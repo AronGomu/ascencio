@@ -1,6 +1,10 @@
 import { DECK_DATABASE_NAME, deckId, type DeckId } from "../../decks/index.ts";
 import type { InstalledGameplay } from "../../content/index.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../story/index.ts";
+import {
+  STORY_SAVES_DATABASE_NAME,
+  STORY_SLOT_KEYS,
+  type GenerationSaveRepository,
+} from "../../story/saves/index.ts";
 import { SNAPSHOT_DATABASE_NAME } from "../../battle/storage/snapshot-store.ts";
 import type { AppRoute } from "../routes.ts";
 import { SHELL_SETTINGS_KEY } from "../settings/shell-settings.ts";
@@ -81,7 +85,13 @@ export async function resetStorageTarget(
   target: AdminStorageTarget,
   factory: IDBFactory,
   storage: Pick<Storage, "removeItem">,
+  saves: GenerationSaveRepository | null = null,
 ): Promise<AdminResetResult> {
+  if (target.name === STORY_SAVES_DATABASE_NAME) {
+    if (saves === null) throw new Error("STORY_MIGRATION_FAILED");
+    await Promise.all(STORY_SLOT_KEYS.map((slot) => saves.clear(slot)));
+    return { outcome: "deleted" };
+  }
   if (target.kind === "localstorage") {
     storage.removeItem(target.name);
     return { outcome: "deleted" };

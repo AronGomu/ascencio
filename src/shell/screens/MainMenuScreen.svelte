@@ -4,7 +4,9 @@
   import { INSTALL_CONTENT_ROUTE } from "../routes.ts";
   import type { ShellStore } from "../shell-store.ts";
   import ShellSettingsDialog from "./ShellSettingsDialog.svelte";
-  import { storySaveExists } from "./story-save-presence.ts";
+  import type { GenerationSaveRepository } from "../../story/saves/index.ts";
+  export let saves: GenerationSaveRepository | null = null;
+  let saveError: string | null = null;
 
   export let store: ShellStore;
   export let coreGate: CoreGate;
@@ -24,9 +26,22 @@
 
   onMount(() => {
     if (coreGate.kind !== "ready") return;
-    void storySaveExists(globalThis.indexedDB).then((found) => {
-      hasSave = found;
-    });
+    if (saves === null) return;
+    void Promise.all([saves.read("manual:1"), saves.read("autosave")])
+      .then((results) => {
+        hasSave = results.some((result) => result.kind === "ready");
+        const problem = results.find(
+          (result) =>
+            result.kind === "corrupt" || result.kind === "incompatible",
+        );
+        if (problem?.kind === "corrupt") saveError = problem.reason;
+        if (problem?.kind === "incompatible")
+          saveError = `Story save schema ${problem.found} is incompatible`;
+      })
+      .catch((error: unknown) => {
+        saveError =
+          error instanceof Error ? error.message : "STORY_STORAGE_UNAVAILABLE";
+      });
   });
 
   const gameplayReady = (): boolean => coreGate.kind === "ready";
@@ -37,6 +52,9 @@
 </script>
 
 <main class="main-menu" data-cy="main-menu-screen">
+  {#if saveError !== null}<p role="alert" data-cy="main-menu-save-error">
+      {saveError}
+    </p>{/if}
   <p class="main-menu__eyebrow" data-cy="main-menu-eyebrow">
     Private prototype · v0.1
   </p>

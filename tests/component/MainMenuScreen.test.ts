@@ -6,16 +6,16 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import MainMenuScreen from "../../src/shell/screens/MainMenuScreen.svelte";
-import {
-  STORY_SAVES_DATABASE_NAME,
-  storySaveExists,
-} from "../../src/shell/screens/story-save-presence.ts";
+import { STORY_SAVES_DATABASE_NAME } from "../../src/shell/screens/story-save-presence.ts";
 import {
   createShellStore,
   type ShellState,
 } from "../../src/shell/shell-store.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
-import { createStorySaveRepository } from "../../src/story/saves/story-save-repository.ts";
+import {
+  createStorySaveRepository,
+  resetStorySessionFixture,
+} from "../fixtures/story-session.ts";
 
 function query(selector: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-cy="${selector}"]`);
@@ -49,7 +49,7 @@ async function writeStorySave(): Promise<void> {
     one database in the order they were made, so a probe started after the
     render cannot answer before the menu's; one flush then applies it. */
 async function settleSaveProbe(): Promise<void> {
-  await storySaveExists(indexedDB);
+  await createStorySaveRepository(indexedDB).read("autosave");
   await tick();
 }
 
@@ -59,6 +59,7 @@ function renderMenu(record: ShellState[] = []) {
   const store = createShellStore("#/", (hash) => hashes.push(hash));
   store.subscribe((state) => record.push(state));
   render(MainMenuScreen, {
+    saves: createStorySaveRepository(indexedDB),
     store,
     coreGate: {
       kind: "ready",
@@ -76,6 +77,7 @@ function renderMenu(record: ShellState[] = []) {
 }
 
 beforeEach(async () => {
+  resetStorySessionFixture();
   await deleteStoryDatabase();
 });
 
@@ -166,6 +168,9 @@ describe("MainMenuScreen", () => {
     const menu = renderMenu();
     await settleSaveProbe();
 
+    await vi.waitFor(() =>
+      expect(query("main-menu-continue")).toHaveProperty("disabled", false),
+    );
     await fireEvent.click(query("main-menu-continue")!);
 
     expect(menu.hashes).toEqual(["#/story"]);

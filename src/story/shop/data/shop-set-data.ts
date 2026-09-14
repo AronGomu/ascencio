@@ -1,4 +1,4 @@
-import type { InstalledGameplay } from "../../../content/index.ts";
+import type { StorySet } from "../../ports/story-release.ts";
 import type { ShopRarity } from "../../model/story-state.ts";
 /* The one declaration of how the tiers rank. It lives beside the collection's
    grouping because that is what reads it most, but the ordering is the shop's
@@ -16,6 +16,7 @@ export interface ShopSetCard {
 }
 
 export interface ShopSetEntry {
+  readonly imageUrl?: string | null;
   readonly id: string;
   readonly name: string;
   readonly releaseYear: number;
@@ -28,20 +29,18 @@ export interface ShopSetData {
   readonly sets: readonly ShopSetEntry[];
 }
 
-export function installedShopSetData(gameplay: InstalledGameplay): ShopSetData {
+export function installedShopSetData(sets: readonly StorySet[]): ShopSetData {
   return Object.freeze({
     version: 1 as const,
     sets: Object.freeze(
-      gameplay.sets.map((set) =>
+      [...new Map(sets.map((set) => [set.id, set])).values()].map((set) =>
         Object.freeze({
           id: set.id,
           name: set.name,
           releaseYear: set.releaseYear,
           released: true,
           cards: Object.freeze(
-            set.cards.map(({ code, name, rarity }) =>
-              Object.freeze({ code, name, rarity }),
-            ),
+            set.cards.map((card) => Object.freeze({ ...card })),
           ),
         }),
       ),

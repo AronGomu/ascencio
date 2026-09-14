@@ -30,14 +30,14 @@ function browse(sets: readonly ShopSetEntry[]): HTMLElement {
 
 describe("shop set tiles", () => {
   it("renders the set image when one exists", () => {
-    const container = browse([set(LOB, 2002)]);
+    const container = browse([
+      { ...set(LOB, 2002), imageUrl: "blob:installed-set" },
+    ]);
     const image = container.querySelector<HTMLImageElement>(
       `[data-cy="story-shop-set-image-${LOB}"]`,
     );
     expect(image).not.toBeNull();
-    expect(image!.getAttribute("src")).toMatch(
-      new RegExp(`runtime/sets/${LOB}\\.jpg$`),
-    );
+    expect(image!.getAttribute("src")).toBe("blob:installed-set");
     expect(
       container.querySelector(`[data-cy="story-shop-set-fallback-${LOB}"]`),
     ).toBeNull();

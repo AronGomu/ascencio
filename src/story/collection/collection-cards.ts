@@ -12,8 +12,9 @@
    comparisons for one screen open. One pass over the sets and one lookup per
    card is the same answer at 19,448 steps. */
 
-import type { InstalledGameplay } from "../../content/index.ts";
-import { installedDeckCatalog } from "../../decks/index.ts";
+import type { Cards } from "../../cards/index.ts";
+import type { StorySet } from "../ports/story-release.ts";
+import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type { ShopRarity } from "../model/story-state.ts";
 import { inferRarity } from "../shop/data/shop-rarity.ts";
@@ -63,10 +64,11 @@ export function collectionRarityIndex(
  * or whole-catalog fallback participates.
  */
 export async function loadCollectionCatalog(
-  gameplay: InstalledGameplay,
+  definitions: Cards,
+  sets: readonly StorySet[],
 ): Promise<CollectionCatalog> {
-  const cards = installedDeckCatalog(gameplay).cards;
-  const data = installedShopSetData(gameplay);
+  const cards = cardsDeckCatalog(definitions);
+  const data = installedShopSetData(sets);
   return Object.freeze({
     cards,
     rarityByCode: collectionRarityIndex(cards, data),

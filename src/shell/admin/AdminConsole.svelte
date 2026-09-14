@@ -21,6 +21,8 @@
       reset that follows is not blocked by an open database. */
   type ClosableRepository = DeckRepository & { close: () => void };
 
+  import type { GenerationSaveRepository } from "../../story/saves/index.ts";
+  export let saves: GenerationSaveRepository | null = null;
   export let store: ShellStore;
   export let gameplay: InstalledGameplay | null = null;
   export let openRepository: () => Promise<ClosableRepository> = async () =>
@@ -32,6 +34,7 @@
       target,
       globalThis.indexedDB,
       globalThis.localStorage,
+      saves,
     );
   export let now: () => Date = () => new Date();
 

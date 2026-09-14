@@ -1,4 +1,8 @@
-import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
+import {
+  storyAppProps,
+  createStorySaveRepository,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -6,7 +10,6 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
-import { createStorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
 import type {
   StoryEncounterRequest,
   StoryHandoffOutcome,
@@ -25,6 +28,7 @@ import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts"
 import { fieldableStoryDeck } from "../../fixtures/story-decks.ts";
 
 afterEach(async () => {
+  resetStorySessionFixture();
   cleanup();
   vi.unstubAllGlobals();
   globalThis.location.hash = "";
@@ -200,7 +204,7 @@ const HEADER_MATRIX = {
 
 describe("StoryApp", () => {
   it("mounts from the story domain straight into the prologue", async () => {
-    render(StoryApp, { gameplay: installedDuelGameplayFixture() });
+    render(StoryApp, { ...storyAppProps() });
     await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
     expect(screen.queryByRole("button", { name: "New Game" })).toBeNull();
   });
@@ -209,7 +213,7 @@ describe("StoryApp", () => {
      domain has to open on the story itself, with no reviewer surface left
      anywhere in the tree. */
   it("exposes no reviewer launcher or drawer", () => {
-    render(StoryApp, { gameplay: installedDuelGameplayFixture() });
+    render(StoryApp, { ...storyAppProps() });
     expect(
       screen.queryByRole("button", { name: "Start full flow" }),
     ).toBeNull();
@@ -222,7 +226,7 @@ describe("StoryApp", () => {
   });
 
   it("starts prologue without a second visual-novel menu", async () => {
-    render(StoryApp, { gameplay: installedDuelGameplayFixture() });
+    render(StoryApp, { ...storyAppProps() });
     expect(screen.getByText(/Rain turned/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "New Game" })).toBeNull();
   });
@@ -234,7 +238,7 @@ describe("StoryApp", () => {
       savedScreen: "map" as const,
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: mapState,
     });
     expect(container.querySelector('[data-cy="story-global-menu"]')).toBeNull();
@@ -248,7 +252,7 @@ describe("StoryApp", () => {
 
   it("keeps the narrative pause menu without a second floating control", () => {
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
     });
     expect(container.querySelector('[data-cy="story-global-menu"]')).toBeNull();
     expect(
@@ -271,7 +275,7 @@ describe("StoryApp", () => {
           : null,
       };
       const { container } = render(StoryApp, {
-        gameplay: installedDuelGameplayFixture(),
+        ...storyAppProps(),
         resumeState: state,
       });
       const present = (suffix: string) =>
@@ -310,7 +314,7 @@ describe("StoryApp", () => {
       savedScreen: "map" as const,
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: mapState,
     });
     expect(
@@ -336,7 +340,7 @@ describe("StoryApp", () => {
         previousScreen,
       };
       const { container } = render(StoryApp, {
-        gameplay: installedDuelGameplayFixture(),
+        ...storyAppProps(),
         resumeState: mapState,
       });
 
@@ -360,7 +364,7 @@ describe("StoryApp", () => {
       savedScreen: "outcome" as const,
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: outcomeState,
     });
 
@@ -382,7 +386,7 @@ describe("StoryApp", () => {
       encounterId: "old-arena" as const,
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: outcomeState,
     });
     const user = userEvent.setup();
@@ -409,7 +413,7 @@ describe("StoryApp", () => {
       rewardGranted: true,
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: rewardState,
     });
     const user = userEvent.setup();
@@ -448,7 +452,7 @@ describe("StoryApp", () => {
       collection,
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: handoffState,
       onencounter,
     });
@@ -476,7 +480,7 @@ describe("StoryApp", () => {
       shopReturnScreen: "map" as const,
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: shopState,
     });
     const user = userEvent.setup();
@@ -515,7 +519,7 @@ describe("StoryApp", () => {
       savedScreen: "map" as const,
     };
     render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: mapState,
       ondecks,
     });
@@ -553,7 +557,7 @@ describe("StoryApp", () => {
     };
     try {
       const { container } = render(StoryApp, {
-        gameplay: installedDuelGameplayFixture(),
+        ...storyAppProps(),
         resumeState: mapState,
         ondecks,
       });
@@ -586,7 +590,7 @@ describe("StoryApp", () => {
     installShopDataOnlyNetwork();
     installPrototypeActiveCatalog();
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: sellState({ 89631139: 2 }),
     });
 
@@ -608,7 +612,7 @@ describe("StoryApp", () => {
 
   it("renders under a single scoping root element", () => {
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
     });
     expect(container.querySelector(".story-app")).not.toBeNull();
   });
@@ -620,7 +624,7 @@ describe("StoryApp", () => {
     const user = userEvent.setup();
     const show = vi.fn<ToastPublisher["show"]>(() => "toast-test");
     const first = render(StoryApp, {
-      props: { gameplay: installedDuelGameplayFixture() },
+      props: { ...storyAppProps() },
       context: new Map([[TOAST_CONTEXT_KEY, { show }]]),
     });
     // Story starts in narrative; T1 consolidated Save into gear menu — open gear first
@@ -638,7 +642,7 @@ describe("StoryApp", () => {
     cleanup();
 
     render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       storyEntryIntent: "continue",
     });
     await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
@@ -658,7 +662,7 @@ describe("StoryApp", () => {
     await new Promise((resolve) => (transaction.oncomplete = resolve));
     database.close();
 
-    render(StoryApp, { gameplay: installedDuelGameplayFixture() });
+    render(StoryApp, { ...storyAppProps() });
     await waitFor(() =>
       expect(screen.getByRole("alert").textContent).toMatch(/manual:1/),
     );

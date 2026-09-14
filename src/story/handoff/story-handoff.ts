@@ -3,6 +3,7 @@
    result it will be handed, and normalises it into the four authored outcome
    branches it already had. */
 
+import type { StoryBinding } from "../saves/generation-contracts.ts";
 import type { BattleFacadeResult } from "../../battle/battle-contracts.ts";
 /* Type-only, like the battle import above: `src/decks/index.ts` reaches the
    deck database and `idb` through it, and the shell's coordinator imports this
@@ -34,6 +35,7 @@ export interface StoryEncounterRequest {
   readonly encounterId: EncounterId;
   readonly label: string;
   readonly state: StoryState;
+  readonly story: StoryBinding;
   readonly deck: ValidatedDeckSnapshot;
 }
 

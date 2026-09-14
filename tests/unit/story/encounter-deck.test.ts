@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { catalogByCode } from "../../../src/decks/validation/index.ts";
 import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { legacyCollectionInputs } from "../../../src/shell/adapters/legacy-collection.ts";
 import { encounterDeck } from "../../../src/story/decks/encounter-deck.ts";
 import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 import {
@@ -21,7 +22,8 @@ import {
 const FIELDABLE = fieldableStoryDeck();
 const SOLD = catalogByCode(PROTOTYPE_CATALOG).get(FIELDABLE.deck.main[0]!)!;
 const GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG);
-const resolveEncounter = (state: StoryState) => encounterDeck(state, GAMEPLAY);
+const resolveEncounter = (state: StoryState) =>
+  encounterDeck(state, legacyCollectionInputs(GAMEPLAY).cards);
 
 afterEach(() => setRuntimeCatalogForTests(null));
 

@@ -12,14 +12,13 @@
   export let onretry: () => void = () => undefined;
   export let onback: () => void;
   export let imageUrlFor: (entry: ShopSetEntry) => string | null = (entry) =>
-    `${import.meta.env.BASE_URL}runtime/sets/${entry.id}.jpg`;
+    entry.imageUrl ?? null;
 
   let dialogSetId: string | null = null;
 
   $: latestRow = latestReleasedSets(sets ?? []);
 
-  /* Installed ChapterSet data supplies null when authoritative set art does
-     not exist. Legacy shop data keeps the packaged-path default above. */
+  /* Art is optional, already resolved by the Story media port. */
 
   function openDialog(entry: ShopSetEntry): void {
     if (!entry.released) return;

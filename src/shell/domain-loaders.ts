@@ -1,5 +1,10 @@
 import type { Component } from "svelte";
-import type { ContentReadPort, InstalledGameplay } from "../content/index.ts";
+import type { Cards } from "../cards/index.ts";
+import type { StoryRelease, StoryMedia } from "../story/ports/index.ts";
+import type {
+  GenerationSaveRepository,
+  StoryBinding,
+} from "../story/saves/index.ts";
 import type { CardImageSource } from "../cards/images/index.ts";
 import type {
   BattleFacade,
@@ -71,8 +76,10 @@ export type BattleDeckModule = Omit<
     is handed back the checkpointed state plus the one result that encounter
     produced; the shell owns the handoff id, the route and the duel itself. */
 export type StoryDomainProps = {
-  readonly gameplay: InstalledGameplay;
-  readonly reader: ContentReadPort | null;
+  readonly release: StoryRelease;
+  readonly cards: Cards;
+  readonly saves: GenerationSaveRepository;
+  readonly media: StoryMedia | null;
   readonly imageSource: CardImageSource | null;
   /** Which main-menu entry sent the player here, so the story can open on that
       screen rather than repeating a title the shell already showed. `null`
@@ -82,6 +89,7 @@ export type StoryDomainProps = {
     request: StoryEncounterRequest,
   ) => Promise<StoryHandoffOutcome>;
   readonly resumeState?: StoryState | null;
+  readonly resumeStory?: StoryBinding | null;
   readonly resolution?: StoryDuelResolution | null;
   readonly onhandled?: () => void;
   /** Leaving the story for the decks the same save owns. Reported rather than

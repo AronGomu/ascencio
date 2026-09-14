@@ -126,7 +126,10 @@ function isLegalImport(from: string, to: string): boolean {
   if (source === "shared-svelte-ui")
     return to.startsWith("src/shared-svelte-ui/");
   const target = domainOf(to);
-  if (target === "content" && ["decks", "deck-editor"].includes(source))
+  if (
+    target === "content" &&
+    ["decks", "deck-editor", "story"].includes(source)
+  )
     return false;
   if (source === target) return true;
   if (source === "deck-select") return false;
@@ -151,6 +154,11 @@ function isLegalImport(from: string, to: string): boolean {
       (entry) => to === `src/shared-svelte-ui/${entry}/index.ts`,
     );
   if (target === "deck-editor" && to === "src/deck-editor/ports/index.ts")
+    return source === "shell";
+  if (
+    target === "story" &&
+    ["src/story/ports/index.ts", "src/story/saves/index.ts"].includes(to)
+  )
     return source === "shell";
   /* The visual novel types a battle handoff without mounting one. */
   if (source === "story" && to === "src/battle/battle-contracts.ts")
@@ -785,7 +793,6 @@ describe("public domain APIs are frozen", () => {
         "ENCOUNTER_LABELS",
         "STORY_SAVES_DATABASE_NAME",
         "acceptsResult",
-        "createStorySaveRepository",
         "default",
         "encounterDeck",
         "loadCollectionCatalog",
@@ -798,6 +805,7 @@ describe("public domain APIs are frozen", () => {
       types: [
         "CollectionCatalog",
         "EncounterId",
+        "GenerationSaveRepository",
         "PendingStoryDuel",
         "StoryDuelResolution",
         "StoryEncounterIntent",
@@ -805,7 +813,6 @@ describe("public domain APIs are frozen", () => {
         "StoryHandoffOutcome",
         "StorySaveEnvelope",
         "StorySaveReadResult",
-        "StorySaveRepository",
         "StorySaveSummary",
         "StorySaveWriteResult",
         "StorySlotKey",
@@ -1011,4 +1018,64 @@ it("no catch-all source folders", () => {
     ["shared", "common", "utils", "core"].includes(entry),
   );
   expect(catchAll).toEqual([]);
+});
+
+describe("Story Content isolation", () => {
+  it("rejects Content imports including type aliases and raw path fixtures", () => {
+    expect(
+      isLegalImport("src/story/model/fixture.ts", "src/content/index.ts"),
+    ).toBe(false);
+    expect(
+      sourceFiles()
+        .filter((file) => file.startsWith("src/story/"))
+        .flatMap((file) =>
+          importsOf(file).filter((ref) => String(ref).includes("src/content/")),
+        ),
+    ).toEqual([]);
+  });
+});
+
+it("Story pure ports/saves entries expose exact generation contracts without UI", async () => {
+  const ports = await import("../../src/story/ports/index.ts");
+  const saves = await import("../../src/story/saves/index.ts");
+  expect(Object.keys(ports).sort()).toEqual([
+    "parseStoryRelease",
+    "validateStoryContinuity",
+    "validateStoryRelease",
+  ]);
+  expect(Object.keys(saves).sort()).toEqual([
+    "STORY_SAVES_DATABASE_NAME",
+    "STORY_SLOT_KEYS",
+    "createStoryMigrationPort",
+  ]);
+  expect(declaredExports("src/story/ports/index.ts").types).toEqual([
+    "StoryChoiceId",
+    "StoryDocument",
+    "StoryMedia",
+    "StoryMediaLease",
+    "StoryRarity",
+    "StoryRelease",
+    "StorySet",
+  ]);
+  expect(declaredExports("src/story/saves/index.ts").types).toEqual([
+    "GenerationSaveRepository",
+    "StoryBinding",
+    "StoryGenerationId",
+    "StoryGenerationSeal",
+    "StoryMigrationPort",
+    "StorySaveEnvelope",
+    "StorySaveReadResult",
+    "StorySaveSummary",
+    "StorySaveWriteResult",
+    "StorySlotKey",
+  ]);
+  for (const entry of [
+    "src/story/ports/index.ts",
+    "src/story/saves/index.ts",
+  ]) {
+    expect(isLegalImport("src/shell/adapters/fixture.ts", entry)).toBe(true);
+    expect(importsOf(entry).some((path) => path.endsWith(".svelte"))).toBe(
+      false,
+    );
+  }
 });

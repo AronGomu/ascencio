@@ -152,3 +152,32 @@ describe("buildAdminTestDeck", () => {
     expect(ADMIN_TEST_DECK_ID).toBe("admin-test-deck");
   });
 });
+
+it("Story admin reset clears only injected generation slots, never deletes Story DB", async () => {
+  const clear = vi.fn<(slot: string) => Promise<void>>(async () => undefined);
+  const factory = {
+    deleteDatabase: vi.fn(() => {
+      throw new Error("must not delete Story DB");
+    }),
+  } as unknown as IDBFactory;
+  const saves = { read: vi.fn(), write: vi.fn(), list: vi.fn(), clear };
+  await expect(
+    resetStorageTarget(
+      target("story-saves"),
+      factory,
+      { removeItem: vi.fn() },
+      saves,
+    ),
+  ).resolves.toEqual({ outcome: "deleted" });
+  expect(clear.mock.calls.map((call) => call[0])).toEqual([
+    "manual:1",
+    "manual:2",
+    "manual:3",
+    "autosave",
+    "checkpoint:pre-duel",
+  ]);
+  expect(factory.deleteDatabase).not.toHaveBeenCalled();
+  await expect(
+    resetStorageTarget(target("story-saves"), factory, { removeItem: vi.fn() }),
+  ).rejects.toThrow("STORY_MIGRATION_FAILED");
+});

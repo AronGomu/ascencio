@@ -13,7 +13,7 @@ import {
   STARTER_DECK_NAME,
   importYdk,
 } from "../../decks/editing/index.ts";
-import type { InstalledGameplay } from "../../content/index.ts";
+import type { StoryRelease } from "../ports/story-release.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import {
   PROTOTYPE_RULESET,
@@ -42,10 +42,10 @@ export function buildStarterGrant(): StarterGrant {
 }
 
 export function buildInstalledStarterGrant(
-  gameplay: InstalledGameplay,
+  chapter: StoryRelease["chapters"][number],
 ): StarterGrant {
-  const installed = gameplay.decks.find(
-    ({ id }) => id === gameplay.defaults.starterDeckId,
+  const installed = chapter.decks.find(
+    ({ id }) => id === chapter.defaults.starterDeckId,
   );
   if (installed === undefined)
     throw new Error("Installed starter deck is unavailable");

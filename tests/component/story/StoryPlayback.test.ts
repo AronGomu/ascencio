@@ -1,4 +1,7 @@
-import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
+import {
+  storyAppProps,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -22,6 +25,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  resetStorySessionFixture();
   vi.useRealTimers();
   cleanup();
   localStorage.clear();
@@ -43,7 +47,7 @@ async function runPlayback(totalMs: number, stepMs = 60): Promise<void> {
 
 async function startNewGame(): Promise<ReturnType<typeof userEvent.setup>> {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-  render(StoryApp, { gameplay: installedDuelGameplayFixture() });
+  render(StoryApp, { ...storyAppProps() });
   await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
   return user;
 }

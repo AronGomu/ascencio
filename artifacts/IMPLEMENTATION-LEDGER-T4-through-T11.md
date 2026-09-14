@@ -72,6 +72,32 @@ Paths: `package.json`; `scripts/content-publish.ts`; `scripts/lib/asset-delivery
 - [x] T5.R4 Validate persisted job exact shape/DB key/UUID/manifest/closed sorted chapters/kind/progress identity/phase/safe bounded counters before list/open/resume. Validation: 22 corruption cases plus two closure/order cases red→green; metadata/network unchanged on rejection with `CONTENT_INTEGRITY_FAILED`.
 - [x] T5.R5 Final requested focused/regression/type/lint/format/diff checks; repair report/evidence. Validation: 91/91 focused, 66/66 affected, typecheck 0 errors/4 pre-existing warnings, full T5 targeted ESLint/Prettier, native Chromium, diff/staging checks pass. `artifacts/IMPLEMENTATION-REPORT-T5-repair.md`; exact logs/exit codes under `artifacts/T5-REPAIR-EVIDENCE/`. Baseline ledger/ticket Markdown Prettier warnings independently reproduced in before snapshots; preserved, not broadly reformatted. Independent acceptance still required.
 
+## T6 — Story semantic release + forward save generations
+
+| Field | Value |
+| --- | --- |
+| State | **ACCEPTED retry1** — integration review clean; B1/B2 independently cleared `artifacts/REVIEW-T6-repair.md`; parent inspected generation tx/parser, reran 95/95 save tests |
+| Model/route | Failed Astra-high acceptance → parent-routed `openai-codex/gpt-6-astra:high` retry1 per N3; sole root writer; no children |
+| Retries | `1` — parent accepts `artifacts/REVIEW-T6-integrity.md` B1/B2; integration review clean |
+| Dependencies | T5 accepted `8a0d513`; T4 `5c2ddff`; T1–T3 `e338808` |
+| Risk/boundary | Parent-approved intermediate Story refusal without selected semantic inputs; T9 owns final lifecycle lease enforcement + production selector injection. No alternate lock/selector/bootstrap generation/legacy binding bridge |
+| Paths | `src/story/ports/`, generation files under `src/story/saves/`, StoryApp/collection/shop/deck/handoff consumers; `src/shell/adapters/`, Shell mount/menu/admin/handoff consumers; boundary config/tests; exact inventory `artifacts/T6-EVIDENCE/changed-files.json` |
+| Validation | retry1 exact requested Vitest 193/193 (120 + 73 additions); affected 819/819; typecheck 0 errors/4 existing warnings; scoped ESLint/Prettier/diff/staging exit 0; preservation 2210 unchanged / 5 intentional existing-file changes. Initial native Chromium evidence retained, not rerun |
+| Report | `artifacts/IMPLEMENTATION-REPORT-T6-repair.md`; retry1 logs/exits/commands/repair-only diff under `artifacts/T6-REPAIR-EVIDENCE/`; initial report/evidence retained |
+
+- [x] T6.1 Write named tests first. Validation: `red-vitest.log`, exit 1; missing semantic ports/migration + forbidden Content fixture. Existing legacy save suite stays green.
+- [x] T6.2 Implement pure StoryRelease/parser/continuity + Shell-only staged translation. Validation: metadata bounds, duplicate definitions/order, references, optional map/set media, canonical abort; Story imports no root Content.
+- [x] T6.3 Implement Story DB v2 generation stores, strict schema6, five-slot COW/seals, CAS/source snapshots. Validation: concurrent idempotence, narrative beat-ID remap, quota abort/source hashes, corrupt/future refusal, descriptor/absence verification, active mutable-slot reopen, unchanged legacy schema1–5.
+- [x] T6.4 Inject generation repository across Story/manual/autosave/checkpoint/deck/editor/handoff/admin/menu. Validation: 746 affected checks; completed chapter binding survives checkpoint handback; admin clears only supplied generation; missing injection refuses Story explicitly.
+- [x] T6.5 Publish checked evidence without commit/stage/push/deploy. Validation: exact commands in `final-commands.json`, Chromium result/trace/screenshots, `git diff --cached --quiet` exit 0. Review gate remains required.
+
+## T6 retry1 — bounded B1/B2 repair
+
+- [x] T6.R1 Add sparse schema6/seal regressions before implementation. Validation: exact T6 command plus 73 additions exits 1: 65 failed / 128 passed; `artifacts/T6-REPAIR-EVIDENCE/red-vitest.log`. Existing location-density/storage-error cases already pass; not claimed as new RED failures.
+- [x] T6.R2 Reject sparse binding/StoryState arrays only at generation entry; retain typed write failure, semantic migration refusal, unchanged source rows. Validation: exact T6 green 193/193, including 24 sparse parse/write/raw-source cases; `artifacts/T6-REPAIR-EVIDENCE/green-vitest.log`. Historical parser untouched.
+- [x] T6.R3 Clone/validate seals within semantic boundary before DB access; strictly validate scalar IDs/source/revision plus dense slots. Validation: malformed/uncloneable cases reject exact `STORY_MIGRATION_FAILED` with zero DB opens; valid seals retain unavailable/quota mappings. Exact T6 green 193/193.
+- [x] T6.R4 Run affected suites/typecheck/lint/format/diff/staging checks; publish repair-only diff, logs, report. Validation: affected 819/819; typecheck 0 errors/4 existing warnings; scoped ESLint/Prettier/diff/staging exit 0; 2210 baseline regular files unchanged, 5 intentional changes, zero unexpected changes. `artifacts/IMPLEMENTATION-REPORT-T6-repair.md`; `artifacts/T6-REPAIR-EVIDENCE/commands.json`, `scope-result.json`. Required independent review pending.
+
 ## Pending implementation order
 
 - [x] T4 → T5. Validation: T4 accepted at `5c2ddff`; T5 independently accepted; parent verified 91/91 focused tests. Native Chromium evidence in T5 repair report.

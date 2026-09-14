@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import mapAsset from "../../../assets/story/chapter-01/city-map-placeholder.svg";
   import type { LocationId, StoryLocationState } from "../model/story-state.ts";
 
   type SelectionOwner = "hover" | "focus" | "tap";
@@ -11,6 +10,7 @@
   const POPOVER_INSET = 0;
   const POPOVER_GAP = 8;
 
+  export let imageUrl: string | null = null;
   export let locations: readonly StoryLocationState[] = [];
   export let returnLabel = "Dialog";
   export let onselect: (id: LocationId) => void = () => undefined;
@@ -302,19 +302,21 @@
   data-cy="story-map-screen"
 >
   <div class="map-art" data-cy="story-map-art" bind:this={mapArtElement}>
-    <img
-      class="map-backdrop"
-      src={mapAsset}
-      alt=""
-      aria-hidden="true"
-      data-cy="story-map-backdrop"
-    />
+    {#if imageUrl !== null}<img
+        class="map-backdrop"
+        src={imageUrl}
+        alt=""
+        aria-hidden="true"
+        data-cy="story-map-backdrop"
+      />{/if}
     <div class="map-canvas" data-cy="story-map-canvas">
-      <img
-        src={mapAsset}
-        alt="Illustrated city map of the river district"
-        data-cy="story-map-image"
-      />
+      {#if imageUrl !== null}<img
+          src={imageUrl}
+          alt="Illustrated city map of the river district"
+          data-cy="story-map-image"
+        />{:else}<div class="map-placeholder" data-cy="story-map-placeholder">
+          City signal map
+        </div>{/if}
       <div
         class="hotspots"
         aria-label="Map hotspots"
@@ -417,6 +419,13 @@
     background: var(--bg);
   }
 
+  .map-placeholder {
+    aspect-ratio: 12 / 7;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    color: var(--story-text);
+  }
   .map-art {
     position: relative;
     flex: 1 1 auto;

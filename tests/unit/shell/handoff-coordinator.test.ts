@@ -10,8 +10,9 @@ import type {
   StorySaveReadResult,
   StorySaveWriteResult,
   StorySlotKey,
-} from "../../../src/story/saves/story-save-contracts.ts";
-import type { StorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
+} from "../../../src/story/saves/generation-contracts.ts";
+import type { GenerationSaveRepository as StorySaveRepository } from "../../../src/story/saves/index.ts";
+import { storyBindingFixture } from "../../fixtures/story-release.ts";
 import type { StoryDuelResolution } from "../../../src/story/handoff/story-handoff.ts";
 
 const CHECKPOINT: StorySlotKey = "checkpoint:pre-duel";
@@ -51,7 +52,8 @@ function createFakeSaves(): FakeSaves {
       return Promise.resolve<StorySaveReadResult>({
         kind: "ready",
         envelope: {
-          schemaVersion: 4,
+          schemaVersion: 6,
+          story: storyBindingFixture(),
           slot,
           revision: record.revision,
           savedAt: record.savedAt,
@@ -144,14 +146,14 @@ describe("begin", () => {
     const order: string[] = [];
     navigate.mockImplementation(() => order.push("navigate"));
     const original = saves.write.bind(saves);
-    saves.write = (slot, state, expected) => {
+    saves.write = (slot, state, expected, story) => {
       order.push("write");
-      return original(slot, state, expected);
+      return original(slot, state, expected, story);
     };
 
-    await expect(coordinator().begin(INTENT, preBattleState())).resolves.toBe(
-      "ready",
-    );
+    await expect(
+      coordinator().begin(INTENT, preBattleState(), storyBindingFixture()),
+    ).resolves.toBe("ready");
 
     expect(order).toEqual(["write", "navigate"]);
     expect(routes()).toEqual([`#/duel/session/${INTENT.handoffId}`]);
@@ -167,7 +169,7 @@ describe("begin", () => {
   });
 
   it("hands the checkpointed state back as the last stable state", async () => {
-    await coordinator().begin(INTENT, preBattleState());
+    await coordinator().begin(INTENT, preBattleState(), storyBindingFixture());
     expect(onRestore).toHaveBeenCalledTimes(1);
     expect(onRestore.mock.calls[0]?.[0].pendingHandoffId).toBe(
       INTENT.handoffId,
@@ -181,9 +183,9 @@ describe("begin", () => {
   ])("does not start the duel when the write answers %o", async (result) => {
     saves.failWriteWith = result;
 
-    await expect(coordinator().begin(INTENT, preBattleState())).resolves.toBe(
-      "checkpoint-failed",
-    );
+    await expect(
+      coordinator().begin(INTENT, preBattleState(), storyBindingFixture()),
+    ).resolves.toBe("checkpoint-failed");
     expect(navigate).not.toHaveBeenCalled();
     expect(onRestore).not.toHaveBeenCalled();
   });
@@ -194,14 +196,18 @@ describe("begin", () => {
       pendingHandoffId: "someone-elses-handoff",
     });
 
-    await expect(coordinator().begin(INTENT, preBattleState())).resolves.toBe(
-      "checkpoint-failed",
-    );
+    await expect(
+      coordinator().begin(INTENT, preBattleState(), storyBindingFixture()),
+    ).resolves.toBe("checkpoint-failed");
     expect(navigate).not.toHaveBeenCalled();
   });
 
   it("does not start the duel when the checkpoint cannot be read back", async () => {
-    const started = coordinator().begin(INTENT, preBattleState());
+    const started = coordinator().begin(
+      INTENT,
+      preBattleState(),
+      storyBindingFixture(),
+    );
     saves.readAs = { kind: "corrupt", slot: CHECKPOINT, reason: "broken" };
 
     await expect(started).resolves.toBe("checkpoint-failed");
@@ -215,6 +221,7 @@ describe("begin", () => {
       coordinator().begin(
         { ...INTENT, handoffId: "not/a/route" },
         preBattleState(),
+        storyBindingFixture(),
       ),
     ).resolves.toBe("checkpoint-failed");
     expect(saves.writes).toEqual([]);
@@ -225,7 +232,7 @@ describe("begin", () => {
   it("leaves nothing pending after a failed checkpoint", async () => {
     saves.failWriteWith = { kind: "failed", reason: "unknown" };
     const handoff = coordinator();
-    await handoff.begin(INTENT, preBattleState());
+    await handoff.begin(INTENT, preBattleState(), storyBindingFixture());
 
     handoff.settle(INTENT.handoffId, {
       kind: "resolved",
@@ -239,7 +246,7 @@ describe("begin", () => {
 describe("resume", () => {
   it("restores a checkpoint whose handoff matches", async () => {
     const handoff = coordinator();
-    await handoff.begin(INTENT, preBattleState());
+    await handoff.begin(INTENT, preBattleState(), storyBindingFixture());
     navigate.mockClear();
     onRestore.mockClear();
 
@@ -253,7 +260,7 @@ describe("resume", () => {
 
   it("restores the duel it is already running without re-reading", async () => {
     const handoff = coordinator();
-    await handoff.begin(INTENT, preBattleState());
+    await handoff.begin(INTENT, preBattleState(), storyBindingFixture());
     saves.readAs = { kind: "empty", slot: CHECKPOINT };
 
     await expect(handoff.resume(INTENT.handoffId)).resolves.toBe("restored");
@@ -264,7 +271,11 @@ describe("resume", () => {
     [
       "a mismatched handoff id",
       async () => {
-        await coordinator().begin(INTENT, preBattleState());
+        await coordinator().begin(
+          INTENT,
+          preBattleState(),
+          storyBindingFixture(),
+        );
       },
       "22222222-2222-4333-8444-555555555555",
     ],
@@ -300,7 +311,8 @@ describe("resume", () => {
     saves.readAs = {
       kind: "ready",
       envelope: {
-        schemaVersion: 4,
+        schemaVersion: 6,
+        story: storyBindingFixture(),
         slot: CHECKPOINT,
         revision: 1,
         savedAt: 1,
@@ -334,7 +346,7 @@ describe("resume", () => {
 describe("settle", () => {
   async function started() {
     const handoff = coordinator();
-    await handoff.begin(INTENT, preBattleState());
+    await handoff.begin(INTENT, preBattleState(), storyBindingFixture());
     navigate.mockClear();
     return handoff;
   }
@@ -395,7 +407,7 @@ describe("settle", () => {
       ...INTENT,
       handoffId: "33333333-2222-4333-8444-555555555555",
     };
-    await handoff.begin(second, preBattleState());
+    await handoff.begin(second, preBattleState(), storyBindingFixture());
 
     handoff.settle(INTENT.handoffId, {
       kind: "resolved",

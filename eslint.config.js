@@ -14,7 +14,14 @@ import tseslint from "typescript-eslint";
    These patterns match specifier text rather than resolved paths.
    `tests/unit/domain-boundaries.test.ts` resolves real paths and is the
    airtight half of the pair; both run in `check:headless`. */
-const STORY_INTERNALS = ["**/story/**", "!**/story/index.ts"];
+const STORY_INTERNALS = [
+  "**/story/**",
+  "!**/story/index.ts",
+  "!**/story/ports",
+  "!**/story/ports/index.ts",
+  "!**/story/saves",
+  "!**/story/saves/index.ts",
+];
 const DECK_EDITOR_INTERNALS = ["**/deck-editor/**", "!**/deck-editor/index.ts"];
 const EDITOR_PORT = ["!**/deck-editor/ports", "!**/deck-editor/ports/index.ts"];
 const DECK_SELECT_INTERNALS = ["**/deck-select/**", "!**/deck-select/index.ts"];
@@ -101,7 +108,7 @@ const boundaries = (files, patterns) => ({
                 {
                   group: ["**/content/**"],
                   message:
-                    "Decks and Editor consume semantic Cards ports; Content is composed by Shell.",
+                    "Domains consume semantic ports; Content is composed by Shell.",
                 },
               ]
             : []),
@@ -256,7 +263,7 @@ export default tseslint.config(
                 ];
                 if (
                   source === "cards" ||
-                  (["decks", "deck-editor"].includes(source) &&
+                  (["decks", "deck-editor", "story"].includes(source) &&
                     target === "content") ||
                   (target === "decks" &&
                     !verifierDebt &&

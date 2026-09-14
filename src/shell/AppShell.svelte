@@ -33,6 +33,13 @@
   import { deckId } from "../decks/contracts/index.ts";
   import type { DeckContext } from "../decks/repository/index.ts";
   import type { CardOwnership } from "../decks/validation/index.ts";
+  import type { Cards } from "../cards/index.ts";
+  import type { StoryRelease, StoryMedia } from "../story/ports/index.ts";
+  import type {
+    GenerationSaveRepository,
+    StorySlotKey,
+    StoryBinding,
+  } from "../story/saves/index.ts";
   import type { CardImageSource } from "../cards/images/index.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
@@ -41,8 +48,6 @@
     CollectionCatalog,
     StoryDuelResolution,
     StoryEncounterRequest,
-    StorySaveRepository,
-    StorySlotKey,
     StoryState,
   } from "../story/index.ts";
   import {
@@ -129,10 +134,12 @@
   /* Story progress is written by the shell only for the pre-duel checkpoint.
      The default reaches the repository through the visual novel's own lazy
      chunk, so `#/free-play` and its decks never load the story to hold it. */
-  export let saves: StorySaveRepository | null = null;
+  export let saves: GenerationSaveRepository | null = null;
+  export let storyRelease: StoryRelease | null = null;
+  export let storyCards: Cards | null = null;
+  export let storyMedia: StoryMedia | null = null;
 
   let stage: HTMLElement | undefined;
-  let storySaves: Promise<StorySaveRepository> | null = null;
   /* The two decks the match setup produced, and what decides whether
      `#/free-play` shows that setup or the duel: no request is the screen where
      both seats are chosen, a request is the duel it names. Held as one object
@@ -146,24 +153,22 @@
      than throwing the player out of an encounter that is already checkpointed. */
   let sessionRequest: BattleRequest | null = null;
 
-  async function openStorySaves(): Promise<StorySaveRepository> {
-    storySaves ??= import("../story/index.ts").then((story) =>
-      story.createStorySaveRepository(globalThis.indexedDB),
-    );
-    return await storySaves;
+  // T9 supplies selected generation under Shell lifecycle lease. Never infer legacy binding.
+  function openStorySaves(): GenerationSaveRepository {
+    if (saves === null) throw new Error("STORY_MIGRATION_FAILED");
+    return saves;
   }
-
-  const lazySaves: StorySaveRepository = {
-    read: async (slot: StorySlotKey) =>
-      await (await openStorySaves()).read(slot),
+  const lazySaves: GenerationSaveRepository = {
+    read: async (slot: StorySlotKey) => openStorySaves().read(slot),
     write: async (
       slot: StorySlotKey,
       state: StoryState,
       expected: number | null,
-    ) => await (await openStorySaves()).write(slot, state, expected),
-    list: async () => await (await openStorySaves()).list(),
+      binding: StoryBinding,
+    ) => openStorySaves().write(slot, state, expected, binding),
+    list: async () => openStorySaves().list(),
     clear: async (slot: StorySlotKey) => {
-      await (await openStorySaves()).clear(slot);
+      await openStorySaves().clear(slot);
     },
   };
 
@@ -182,6 +187,7 @@
      only until the story adopts it, so a later remount cannot replay it. */
   let handback: {
     readonly state: StoryState;
+    readonly story: StoryBinding;
     readonly resolution: StoryDuelResolution | null;
   } | null = null;
   let sessionHandoffId: string | null = null;
@@ -198,10 +204,10 @@
     onResolution: (resolution) => {
       /* `onRestore` always ran first: a resolution can only exist for a duel
          whose checkpoint this coordinator wrote or restored. */
-      if (handback !== null) handback = { state: handback.state, resolution };
+      if (handback !== null) handback = { ...handback, resolution };
     },
-    onRestore: (state) => {
-      handback = { state, resolution: null };
+    onRestore: (state, story) => {
+      handback = { state, story, resolution: null };
     },
   });
 
@@ -234,6 +240,7 @@
         label: request.label,
       },
       request.state,
+      request.story,
     );
     if (outcome !== "ready") sessionRequest = null;
     return outcome;
@@ -252,7 +259,8 @@
     try {
       const story = await import("../story/index.ts");
       if (gameplay === null) return null;
-      const deck = await story.encounterDeck(state, gameplay);
+      if (storyCards === null) return null;
+      const deck = await story.encounterDeck(state, storyCards);
       /* The battle module is asked for second and only when there is a deck to
          seat with it: a checkpoint naming no fieldable deck must not pay for
          the largest chunk in the build to learn that. */
@@ -508,7 +516,12 @@
     const installed = gameplay;
     const [catalogResult, screenResult, imagesResult] =
       await Promise.allSettled([
-        story.loadCollectionCatalog(installed),
+        import("./adapters/legacy-collection.ts").then(
+          ({ legacyCollectionInputs }) => {
+            const input = legacyCollectionInputs(installed);
+            return story.loadCollectionCatalog(input.cards, input.sets);
+          },
+        ),
         story.loadCollectionScreen(),
         reader === null
           ? Promise.resolve(null)
@@ -643,7 +656,12 @@
 >
   {#if route.kind === "home"}
     <div class="shell-region shell-region--home" data-cy="shell-region-home">
-      <MainMenuScreen {store} {coreGate} onfreeplaywarm={warmFreePlay} />
+      <MainMenuScreen
+        {saves}
+        {store}
+        {coreGate}
+        onfreeplaywarm={warmFreePlay}
+      />
     </div>
   {:else if route.kind === "install-content"}
     <div
@@ -745,25 +763,28 @@
   {:else if route.kind === "admin"}
     <div class="shell-region shell-region--admin" data-cy="shell-region-admin">
       {#await import("./admin/AdminConsole.svelte") then module}
-        <svelte:component this={module.default} {store} {gameplay} />
+        <svelte:component this={module.default} {store} {gameplay} {saves} />
       {:catch error}
         <DomainLoadError label="Developer console" cy="admin" {error} />
       {/await}
     </div>
   {:else if route.kind === "story"}
     <div class="shell-region shell-region--story" data-cy="shell-region-story">
-      {#if gameplay !== null}
+      {#if storyRelease !== null && storyCards !== null && saves !== null}
         {#await loaders.story() then module}
           <svelte:component
             this={module.default}
-            {gameplay}
-            reader={contentReader}
+            release={storyRelease}
+            cards={storyCards}
+            {saves}
+            media={storyMedia}
             imageSource={cardImages}
             onencounter={startEncounter}
             {storyEntryIntent}
             ondecks={() => store.navigate(deckRoute("story", null))}
             onmainmenu={() => store.navigate(HOME_ROUTE)}
             resumeState={handback?.state ?? null}
+            resumeStory={handback?.story ?? null}
             resolution={handback?.resolution ?? null}
             onhandled={() => {
               handback = null;
@@ -772,6 +793,12 @@
         {:catch error}
           <DomainLoadError label="Visual novel" cy="story" {error} />
         {/await}
+      {:else}
+        <DomainLoadError
+          label="Visual novel"
+          cy="story"
+          error={new Error("STORY_MIGRATION_FAILED")}
+        />
       {/if}
     </div>
   {:else if route.kind === "free-play" && matchRequest === null}

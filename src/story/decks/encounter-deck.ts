@@ -10,8 +10,8 @@
    empty or unrelated catalog calls installed cards missing, so every caller
    derives the catalog from that same exact content set. */
 
-import type { InstalledGameplay } from "../../content/index.ts";
-import { installedDeckCatalog } from "../../decks/index.ts";
+import type { Cards } from "../../cards/index.ts";
+import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
@@ -32,11 +32,11 @@ import { storyCardOwnership } from "./card-ownership.ts";
  */
 export async function encounterDeck(
   state: StoryState,
-  gameplay: InstalledGameplay,
+  cards: Cards,
 ): Promise<ValidatedDeckSnapshot | null> {
   const chosen = state.decks.find(({ id }) => id === state.defaultDeckId);
   if (chosen === undefined) return null;
-  const catalog = catalogByCode(installedDeckCatalog(gameplay).cards);
+  const catalog = catalogByCode(cardsDeckCatalog(cards));
   /* A reader over the save rather than the story's own `DeckRepository`: this
      resolves one deck and writes nothing, and the repository's other half is a
      dispatch-and-persist loop no read has any business holding. */

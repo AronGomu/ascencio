@@ -1,3 +1,9 @@
+import {
+  storyShellProps,
+  createStorySaveRepository,
+  resetStorySessionFixture,
+} from "../fixtures/story-session.ts";
+import { storyBindingFixture } from "../fixtures/story-release.ts";
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
 import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
@@ -100,15 +106,12 @@ import {
   type ShellStore,
 } from "../../src/shell/shell-store.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/story-save-contracts.ts";
+import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/index.ts";
 import type {
   StorySaveWriteResult,
   StorySlotKey,
-} from "../../src/story/saves/story-save-contracts.ts";
-import {
-  createStorySaveRepository,
-  type StorySaveRepository,
-} from "../../src/story/saves/story-save-repository.ts";
+} from "../../src/story/saves/index.ts";
+import type { GenerationSaveRepository as StorySaveRepository } from "../../src/story/saves/index.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 import { fieldableStoryDeck } from "../fixtures/story-decks.ts";
 
@@ -163,13 +166,13 @@ let checkpointWriteFailure: StorySaveWriteResult | null = null;
 function failableSaves(inner: StorySaveRepository): StorySaveRepository {
   return {
     read: (slot) => inner.read(slot),
-    write: (slot, state, expectedRevision) => {
+    write: (slot, state, expectedRevision, story) => {
       const failure = checkpointWriteFailure;
       if (failure !== null && slot === "checkpoint:pre-duel") {
         checkpointWriteFailure = null;
         return Promise.resolve(failure);
       }
-      return inner.write(slot, state, expectedRevision);
+      return inner.write(slot, state, expectedRevision, story);
     },
     list: () => inner.list(),
     clear: (slot) => inner.clear(slot),
@@ -183,6 +186,7 @@ function renderShell() {
     hash = next;
   });
   return render(AppShell, {
+    ...storyShellProps(),
     store,
     loaders,
     saves,
@@ -242,6 +246,7 @@ async function seedMapProgress(): Promise<void> {
       collection,
     },
     null,
+    storyBindingFixture(),
   );
 }
 
@@ -284,6 +289,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  resetStorySessionFixture();
   cleanup();
   localStorage.clear();
   mockedWorkerClientCtor.instances.length = 0;
@@ -354,6 +360,7 @@ describe("story duel handoff", () => {
         collection,
       },
       null,
+      storyBindingFixture(),
     );
     hash = `#/duel/session/${handoffId}`;
     renderShell();
@@ -452,6 +459,7 @@ describe("story duel handoff", () => {
         pendingHandoffId: handoffId,
       },
       null,
+      storyBindingFixture(),
     );
     hash = `#/duel/session/${handoffId}`;
     renderShell();

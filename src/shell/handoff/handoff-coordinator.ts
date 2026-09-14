@@ -14,7 +14,11 @@ import type { NavigateOptions } from "../shell-store.ts";
    the visual novel behind their dynamic imports: a value import of either
    public entry would pull `BattleFacade` or `StoryApp` into the entry chunk. */
 import type { BattleFacadeResult } from "../../battle/index.ts";
-import type { StorySaveRepository, StoryState } from "../../story/index.ts";
+import type { StoryState } from "../../story/index.ts";
+import type {
+  GenerationSaveRepository,
+  StoryBinding,
+} from "../../story/saves/index.ts";
 /* The one deep import the shell holds into the visual novel, for the same
    reason `src/shell/settings/shell-settings.ts` holds one into the duel: the
    entry that could legally carry these four functions also exports `StoryApp`,
@@ -37,13 +41,14 @@ export interface HandoffCoordinator {
   begin(
     intent: StoryEncounterIntent,
     state: StoryState,
+    story: StoryBinding,
   ): Promise<"ready" | "checkpoint-failed">;
   resume(handoffId: string): Promise<"restored" | "not-found">;
   settle(handoffId: string, result: BattleFacadeResult): void;
 }
 
 export function createHandoffCoordinator(deps: {
-  readonly saves: StorySaveRepository;
+  readonly saves: GenerationSaveRepository;
   readonly navigate: (route: AppRoute, options?: NavigateOptions) => void;
   readonly onResolution: (
     resolution: StoryDuelResolution,
@@ -51,12 +56,12 @@ export function createHandoffCoordinator(deps: {
   ) => void;
   /** The state the story should come back to: the checkpoint that was just
       verified, or the one a reload restored. */
-  readonly onRestore: (state: StoryState) => void;
+  readonly onRestore: (state: StoryState, story: StoryBinding) => void;
 }): HandoffCoordinator {
   let pending: PendingStoryDuel | null = null;
 
   return {
-    async begin(intent, state) {
+    async begin(intent, state, story) {
       /* Before anything is stored: an id the hash cannot carry would strand
          the player on a route no reload could ever resume. */
       try {
@@ -65,12 +70,23 @@ export function createHandoffCoordinator(deps: {
         return "checkpoint-failed";
       }
 
+      const binding = structuredClone(story);
       const checkpoint: StoryState = {
-        ...state,
+        ...structuredClone(state),
         encounterId: intent.encounterId,
         pendingHandoffId: intent.handoffId,
       };
-      const written = await deps.saves.write(CHECKPOINT, checkpoint, null);
+      const previous = await deps.saves.read(CHECKPOINT);
+      if (previous.kind === "corrupt" || previous.kind === "incompatible")
+        return "checkpoint-failed";
+      const expected =
+        previous.kind === "ready" ? previous.envelope.revision : 0;
+      const written = await deps.saves.write(
+        CHECKPOINT,
+        checkpoint,
+        expected,
+        binding,
+      );
       if (written.kind !== "written") return "checkpoint-failed";
 
       /* Verified, not assumed. A write that reported success and stored
@@ -89,7 +105,10 @@ export function createHandoffCoordinator(deps: {
         handoffId: intent.handoffId,
         encounterId: intent.encounterId,
       };
-      deps.onRestore(restoreStoryState(stored.envelope.state));
+      deps.onRestore(
+        restoreStoryState(stored.envelope.state),
+        stored.envelope.story,
+      );
       deps.navigate({
         kind: "duel-session",
         handoffId: routeHandoffId(intent.handoffId),
@@ -125,7 +144,7 @@ export function createHandoffCoordinator(deps: {
       }
 
       pending = { handoffId, encounterId: state.encounterId };
-      deps.onRestore(state);
+      if (stored.kind === "ready") deps.onRestore(state, stored.envelope.story);
       return "restored";
     },
 

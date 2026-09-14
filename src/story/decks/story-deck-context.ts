@@ -19,13 +19,13 @@ import { storyCardOwnership } from "./card-ownership.ts";
 import { createStoryDeckRepository } from "./story-deck-repository.ts";
 import { reduceStory } from "../model/story-reducer.ts";
 import type { StoryState } from "../model/story-state.ts";
-import {
-  storyChapterLabel,
-  type StorySaveEnvelope,
-  type StorySaveWriteResult,
-  type StorySlotKey,
-} from "../saves/story-save-contracts.ts";
-import type { StorySaveRepository } from "../saves/story-save-repository.ts";
+import { storyChapterLabel } from "../saves/story-save-contracts.ts";
+import type {
+  GenerationSaveRepository,
+  StorySaveEnvelope,
+  StorySaveWriteResult,
+  StorySlotKey,
+} from "../saves/generation-contracts.ts";
 
 /* The slots a player's own progress lives in, and the ones the title screen's
    Continue chooses between. `checkpoint:pre-duel` is deliberately absent: it is
@@ -42,11 +42,19 @@ const PLAYER_SLOTS: readonly StorySlotKey[] = ["manual:1", "autosave"];
  * the editor shows are the decks the next resumed session will duel with.
  */
 export async function openStoryDeckContext(
-  saves: StorySaveRepository,
+  saves: GenerationSaveRepository,
 ): Promise<DeckContext | null> {
   const results = await Promise.all(
     PLAYER_SLOTS.map(async (slot) => await saves.read(slot)),
   );
+  const failure = results.find(
+    (result) => result.kind === "corrupt" || result.kind === "incompatible",
+  );
+  if (failure?.kind === "corrupt") throw new DeckStorageError(failure.reason);
+  if (failure?.kind === "incompatible")
+    throw new DeckStorageError(
+      `Story save schema ${failure.found} is incompatible`,
+    );
   const [loaded] = results
     .flatMap((result) => (result.kind === "ready" ? [result.envelope] : []))
     .sort(
@@ -58,7 +66,7 @@ export async function openStoryDeckContext(
 }
 
 function storyDeckContext(
-  saves: StorySaveRepository,
+  saves: GenerationSaveRepository,
   loaded: StorySaveEnvelope,
 ): DeckContext {
   const slot = loaded.slot;
@@ -89,7 +97,7 @@ function storyDeckContext(
            an exception, and a refused write reported as success would leave
            the player looking at a deck their save does not have. */
         persist: async () => {
-          const result = await saves.write(slot, state, revision);
+          const result = await saves.write(slot, state, revision, loaded.story);
           if (result.kind !== "written")
             throw new DeckStorageError(writeFailure(result));
           revision = result.revision;

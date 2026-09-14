@@ -1,4 +1,7 @@
-import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
+import {
+  storyAppProps,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -67,6 +70,7 @@ async function flipWholePack(container: HTMLElement): Promise<void> {
 }
 
 afterEach(async () => {
+  resetStorySessionFixture();
   cleanup();
   localStorage.clear();
   await deleteDB(STORY_SAVES_DATABASE_NAME);
@@ -201,7 +205,7 @@ describe("opening more than one pack", () => {
 
   it("Open all remaining lands on the results list holding every card", async () => {
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: {
         ...createInitialStoryState(),
         screen: "shop-opening" as const,

@@ -35,9 +35,8 @@ export type {
   StorySaveSummary,
   StorySaveWriteResult,
   StorySlotKey,
-} from "./saves/story-save-contracts.ts";
-export { createStorySaveRepository } from "./saves/story-save-repository.ts";
-export type { StorySaveRepository } from "./saves/story-save-repository.ts";
+} from "./saves/generation-contracts.ts";
+export type { GenerationSaveRepository } from "./saves/generation-contracts.ts";
 /* The one constructor of a story deck context, and the reason the shell needs
    nothing else from here to bind the editor: the save the player would resume,
    the repository over it, what it owns and the name for the editor's banner all

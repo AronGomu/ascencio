@@ -14,7 +14,7 @@ import {
 } from "../model/story-state.ts";
 
 export const STORY_SAVES_DATABASE_NAME = "ygo-story-saves";
-export const STORY_SAVES_DATABASE_VERSION = 1;
+export const STORY_SAVES_DATABASE_VERSION = 2;
 export const STORY_SAVES_STORE_NAME = "saves";
 export const STORY_SAVE_SCHEMA_VERSION = 4;
 
@@ -90,7 +90,12 @@ export type StorySaveWriteResult =
     field, which `parseStorySaveEnvelope` checks against the key it was filed
     under. */
 export function createStorySaveStores(database: IDBDatabase): void {
-  database.createObjectStore(STORY_SAVES_STORE_NAME);
+  if (!database.objectStoreNames.contains(STORY_SAVES_STORE_NAME))
+    database.createObjectStore(STORY_SAVES_STORE_NAME);
+  if (!database.objectStoreNames.contains("generations"))
+    database.createObjectStore("generations", { keyPath: "generationId" });
+  if (!database.objectStoreNames.contains("generationSaves"))
+    database.createObjectStore("generationSaves");
 }
 
 const ENVELOPE_KEYS = [
@@ -525,7 +530,10 @@ function hasExactKeys(value: object, expected: readonly string[]): boolean {
 /* Carried over unchanged from the browser-storage record this replaced: a save
    is only resumable if every screen, beat index and map node in it is one the
    current content actually has. */
-function isStoryState(value: unknown): value is StoryState {
+export function isStoryState(
+  value: unknown,
+  beatCount = PROLOGUE.beats.length,
+): value is StoryState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as Record<string, unknown>;
   const screens = new Set<string>(STORY_SCREENS);
@@ -560,7 +568,7 @@ function isStoryState(value: unknown): value is StoryState {
     typeof state.progressExists !== "boolean" ||
     !Number.isSafeInteger(state.narrativeIndex) ||
     (state.narrativeIndex as number) < 0 ||
-    (state.narrativeIndex as number) >= PROLOGUE.beats.length ||
+    (state.narrativeIndex as number) >= beatCount ||
     !(
       state.lastInputId === null ||
       (Number.isSafeInteger(state.lastInputId) &&

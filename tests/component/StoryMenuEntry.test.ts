@@ -1,3 +1,9 @@
+import {
+  storyShellProps,
+  storyAppProps,
+  createStorySaveRepository,
+  resetStorySessionFixture,
+} from "../fixtures/story-session.ts";
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
 import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
@@ -11,8 +17,7 @@ import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
 import StoryApp from "../../src/story/StoryApp.svelte";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/story-save-contracts.ts";
-import { createStorySaveRepository } from "../../src/story/saves/story-save-repository.ts";
+import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/index.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 import { fieldableStoryDeck } from "../fixtures/story-decks.ts";
 
@@ -49,6 +54,7 @@ function renderShell() {
     hash = next;
   });
   return render(AppShell, {
+    ...storyShellProps(),
     store,
     loaders,
     initialCoreGate: READY_CORE_GATE,
@@ -105,6 +111,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  resetStorySessionFixture();
   cleanup();
   await deleteStorySaves();
 });
@@ -126,6 +133,9 @@ describe("the main menu's story entries", () => {
     const user = userEvent.setup();
     renderShell();
 
+    await vi.waitFor(() =>
+      expect(cy("main-menu-continue")).toHaveProperty("disabled", false),
+    );
     await user.click(await waitForCy("main-menu-continue"));
 
     await waitForCy("story-map-screen");
@@ -149,8 +159,7 @@ describe("the main menu's story entries", () => {
      duel result the player never sees, so the story refuses it on its own. */
   it("never opens an entry over a state handed back from a duel", async () => {
     render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
-      reader: contentReaderFixture(),
+      ...storyAppProps(),
       storyEntryIntent: "new",
       resumeState: {
         ...createInitialStoryState(),

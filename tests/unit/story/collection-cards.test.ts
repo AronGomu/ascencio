@@ -1,3 +1,4 @@
+import { legacyCollectionInputs } from "../../../src/shell/adapters/legacy-collection.ts";
 import { afterEach, describe, expect, it } from "vitest";
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
@@ -102,7 +103,10 @@ describe("loadCollectionCatalog", () => {
   it("degrades to inferred rarities when the shop data cannot be read", async () => {
     setRuntimeCatalogForTests(CARDS);
     const { cards, rarityByCode } = await loadCollectionCatalog(
-      installedGameplayFromCatalog(CARDS, { sets: Object.freeze([]) }),
+      legacyCollectionInputs(
+        installedGameplayFromCatalog(CARDS, { sets: Object.freeze([]) }),
+      ).cards,
+      [],
     );
     expect(cards.map(({ code }) => code).sort()).toEqual([4007, 4008, 4009]);
     expect(rarityByCode.get(4009)).toBe("secret-rare");

@@ -1,4 +1,7 @@
-import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
+import {
+  storyAppProps,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -12,6 +15,7 @@ import BoosterInventoryDialog from "../../../src/story/shop/BoosterInventoryDial
 import BoosterResultsScreen from "../../../src/story/shop/BoosterResultsScreen.svelte";
 
 afterEach(async () => {
+  resetStorySessionFixture();
   cleanup();
   await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
@@ -25,7 +29,7 @@ describe("BoosterOpening", () => {
       boosters: { a: 2, b: 1 },
     };
     const { container } = render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: shopState,
     });
     const chip = container.querySelector('[data-cy="story-top-bar-boosters"]');

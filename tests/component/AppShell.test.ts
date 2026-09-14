@@ -1,3 +1,8 @@
+import {
+  storyShellProps,
+  resetStorySessionFixture,
+} from "../fixtures/story-session.ts";
+import { storyBindingFixture } from "../fixtures/story-release.ts";
 import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -36,8 +41,8 @@ import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 import type {
   StorySaveReadResult,
   StorySlotKey,
-} from "../../src/story/saves/story-save-contracts.ts";
-import type { StorySaveRepository } from "../../src/story/saves/story-save-repository.ts";
+} from "../../src/story/saves/generation-contracts.ts";
+import type { GenerationSaveRepository as StorySaveRepository } from "../../src/story/saves/index.ts";
 
 /* The match setup reads the card database before it can offer a deck, and
    jsdom has no runtime assets to serve it. */
@@ -112,7 +117,8 @@ function savesHolding(
           ? {
               kind: "ready",
               envelope: {
-                schemaVersion: 4,
+                schemaVersion: 6,
+                story: storyBindingFixture(),
                 slot,
                 revision: 1,
                 savedAt: 1,
@@ -131,7 +137,8 @@ function checkpointFor(handoffId: string): StorySaveReadResult {
   return {
     kind: "ready",
     envelope: {
-      schemaVersion: 4,
+      schemaVersion: 6,
+      story: storyBindingFixture(),
       slot: "checkpoint:pre-duel",
       revision: 1,
       savedAt: 1,
@@ -166,7 +173,11 @@ function renderShell(props: {
   readonly loaders: DomainLoaders;
   readonly saves?: StorySaveRepository;
 }) {
-  return render(AppShell, { initialCoreGate: READY_CORE_GATE, ...props });
+  return render(AppShell, {
+    ...storyShellProps(),
+    initialCoreGate: READY_CORE_GATE,
+    ...props,
+  });
 }
 
 function renderAt(hash: string, domainLoaders: DomainLoaders = loaders) {
@@ -208,6 +219,7 @@ const defaultViewport = {
 };
 
 afterEach(() => {
+  resetStorySessionFixture();
   cleanup();
   resetBattleFacadeProps();
   /* The listing is held for the life of the page, so one test's library would
@@ -762,4 +774,16 @@ describe("AppShell", () => {
       document.querySelector('[data-cy="shell-region-decks"]'),
     ).not.toBeNull();
   });
+});
+
+it("refuses Story without selected semantic inputs instead of creating legacy binding", async () => {
+  const store = createShellStore("#/story", () => undefined);
+  const mounted = render(AppShell, {
+    store,
+    loaders,
+    initialCoreGate: READY_CORE_GATE,
+  });
+  await vi.waitFor(() =>
+    expect(mounted.container.textContent).toContain("STORY_MIGRATION_FAILED"),
+  );
 });

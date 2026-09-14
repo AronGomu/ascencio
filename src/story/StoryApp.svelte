@@ -1,12 +1,19 @@
 <script lang="ts">
   import { afterUpdate, getContext, onDestroy, onMount } from "svelte";
-  import {
-    loadInstalledImages,
-    type ContentReadPort,
-    type InstalledGameplay,
-    type InstalledImageLibrary,
-  } from "../content/index.ts";
-  import { PROLOGUE } from "./content/prologue.ts";
+  import type { Cards } from "../cards/index.ts";
+  import type {
+    StoryRelease,
+    StoryMedia,
+    StoryMediaLease,
+  } from "./ports/story-release.ts";
+  import { storySession } from "./ports/story-session.ts";
+  import type {
+    GenerationSaveRepository,
+    StoryBinding,
+    StorySaveReadResult,
+    StorySaveWriteResult,
+    StorySlotKey,
+  } from "./saves/generation-contracts.ts";
   import type { CardImageSource } from "../cards/images/index.ts";
   import {
     createInitialStoryState,
@@ -66,27 +73,34 @@
   } from "./shop/data/shop-set-data.ts";
   import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
   import { singlePriceDp } from "./shop/data/shop-pricing.ts";
-  import { installedDeckCatalog } from "../decks/index.ts";
+  import { cardsDeckCatalog } from "../decks/catalog/index.ts";
   import { catalogByCode } from "../decks/validation/index.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/index.ts";
   import { encounterDeck } from "./decks/encounter-deck.ts";
   import { buildInstalledStarterGrant } from "./decks/starter-grant.ts";
   import { preBattleDeckOptions } from "./decks/pre-battle-decks.ts";
-  import {
-    STORY_SLOT_KEYS,
-    type StorySaveReadResult,
-    type StorySaveWriteResult,
-    type StorySlotKey,
-  } from "./saves/story-save-contracts.ts";
-  import { createStorySaveRepository } from "./saves/story-save-repository.ts";
+  import { STORY_SLOT_KEYS } from "./saves/story-save-contracts.ts";
   /* Scoped to `.story-app`, so it travels with the component instead of
      leaking into the duel and deck editor the shell mounts beside it. */
   import "./styles.css";
 
   type Overlay = "history" | "settings" | "pause" | "save" | "load" | null;
 
-  export let gameplay: InstalledGameplay;
-  export let reader: ContentReadPort | null = null;
+  export let release: StoryRelease;
+  export let cards: Cards;
+  // Shell owns lifecycle lease; injected repository always addresses its generation.
+  export let saves: GenerationSaveRepository;
+  export let media: StoryMedia | null = null;
+  const { chapter, binding: initialBinding } = storySession(release);
+  export let resumeStory: StoryBinding | null = null;
+  let binding: StoryBinding = resumeStory ?? initialBinding;
+  $: document = release.chapters.find(
+    (chapter) => chapter.id === binding.chapterId,
+  )!.document!;
+  let manualBinding: StoryBinding | null = null;
+  let autosaveBinding: StoryBinding | null = null;
+  let manualRevision = 0;
+  let autosaveRevision = 0;
   export let imageSource: CardImageSource | null = null;
 
   /* The duel handoff, in three props. The story asks for an encounter and is
@@ -183,7 +197,6 @@
      handoff, which writes them without going through this screen. */
   const MANUAL_SLOT: StorySlotKey = "manual:1";
   const AUTOSAVE_SLOT: StorySlotKey = "autosave";
-  const saves = createStorySaveRepository(globalThis.indexedDB);
   /* Auto and Skip read their pacing from here; the settings overlay writes
      it. Reader preferences, so they live outside the save slots. */
   const playbackSettings = createStoryPlaybackSettingsStore();
@@ -195,7 +208,7 @@
       : entryIntent === null || entryIntent === "new"
         ? reduceStory(createInitialStoryState(), {
             type: "new-game",
-            starterGrant: buildInstalledStarterGrant(gameplay),
+            starterGrant: buildInstalledStarterGrant(chapter),
           })
         : createInitialStoryState();
   /* A restored checkpoint with no result to apply is a handoff that never
@@ -225,8 +238,12 @@
   let dirty = false;
   let inputId = 0;
   let focusedScreen: StoryScreen = state.screen;
-  let shopData: ShopSetData | null = installedShopSetData(gameplay);
-  let imageLibrary: InstalledImageLibrary | null = null;
+  let shopData: ShopSetData | null = installedShopSetData(
+    release.chapters.flatMap((chapter) => chapter.sets),
+  );
+  const mediaLeases: StoryMediaLease[] = [];
+  const mediaAbort = new AbortController();
+  let mapImageUrl: string | null = null;
   let imageError: string | null = null;
   let destroyed = false;
   let shopDataError: string | null = null;
@@ -234,7 +251,7 @@
   /* Full views, not a name/image projection: `resolveCardRarity` infers a
      rarity from ATK/type fields when the shop data misses a code. */
   let cardViewByCode: ReadonlyMap<number, DeckBuilderCardView> = catalogByCode(
-    installedDeckCatalog(gameplay).cards,
+    cardsDeckCatalog(cards),
   );
   /* Tracked as a flag rather than as `size > 0`, so a read that answered is
      never mistaken for one still in flight and retried on every flush. */
@@ -255,7 +272,8 @@
   onDestroy(() => {
     destroyed = true;
     stopPlaybackTimer();
-    imageLibrary?.dispose();
+    mediaAbort.abort();
+    mediaLeases.forEach((lease) => lease.release());
   });
 
   onMount(() => {
@@ -266,7 +284,11 @@
        The entry is applied after it, never beside it: Continue resumes the
        newer of the two player slots, and which one that is only exists once
        storage has answered. */
-    void hydrate().then(() => applyEntryIntent());
+    void hydrate()
+      .then(() => applyEntryIntent())
+      .catch((error: unknown) => {
+        storageOperationError = errorMessage(error);
+      });
     void loadImages().catch(() => {
       imageError = "Installed card images could not be read.";
     });
@@ -287,6 +309,12 @@
       saves.read(MANUAL_SLOT),
       saves.read(AUTOSAVE_SLOT),
     ]);
+    manualBinding = manual.kind === "ready" ? manual.envelope.story : null;
+    autosaveBinding =
+      autosave.kind === "ready" ? autosave.envelope.story : null;
+    manualRevision = manual.kind === "ready" ? manual.envelope.revision : 0;
+    autosaveRevision =
+      autosave.kind === "ready" ? autosave.envelope.revision : 0;
     manualState = manual.kind === "ready" ? manual.envelope.state : null;
     autosaveState = autosave.kind === "ready" ? autosave.envelope.state : null;
     latestSaveSlot = newerSlot(manual, autosave);
@@ -316,7 +344,7 @@
   function readProblem(result: StorySaveReadResult): string | null {
     if (result.kind === "corrupt") return `${result.slot}: ${result.reason}`;
     if (result.kind === "incompatible")
-      return `${result.slot}: save was written by a newer version (schema ${String(result.found)})`;
+      return `${result.slot}: save schema ${String(result.found)} is incompatible`;
     return null;
   }
 
@@ -436,12 +464,10 @@
       ? "the duel"
       : ENCOUNTER_LABELS[state.encounterId];
   $: beat =
-    PROLOGUE.beats[Math.min(state.narrativeIndex, PROLOGUE.beats.length - 1)]!;
+    document.beats[Math.min(state.narrativeIndex, document.beats.length - 1)]!;
   $: activeChoices =
-    state.narrativeIndex === 13 && state.choice === null
-      ? PROLOGUE.choices
-      : [];
-  $: historyEntries = PROLOGUE.beats
+    beat.id === "choice-pause" && state.choice === null ? document.choices : [];
+  $: historyEntries = document.beats
     .slice(0, state.narrativeIndex + 1)
     .map(({ speaker, text }) => ({ speaker, text }));
   /* Playback is driven from here rather than from a reactive statement: it
@@ -499,9 +525,9 @@
     }
     const halt = playbackHalt(playback, {
       hasChoices: activeChoices.length > 0,
-      atLastBeat: state.narrativeIndex >= PROLOGUE.beats.length - 1,
+      atLastBeat: state.narrativeIndex >= document.beats.length - 1,
       nextBeatRead: readBeats.has(
-        PROLOGUE.beats[state.narrativeIndex + 1]?.id ?? "",
+        document.beats[state.narrativeIndex + 1]?.id ?? "",
       ),
       skipUnread: $playbackSettings.skipUnread,
     });
@@ -523,32 +549,35 @@
 
   async function loadShopData(): Promise<void> {
     shopDataError = null;
-    shopData = installedShopSetData(gameplay);
+    shopData = installedShopSetData(
+      release.chapters.flatMap((chapter) => chapter.sets),
+    );
   }
 
   async function loadImages(): Promise<void> {
-    if (reader === null) return;
-    const loaded = await loadInstalledImages(reader, gameplay);
-    if (destroyed) {
-      loaded.dispose();
-      return;
-    }
-    imageLibrary?.dispose();
-    imageLibrary = loaded;
-    const data = installedShopSetData(gameplay);
-    shopData = {
-      ...data,
-      sets: data.sets.map((set) => ({
-        ...set,
-        imageUrl: loaded.setUrls.get(set.id) ?? null,
-      })),
+    if (media === null) return;
+    const retain = (lease: StoryMediaLease | null): string | null => {
+      if (lease === null) return null;
+      if (destroyed) {
+        lease.release();
+        return null;
+      }
+      mediaLeases.push(lease);
+      return lease.url;
     };
-    cardViewByCode = catalogByCode(
-      installedDeckCatalog(gameplay).cards.map((card) => ({
-        ...card,
-        imageUrl: loaded.cardUrls.get(card.code) ?? null,
+    mapImageUrl = retain(await media.acquireMap(chapter.id, mediaAbort.signal));
+    const data = installedShopSetData(
+      release.chapters.flatMap((chapter) => chapter.sets),
+    );
+    const sets = await Promise.all(
+      data.sets.map(async (set) => ({
+        ...set,
+        imageUrl: retain(
+          await media!.acquireSetImage(set.id, mediaAbort.signal),
+        ),
       })),
     );
+    if (!destroyed) shopData = { ...data, sets };
   }
 
   /**
@@ -563,7 +592,7 @@
    */
   function loadCatalog(): void {
     catalogError = null;
-    cardViewByCode = catalogByCode(installedDeckCatalog(gameplay).cards);
+    cardViewByCode = catalogByCode(cardsDeckCatalog(cards));
     catalogReady = true;
     catalogLoading = false;
   }
@@ -605,15 +634,16 @@
     overlay = null;
   }
   function dispatch(command: Parameters<typeof reduceStory>[1]): void {
-    const next = reduceStory(state, command);
+    const next = reduceStory(state, command, document);
     if (next !== state && !["continue", "load", "reset"].includes(command.type))
       dirty = true;
     state = next;
   }
   function newGame(): void {
+    binding = initialBinding;
     dispatch({
       type: "new-game",
-      starterGrant: buildInstalledStarterGrant(gameplay),
+      starterGrant: buildInstalledStarterGrant(chapter),
     });
   }
   /** Takes the one result this encounter is allowed to produce. A resolution
@@ -640,7 +670,8 @@
       player can leave through — and a checkpoint written from the state as it
       stands after that would record a screen they already walked away from. */
   async function beginHandoff(): Promise<void> {
-    const current = state;
+    const current = structuredClone(state);
+    const currentBinding = structuredClone(binding);
     const encounterId = current.encounterId;
     if (encounterId === null) {
       handoffError = HANDOFF_INTERRUPTED;
@@ -652,7 +683,7 @@
          null here is the same save answering differently — a card database
          that changed under it, or a retry reached from the outcome screen
          without ever passing the briefing. */
-      const deck = await encounterDeck(current, gameplay);
+      const deck = await encounterDeck(current, cards);
       if (deck === null) {
         handoffError = DECK_UNPLAYABLE;
         return;
@@ -661,6 +692,7 @@
         encounterId,
         label: ENCOUNTER_LABELS[encounterId],
         state: current,
+        story: currentBinding,
         deck,
       });
       if (outcome === "checkpoint-failed") handoffError = CHECKPOINT_FAILED;
@@ -718,13 +750,20 @@
         : latestSaveSlot === "autosave"
           ? autosaveState
           : (autosaveState ?? manualState);
-    if (snapshot !== null) resumeSnapshot(snapshot);
-    else dispatch({ type: "continue" });
+    if (snapshot !== null) {
+      binding =
+        (latestSaveSlot === "manual" ? manualBinding : autosaveBinding) ??
+        binding;
+      resumeSnapshot(snapshot);
+    } else dispatch({ type: "continue" });
   }
   function loadSlot(slot: "manual" | "autosave"): void {
     const snapshot = slot === "manual" ? manualState : autosaveState;
-    if (snapshot !== null) resumeSnapshot(snapshot);
-    else {
+    if (snapshot !== null) {
+      binding =
+        (slot === "manual" ? manualBinding : autosaveBinding) ?? binding;
+      resumeSnapshot(snapshot);
+    } else {
       state = reduceStory(state, { type: "load", slot });
       dirty = false;
     }
@@ -736,6 +775,7 @@
       storageOperationError = `Delete failed: ${errorMessage(error)}`;
       return false;
     }
+    manualRevision = 0;
     manualState = null;
     if (latestSaveSlot === "manual")
       latestSaveSlot = autosaveState === null ? null : "autosave";
@@ -755,7 +795,7 @@
     advanceBeat();
   }
   function advanceBeat(): void {
-    if (state.narrativeIndex >= PROLOGUE.beats.length - 1) {
+    if (state.narrativeIndex >= document.beats.length - 1) {
       dispatch({ type: "go-to-map" });
       return;
     }
@@ -774,8 +814,8 @@
       overlayTrigger =
         event?.currentTarget instanceof HTMLElement
           ? event.currentTarget
-          : document.activeElement instanceof HTMLElement
-            ? document.activeElement
+          : globalThis.document.activeElement instanceof HTMLElement
+            ? globalThis.document.activeElement
             : null;
     saveMode =
       value === "save"
@@ -791,17 +831,21 @@
   async function retryStorageAccess(): Promise<boolean> {
     return await hydrate();
   }
-  /* Both save paths overwrite unconditionally: the overlay already asked the
-     player to confirm, and this screen is the only writer of these two slots.
-     T19's checkpoint writes its own slot with an expected revision. */
+  /* CAS preserves newer tab writes even after local overwrite confirmation. */
   async function manualSave(): Promise<void> {
     if (storageOperationError !== null) {
       saveMode = "failure";
       return;
     }
-    const snapshot = { ...state, savedScreen: state.screen };
+    const snapshot = structuredClone({ ...state, savedScreen: state.screen });
+    const savedBinding = structuredClone(binding);
     saveMode = "saving";
-    const result = await saves.write(MANUAL_SLOT, snapshot, null);
+    const result = await saves.write(
+      MANUAL_SLOT,
+      snapshot,
+      manualRevision,
+      savedBinding,
+    );
     saveMode =
       result.kind === "written"
         ? toasts === undefined
@@ -809,6 +853,8 @@
           : "idle"
         : "failure";
     if (result.kind === "written") {
+      manualRevision = result.revision;
+      manualBinding = savedBinding;
       manualState = snapshot;
       latestSaveSlot = "manual";
       dirty = false;
@@ -828,8 +874,17 @@
       return;
     }
     autosaveStatus = "pending";
-    const snapshot = { ...state, savedScreen: "reward" as const };
-    const result = await saves.write(AUTOSAVE_SLOT, snapshot, null);
+    const snapshot = structuredClone({
+      ...state,
+      savedScreen: "reward" as const,
+    });
+    const savedBinding = structuredClone(binding);
+    const result = await saves.write(
+      AUTOSAVE_SLOT,
+      snapshot,
+      autosaveRevision,
+      savedBinding,
+    );
     autosaveStatus =
       result.kind === "written"
         ? toasts === undefined
@@ -837,6 +892,8 @@
           : "idle"
         : "failure";
     if (result.kind === "written") {
+      autosaveRevision = result.revision;
+      autosaveBinding = savedBinding;
       autosaveState = snapshot;
       latestSaveSlot = "autosave";
       dirty = false;
@@ -858,12 +915,20 @@
       blocking them, and a permission or quota that has since been fixed must
       not keep them there. */
   async function openDeckEditor(): Promise<void> {
-    const snapshot = { ...state, savedScreen: state.screen };
-    const result = await saves.write(AUTOSAVE_SLOT, snapshot, null);
+    const snapshot = structuredClone({ ...state, savedScreen: state.screen });
+    const savedBinding = structuredClone(binding);
+    const result = await saves.write(
+      AUTOSAVE_SLOT,
+      snapshot,
+      autosaveRevision,
+      savedBinding,
+    );
     if (result.kind !== "written") {
       storageOperationError = writeProblem(result);
       return;
     }
+    autosaveRevision = result.revision;
+    autosaveBinding = savedBinding;
     autosaveState = snapshot;
     latestSaveSlot = "autosave";
     dirty = false;
@@ -895,7 +960,9 @@
       return;
     }
     state = createInitialStoryState();
+    manualRevision = 0;
     manualState = null;
+    autosaveRevision = 0;
     autosaveState = null;
     latestSaveSlot = null;
     storageOperationError = null;
@@ -973,7 +1040,7 @@
         narrativeIndex={state.narrativeIndex}
         choices={activeChoices}
         selectedChoice={state.choice}
-        choiceResponse={state.narrativeIndex === 13
+        choiceResponse={beat.id === "choice-pause"
           ? state.choiceResponse
           : null}
         {playback}
@@ -985,6 +1052,7 @@
       />
     {:else if state.screen === "map"}
       <IllustratedMapScreen
+        imageUrl={mapImageUrl}
         locations={state.locations}
         returnLabel={storyScreenLabel(mapReturnTarget)}
         onselect={(locationId: LocationId) =>

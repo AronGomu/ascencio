@@ -2,6 +2,7 @@ import {
   CHOICE_RESPONSES,
   LATER_ACKNOWLEDGMENTS,
 } from "../content/prologue.ts";
+import type { StoryDocument } from "../ports/story-release.ts";
 import type { StarterGrant } from "../decks/starter-grant.ts";
 import {
   createInitialStoryState,
@@ -89,16 +90,18 @@ export type StoryCommand =
 export function reduceStory(
   state: StoryState,
   command: StoryCommand,
+  document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments">,
 ): StoryState {
   return rememberStoryStateTransition(
     state,
-    reduceStoryCommand(state, command),
+    reduceStoryCommand(state, command, document),
   );
 }
 
 function reduceStoryCommand(
   state: StoryState,
   command: StoryCommand,
+  document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments">,
 ): StoryState {
   switch (command.type) {
     case "new-game": {
@@ -144,7 +147,9 @@ function reduceStoryCommand(
       return {
         ...state,
         choice: command.choice,
-        choiceResponse: CHOICE_RESPONSES[command.choice],
+        choiceResponse: (document?.choiceResponses ?? CHOICE_RESPONSES)[
+          command.choice
+        ],
       };
     case "go-to-map":
       return {
@@ -152,7 +157,11 @@ function reduceStoryCommand(
         screen: "map",
         savedScreen: "map",
         laterAcknowledgment:
-          state.choice === null ? null : LATER_ACKNOWLEDGMENTS[state.choice],
+          state.choice === null
+            ? null
+            : (document?.laterAcknowledgments ?? LATER_ACKNOWLEDGMENTS)[
+                state.choice
+              ],
       };
     case "select-location": {
       if (state.screen !== "map") return state;

@@ -36,6 +36,7 @@ describe("IllustratedMapScreen", () => {
   it("distills the map to one hotspot per visible location", () => {
     const { container } = render(IllustratedMapScreen, {
       locations: states,
+      imageUrl: "blob:installed-map",
     });
 
     expect(

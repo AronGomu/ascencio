@@ -1,3 +1,13 @@
+import type {
+  StorySaveReadResult,
+  StorySlotKey,
+} from "../../../src/story/saves/index.ts";
+import {
+  storyShellProps,
+  createStorySaveRepository,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
+import { storyBindingFixture } from "../../fixtures/story-release.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -21,15 +31,8 @@ import {
   createInitialStoryState,
   type StoryState,
 } from "../../../src/story/model/story-state.ts";
-import {
-  STORY_SAVES_DATABASE_NAME,
-  type StorySaveReadResult,
-  type StorySlotKey,
-} from "../../../src/story/saves/story-save-contracts.ts";
-import {
-  createStorySaveRepository,
-  type StorySaveRepository,
-} from "../../../src/story/saves/story-save-repository.ts";
+import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/index.ts";
+import type { GenerationSaveRepository as StorySaveRepository } from "../../../src/story/saves/index.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
@@ -69,6 +72,7 @@ const READY_CORE_GATE = {
 };
 
 afterEach(async () => {
+  resetStorySessionFixture();
   cleanup();
   vi.restoreAllMocks();
   await Promise.all([
@@ -87,7 +91,8 @@ function savesHolding(state: StoryState | null): StorySaveRepository {
           ? {
               kind: "ready",
               envelope: {
-                schemaVersion: 4,
+                schemaVersion: 6,
+                story: storyBindingFixture(),
                 slot,
                 revision: 1,
                 savedAt: 1,
@@ -138,6 +143,7 @@ function renderAt(hash: string, state: StoryState | null = null) {
     current = next;
   });
   const rendered = render(AppShell, {
+    ...storyShellProps(),
     store,
     loaders,
     saves: savesHolding(state),
@@ -191,6 +197,7 @@ describe("deck editor context binding", () => {
       current = next;
     });
     render(AppShell, {
+      ...storyShellProps(),
       store,
       loaders: storyLoaders,
       saves,

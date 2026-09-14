@@ -18,11 +18,11 @@ C5. One writer per cwd; dependencies permit advisory parallel analysis, not shar
 
 ## Requirements
 
-- [ ] R1. Story owns document/release validation, shop set metadata, story binding, save generations. Remove ALL Content imports from Story including reducer/handoff/repository/collection type aliases, not only component props.
-- [ ] R2. Shell-owned story adapter reads staged Content and translates into StoryRelease/StoryMedia; StoryApp required release + generation repository inputs trusted. Missing optional map/set image returns null, never blocks narrative/shop.
-- [ ] R3. Copy-on-write generation prepares all five supported slots in one Story tx, seals only after complete parse/migration; active-generation startup verifies semantic descriptor rather than original mutable slot hashes. Preserve old generation/legacy raw slots; no selected active Story pointer.
-- [ ] R4. Forward migration preserves whole StoryState and story-owned decks/economy/checkpoints. narrativeIndex maps by semantic beat ID from stored source descriptor. Missing removed IDs or corrupt/future slot rejects whole migration; no dropped slot, starter grant, balance change.
-- [ ] R5. All manual/autosave/checkpoint/Story deck-editor/openStoryDeckContext/handoff/admin paths use injected generation repository. Normal writes require held Shell lifecycle lease; Story does not acquire Content locks or inspect manifests. Legacy save status visible, preserved.
+- [x] R1. Story owns document/release validation, shop set metadata, story binding, save generations. Remove ALL Content imports from Story including reducer/handoff/repository/collection type aliases, not only component props.
+- [x] R2. Shell-owned story adapter reads staged Content and translates into StoryRelease/StoryMedia; StoryApp required release + generation repository inputs trusted. Missing optional map/set image returns null, never blocks narrative/shop.
+- [x] R3. Copy-on-write generation prepares all five supported slots in one Story tx, seals only after complete parse/migration; active-generation startup verifies semantic descriptor rather than original mutable slot hashes. Preserve old generation/legacy raw slots; no selected active Story pointer.
+- [x] R4. Forward migration preserves whole StoryState and story-owned decks/economy/checkpoints. narrativeIndex maps by semantic beat ID from stored source descriptor. Missing removed IDs or corrupt/future slot rejects whole migration; no dropped slot, starter grant, balance change.
+- [x] R5. All manual/autosave/checkpoint/Story deck-editor/openStoryDeckContext/handoff/admin paths use injected generation repository. Normal writes require held Shell lifecycle lease; Story does not acquire Content locks or inspect manifests. Legacy save status visible, preserved.
 
 ## Inputs
 
@@ -310,9 +310,9 @@ Props implemented by Svelte component, no provider/lease/code prop. Pure preview
 
 ## TDD
 
-- [ ] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
-- [ ] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
-- [ ] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
+- [x] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
+- [x] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
+- [x] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
 
 ## Test plan
 
@@ -328,22 +328,34 @@ Props implemented by Svelte component, no provider/lease/code prop. Pure preview
 
 ## Impl steps
 
-- [ ] P1. Red: null map boots; all five slots copy; missing beat rejects; old bytes unchanged after abort/quota; Content import fixture fails. Verify: failures hit current coupled source.
-- [ ] P2. Create pure StoryRelease/parser/continuity validator, semantic map/set media ports; Shell adapter maps wire fields without implementing Story rules. Verify: shop rarity/printing metadata and defaults preserved.
-- [ ] P3. Add DB v2 generations/generationSaves stores without changing saves. Implement prepare/verifySeal/repository plus strict slot/descriptor validation. Verify: COW crash boundaries, stale CAS, no active pointer.
-- [ ] P4. Inject StoryApp and collection/shop/handoff/Story deck contexts; replace old read-only Shell save scanner by Story public saves entry where appropriate. Verify: every save path bound to same generation.
-- [ ] P5. Run migration/component tests and boundary enforcement. Expose narrow pure ports/saves/validation entries without eager Story UI. Verify: no runtime Content type or path in Story source.
+- [x] P1. Red: null map boots; all five slots copy; missing beat rejects; old bytes unchanged after abort/quota; Content import fixture fails. Verify: failures hit current coupled source.
+- [x] P2. Create pure StoryRelease/parser/continuity validator, semantic map/set media ports; Shell adapter maps wire fields without implementing Story rules. Verify: shop rarity/printing metadata and defaults preserved.
+- [x] P3. Add DB v2 generations/generationSaves stores without changing saves. Implement prepare/verifySeal/repository plus strict slot/descriptor validation. Verify: COW crash boundaries, stale CAS, no active pointer.
+- [x] P4. Inject StoryApp and collection/shop/handoff/Story deck contexts; replace old read-only Shell save scanner by Story public saves entry where appropriate. Verify: every save path bound to same generation.
+- [x] P5. Run migration/component tests and boundary enforcement. Expose narrow pure ports/saves/validation entries without eager Story UI. Verify: no runtime Content type or path in Story source.
 
 ## Validation
 
-- [ ] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
+- [x] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
 
 ```sh
 npx vitest run tests/unit/story/story-release.test.ts tests/unit/story/save-generations.test.ts tests/unit/story/story-save-repository.test.ts tests/component/story/installed-story.test.ts tests/unit/domain-boundaries.test.ts --reporter=verbose
 npm run typecheck
 ```
 
-- [ ] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
-- [ ] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
-- [ ] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
-- [ ] V5. Commit msg draft: `feat(story): stage forward saves without overwriting progress`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+- [x] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
+- [x] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
+- [x] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
+- [x] V5. Commit msg draft: `feat(story): stage forward saves without overwriting progress`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+
+## T6 execution evidence — retry0
+
+E1. Checked implementation; independent acceptance pending. Route: parent-registered `openai-codex/gpt-6-astra:high`; sole root writer, no children/commits/staging/push/deploy. Dependencies: T5 `8a0d513`, T4 `5c2ddff`, T1–T3 `e338808`.
+
+E2. Exact focused command: 5 files / 120 tests; affected Story/Shell/admin/data-cy: 68 files / 746 tests. `npm run typecheck`: 0 errors, 4 pre-existing warnings. Targeted ESLint/Prettier/diff/staging checks exit 0. Commands, exits, full output: `artifacts/T6-EVIDENCE/final-commands.json`. Initial named-test RED: `red-vitest.log` (exit 1, missing modules + forbidden Content fixture). Additional RED/green cycles cover malformed seals, concurrent prepare, producer metadata bounds, checkpoint binding, canonical abort.
+
+E3. Native Chromium: five copied slots, unchanged source, narrative index 8→9, active reopen after clear, rendered narrative, null-map placeholder→Old Arena briefing. `artifacts/T6-EVIDENCE/browser-native-result.json`, `browser-native-map.png`, `browser-native-trace.zip`. Optional null set media permits pack purchase (1000→850 DP) in component test.
+
+E4. R5 lifecycle boundary: parent explicitly approved intermediate refusal without selected release/generation. All consumers now take injected generation repository; final held-lease enforcement + production selector injection remain T9, not implemented here. Additional required `cards: Cards` consumer input approved; exact StoryRelease unchanged. Legacy free-play retains read-only Shell projection; no legacy binding bridge or legacy production save writer. Parent reply: `artifacts/T6-EVIDENCE/parent-decision.md`.
+
+E5. V3 inventory + assumptions + residuals + intentional file list: `artifacts/IMPLEMENTATION-REPORT-T6.md`, `artifacts/T6-EVIDENCE/swallowed-error-inventory.md`, `artifacts/T6-EVIDENCE/changed-files.json`. V5 draft retained verbatim; no commit authorized for this worker.

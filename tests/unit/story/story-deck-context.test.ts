@@ -17,8 +17,9 @@ import {
 } from "../../../src/story/saves/story-save-contracts.ts";
 import {
   createStorySaveRepository,
-  type StorySaveRepository,
-} from "../../../src/story/saves/story-save-repository.ts";
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
+import type { GenerationSaveRepository as StorySaveRepository } from "../../../src/story/saves/index.ts";
 
 /* The one place a story deck context is built, so this is where "which save is
    the editor about to write into" is decided. Driven against the real save
@@ -27,6 +28,7 @@ import {
    write as a successful save. */
 
 afterEach(async () => {
+  resetStorySessionFixture();
   await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
 
@@ -181,10 +183,10 @@ describe("openStoryDeckContext", () => {
     let refuse = true;
     const flaky: StorySaveRepository = {
       ...real,
-      write: (slot, state, revision) =>
+      write: (slot, state, revision, story) =>
         refuse
           ? Promise.resolve({ kind: "failed", reason: "quota" })
-          : real.write(slot, state, revision),
+          : real.write(slot, state, revision, story),
     };
     await seed("manual:1", saveState({ decks: [] }), 20);
     const context = await openStoryDeckContext(flaky);

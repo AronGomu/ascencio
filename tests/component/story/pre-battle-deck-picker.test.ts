@@ -1,4 +1,8 @@
-import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
+import {
+  storyAppProps,
+  createStorySaveRepository,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
@@ -14,7 +18,6 @@ import type {
 } from "../../../src/story/handoff/story-handoff.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
-import { createStorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
 import {
   TOAST_CONTEXT_KEY,
   type ToastPublisher,
@@ -30,6 +33,7 @@ import {
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 
 afterEach(async () => {
+  resetStorySessionFixture();
   cleanup();
   resetRuntimeCatalog();
   await deleteDB(STORY_SAVES_DATABASE_NAME);
@@ -501,7 +505,7 @@ describe("the briefing inside the story app", () => {
       (request: StoryEncounterRequest) => Promise<StoryHandoffOutcome>
     >(() => Promise.resolve("ready"));
     render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: preBattleSave(),
       onencounter,
     });
@@ -540,7 +544,7 @@ describe("the briefing inside the story app", () => {
   it("keeps the pick after a trip back to the map", async () => {
     installPrototypeActiveCatalog();
     render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: preBattleSave(),
     });
     await waitFor(() =>
@@ -576,7 +580,7 @@ describe("leaving the briefing for the deck editor", () => {
 
   async function blockedBriefing(ondecks: () => void) {
     render(StoryApp, {
-      gameplay: installedDuelGameplayFixture(),
+      ...storyAppProps(),
       resumeState: unsavedProgress(),
       ondecks,
     });

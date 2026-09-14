@@ -7,11 +7,7 @@
   import { storySaveExists } from "./story-save-presence.ts";
 
   export let store: ShellStore;
-  export let coreGate: CoreGate = {
-    kind: "ready",
-    chapterIds: ["chapter-01"],
-    generation: 1,
-  };
+  export let coreGate: CoreGate;
   /* Free play opens on a deck list, and reading that list means the whole
      packaged card database. Reported the moment a player reaches for the
      entry — pointer over it, or focus on it — so the read happens while they

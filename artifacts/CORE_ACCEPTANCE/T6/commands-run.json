@@ -1,0 +1,386 @@
+[
+  {
+    "command": "graphify query \"installed runtime worker content gate deck validation\"",
+    "result": "failed",
+    "summary": "Worktree graphify-out/graph.json absent; direct source inspection used."
+  },
+  {
+    "command": "npx vitest run tests/unit/installed-images.test.ts tests/unit/duel-worker-runtime.test.ts",
+    "result": "passed",
+    "summary": "Red: 6 regressions failed. Green: 34 passed. Expanded final focused suite below."
+  },
+  {
+    "command": "npx vitest run tests/unit/installed-worker-deck-validation.test.ts",
+    "result": "passed",
+    "summary": "Red: 12 failed; green: 12 passed; both seats assert createDuel=0."
+  },
+  {
+    "command": "npx vitest run tests/unit/admin-actions.test.ts tests/component/AdminConsole.test.ts",
+    "result": "passed",
+    "summary": "26 passed after installed-default seeding fix; red-admin.txt captures failure."
+  },
+  {
+    "command": "npx vitest run tests/unit/core-gate.test.ts",
+    "result": "passed",
+    "summary": "11 passed; red-reader.txt captures 4 close regressions."
+  },
+  {
+    "command": "npx vitest run tests/component/BattleFacade.test.ts",
+    "result": "passed",
+    "summary": "Diagnostic red/green; final 22 facade tests pass within full components."
+  },
+  {
+    "command": "npx vitest run tests/component/core-menu.test.ts",
+    "result": "passed",
+    "summary": "6 passed; late-owned-reader red/green."
+  },
+  {
+    "command": "npx vitest run tests/unit/installed-runtime-receipt-validation.test.ts",
+    "result": "passed",
+    "summary": "4 passed; forged asset/engine/runtime digest/length regressions."
+  },
+  {
+    "command": "npx vitest run tests/unit/duel-state-projector.test.ts tests/integration/installed-runtime-wasm.test.ts",
+    "result": "passed",
+    "summary": "Token location-0 red/green; legal Scapegoat resolves four Sheep Tokens on exact WASM."
+  },
+  {
+    "command": "npx vitest run tests/unit/installed-worker-deck-validation.test.ts tests/unit/duel-worker-runtime.test.ts tests/unit/duel-state-projector.test.ts tests/unit/core-gate.test.ts tests/unit/admin-actions.test.ts tests/unit/installed-images.test.ts tests/unit/installed-runtime-receipt-validation.test.ts tests/unit/domain-boundaries.test.ts tests/unit/snapshot-store.test.ts tests/integration/installed-runtime.test.ts tests/integration/installed-runtime-wasm.test.ts",
+    "result": "passed",
+    "summary": "Final 11 files / 186 tests passed."
+  },
+  {
+    "command": "npm run check:headless",
+    "result": "failed",
+    "summary": "Stopped at formatting; remaining constituent gates run separately."
+  },
+  {
+    "command": "npm run format:check",
+    "result": "failed",
+    "summary": "Only pre-existing untouched e2e/asset-root-urls.spec.ts remains unformatted."
+  },
+  {
+    "command": "xargs -d '\\n' npx prettier --check < .tmp/format-paths.txt",
+    "result": "passed",
+    "summary": "All intentional changed/new source/test/config paths formatted; scratch path removed after validation."
+  },
+  {
+    "command": "npm run lint",
+    "result": "passed",
+    "summary": "Final ESLint clean."
+  },
+  {
+    "command": "npm run typecheck",
+    "result": "passed",
+    "summary": "0 errors; 5 existing Svelte warnings."
+  },
+  {
+    "command": "npm run test:legacy",
+    "result": "passed",
+    "summary": "172 passed."
+  },
+  {
+    "command": "npm run test:unit",
+    "result": "failed",
+    "summary": "178 files / 2217 tests passed; 12 files failed due absent legacy source/media/readiness inputs; 7 skipped."
+  },
+  {
+    "command": "npx vitest run tests/unit/decks/deck-catalog-performance.test.ts",
+    "result": "passed",
+    "summary": "9 passed; invoked separately because unit wrapper stopped before performance stage."
+  },
+  {
+    "command": "npm run test:integration",
+    "result": "failed",
+    "summary": "3 files / 13 tests passed; 17 files failed from absent legacy assets; 28 skipped. Latest exact-runtime focused suite passes."
+  },
+  {
+    "command": "npm run test:component",
+    "result": "passed",
+    "summary": "Final 131 files / 1229 tests passed."
+  },
+  {
+    "command": "npm run vendor:verify",
+    "result": "passed",
+    "summary": "Frozen ocgcore-wasm@0.1.2, 21 files verified."
+  },
+  {
+    "command": "npm run assets:verify",
+    "result": "failed",
+    "summary": "Missing assets/shared/data/current/manifest.json."
+  },
+  {
+    "command": "npm run assets:sets:verify",
+    "result": "failed",
+    "summary": "Missing assets/shared/set-images/manifest.json."
+  },
+  {
+    "command": "npm run assets:images:verify",
+    "result": "failed",
+    "summary": "Missing generated/card-images/archive/download-report.json."
+  },
+  {
+    "command": "npm run snapshot:verify",
+    "result": "failed",
+    "summary": "Missing assets/shared/data/current/manifest.json."
+  },
+  {
+    "command": "npm run content:setup:verify",
+    "result": "failed",
+    "summary": "codeReady=false/publishReady=false; missing source coverage, license/host/device evidence; no remote actions."
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npm run build",
+    "result": "passed",
+    "summary": "Private build verification: shell 109989, Worker 156376, battle 306739, editor 162809, story 157933 bytes."
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npm run build:reproducible",
+    "result": "passed",
+    "summary": "105 identical output files."
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npx playwright test -c playwright.content.config.ts --project=chromium",
+    "result": "passed",
+    "summary": "Final 12 passed; negative seats createDuel=0, same-Worker calibration=1 with terminal surrender, valid UI surrender."
+  },
+  {
+    "command": "npm run test:core",
+    "result": "passed",
+    "summary": "8 source-only Chromium checks passed."
+  },
+  {
+    "command": "npm run test:e2e -- --project=chromium",
+    "result": "failed",
+    "summary": "Legacy webServer cannot pass snapshot verification; missing legacy manifest."
+  },
+  {
+    "command": "npm run test:acceptance",
+    "result": "failed",
+    "summary": "Legacy webServer cannot pass snapshot verification; missing legacy manifest."
+  },
+  {
+    "command": "git diff --check",
+    "result": "passed",
+    "summary": "No whitespace errors."
+  },
+  {
+    "command": "git diff --cached --name-only",
+    "result": "passed",
+    "summary": "Empty; no staged files."
+  },
+  {
+    "command": "git diff --quiet -- vendor/ocgcore-wasm/0.1.2",
+    "result": "passed",
+    "summary": "Frozen vendor unchanged."
+  },
+  {
+    "command": "git diff --quiet -- e2e/asset-root-urls.spec.ts",
+    "result": "passed",
+    "summary": "Remaining formatter failure path untouched."
+  },
+  {
+    "command": "graphify query \"installed image lease ownership Battle DeckEditor AppShell collection lifecycle\"",
+    "result": "failed",
+    "summary": "graphify-out/graph.json absent; direct source inspection used.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/../final-review-ledger.md"
+  },
+  {
+    "command": "npx vitest run tests/unit/installed-battle-images.test.ts tests/component/deck-editor/installed-image-teardown.test.ts tests/component/collection-image-teardown.test.ts tests/component/installed-free-play.test.ts tests/component/AdminConsole.test.ts",
+    "result": "failed",
+    "summary": "TDD red: 10 failed, 14 passed.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/red.txt"
+  },
+  {
+    "command": "npx vitest run tests/component/deck-select/deck-select-screen.test.ts",
+    "result": "failed",
+    "summary": "TDD read-only red: 2 failed, 26 passed.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/red-read-only.txt"
+  },
+  {
+    "command": "npx vitest run tests/unit/installed-battle-images.test.ts tests/component/deck-editor/installed-image-teardown.test.ts tests/component/collection-image-teardown.test.ts tests/component/installed-free-play.test.ts tests/component/AdminConsole.test.ts tests/component/deck-select tests/unit/shell/free-play-deck-tiles.test.ts tests/unit/shell/free-play-deck-actions.test.ts tests/unit/story/pre-battle-tiles.test.ts tests/component/story/pre-battle-deck-picker.test.ts",
+    "result": "passed",
+    "summary": "17 files, 178 tests passed.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/green-focused.txt"
+  },
+  {
+    "command": "npx vitest run tests/unit/installed-worker-deck-validation.test.ts tests/unit/duel-worker-runtime.test.ts tests/unit/duel-state-projector.test.ts tests/unit/core-gate.test.ts tests/unit/admin-actions.test.ts tests/unit/installed-images.test.ts tests/unit/installed-battle-images.test.ts tests/unit/installed-runtime-receipt-validation.test.ts tests/unit/domain-boundaries.test.ts tests/unit/snapshot-store.test.ts tests/integration/installed-runtime.test.ts tests/integration/installed-runtime-wasm.test.ts tests/component/deck-editor/installed-image-teardown.test.ts tests/component/collection-image-teardown.test.ts",
+    "result": "passed",
+    "summary": "Final 14 files, 195 tests passed; exact installed real-WASM/security/lifecycle coverage.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/final-focused.txt"
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npx playwright test -c playwright.content-built.config.ts --project=chromium",
+    "result": "failed",
+    "summary": "Initial harness asserted producer ObjectRef key against bootstrap digest/length; corrected to contract.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/built-chromium.txt"
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npx playwright test -c playwright.content-built.config.ts --project=chromium",
+    "result": "passed",
+    "summary": "2 passed root/subpath, first black-box built proof.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/built-chromium-2.txt"
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npx playwright test -c playwright.content-built.config.ts --project=chromium",
+    "result": "passed",
+    "summary": "2 passed root/subpath; includes Worker resource URLs, 38 hashed JS files each, no source URLs, terminal surrender, automatic scratch teardown.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/built-chromium-final.txt"
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npx playwright test -c playwright.content.config.ts --project=chromium",
+    "result": "passed",
+    "summary": "12 passed; calibrated source Worker rejection + valid terminal, installed UI terminal.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/source-content-chromium.txt"
+  },
+  {
+    "command": "env -u CONTENT_RUN PLAYWRIGHT_JSON_OUTPUT_FILE=artifacts/CORE_ACCEPTANCE/T6/core-source-playwright-report.json npx playwright test -c playwright.core.config.ts --project=chromium --output=artifacts/CORE_ACCEPTANCE/T6/core-source-test-results --reporter=line,json",
+    "result": "passed",
+    "summary": "8 passed; root/subpath source-only CORE gates, offline executable shell.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/source-core-chromium.txt"
+  },
+  {
+    "command": "npm run check:headless",
+    "result": "failed",
+    "summary": "Untouched e2e/asset-root-urls.spec.ts Prettier failure; later gates run independently.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/check-headless.txt"
+  },
+  {
+    "command": "npm run format:check",
+    "result": "failed",
+    "summary": "Untouched e2e/asset-root-urls.spec.ts is sole formatting failure.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/final-format.txt"
+  },
+  {
+    "command": "npx prettier --check e2e-content/real-installer.spec.ts eslint.config.js playwright.content.config.ts scripts/lib/content-setup-decks.ts scripts/lib/domain-chunk-closure.ts src/battle/BattleFacade.svelte src/battle/app/App.svelte src/battle/app/DuelWorkerClient.ts src/battle/app/components/DeckPicker.svelte src/battle/app/images/card-image-cache.ts src/battle/app/presentation/immutable-choice-id-set.ts src/battle/app/stores/duel-store.ts src/battle/decks/selectable-decks.ts src/battle/duel/contracts/duel-command.ts src/battle/index.ts src/battle/worker/DuelWorkerRuntime.ts src/battle/worker/assets/browser-runtime-assets.ts src/battle/worker/create-browser-runtime.ts src/battle/worker/create-node-runtime.ts src/battle/worker/decks/resolve-duel-decks.ts src/battle/worker/projection/DuelStateProjector.ts src/content/content-api.ts src/content/index.ts src/content/storage/content-reader.ts src/deck-editor/DeckEditorApp.svelte src/deck-editor/components/deck-library-tiles.ts src/deck-select/DeckSelectScreen.svelte src/deck-select/DeckTile.svelte src/deck-select/DeckTileMenu.svelte src/deck-select/deck-select-contracts.ts src/decks/starter-deck.ts src/shell/AppShell.svelte src/shell/admin/AdminConsole.svelte src/shell/admin/admin-actions.ts src/shell/core/core-gate.ts src/shell/domain-loaders.ts src/shell/routes.ts src/shell/screens/FreePlayMatchSetup.svelte src/shell/screens/InstallContentScreen.svelte src/shell/screens/MainMenuScreen.svelte src/shell/screens/free-play-deck-actions.ts src/shell/screens/free-play-deck-listing.ts src/shell/screens/free-play-deck-tiles.ts src/shell/screens/free-play-opponents.ts src/story/StoryApp.svelte src/story/collection/collection-cards.ts src/story/decks/encounter-deck.ts src/story/decks/pre-battle-decks.ts src/story/decks/pre-battle-tiles.ts src/story/decks/starter-grant.ts src/story/model/story-reducer.ts src/story/screens/PreBattleScreen.svelte src/story/shop/data/shop-set-data.ts tests/component/AdminConsole.test.ts tests/component/AppBoardMapping.test.ts tests/component/AppChrome.test.ts tests/component/AppLocalDecks.test.ts tests/component/AppShell.test.ts tests/component/BattleFacade.test.ts tests/component/DeckPicker.test.ts tests/component/FreePlayMatchSetup.test.ts tests/component/FreePlayUniqueOwner.test.ts tests/component/MainMenuScreen.test.ts tests/component/StoryDuelHandoff.test.ts tests/component/StoryMenuEntry.test.ts tests/component/content-installer.test.ts tests/component/core-menu.test.ts tests/component/deck-editor/deck-delete-failure.test.ts tests/component/deck-editor/deck-editor-blocked.test.ts tests/component/deck-editor/deck-editor-shell.test.ts tests/component/deck-editor/deck-favourites.test.ts tests/component/deck-editor/deck-library-order.test.ts tests/component/deck-editor/deck-migration-error.test.ts tests/component/deck-editor/deck-ownership-legality.test.ts tests/component/deck-editor/deck-route.test.ts tests/component/deck-editor/default-deck.test.ts tests/component/deck-editor/editor-context.test.ts tests/component/deck-editor/owned-only-catalog.test.ts tests/component/deck-editor/token-cards.test.ts tests/component/deck-select/deck-select-screen.test.ts tests/component/deck-select/deck-tile-menu.test.ts tests/component/deck-select/deck-tile.test.ts tests/component/deck-select/hover-previews.test.ts tests/component/deck-select/seat-panel.test.ts tests/component/deck-select/tile-builder.ts tests/component/story/BattleHandoff.test.ts tests/component/story/BoosterOpening.test.ts tests/component/story/StoryApp.test.ts tests/component/story/StoryPlayback.test.ts tests/component/story/booster-open-all.test.ts tests/component/story/pre-battle-deck-picker.test.ts tests/component/story/single-pack-reveal.test.ts tests/fixtures/BattleFacadeProbe.svelte tests/fixtures/DeckEditorProbe.svelte tests/fixtures/node-duel-worker-harness.ts tests/integration/custom-deck-duel.test.ts tests/integration/duel-replay-restore.test.ts tests/integration/node-worker-thread.test.ts tests/integration/worker-runtime.test.ts tests/unit/admin-actions.test.ts tests/unit/browser-runtime-assets.test.ts tests/unit/chapter-one-decks.test.ts tests/unit/contracts.test.ts tests/unit/core-gate.test.ts tests/unit/data-cy-coverage.test.ts tests/unit/deck-editor/deck-library-tiles.test.ts tests/unit/deck-select/order-deck-tiles.test.ts tests/unit/domain-boundaries.test.ts tests/unit/duel-state-projector.test.ts tests/unit/duel-store.test.ts tests/unit/duel-worker-attachment.test.ts tests/unit/duel-worker-client.test.ts tests/unit/duel-worker-runtime.test.ts tests/unit/shell/free-play-deck-actions.test.ts tests/unit/shell/free-play-deck-tiles.test.ts tests/unit/shell/free-play-opponents.test.ts tests/unit/shell/story-battle-request.test.ts tests/unit/story/collection-cards.test.ts tests/unit/story/encounter-deck.test.ts tests/unit/story/new-game-grant.test.ts tests/unit/story/pre-battle-decks.test.ts tests/unit/story/pre-battle-tiles.test.ts tests/unit/story/story-boundaries.test.ts tests/unit/story/story-decks.test.ts tests/unit/story/story-state.test.ts e2e-content/built-installer.spec.ts playwright.content-built.config.ts scripts/content-built-teardown.ts src/battle/decks/installed-selectable-decks.ts src/battle/worker/assets/installed-runtime-dependencies.ts src/content/contracts/owned-content-reader.ts src/content/load-installed-images.ts src/shell/handoff/handoff-request.ts tests/component/collection-image-teardown.test.ts tests/component/deck-editor/installed-catalog-boot.test.ts tests/component/deck-editor/installed-catalog.test.ts tests/component/deck-editor/installed-image-teardown.test.ts tests/component/installed-free-play.test.ts tests/fixtures/exact-installed-runtime.ts tests/fixtures/installed-duel-gameplay.ts tests/fixtures/installed-gameplay.ts tests/integration/installed-runtime-wasm.test.ts tests/integration/installed-runtime.test.ts tests/unit/installed-battle-images.test.ts tests/unit/installed-duel-command.test.ts tests/unit/installed-free-play.test.ts tests/unit/installed-images.test.ts tests/unit/installed-runtime-receipt-validation.test.ts tests/unit/installed-worker-deck-validation.test.ts",
+    "result": "passed",
+    "summary": "All 149 changed/new source files pass formatting; paths enumerated in changed-files.json.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/changed-source-format.txt"
+  },
+  {
+    "command": "npm run test:component",
+    "result": "failed",
+    "summary": "131 files/1232 tests passed; 2 stale Bundled assertions updated.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/full-components.txt"
+  },
+  {
+    "command": "npm run test:component",
+    "result": "failed",
+    "summary": "132 files/1233 tests passed; StoryMenuEntry timeout.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/full-components-2.txt"
+  },
+  {
+    "command": "npm run test:component",
+    "result": "passed",
+    "summary": "133 files/1234 tests passed. No Story source changes for timeout retry.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/full-components-3.txt"
+  },
+  {
+    "command": "npx vitest run tests/component/StoryMenuEntry.test.ts",
+    "result": "passed",
+    "summary": "4 passed on isolated retry.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/story-menu-retry.txt"
+  },
+  {
+    "command": "npm run test:unit",
+    "result": "failed",
+    "summary": "179 files/2225 tests passed; 12 files/11 tests failed, 7 skipped. Missing legacy inputs.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/full-unit.txt"
+  },
+  {
+    "command": "npx vitest run tests/unit/decks/deck-catalog-performance.test.ts",
+    "result": "passed",
+    "summary": "9 passed.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/performance.txt"
+  },
+  {
+    "command": "npm run test:integration",
+    "result": "failed",
+    "summary": "3 files/14 tests passed; 17 files/11 tests failed, 28 skipped. Missing legacy inputs.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/full-integration.txt"
+  },
+  {
+    "command": "npm run test:legacy",
+    "result": "passed",
+    "summary": "172 passed.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/legacy-node.txt"
+  },
+  {
+    "command": "npm run lint",
+    "result": "failed",
+    "summary": "Initial lint scanned generated subpath dist; scratch cleanup/global teardown fixes test-output pollution.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/lint.txt"
+  },
+  {
+    "command": "npm run lint",
+    "result": "passed",
+    "summary": "Final ESLint clean after generated scratch removed.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/final-lint.txt"
+  },
+  {
+    "command": "npm run typecheck",
+    "result": "passed",
+    "summary": "0 errors, 5 existing Svelte warnings.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/final-typecheck.txt"
+  },
+  {
+    "command": "npm run vendor:verify",
+    "result": "passed",
+    "summary": "21 frozen vendor files verified.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/vendor-verify.txt"
+  },
+  {
+    "command": "npm run build:verify",
+    "result": "failed",
+    "summary": "Missing CONTENT_RUN env against private installed dist: Error: CORE build invented a content delivery pin.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/build-verify.txt"
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npm run build:verify",
+    "result": "passed",
+    "summary": "Exact env: build closure/domain budgets pass; emitted Worker DbNnsZT5.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/build-verify-exact.txt"
+  },
+  {
+    "command": "CONTENT_RUN=generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807 npm run build:reproducible",
+    "result": "passed",
+    "summary": "105 files reproducible.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/build-reproducible.txt"
+  },
+  {
+    "command": "npm run assets:verify",
+    "result": "failed",
+    "summary": "Missing assets/shared/data/current/manifest.json; no fixture reconstruction attempted.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/assets-verify.txt"
+  },
+  {
+    "command": "npm run snapshot:verify",
+    "result": "failed",
+    "summary": "Missing assets/shared/data/current/manifest.json; no fixture reconstruction attempted.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/snapshot-verify.txt"
+  },
+  {
+    "command": "npm run test:e2e -- --project=chromium",
+    "result": "failed",
+    "summary": "Missing assets/shared/data/current/manifest.json; no fixture reconstruction attempted.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/legacy-e2e.txt"
+  },
+  {
+    "command": "npm run test:acceptance -- --project=chromium",
+    "result": "failed",
+    "summary": "Missing assets/shared/data/current/manifest.json; no fixture reconstruction attempted.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/legacy-acceptance.txt"
+  },
+  {
+    "command": "node --input-type=module -e 'import teardown from \"./scripts/content-built-teardown.ts\"; await teardown();'",
+    "result": "passed",
+    "summary": "Removed only owned generated subpath build; final Playwright global teardown also verified.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/cleanup-built.txt"
+  },
+  {
+    "command": "git diff --check; git diff --cached --name-only; git diff --name-only -- vendor",
+    "result": "passed",
+    "summary": "No whitespace errors, no staged paths, vendor diff empty.",
+    "evidence": "artifacts/CORE_ACCEPTANCE/T6/final-review/final-git-checks.txt"
+  }
+]

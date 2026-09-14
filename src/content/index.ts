@@ -1,3 +1,4 @@
+export type { OwnedContentReader } from "./contracts/owned-content-reader.ts";
 export type { ChapterId } from "./contracts/chapter-id.ts";
 export type {
   CoreBootstrap,
@@ -28,6 +29,8 @@ export type { PackedFile } from "./contracts/packed-file.ts";
 export type { ContentManifest } from "./contracts/content-manifest.ts";
 export type { ContentSetRef } from "./contracts/content-set-ref.ts";
 export type { InstalledContentSet } from "./contracts/installed-content-set.ts";
+export type { InstalledGameplay } from "./contracts/installed-gameplay.ts";
+export type { InstalledAssetLease } from "./contracts/installed-asset-lease.ts";
 export type { ContentFailureCode } from "./contracts/content-failure-code.ts";
 export type { ContentFailure } from "./contracts/content-failure.ts";
 export type { ContentResult } from "./contracts/content-result.ts";
@@ -50,6 +53,12 @@ export { parseContentManifest } from "./parsers/content-manifest.ts";
 export { parseChapterGameplay } from "./parsers/chapter-gameplay.ts";
 export { parseChapterStoryDocument } from "./parsers/chapter-story-document.ts";
 export { contentObjectUrl } from "./content-object-url.ts";
+export { loadInstalledGameplay } from "./load-installed-gameplay.ts";
+export {
+  loadInstalledImages,
+  type InstalledImageLibrary,
+} from "./load-installed-images.ts";
+export { acquireInstalledAsset } from "./acquire-installed-asset.ts";
 export {
   ZIP_PART_MAX_BYTES,
   ZIP_PART_MAX_UNPACKED_BYTES,
@@ -59,3 +68,12 @@ export {
   CONTENT_CACHE_NAME,
   CONTENT_INSTALLER_LOCK,
 } from "./content-constants.ts";
+
+export type { DownloadJob } from "./contracts/download-job.ts";
+export type { PersistedDownloadJob } from "./contracts/persisted-download-job.ts";
+export type { InstallReceipt } from "./contracts/install-receipt.ts";
+export type { ContentInstaller } from "./contracts/content-installer.ts";
+export type { SavedContentRefsPort } from "./contracts/saved-content-refs-port.ts";
+export type { RuntimeReceiptFile } from "./contracts/runtime-receipt-file.ts";
+export type { InstalledRuntimeReceipt } from "./contracts/installed-runtime-receipt.ts";
+export { createContentInstaller, openContentReader } from "./content-api.ts";

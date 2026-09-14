@@ -1,10 +1,9 @@
+import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 import "fake-indexeddb/auto";
 
 import { openDB } from "idb";
 import { describe, expect, it, vi } from "vitest";
-import { DECK_SOURCES } from "../../src/battle/duel/presets/deck-sources-browser.ts";
 import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
-import { reviewedCardPool } from "../../src/battle/duel/presets/reviewed-card-pool.ts";
 import {
   ADMIN_ROUTES,
   ADMIN_STORAGE_TARGETS,
@@ -134,16 +133,19 @@ describe("resetStorageTarget", () => {
 });
 
 describe("buildAdminTestDeck", () => {
-  it("returns 40 main cards drawn from the bundled preset pool", () => {
-    const pool = reviewedCardPool(DECK_SOURCES);
-    const deck = buildAdminTestDeck();
+  it("returns installed default deck, without bundled preset access", () => {
+    const gameplay = installedGameplayFixture();
+    const pool = new Set(gameplay.cards.map(({ code }) => code));
+    const deck = buildAdminTestDeck(installedGameplayFixture());
     expect(deck.main).toHaveLength(40);
     for (const code of [...deck.main, ...deck.extra, ...deck.side])
       expect(pool.has(code)).toBe(true);
   });
 
   it("is stable across calls", () => {
-    expect(buildAdminTestDeck()).toEqual(buildAdminTestDeck());
+    expect(buildAdminTestDeck(installedGameplayFixture())).toEqual(
+      buildAdminTestDeck(installedGameplayFixture()),
+    );
   });
 
   it("uses a fixed deck id", () => {

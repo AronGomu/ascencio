@@ -13,8 +13,11 @@ export interface SelectableDeck {
       key that still resolves names the same 40 cards it named yesterday. */
   readonly key: string;
   readonly label: string;
-  readonly source: "preset" | "local";
-  readonly selection: BattleDeckSelection;
+  readonly source: "preset" | "chapter" | "local";
+  /** `null` keeps an invalid stored deck visible without making Start a path
+      that can hand it to the Worker. */
+  readonly selection: BattleDeckSelection | null;
+  readonly blockReason?: string | null;
   /** The deck's cards, for tiles: counts, cover art, hover decklists. The
       cover is derived rather than stored — `lists.extra[0] ?? lists.main[0]` —
       so a deck edited into a different theme never keeps yesterday's face. */
@@ -85,6 +88,7 @@ export async function listSelectableDecks(
         label: deck.name,
         source: "local" as const,
         selection: Object.freeze({ kind: "local" as const, deck }),
+        blockReason: null,
         /* The snapshot's own arrays, already frozen by `resolveDeck`: the row
            a tile counts is the one the seat will be given. */
         lists: Object.freeze({
@@ -124,6 +128,7 @@ export function presetSelectableDecks(
           kind: "preset" as const,
           deckId: preset.id,
         }),
+        blockReason: null,
         lists: listsOfPreset(preset.id),
         updatedAt: null,
       }),

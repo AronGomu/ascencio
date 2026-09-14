@@ -11,7 +11,7 @@ export function tile(overrides: Partial<DeckTileModel> = {}): DeckTileModel {
     coverImageUrl: null,
     legal: true,
     blockReason: null,
-    bundled: false,
+    readOnly: false,
     lockedBy: null,
     isDefault: false,
     deletable: true,

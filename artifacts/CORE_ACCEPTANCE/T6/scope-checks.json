@@ -1,0 +1,26 @@
+[
+  {
+    "command": "git diff --check",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": "git diff --cached --name-only",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": "git diff --quiet -- vendor/ocgcore-wasm/0.1.2",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": "git diff --quiet -- e2e/asset-root-urls.spec.ts",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

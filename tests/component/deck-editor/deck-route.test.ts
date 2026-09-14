@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -28,7 +29,11 @@ afterEach(async () => {
    drives it exactly as `AppShell` does: a `deckId` prop plus an `onnavigate`
    callback the shell turns into a hash write. */
 function mount(id: DeckId | null, onnavigate = vi.fn()) {
-  const result = render(DeckEditorApp, { deckId: id, onnavigate });
+  const result = render(DeckEditorApp, {
+    gameplay: installedDuelGameplayFixture(),
+    deckId: id,
+    onnavigate,
+  });
   return { ...result, onnavigate };
 }
 

@@ -1,3 +1,4 @@
+import { TEST_CONTENT_REF } from "./installed-gameplay.ts";
 import { Worker } from "node:worker_threads";
 import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
 
@@ -141,7 +142,7 @@ export class NodeDuelWorkerHarness {
     timeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
   ): Promise<unknown> {
     const afterSequence = this.cursor;
-    this.post({ type: "initialize" });
+    this.post({ type: "initialize", content: TEST_CONTENT_REF });
     try {
       const message = await this.waitForMessage(
         (value) => {

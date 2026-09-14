@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -42,7 +43,7 @@ async function runPlayback(totalMs: number, stepMs = 60): Promise<void> {
 
 async function startNewGame(): Promise<ReturnType<typeof userEvent.setup>> {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-  render(StoryApp);
+  render(StoryApp, { gameplay: installedDuelGameplayFixture() });
   await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
   return user;
 }

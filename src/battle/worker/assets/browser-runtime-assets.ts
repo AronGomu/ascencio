@@ -23,7 +23,7 @@ export interface BrowserRuntimeAssets extends ActiveDuelAssetReader {
 export interface BrowserRuntimeAssetOptions {
   readonly expectedManifestSha256: string;
   readonly fetch?: typeof globalThis.fetch;
-  readonly cacheStorage?: Pick<CacheStorage, "open">;
+  readonly cacheStorage?: Pick<CacheStorage, "open"> | null;
   readonly signal?: AbortSignal;
   readonly onProgress?: (stage: string, progress?: number) => void;
   readonly cacheSnapshotId?: string;
@@ -61,7 +61,10 @@ export async function loadBrowserRuntimeAssets(
   if (!/^[a-f0-9]{64}$/.test(options.expectedManifestSha256))
     throw new Error("Expected runtime manifest digest is invalid");
   const progress = options.onProgress ?? (() => undefined);
-  const cacheStorage = options.cacheStorage ?? globalThis.caches;
+  const cacheStorage =
+    options.cacheStorage === undefined
+      ? globalThis.caches
+      : options.cacheStorage;
   const signal = options.signal;
   signal?.throwIfAborted();
 

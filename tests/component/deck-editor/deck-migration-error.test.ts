@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -55,7 +56,11 @@ describe("deck editor migration failure", () => {
        delete in a browser; the copy has already succeeded by then. */
     openLegacy = await openDeckDatabase(LEGACY_DECK_DATABASE_NAME);
 
-    render(DeckEditorApp, { deckId: null, onnavigate: vi.fn() });
+    render(DeckEditorApp, {
+      gameplay: installedDuelGameplayFixture(),
+      deckId: null,
+      onnavigate: vi.fn(),
+    });
 
     await waitFor(() => expect(query("deck-migration-error")).not.toBeNull());
     expect(query("deck-migration-error")?.getAttribute("role")).toBe("alert");

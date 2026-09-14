@@ -1,3 +1,4 @@
+import { validateDeckDraft } from "../../../decks/deck-validation.ts";
 import type { DuelDeckSelection } from "../../duel/contracts/duel-deck-selection.ts";
 import { duelOperationError } from "../../duel/contracts/duel-error.ts";
 import { cardCode } from "../../duel/contracts/ids.ts";
@@ -30,6 +31,14 @@ export function resolveDuelDecks(
   opponent: DuelDeckSelection,
   resources: DuelRuntimeResources,
 ): ResolvedDuelDecks {
+  if (
+    resources.allowPresetDecks === false &&
+    (player.kind === "preset" || opponent.kind === "preset")
+  )
+    throw duelOperationError(
+      "invalid_command",
+      "Installed gameplay does not accept bundled preset decks",
+    );
   const resolved =
     player.kind === "preset" && opponent.kind === "preset"
       ? presetPair(player.deckId, opponent.deckId, resources)
@@ -45,11 +54,42 @@ export function resolveDuelDecks(
      The codes named in the failure are only ever codes the caller already
      holds: an explicit list it sent itself, or a bundled preset whose `.ydk`
      ships in the same build. Nothing hidden is disclosed by naming them. */
+  const codes = [
+    ...deckCodes(resolved.player),
+    ...deckCodes(resolved.opponent),
+  ];
   assertSupportedCards(
-    [...deckCodes(resolved.player), ...deckCodes(resolved.opponent)],
+    codes,
     resources.dependencies.cards,
     new Set(resources.dependencies.images.keys()),
   );
+  if (resources.allowedCardCodes !== undefined)
+    assertInstalledCardPool(codes, resources.allowedCardCodes);
+  if (resources.allowPresetDecks === false) {
+    if (
+      resources.deckCatalog === undefined ||
+      resources.deckRuleset === undefined
+    )
+      throw duelOperationError(
+        "invalid_command",
+        "Installed deck validation is unavailable",
+      );
+    for (const seat of ["player", "opponent"] as const) {
+      const validation = validateDeckDraft(
+        resolved[seat],
+        resources.deckCatalog,
+        resources.deckRuleset,
+      );
+      if (validation.status === "errors")
+        throw duelOperationError(
+          "invalid_command",
+          `${seat} deck is invalid: ${validation.issues
+            .filter(({ severity }) => severity === "error")
+            .map(({ message }) => message)
+            .join(" ")}`,
+        );
+    }
+  }
   return resolved;
 }
 
@@ -70,6 +110,22 @@ export function assertSupportedCards(
   throw duelOperationError(
     "unsupported_card",
     `Duel cannot start: ${offending.length} card code(s) are outside the active snapshot: ${reported.join(", ")}${ellipsis}`,
+  );
+}
+
+export function assertInstalledCardPool(
+  codes: readonly number[],
+  allowedCardCodes: ReadonlySet<number>,
+): void {
+  const offending = [...new Set(codes)].filter(
+    (code) => !allowedCardCodes.has(code),
+  );
+  if (offending.length === 0) return;
+  const reported = offending.slice(0, MAXIMUM_REPORTED_CODES);
+  const ellipsis = offending.length > reported.length ? ", …" : "";
+  throw duelOperationError(
+    "unsupported_card",
+    `Duel cannot start: ${offending.length} card code(s) are outside installed chapter content: ${reported.join(", ")}${ellipsis}`,
   );
 }
 

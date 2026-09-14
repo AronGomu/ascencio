@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig, type UserConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
 import { appBuildIdentity } from "./scripts/lib/app-build-identity.ts";
 import {
   coreContentPlugin,
@@ -41,6 +42,47 @@ export default defineConfig(async (): Promise<UserConfig> => {
       syncOnlyVendoredCorePlugin(projectRoot),
       svelte(),
       coreContentPlugin(projectRoot, delivery),
+      VitePWA({
+        strategies: "injectManifest",
+        srcDir: "src",
+        filename: "service-worker.ts",
+        injectRegister: false,
+        registerType: "prompt",
+        includeManifestIcons: false,
+        manifest: {
+          name: "YGO Story Duel Simulator",
+          short_name: "YGO Story",
+          description: "Offline Yu-Gi-Oh! story duel simulator",
+          start_url: ".",
+          scope: ".",
+          display: "standalone",
+          background_color: "#151126",
+          theme_color: "#151126",
+          icons: [
+            {
+              src: "app-icon.svg",
+              sizes: "any",
+              type: "image/svg+xml",
+              purpose: "any",
+            },
+          ],
+        },
+        injectManifest: {
+          globPatterns: [
+            "**/*.{html,js,css,woff2}",
+            "core-bootstrap.json",
+            "app-icon.svg",
+          ],
+          globIgnores: [
+            "content/**",
+            "runtime/**",
+            "__content/**",
+            "**/*.wasm",
+            "**/*.zip",
+            "assets/story/**",
+          ],
+        },
+      }),
     ],
     define: {
       __RUNTIME_MANIFEST_SHA256__: "null",

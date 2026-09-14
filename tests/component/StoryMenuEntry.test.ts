@@ -1,3 +1,5 @@
+import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
+import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -35,7 +37,8 @@ const loaders: DomainLoaders = {
 const REAL_IMPORT = { timeout: 15_000 };
 const READY_CORE_GATE = {
   kind: "ready" as const,
-  chapterIds: ["chapter-01" as const],
+  gameplay: installedDuelGameplayFixture(),
+  reader: contentReaderFixture(),
   generation: 1,
 };
 
@@ -146,6 +149,8 @@ describe("the main menu's story entries", () => {
      duel result the player never sees, so the story refuses it on its own. */
   it("never opens an entry over a state handed back from a duel", async () => {
     render(StoryApp, {
+      gameplay: installedDuelGameplayFixture(),
+      reader: contentReaderFixture(),
       storyEntryIntent: "new",
       resumeState: {
         ...createInitialStoryState(),

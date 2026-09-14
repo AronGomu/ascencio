@@ -67,7 +67,7 @@ describe("DeckTileMenu", () => {
     const onclose = vi.fn();
     render(DeckTileMenu, {
       props: {
-        tile: tile({ deletable: false, bundled: true }),
+        tile: tile({ deletable: false, readOnly: true }),
         anchor: kebab(),
         ondelete,
         onclose,

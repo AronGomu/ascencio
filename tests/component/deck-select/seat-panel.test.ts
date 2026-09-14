@@ -85,7 +85,7 @@ function props(overrides: Record<string, unknown> = {}) {
     selectedKey: "k1",
     opponent: OPPONENTS[2]!,
     opponents: OPPONENTS,
-    opponentDeck: tile({ key: "o1", name: "Warden Vault", bundled: true }),
+    opponentDeck: tile({ key: "o1", name: "Warden Vault", readOnly: true }),
     playerDeck: tile({ key: "k1", name: "Aurora Fleet" }),
     decklistFor: vi.fn(async (key: string) =>
       key === "k1" ? PLAYER_LIST : key === "o1" ? OPPONENT_LIST : null,

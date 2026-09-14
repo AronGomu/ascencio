@@ -2,7 +2,6 @@ import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../decks/catalog/pinned-ruleset.ts";
-import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
 import { deckId, type DeckId } from "../../decks/deck-contracts.ts";
 import { emptyDeckHistory } from "../../decks/deck-history.ts";
 import {
@@ -58,7 +57,7 @@ export function parseLocalDeckKey(
    rather than a message a player is ever meant to read. */
 function localDeck(key: string): Readonly<{ id: DeckId; revision: number }> {
   const local = parseLocalDeckKey(key);
-  if (local === null) throw new Error("Bundled decks cannot be modified");
+  if (local === null) throw new Error("Read-only decks cannot be modified");
   return local;
 }
 
@@ -111,11 +110,12 @@ export async function renameLocalDeck(
     because the ruleset the source was stored under may not be this build's. */
 export async function duplicateLocalDeck(
   key: string,
-  bundledSource?: DuplicateSource,
+  bundledSource: DuplicateSource | undefined,
+  catalogCards: Parameters<typeof catalogByCode>[0],
 ): Promise<void> {
   let repository: IndexedDbDeckRepository | null = null;
   try {
-    const catalog = catalogByCode(await runtimeCatalog());
+    const catalog = catalogByCode(catalogCards);
     const local = parseLocalDeckKey(key);
     let source: DuplicateSource | null = bundledSource ?? null;
     if (local !== null) {
@@ -124,7 +124,7 @@ export async function duplicateLocalDeck(
       if (stored === null) return;
       source = { name: stored.deck.name, lists: stored.deck };
     }
-    if (source === null) throw new Error("Bundled decks cannot be modified");
+    if (source === null) throw new Error("Read-only decks cannot be modified");
     const copy = createBlankDeck(
       derivedDeckName(source.name, " Copy"),
       catalog,

@@ -4,7 +4,6 @@ import {
   DEFAULT_PLAYER_DECK_ID,
 } from "../../src/battle/duel/presets/deck-catalog.ts";
 import { parseYdk } from "../../src/battle/duel/presets/deck-parser.ts";
-import { FREE_PLAY_OPPONENTS } from "../../src/shell/screens/free-play-opponents.ts";
 import { MAX_SETUP_BYTES } from "./content-setup.ts";
 import { readBounded } from "./content-setup-io.ts";
 
@@ -17,10 +16,6 @@ export async function inspectPrototypeDecks(
   if (
     !exposedIds.has(DEFAULT_PLAYER_DECK_ID) ||
     !exposedIds.has(DEFAULT_OPPONENT_DECK_ID) ||
-    FREE_PLAY_OPPONENTS.some(
-      ({ deckKey }) =>
-        !deckKey.startsWith("preset:") || !exposedIds.has(deckKey.slice(7)),
-    ) ||
     DECK_CATALOG.some(({ fileName }) => !/^[a-z0-9-]+\.ydk$/.test(fileName))
   )
     return false;

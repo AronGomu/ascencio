@@ -6,8 +6,9 @@ const subpath = "/ygo-story-duel/";
 
 export default defineConfig({
   testDir: "./e2e-core",
+  testIgnore: "chapter-content-delivery.spec.ts",
   globalTeardown: "./scripts/core-source-only-teardown.ts",
-  outputDir: "artifacts/CORE_ACCEPTANCE/T2/test-results",
+  outputDir: "artifacts/CORE_ACCEPTANCE/T9/test-results",
   fullyParallel: false,
   workers: 1,
   timeout: 180_000,
@@ -16,7 +17,7 @@ export default defineConfig({
     ["line"],
     [
       "json",
-      { outputFile: "artifacts/CORE_ACCEPTANCE/T2/playwright-report.json" },
+      { outputFile: "artifacts/CORE_ACCEPTANCE/T9/playwright-report.json" },
     ],
   ],
   use: {

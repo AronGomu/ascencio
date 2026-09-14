@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import * as battle from "../../src/battle/index.ts";
 import * as content from "../../src/content/index.ts";
+import * as contentActivation from "../../src/battle/content-activation.ts";
 import * as deckEditor from "../../src/deck-editor/index.ts";
 import * as deckSelect from "../../src/deck-select/index.ts";
 import * as decks from "../../src/decks/index.ts";
@@ -53,12 +54,26 @@ const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
    takes the entry chunk from 2.62 kB to 339.73 kB. Each allowance disappears
    when its module gets a legal home. */
 const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  /* Installed-content readers stay behind route/startup dynamic imports.
+     Importing the broad content entry at these sites adds its full export graph
+     to the shell closure and exceeds the machine-enforced shell budget. */
+  "src/shell/AppShell.svelte": ["src/content/load-installed-images.ts"],
+  "src/shell/core/core-gate.ts": [
+    "src/content/storage/content-reader.ts",
+    "src/content/load-installed-gameplay.ts",
+  ],
+  // Pure install-only validation avoids loading BattleFacade.
+  "src/shell/screens/InstallContentScreen.svelte": [
+    "src/battle/content-activation.ts",
+  ],
+  // Shared pure deck rules, never UI/gameplay chunks; owner-approved T4 exception.
+  "src/content/install/verify-gameplay.ts": [
+    "src/decks/catalog/pinned-ruleset.ts",
+    "src/decks/catalog/ocg-mask.ts",
+  ],
+  "src/content/storage/content-database.ts": ["idb"],
+  "src/content/storage/content-reader.ts": ["idb"],
   "src/shell/admin/admin-actions.ts": [
-    /* Deck-format and preset asset modules. `src/decks/index.ts` cannot carry
-       them either: it is reached eagerly from `src/shell/routes.ts`, so six raw
-       `.ydk` payloads would land in the entry chunk. */
-    "src/battle/duel/presets/deck-parser.ts",
-    "src/battle/duel/presets/deck-sources-browser.ts",
     /* The duel's snapshot database name, so the console can reset it. */
     "src/battle/storage/snapshot-store.ts",
   ],
@@ -84,10 +99,10 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/decks/ydk-adapter.ts": ["src/battle/duel/presets/deck-parser.ts"],
 });
 
-/* `src/acceptance-main.ts` is the build entry for the duel acceptance harness
-   that lives in `src/battle/app/acceptance/`, so it belongs to battle. */
+/* Root entrypoints compose owned domains. `src/acceptance-main.ts` is the
+   battle acceptance entry; service worker composes shell-owned PWA policy. */
 function domainOf(file: string): Domain {
-  if (file === "src/main.ts") return "main";
+  if (file === "src/main.ts" || file === "src/service-worker.ts") return "main";
   if (file === "src/acceptance-main.ts") return "battle";
   if (file.startsWith("src/content/")) return "content";
   if (file.startsWith("src/shell/")) return "shell";
@@ -216,7 +231,12 @@ describe("public domain APIs are frozen", () => {
         "CONTENT_INSTALLER_LOCK",
         "ZIP_PART_MAX_BYTES",
         "ZIP_PART_MAX_UNPACKED_BYTES",
+        "acquireInstalledAsset",
         "contentObjectUrl",
+        "createContentInstaller",
+        "loadInstalledGameplay",
+        "loadInstalledImages",
+        "openContentReader",
         "parseChapterGameplay",
         "parseChapterSelections",
         "parseChapterStoryDocument",
@@ -243,6 +263,7 @@ describe("public domain APIs are frozen", () => {
         "ContentFailure",
         "ContentFailureCode",
         "ContentIndex",
+        "ContentInstaller",
         "ContentManager",
         "ContentManifest",
         "ContentMediaType",
@@ -252,16 +273,26 @@ describe("public domain APIs are frozen", () => {
         "ContentSetRef",
         "CoreBootstrap",
         "CoreChapterId",
+        "DownloadJob",
         "DownloadPhase",
         "DownloadProgress",
         "DownloadResult",
         "DownloadTarget",
+        "InstallReceipt",
+        "InstalledAssetLease",
         "InstalledContentSet",
+        "InstalledGameplay",
+        "InstalledImageLibrary",
+        "InstalledRuntimeReceipt",
         "ManifestRef",
+        "OwnedContentReader",
         "PackId",
         "PackedFile",
+        "PersistedDownloadJob",
         "RuntimeActivationPort",
+        "RuntimeReceiptFile",
         "RuntimeSnapshotRef",
+        "SavedContentRefsPort",
         "Sha256",
         "StoryContentBinding",
         "VerifiedMetadata",
@@ -269,6 +300,13 @@ describe("public domain APIs are frozen", () => {
       ],
     },
 
+    {
+      name: "battle content activation",
+      entry: "src/battle/content-activation.ts",
+      namespace: contentActivation,
+      values: ["createRuntimeActivationPort"],
+      types: [],
+    },
     {
       name: "battle",
       entry: "src/battle/index.ts",
@@ -288,6 +326,7 @@ describe("public domain APIs are frozen", () => {
         "DEFAULT_OPPONENT_DECK_ID",
         "DEFAULT_PLAYER_DECK_ID",
         "findSelectableDeck",
+        "installedSelectableDecks",
         "listSelectableDecks",
         "parseBattleRequest",
         "presetSelectableDecks",
@@ -309,6 +348,7 @@ describe("public domain APIs are frozen", () => {
         "DECK_DATABASE_NAME",
         "DeckMigrationError",
         "deckId",
+        "installedDeckCatalog",
         "resolveDeck",
       ],
       types: [
@@ -498,6 +538,35 @@ describe("public domain APIs are frozen", () => {
 });
 
 describe("domain imports", () => {
+  it("installer exceptions remain exact-file pure validation boundaries", () => {
+    expect(
+      isLegalImport(
+        "src/content/install/verify-gameplay.ts",
+        "src/decks/catalog/pinned-ruleset.ts",
+      ),
+    ).toBe(true);
+    expect(
+      isLegalImport(
+        "src/content/probe.ts",
+        "src/decks/catalog/pinned-ruleset.ts",
+      ),
+    ).toBe(false);
+    expect(
+      isLegalImport(
+        "src/content/install/verify-gameplay.ts",
+        "src/decks/index.ts",
+      ),
+    ).toBe(false);
+    expect(
+      isLegalImport(
+        "src/shell/screens/InstallContentScreen.svelte",
+        "src/battle/content-activation.ts",
+      ),
+    ).toBe(true);
+    expect(
+      isLegalImport("src/shell/probe.ts", "src/battle/content-activation.ts"),
+    ).toBe(false);
+  });
   it("content rejects dynamic Node and scripts imports", () => {
     for (const specifier of [
       "node:fs",

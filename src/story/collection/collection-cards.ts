@@ -12,12 +12,13 @@
    comparisons for one screen open. One pass over the sets and one lookup per
    card is the same answer at 19,448 steps. */
 
+import type { InstalledGameplay } from "../../content/index.ts";
+import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
 import type { ShopRarity } from "../model/story-state.ts";
 import { inferRarity } from "../shop/data/shop-rarity.ts";
 import {
-  fetchShopSetData,
+  installedShopSetData,
   type ShopSetData,
 } from "../shop/data/shop-set-data.ts";
 import { RARITY_ORDER } from "./group-by-rarity.ts";
@@ -56,18 +57,16 @@ export function collectionRarityIndex(
 /**
  * Reads both halves of what the collection screen renders.
  *
- * The catalog is the shared `runtimeCatalog()` memo the editor and the duel
- * already read, so opening the collection after either costs no second fetch.
- *
- * A failed shop read is not a failed collection: the cards, the counts and the
- * ordering all survive it, so it degrades to inferred rarities rather than
- * refusing the screen. A failed catalog read has nothing to show and rejects.
+ * Card records plus set printings come from one verified installed gameplay
+ * union, matching editor, duel, shop, and preview without another fetch.
+ * Cards absent set printings retain inferred rarity; no external shop source
+ * or whole-catalog fallback participates.
  */
-export async function loadCollectionCatalog(): Promise<CollectionCatalog> {
-  const [cards, data] = await Promise.all([
-    runtimeCatalog(),
-    fetchShopSetData().catch(() => null),
-  ]);
+export async function loadCollectionCatalog(
+  gameplay: InstalledGameplay,
+): Promise<CollectionCatalog> {
+  const cards = installedDeckCatalog(gameplay).cards;
+  const data = installedShopSetData(gameplay);
   return Object.freeze({
     cards,
     rarityByCode: collectionRarityIndex(cards, data),

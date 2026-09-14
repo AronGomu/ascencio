@@ -100,7 +100,7 @@ function props(overrides: Record<string, unknown> = {}) {
       line: "Locks the board, then closes it out.",
       locked: false,
     },
-    opponentDeck: tile({ key: "o1", name: "Warden Vault", bundled: true }),
+    opponentDeck: tile({ key: "o1", name: "Warden Vault", readOnly: true }),
     playerDeck: tile({ key: "k1", name: "Aurora Fleet" }),
     decklistFor: resolver(),
     ...overrides,

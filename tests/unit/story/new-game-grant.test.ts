@@ -6,7 +6,10 @@ import { createInitialStoryState } from "../../../src/story/model/story-state.ts
 import { migrateStorySaveState } from "../../../src/story/saves/story-save-contracts.ts";
 
 function newGame(): ReturnType<typeof reduceStory> {
-  return reduceStory(createInitialStoryState(), { type: "new-game" });
+  return reduceStory(createInitialStoryState(), {
+    type: "new-game",
+    starterGrant: buildStarterGrant(),
+  });
 }
 
 describe("the new-save starter grant", () => {

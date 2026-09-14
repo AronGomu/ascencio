@@ -18,6 +18,7 @@ export {
   presetSelectableDecks,
   findSelectableDeck,
 } from "./decks/selectable-decks.ts";
+export { installedSelectableDecks } from "./decks/installed-selectable-decks.ts";
 /* T17: a host that builds its own pairing needs the bundled list `listSelectableDecks`
    takes and the seats to fall back to when a remembered key no longer resolves.
    Metadata only — the `.ydk` payloads stay in `deck-sources-browser.ts`, so this

@@ -3,7 +3,8 @@ import * as battle from "../../../src/battle/index.ts";
 import { deckId } from "../../../src/decks/deck-contracts.ts";
 import type { ValidatedDeckSnapshot } from "../../../src/decks/deck-contracts.ts";
 import type { BattleDeckModule } from "../../../src/shell/domain-loaders.ts";
-import { storyBattleRequest } from "../../../src/shell/handoff/story-battle-request.ts";
+import { storyBattleRequest } from "../../../src/shell/handoff/handoff-request.ts";
+import { installedGameplayFixture } from "../../fixtures/installed-gameplay.ts";
 
 /* The pairing a story encounter is fought with. Only the player's seat comes
    from the save; the opponent stays the bundled deck the duel has always fixed
@@ -25,15 +26,22 @@ function snapshot(main: readonly number[]): ValidatedDeckSnapshot {
 const FORTY = Array.from({ length: 40 }, (_, index) => 1000 + index);
 
 describe("the battle request a story encounter starts", () => {
-  it("seats the save's deck as the player and a preset as the opponent", () => {
+  it("seats save deck and installed chapter deck", () => {
     const deck = snapshot(FORTY);
 
-    const request = storyBattleRequest(module, deck);
+    const request = storyBattleRequest(
+      module,
+      deck,
+      installedGameplayFixture(),
+    );
 
     expect(request.player).toEqual({ kind: "local", deck });
-    expect(request.opponent).toEqual({
-      kind: "preset",
-      deckId: battle.DEFAULT_OPPONENT_DECK_ID,
+    expect(request.opponent).toMatchObject({
+      kind: "local",
+      deck: {
+        ref: { deckId: "chapter:installed-starter", revision: 0 },
+        name: "Installed Starter",
+      },
     });
   });
 
@@ -46,8 +54,8 @@ describe("the battle request a story encounter starts", () => {
       ...Array.from({ length: 21 }, () => 9),
     ]);
 
-    expect(() => storyBattleRequest(module, overfull)).toThrow(
-      battle.BattleRequestError,
-    );
+    expect(() =>
+      storyBattleRequest(module, overfull, installedGameplayFixture()),
+    ).toThrow(battle.BattleRequestError);
   });
 });

@@ -1,3 +1,4 @@
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
@@ -200,6 +201,7 @@ describe("opening more than one pack", () => {
 
   it("Open all remaining lands on the results list holding every card", async () => {
     const { container } = render(StoryApp, {
+      gameplay: installedDuelGameplayFixture(),
       resumeState: {
         ...createInitialStoryState(),
         screen: "shop-opening" as const,

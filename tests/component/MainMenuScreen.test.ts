@@ -1,3 +1,4 @@
+import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -57,7 +58,16 @@ function renderMenu(record: ShellState[] = []) {
   const onfreeplaywarm = vi.fn();
   const store = createShellStore("#/", (hash) => hashes.push(hash));
   store.subscribe((state) => record.push(state));
-  render(MainMenuScreen, { store, onfreeplaywarm });
+  render(MainMenuScreen, {
+    store,
+    coreGate: {
+      kind: "ready",
+      gameplay: installedGameplayFixture(),
+      reader: null,
+      generation: 1,
+    },
+    onfreeplaywarm,
+  });
   return {
     hashes,
     onfreeplaywarm,

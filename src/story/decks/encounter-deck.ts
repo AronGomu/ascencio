@@ -6,17 +6,16 @@
    the pinned ruleset and the save's own ownership — so a deck the briefing
    refused can never resolve here, and the gate is a rule rather than a screen.
 
-   The catalog is read rather than passed in: the encounter can be started from
-   the briefing, which has already awaited it, and from the retry on the outcome
-   screen, which is a fresh mount of this domain that has not. Resolving against
-   an empty catalog calls every card missing, so both callers have to hold the
-   real one. `runtimeCatalog()` is read at most once per page. */
+   Installed gameplay is passed in from the shell gate. Resolving against an
+   empty or unrelated catalog calls installed cards missing, so every caller
+   derives the catalog from that same exact content set. */
 
+import type { InstalledGameplay } from "../../content/index.ts";
+import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../decks/catalog/pinned-ruleset.ts";
-import { runtimeCatalog } from "../../decks/catalog/runtime-catalog.ts";
 import { emptyDeckHistory } from "../../decks/deck-history.ts";
 import { resolveDeck, type ValidatedDeckSnapshot } from "../../decks/index.ts";
 import type { StoryState } from "../model/story-state.ts";
@@ -33,10 +32,11 @@ import { storyCardOwnership } from "./card-ownership.ts";
  */
 export async function encounterDeck(
   state: StoryState,
+  gameplay: InstalledGameplay,
 ): Promise<ValidatedDeckSnapshot | null> {
   const chosen = state.decks.find(({ id }) => id === state.defaultDeckId);
   if (chosen === undefined) return null;
-  const catalog = catalogByCode(await runtimeCatalog());
+  const catalog = catalogByCode(installedDeckCatalog(gameplay).cards);
   /* A reader over the save rather than the story's own `DeckRepository`: this
      resolves one deck and writes nothing, and the repository's other half is a
      dispatch-and-persist loop no read has any business holding. */

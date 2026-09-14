@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
+  import {
+    openContentReader,
+    type ContentReadPort,
+    type OwnedContentReader,
+    type ContentSessionLease,
+    type ContentSetRef,
+    type InstalledGameplay,
+  } from "../content/index.ts";
   import App from "./app/App.svelte";
   import type {
     BattleFacadeResult,
@@ -7,6 +15,11 @@
   } from "./battle-contracts.ts";
   import RotationNotice from "./components/RotationNotice.svelte";
   import { settleOnce } from "./settle-once.ts";
+
+  export let content: ContentSetRef;
+  export let gameplay: InstalledGameplay;
+  export let openReader: typeof openContentReader = openContentReader;
+  export let sharedReader: ContentReadPort | null = null;
 
   /* `null` is standalone mode: the duel renders its own deck picker, owns the
      whole session and reports nothing back, which is exactly what `#/duel`
@@ -32,8 +45,58 @@
   export let onleavematch: (() => void) | null = null;
 
   const settle = settleOnce<BattleFacadeResult>((result) => oncomplete(result));
+  let reader: ContentReadPort | null = null;
+  let lease: ContentSessionLease | null = null;
+  let contentError: string | null = null;
 
   $: hostWaiting = hosted || request !== null;
+
+  onMount(() => {
+    let cancelled = false;
+    let ownedReader: OwnedContentReader | null = null;
+    void (async () => {
+      if (JSON.stringify(gameplay.content) !== JSON.stringify(content))
+        throw new Error("Installed gameplay does not match requested content");
+      let source = sharedReader;
+      if (source === null) {
+        const opened = await openReader();
+        if (opened.kind === "failed") throw new Error(opened.code);
+        ownedReader = opened.value;
+        source = ownedReader;
+      }
+      if (cancelled) {
+        ownedReader?.close();
+        ownedReader = null;
+        return;
+      }
+      const acquired = await source.acquireSession(content);
+      if (acquired.kind === "failed") throw new Error(acquired.code);
+      if (cancelled) {
+        acquired.value.release();
+        ownedReader?.close();
+        ownedReader = null;
+      } else {
+        reader = source;
+        lease = acquired.value;
+      }
+    })().catch((error: unknown) => {
+      ownedReader?.close();
+      ownedReader = null;
+      if (!cancelled)
+        contentError =
+          error instanceof Error
+            ? error.message
+            : "Installed content is unavailable";
+    });
+    return () => {
+      cancelled = true;
+      lease?.release();
+      lease = null;
+      ownedReader?.close();
+      ownedReader = null;
+      reader = null;
+    };
+  });
 
   onDestroy(() => {
     /* The duel disposes itself through `App`'s own teardown when this
@@ -45,11 +108,24 @@
 </script>
 
 <div class="battle-root" data-cy="battle-root">
-  <App
-    {request}
-    {onleavematch}
-    onbattlecomplete={hostWaiting ? settle : undefined}
-  />
+  {#if reader !== null && lease !== null}
+    <App
+      {content}
+      {gameplay}
+      {reader}
+      {request}
+      {onleavematch}
+      onbattlecomplete={hostWaiting ? settle : undefined}
+    />
+  {:else if contentError !== null}
+    <p role="alert" data-cy="battle-content-error">
+      Installed content could not be opened: {contentError}
+    </p>
+  {:else}
+    <p role="status" data-cy="battle-content-loading">
+      Verifying installed duel content…
+    </p>
+  {/if}
   {#if rotated && !rotationNoticeDismissed}
     <RotationNotice ondismiss={onrotationnoticedismiss} />
   {/if}

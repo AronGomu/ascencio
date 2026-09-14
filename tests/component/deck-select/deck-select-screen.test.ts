@@ -88,7 +88,7 @@ function props(overrides: Record<string, unknown> = {}) {
       line: "Locks the board, then closes it out.",
       locked: false,
     },
-    opponentDeck: tile({ key: "o1", name: "Warden Vault", bundled: true }),
+    opponentDeck: tile({ key: "o1", name: "Warden Vault", readOnly: true }),
     playerDeck: null,
     ...handlers(),
     ...overrides,
@@ -187,14 +187,19 @@ describe("DeckSelectScreen", () => {
     expect(values.onblockedopen).not.toHaveBeenCalled();
   });
 
-  it("reports bundled dblclick once without opening", async () => {
+  it("reports installed read-only dblclick once without opening", async () => {
     const values = handlers();
-    const bundled = tile({ key: "preset", bundled: true });
-    render(DeckSelectScreen, props({ ...values, tiles: [bundled] }));
+    const installed = tile({
+      key: "chapter",
+      meta: "Installed chapter",
+      readOnly: true,
+      deletable: false,
+    });
+    render(DeckSelectScreen, props({ ...values, tiles: [installed] }));
 
-    await fireEvent.dblClick(cy("deck-tile-press-preset"));
+    await fireEvent.dblClick(cy("deck-tile-press-chapter"));
 
-    expect(values.onblockedopen).toHaveBeenCalledExactlyOnceWith(bundled);
+    expect(values.onblockedopen).toHaveBeenCalledExactlyOnceWith(installed);
     expect(values.onopen).not.toHaveBeenCalled();
   });
 
@@ -223,19 +228,19 @@ describe("DeckSelectScreen", () => {
     expect(button("deck-tile-default-star-k3").disabled).toBe(true);
   });
 
-  it("renders no default star for bundled presets", () => {
+  it("renders no default star for read-only decks", () => {
     render(
       DeckSelectScreen,
-      props({ tiles: [tile({ key: "preset", bundled: true })] }),
+      props({ tiles: [tile({ key: "preset", readOnly: true })] }),
     );
 
     expect(find("deck-tile-default-star-preset")).toBeNull();
   });
 
-  it("bundled kebab keeps Open disabled and names the reason", async () => {
+  it("read-only kebab keeps Open disabled and names the reason", async () => {
     render(
       DeckSelectScreen,
-      props({ tiles: [tile({ key: "preset", bundled: true })] }),
+      props({ tiles: [tile({ key: "preset", readOnly: true })] }),
     );
 
     await userEvent.setup().click(cy("deck-tile-menu-preset"));
@@ -245,7 +250,10 @@ describe("DeckSelectScreen", () => {
     expect(open.disabled).toBe(true);
     expect(open.textContent?.trim()).toBe("Open in deck builder");
     expect(open.getAttribute("aria-describedby")).toBe(reason.id);
-    expect(reason.textContent?.trim()).toBe("Bundled deck: cannot be modified");
+    expect(reason.textContent?.trim()).toBe(
+      "Read-only deck: cannot be modified",
+    );
+    expect(button("deck-tile-menu-rename-preset").disabled).toBe(true);
   });
 
   it("kebab flow reaches rename with new name", async () => {
@@ -339,13 +347,13 @@ describe("DeckSelectScreen", () => {
     render(
       DeckSelectScreen,
       props({
-        tiles: [tile({ key: "b1", bundled: true, deletable: false })],
+        tiles: [tile({ key: "b1", readOnly: true, deletable: false })],
         selectedKey: "b1",
       }),
     );
 
     expect(button("deck-select-delete").disabled).toBe(true);
-    expect(button("deck-select-rename").disabled).toBe(false);
+    expect(button("deck-select-rename").disabled).toBe(true);
     expect(button("deck-select-duplicate").disabled).toBe(false);
   });
 

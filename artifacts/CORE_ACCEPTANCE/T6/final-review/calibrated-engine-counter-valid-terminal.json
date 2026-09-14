@@ -1,0 +1,12 @@
+{
+  "createDuelCount": 0,
+  "calibratedCount": 1,
+  "probeResult": {
+    "type": "result",
+    "result": {
+      "type": "surrendered",
+      "winner": 1,
+      "loser": 0
+    }
+  }
+}

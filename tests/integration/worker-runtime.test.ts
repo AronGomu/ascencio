@@ -1,3 +1,4 @@
+import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -52,7 +53,7 @@ describe("typed duel Worker runtime", () => {
       snapshotId: snapshotId("a".repeat(64)),
     }));
     try {
-      await runtime.handle({ type: "initialize" });
+      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
       const started = await runtime.handle({
         type: "startDuel",
         duelId: duelId(preset.id),
@@ -74,7 +75,14 @@ describe("typed duel Worker runtime", () => {
       path.resolve("tests/fixtures/missing-runtime-root"),
     );
     try {
-      expect((await runtime.handle({ type: "initialize" })).at(-1)).toEqual(
+      expect(
+        (
+          await runtime.handle({
+            type: "initialize",
+            content: TEST_CONTENT_REF,
+          })
+        ).at(-1),
+      ).toEqual(
         expect.objectContaining({
           type: "error",
           error: expect.objectContaining({
@@ -138,7 +146,10 @@ describe("typed duel Worker runtime", () => {
 
     const runtime = createNodeDuelWorkerRuntime(projectRoot);
     try {
-      const initialized = await runtime.handle({ type: "initialize" });
+      const initialized = await runtime.handle({
+        type: "initialize",
+        content: TEST_CONTENT_REF,
+      });
       expect(initialized.at(-1)).toEqual(
         expect.objectContaining({
           type: "error",
@@ -157,7 +168,10 @@ describe("typed duel Worker runtime", () => {
   it("initializes real local resources and starts only the bundled production duel", async () => {
     const runtime = createNodeDuelWorkerRuntime();
     try {
-      const initialized = await runtime.handle({ type: "initialize" });
+      const initialized = await runtime.handle({
+        type: "initialize",
+        content: TEST_CONTENT_REF,
+      });
       expect(initialized.at(-1)).toEqual({
         type: "ready",
         coreVersion: [11, 0],
@@ -283,7 +297,10 @@ describe("typed duel Worker runtime", () => {
 
       const replacementRuntime = createNodeDuelWorkerRuntime();
       try {
-        await replacementRuntime.handle({ type: "initialize" });
+        await replacementRuntime.handle({
+          type: "initialize",
+          content: TEST_CONTENT_REF,
+        });
         const replacementStarted = await replacementRuntime.handle({
           type: "startDuel",
           duelId: duelId(

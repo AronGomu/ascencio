@@ -1,3 +1,4 @@
+import type { ContentSetRef, ManifestRef } from "../../../content/index.ts";
 import {
   DuelCommandValidationError,
   requireId,
@@ -21,8 +22,13 @@ const MAX_RESPONSE_CHOICES = 256;
 
 export { DuelCommandValidationError };
 
+export interface InitializeInstalledCommand {
+  readonly type: "initialize";
+  readonly content: ContentSetRef;
+}
+
 export type DuelCommand =
-  | { readonly type: "initialize" }
+  | InitializeInstalledCommand
   | {
       readonly type: "startDuel";
       readonly duelId: DuelId;
@@ -49,6 +55,15 @@ export function parseDuelCommand(value: unknown): DuelCommand {
   }
   switch (commandType) {
     case "initialize":
+      requireOnlyKeys(command, ["type", "content"]);
+      if (command.content === undefined)
+        throw new DuelCommandValidationError(
+          "Duel initialize command requires installed content",
+        );
+      return {
+        type: "initialize",
+        content: parseContentSetRef(command.content),
+      };
     case "surrender":
     case "requestDiagnostics":
     case "restore":
@@ -93,4 +108,76 @@ export function parseDuelCommand(value: unknown): DuelCommand {
     default:
       throw new DuelCommandValidationError("Unsupported duel command");
   }
+}
+
+function parseContentSetRef(value: unknown): ContentSetRef {
+  try {
+    const ref = requireRecord(value);
+    requireOnlyKeys(ref, ["catalogSha256", "snapshot", "runtime", "chapters"]);
+    const snapshot = requireRecord(ref.snapshot);
+    requireOnlyKeys(snapshot, [
+      "activationId",
+      "runtimeSnapshotId",
+      "runtimeManifestSha256",
+      "releaseCatalogSha256",
+    ]);
+    const catalogSha256 = contentHash(ref.catalogSha256);
+    const releaseCatalogSha256 = contentHash(snapshot.releaseCatalogSha256);
+    if (catalogSha256 !== releaseCatalogSha256) throw new Error();
+    const runtime = manifestRef(ref.runtime);
+    if (runtime.packId !== "runtime") throw new Error();
+    if (!Array.isArray(ref.chapters) || ref.chapters.length > 99)
+      throw new Error();
+    const chapters = ref.chapters.map(manifestRef);
+    if (
+      chapters.length === 0 ||
+      chapters.some(({ packId }) => packId === "runtime") ||
+      chapters.some(
+        ({ packId }, index) =>
+          index > 0 && chapters[index - 1]!.packId >= packId,
+      )
+    )
+      throw new Error();
+    return Object.freeze({
+      catalogSha256,
+      snapshot: Object.freeze({
+        activationId: contentHash(snapshot.activationId),
+        runtimeSnapshotId: contentHash(snapshot.runtimeSnapshotId),
+        runtimeManifestSha256: contentHash(snapshot.runtimeManifestSha256),
+        releaseCatalogSha256,
+      }),
+      runtime,
+      chapters: Object.freeze(chapters),
+    });
+  } catch {
+    throw new DuelCommandValidationError(
+      "Duel initialize command content ref is invalid",
+    );
+  }
+}
+
+function manifestRef(value: unknown): ManifestRef {
+  const ref = requireRecord(value);
+  requireOnlyKeys(ref, ["packId", "sha256", "bytes"]);
+  if (
+    typeof ref.packId !== "string" ||
+    (ref.packId !== "runtime" &&
+      !/^chapter-(0[1-9]|[1-9][0-9])$/.test(ref.packId)) ||
+    typeof ref.bytes !== "number" ||
+    !Number.isSafeInteger(ref.bytes) ||
+    ref.bytes < 1 ||
+    ref.bytes > 4_194_304
+  )
+    throw new Error();
+  return Object.freeze({
+    packId: ref.packId as ManifestRef["packId"],
+    sha256: contentHash(ref.sha256),
+    bytes: ref.bytes,
+  });
+}
+
+function contentHash(value: unknown): string {
+  if (typeof value !== "string" || !/^[a-f0-9]{64}$/.test(value))
+    throw new Error();
+  return value;
 }

@@ -3,6 +3,7 @@ import { catalogByCode } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 import { encounterDeck } from "../../../src/story/decks/encounter-deck.ts";
+import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 import {
   createInitialStoryState,
   type StoryState,
@@ -19,6 +20,8 @@ import {
 
 const FIELDABLE = fieldableStoryDeck();
 const SOLD = catalogByCode(PROTOTYPE_CATALOG).get(FIELDABLE.deck.main[0]!)!;
+const GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG);
+const resolveEncounter = (state: StoryState) => encounterDeck(state, GAMEPLAY);
 
 afterEach(() => setRuntimeCatalogForTests(null));
 
@@ -37,7 +40,7 @@ function save(overrides: Partial<StoryState> = {}): StoryState {
 
 describe("the deck a story encounter is fought with", () => {
   it("is the deck the save chose, card for card", async () => {
-    const deck = await encounterDeck(save());
+    const deck = await resolveEncounter(save());
 
     expect(deck?.ref).toEqual({
       type: "local",
@@ -55,7 +58,7 @@ describe("the deck a story encounter is fought with", () => {
      so resolving it without the save's own ownership would hand the engine
      cards this save sold — past a briefing that had already refused them. */
   it("is never a deck whose cards the save no longer owns", async () => {
-    const deck = await encounterDeck(
+    const deck = await resolveEncounter(
       save({ collection: { ...FIELDABLE.collection, [SOLD.code]: 0 } }),
     );
 
@@ -66,7 +69,7 @@ describe("the deck a story encounter is fought with", () => {
      warnings. Illegal means errors: a fresh save has to be able to fight its
      first encounter with the only deck it owns. */
   it("is resolved for a deck that only warns", async () => {
-    const deck = await encounterDeck(save());
+    const deck = await resolveEncounter(save());
 
     expect(deck).not.toBeNull();
     expect(deck?.extra).toEqual([]);
@@ -74,13 +77,13 @@ describe("the deck a story encounter is fought with", () => {
 
   it("is nothing when the save's default names a deck it no longer has", async () => {
     await expect(
-      encounterDeck(save({ defaultDeckId: "deleted" })),
+      resolveEncounter(save({ defaultDeckId: "deleted" })),
     ).resolves.toBeNull();
   });
 
   it("is nothing when the save has no default at all", async () => {
     await expect(
-      encounterDeck(save({ defaultDeckId: null })),
+      resolveEncounter(save({ defaultDeckId: null })),
     ).resolves.toBeNull();
   });
 
@@ -90,7 +93,7 @@ describe("the deck a story encounter is fought with", () => {
     });
 
     await expect(
-      encounterDeck(save({ decks: [short], defaultDeckId: short.id })),
+      resolveEncounter(save({ decks: [short], defaultDeckId: short.id })),
     ).resolves.toBeNull();
   });
 
@@ -116,7 +119,7 @@ describe("the deck a story encounter is fought with", () => {
     });
 
     await expect(
-      encounterDeck(save({ decks: [stale], defaultDeckId: stale.id })),
+      resolveEncounter(save({ decks: [stale], defaultDeckId: stale.id })),
     ).resolves.not.toBeNull();
   });
 });

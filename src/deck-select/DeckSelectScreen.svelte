@@ -37,10 +37,10 @@
       kebab — a scope whose decks are managed somewhere else. Open and Start
       stay: they are how this screen is left, not how a deck is edited. */
   export let manageable = true;
-  /** Host owns default capability and persistence. Bundled presets default to
+  /** Host owns default capability and persistence. Read-only decks default to
       incapable; story-owned locked decks may opt in independently. */
   export let canSetDefault: (tile: DeckTileModel) => boolean = (tile) =>
-    !tile.bundled;
+    !tile.readOnly;
   export let onsetdefault: (key: string) => void = () => undefined;
   export let onselect: (key: string) => void = () => undefined;
   export let onstart: () => void = () => undefined;
@@ -461,7 +461,7 @@
   }
 
   function openTile(tile: DeckTileModel): void {
-    if (tile.bundled) onblockedopen(tile);
+    if (tile.readOnly) onblockedopen(tile);
     else onopen(tile.key);
   }
 
@@ -494,6 +494,7 @@
   /* The footer buttons and the kebab items are two paths to one operation, so
      both raise the same dialog rather than each confirming its own way. */
   function openRename(key: string): void {
+    if (tiles.find((tile) => tile.key === key)?.readOnly) return;
     renaming = key;
   }
 
@@ -503,7 +504,12 @@
   }
 
   function deleteSelected(): void {
-    if (selectedTile === null || !selectedTile.deletable) return;
+    if (
+      selectedTile === null ||
+      selectedTile.readOnly ||
+      !selectedTile.deletable
+    )
+      return;
     deleting = selectedTile.key;
   }
 
@@ -568,7 +574,9 @@
       type="button"
       class="secondary act-delete"
       role={compactMenuOpen ? "menuitem" : undefined}
-      disabled={selectedTile === null || !selectedTile.deletable}
+      disabled={selectedTile === null ||
+        selectedTile.readOnly ||
+        !selectedTile.deletable}
       data-cy="deck-select-delete"
       onclick={() => {
         closeCompactMenu();
@@ -580,7 +588,7 @@
       type="button"
       class="secondary act-rename"
       role={compactMenuOpen ? "menuitem" : undefined}
-      disabled={selectedTile === null}
+      disabled={selectedTile === null || selectedTile.readOnly}
       data-cy="deck-select-rename"
       onclick={() => {
         closeCompactMenu();
@@ -939,7 +947,9 @@
         yours={seat === "opponent" && candidate.key === playerDeck?.key}
         onpress={() => onselect(candidate.key)}
         ondblpress={() => openTile(candidate)}
-        onrename={manageable ? () => openRename(candidate.key) : null}
+        onrename={manageable && !candidate.readOnly
+          ? () => openRename(candidate.key)
+          : null}
         canSetDefault={canSetDefault(candidate)}
         onsetdefault={() => onsetdefault(candidate.key)}
         showMenu={manageable}
@@ -1104,9 +1114,9 @@
     anchor={menu.anchor}
     onclose={() => (menu = null)}
     onopen={() => openTile(menuTile)}
-    openDisabled={menuTile.bundled}
-    openDisabledReason={menuTile.bundled
-      ? "Bundled deck: cannot be modified"
+    openDisabled={menuTile.readOnly}
+    openDisabledReason={menuTile.readOnly
+      ? "Read-only deck: cannot be modified"
       : null}
     onrename={() => openRename(key)}
     onduplicate={() => onduplicate(key)}

@@ -1,3 +1,4 @@
+import type { ContentSetRef } from "../../content/index.ts";
 import {
   parseDuelCommand,
   type DuelCommand,
@@ -62,7 +63,7 @@ export interface DuelWorkerDisposalResult {
 export interface DuelClient {
   readonly context: DuelClientContext;
   subscribe(listener: DuelClientListener): () => void;
-  initialize(): boolean;
+  initialize(content: ContentSetRef): boolean;
   startDuel(
     duelId: DuelId,
     player: DuelDeckSelection,
@@ -146,7 +147,7 @@ export class DuelWorkerClient implements DuelClient {
     return () => this.#listeners.delete(listener);
   }
 
-  initialize(): boolean {
+  initialize(content: ContentSetRef): boolean {
     if (
       this.#closed ||
       this.#worker === null ||
@@ -156,7 +157,7 @@ export class DuelWorkerClient implements DuelClient {
       return false;
     }
     this.#initializeSent = true;
-    if (!this.#post({ type: "initialize" })) {
+    if (!this.#post({ type: "initialize", content })) {
       this.#initializeSent = false;
       return false;
     }

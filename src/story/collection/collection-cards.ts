@@ -13,8 +13,8 @@
    card is the same answer at 19,448 steps. */
 
 import type { InstalledGameplay } from "../../content/index.ts";
-import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
-import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+import { installedDeckCatalog } from "../../decks/index.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type { ShopRarity } from "../model/story-state.ts";
 import { inferRarity } from "../shop/data/shop-rarity.ts";
 import {

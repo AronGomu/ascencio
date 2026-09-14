@@ -5,7 +5,7 @@
     DeckAutosaveRecord,
     DeckId,
     DeckRecord,
-  } from "../../decks/deck-contracts.ts";
+  } from "../../decks/contracts/index.ts";
 
   export let decks: readonly DeckRecord[];
   export let autosaves: readonly DeckAutosaveRecord[];

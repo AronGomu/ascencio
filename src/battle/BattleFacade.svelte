@@ -13,6 +13,7 @@
     BattleFacadeResult,
     BattleRequest,
   } from "./battle-contracts.ts";
+  import type { CardImageSource } from "../cards/images/index.ts";
   import RotationNotice from "./components/RotationNotice.svelte";
   import { settleOnce } from "./settle-once.ts";
 
@@ -20,6 +21,7 @@
   export let gameplay: InstalledGameplay;
   export let openReader: typeof openContentReader = openContentReader;
   export let sharedReader: ContentReadPort | null = null;
+  export let imageSource: CardImageSource | null = null;
 
   /* `null` is standalone mode: the duel renders its own deck picker, owns the
      whole session and reports nothing back, which is exactly what `#/duel`
@@ -113,6 +115,7 @@
       {content}
       {gameplay}
       {reader}
+      {imageSource}
       {request}
       {onleavematch}
       onbattlecomplete={hostWaiting ? settle : undefined}

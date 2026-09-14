@@ -4,7 +4,7 @@ import type {
   ManifestRef,
   RuntimeSnapshotRef,
 } from "../../content/index.ts";
-import { verifyDigest } from "../../decks/catalog/snapshot-digest.ts";
+import { verifyDigest } from "./snapshot-digest.ts";
 import { SNAPSHOT_DATABASE_NAME, SnapshotStore } from "./snapshot-store.ts";
 
 const paths = [

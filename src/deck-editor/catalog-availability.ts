@@ -11,8 +11,8 @@
    the work is worth something — the catalog filter below, which is a pass over
    14,794 cards for an answer that is always yes. */
 
-import type { CardOwnership } from "../decks/card-ownership.ts";
-import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
+import type { CardOwnership } from "../decks/validation/index.ts";
+import type { DeckBuilderCardView } from "../decks/catalog/index.ts";
 
 /** How many further copies of `code` may be added, given the copies a deck
     already holds across every zone. Zero means the add affordance is spent. */

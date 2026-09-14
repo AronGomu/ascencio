@@ -4,7 +4,7 @@ import { deckId } from "../../src/decks/index.ts";
 import { installedDeckCatalog } from "../../src/decks/catalog/installed-gameplay-cards.ts";
 import { installedSelectableDecks } from "../../src/battle/decks/installed-selectable-decks.ts";
 import { installedFreePlayOpponents } from "../../src/shell/screens/free-play-opponents.ts";
-import { PROTOTYPE_RULESET } from "../../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
 import {
   installedGameplayFixture,
   TEST_CONTENT_SET_REF,

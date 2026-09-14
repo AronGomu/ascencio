@@ -7,7 +7,7 @@ import type {
   RuntimeReceiptFile,
   RuntimeSnapshotRef,
 } from "../../content/index.ts";
-import { verifyDigest } from "../../decks/catalog/snapshot-digest.ts";
+import { verifyDigest } from "./snapshot-digest.ts";
 import { parseRuntimeSnapshotManifest } from "../worker/assets/runtime-manifest.ts";
 import { verifyRuntimeSupport } from "./verify-runtime-support.ts";
 import { writeInstalledRuntimeReceipt } from "./installed-runtime-receipt.ts";

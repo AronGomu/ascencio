@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -10,8 +11,8 @@ import {
   DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_NAME,
 } from "../../../src/decks/deck-database.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { createBlankDeck } from "../../../src/decks/editing/index.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   openDeckDatabase,
   seedDeckDatabase,
@@ -57,7 +58,7 @@ describe("deck editor migration failure", () => {
     openLegacy = await openDeckDatabase(LEGACY_DECK_DATABASE_NAME);
 
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
     });

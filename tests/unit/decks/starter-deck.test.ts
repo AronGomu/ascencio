@@ -36,7 +36,7 @@ import type {
 } from "../../../src/decks/catalog/ocg-card-mapper.ts";
 import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
 import { importYdk } from "../../../src/decks/ydk-adapter.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
 const names: string[] = [];
 const catalog = catalogByCode(PROTOTYPE_CATALOG);

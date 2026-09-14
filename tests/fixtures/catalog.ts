@@ -3,16 +3,16 @@ import {
   type AssetDeckCardRecord,
   type DeckBuilderCardView,
   type DeckCatalogRecord,
-} from "../../decks/catalog/ocg-card-mapper.ts";
+} from "../../src/decks/catalog/ocg-card-mapper.ts";
 import {
   packagedCatalogRecords,
   type PackagedCardText,
-} from "../../decks/catalog/packaged-catalog.ts";
+} from "../../src/decks/catalog/packaged-catalog.ts";
 import {
   OCG_ATTRIBUTE,
   OCG_RACE,
   OCG_TYPE,
-} from "../../decks/catalog/ocg-mask.ts";
+} from "../../src/cards/classification/index.ts";
 
 /* A small hand-written catalog, kept for tests and nothing else: production
    fetches the whole card database at runtime

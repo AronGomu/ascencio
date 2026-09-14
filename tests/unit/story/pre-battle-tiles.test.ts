@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { catalogByCode } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { catalogByCode } from "../../../src/decks/validation/index.ts";
 import { preBattleDeckTile } from "../../../src/story/decks/pre-battle-tiles.ts";
 import type { PreBattleDeckOption } from "../../../src/story/decks/pre-battle-decks.ts";
 import type { StoryDeck } from "../../../src/story/model/story-state.ts";

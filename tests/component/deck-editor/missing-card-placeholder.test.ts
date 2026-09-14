@@ -1,15 +1,21 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { tick } from "svelte";
 import CardTile from "../../../src/deck-editor/components/CardTile.svelte";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../../src/decks/validation/index.ts";
 import { stateFixture } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
@@ -42,21 +48,20 @@ describe("missing-card placeholder", () => {
         card.code !== missingCode &&
         quantityLimit(PROTOTYPE_RULESET, card.code) > 0,
     )!;
-    const cards = PROTOTYPE_CATALOG.map((card) => ({
-      ...card,
-      imageUrl:
-        card.code === missingCode
-          ? "/cards/missing.jpg"
-          : card.code === validCard.code
-            ? "/cards/valid.jpg"
-            : card.imageUrl,
-    }));
+    const cards = PROTOTYPE_CATALOG;
+    const images = {
+      acquire: vi.fn(async (code: number) => ({
+        url: code === missingCode ? "/cards/missing.jpg" : "/cards/valid.jpg",
+        release: vi.fn(),
+      })),
+    };
     const onmutate = vi.fn();
     const { container } = render(DeckEditor, {
       state,
       cards,
       catalog: new Map(cards.map((card) => [card.code, card])),
       ruleset: PROTOTYPE_RULESET,
+      images,
       returnLabel: "Deck Selection",
       onreturn: vi.fn(),
       onrename: vi.fn(),
@@ -78,9 +83,13 @@ describe("missing-card placeholder", () => {
     )!;
 
     await fireEvent.mouseEnter(missingCatalogTile);
-    const failedImage = container.querySelector<HTMLImageElement>(
-      '[data-cy="card-preview-image"]',
-    )!;
+    const failedImage = await waitFor(() => {
+      const image = container.querySelector<HTMLImageElement>(
+        '[data-cy="card-preview-image"]',
+      );
+      expect(image).not.toBeNull();
+      return image!;
+    });
     await fireEvent.error(failedImage);
     expect(
       container.querySelector('[data-cy="card-preview-image-placeholder"]'),
@@ -102,11 +111,12 @@ describe("missing-card placeholder", () => {
     ).not.toBeNull();
 
     await fireEvent.mouseEnter(validCatalogTile);
-    await tick();
-    expect(
-      container
-        .querySelector('[data-cy="card-preview-image"]')
-        ?.getAttribute("src"),
-    ).toBe("/cards/valid.jpg");
+    await waitFor(() =>
+      expect(
+        container
+          .querySelector('[data-cy="card-preview-image"]')
+          ?.getAttribute("src"),
+      ).toBe("/cards/valid.jpg"),
+    );
   });
 });

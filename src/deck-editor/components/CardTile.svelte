@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 
   export let card: DeckBuilderCardView | null;
   export let code: number;

@@ -33,12 +33,12 @@ import CardCatalog from "../../src/deck-editor/components/CardCatalog.svelte";
 import DeckZoneGrid from "../../src/deck-editor/components/DeckZoneGrid.svelte";
 import DeckSelectScreen from "../../src/deck-select/DeckSelectScreen.svelte";
 import type { DeckTileModel } from "../../src/deck-select/deck-select-contracts.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../fixtures/catalog.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../src/decks/catalog/pinned-ruleset.ts";
-import { mainDeckGridPlan } from "../../src/decks/deck-model.ts";
+} from "../../src/decks/validation/index.ts";
+import { mainDeckGridPlan } from "../../src/decks/editing/index.ts";
 import {
   PUBLIC_STATE_CARD_TEXTS,
   publicStateCard,
@@ -159,6 +159,7 @@ const CONTRACT_ROOTS = [
   "src/shell",
   "src/deck-editor",
   "src/story",
+  "src/shared-svelte-ui",
   /* The shared deck-selection screen renders inside shell, deck-editor and
      story alike, so its elements are part of every host's document and belong
      under the same contract as the domains that mount it. */

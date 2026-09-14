@@ -10,6 +10,11 @@
   import type { DuelError } from "../duel/contracts/duel-error.ts";
   import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
   import { snapshotId, type PromptId } from "../duel/contracts/ids.ts";
+  import { cardCode as canonicalCardCode } from "../../cards/index.ts";
+  import type {
+    CardImageLease as SharedCardImageLease,
+    CardImageSource,
+  } from "../../cards/images/index.ts";
   import type {
     PlayerIndex,
     PublicCard,
@@ -29,11 +34,11 @@
   } from "../field/off-field-target-list.ts";
   import type { PhysicalZoneId } from "../field/duel-field-layout.ts";
   import {
-    CardPreviewPanel,
     TOAST_CONTEXT_KEY,
     type ToastPublisher,
     type ToastTone,
   } from "../../shell/index.ts";
+  import { CardPreviewPanel } from "../../shared-svelte-ui/card-preview/index.ts";
   import DuelRail from "./components/DuelRail.svelte";
   import PhaseBar from "./components/PhaseBar.svelte";
   import DeckPicker from "./components/DeckPicker.svelte";
@@ -82,10 +87,10 @@
   import {
     catalogByCode,
     PROTOTYPE_RULESET,
-  } from "../../decks/catalog/pinned-ruleset.ts";
-  import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
+  } from "../../decks/validation/index.ts";
+  import { installedDeckCatalog } from "../../decks/index.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+  import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
   import {
     battleFacadeFailure,
     battleResultForDuelResult,
@@ -113,6 +118,7 @@
   export let content: ContentSetRef;
   export let gameplay: InstalledGameplay;
   export let reader: ContentReadPort;
+  export let imageSource: CardImageSource | null = null;
 
   /* Set by the battle facade when a host is waiting for this duel's outcome.
      Left undefined in standalone mode, where the duel reports nothing
@@ -177,6 +183,15 @@
   let imageProgress = 0;
   let imageWarning: string | null = null;
   let previewCard: CardPreviewView | null = null;
+  let previewCode: number | null = null;
+  let activePreviewSource: CardImageSource | null = null;
+  let activePreviewCode: number | null = null;
+  let activePreviewAbort: AbortController | null = null;
+  let activePreviewLease: SharedCardImageLease | null = null;
+  let previewImageUrl: string | null = null;
+  $: synchronizePreviewImage(imageSource, previewCode);
+  $: renderedPreview =
+    previewCard === null ? null : { ...previewCard, imageUrl: previewImageUrl };
   let autoResolvedPromptId: PromptId | null = null;
   /* Ctrl is a hold, not a mode: it raises Full Control for as long as it is
      down and drops it on release, while the checkbox keeps whatever the
@@ -379,6 +394,7 @@
       imageLoading = true;
       imageProgress = 0;
       imageWarning = null;
+      releasePreviewImage();
       imageLibrary?.dispose();
       imageLibrary = null;
       try {
@@ -424,6 +440,7 @@
       imageAbortController?.abort(
         new DOMException("Application disposed", "AbortError"),
       );
+      releasePreviewImage();
       imageLibrary?.dispose();
       void duel.destroy().catch((error: unknown) => {
         console.error({ event: "duel.app.destroy.failed", err: error });
@@ -442,6 +459,7 @@
          generation, so the previewed card — and the image lease behind it —
          must not survive into the next duel. */
       previewCard = null;
+      previewCode = null;
     }
     if ($duel.error !== null) diagnosticPending = false;
     /* A restore rebuilds the duel the held trace was taken from, so from here
@@ -921,23 +939,26 @@
     await refreshSelectableDecks();
   }
 
+  function showPreview(code: number, next: CardPreviewView | null): void {
+    if (next === null) return;
+    previewCode = code;
+    previewCard = next;
+  }
+
   function previewFieldCard(card: BoardCardView): void {
     if (card.code === undefined) return;
-    const next = cardPreviewForCode(card.code, activeCardTexts);
-    if (next !== null) previewCard = next;
+    showPreview(card.code, cardPreviewForCode(card.code, activeCardTexts));
   }
 
   function previewStackCard(stack: BoardStackView): void {
     const code = stackTopCode(stack);
     if (code === undefined) return;
-    const next = cardPreviewForCode(code, activeCardTexts);
-    if (next !== null) previewCard = next;
+    showPreview(code, cardPreviewForCode(code, activeCardTexts));
   }
 
   function previewZoneListEntry(entry: ZoneListEntry): void {
     if (entry.code === undefined) return;
-    const next = cardPreviewForCode(entry.code, activeCardTexts);
-    if (next !== null) previewCard = next;
+    showPreview(entry.code, cardPreviewForCode(entry.code, activeCardTexts));
   }
 
   /* Still wired to `DuelHud`'s `oninspect`, so the HUD and the card trays need
@@ -948,7 +969,51 @@
      identity visibility from face orientation. */
   function previewHudCard(card: PublicCard): void {
     const next = cardPreviewForPublicCard(card, activeCardTexts);
-    if (next !== null) previewCard = next;
+    if (next !== null && card.code !== undefined) showPreview(card.code, next);
+  }
+
+  function releasePreviewImage(): void {
+    activePreviewAbort?.abort();
+    activePreviewAbort = null;
+    activePreviewLease?.release();
+    activePreviewLease = null;
+    previewImageUrl = null;
+  }
+
+  function synchronizePreviewImage(
+    source: CardImageSource | null,
+    code: number | null,
+  ): void {
+    if (source === activePreviewSource && code === activePreviewCode) return;
+    releasePreviewImage();
+    activePreviewSource = source;
+    activePreviewCode = code;
+    if (source === null || code === null) return;
+    const controller = new AbortController();
+    activePreviewAbort = controller;
+    void source
+      .acquire(canonicalCardCode(code), "full", controller.signal)
+      .then(
+        (lease) => {
+          if (
+            controller.signal.aborted ||
+            activePreviewAbort !== controller ||
+            activePreviewSource !== source ||
+            activePreviewCode !== code
+          ) {
+            lease?.release();
+            return;
+          }
+          activePreviewLease = lease;
+          previewImageUrl = lease?.url ?? null;
+        },
+        (error: unknown) => {
+          if (controller.signal.aborted) return;
+          imageWarning = `Installed card image is unavailable: ${
+            error instanceof Error ? error.message : String(error)
+          }`;
+        },
+      );
   }
 
   function retryCardImageLoading(): void {
@@ -1126,10 +1191,9 @@
   {#if duelBoard || $duel.snapshot}
     <div class="duel-shell" data-cy="duel-shell">
       <CardPreviewPanel
-        preview={previewCard}
-        imageLibrary={imagesMatchRuntime ? imageLibrary : null}
-        placeholderUrl={imageLibrary?.placeholderUrl ??
-          DEFAULT_CARD_PLACEHOLDER}
+        preview={renderedPreview}
+        dataCyPrefix="card-preview"
+        emptyLabel="Hover a card to see its details."
       />
       <div class="duel-field-column" data-cy="duel-field-column">
         {#if $duel.snapshot}

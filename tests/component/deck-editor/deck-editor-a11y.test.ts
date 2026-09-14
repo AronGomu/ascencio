@@ -5,8 +5,8 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
 import DeckLibrary from "../../../src/deck-editor/components/DeckLibrary.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   prototypeCatalogMap,
   stateFixture,

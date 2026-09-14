@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { DeckZone } from "../../decks/deck-contracts.ts";
+  import type { DeckZone } from "../../decks/contracts/index.ts";
   import { handleModalKeydown } from "../focus-trap.ts";
   import type { TapTarget } from "../layout/tap-targets.ts";
 

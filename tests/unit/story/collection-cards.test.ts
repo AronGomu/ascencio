@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import {
   collectionRarityIndex,

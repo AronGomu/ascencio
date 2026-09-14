@@ -1,12 +1,12 @@
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../src/decks/validation/index.ts";
 import {
   deckId,
   type DeckValidationSummary,
-} from "../../src/decks/deck-contracts.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+} from "../../src/decks/contracts/index.ts";
+import { PROTOTYPE_CATALOG } from "./catalog.ts";
 import type { StoryDeck } from "../../src/story/model/story-state.ts";
 
 /* One deck as a story save holds it. Built as a literal rather than through

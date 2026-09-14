@@ -5,18 +5,21 @@
    cache, not authority: `resolveDeck` plus editor library recompute it against
    same installed gameplay union before use. Save layer checks record shape. */
 
-import legacyStarterYdk from "../../decks/starter-deck.ydk?raw";
-import type { InstalledGameplay } from "../../content/index.ts";
-import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-import { PROTOTYPE_RULESET } from "../../decks/catalog/pinned-ruleset.ts";
-import type { DeckCardLists } from "../../decks/deck-contracts.ts";
-import { applyDeckCommand, createBlankDeck } from "../../decks/deck-model.ts";
-import { validateDeckDraft } from "../../decks/deck-validation.ts";
 import {
+  LEGACY_STARTER_DECK_LIST as legacyStarterYdk,
+  applyDeckCommand,
+  createBlankDeck,
   STARTER_DECK_LIST,
   STARTER_DECK_NAME,
-} from "../../decks/starter-deck.ts";
-import { importYdk } from "../../decks/ydk-adapter.ts";
+  importYdk,
+} from "../../decks/editing/index.ts";
+import type { InstalledGameplay } from "../../content/index.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+import {
+  PROTOTYPE_RULESET,
+  validateDeckDraft,
+} from "../../decks/validation/index.ts";
+import type { DeckCardLists } from "../../decks/contracts/index.ts";
 import type { StoryDeck } from "../model/story-state.ts";
 
 const EMPTY_CATALOG: ReadonlyMap<number, DeckBuilderCardView> = new Map();

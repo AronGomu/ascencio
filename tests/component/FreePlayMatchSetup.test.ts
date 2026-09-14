@@ -17,13 +17,15 @@ import {
   catalogByCode,
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../src/decks/catalog/pinned-ruleset.ts";
-import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../src/decks/deck-model.ts";
-import { validateDeckDraft } from "../../src/decks/deck-validation.ts";
+  validateDeckDraft,
+} from "../../src/decks/validation/index.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../src/decks/editing/index.ts";
 import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
-import { IndexedDbDeckRepository } from "../../src/decks/indexeddb-deck-repository.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+import { IndexedDbDeckRepository } from "../../src/decks/repository/index.ts";
+import { PROTOTYPE_CATALOG } from "../fixtures/catalog.ts";
 import {
   TOAST_CONTEXT_KEY,
   type ToastPublisher,

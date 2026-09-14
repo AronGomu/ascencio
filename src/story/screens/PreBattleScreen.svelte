@@ -1,8 +1,8 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import { cardFrameOf } from "../../decks/card-frame.ts";
-  import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+  import { CARD_FRAME_COLORS, cardFrameOf } from "../../cards/index.ts";
+  import { croppedCardImageUrl } from "../cards/deck-cover.ts";
   import {
     DeckSelectScreen,
     type DeckTileModel,
@@ -122,8 +122,8 @@
       return {
         code,
         name: card?.name ?? `#${code}`,
-        frame: cardFrameOf(card?.rawType ?? 0),
-        artUrl: croppedCardImageUrl(card?.imageUrl ?? null),
+        frameColor: CARD_FRAME_COLORS[cardFrameOf(card?.rawType ?? 0)],
+        imageUrl: croppedCardImageUrl(card?.imageUrl ?? null),
       };
     });
   }

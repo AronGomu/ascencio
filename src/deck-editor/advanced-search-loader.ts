@@ -4,9 +4,9 @@ import {
   EMPTY_ADVANCED_DECK_CATALOG_FILTERS,
   advancedDeckCatalogOptions,
   type DeckCatalogQuery,
-} from "../decks/catalog/deck-catalog.ts";
-import { filterDeckCatalogIndex } from "../decks/catalog/deck-catalog-index.ts";
-import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
+  filterDeckCatalogIndex,
+  type DeckBuilderCardView,
+} from "../decks/catalog/index.ts";
 
 interface AdvancedSearchHandle {
   setResultCount(resultCount: number): void;

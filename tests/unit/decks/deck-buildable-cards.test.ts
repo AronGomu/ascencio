@@ -3,7 +3,7 @@ import {
   deckBuildableCards,
   isDeckBuildableCard,
 } from "../../../src/decks/catalog/deck-buildable-cards.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { SHEEP_TOKEN, SHEEP_TOKEN_CODE } from "../../fixtures/token-card.ts";
 
 describe("deck-buildable cards", () => {

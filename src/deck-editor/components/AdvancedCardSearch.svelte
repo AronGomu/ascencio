@@ -11,7 +11,7 @@
     type SpellProperty,
     type SummonFrame,
     type TrapProperty,
-  } from "../../decks/catalog/deck-catalog.ts";
+  } from "../../decks/catalog/index.ts";
   import { handleModalKeydown } from "../focus-trap.ts";
   import AdvancedCheckboxGroup from "./AdvancedCheckboxGroup.svelte";
   import AdvancedSelectField from "./AdvancedSelectField.svelte";

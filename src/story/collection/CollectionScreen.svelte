@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import type { CardOwnership } from "../../decks/card-ownership.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import { CardPreviewPanel, type CardPreviewView } from "../../shell/index.ts";
+  import type { CardOwnership } from "../../decks/validation/index.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+  import type { CardPreviewView } from "../../shared-svelte-ui/card-preview/index.ts";
+  import type { CardImageSource } from "../../cards/images/index.ts";
+  import CardPreviewHost from "../components/CardPreviewHost.svelte";
   import StoryCardTile from "../components/StoryCardTile.svelte";
   import type { ShopRarity } from "../model/story-state.ts";
   import { byName, groupByRarity } from "./group-by-rarity.ts";
@@ -16,6 +18,7 @@
   export let ownership: CardOwnership;
   export let cards: readonly DeckBuilderCardView[];
   export let rarityByCode: ReadonlyMap<number, ShopRarity>;
+  export let imageSource: CardImageSource | null = null;
   export let onback: () => void = () => undefined;
 
   interface CollectionEntry {
@@ -88,9 +91,13 @@
     selected === null
       ? null
       : ({
-          code: selected.code,
+          key: String(selected.code),
           name: selected.name,
           description: selected.description,
+          statsLine: null,
+          imageUrl: null,
+          imageAlt: selected.name,
+          placeholderLabel: "Image unavailable",
         } satisfies CardPreviewView);
 
   $: observeSentinel(sentinel, scroller);
@@ -179,7 +186,13 @@
 
   <div class="collection-layout" data-cy="collection-layout">
     <aside class="collection-preview" data-cy="collection-preview">
-      <CardPreviewPanel {preview} staticImageUrl={selected?.imageUrl ?? null} />
+      <CardPreviewHost
+        code={selected?.code ?? null}
+        {preview}
+        {imageSource}
+        dataCyPrefix="collection-preview-card"
+        emptyLabel="Hover a card to see its details."
+      />
     </aside>
 
     <div class="collection-grid" data-cy="collection-grid" bind:this={scroller}>

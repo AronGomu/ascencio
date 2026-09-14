@@ -3,17 +3,17 @@
 import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it } from "vitest";
-import { MAXIMUM_DECK_AUTOSAVES } from "../../../src/decks/deck-database.ts";
-import type {
-  DeckAutosaveRecord,
-  DeckHistory,
-} from "../../../src/decks/deck-contracts.ts";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import {
+  MAXIMUM_DECK_AUTOSAVES,
   DeckRevisionConflictError,
   DeckStorageError,
-} from "../../../src/decks/indexeddb-deck-repository.ts";
+} from "../../../src/decks/repository/index.ts";
+import {
+  type DeckAutosaveRecord,
+  type DeckHistory,
+  deckId,
+} from "../../../src/decks/contracts/index.ts";
+import { emptyDeckHistory } from "../../../src/decks/editing/index.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
 import {

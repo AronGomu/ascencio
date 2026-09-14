@@ -13,9 +13,11 @@
    and no Side deck and so validates to `warnings`; a gate that asked for a
    clean verdict would lock every fresh save out of its first duel. */
 
-import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-import { PROTOTYPE_RULESET } from "../../decks/catalog/pinned-ruleset.ts";
-import { validateDeckDraft } from "../../decks/deck-validation.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+import {
+  PROTOTYPE_RULESET,
+  validateDeckDraft,
+} from "../../decks/validation/index.ts";
 import type { StoryState } from "../model/story-state.ts";
 import { storyCardOwnership } from "./card-ownership.ts";
 

@@ -10,7 +10,7 @@
     toFrameDelta,
     UNROTATED_FRAME,
     type StageFrame,
-  } from "../../presentation/stage-frame.ts";
+  } from "../../../../shared-svelte-ui/geometry/index.ts";
   import type { PersistedWindowPosition } from "../../stores/persisted-ui-state.ts";
 
   export let windowId: FieldWindowId;

@@ -4,12 +4,12 @@ import { cleanup, render, screen } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   pushDeckUpdate,
   undoDeckUpdate,
-} from "../../../src/decks/deck-history.ts";
+} from "../../../src/decks/editing/index.ts";
 import {
   prototypeCatalogMap,
   stateFixture,

@@ -1,7 +1,7 @@
 import { isProjectedCardIdentityKnown } from "../../duel/card-visibility.ts";
 import type { CardCode } from "../../duel/contracts/ids.ts";
 import type { PublicCard } from "../../duel/contracts/public-duel-state.ts";
-import type { CardPreviewView } from "../../../shell/index.ts";
+import type { CardPreviewView } from "../../../shared-svelte-ui/card-preview/index.ts";
 
 /** The subset of `__ACTIVE_CARD_TEXTS__` the preview panel reads. */
 export interface CardPreviewText {
@@ -17,9 +17,8 @@ export interface CardPreviewText {
   readonly defense?: number | null;
 }
 
-/* The panel itself lives in the shell, shared with the deck editor, so its view
-   shape is the shell's. Re-exported here because the duel's own modules read it
-   as duel presentation vocabulary. */
+/* Re-exported here because duel modules read the shared view as duel
+   presentation vocabulary. */
 export type { CardPreviewView };
 
 /** Builds the compact stats line shown in the preview panel below the card name. */
@@ -67,11 +66,15 @@ export function cardPreviewForCode(
 ): CardPreviewView | null {
   if (code === undefined) return null;
   const text = cardTexts.get(code);
+  const name = text?.name ?? `Card ${code}`;
   return {
-    code,
-    name: text?.name ?? `Card ${code}`,
+    key: String(code),
+    name,
     description: text?.description ?? "No card text available.",
     statsLine: text != null ? formatCardStatsLine(text) : null,
+    imageUrl: null,
+    imageAlt: name,
+    placeholderLabel: "Image unavailable",
   };
 }
 

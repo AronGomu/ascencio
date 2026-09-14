@@ -1,11 +1,11 @@
-import type { DeckRecord } from "../../src/decks/deck-contracts.ts";
+import type { DeckRecord } from "../../src/decks/contracts/index.ts";
 import {
   createDeckStores,
   DECK_DATABASE_VERSION,
   LEGACY_DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_VERSION,
 } from "../../src/decks/deck-database.ts";
-import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
+import { emptyDeckHistory } from "../../src/decks/editing/index.ts";
 
 /* Raw-IndexedDB access for the tests that have to look at a deck database from
    outside the repository — the migration tests, which need to plant a

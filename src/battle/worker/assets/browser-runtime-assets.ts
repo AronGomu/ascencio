@@ -4,7 +4,7 @@ import {
   type RuntimeManifestFile,
   type RuntimeSnapshotManifest,
 } from "./runtime-manifest.ts";
-import { verifyDigest } from "../../../decks/catalog/snapshot-digest.ts";
+import { verifyDigest } from "../../storage/snapshot-digest.ts";
 import type { ActiveDuelAssetReader } from "./active-duel-dependencies.ts";
 
 const WASM_VENDOR_PATH = "lib/ocgcore.sync.wasm";

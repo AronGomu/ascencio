@@ -13,7 +13,7 @@ import {
   PROTOTYPE_CATALOG,
   PROTOTYPE_CATALOG_ASSETS,
   PROTOTYPE_CATALOG_TEXTS,
-} from "../../../src/deck-editor/fixtures/catalog.ts";
+} from "../../fixtures/catalog.ts";
 
 /* The runtime shards are bucketed by `code % 64`, so a reader standing in for
    them buckets the same way. A loader that asked for the wrong shard would

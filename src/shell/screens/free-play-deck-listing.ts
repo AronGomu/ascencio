@@ -1,11 +1,11 @@
 import type { InstalledGameplay } from "../../content/index.ts";
 import type { SelectableDeck } from "../../battle/index.ts";
-import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
+import { installedDeckCatalog } from "../../decks/index.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../decks/catalog/pinned-ruleset.ts";
-import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
+} from "../../decks/validation/index.ts";
+import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
 import type { BattleDeckModule } from "../domain-loaders.ts";
 
 export type BattleDeckLoader = () => Promise<BattleDeckModule>;

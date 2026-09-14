@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import CollectionScreen from "../../../src/story/collection/CollectionScreen.svelte";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import {

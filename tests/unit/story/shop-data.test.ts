@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import { inferRarity } from "../../../src/story/shop/data/shop-rarity.ts";
 import {
   SELL_PRICE_DP,

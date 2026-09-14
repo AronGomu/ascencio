@@ -1,4 +1,4 @@
-import { deckId, type DeckId } from "../decks/deck-contracts.ts";
+import { deckId, type DeckId } from "../decks/contracts/index.ts";
 
 /* Route ids travel in the URL hash, so they stay restricted to characters that
    survive a copy-paste without escaping and cannot smuggle a path segment. */

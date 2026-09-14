@@ -6,11 +6,11 @@
     type DecklistRow,
     type DecklistView,
   } from "../../deck-select/index.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import { cardFrameOf } from "../../decks/card-frame.ts";
-  import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
-  import type { DeckId, DeckRecord } from "../../decks/deck-contracts.ts";
-  import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+  import { CARD_FRAME_COLORS, cardFrameOf } from "../../cards/index.ts";
+  import { croppedCardImageUrl } from "../cards/deck-cover.ts";
+  import type { DeckId, DeckRecord } from "../../decks/contracts/index.ts";
+  import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/editing/index.ts";
   import { deckLibraryTiles } from "./deck-library-tiles.ts";
   import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../../shell/index.ts";
 
@@ -83,8 +83,8 @@
     return {
       code,
       name: card?.name ?? `Missing card ${code}`,
-      frame: cardFrameOf(card?.rawType ?? 0),
-      artUrl: croppedCardImageUrl(card?.imageUrl ?? null),
+      frameColor: CARD_FRAME_COLORS[cardFrameOf(card?.rawType ?? 0)],
+      imageUrl: croppedCardImageUrl(card?.imageUrl ?? null),
     };
   }
 

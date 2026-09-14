@@ -5,13 +5,13 @@ import { afterEach, describe, expect, it } from "vitest";
 import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
+} from "../../../src/decks/validation/index.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { deckId } from "../../../src/decks/contracts/index.ts";
 import { DECK_DATABASE_VERSION } from "../../../src/decks/deck-database.ts";
 
 const names: string[] = [];

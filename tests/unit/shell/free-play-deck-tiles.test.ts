@@ -4,9 +4,9 @@ import {
   presetSelectableDecks,
   type SelectableDeck,
 } from "../../../src/battle/index.ts";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
+import { deckId } from "../../../src/decks/contracts/index.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { freePlayDeckTile } from "../../../src/shell/screens/free-play-deck-tiles.ts";
 
 /* How free play describes one deck to the shared selection screen. Pure, so it

@@ -6,8 +6,8 @@ import CollectionScreen from "../../../src/story/collection/CollectionScreen.sve
 import {
   unlimitedCardOwnership,
   type CardOwnership,
-} from "../../../src/decks/card-ownership.ts";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+} from "../../../src/decks/validation/index.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import {
   createInitialStoryState,
@@ -188,7 +188,8 @@ describe("CollectionScreen", () => {
       .setup()
       .click(container.querySelector('[data-cy="collection-card-4007"]')!);
     expect(
-      container.querySelector('[data-cy="card-preview-name"]')!.textContent,
+      container.querySelector('[data-cy="collection-preview-card-name"]')!
+        .textContent,
     ).toBe("Dark Magician");
   });
 

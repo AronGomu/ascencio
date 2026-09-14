@@ -1,9 +1,9 @@
-import type { DeckZone } from "../../decks/deck-contracts.ts";
-import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+import type { DeckZone } from "../../decks/contracts/index.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import {
   quantityLimit,
   type PinnedDeckRuleset,
-} from "../../decks/catalog/pinned-ruleset.ts";
+} from "../../decks/validation/index.ts";
 
 /** How many cards each zone already holds; a tap target for a full zone is
     offered but disabled, so the menu never changes shape under the finger. */

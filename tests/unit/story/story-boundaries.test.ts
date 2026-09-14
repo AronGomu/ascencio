@@ -5,41 +5,35 @@ import { describe, expect, it } from "vitest";
 const storyRoot = path.resolve("src/story");
 
 /* What the visual novel may reach for outside itself, mirroring the rule
-   `tests/unit/domain-boundaries.test.ts` enforces across every domain: the
-   shared deck-data library, the one type-only battle module that names a duel
-   result, and the shell's public entry. Everything else the app ships — the
-   duel's `app/`, `duel/`, `field/`, `worker/` and `storage/` internals under
-   `src/battle/`, the shell's internals, the deck editor — is a boundary break,
-   because the story is loaded as its own lazy chunk and a value import would
-   drag that chunk in with it.
+   `tests/unit/domain-boundaries.test.ts` enforces across every domain: shared
+   deck/card contracts, pure shared presentation, the one type-only battle
+   module that names a duel result, and public shell/deck-selection entries.
+   Everything else the app ships — the duel's `app/`, `duel/`, `field/`,
+   `worker/` and `storage/` internals under `src/battle/`, shell internals, the
+   deck editor — is a boundary break, because story loads as its own lazy chunk.
 
-   T29, deliberate widening of one target: `src/shell/index.ts` is the shared
-   card preview panel's home (ADR-036), and the collection screen renders it
-   rather than growing a third inspector. It costs the story chunk nothing —
-   the shell entry is the eager chunk every route has already loaded before the
-   visual novel mounts — which is the same reason the duel's zone in
-   `eslint.config.js` stopped excluding the whole shell when the panel moved
-   there. Both machine checks already allow it: the story zone in
-   `eslint.config.js` re-includes the shell entry, and `isLegalImport` in
-   `tests/unit/domain-boundaries.test.ts` resolves it to the shell's public
-   entry. This file was the one list still holding the pre-ADR-036 shape.
-
-   T24, the same widening for the same reason: `src/deck-select/index.ts` is
-   the shared deck-selection screen, which the pre-battle briefing renders
-   rather than growing a second deck picker of its own. It is presentational
-   and reads no other domain, so the story chunk pays for a screen and nothing
-   behind it — and both machine checks already allow it, the story zone in
-   `eslint.config.js` re-including the entry and `isLegalImport` resolving it
-   to deck-select's public entry. */
+   T3 moves card-preview presentation from the shell into pure shared Svelte UI.
+   Story also accepts the public `CardImageSource` port as an injected type-only
+   input; neither entry grants access to a connected provider implementation. */
 function reachableFromStory(target: string): boolean {
   return (
     target === "src/battle/battle-contracts.ts" ||
     target === "src/shell/index.ts" ||
     target === "src/deck-select/index.ts" ||
     target === "src/content/index.ts" ||
+    target === "src/cards/index.ts" ||
+    target === "src/cards/images/index.ts" ||
+    target === "src/shared-svelte-ui/card-preview/index.ts" ||
     // T2 source relocation preserves the existing static SVG import, not a code API.
     target === "assets/story/chapter-01/city-map-placeholder.svg" ||
-    target.startsWith("src/decks/")
+    [
+      "index",
+      "contracts/index",
+      "repository/index",
+      "editing/index",
+      "validation/index",
+      "catalog/index",
+    ].some((entry) => target === `src/decks/${entry}.ts`)
   );
 }
 
@@ -67,7 +61,7 @@ describe("story source boundary", () => {
     }
   });
 
-  it("reaches outside itself only for deck data and the duel result contract", async () => {
+  it("reaches outside itself only through approved public entries", async () => {
     const files = await findSourceFiles(storyRoot);
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) {

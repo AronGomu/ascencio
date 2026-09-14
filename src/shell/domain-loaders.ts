@@ -1,13 +1,15 @@
 import type { Component } from "svelte";
 import type { ContentReadPort, InstalledGameplay } from "../content/index.ts";
+import type { CardImageSource } from "../cards/images/index.ts";
 import type {
   BattleFacade,
   findSelectableDeck,
   installedSelectableDecks,
   parseBattleRequest,
 } from "../battle/index.ts";
+import type { EditorCatalogInput } from "../deck-editor/ports/index.ts";
 import type { DeckEditorRoute } from "../deck-editor/index.ts";
-import type { DeckContext } from "../decks/deck-repository-context.ts";
+import type { DeckContext } from "../decks/repository/index.ts";
 import type {
   StoryDuelResolution,
   StoryEncounterRequest,
@@ -29,8 +31,7 @@ export type DomainLoader<
     story save's decks and must never write into the wrong one. */
 export type DeckEditorDomainProps = DeckEditorRoute & {
   readonly context: DeckContext;
-  readonly gameplay: InstalledGameplay;
-  readonly reader: ContentReadPort | null;
+  readonly catalogInput: EditorCatalogInput;
   readonly onnavigate: (route: DeckEditorRoute) => void;
   /** Leaving the deck menu for the cards the same world owns. Reported rather
       than routed, because `DeckEditorRoute` names a deck and this names a
@@ -72,6 +73,7 @@ export type BattleDeckModule = Omit<
 export type StoryDomainProps = {
   readonly gameplay: InstalledGameplay;
   readonly reader: ContentReadPort | null;
+  readonly imageSource: CardImageSource | null;
   /** Which main-menu entry sent the player here, so the story can open on that
       screen rather than repeating a title the shell already showed. `null`
       when the route was reached any other way. */

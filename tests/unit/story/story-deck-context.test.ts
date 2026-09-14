@@ -4,8 +4,8 @@ import "fake-indexeddb/auto";
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it } from "vitest";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { DeckStorageError } from "../../../src/decks/deck-storage-errors.ts";
+import { emptyDeckHistory } from "../../../src/decks/editing/index.ts";
+import { DeckStorageError } from "../../../src/decks/repository/index.ts";
 import { openStoryDeckContext } from "../../../src/story/decks/story-deck-context.ts";
 import {
   createInitialStoryState,

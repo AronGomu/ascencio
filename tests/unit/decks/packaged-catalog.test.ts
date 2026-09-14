@@ -6,7 +6,7 @@ import {
   packagedCatalog,
   packagedCatalogRecords,
 } from "../../../src/decks/catalog/packaged-catalog.ts";
-import { PROTOTYPE_CATALOG_ASSETS } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG_ASSETS } from "../../fixtures/catalog.ts";
 
 /* Built the way `vite.config.ts` builds the three globals, from the same
    generated snapshot, so this file checks the real shipped catalog rather than

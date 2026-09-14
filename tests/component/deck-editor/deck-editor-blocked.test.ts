@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -48,7 +49,7 @@ describe("deck editor blocked open", () => {
     );
 
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
     });

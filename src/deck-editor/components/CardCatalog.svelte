@@ -1,29 +1,27 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import type { AdvancedDeckCatalogFilters } from "../../decks/catalog/deck-catalog.ts";
   import {
+    type AdvancedDeckCatalogFilters,
     catalogTypeOptions,
     EMPTY_CATALOG_FILTERS,
     type DeckCatalogFilters,
-  } from "../../decks/catalog/deck-catalog-types.ts";
-  import {
     buildDeckCatalogIndex,
     filterQuickDeckCatalogIndex,
-  } from "../../decks/catalog/deck-catalog-index-base.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
-  import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
+    type DeckBuilderCardView,
+  } from "../../decks/catalog/index.ts";
   import {
+    type PinnedDeckRuleset,
+    quantityLimit,
     unlimitedCardOwnership,
     type CardOwnership,
-  } from "../../decks/card-ownership.ts";
+  } from "../../decks/validation/index.ts";
   import { availableCopies } from "../catalog-availability.ts";
   import {
     INITIAL_RESULT_WINDOW,
     nextResultWindow,
     RESULT_WINDOW_CEILING,
   } from "../layout/result-window.ts";
-  import { OverlayScrollbar } from "../../shell/index.ts";
+  import { OverlayScrollbar } from "../../shared-svelte-ui/scrollbar/index.ts";
   import CardTile from "./CardTile.svelte";
   import type CatalogTypeInputComponent from "./CatalogTypeInput.svelte";
   import type { AdvancedSearchHost } from "../advanced-search-loader.ts";

@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -9,9 +10,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import { DECK_DATABASE_NAME } from "../../../src/decks/repository/index.ts";
 import {
   prototypeCatalogMap,
   stateFixture,
@@ -185,7 +186,7 @@ describe("DeckEditor shell", () => {
 describe("DeckEditorApp boot", () => {
   it("loads isolated storage then falls back to Deck Library", async () => {
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
     });

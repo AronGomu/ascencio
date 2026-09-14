@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import * as battle from "../../../src/battle/index.ts";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
-import type { ValidatedDeckSnapshot } from "../../../src/decks/deck-contracts.ts";
+import {
+  deckId,
+  type ValidatedDeckSnapshot,
+} from "../../../src/decks/contracts/index.ts";
 import type { BattleDeckModule } from "../../../src/shell/domain-loaders.ts";
 import { storyBattleRequest } from "../../../src/shell/handoff/handoff-request.ts";
 import { installedGameplayFixture } from "../../fixtures/installed-gameplay.ts";

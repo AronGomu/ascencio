@@ -7,6 +7,7 @@
     type InstalledImageLibrary,
   } from "../content/index.ts";
   import { PROLOGUE } from "./content/prologue.ts";
+  import type { CardImageSource } from "../cards/images/index.ts";
   import {
     createInitialStoryState,
     mapReturnScreen,
@@ -65,9 +66,9 @@
   } from "./shop/data/shop-set-data.ts";
   import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
   import { singlePriceDp } from "./shop/data/shop-pricing.ts";
-  import { installedDeckCatalog } from "../decks/catalog/installed-gameplay-cards.ts";
-  import { catalogByCode } from "../decks/catalog/pinned-ruleset.ts";
-  import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
+  import { installedDeckCatalog } from "../decks/index.ts";
+  import { catalogByCode } from "../decks/validation/index.ts";
+  import type { DeckBuilderCardView } from "../decks/catalog/index.ts";
   import { encounterDeck } from "./decks/encounter-deck.ts";
   import { buildInstalledStarterGrant } from "./decks/starter-grant.ts";
   import { preBattleDeckOptions } from "./decks/pre-battle-decks.ts";
@@ -86,6 +87,7 @@
 
   export let gameplay: InstalledGameplay;
   export let reader: ContentReadPort | null = null;
+  export let imageSource: CardImageSource | null = null;
 
   /* The duel handoff, in three props. The story asks for an encounter and is
      told whether it started; it is unmounted while the duel runs, so what
@@ -1110,6 +1112,7 @@
             setName={shopSetName}
             dp={state.dp}
             cards={shopCards}
+            {imageSource}
             onbuysingle={(code, rarity) =>
               dispatch({ type: "buy-single", code, rarity })}
             onback={() => dispatch({ type: "shop-navigate", to: "browse" })}

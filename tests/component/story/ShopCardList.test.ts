@@ -4,6 +4,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ShopCardListScreen from "../../../src/story/shop/ShopCardListScreen.svelte";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
+import type { CardImageSource } from "../../../src/cards/images/index.ts";
 
 afterEach(() => cleanup());
 
@@ -61,6 +62,12 @@ const FIVE_CARDS: readonly CardEntry[] = [
 ];
 
 const noop = () => undefined;
+const previewImages: CardImageSource = {
+  acquire: async (code) => ({
+    url: `/art/${code}.jpg`,
+    release: noop,
+  }),
+};
 
 describe("ShopCardListScreen", () => {
   it("grid renders one halo tile per card", () => {
@@ -118,8 +125,11 @@ describe("ShopCardListScreen", () => {
       container.querySelector('[data-cy="story-shop-card-333"]')!,
     );
     expect(
-      (container.querySelector('[data-cy="card-preview-name"]') as HTMLElement)
-        .textContent,
+      (
+        container.querySelector(
+          '[data-cy="story-shop-card-preview-name"]',
+        ) as HTMLElement
+      ).textContent,
     ).toBe("Exodia the Forbidden One");
     expect(
       (
@@ -138,6 +148,7 @@ describe("ShopCardListScreen", () => {
       setName: "LOB",
       dp: 9999,
       cards: FIVE_CARDS,
+      imageSource: previewImages,
       onbuysingle: noop,
       onback: noop,
     });
@@ -145,7 +156,7 @@ describe("ShopCardListScreen", () => {
       '[data-cy="story-shop-cards-preview"]',
     ) as HTMLElement;
     expect(
-      preview.querySelector('[data-cy="card-preview-panel"]'),
+      preview.querySelector('[data-cy="story-shop-card-preview-panel"]'),
       "the shared preview panel is mounted in the set list",
     ).not.toBeNull();
 
@@ -153,15 +164,16 @@ describe("ShopCardListScreen", () => {
       container.querySelector('[data-cy="story-shop-card-444"]')!,
     );
     expect(
-      preview.querySelector('[data-cy="card-preview-text"]')?.textContent,
+      preview.querySelector('[data-cy="story-shop-card-preview-text"]')
+        ?.textContent,
     ).toContain("A fiend with dark powers");
-    expect(
-      (
-        preview.querySelector(
-          '[data-cy="card-preview-image"]',
-        ) as HTMLImageElement
-      ).src,
-    ).toContain("/art/444.jpg");
+    await vi.waitFor(() =>
+      expect(
+        preview
+          .querySelector('[data-cy="story-shop-card-preview-image"]')
+          ?.getAttribute("src"),
+      ).toBe("/art/444.jpg"),
+    );
 
     /* One rendering of the card, not two: the panel draws the art, so the
        screen's own tile is gone from the preview column. */

@@ -1,4 +1,4 @@
-import type { DeckZone } from "../../decks/deck-contracts.ts";
+import type { DeckZone } from "../../decks/contracts/index.ts";
 
 /* What a double-click on a tile means. Derived from the target and the deck's
    fill, never from anything the layout happens to be showing. */

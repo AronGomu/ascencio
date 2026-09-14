@@ -5,8 +5,8 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { OCG_TYPE } from "../../../src/decks/catalog/ocg-mask.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { OCG_TYPE } from "../../../src/cards/classification/index.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 const mainCodes = PROTOTYPE_CATALOG.filter(

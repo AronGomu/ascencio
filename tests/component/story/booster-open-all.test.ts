@@ -11,7 +11,7 @@ import BoosterResultsScreen from "../../../src/story/shop/BoosterResultsScreen.s
 import { PACK_SIZE } from "../../../src/story/shop/data/shop-pricing.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 
 /* Buying more than one pack. The single pack — the flip, the halo, the zoom,

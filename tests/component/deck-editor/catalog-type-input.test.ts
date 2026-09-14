@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CatalogTypeInput from "../../../src/deck-editor/components/CatalogTypeInput.svelte";
-import type { CatalogTypeTag } from "../../../src/decks/catalog/deck-catalog.ts";
+import type { CatalogTypeTag } from "../../../src/decks/catalog/index.ts";
 
 const OPTIONS: readonly CatalogTypeTag[] = [
   {

@@ -10,7 +10,7 @@ import {
   type CatalogTypeTag,
   type DeckCatalogQuery,
 } from "../../../src/decks/catalog/deck-catalog.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
 function tag(
   category: CatalogTypeTag["category"],

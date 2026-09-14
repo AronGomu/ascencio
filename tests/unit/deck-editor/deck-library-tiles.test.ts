@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { deckLibraryTiles } from "../../../src/deck-editor/components/deck-library-tiles.ts";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import {
   deckId,
   type DeckRecord,
   type DeckValidationIssue,
-} from "../../../src/decks/deck-contracts.ts";
+} from "../../../src/decks/contracts/index.ts";
 
 /* The library's own mapping, read without a DOM: what a stored deck looks like
    as the one tile every deck grid renders. The two halves the screen cannot

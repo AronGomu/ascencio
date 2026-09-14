@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -9,10 +10,12 @@ import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
-import type { DeckContext } from "../../../src/decks/deck-repository-context.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+} from "../../../src/decks/validation/index.ts";
+import {
+  DECK_DATABASE_NAME,
+  type DeckContext,
+} from "../../../src/decks/repository/index.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
@@ -99,7 +102,7 @@ function storyContext(
 async function openLibrary(collection: Record<number, number>): Promise<void> {
   render(DeckEditorApp, {
     props: {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
       context: storyContext(collection),

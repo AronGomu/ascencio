@@ -10,7 +10,7 @@ import {
   OCG_ATTRIBUTE,
   OCG_RACE,
   OCG_TYPE,
-} from "../../../src/decks/catalog/ocg-mask.ts";
+} from "../../../src/cards/classification/index.ts";
 
 describe("client-safe OCG masks", () => {
   it("matches vendored runtime constants without importing core in client code", () => {

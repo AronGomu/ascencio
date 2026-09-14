@@ -4,7 +4,7 @@ import { installedDeckCatalog } from "../../src/decks/catalog/installed-gameplay
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../src/decks/validation/index.ts";
 import {
   createFakeOcgCoreAdapter,
   FAKE_DEPENDENCIES,

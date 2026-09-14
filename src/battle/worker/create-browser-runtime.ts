@@ -10,12 +10,12 @@ import {
 } from "../../content/index.ts";
 import { readInstalledRuntimeReceipt } from "../storage/installed-runtime-receipt.ts";
 import { DuelOperationError } from "../duel/contracts/duel-error.ts";
-import { verifyDigest } from "../../decks/catalog/snapshot-digest.ts";
-import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
+import { verifyDigest } from "../storage/snapshot-digest.ts";
+import { installedDeckCatalog } from "../../decks/index.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../decks/catalog/pinned-ruleset.ts";
+} from "../../decks/validation/index.ts";
 import { loadInstalledRuntimeDependencies } from "./assets/installed-runtime-dependencies.ts";
 import { loadBrowserRuntimeAssets } from "./assets/browser-runtime-assets.ts";
 import {

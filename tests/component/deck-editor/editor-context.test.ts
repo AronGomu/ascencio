@@ -5,11 +5,15 @@ import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import {
+  DECK_DATABASE_NAME,
+  IndexedDbDeckRepository,
+} from "../../../src/decks/repository/index.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../../src/decks/editing/index.ts";
 import AppShell from "../../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../../src/shell/shell-store.ts";

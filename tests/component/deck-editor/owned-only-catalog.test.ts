@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -8,19 +9,23 @@ import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import {
   PROTOTYPE_RULESET,
   catalogByCode,
   quantityLimit,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import type { DeckContext } from "../../../src/decks/deck-repository-context.ts";
-import type { DeckRepository } from "../../../src/decks/deck-repository.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+} from "../../../src/decks/validation/index.ts";
+import { deckId } from "../../../src/decks/contracts/index.ts";
+import {
+  DECK_DATABASE_NAME,
+  type DeckContext,
+  type DeckRepository,
+  IndexedDbDeckRepository,
+} from "../../../src/decks/repository/index.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../../src/decks/editing/index.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
@@ -133,7 +138,9 @@ async function openCatalog(props: {
      harness refuses a props object that shares a name with one. */
   render(DeckEditorApp, {
     props: {
-      gameplay: installedGameplayFromCatalog(CATALOG_FIVE),
+      catalogInput: installedEditorCatalog(
+        installedGameplayFromCatalog(CATALOG_FIVE),
+      ),
       deckId: deckId(props.deckId),
       onnavigate: vi.fn(),
       ...(props.context === undefined ? {} : { context: props.context }),

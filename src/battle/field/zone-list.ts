@@ -72,9 +72,10 @@ function deckEntry(
   cardTexts: ReadonlyMap<number, BoardCardText>,
 ): ZoneListEntry {
   const identityVisible = isProjectedCardIdentityKnown(card);
-  const label = identityVisible
-    ? (cardTexts.get(card.code as CardCode)?.name ?? `Card ${card.code}`)
-    : "Face-down card";
+  const label =
+    identityVisible && card.code !== undefined
+      ? (cardTexts.get(card.code)?.name ?? `Card ${card.code}`)
+      : "Face-down card";
   return Object.freeze({
     id: `${stackId}:${index + 1}`,
     position: index + 1,
@@ -108,9 +109,10 @@ function sourcedEntry(
   cardTexts: ReadonlyMap<number, BoardCardText>,
 ): ZoneListEntry {
   const identityVisible = isProjectedCardIdentityKnown(card);
-  const label = identityVisible
-    ? (cardTexts.get(card.code as CardCode)?.name ?? `Card ${card.code}`)
-    : "Face-down card";
+  const label =
+    identityVisible && card.code !== undefined
+      ? (cardTexts.get(card.code)?.name ?? `Card ${card.code}`)
+      : "Face-down card";
   return Object.freeze({
     id: `${stackId}:${index + 1}`,
     position: index + 1,

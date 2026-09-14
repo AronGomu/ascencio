@@ -1,0 +1,17 @@
+export {
+  deckId,
+  cloneCardLists,
+  type DeckId,
+  type DeckZone,
+  type DeckIssueSeverity,
+  type DeckValidationIssue,
+  type DeckValidationSummary,
+  type DeckCardLists,
+  type DeckRecord,
+  type ValidatedDeckSnapshot,
+  type ResolveDeckResult,
+  type DeckCardUpdate,
+  type DeckHistory,
+  type StoredDeck,
+  type DeckAutosaveRecord,
+} from "../deck-contracts.ts";

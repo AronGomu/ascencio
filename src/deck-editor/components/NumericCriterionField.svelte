@@ -3,7 +3,7 @@
     numericCriterionError,
     type NumericCriterion,
     type NumericOperator,
-  } from "../../decks/catalog/deck-catalog.ts";
+  } from "../../decks/catalog/index.ts";
 
   export let id: string;
   export let label: string;

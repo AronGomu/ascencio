@@ -76,7 +76,7 @@
     toFrameRect,
     UNROTATED_FRAME,
     type StageFrame,
-  } from "../presentation/stage-frame.ts";
+  } from "../../../shared-svelte-ui/geometry/index.ts";
   import DragGhost from "./duel-field/DragGhost.svelte";
   import DropConfirmDialog from "./duel-field/DropConfirmDialog.svelte";
   import HandZoomOverlay from "./duel-field/HandZoomOverlay.svelte";

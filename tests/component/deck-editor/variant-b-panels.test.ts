@@ -11,7 +11,7 @@ import LoadDeckDialog from "../../../src/deck-editor/components/LoadDeckDialog.s
 import TapTargetMenu from "../../../src/deck-editor/components/TapTargetMenu.svelte";
 import YdkExport from "../../../src/deck-editor/components/YdkExport.svelte";
 import YdkImport from "../../../src/deck-editor/components/YdkImport.svelte";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   deckFixture,
   prototypeCatalogMap,

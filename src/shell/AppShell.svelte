@@ -30,12 +30,10 @@
     type AppRoute,
     type RouteContext,
   } from "./routes.ts";
-  import { deckId } from "../decks/deck-contracts.ts";
-  import type { DeckContext } from "../decks/deck-repository-context.ts";
-  import {
-    unlimitedCardOwnership,
-    type CardOwnership,
-  } from "../decks/card-ownership.ts";
+  import { deckId } from "../decks/contracts/index.ts";
+  import type { DeckContext } from "../decks/repository/index.ts";
+  import type { CardOwnership } from "../decks/validation/index.ts";
+  import type { CardImageSource } from "../cards/images/index.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
   import type { BattleFacadeResult, BattleRequest } from "../battle/index.ts";
@@ -76,6 +74,58 @@
     coreGate.kind === "ready" ? coreGate.gameplay : null;
   let contentReader: OwnedContentReader | null =
     coreGate.kind === "ready" ? coreGate.reader : null;
+  let cardImages: CardImageSource | null = null;
+  let boundImageReader: OwnedContentReader | null = null;
+  let boundImageGameplay: InstalledGameplay | null = null;
+  let imageBindingToken = 0;
+  $: bindCardImages(contentReader, gameplay);
+
+  function bindCardImages(
+    reader: OwnedContentReader | null,
+    installed: InstalledGameplay | null,
+  ): void {
+    if (reader === boundImageReader && installed === boundImageGameplay) return;
+    boundImageReader = reader;
+    boundImageGameplay = installed;
+    cardImages = null;
+    const requested = ++imageBindingToken;
+    if (reader === null || installed === null) return;
+    void import("./cards/installed-card-image-source.ts").then(
+      ({ createInstalledCardImageSource }) => {
+        if (requested !== imageBindingToken) return;
+        const observedReasons: string[] = [];
+        cardImages = createInstalledCardImageSource(
+          reader,
+          installed,
+          (status) => {
+            if (
+              requested !== imageBindingToken ||
+              observedReasons.includes(status.reason)
+            )
+              return;
+            observedReasons.push(status.reason);
+            console.warn({
+              event: "shell.card-images.missing-media",
+              reason: status.reason,
+            });
+            if (observedReasons.length === 1)
+              toasts.show({
+                message:
+                  "Some card images are unavailable. You can keep playing.",
+                tone: "warning",
+              });
+          },
+        );
+      },
+      () => {
+        if (requested === imageBindingToken)
+          toasts.show({
+            message: "Card images are unavailable. You can keep playing.",
+            tone: "warning",
+          });
+      },
+    );
+  }
   /* Story progress is written by the shell only for the pre-duel checkpoint.
      The default reaches the repository through the visual novel's own lazy
      chunk, so `#/free-play` and its decks never load the story to hold it. */
@@ -441,7 +491,10 @@
     world: RouteContext,
     requested: number,
   ): Promise<OpenCollection | null> {
-    const story = await import("../story/index.ts");
+    const [story, { unlimitedCardOwnership }] = await Promise.all([
+      import("../story/index.ts"),
+      import("../decks/validation/index.ts"),
+    ]);
     let ownership: CardOwnership = unlimitedCardOwnership();
     if (world === "story") {
       const bound = await story.openStoryDeckContext(saves ?? lazySaves);
@@ -560,6 +613,7 @@
 
     return () => {
       mounted = false;
+      imageBindingToken += 1;
       observer?.disconnect();
       globalThis.removeEventListener("resize", measure);
       globalThis.removeEventListener("hashchange", syncFromLocation);
@@ -641,6 +695,7 @@
           ownership={opened.ownership}
           cards={opened.catalog.cards}
           rarityByCode={opened.catalog.rarityByCode}
+          imageSource={cardImages}
           onback={() => store.navigate(deckRoute(opened.context, null))}
         />
       {/if}
@@ -663,12 +718,13 @@
           </p>
         {:else if gameplay !== null}
           {@const bound = editorContext}
-          {#await loaders.decks() then module}
+          {@const installed = gameplay}
+          {@const images = cardImages}
+          {#await Promise.all( [loaders.decks(), import("./cards/installed-editor-catalog.ts").then( ({ installedEditorCatalog }) => installedEditorCatalog(installed, images ?? undefined) )] ) then [module, catalogInput]}
             <svelte:component
               this={module.default}
               context={bound}
-              {gameplay}
-              reader={contentReader}
+              {catalogInput}
               deckId={route.kind === "free-play-deck" ||
               route.kind === "story-deck"
                 ? route.deckId
@@ -702,6 +758,7 @@
             this={module.default}
             {gameplay}
             reader={contentReader}
+            imageSource={cardImages}
             onencounter={startEncounter}
             {storyEntryIntent}
             ondecks={() => store.navigate(deckRoute("story", null))}
@@ -723,7 +780,7 @@
          click that named the screen behind it (ADR-054). Both seats are chosen
          here rather than inside the duel, whose own picker fixes the opponent.
          The duel still mounts in the region below and nowhere else:
-         `src/battle/app/presentation/stage-frame.ts` maps every viewport
+         shared stage geometry maps every viewport
          coordinate through `shell-region-duel`.
 
          Loaded rather than imported, for the reason the domains are: reading
@@ -772,6 +829,7 @@
             content={gameplay.content}
             {gameplay}
             sharedReader={contentReader}
+            imageSource={cardImages}
             request={duelRequest}
             hosted={route.kind === "duel-session"}
             oncomplete={settleSession}

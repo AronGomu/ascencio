@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../../src/decks/validation/index.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import {
   createInitialStoryState,

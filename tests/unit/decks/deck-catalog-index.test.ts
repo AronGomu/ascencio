@@ -9,7 +9,7 @@ import {
   buildDeckCatalogIndex,
   filterDeckCatalogIndex,
 } from "../../../src/decks/catalog/deck-catalog-index.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { availableCopies } from "../../../src/deck-editor/catalog-availability.ts";
 import type { CardOwnership } from "../../../src/decks/card-ownership.ts";
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";

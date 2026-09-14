@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { InstalledGameplay } from "../../content/index.ts";
-  import { PROTOTYPE_RULESET } from "../../decks/catalog/pinned-ruleset.ts";
-  import { emptyDeckHistory } from "../../decks/deck-history.ts";
+  import { PROTOTYPE_RULESET } from "../../decks/validation/index.ts";
+  import { emptyDeckHistory } from "../../decks/editing/index.ts";
   import type { DeckRepository } from "../../decks/index.ts";
-  import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
+  import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
   import { formatAppRoute, type AppRoute } from "../routes.ts";
   import type { ShellStore } from "../shell-store.ts";
   import {

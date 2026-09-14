@@ -14,7 +14,7 @@ import {
   createInitialStoryState,
   type ShopRarity,
 } from "../../../src/story/model/story-state.ts";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 
 afterEach(() => cleanup());
 
@@ -121,7 +121,9 @@ describe("StoryCardTile", () => {
       container.querySelector('[data-cy="story-shop-cards-preview-art-111"]'),
     ).toBeNull();
     expect(
-      container.querySelector('[data-cy="card-preview-image"]'),
+      container.querySelector(
+        '[data-cy="story-shop-card-preview-image-placeholder"]',
+      ),
     ).not.toBeNull();
   });
 

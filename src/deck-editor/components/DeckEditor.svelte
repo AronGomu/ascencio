@@ -3,27 +3,34 @@
     MAXIMUM_DECK_NAME_LENGTH,
     type SortDirection,
     type SortMode,
-  } from "../../decks/deck-model.ts";
+  } from "../../decks/editing/index.ts";
   import type {
     DeckCardLists,
     DeckRecord,
     DeckZone,
-  } from "../../decks/deck-contracts.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
+    DeckAutosaveRecord,
+    DeckId,
+  } from "../../decks/contracts/index.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import {
+    type PinnedDeckRuleset,
     unlimitedCardOwnership,
     type CardOwnership,
-  } from "../../decks/card-ownership.ts";
-  import { getContext, tick } from "svelte";
+  } from "../../decks/validation/index.ts";
+  import { getContext, onDestroy, tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
   import type { DeckBuilderState } from "../deck-editor-store.ts";
   import CardCatalog from "./CardCatalog.svelte";
+  import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../../shell/index.ts";
   import {
     CardPreviewPanel,
-    TOAST_CONTEXT_KEY,
-    type ToastPublisher,
-  } from "../../shell/index.ts";
+    type CardPreviewView,
+  } from "../../shared-svelte-ui/card-preview/index.ts";
+  import { cardCode } from "../../cards/index.ts";
+  import type {
+    CardImageLease,
+    CardImageSource,
+  } from "../../cards/images/index.ts";
   import DeckWorkspace from "./DeckWorkspace.svelte";
   import EditorTabs from "./EditorTabs.svelte";
   import TapTargetMenu from "./TapTargetMenu.svelte";
@@ -45,16 +52,13 @@
   import type { PickedCard } from "../drag-state.ts";
   import LoadDeckDialog from "./LoadDeckDialog.svelte";
   import YdkImport from "./YdkImport.svelte";
-  import type {
-    DeckAutosaveRecord,
-    DeckId,
-  } from "../../decks/deck-contracts.ts";
   import { handleModalKeydown } from "../focus-trap.ts";
 
   export let state: DeckBuilderState;
   export let cards: readonly DeckBuilderCardView[];
   export let catalog: ReadonlyMap<number, DeckBuilderCardView>;
   export let ruleset: PinnedDeckRuleset;
+  export let images: CardImageSource | null = null;
   /* Passed straight to the catalog, which is the only pane that offers a card
       the deck does not already hold. Free play's is the default. */
   export let ownership: CardOwnership = unlimitedCardOwnership();
@@ -66,7 +70,7 @@
   export let onreturn: () => void = () => undefined;
   export let onrename: (name: string) => void;
   export let onmutate: (
-    command: import("../../decks/deck-model.ts").DeckCommand,
+    command: import("../../decks/editing/index.ts").DeckCommand,
   ) => boolean | void | Promise<boolean | void>;
   export let onsetillustration: (code: number) => void | Promise<void> = () =>
     undefined;
@@ -144,23 +148,84 @@
     // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
     toastedMessage = null;
   }
+  let activePreviewSource: CardImageSource | null = null;
+  let activePreviewCode: number | null = null;
+  let activePreviewAbort: AbortController | null = null;
+  let activePreviewLease: CardImageLease | null = null;
+  let previewImageUrl: string | null = null;
+
   $: previewSource = hovered ?? selected;
   $: previewSourceCode = hovered !== null ? hoveredCode : selectedCode;
-  $: previewView =
-    previewSource !== null
-      ? {
-          code: previewSource.code,
-          name: previewSource.name,
-          description: previewSource.description,
+  $: synchronizePreviewImage(images, previewSourceCode);
+  $: previewView = previewViewFor(
+    previewSourceCode,
+    previewSource,
+    previewImageUrl,
+  );
+
+  onDestroy(releasePreviewImage);
+
+  function previewViewFor(
+    code: number | null,
+    source: DeckBuilderCardView | null,
+    imageUrl: string | null,
+  ): CardPreviewView | null {
+    if (code === null) return null;
+    const name = source?.name ?? `Missing card ${code}`;
+    return {
+      key: String(code),
+      name,
+      description:
+        source?.description ?? "Card data is unavailable for this code.",
+      statsLine: null,
+      imageUrl,
+      imageAlt: name,
+      placeholderLabel: "Image unavailable",
+    };
+  }
+
+  function releasePreviewImage(): void {
+    activePreviewAbort?.abort();
+    activePreviewAbort = null;
+    activePreviewLease?.release();
+    activePreviewLease = null;
+    previewImageUrl = null;
+  }
+
+  function synchronizePreviewImage(
+    source: CardImageSource | null,
+    code: number | null,
+  ): void {
+    if (source === activePreviewSource && code === activePreviewCode) return;
+    releasePreviewImage();
+    activePreviewSource = source;
+    activePreviewCode = code;
+    if (source === null || code === null) return;
+    const controller = new AbortController();
+    activePreviewAbort = controller;
+    void source.acquire(cardCode(code), "full", controller.signal).then(
+      (lease) => {
+        if (
+          controller.signal.aborted ||
+          activePreviewAbort !== controller ||
+          activePreviewSource !== source ||
+          activePreviewCode !== code
+        ) {
+          lease?.release();
+          return;
         }
-      : previewSourceCode !== null
-        ? {
-            code: previewSourceCode,
-            name: `Missing card ${previewSourceCode}`,
-            description: "Card data is unavailable for this code.",
-          }
-        : null;
-  $: previewImageUrl = previewSource?.imageUrl ?? null;
+        activePreviewLease = lease;
+        previewImageUrl = lease?.url ?? null;
+      },
+      (error: unknown) => {
+        if (controller.signal.aborted) return;
+        toasts?.show({
+          message: `Card image is unavailable: ${error instanceof Error ? error.message : String(error)}`,
+          tone: "warning",
+        });
+      },
+    );
+  }
 
   function countCopies(value: DeckRecord): ReadonlyMap<number, number> {
     const result = new SvelteMap<number, number>();
@@ -731,8 +796,8 @@
         >
           <CardPreviewPanel
             preview={previewView}
-            imageLibrary={null}
-            staticImageUrl={previewImageUrl}
+            dataCyPrefix="card-preview"
+            emptyLabel="Hover a card to see its details."
           />
           <button
             type="button"

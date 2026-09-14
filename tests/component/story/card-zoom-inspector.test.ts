@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CardZoomInspector from "../../../src/story/components/CardZoomInspector.svelte";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 
 /* Svelte measures a `bind:clientHeight` through a `ResizeObserver`, which jsdom

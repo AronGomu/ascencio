@@ -4,8 +4,8 @@ import {
   OCG_ATTRIBUTE,
   OCG_RACE,
   OCG_TYPE,
-} from "../../../src/decks/catalog/ocg-mask.ts";
-import { PROTOTYPE_CATALOG_RECORDS } from "../../../src/deck-editor/fixtures/catalog.ts";
+} from "../../../src/cards/classification/index.ts";
+import { PROTOTYPE_CATALOG_RECORDS } from "../../fixtures/catalog.ts";
 
 describe("OCG deck-editor card mapping", () => {
   it("derives card families, labels, attributes, races, and canonical zones", () => {

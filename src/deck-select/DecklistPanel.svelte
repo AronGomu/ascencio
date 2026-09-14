@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { CARD_FRAME_COLORS, type CardFrame } from "../decks/card-frame.ts";
   import type { DecklistRow, DecklistView } from "./deck-select-contracts.ts";
 
   export let decklist: DecklistView;
@@ -17,8 +16,8 @@
   interface Entry {
     readonly code: number;
     readonly name: string;
-    readonly frame: CardFrame;
-    readonly artUrl: string | null;
+    readonly frameColor: string;
+    readonly imageUrl: string | null;
     readonly copies: number;
   }
 
@@ -36,8 +35,8 @@
     const counted: {
       code: number;
       name: string;
-      frame: CardFrame;
-      artUrl: string | null;
+      frameColor: string;
+      imageUrl: string | null;
       copies: number;
     }[] = [];
     for (const row of rows) {
@@ -46,8 +45,8 @@
         counted.push({
           code: row.code,
           name: row.name,
-          frame: row.frame,
-          artUrl: row.artUrl,
+          frameColor: row.frameColor,
+          imageUrl: row.imageUrl,
           copies: 1,
         });
       else seen.copies += 1;
@@ -88,7 +87,7 @@
           <li
             class="row"
             tabindex={onrowhover === null ? undefined : 0}
-            style={`--fc:${CARD_FRAME_COLORS[entry.frame]};${entry.artUrl === null ? "" : `--img:url('${entry.artUrl}')`}`}
+            style={`--fc:${entry.frameColor};${entry.imageUrl === null ? "" : `--img:url('${entry.imageUrl}')`}`}
             onpointerenter={(event) =>
               onrowhover?.(entry.code, event.currentTarget)}
             onpointerleave={() => onrowleave?.()}
@@ -101,7 +100,7 @@
               class:single={entry.copies === 1}
               data-cy={`${cy}-row-copies-${entry.code}`}>{entry.copies}</span
             >
-            {#if entry.artUrl !== null}
+            {#if entry.imageUrl !== null}
               <span class="art" data-cy={`${cy}-row-art-${entry.code}`}></span>
               <span class="fade" data-cy={`${cy}-row-fade-${entry.code}`}
               ></span>

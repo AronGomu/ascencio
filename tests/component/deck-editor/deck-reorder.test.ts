@@ -3,9 +3,9 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import type { DeckCommand } from "../../../src/decks/deck-model.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import type { DeckCommand } from "../../../src/decks/editing/index.ts";
 import {
   prototypeCatalogMap,
   stateFixture,

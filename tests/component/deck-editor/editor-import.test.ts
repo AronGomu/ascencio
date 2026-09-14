@@ -4,13 +4,13 @@ import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
 import {
+  PROTOTYPE_RULESET,
   unlimitedCardOwnership,
   type CardOwnership,
-} from "../../../src/decks/card-ownership.ts";
-import type { DeckCommand } from "../../../src/decks/deck-model.ts";
+} from "../../../src/decks/validation/index.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import type { DeckCommand } from "../../../src/decks/editing/index.ts";
 import {
   deckFixture,
   prototypeCatalogMap,

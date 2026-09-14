@@ -1,16 +1,16 @@
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../decks/catalog/pinned-ruleset.ts";
-import { deckId, type DeckId } from "../../decks/deck-contracts.ts";
-import { emptyDeckHistory } from "../../decks/deck-history.ts";
+  validateDeckDraft,
+} from "../../decks/validation/index.ts";
+import { deckId, type DeckId } from "../../decks/contracts/index.ts";
 import {
+  emptyDeckHistory,
   createBlankDeck,
   derivedDeckName,
   normalizeDeckName,
-} from "../../decks/deck-model.ts";
-import { validateDeckDraft } from "../../decks/deck-validation.ts";
-import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
+} from "../../decks/editing/index.ts";
+import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
 
 interface DuplicateSource {
   readonly name: string;

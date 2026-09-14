@@ -1,4 +1,4 @@
-import type { DeckRecord } from "../../decks/deck-contracts.ts";
+import type { DeckRecord } from "../../decks/contracts/index.ts";
 
 export const STORY_SCREENS = [
   "title",

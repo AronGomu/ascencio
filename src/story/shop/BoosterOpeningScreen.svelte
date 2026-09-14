@@ -38,7 +38,7 @@
   } from "../playback/story-playback-settings-store.ts";
   import { createAutoFlip, type AutoFlip } from "./auto-flip.ts";
   import { PACK_SIZE } from "./data/shop-pricing.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import type { ShopRarity } from "../model/story-state.ts";
 
   export let cards: readonly {

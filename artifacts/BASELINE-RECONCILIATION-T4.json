@@ -1,0 +1,2644 @@
+{
+  "schemaVersion": 1,
+  "capturedBeforeReconciliation": true,
+  "route": {
+    "requested": "openai-codex/gpt-5.6-sol:high",
+    "verification": "parent-confirmed; child runtime exposes no direct model metadata",
+    "context": "fresh",
+    "workerRun": "e85218fb"
+  },
+  "repository": {
+    "root": "/home/aron/projects/ascencio",
+    "branch": "main",
+    "rootHead": "b197f885f0ff0122f8748249908a9e2a1fe15601",
+    "lane": "/home/aron/projects/ascencio/.tmp/worktrees/content-rearchitecture-t1-20260913",
+    "laneHead": "010401956d0cd59d8e6dda91bd367040f5de669e",
+    "laneBranch": null,
+    "mergeBase": "25d761f117a6260890a2465d81c3433c850deb10",
+    "divergence": {
+      "rootOnly": 1,
+      "laneOnly": 15
+    }
+  },
+  "mergePreflight": {
+    "strategy": "merge original lane HEAD into root main; resolve sole docs/GLOSSARY.md modify/delete conflict to root deletion",
+    "mergeTreeExitCode": 1,
+    "conflicts": [
+      "docs/GLOSSARY.md"
+    ],
+    "rootUntrackedCollisionsWithLaneCommit": []
+  },
+  "rootStatusSha256": "66be64cf74cc44856a2c888b6f0a37e0d1d82e569465d2ace94764c2f9f71035",
+  "rootStatusEntries": [
+    {
+      "status": "??",
+      "path": "artifacts/IMPLEMENTATION-LEDGER-T1-through-T3.md",
+      "sha256": "84aff885bebc8e9d568fb44fc51d2143d7c23cd574bd849b9fd3a8a27be6115b"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/IMPLEMENTATION-REPORT-T1-through-T3.md",
+      "sha256": "4a9e62c501ee5e3402fc020e14daad28dbf5a50d704f681ae83b9935ae9a1177"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/IMPLEMENTATION-REPORT-T2.md",
+      "sha256": "219b8f91de244a8ed836a68451d859f0199bf7485468771c760c3af908ce16c1"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/IMPLEMENTATION-REPORT-T3.md",
+      "sha256": "dccd4b79282fea91ec8a07d47d4e0e60e6ba8112b17ec40a667184677e039325"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/IMPLEMENTATION-REPORT-T4-through-T11-preflight.md",
+      "sha256": "7032b4fe6c6b5f2e091812a6f458138442f9167e8bfeba705eb5e72b26613338"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture.html",
+      "sha256": "0355ea555f4663c92946dca5e6704c7b3f7a1b0b05526d5b6e245f108a25f56c"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture.md",
+      "sha256": "574fe93e24b7c20e1df666bd8e6f0a2f544db6fb201a974aba59b402bbbe5c19"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/CONTEXT.md",
+      "sha256": "c26e9d4f80f419ec6a6530d920ed4973df8a64ca107b535a50031e907b800bb3"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/CONTRACTS.md",
+      "sha256": "050c7c1011e9186043188489f264c86c800da7f949b0f107dd725e665f084126"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/REVIEW_COHERENCE.md",
+      "sha256": "f7a0d84bac121bec1ce5b91ad6c4bd1e58435c7bf53feff1be94248484190af9"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/REVIEW_DISPOSITIONS.md",
+      "sha256": "ae20c7be24dba347523b3cb85ec0ddb18224cbeda6340d6fdecc3d41a13441b1"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/REVIEW_INDEX.md",
+      "sha256": "7da41914414f1b03da1bf3071043e9d7ae7ef2b44f6d6253f50fa739bf5ba489"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T10_update-media-cleanup.md",
+      "sha256": "bcbe2d46a8c35b5a8b38631e9f48b844974608545b7e63d58c3871f9d4edce9e"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T11_acceptance.md",
+      "sha256": "6374417cad55afddaafb0faa458d8b697f071f6b582cc4f3dae45ee9eb95e2bf"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T1_baseline-preflight.md",
+      "sha256": "511ff33130a7f17ac80cda5aae628f2a17d77c0cc600c4ff7c4b5e70ce729b53"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T2_cards-deck-editing.md",
+      "sha256": "e7dc81549016232ec99c21cc83d794a46c959c8935234bfc4bc9c739e56c30db"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T3_shared-presentation.md",
+      "sha256": "4bd6ed5f211191ad3d1c5d321ef983833f80bcc53c0cca62e0ba3bea91962ee0"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T4_per-file-producer.md",
+      "sha256": "1bd26680f5143b8a5d69691500648eb1a55b35419df6d67c073cbd25f5360141"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T5_progressive-storage.md",
+      "sha256": "03ca4529453977c14e196f41bd56331020ea243589fc4947cb7dadc2015cd4dd"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T6_story-save-generations.md",
+      "sha256": "6d3d99fc0db658794f5e8aae6436817b7ec7cf5205bb8a95bde5538fc4b42888"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T7_battle-runtime.md",
+      "sha256": "a38e8232d2513244bf380f3791d077fce1d4d043eab0db325f4f6adc1dfe2093"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T8_semantic-preparation.md",
+      "sha256": "7203ffe15747b1b3cfbcadad2ca6b856071a7f60111c573abce485d72dde0557"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T9_atomic-activation.md",
+      "sha256": "2c5feb86425c7fdfc5abfd80cc71064d023bc7fdf92e01e9ca668c42281bcf43"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/VALIDATION.md",
+      "sha256": "7a049ce71bc09ae832c0aab9d98db40b8983b22b2e3e699db39cdcaddc521e2a"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/plan-desktop.png",
+      "sha256": "eca68568df732521607c65dcf9994071740799b22b95b05a749f7b9abd0096e6"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/plan-mobile.png",
+      "sha256": "e88277721c5745cb6b0ec010d7fad1e1d725ffe4481366941146ce8f6835f426"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/ticket-manifest.json",
+      "sha256": "3b9da0bbce4fec776fb0f44f86a5d3ba2775f9998ce7cb90f05aa15ddff7653a"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/validate-plan-browser.mjs",
+      "sha256": "6571693815ec0a81dae9c1b1b4c5a54a26d54d8f0c27c345bd899e3b091eb846"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/validate-plan.mjs",
+      "sha256": "375bb04579ba64e6981e9cbaa8aad24e18df8d64f6624e81e7a9928aabc3c56f"
+    }
+  ],
+  "laneStatusSha256": "62474facecad7d8a42141885886929a767e461b7472694dce012dc519fd71dab",
+  "laneStatusEntries": [
+    {
+      "status": " M",
+      "path": "docs/GLOSSARY.md",
+      "worktreeSha256": "70b84442c62bd252ce9f98a2e8b855744f6511778a2e55fd2857298355e83cd7",
+      "baselineBlobOid": "75a1236bd6b43ee374a3f869e83f9e8cdbd10349",
+      "baselineSha256": "7344c6354ff2fd9214a44952fff864d8ff941b95c5783bd67990b3e2b8215210",
+      "decision": "evidence-only",
+      "reason": "root commit intentionally deleted glossary; capture patch attribution without resurrection"
+    },
+    {
+      "status": " M",
+      "path": "e2e-acceptance/full-height-field.spec.ts",
+      "worktreeSha256": "21da6cc92dfae6cfff15198c3299f5f2ab80e79c7c525dc00e5627a9f8806f66",
+      "baselineBlobOid": "90e1bbc8db58d44f3b9df4df9132ab51b57f273f",
+      "baselineSha256": "e1aa8fb8fa5a7e98c44e93997e76c8f20ea83adc6b8c2158ec689c54e185d9c7",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "eslint.config.js",
+      "worktreeSha256": "390f6cff61a68cdbded84cd24020ee243513f875c6b9472f11d22dbf9aa87e76",
+      "baselineBlobOid": "30b8460b8fa940f0b3363b9d8f2d77c18ba6d80f",
+      "baselineSha256": "ef762cd485de646195e07f0408cc0ed2bc8bfee2ad65e0656804432c85653070",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/BattleFacade.svelte",
+      "worktreeSha256": "ad62c2b239c29995a109a16e45cde0a5c9f91abee53f4932699214a7e9aacf34",
+      "baselineBlobOid": "fd793ced0891b8baeadd34c5f0b810ad4c1f2a9e",
+      "baselineSha256": "99b2a94dee674a0e9272ef80dca527b76daaf3ca06b6fc76b56ed173ecdf30df",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/App.svelte",
+      "worktreeSha256": "c6fcf5f45e4ef8b74332fc75ab11aef538616d292ac54803c40f878012ce9438",
+      "baselineBlobOid": "6688983cf6730bd9e08e83db4f638ec36c00b7bf",
+      "baselineSha256": "b7331f6c64f463a06147a8dbb4d9aaa055b94d6f6676c0be70d636580104580f",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/acceptance/AcceptanceHarness.svelte",
+      "worktreeSha256": "3c2acc1159b65b705aef0d0dd3379cb6dc8d61ee7eeeb3b734abeb3a00880226",
+      "baselineBlobOid": "42585c2891027b060bcf482555a5a328e49ac154",
+      "baselineSha256": "452413f0d33e2507b35b451381e57d9490341ce9e32e993a2ecf8bb597f2dbf2",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/components/DuelField.svelte",
+      "worktreeSha256": "5462f9616e25e967c2f64c77e58991a4a41829a831e767cfef31f92f6ac79c02",
+      "baselineBlobOid": "fd1f5e01c898b7268bae1b6af96845cdaa45af07",
+      "baselineSha256": "767cd53e3075d2bce72c40a5a018970d3903afd520a266e84289d3c32c15a380",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/components/duel-field/FloatingFieldWindow.svelte",
+      "worktreeSha256": "844af5a2b9156f58b986815d08ec13649af6b3d382deec12ca85a8083f73ef17",
+      "baselineBlobOid": "b22fb36a9211fc02cd57ca4abdb0bd10e8208d89",
+      "baselineSha256": "a44d93d5bae97ceb9a9d346f383185e80d7ba856ea2d415a49c091d18d1fb62f",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/components/duel-field/HandBand.svelte",
+      "worktreeSha256": "022fd7ede09e4abdf389551bfc8cc134e621e55f5b8872390e0f21cf6d86f0a9",
+      "baselineBlobOid": "1a4ca585c2492ad9ebbf4144b31fdc3d7840a569",
+      "baselineSha256": "53e49d793639a04937c8009a1a1e29e261206279b84bfbff14e18c5180197494",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/components/duel-field/HandZoomOverlay.svelte",
+      "worktreeSha256": "b1e98e80773de9766f032942b9f5ae46ca8509fe3eda669ed15639e5dbdef7dd",
+      "baselineBlobOid": "5b6f0954a82bf569477eb3408c65bbdb0a9b821f",
+      "baselineSha256": "3a7c3df668c7d7b52805df63f2ce8191bf09535535c6b34f3bb30db1601baf52",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/presentation/card-preview.ts",
+      "worktreeSha256": "3cacf4752df03accd7dd398a0ab73709aa595c7ae18cb063b736776e2bc34e82",
+      "baselineBlobOid": "54587a57b0ceef750a306bb723a98505008ebb88",
+      "baselineSha256": "3e165a26cb7a0f3a496955917353b1ef982def6d6d7de0679667141a35504c04",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/presentation/dom-feedback-controller.ts",
+      "worktreeSha256": "6bf766d21fe16aa120a056d0b0e145e2e0ef13dd2878c845f799659e675402d0",
+      "baselineBlobOid": "89d2c9177a92fda400cedebd0c55a6f09220fd65",
+      "baselineSha256": "7e12253b6f4eaeb6497713a819c02a69827b9800e9d4dfc1e782b1c7f3c360d5",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " D",
+      "path": "src/battle/app/presentation/stage-frame.ts",
+      "worktreeSha256": null,
+      "baselineBlobOid": "875a055a1d0380cde876dd13704702d4463dbf05",
+      "baselineSha256": "7e19fe63c9c63e1931a091401b6c376ad022a906e8cde02217fb4a4fe485e13f",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/app/prompts/interaction-spec.ts",
+      "worktreeSha256": "ae7e0eefaf03ceaaa404bbf25ca316fce761e0f96f2542b2b4735df67906884d",
+      "baselineBlobOid": "712704773a8dc9f14eacdc15880efb4ee35de6cf",
+      "baselineSha256": "78ea038244846157e9d697f6861647164268561ca3aba8719aeaa633e7f7b1e1",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/decks/installed-selectable-decks.ts",
+      "worktreeSha256": "a82184addb256772e71c0308c842381885bff9d2e142feed380fb2932fb056ea",
+      "baselineBlobOid": "04b8256999c50274d65078463338b5de7d7bb727",
+      "baselineSha256": "8b33a2f412053f7a070de7fb6224476a13f9da47da54fcdda6972c70b69bee43",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/decks/selectable-decks.ts",
+      "worktreeSha256": "b8a64f5ca0c7f04144d5169c3c9eea35ab50210c940914b8edf254c7358c906a",
+      "baselineBlobOid": "601b75dfb8af4cbfa6fa3a49ffdd35ebae173a56",
+      "baselineSha256": "f054bed18c2395c2a67a1f40db83a2eaba9e29493eee3d5f44ed7d40a0cdbac8",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/duel/contracts/ids.ts",
+      "worktreeSha256": "e83840de49bbad52bc1e365007c2fa2e701d37589ab0dc8be85455442d48c5a8",
+      "baselineBlobOid": "643192114fee28a03f1f0451f5e9e2ac0d098c6a",
+      "baselineSha256": "e581e3ff0864d324a976ba305a4e65f2a643fe6320315f7bcfd2bd7dca0b7771",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/field/off-field-target-list.ts",
+      "worktreeSha256": "249927c153efbc3fe28ebf741c33fb797cb2a4dc126d8610396d21b7ed7e6a4a",
+      "baselineBlobOid": "97d43d6c0b4595af6b49dd7ddef4def754b9a373",
+      "baselineSha256": "1a82eec7c34e73fcc5e8d50b9a9df79998af3919ba7f887eafa3dd1c0269b59d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/field/zone-list.ts",
+      "worktreeSha256": "7c21660f38f5984f6d9b257e2630b97e15b96a73957957a5b8c901cddce81357",
+      "baselineBlobOid": "a331ed5b9bfbe1f32b1fa3aef2b808c689f0fc45",
+      "baselineSha256": "7abc96202d63a7fe04f8f73c3761e6e200804f17fdff8a9b8cd8262b1f4972af",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/storage/installed-runtime-receipt.ts",
+      "worktreeSha256": "9fa9ec067a2537d6fc26ed1a6f673eb5912b94af1c777a47abdbe0371560ad35",
+      "baselineBlobOid": "831d0a385ca83ef3c4e21e3b77426c9f0efb4279",
+      "baselineSha256": "0f2c6896b68b7dcad045d41d3c485b9f5c298ef7aa05212675a8caf7b16dd236",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/storage/prepare-installed-runtime.ts",
+      "worktreeSha256": "deaad7f868fcaf26549d185f144afc6a49c0b6823aa76b3e485234ee7a9ab994",
+      "baselineBlobOid": "c356a85d2eea615395ab4c6436ec06a17c52d403",
+      "baselineSha256": "f387def105ef9ff369f36638bb1fb990d065a80974a496febc27a9ced71b5deb",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/worker/DuelWorkerRuntime.ts",
+      "worktreeSha256": "90fd7588d813880de2e1e929519cdf581a6dd428df8e31dae6c07628ad20a2e0",
+      "baselineBlobOid": "a4f58e0142a0f4e3fa8566fdfbddf45fc0b41b35",
+      "baselineSha256": "3fe71db91ba652be3d61a1fb50fec93588ceda5dd5f53d2b6a5c1cce215b390e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/worker/assets/browser-runtime-assets.ts",
+      "worktreeSha256": "76379064dca51a7adf39db8080bc89f2daf95bb3a260605b35029c822a960034",
+      "baselineBlobOid": "aff9746f1f62c88c6d28d1f5592de690f609bd32",
+      "baselineSha256": "766e6c296cefeabf67d4b34fb90263d3dab03a39c52b4587560e5544fee65200",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/worker/create-browser-runtime.ts",
+      "worktreeSha256": "ffd7e0f2f3a1a2ef8d043a430b93700f5dd684d26706ad73f2bf451836530691",
+      "baselineBlobOid": "219400a1afccdfc425299aa544d43482c21b9990",
+      "baselineSha256": "faa661144d5dc60180f1f8fb856535eb795709b1cf16aed63971cde131d57ef7",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/battle/worker/decks/resolve-duel-decks.ts",
+      "worktreeSha256": "1803db7903558721dd1c5e269186852c5b3181b7f22e1e4063004504e742562a",
+      "baselineBlobOid": "5d0ec8fdd31e0dd1c11fd29dee52b50e04c45086",
+      "baselineSha256": "b8309a929c4f768566aef9a8556dec8981ed296f6721b2c5c5a52b03146e4cff",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/content/index.ts",
+      "worktreeSha256": "d7dafaab735b215b62874516989a0d1a3a7ae6636fe971fbdd60f40d766cbad5",
+      "baselineBlobOid": "633eb19098237da423f8de70d7cfb1749ac36195",
+      "baselineSha256": "02022e6099f2de9ca70090320bc7985b3750a23b1660b7ca01b750f931047ce3",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/DeckEditorApp.svelte",
+      "worktreeSha256": "f0ba1634ff5d12bb78cb8af99af7155db99b7df7cafc810ecaf071f91b806ff2",
+      "baselineBlobOid": "6425abd17f30c090209abe79a92e81128ec21d54",
+      "baselineSha256": "9e1f44c9e1b98e89587240ebc358285a879f73dc40351ec3a990b75bc54bdac3",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/advanced-search-loader.ts",
+      "worktreeSha256": "011cef558fe7810fdb9c336c64f34f1b6294e14a3224f2e2389c716378c826b3",
+      "baselineBlobOid": "cdcb59c926ea68034b5d247624fca8fdad5f9e17",
+      "baselineSha256": "e7668331e75a71a8dc6cfa3402cbc6656cd7674f0859aab55504e57288a97b62",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/catalog-availability.ts",
+      "worktreeSha256": "de6b175589161781494ae8c2b0a7d229940403bc02b12e697f95f0e730e76306",
+      "baselineBlobOid": "5043c962280a8c6364b9160e9d0b5fa800fa714b",
+      "baselineSha256": "6effe2c3863ebdf6e09053b121520ad42e3c633d923e963e02f277406b198088",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/AdvancedCardSearch.svelte",
+      "worktreeSha256": "05b743df33378325211f594b565df8d96a8e92e7e23052c1dbfb1651e289dfd4",
+      "baselineBlobOid": "054ba65e2da8adae097331dd14b2de20ca8a0c7e",
+      "baselineSha256": "65439cc64d2da1a90ebf1c17c0c018e460de46d36b289a5d8315acc6d8004d14",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/CardCatalog.svelte",
+      "worktreeSha256": "4b928e7c824f6172e8a76e8aac45ecfb62a5a81ee9903ee9b6bf62f6f2ecc8b4",
+      "baselineBlobOid": "498f5a7fcbf27fdf9f2098af3464be415fd2fe1f",
+      "baselineSha256": "e74ec12d7130b404e84b60a2543581f27a9b9af42c8e437c29634d622c5abad3",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/CardTile.svelte",
+      "worktreeSha256": "fbd2b3eabbd88b5ce93792e2a9db1695a11ed50d7b3c75e7743450de65247149",
+      "baselineBlobOid": "27403cc7c39e8c93c2b9972e674d8563113a8e24",
+      "baselineSha256": "6e84b83847b6d36127538350680cd40b9a6ea598699eff996c9b63b2686a1d6d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/CatalogTypeInput.svelte",
+      "worktreeSha256": "1ed8dd2a354fdf1d488a5cd12875ab795173aeca659250120b283e60aac88e74",
+      "baselineBlobOid": "d764c88d82396ee4883c1d2548fa18ce77efeb17",
+      "baselineSha256": "e972ff3fcc763d3b1cd28d9ce2269184c93b5bf029a74f8b44b9851f79d19f6d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/DeckEditor.svelte",
+      "worktreeSha256": "97fe8305c395d4891733ad04054b6780dc07cb1f87cea173669ad84a9d873913",
+      "baselineBlobOid": "4b87a59a6462ea03ad3fe07a115dbf69b59596c4",
+      "baselineSha256": "ad2f9bf49f51c8453d282fffa6ef9d5901ca7b833f6df856fda9cfcad22ad278",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/DeckLibrary.svelte",
+      "worktreeSha256": "3f9414f41233fa5d5a52d238041245cce7fd41d6fb6f1e5bdb5dbea1afa0fc5d",
+      "baselineBlobOid": "2a0d5599e3adf8a855aa50f0ea7f8f7999db048c",
+      "baselineSha256": "c7d4c7f49f2b88a97498b66c4036093d17828994e1f9ed1eab86d2061ab84ff9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/DeckWorkspace.svelte",
+      "worktreeSha256": "b45c7de6d3394843d0e28b73dd9d45e7a4f33df02818a91359ddad0799403089",
+      "baselineBlobOid": "486420218eb4cedbca6caffa607f02583f500d80",
+      "baselineSha256": "2497d09c4d2060a4ead114ffde1565f9c5feb51c59fef4df18eb9027c13638ae",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/DeckZoneGrid.svelte",
+      "worktreeSha256": "1f505ffbb3207a0bfedf3b246ee0cef1dc1d082279a6bbd1e9ea41eb9d567201",
+      "baselineBlobOid": "800b0c463884a7a8198d3d6e7c37d1e0dc5a59a7",
+      "baselineSha256": "c5d6b45cf086bea26190562e552f0b147dc9ccb9c6e977b8dda67a90313fac77",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/LoadDeckDialog.svelte",
+      "worktreeSha256": "ed1172c554d782a0d9e4586ab57d3645f688d65bf163c9899409b47f6d3302ca",
+      "baselineBlobOid": "5c1b8307e62ba5665afcf3e005ed41cdf2def1d1",
+      "baselineSha256": "3944a1d2807901f4d06804558ee57e64a792c41d3c7b11e11e93f44f00f91591",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/NumericCriterionField.svelte",
+      "worktreeSha256": "d9c6a06faa0a281a79a7d57080fff5aefa5164cb73034e77c6ea496125af711b",
+      "baselineBlobOid": "721a2e02ababd72e5025b19e5058f01c3ee72512",
+      "baselineSha256": "c032f81f69b8e27031a7e35c309710023f961cd098d82755a0c7bc731bf2e499",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/TapTargetMenu.svelte",
+      "worktreeSha256": "82ca0243273be61c572880a80443b8f6a369c6b200a8168a2105a26b03db1281",
+      "baselineBlobOid": "5a3fad543f1d35c08ba84a9c2de31ebceef1bc37",
+      "baselineSha256": "5895f88024f8733f844c781e6beb1b9c134e5e5fa76f65c3404a3f1568b3a611",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/YdkExport.svelte",
+      "worktreeSha256": "511fe5b3d1972c9f324e06faf49009473a5f27b9f70e6cadde1e82cf3c187bb8",
+      "baselineBlobOid": "bbd2b05f8cc003bf487601aef5fbdbc8430e81e6",
+      "baselineSha256": "2dc28c31f7afe85a6df51ad6f6ebf9f66f495f41de4ce8f9d08c6eb97a4663d8",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/YdkImport.svelte",
+      "worktreeSha256": "26b0327b36c8e25aea78c561750d837e3a73267733c5cffcb73e5897f38fd274",
+      "baselineBlobOid": "2e7d66f9333fd742d24d68cdb1dbd0045ded00c4",
+      "baselineSha256": "17e9ce191138b7e8809e6b10c78b3bf4ef5a572ed1f3aaf0fcbbcab240a1dfbb",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/components/deck-library-tiles.ts",
+      "worktreeSha256": "8581a327e88b17ec7a4c3671614dd93a4b22a057f9a81d1abd0348d8a7283352",
+      "baselineBlobOid": "6bc4d948b861d10618dc26d1f9b728952bfaa98f",
+      "baselineSha256": "8c61a5fc5ab3ef71a39d8d2e891a792c2f101928c789fd76971392d8d7e7b05e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/deck-editor-store.ts",
+      "worktreeSha256": "10fb0f11e3d4535cbd601730f8f478251de0877d41905a20a7679ca85eecec8a",
+      "baselineBlobOid": "ff1578d6e7bf80b997b4df173f1101d0569c6edb",
+      "baselineSha256": "3eb3b8ab2b87da7595c2f544f3833a886128f75724e20de88e3b6b210955ba9a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/drag-state.ts",
+      "worktreeSha256": "5dd7e59d9ce823a66cb4661ab7e5de22567e820313392570e6af74b77ee2c089",
+      "baselineBlobOid": "158871914198ea0b8e30c1286978ad77b9e58278",
+      "baselineSha256": "6e496214760326712db53ed5178458c94d13ad9c2cfc3141348b15a19796abc7",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " D",
+      "path": "src/deck-editor/fixtures/catalog.ts",
+      "worktreeSha256": null,
+      "baselineBlobOid": "d03b2ff4d80503372991109b5ba12b82907b202b",
+      "baselineSha256": "d9614b130c080c39897dad66642cc60499a52c8ec10db77772ddbb1a1b90ec1a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/layout/click-intent.ts",
+      "worktreeSha256": "a664b01ed4c752a7d30fac988c9d7afcb2cef3d837682457e40dfd9de62b49ec",
+      "baselineBlobOid": "97a2f8c99d6aa70b6b669bca634571c4eb17e6ab",
+      "baselineSha256": "a87382ce501845ca6d5300a60ae29f51691e3b013dbbf2d5a6a945d207c6b755",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-editor/layout/tap-targets.ts",
+      "worktreeSha256": "034fd22a42304b95cada07ba41ef77d6ad8f91cafa1b92d2a2988dcbd816346f",
+      "baselineBlobOid": "7cedb6c7d5cfa173814d82bb4cae48319971a416",
+      "baselineSha256": "5916650f57d2554147842756f8030cf0c261cdc6985ceaaf33206c28ee71c216",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-select/DecklistPanel.svelte",
+      "worktreeSha256": "c224c56563b864403297882aae730dfa0f19498f5ab7fc390d16502098754227",
+      "baselineBlobOid": "b8180d93626e1d626d9932bbd13c11b1af3f2afa",
+      "baselineSha256": "f7af514237c70de5eeaee99e26c352f50a9d72a91a6a29408c6e4ace53fda18e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/deck-select/deck-select-contracts.ts",
+      "worktreeSha256": "1872fde03130a0497f896e9a56f5c6cdaa4b609f3f5b69102eab05afac4e0821",
+      "baselineBlobOid": "a57300783fa24f6a02a1528a16b1336414118902",
+      "baselineSha256": "2e075a273cd8b4c5fb9aa7fc28520afc7de95dc591c1cdcacf5e33074f157f2d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/decks/card-frame.ts",
+      "worktreeSha256": "6ea98875ca5caf8009f1780a400ef3d491fbf2bc2ecf606ba84c8d915f76bb91",
+      "baselineBlobOid": "8706ad7049d51c4e3974961e0ed32802238b81eb",
+      "baselineSha256": "d5e80eb4b00a52ecdb46d4de3901c95ac2de8d0c0dae7310974199f63ddeffd9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/decks/catalog/installed-gameplay-cards.ts",
+      "worktreeSha256": "b08e588959c1127798d97a91a37dd6a03a68c08f28407ee350969cfb10de264e",
+      "baselineBlobOid": "cee31a5a2e6e7bea6adb33e8c08256ba2730154a",
+      "baselineSha256": "307a68686d8842bbd746fe5359f3ff31a8e5e2668e33b50cd5cfbdeaa74c75c0",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/decks/catalog/ocg-mask.ts",
+      "worktreeSha256": "78beb044f34b54bdac29484a25c27a22f684ce1deffa4d0c6d902990368f9b77",
+      "baselineBlobOid": "3ea0070c364a1ee60305cb37b0acdda23ec3223d",
+      "baselineSha256": "1f0572254859e9256f0b00f357a8ba2f1258787f70943b4471610f4419c39c94",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/AppShell.svelte",
+      "worktreeSha256": "100f07910f1fc89e7548e8e4f7b614d56619e06fc2039280d6a6c33285ddf83b",
+      "baselineBlobOid": "919769e56b2cd30c8a77385293239eaabb6dc1ec",
+      "baselineSha256": "99ee07570c45a5c70636428607c7f195b231c8671e16f693c110882f4fe8d13a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/admin/AdminConsole.svelte",
+      "worktreeSha256": "7f4b4464eb837bf85c4fa0c15d84109a528916d7b26d0eb8a19912da609d5695",
+      "baselineBlobOid": "f67c4b48924dc5c0086911221fea6bfbb6731e6a",
+      "baselineSha256": "f57a3c1f419f361c4c1e58118ce79770d9afdfa7ce3aeee189ae53315c69015a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " D",
+      "path": "src/shell/card-preview/CardPreviewPanel.svelte",
+      "worktreeSha256": null,
+      "baselineBlobOid": "df5b5754b9c4318d1f305d8424400e155fd3e7a0",
+      "baselineSha256": "7fc9591d501f2de1cae583f1c97044bee295b6885473af71afa407e636cf678e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " D",
+      "path": "src/shell/card-preview/OverlayScrollbar.svelte",
+      "worktreeSha256": null,
+      "baselineBlobOid": "22d39ab279f34ff8e7be3bab296f46ad15299cc7",
+      "baselineSha256": "c12f0553ca7691036c755e9be19cab8c4c7b0e0834b875e1c264ece316692087",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " D",
+      "path": "src/shell/card-preview/card-preview-view.ts",
+      "worktreeSha256": null,
+      "baselineBlobOid": "a87a105bc9bea4c7183357deac04f379a317b977",
+      "baselineSha256": "7af9df8a7ccd998218c542f5b3062486f0c0f9f66b080c0b7f6232b977e30a19",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/domain-loaders.ts",
+      "worktreeSha256": "9effc7478068100ee0120e9fd24eb43adc04d4ebfc2f86ceab09d6e3c6ce23ae",
+      "baselineBlobOid": "9fdd5d0d1734506b4738c3d97ff39f28dc200176",
+      "baselineSha256": "acba26909161dbc8b2d14af3e9051114ef7668febb1d018dbaf0065ccc516d3c",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/index.ts",
+      "worktreeSha256": "1a5863d3b7a6a5b77c021dc7facbfe5b052b7ab8fe3c029bd884e98a6b0e4289",
+      "baselineBlobOid": "3c81f9c3e56f1365cec8a28a6b9c9ae174069d07",
+      "baselineSha256": "8c558ce87a21fc1ec8b57226dd0bb30fec8d99f61134e6e90f026133d2ccff65",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/routes.ts",
+      "worktreeSha256": "400b7134b6ed6c034ea8c7d7778ed9f81191a18a5ae81fa118fbdc7fc6b33ac0",
+      "baselineBlobOid": "602c2511d6fbc315dde7f19c57457ab75239a4c0",
+      "baselineSha256": "530655679f5388c413728b5c0ee180a214ea88c042136c9232b6fc2bc4bdf3d9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/screens/FreePlayMatchSetup.svelte",
+      "worktreeSha256": "85ead2fc7aa8fb754824353220257d1e1b19b31d2a4cd9d169f24a4034ef5486",
+      "baselineBlobOid": "53099f241ea837e259d62a77ce13dc0bfdba197f",
+      "baselineSha256": "afd64d5db1bf5cf731010aaa6bdf63e8f2aec4ea0edc6dc3847e079abf3301f0",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/screens/free-play-deck-actions.ts",
+      "worktreeSha256": "09a0539f906e6ca670f9dc96321801938f00c99adf3c02265862f7b1cb938d7f",
+      "baselineBlobOid": "07600e7480e6656c2c7280e1e0b9117c7521f2f5",
+      "baselineSha256": "ce0b62b0b34c8e173ded70b8d03f326362c3b4ea364c4f7c15dc359030a7e030",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/screens/free-play-deck-listing.ts",
+      "worktreeSha256": "f0e551bbae5598d1527b617bb73c1851da284f0326ba0bd1fabbe0a86df3583e",
+      "baselineBlobOid": "ef01dc0874523005cc6ebc0c0126711976a0a2ba",
+      "baselineSha256": "8e049ab68055d4aafef4bed5416139aeef9cab4b8e15ff6986c2b09f2b965410",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/shell/screens/free-play-deck-tiles.ts",
+      "worktreeSha256": "619552caaca62e0fcd9b4ca694528784a52a35e59d4cfc0a6fe31a06e1bfea89",
+      "baselineBlobOid": "55033f62b3f0036fa1836c7eea02b4e7af6932cf",
+      "baselineSha256": "d0bade10648fecd36aa507206411edeab2032f64753f4151dc4c72ca28a5fdc1",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/StoryApp.svelte",
+      "worktreeSha256": "360e5511c4cca1f9d47c3ac78f6108e9839ea2913dace17f3cc155579a17f225",
+      "baselineBlobOid": "af894befb0172caf91b75eafbb51a040afc5e224",
+      "baselineSha256": "0102aa74a3e366f2d1f753aa72d589d63e69d3e7be045112250f5298f302f4c6",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/collection/CollectionScreen.svelte",
+      "worktreeSha256": "aef18fcce5b38b22a96b7b6b97b087f621d8fa5a30070fa695bfdb1664944ac5",
+      "baselineBlobOid": "99c203c76ae42b59d6dea08b5919bdca677d84e5",
+      "baselineSha256": "8af7769188b3f33f2244f5fc5e72ee956d225ec13b82a6440469c95dbe090d98",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/collection/collection-cards.ts",
+      "worktreeSha256": "db92cfb8b9dd3daaf6cf77c2e5a22d2057c09e2e87a8e8e41a72b6771cb38470",
+      "baselineBlobOid": "3520a4b0c7c630dce264f9cecc52a5e3bd9dc2d2",
+      "baselineSha256": "120f22badb85a2461d9a57f1993176d840f63af8d3b439d678d63889ddcf5854",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/components/CardZoomInspector.svelte",
+      "worktreeSha256": "7f7f4a8287cc290c86bfaea09cd4023b65d3d07832e92123c8c27b67bdfb3b35",
+      "baselineBlobOid": "30077e831c20b31d91f626c0c25053611debd138",
+      "baselineSha256": "2d9eb873d298324dfd81dca5da36910063a4fc344025f265848e7ba6a2957197",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/decks/card-ownership.ts",
+      "worktreeSha256": "65f649efdd4af0feae57e94cf382f67bad58a19fd6b105167fbe8c281a19a2a5",
+      "baselineBlobOid": "3e0a65d58eefe8efe29c7fa1336920361a76de9a",
+      "baselineSha256": "8467467cce47f2ea18e6a613379c4d7297d398bc1539cde5b16a480289977200",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/decks/encounter-deck.ts",
+      "worktreeSha256": "f571653914aaf7c8355dfde9a1fdd7071a877094e7ea12afb511f1d2730f1e86",
+      "baselineBlobOid": "2fc7532411e983c69171683b0b099836fa48330b",
+      "baselineSha256": "cfad90d28f232fbcfb2991c6687b6109a460bb961855581127ee386d28b149e3",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/decks/pre-battle-decks.ts",
+      "worktreeSha256": "f8092576e33c96f32de3169ce7e25d2253dc3dd8ed1e2937b1f23e4a924400b9",
+      "baselineBlobOid": "b45090b88d8a7a6c316a0085492f1721dbb825fa",
+      "baselineSha256": "ada9255e457cb55f6f6a9b6034e5f7d265a3edcfb1c552a26207095787907d27",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/decks/pre-battle-tiles.ts",
+      "worktreeSha256": "85d177d016edfb19134567bdef35450ac0e4bc1ef62c3fa45f685bfa51ff831a",
+      "baselineBlobOid": "6ccbbb195a64013f37d7998ba4f94a961dbdae3d",
+      "baselineSha256": "a6a4295617f9507236b5df4641ec1bf31b237d4693f354a38c79d16cef1bf7c1",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/decks/starter-grant.ts",
+      "worktreeSha256": "0624df05cf2aa04aea4480df8934f1123c26bdd68bc6e6d59b80cc74d44f908a",
+      "baselineBlobOid": "247bf96ce1438f9d84e36bce0d37801c5eca1f3a",
+      "baselineSha256": "9fd6397eaf12da2d71c8bc7efb4f29fd8872ae62d5715c8d130e62c9311d3ece",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/decks/story-deck-context.ts",
+      "worktreeSha256": "4a8d3e2cc1a067bdbdab4985ed058ace46d36a7a226e3fc3b6df6e198d70c4ab",
+      "baselineBlobOid": "671b8a952daa3bea8f153b2a3caa99e53f16c9e4",
+      "baselineSha256": "cdc839608d22855d08ee39406c496c3c916bc23af257fe61c7b34bd2e2ec301e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/decks/story-deck-repository.ts",
+      "worktreeSha256": "46cd90f7350c75542fffcae9ba3bc887859b0c1afbf8780b3d04f84ef1b23b55",
+      "baselineBlobOid": "01a6933d2956764fd96c2997ebebda01be0d6a01",
+      "baselineSha256": "21ca295eaf1f02bf28a0e88bae15b23ab037acc81976dbf0d7f6a5e86fb4cff6",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/model/story-state.ts",
+      "worktreeSha256": "c6dbdc66f152133a11bff5fc8576b00c8e78411b3c35b9aed4f46a507aef4c86",
+      "baselineBlobOid": "4fe1ad84bed0a85c1f11378662c95ef6c34c1ac2",
+      "baselineSha256": "b6a330d08beba2740a38c7731fefd621092620e6b1c3cc665c15470df8411c73",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/screens/PreBattleScreen.svelte",
+      "worktreeSha256": "6bf3b5b3d848edc58e2666b511b29491f578ef3030a2a9cbbe032c4e05b82e15",
+      "baselineBlobOid": "e3abc237d9581c3f2b327914412ca9eb7b990132",
+      "baselineSha256": "027d86e5265911878569e5a57f3881bfee558061e3ce5bf2a81ec4a376afebca",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/shop/BoosterOpeningScreen.svelte",
+      "worktreeSha256": "560cfa3c152829d39fe1569a20a9e43f380688f95caf9d5f6d94addf682eb4a6",
+      "baselineBlobOid": "f8a2803eabd3661423b166f01c0266b05235963e",
+      "baselineSha256": "11e3b692c516d06b01e6dcea599c7a4375385c6d23e832781a178cdbf13dd1ef",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/shop/ShopCardListScreen.svelte",
+      "worktreeSha256": "0470db93c7fecfeaac8030faacbd89ca501304d07a0b7eded9ab7d2b8da1edd4",
+      "baselineBlobOid": "1939538281e8f84df4b399e86e04614c86143599",
+      "baselineSha256": "0acd1b8438ef13ae7c736a51541fa12b64bbc414fd8c9db8e3cf76bc74f528f1",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/shop/data/shop-rarity.ts",
+      "worktreeSha256": "e00f044c6c9aa0f45bf983480d4ef4205d550acc5090f73a7a0ad24992cc95a7",
+      "baselineBlobOid": "63bff71ac64a921a90aeb1a07ace17d16fbe4ab5",
+      "baselineSha256": "cd3ce2db67a7462a4fbb8f925f9c5d44d3b54ddf6bd67f85e386f8342f8452ba",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/story/shop/data/shop-set-data.ts",
+      "worktreeSha256": "af03cf497358de06aeae32ca8e2b91417c91e082f5624f314181a9c92acdd21e",
+      "baselineBlobOid": "eb88c77080a4f2a22f351a5f5652ea9bcdee74cd",
+      "baselineSha256": "9ff6036c6693731f0b87d22303040a5b1e0e01c1a0fd2e624436ec7be2304dae",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "src/styles/app.css",
+      "worktreeSha256": "8bffb3ad074e69f1d5ccbfab4ebe6d2c9b1fe4366fd4429d348ab9ff41eaf078",
+      "baselineBlobOid": "d39479cb6049204c3eaa84326246d4749a6654ea",
+      "baselineSha256": "8971f6acd58590020b936d96c84c553ef7c7bde50567024d895b35a56814cb18",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/AppChrome.test.ts",
+      "worktreeSha256": "a4217ca3b449868b425e5bc862ab2c8d952745092ae976c783605edd06cd76b8",
+      "baselineBlobOid": "c5ddcf87940493d6e5c91547692dbd46520c0be9",
+      "baselineSha256": "0303a4b81c400769044e8fd5c92a94f694b95a7321db0aafde832936f9f3223f",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/AppLocalDecks.test.ts",
+      "worktreeSha256": "7a756e3feacc043d92bb47cc69cfba1c2a605a6f1e26b41531be096f7dd7c2bf",
+      "baselineBlobOid": "d26ff40e5f41784f46adfffdc1c8710eadbcfed2",
+      "baselineSha256": "e1e80bc9aa6964e24a8100b360a0c636479fc479f3de12bebfb101eb96fa8e8e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/AppShell.test.ts",
+      "worktreeSha256": "9f1605187603dcf19172cb3fd7c00beaa46874831823b136b1b5d78e2106a11d",
+      "baselineBlobOid": "122917c7d0fc758dc4ca159e2b27a9d61a0e8378",
+      "baselineSha256": "02a5ae76c8003fbff8abe98500ae921e77854eab40b44d607cd68b263ddd8e66",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/CardPreviewPanel.test.ts",
+      "worktreeSha256": "626f3c6918f55edabcdd3543c411deb48312d1065935c08b4a784c5840af0bc9",
+      "baselineBlobOid": "bdca20116a70ad041cda4a5d6170cea7220a3635",
+      "baselineSha256": "eeb43b101c493650f4f77520a565df4a816ecbce7a75ab2642515a91c16d0b9d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/FreePlayMatchSetup.test.ts",
+      "worktreeSha256": "f1b508b91083cd9db94c5b32490ce8fa9b69084a9df9e5eaca069cbb80002f0c",
+      "baselineBlobOid": "2c5cf9aa83d0941b0be9bd53eb4c9319db14aa26",
+      "baselineSha256": "15e50e43f3247a2d30dc7cb8d45cd554cd2286330ee27fb4effb9a510549b4db",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/OverlayScrollbar.test.ts",
+      "worktreeSha256": "7a4e4517c19b898dbd85b31a0f8cc56b81f6291ed4dc43fad8e93831ae558957",
+      "baselineBlobOid": "7c6a15742024050682697e94365721b73d3f3265",
+      "baselineSha256": "c80e6d54b650dc7081ee2ea94ea2aaec0013178b5b5e6305457a4e8d5ca78ccf",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/advanced-card-search.test.ts",
+      "worktreeSha256": "e4d00a79ddfd1e77a22765063272c49b4c04e92970f2887a2dd32d60cc10e8ba",
+      "baselineBlobOid": "848a5cdcd9e1f46b5f5cd915b4d2bc9b7b4c8f0a",
+      "baselineSha256": "bd7e42ec6ea41138beba93c27b5843a38ae66c42fa13bd1446c8bf7672fec8e6",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/advanced-search-load-error.test.ts",
+      "worktreeSha256": "62d18625d6023a79b9aa08936c96683987466ae5ba226e785b33861664a64cb1",
+      "baselineBlobOid": "ce316a661716b406c6393a0a4f88cae5530a3bb4",
+      "baselineSha256": "01ed4846a50fd92b33b540f793aedf3f894369e9758942f068bdfc701c5fb17e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/advanced-search-load-lifecycle.test.ts",
+      "worktreeSha256": "cf2fa82b17e59a0f0490a10ca208ae61323300b312a2c924e4cffa47b785d702",
+      "baselineBlobOid": "da67a4008f6e764d31eb8c76f9a239fc17f531fa",
+      "baselineSha256": "0f65b4281843651e14bd3b56da5eb5ecefb3a510e8014b41787e4d379ce7b11b",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/card-catalog.test.ts",
+      "worktreeSha256": "e26e2c177b8846e4e42a57583a87c3bb67393dda7106e9bba4d016342120a561",
+      "baselineBlobOid": "072a30c0c540332c973614a06ac19b690bc5745b",
+      "baselineSha256": "b161567e00974a6fc330cdca1e5a2d0b9d1b989a6def327ca884eedb110226da",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/card-preview-pane.test.ts",
+      "worktreeSha256": "75ef39ababf92a3d38efbea7592ed4a11402a2f34fa98372a6133a5eb7bdc295",
+      "baselineBlobOid": "c10089325befc945f3cab7b7b3dcdac10d9cd30b",
+      "baselineSha256": "74ebf0b8acb113fc30856adff2c01c227eab46ba19a0f759f526d2d7ac238438",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/card-tile-art.test.ts",
+      "worktreeSha256": "195ff7db46619e17b865932cba2c1b624ebd2b799555b8d1d1b98be907281981",
+      "baselineBlobOid": "3ea79aa074af239bb401ae3f86268be7013cad50",
+      "baselineSha256": "53ea0f820a71450e924d984d24087baf8c136b51bc2b9261052e8e625f803325",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/catalog-index-wiring.test.ts",
+      "worktreeSha256": "999430ce7d05bc4fa01567c8496ff67a90339221fbd6b99816f2c58cb25ff5e8",
+      "baselineBlobOid": "50b80f25cf05a6821a4d03b23a7dba1184dd6df9",
+      "baselineSha256": "86a9cf614f1cc4b6057e766c65728c91ed594be09f0bfc44d8371dc149552f3d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/catalog-infinite-scroll.test.ts",
+      "worktreeSha256": "152fcec4f4b2d37ff6b040a6c1283f9261ef40dfe89f835032e1280b6396986b",
+      "baselineBlobOid": "c713461cacfc782621b6c2fe67cc0f2ef1584b43",
+      "baselineSha256": "899e5f8c45118b8b21d51b9491d7e240cb23afada44e5554154365aede6e4221",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/catalog-scrollbar.test.ts",
+      "worktreeSha256": "c2560e7ce70d751806998c073e6db964fc9cbf59690a0404c75d83e4b6e6d03d",
+      "baselineBlobOid": "a0d83045e354afca8f1fb9061eb55b2f6c029932",
+      "baselineSha256": "61f4f26397abd9e9b5f3693190c04dd2da6ee43155350327cd86e4aaf6271f71",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/catalog-type-input.test.ts",
+      "worktreeSha256": "5c3ebd99066c3cc33124f08751b9341366769d370a35bbee003f9dbd3a31a121",
+      "baselineBlobOid": "30718fae81d4394937ef084f20f08b19658fcb23",
+      "baselineSha256": "2476a762da87b7d5b14ee34f09a7d28502e0fe76c0b68ae22b5bfa8da12946ec",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/click-semantics.test.ts",
+      "worktreeSha256": "aa1df33f46eecb65b94705c54d125c257dc19d44800f8872b4cc4654b2489756",
+      "baselineBlobOid": "445541448dfbd7bad64a8196bd1a6e3655efe3bb",
+      "baselineSha256": "0643c85b1c45932581eccfd94653e895e14f635031ebcd74644c0a14667d05ae",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-autosave.test.ts",
+      "worktreeSha256": "d076e926d34c3e0a15eac3f72c549e13b1bf25e4a5b1acd331d9cdc9a32391d0",
+      "baselineBlobOid": "1831afd96709f24670f51b5d6c7391d948f5fbc9",
+      "baselineSha256": "30e4c4f8cbda6cb2b1ae66fba0aeba6fd3e53d936312713466560819a9f42445",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-click-move.test.ts",
+      "worktreeSha256": "f59e6ab05e6045a4925a0e12443b0c4ffbbf561ba846698b54b94e3ee63e62a3",
+      "baselineBlobOid": "d1153043f7959d2ee3272b22254ebdaf2d7a220c",
+      "baselineSha256": "aa9424b54e56772e9731c57f6c8354f6c1860a65342c8be77762e567c8ebf82b",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-context-menu.test.ts",
+      "worktreeSha256": "28efc8f7ee21448e260f639460543e6a3992d0def9b78c78bf74dcb57b0de79b",
+      "baselineBlobOid": "82b765e864ad9d25874ea09f8e6c873f9c9fd610",
+      "baselineSha256": "e04d5948621c594bf3887542f2207cfe59cacbf68f08de487c59d95a6d4b24d2",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-create-failure.test.ts",
+      "worktreeSha256": "eb9fbaf1e96d28433f1b55c15277b3a94d3f2feb0db318366a9c626e04269548",
+      "baselineBlobOid": "65e96f68325369fe7b45ecc3b7c8617cf3816ad9",
+      "baselineSha256": "4b030b96a555e451e577c23cfa564d49850c3cbe5b390266442ac72935aec159",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-delete-failure.test.ts",
+      "worktreeSha256": "a80589134cb834424c0cacee57ea2ad2b82d0fe457b24d61e9f8d28a8cfc3646",
+      "baselineBlobOid": "d051c96244478536d6146a76eb7f34e8c23f5365",
+      "baselineSha256": "88ecc015c5a51cf81f4262ab2a52663ac05f27b7f5308cf10e05e5a9aa9b1a61",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-editor-a11y.test.ts",
+      "worktreeSha256": "f4741edbf4002a4fff59119196b464d52355e75b41d6c89f3779cf19286c443c",
+      "baselineBlobOid": "b042428bf8104d5737686fe28024196d1754c10f",
+      "baselineSha256": "98d194548a318c187b5b48920eab529358c2c1e7a62b99834c852859982f70da",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-editor-blocked.test.ts",
+      "worktreeSha256": "571b2d65797311dd7f8d6fa51c4672bb9e7a0e139d580582cb8aaee7e900b50b",
+      "baselineBlobOid": "8f6c2ca0bf175f86c267a2ceb0377764b45dc02d",
+      "baselineSha256": "cf8673c5f4c73ced794fbdb5872e1a7d30a5c2573d453b135d940f863e14fcdb",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-editor-shell.test.ts",
+      "worktreeSha256": "05ff397e429754f07d14f07f6cb3b8f3f0c98c618ea0b918d57299d1a2f93051",
+      "baselineBlobOid": "8f91b86573c1a89b5e1fd49dbfd6d1a50d151351",
+      "baselineSha256": "5e8ccc760a12c651f9108384605594632689b80b8050d9dc83f0d8487381396c",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-entry.test.ts",
+      "worktreeSha256": "2d3e3f547c2eb3aeb4bca774d4b7c7b44ab1d4341d2d930ed8dd15028d2ca985",
+      "baselineBlobOid": "69cf5cbd8f0ad71d9f451360c0e5c21a249f0cbe",
+      "baselineSha256": "90a2c5689f5cf3da134de4bd668cfe8c6f6c0731e5c5a64d04298e05ad6f25d4",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-favourites.test.ts",
+      "worktreeSha256": "3fb9a87ece619327070d16e5b1cd7057ae8cf6738a609eb4a5bda4986befc614",
+      "baselineBlobOid": "08dc3db56755ebb2100b38b2ab43c7f9dab0666c",
+      "baselineSha256": "5b65b4b42493b62ac251bfe11a0b4c2a6a43d40a62d445a05805ff52865beb12",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-history-ui.test.ts",
+      "worktreeSha256": "65580c8ced12c6019904f5a054a478414552db6f1d7c6b5aaece7b057c06a7f0",
+      "baselineBlobOid": "6b0658e229168b811ef7d954f2361bc7b31b7d99",
+      "baselineSha256": "705ccd8e5318dbfa95278de23c30e5f684b8008e5a2791b15bd1b2d2caf2dec4",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-library-order.test.ts",
+      "worktreeSha256": "f98fcc33c41b057eb0932bd521cdb4e6c885d071bf3737a6a917b1fe9a77dd70",
+      "baselineBlobOid": "7b8909cd52f65ed687514ca4800e679fee99c8fb",
+      "baselineSha256": "0146029532f45615d76680fe86f84e9fe41786b9c485bdeefc26e493d369e3e9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-library-rename.test.ts",
+      "worktreeSha256": "063dd121dd5237def9e7aef3252de328b5285ef4f3a4c326b73a545687be2217",
+      "baselineBlobOid": "e20191ee8fee13280b310396f77526d844fc85b4",
+      "baselineSha256": "af6f0e2afa046690368a7334be172aadd229a7ce31c4dabc947fdaab971b0e63",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-library.test.ts",
+      "worktreeSha256": "87995884747d23f53c2af9b84ed59584e17b8679f855f29de84e38d6728cd993",
+      "baselineBlobOid": "6c4002b74e0c07115bda35e4a2711104741e0c35",
+      "baselineSha256": "af6fdb73b23fd7e0e250ee6a7738dc5f7c707be312c6aec6d4f602147344d0b7",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-migration-error.test.ts",
+      "worktreeSha256": "95d517ee14edf672bb020b1430bdaf7925a9f7baec7e0c0edfdb925472f38d07",
+      "baselineBlobOid": "3f95c2a1099ad3b252ed923b8a4a53e598743f18",
+      "baselineSha256": "6e2ef010396352ed2ebf4b0856c8dfcff19322f5b30b16979130c3188671ea35",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-ownership-legality.test.ts",
+      "worktreeSha256": "6ca0f9d6b1104a37f0b98cfd617fd6cd9e535da1973143439bf3dbb9ddc99619",
+      "baselineBlobOid": "18f654c4e03804a3f69804cabc2d0f2155f2f5f1",
+      "baselineSha256": "52ed2419ffc954e2a6af9a86f3e1e70b3cb3d62b06d65ca0beb393f33fba042c",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-page-actions.test.ts",
+      "worktreeSha256": "b64ad72ea6db7573155fff4f7c9347bf87ce7cf7755dbaf2882f1cdb94556096",
+      "baselineBlobOid": "e17bdce171d26bf6c7a4f63ec5bfa889f4be9f40",
+      "baselineSha256": "c880f9e62296ff491cad317c617bb517255f05cc62e70f0b4f36afd0429f11db",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-reorder.test.ts",
+      "worktreeSha256": "3f2332e827683684d851a7e69a8dec55a5dcb8ec9e2a2ed833ba769372b20ceb",
+      "baselineBlobOid": "fde76d2f2477cca3e420841e0476b24741b70bfe",
+      "baselineSha256": "1219414cf0c96ae16d16be9a3d35d3c0b40594ed342a7d3052cb2e514f131ebe",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-route.test.ts",
+      "worktreeSha256": "089cbc0005b2cd57ce1cf1c177294f34228102281bf51092c051d7d62508abf0",
+      "baselineBlobOid": "1c0ca1a6a268d39ccb9ce17395bcd511df7e453a",
+      "baselineSha256": "6048c73c055b647b4c36220fb5fcd5f0aac73c630fcedc962048411b90b832c0",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-save-conflict.test.ts",
+      "worktreeSha256": "e95e4047f644a70e7ef4afee687a50b3eb9ce30224f01bc01cde0d38c11abcdb",
+      "baselineBlobOid": "0cac5575209e05bfda2e65c1974c2e893f8ef5fb",
+      "baselineSha256": "8b1c700e9a3b9a25fd5566659d28c02a22efeeef03ac0fa23ccfa517b87ccfbd",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-validation-ui.test.ts",
+      "worktreeSha256": "90cdb2d6b7389c19c28fc982fb7b4286faf9ac88a7517ae92da4cab8cde76199",
+      "baselineBlobOid": "2ae25f41fc36e799e4f7906ef43b96d8e253c60c",
+      "baselineSha256": "5ef21255ea3042d3e5a18ef573060d6b00213175f5d23a83edbf7f9becb4ff0f",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-workspace-selectors.test.ts",
+      "worktreeSha256": "0b7225cc455b7d356625c380074b180c6deecc4c6750d72d7dbb057820e64564",
+      "baselineBlobOid": "fbd7d261420b0460535ca8d691c9ade07118b142",
+      "baselineSha256": "84671b00e7614f117023e7a5bcb5b2d2e0cca1e86992332cb52a3e0ef04029f6",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/deck-zone-grid.test.ts",
+      "worktreeSha256": "a77907cafdd15ceee22b8d7c43e6cdc6ce2bac50d4baf76862040e32935af2f9",
+      "baselineBlobOid": "f65b1b7598f2713192a294043f0e50a0c5ef369c",
+      "baselineSha256": "b8adf349e1f598fa81ce480a55a12d78364d316ae73a9f25f0e26bab8f38cf27",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/default-deck.test.ts",
+      "worktreeSha256": "330ee964d89153c59cc598592ca2ce6f8ce4bb6e668dfb9767a72cf3412c0887",
+      "baselineBlobOid": "96caa6cc3773a56ea380eca1a201185c433892d1",
+      "baselineSha256": "9331bd4cd23cb0cd7192d78414699d4b14f2a4f5ce15acfd2e38eceda7e2d878",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/editor-context.test.ts",
+      "worktreeSha256": "1aaf52a4dde867f929c3a1354d2d1d52e9f7d58156815f57e72566e8aab469a6",
+      "baselineBlobOid": "939917cfe9d5803aaa5682266cc195eb73b24538",
+      "baselineSha256": "e04776b6fa3f765fb471d2b7ccb5568470f9df3cdbf759da24a242cddb20fbbd",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/editor-import.test.ts",
+      "worktreeSha256": "5d1aec8f4db9bd2b48b32b8ac8bb7c81e503b4cb7d4f644c88f20b196f1b7b0f",
+      "baselineBlobOid": "9f443ae08dece55af6df292dc1af4320bdc08194",
+      "baselineSha256": "dfac71480b8f2c441110cfc6b91daf58c27968a92dbd7168c3673ef8b2e0b39a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/installed-catalog-boot.test.ts",
+      "worktreeSha256": "9e749ff8ec4c65ea154a0a0b832fff117bbb2984c2546fb7f26f1598a5301748",
+      "baselineBlobOid": "9d295bfb4646edd5d96c724c40098b055098e663",
+      "baselineSha256": "4d5d2ad51be1f1a7d85dbe9e996d05989617a8c9dd3250e62387001b3b0844cf",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/installed-catalog.test.ts",
+      "worktreeSha256": "8fe847447f95c05b43f86a215ce16cfbc0b63e3d1f8287493a9a8bc435f4c98d",
+      "baselineBlobOid": "42c7014a3507bb696998ab5b23d4b15cf56a5733",
+      "baselineSha256": "b147bb1b1d5968047663d1f76490b34a3d3e75336ffea29fdb4d7014da0c6e0c",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/installed-image-teardown.test.ts",
+      "worktreeSha256": "f5dbf7d6fc09de5109f9db68a1b9aac133a8611e68541c3885796aff20d8f079",
+      "baselineBlobOid": "0ab9efc55626e926a29d610c18a13535f46828f0",
+      "baselineSha256": "6a69f0b85b9f0d80ea16e43c50d80a7b5f6d9e023719dea23866e548adc79619",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/keyboard-shortcuts.test.ts",
+      "worktreeSha256": "1dd7cee8b2e0e146c322e30184ec199e48592575f57bc2fdbe53025b23fd8013",
+      "baselineBlobOid": "f4c8f1c7bf74abddedf386bc21cce352f5deb116",
+      "baselineSha256": "22c24890c8e750fd027f04d94e46973c016a57d7e6cec1382f25b4f93d254c13",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/load-deck-dialog.test.ts",
+      "worktreeSha256": "9e931fac6056d393c8fd5a3b5d03a7ed7bb9ef18449f8fbbe59fea79670151c4",
+      "baselineBlobOid": "54cc1201cbb20ea334fd932372148d1ee8f9a1b1",
+      "baselineSha256": "e7493f4c260c691d160f498f7f3c38f73412707ccbcf91034b5f1947ca9e88ba",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/missing-card-placeholder.test.ts",
+      "worktreeSha256": "d25f37d9797da99fd86a49b85faa44e43a418c6d472310e2718364982929e15f",
+      "baselineBlobOid": "475c8ec6f87a5bd6b4ae66eb5089c396aa00f90c",
+      "baselineSha256": "955e0e1498e46a41c5ff2cbd249c57c9ec5486d68f0bbc446d852717d3bf2f3a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/owned-only-catalog.test.ts",
+      "worktreeSha256": "f28f1a34da36f1ce4036af946e017b8588151ef9a3b64957adef850ebda704f4",
+      "baselineBlobOid": "840a1eadf525c0c3e56978c5971f0c647b43c7de",
+      "baselineSha256": "8feccf363661f82fa730e7feef0b35639e3b742d25765c6834f064622fca3a19",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/pointer-drag.test.ts",
+      "worktreeSha256": "7134ea411a1d6bada40a0bd885eefc8856bbe638483ce4f1dc971a4c0770b70a",
+      "baselineBlobOid": "eb5521f8ee8ddea47526abe02c25d11985d80046",
+      "baselineSha256": "073ffff1cc284750b889b7bf3fa09b88a9823c17f1c3f80543d4c220aaa016f1",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/portrait-layout.test.ts",
+      "worktreeSha256": "36b66592449c2721e5b8c95621923e549e61111f64843d71f54c3ad3209366f7",
+      "baselineBlobOid": "77a60c8d01831e3c7f4090247d1ce9cf09f6fe14",
+      "baselineSha256": "0ff6090f772c1d42fa6400b382b67c0a49bef613023718a81e20f7ec35e66647",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/quantity-badge.test.ts",
+      "worktreeSha256": "6980024c0f6b208b62674bc978400a992285df9b86f0d858f71d938f6de0a872",
+      "baselineBlobOid": "a776c654fd88d73c3ff09baaffd7cf4e93cec0d0",
+      "baselineSha256": "d0ba13e6e8575d0558e801db9b1943f00c5e7ee0dcbb4c73a0f7a0b47b02eb10",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/token-cards.test.ts",
+      "worktreeSha256": "342451344fa5aaaded558135b2f5d37cec45dfbf33b968072fcbecfed48af1cd",
+      "baselineBlobOid": "397593ef51d48c90726de5927f00674a2b037dc9",
+      "baselineSha256": "a8fb764e4d2a9a0229fd48adb3f1819b5f121c098db6c14a0b8417ee5fcf7dbb",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-editor/variant-b-panels.test.ts",
+      "worktreeSha256": "0d44a7854ce756e6edf8f2419ddd6808fb531555a8998a120b8415d39d0faf48",
+      "baselineBlobOid": "47971c38f7d750fa73fbba6fee78ac0b14abc7b3",
+      "baselineSha256": "558581c26e925421c288ad2ab694c473391c56f28e604dbaa1ea82058ac43fe9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-select/hover-previews.test.ts",
+      "worktreeSha256": "06441b1dc2ab2749461db1cf373f299ca27e97dfe1b87506fc9665cf01ad4a30",
+      "baselineBlobOid": "2bc7f2d8ebcb4b7968ec505d178c3a76a9031454",
+      "baselineSha256": "384e6be8aba42549d100ef79c35f922d42209e034f4077a46eca9edf54e17251",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/deck-select/seat-panel.test.ts",
+      "worktreeSha256": "717d2ea95648aa9e4695914c0d808297fa4fd3af36539eff1044aeed58c0abc2",
+      "baselineBlobOid": "a7085170c9bd273aa8e7acbe39f847f4bcacc989",
+      "baselineSha256": "045c0533887a5c4155c9ed02e7b93ed7e7dea57d9ea5d193373ecde4be64d645",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/ShopCardList.test.ts",
+      "worktreeSha256": "c52ae9514e9d8fee7de117fafcc40b7c9bfa69a0456be7e3f711983e9707af9b",
+      "baselineBlobOid": "49ba0f738d584cd9850aa0b9f660e2ebf79dd7f3",
+      "baselineSha256": "2c5936f2286458ade7995e3d9893c1d6a17e2c0de5ab7b1683d5342ee5ed7a82",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/booster-open-all.test.ts",
+      "worktreeSha256": "a4900adc0232bdff1434389f6b2e09b5bfc1221eb0bd1039e24f03e6f3822dc7",
+      "baselineBlobOid": "1c8ec0c9a504aabca628c936f99f0043d7da88cf",
+      "baselineSha256": "0b5995ea73716cac87827292927c0135c79f8e15fe46ac0a6d7d22ff651e549b",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/booster-reveal.test.ts",
+      "worktreeSha256": "cad9a2b35d15da1424bf9c43a5f3006ca9f118a7a2841ce9cf7cd152f28c8445",
+      "baselineBlobOid": "5bda8da9b69f51d2aacadc86666f596b86a2324a",
+      "baselineSha256": "c951d141bf50d3b9fb9ed027e6e61275b0f441516d4b0d5919806a98e451b8a6",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/cancel-controls.test.ts",
+      "worktreeSha256": "8f20c21dabebd7a6ff7da8a0fc20c1f03c93502b2fb2411fdf82204615a09911",
+      "baselineBlobOid": "7497171e4db7a22029b289e80a2c05c9b0a5212c",
+      "baselineSha256": "84cd47c41c61d7544cb7e3b9ffc340268d029922adad3e1d88fd1d7d1dd91a8e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/card-zoom-inspector.test.ts",
+      "worktreeSha256": "c3ce4d1842f0d61ae74581c9422b91d876580ad8e4bc68522caca8c6bae8f619",
+      "baselineBlobOid": "57e1f8b141ea1576e7d34e393aa6c1af2bd76d2b",
+      "baselineSha256": "bf773933c0a3fcb2896b27a9191202e76303510de9e5d4a197069250034a6dbf",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/collection-screen.test.ts",
+      "worktreeSha256": "73abc72b601a0594a89420fd90f0246b8608931883e4c2debdef794fa017a9e7",
+      "baselineBlobOid": "d82b0b4887113723335be223a1bceadc575c7b26",
+      "baselineSha256": "7b357377e40ca4b3840417d2dd37066479d4c0e884a071d4fedf8902705223a2",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/set-list-rarity-sort.test.ts",
+      "worktreeSha256": "95f60b153b387502aac7812c77713a14d2769f0597f267da0fed71bafbe97fcc",
+      "baselineBlobOid": "d00ad28a882ac046c93843f27c5b455987e6e56d",
+      "baselineSha256": "f4368ef1b2d35e4e68b569365740f00b14e3c39184f220653d96fe9d32d71bd3",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/component/story/story-card-tile.test.ts",
+      "worktreeSha256": "7263b9fc78cdd8dca7c89f00bb4bfc8e030060f8a16b44a028896958afd3b22e",
+      "baselineBlobOid": "14e6118f0acb97451adedc35b1d687cd71686b98",
+      "baselineSha256": "cb64a2af11aea41d22120dc3736a5f67a212c2a0bac2261912da3b07b3da6ef1",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/DeckEditorProbe.svelte",
+      "worktreeSha256": "6936bdd1c1a81e5748252eacad6876465631d36c19f12d94270e8335ec110aa9",
+      "baselineBlobOid": "a4e1da9df8197285454336a433d1ddbb47d24cf9",
+      "baselineSha256": "f1774133305921c125697abc4bd793fc34f34acc0336a169bc4d57bde3ae5ee2",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/active-catalog.ts",
+      "worktreeSha256": "4251e562ea1084ec58d995451bd8cf75e15e99d47e9099b25c0f705921071990",
+      "baselineBlobOid": "b8e7f34449ee8c6fa4a670acfb733cb1d27ad964",
+      "baselineSha256": "4a91b384608961baa221d3eaae51dbe6ca99ce621d991f490d1d2c44ab7633ee",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/deck-database.ts",
+      "worktreeSha256": "992fce4522ae77c1642457e65309f4b9ac293a4e28879d156a49627a3f0d6456",
+      "baselineBlobOid": "26a4aafb8156636dcd59f9c994d49b1180f5ae4c",
+      "baselineSha256": "656f8a04f4a0973dc9e119339318eb9783fad8f8950ae1e4df3f1cd93fcd17f6",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/deck-editor.ts",
+      "worktreeSha256": "f033e76338e1d8296c49af9a4772da8fcc471becf91f33382044a3fc62e025fc",
+      "baselineBlobOid": "d8529d890dae1766b51dfb1930f21ec0c6b3c074",
+      "baselineSha256": "78fbf6b8a14abebb9347af7cd0fd4bd8bcf7a742f822db1a3c6b8c6c369cfffe",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/installed-duel-gameplay.ts",
+      "worktreeSha256": "fc1261964225efc899bd87124b7c7c0aea0495ba21a3a9a25f651d964e180fdb",
+      "baselineBlobOid": "24cbfb772b5254f8babdc5949366d3b0736e4ef1",
+      "baselineSha256": "4d9c8d1d404de96095ce4b422b7196abbde11c58a5d4aa5db03e2901c32da65d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/installed-gameplay.ts",
+      "worktreeSha256": "3ef7adf24536868fefd36f3a4936e9a33d5b3f6211f48ba75f38f43378b67409",
+      "baselineBlobOid": "fb6cbe11262c9e675fbe9efeb013b8c28cb1d3df",
+      "baselineSha256": "749f152e7257346b260a295ed810004f4a9b76adada47f07256527712156feae",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/story-decks.ts",
+      "worktreeSha256": "2683d9b455e7f82830ad4264cd1208041fb94ec2d5cfbdd0deb53affb3447c0e",
+      "baselineBlobOid": "cd9258e188f8c99f2fa150060549aab6f6a320fd",
+      "baselineSha256": "395da905a163145691647e373e1d1f83b68bf0c5eb4fc65333db623e9142ec4c",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/synthetic-catalog.ts",
+      "worktreeSha256": "657572dcee782f98366d8daafb32a872f11436b218073cc3d56a06a322b9e33e",
+      "baselineBlobOid": "de1000b3ec72f55e880aa875762879a3e2bbb0e2",
+      "baselineSha256": "67e0e6e596e87dd00dca918857f4e4ea739732cd7f7f173f092a20f5d5c25715",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/token-card.ts",
+      "worktreeSha256": "095240a8b3ca087c709bc9ce3781ae5ed137dae64741abcb11d69c3998566373",
+      "baselineBlobOid": "fbce2d83b40bd8b4075e9088946f76f7eff155a8",
+      "baselineSha256": "90d153bc65edb50bcc176d8cb99d008599d47e363d3a64680c3947249fbf9832",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/battle/selectable-decks.test.ts",
+      "worktreeSha256": "576447814f37eeb47215ec917a049053835c3519d1c53b934767e46482e694d2",
+      "baselineBlobOid": "38763d9c6258b7cabde8b9d4b4b2081cc01caa35",
+      "baselineSha256": "b01e43312f2f0e9a156a1cb4a7b9f555593598a679c14dcbbdddd2cd28be9ffb",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/card-preview.test.ts",
+      "worktreeSha256": "af45010959bd6c05eabe98d21afedef4793b11470cdfc92704552b226df751d1",
+      "baselineBlobOid": "432ae6ba10a66365c587c926e93a052324b99ac5",
+      "baselineSha256": "6a2d8637701968a124d32425a3e8ec039c99be7096997026cc457afdd71cbf90",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/chapter-one-decks.test.ts",
+      "worktreeSha256": "4d9a84c13c3d6e73965be345d8cdc55ddbaca13a344dea8e4e3496e60d6548a1",
+      "baselineBlobOid": "7c28a2b3c586585dcbaf2d915c523fae826f648f",
+      "baselineSha256": "1b86762feebc57e08ad823b0525da5141479b56b21e46fdc74c5894c1d63eb31",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/data-cy-coverage.test.ts",
+      "worktreeSha256": "86086258d24bd806f235685b18edfe7804c23e8cf5157102bd81c6d23993aa96",
+      "baselineBlobOid": "41dd0accb82d025383085bc3125f5ff05af0b243",
+      "baselineSha256": "28a3b8693f3d510116ded8808aa8e8c55199c802c77f16f307ff5194a7c3b9da",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/deck-editor/deck-library-tiles.test.ts",
+      "worktreeSha256": "4f3aedc6327c2a5b15383d6a4c22085896840af34cfbe5dbb90909907f3a0183",
+      "baselineBlobOid": "c3608024df814edf1affed9c58159337e7914f2a",
+      "baselineSha256": "a9a580e9edddb00abb8571a6bd917078ceeaf888d82e7d5dabd70877363dbe68",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/deck-editor/tap-targets.test.ts",
+      "worktreeSha256": "5c3ad4ec8db354bb7c37fe331f36ff776919df5fe3e267a7140e0b778d6e8ac3",
+      "baselineBlobOid": "8ea74675936d6e449744f8fbbdfe71212c2272a5",
+      "baselineSha256": "c85e06fb99d22b9ed33aee13b8d4661fc3fc451c958c31e0b72baeb7c8bd70f0",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/catalog-fixture.test.ts",
+      "worktreeSha256": "ed49ab78e7eb63053d55ac5a81855e3e1fc87530f35ef423678d0af690e7f088",
+      "baselineBlobOid": "86077865e416e54ec55aa2500e9aa9425c209135",
+      "baselineSha256": "18f4cba86b133d6ff51414e40c09794f6c6e197194944db0c3ea1b612f5e35b4",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/deck-buildable-cards.test.ts",
+      "worktreeSha256": "293acbfc0d35af835ad0ac27ccaf2a77de269a966e17354cd00d2ec980fb5360",
+      "baselineBlobOid": "8fe0131f98b9cb0815f79e715eaeae3be7a7b50b",
+      "baselineSha256": "79da2c2529b5ede28aa85f254f7bbec4070c6ec4895cd2a55f2a9f514e6bb4b4",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/deck-catalog-index.test.ts",
+      "worktreeSha256": "bb0c695bf6d667e56044a2ddf826c76bc0fe63ee44c82bd292dd5256a4cb2d44",
+      "baselineBlobOid": "a4f297ec72deb56497053623f55a188acfb69f65",
+      "baselineSha256": "c36d9cbf33df8f159135ee1a130aa84c6fa2efdff0dc6e074192e04049638ace",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/deck-catalog.test.ts",
+      "worktreeSha256": "40f5ad7c109f12cf96f29958e3958a0732995634b024096a776890e3bd2d1e9c",
+      "baselineBlobOid": "431b30d49af366ad1bc14a5eb2cae3bf35adb263",
+      "baselineSha256": "68d4ad023f2e72f64abff7bf062cc0e78114169f5b31f41407b591133137ad6d",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/deck-model.test.ts",
+      "worktreeSha256": "ae715c79d2d0d05aa05743bdbe483e2a8a484cd5861c77948958068c85db72b8",
+      "baselineBlobOid": "fd862243bb6a9b5481a971b6db24acc64a48876f",
+      "baselineSha256": "26fc9219e8edebb7d28cdd41565ac3e7db20908e53f95465ea6ad5de82242af5",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/deck-resolver-integration.test.ts",
+      "worktreeSha256": "0d9b94bed5bc6395373f2b47f811eeeebf73a092a6529a760a780c7e876f7b89",
+      "baselineBlobOid": "81b8bd23a4e51e7086b94b19b16ca5428221b92e",
+      "baselineSha256": "fb4f8f428a7976b6e7f894565439af564fe3dc3c0b60fae0d302f83b9b0618a0",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/deck-resolver.test.ts",
+      "worktreeSha256": "c598d5145683230fc14d10ba306737760c131a555d69b69dcb5b4ab9a94eda47",
+      "baselineBlobOid": "ab76acf795afa485a3985f39e5d70478e50140ad",
+      "baselineSha256": "8f4793795c92911e8f77d07a9ff9835f4ab885f131e075124cba0f2802654889",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/deck-validation.test.ts",
+      "worktreeSha256": "4f334a9b81e114f6d24b1acfcaab094b28a7104ace99da783d4949c97a43aa66",
+      "baselineBlobOid": "eadb5fe48fc822a5bf42d018ded5de317b625d7a",
+      "baselineSha256": "375bc9dc42a99c236decb81e775c4e71964e64aecda6b3da744b64b06e6cf7de",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/indexeddb-deck-repository.test.ts",
+      "worktreeSha256": "93936e6803a7982062ecf9aa6ad1c71a19f25b6a8ddeb0091c2be14d86233fa7",
+      "baselineBlobOid": "e735d853585775325b48eb749a383f2dd440f049",
+      "baselineSha256": "fcf51b2ff2ceba86ff4d56f4968f5c3628e569cb4b38cbdc8b3ab2280e31010e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/ocg-card-mapper.test.ts",
+      "worktreeSha256": "94fe5474a1e08d3edbac2f8c10c7c35ebc16b7be586467278fc1e05cd9d8ee1c",
+      "baselineBlobOid": "f40a3c9a2c460197f72be3730c0e4a160a2f5a07",
+      "baselineSha256": "e9f58281b4df565825484399aed346fc2d1ecf62601856a1541c3ff166baa858",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/ocg-mask-parity.test.ts",
+      "worktreeSha256": "b1b3d51e7a5348513652da38fd38a98251f060185443801316b7471297fd31ab",
+      "baselineBlobOid": "c8b0e92b1fe06e3ed9a5063ded2aa771d302150b",
+      "baselineSha256": "64b5a9261442e55b8c3e993346f9ed60c98737730f4e1ddb69ccecfb3d45f1c2",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/ownership-validation.test.ts",
+      "worktreeSha256": "d6ff055aa39aeb673a6da760138150746a85dde2c3e613e6bfa7200db99b6401",
+      "baselineBlobOid": "3cd03b63857c5794b0f84edbc3cfb9072f0033a4",
+      "baselineSha256": "006bcf3ee1128af05a158fe9ce1b4b53e89ef163cb01be690cbd7d06df5eaef5",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/packaged-catalog.test.ts",
+      "worktreeSha256": "93d71414416f2bc27c13ce6d269533d7703a9f2041ae90f1590ead50df5c7c1e",
+      "baselineBlobOid": "63a4b3eaac8d811e4f79f1c0e362d49bb1ab69f6",
+      "baselineSha256": "48c2a894763938d52ed65898cc4fc34cb3e6667b4b68f653d279d978204cec9b",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/runtime-catalog.test.ts",
+      "worktreeSha256": "1d90c51a9137b63a6a8852ef9b28b67bac390f140e30ab42d91aeef1503ca802",
+      "baselineBlobOid": "8f09d28d25867e27f67bac32cbed21cc87aa9506",
+      "baselineSha256": "4ed1507f9dd221c2c0e34443132a1348fae3dbf95f8f0c80a9e12ac30a4d96d9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/starter-deck.test.ts",
+      "worktreeSha256": "2776648314c90554e091771056cf55b4e511ba53e2c60ed6f49a81156d3fc7d7",
+      "baselineBlobOid": "aeedb639a86313850302099076b399a71d4eee71",
+      "baselineSha256": "3a66fed40b552fa10d24114dd8c4c7737b6a36ff6b6ed86b3379a6fd0e70719a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/decks/ydk-history.test.ts",
+      "worktreeSha256": "244411c52e11cfbac809c84a62ba4ff002cf2597839e616311ca35490d1dd54b",
+      "baselineBlobOid": "e28afa7804f395bf7ba2416d7b3b38b7bbc9cb4e",
+      "baselineSha256": "455bc71a0359fb58da1457e8539f0678539dddc928aa3147923f720874b903f3",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/domain-boundaries.test.ts",
+      "worktreeSha256": "a3778da805cc33df3b335cab67bea3257e5f87df840f3b6befd88f65e6d8e33b",
+      "baselineBlobOid": "9aa9003b5ab386f2a88a41a2f4e1068ac604f97d",
+      "baselineSha256": "1fbcc8de2914e1ef0bf76ee09ecdaad59e7c6f31ffb808233fc9d9af442e2562",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/installed-free-play.test.ts",
+      "worktreeSha256": "9ef4ccceee600eebcd2d762e59682bff9cad3bb69780dc47c4fb279e7e010eea",
+      "baselineBlobOid": "b5979a3ea1d07177af3f8f713f34ec11ed5a44b3",
+      "baselineSha256": "02a26c8e08be36865c30d571c464f3eae747c60dc50fa05323ace9044c321a9f",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/installed-worker-deck-validation.test.ts",
+      "worktreeSha256": "c3c68dca756c97d676891a8f01836439fe264749a1cf0bf8b9708be587307b03",
+      "baselineBlobOid": "7e51a612f03fe8a270b463be59d598bc2517a6e1",
+      "baselineSha256": "da41bdfb5fc381e47867d04f89aa553e909846022f43a65357c0a3adfdd988a0",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/shell/free-play-deck-actions.test.ts",
+      "worktreeSha256": "26c7ff7dbe7b82b5249d0bbe44eb3471f0af20d32ed02bd1b983dfddb2cd74b1",
+      "baselineBlobOid": "088ca5a4c7a3683a285718db3a7b591fd88a4ea2",
+      "baselineSha256": "9e12fb826b660d52331bad1aed61023a75187d927682c0b9d6c40719279277ab",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/shell/free-play-deck-tiles.test.ts",
+      "worktreeSha256": "28fcb058687337360e4cf6050e0635abc9c777d5891d170e2b819d86d51cce32",
+      "baselineBlobOid": "4986dd3a07891029093980e3793f66f2b72ad5ae",
+      "baselineSha256": "51f3e9d1023c0bed70a01add66828463b0602ed617e7f7a84f1042de9aca8c7e",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/shell/story-battle-request.test.ts",
+      "worktreeSha256": "9a23f2aaaca4cd508a3747f2cc6bc6ceaa53f3eb3163b473660c720abe97c034",
+      "baselineBlobOid": "fc0c48dea56f3b9aab0506cea043a6f3e009dd3f",
+      "baselineSha256": "711cd40f365fc848ed9a2c11c63908a7d2f4dda635f85ff1507e95378f216a04",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/stage-frame.test.ts",
+      "worktreeSha256": "a52a171443631ce2a45020de5703da14d348ce479bee9ee052041001367754f3",
+      "baselineBlobOid": "dd6c328d5146e95f0e25e8ebd5f1ff8360b07926",
+      "baselineSha256": "babb96d20aca31a56cf457e4e2cabb09abfc3a71f096c9f9fc61644580cc5b64",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/card-ownership.test.ts",
+      "worktreeSha256": "3a882714a42399e0c659aadbd4f9ab041be269829734414121e99f0f4872c41c",
+      "baselineBlobOid": "41bdb2d64d9b81b1e36bb34c70cae408c6a980f1",
+      "baselineSha256": "cae68324a63eaf5acc1ec37036d112067b1d61c5216ef0732b8ce812cde5cfb4",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/collection-cards.test.ts",
+      "worktreeSha256": "aae881c3fb15fffc38a8b347fc3178490662ef15eb2a5c0f395cebb26c1abe8b",
+      "baselineBlobOid": "4981c521cf52ff4df50331bfcf338bb5bb215f03",
+      "baselineSha256": "226410af2701519111bb43f1608fa219808d0d6e63f46ef6193bc2df9d79a16b",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/encounter-deck.test.ts",
+      "worktreeSha256": "5530b0b9ba0a8f6b68a93a9c72c7372d98e8d0b820139da0c16bceb56345cc72",
+      "baselineBlobOid": "991599c47e1f0615cfc56c809980ae72302fbd80",
+      "baselineSha256": "23b314f61f70a93ea69e2b4073aed5a24447eea86fdde0cc233bf50c4ade06b3",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/new-game-grant.test.ts",
+      "worktreeSha256": "e867c2ecaecc53df2a2a062c8bccf2c380b6dc18434a85d13616e76a4b909021",
+      "baselineBlobOid": "7596380dc8e73b0364f9f105ddf0b5b0cd66ab2a",
+      "baselineSha256": "b02ceff2130aaa23d54f7b480ce14b68520b769773e7352ab22259d989919ff9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/pre-battle-decks.test.ts",
+      "worktreeSha256": "b0b1904c2c1cc4b1233cf63e3382c0290643dae1990cff254fc9c898cc105550",
+      "baselineBlobOid": "1fcced33ea5a043682a5f6a12f7a96f998963106",
+      "baselineSha256": "44b59deb99b0efb517ddc94910f48361bf259ed225812822043d88250c21bff9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/pre-battle-tiles.test.ts",
+      "worktreeSha256": "117e6ccf2d5f2509ec46a2477c43de1c709f0fb3670a7a006f48eb205e22639b",
+      "baselineBlobOid": "50b769a44e4c14fe3b352d90e12fb68ee9324754",
+      "baselineSha256": "67a34413959002bc1f7dfbdc5e79e864a0658793909a63f6f690b8f4edaa2105",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/shop-data.test.ts",
+      "worktreeSha256": "77e92b67d1650ce0eb79a137be0fe9adbfea71a1578208701fc53444cb8292cc",
+      "baselineBlobOid": "53c043e929267c42ba19e48f92494e68c29f049c",
+      "baselineSha256": "a00b0414f73f2eb537ae777535d75db761f80929a391ac6101d98d7ce2ed995a",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/shop-set-data.test.ts",
+      "worktreeSha256": "419b92272ca831a41962a05bcd9103dec98054ee48a7f9557cf929a259841cfa",
+      "baselineBlobOid": "17b30046779c0a9ad648126bffe6af25abb8d5d9",
+      "baselineSha256": "7803da4ec11aaff0f3106636659d52b31ec9d5df1eeb872c28047679ccc676e9",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/story-boundaries.test.ts",
+      "worktreeSha256": "3aa1e6eb65e5c36a3ae38449533d7df05ca04ad97c384ed3a8fb289c769e62df",
+      "baselineBlobOid": "b81eaae1783d59fb786101cf4055d90c431808c0",
+      "baselineSha256": "d2cb2e696b25168c4e010569b9aba8e09fe308cb3aa761c44337d13971ac1f84",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/story-deck-context.test.ts",
+      "worktreeSha256": "c3d5436857b1b14d1741f32015446b7710d26e776d4c2cea9d58c89a1f01c37b",
+      "baselineBlobOid": "9cd132b5d6f9d1cdcf8402ba7f4516f0fbdcb1d7",
+      "baselineSha256": "270af8f9324fec815edc156c37dc44af2a3e0374f1f5c19cd068fa23bcc80fd8",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": " M",
+      "path": "tests/unit/story/story-deck-repository.test.ts",
+      "worktreeSha256": "391be137a056d81736450e95630a1f8892d9a027c984006cabad39dd3092b417",
+      "baselineBlobOid": "55b6a88a293b5f55a9361d15e7ba4842d64c321e",
+      "baselineSha256": "cfb92708ce76b843072390a649b8f440f5948a266882079847ffddd5774742e4",
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/BASELINE_content_module_rearchitecture.md",
+      "worktreeSha256": "8bfb590509f3aedd9ffa391f19392ef48d016a83fa46309391ee1e36d04e3ac5",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/IMPLEMENTATION-REPORT-T3-completion.md",
+      "worktreeSha256": "18250ca699670c890300a2dad968ced9ab33688ceb6e96bde97d64e2ef4efd60",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/IMPLEMENTATION-REPORT-T3-repair.md",
+      "worktreeSha256": "952f7e1b6d3726a707ee68a436de5e1cdaf1df1e381ffbe123f768a095c43d8a",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/PLAN_2026_09_13_content_module_rearchitecture/T1_baseline-preflight.md",
+      "worktreeSha256": "fe1be16f8cb9040a7241b9c2866e6fc2d546e739f50a6948b3cf7d48772c0230",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_APPROVAL.html",
+      "worktreeSha256": "e6189832d81346f40b342a63a7fca73a7efa57292d54719c3cc34f7fee7ae2b6",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_BASELINE_20260913_inventory.json",
+      "worktreeSha256": "67d5fef0984016e3324dd1c07d4e4a78e07c538e604f9694c79e71268a970f7e",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_IMPLEMENTATION_PROPOSAL.md",
+      "worktreeSha256": "00ee543c47abaab771b1dc3802c3eab38070ca13707ea573ebf546c110c608d0",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_PREFLIGHT_EVIDENCE/20260913T173634Z-t1.md",
+      "worktreeSha256": "29fc9df823be7f9283ede1ac2583036d446f82d40c549f139b853acfbf08cdfd",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_PREFLIGHT_EVIDENCE/canonical-asset-copy.json",
+      "worktreeSha256": "c50c665cbaca660702644005940d5c1b97b75a7cef9da7c02882f8a5fb7f7be8",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_PREFLIGHT_EVIDENCE/final-preservation-residue.json",
+      "worktreeSha256": "05a80b72b929a86dae31ebde594ff74b7c4ecd6c554cdd1742af836eb5c0d3d7",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_PREFLIGHT_EVIDENCE/final-reconciliation.md",
+      "worktreeSha256": "785d556732f4bbbea247a82a6c1eaa5b89e39d0eb35acf1a3f1121fa657d1a9e",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_PREFLIGHT_EVIDENCE/pinned-media-recovery.json",
+      "worktreeSha256": "70481f0d8d7da514cd90b030e9ad783b514a541d041176f5fc33961d27c32620",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_PREFLIGHT_EVIDENCE/reviewer-coverage.md",
+      "worktreeSha256": "237b0ffee25174f1d52d05509381130e71aa30f89d2272e61ef466ab91f02773",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_PREFLIGHT_EVIDENCE/reviewer-reports.md",
+      "worktreeSha256": "5bd2d2f6b0f06e104868f5b2d62d5e3b97fce47d1074a07b2d99bf1d3f1a182c",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_REPORT.html",
+      "worktreeSha256": "b42a32a1474a75aaa792e8b10d66f81b5ee51fe67cb742e5522105f07debf6d2",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T1_T7_SALVAGE_INVENTORY.json",
+      "worktreeSha256": "84dedf22e0beaf35acd41c6de16929e1d6bb13f3f709dcbace2ce79d49cb71b8",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T2_PREFLIGHT.json",
+      "worktreeSha256": "d26bb7b03487dc2ffa075398b00ab5e99d927e8052bda6815b396d595470f61a",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T2_cards_deck_editing_evidence.md",
+      "worktreeSha256": "1f13a5a661a412366927b3c04ecf602ce768182a4d0a01c5c07892d3a61dfaaf",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T2_changed_files.json",
+      "worktreeSha256": "5334d77a1f73df1951be11c8f8b85388089366472c2c42436e8a19408535e2dd",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T3_CHANGED_FILES.md",
+      "worktreeSha256": "e02ebafee313a36ad750dfaa89707fc2e8c61ec0432b07277b095df1ab229ca8",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T3_CHROMIUM_PREVIEW.png",
+      "worktreeSha256": "61edef69f45f4063a0593087a305e0af7918bc4feee8f3f1d046e6b6837107f3",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T3_PREFLIGHT.md",
+      "worktreeSha256": "c8262852875a8632fd2d6defedb04f00a54cc8383066960ad84af3671f6f56d5",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T3_REPAIR_EVIDENCE/delta.json",
+      "worktreeSha256": "91b5944ec6f44553f98d0fdd17566818b9a0d8b0e6a16431597ba2ce582d62c5",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/T3_REPAIR_EVIDENCE/preflight.json",
+      "worktreeSha256": "aca2cb30ec121e89dad7ccb4a5e104322534f73ec1b96a36d9b692d812ab215c",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "retain-in-lane",
+      "reason": "lane-local implementation evidence; no blanket artifact transfer"
+    },
+    {
+      "status": "??",
+      "path": "src/battle/storage/snapshot-digest.ts",
+      "worktreeSha256": "00d44f1e7dbacec72ee93e2a1cda6862ab443fc2bc82d016d20fde1bcd708ba6",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/card-frame.ts",
+      "worktreeSha256": "8d9c1922be79fa7136391f501f3ffdf8880d653550d3bdef91cf21f48f6e34af",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/classification/index.ts",
+      "worktreeSha256": "0e29af6bacf4c8e81d8fd50d80d19a04cc22a670a2e8d4f681dc79a5fee1f426",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/classification/ocg-mask.ts",
+      "worktreeSha256": "06f797ff86b294891ed0037bf40aa0c9385166b4b126c024ea89d818fbe69437",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/contracts.ts",
+      "worktreeSha256": "b8c0a1fd0deaff130f9f8fcd242e07df2708c232b98d417fe865e63d173db230",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/create-cards.ts",
+      "worktreeSha256": "f9cc9e5c0a635b6c92639dbb03569484910eb9185ed995b1c001554bb4f5df2b",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/images/index.ts",
+      "worktreeSha256": "51e4354e809ffab8b2a08b47384b041993589bc2f50c94b48349a609ac16504e",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/index.ts",
+      "worktreeSha256": "a41ae80f86edb82cb9d668e8ae16ccb96779d3b84e48e59774347e5d8da1e41d",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/parse-card-definitions.ts",
+      "worktreeSha256": "a0090d1622092189971a08a7a682702d9594bd1976d19f7d43c8ef981efe8e62",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/ports/card-image-source.ts",
+      "worktreeSha256": "4444878eee8170022b9fa9b8edbef8612c2398e70b439370d9cf652b809901a6",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/cards/validate-card-consistency.ts",
+      "worktreeSha256": "77a7da765f695e6126c6574bb9740a52303eca3a7121f8829a3613f90222632c",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/content/contracts/progressive-release.ts",
+      "worktreeSha256": "ea224c3e0a421814de7803bf9e4d1b3c9c2837d3116c4e398dea0cf67cc55967",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/content/parsers/latest-content-pointer.ts",
+      "worktreeSha256": "dd401015a619269da480336c3dc1aa560da86924f5ad24ed53d62bf36707b74c",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/content/parsers/progressive-file.ts",
+      "worktreeSha256": "7afbc0b2f835dc318b7bde54c34452460a85b877c29637bde28630d7896c0ecb",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/content/parsers/progressive-release.ts",
+      "worktreeSha256": "105f7ba1a41eba97ff2374ae76e225e6121112a56aacef7eebee5a2157b9cbf9",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/deck-editor/cards/deck-cover.ts",
+      "worktreeSha256": "1e0ad40631c0200c8efa2c9d0cba61ed6841e8b187ff59018440432e31b20d38",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/deck-editor/ports/editor-catalog-input.ts",
+      "worktreeSha256": "e7b87ca3254a11b73be5fd6ab323614ce1712fea520baeeaebf9cc0ac7b0e15c",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/deck-editor/ports/index.ts",
+      "worktreeSha256": "b403a07a25a685ac91e5296e7af2fac6ab3ae3eb574285286ec262b9eae44837",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/decks/catalog/cards-catalog.ts",
+      "worktreeSha256": "12410183e258a01b47ea6fe587ed996cc6ad1a99bdf85d7143d64c360a26d2e5",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/decks/catalog/index.ts",
+      "worktreeSha256": "bbb4374009b717a5cfca25e59858b95455edbeea44dac0029d16562893035aa3",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/decks/contracts/index.ts",
+      "worktreeSha256": "0ceb7d7d97187a7864632f6bcebfd815dca4e0fa795c83b3098eac16b0128950",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/decks/editing/index.ts",
+      "worktreeSha256": "c8c7752391886be3741fc783163e90fb83b061e200d4d4e542a5accfe4e9d20b",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/decks/repository/index.ts",
+      "worktreeSha256": "1fe9e0d55a1f4a102528389632f6e9826984dcca75c1bb0b3d841c64fc6e4d20",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/decks/validation/index.ts",
+      "worktreeSha256": "721f6ceffeca5895d4eb2afd8531d4fd7b134cfa22a424248427ccaff3a4c571",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/decks/validation/validate-published-decks.ts",
+      "worktreeSha256": "a97233788e5f5caa4b3a5f4cdfc34e28058d58d1c6dc9c38bfe9519af3527457",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte",
+      "worktreeSha256": "6abdec8f7b1411fcab6934471a0cc4fc05d488cff1a6b46fd4b82899ad19496c",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/card-preview/card-preview-view.ts",
+      "worktreeSha256": "9fb5ba5b03ca883002c16a0b7f2be7be25b352b453e7beeeb255124043df9724",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/card-preview/index.ts",
+      "worktreeSha256": "def8fe33ec7add2b287ddf37241cede8da1d302a4d8eccd6012f61ee52c1a8c1",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/geometry/index.ts",
+      "worktreeSha256": "9b014f56266578ab145bf3992ada2db31ac70a795d2101828b06008006493e8f",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/geometry/stage-frame.ts",
+      "worktreeSha256": "7e19fe63c9c63e1931a091401b6c376ad022a906e8cde02217fb4a4fe485e13f",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/scrollbar/OverlayScrollbar.svelte",
+      "worktreeSha256": "da8030a40d06b48d82a5da0c986ccc19537b23c58638095891c3859ca3332e60",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/scrollbar/index.ts",
+      "worktreeSha256": "8854cb8ed4346db067d7ba55dca2d314a4095943e1de2df96a0074005c8ab043",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shared-svelte-ui/scrollbar/scrollbar-props.ts",
+      "worktreeSha256": "a5fbb5b237efa4b7ab7cd71813526eba84bfc51d9aea1c6a434504c6a4507ee2",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shell/cards/deck-cover.ts",
+      "worktreeSha256": "1e0ad40631c0200c8efa2c9d0cba61ed6841e8b187ff59018440432e31b20d38",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shell/cards/installed-card-image-source.ts",
+      "worktreeSha256": "ce852a79d9b29c2bb3e39c59083c1b65766ef2b67e3494fb16edede6ee8a6680",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/shell/cards/installed-editor-catalog.ts",
+      "worktreeSha256": "0eb7888ea5072f2eb90137ff1cb3d8b097f7589f4bb807c9a4a146b698c081c3",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/story/cards/deck-cover.ts",
+      "worktreeSha256": "1e0ad40631c0200c8efa2c9d0cba61ed6841e8b187ff59018440432e31b20d38",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "src/story/components/CardPreviewHost.svelte",
+      "worktreeSha256": "fa2a560946a251830db8911ca1555c57ff47169c546dca9aec5f162ce1c303fb",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/component/shell-card-image-status.test.ts",
+      "worktreeSha256": "42e004403c2445ac9a63808488d401e20bd0ea47b05ecdcb08757e5d11d9b26d",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/component/story/card-preview-host.test.ts",
+      "worktreeSha256": "b6211f58b718e034ab65b7da50995f22b3dbcf4286777d4a663a18e668aeb142",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/fixtures/catalog.ts",
+      "worktreeSha256": "c5342e978d35d37bfe5cb833fd76d2440247cb2cfb414a0fa11a4474712fa755",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/fixtures/fake-r2.ts",
+      "worktreeSha256": "ba217865544571ad24c4ac1a8a79330721178249f4d1dd31b2edfd524b2ac39d",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/fixtures/progressive-release.ts",
+      "worktreeSha256": "fe14276bd61ba49ca0f4618998f6cb19b7ca84ed2bf7c376d2df80a773b5d964",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/unit/cards.test.ts",
+      "worktreeSha256": "092e5d9d3c43f1711268a65cd0393352b244ec08a7359e18e99107b78edcd5c5",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/unit/installed-card-image-source.test.ts",
+      "worktreeSha256": "6d7e4273f8c50eec5fb0fe00341d335d4b97ee10843e616f42f3ac596255e0ff",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/unit/progressive-fixture.test.ts",
+      "worktreeSha256": "fd50432d72ba145aa14fa831c88fbb2e06e3c413a38e6da0a68c37abf9ce6f52",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/unit/progressive-release.test.ts",
+      "worktreeSha256": "90e25fb08ccb30d3261e6581c4b6840d37b2f2e4b301058a7099b2238cdde74e",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    },
+    {
+      "status": "??",
+      "path": "tests/unit/shared-svelte-ui.test.ts",
+      "worktreeSha256": "359008bcaa4432cb2673076e97b9df42be93fc7297590a773f37f0b7f4489d64",
+      "baselineBlobOid": null,
+      "baselineSha256": null,
+      "decision": "transfer",
+      "reason": "accepted T1-T3 source/test/config delta"
+    }
+  ],
+  "counts": {
+    "rootStatusEntries": 29,
+    "laneStatusEntries": 269,
+    "transfer": 244,
+    "evidenceOnly": 1,
+    "retainInLane": 24
+  },
+  "rootDocsIntent": {
+    "glossaryPresent": false,
+    "adr089Through094": [
+      {
+        "path": "docs/ADR/090_ADR_pure_shared_svelte_views.md",
+        "sha256": "000a911fe71566978bb0200889488dcddd61b2500c5f5329536864d1760af61c"
+      },
+      {
+        "path": "docs/ADR/091_ADR_shell_composes_semantic_content_ports.md",
+        "sha256": "d57e1c7d5a88de17c83ca1dc91f4c4b87647443e132d8411163f9df9b9f94f01"
+      },
+      {
+        "path": "docs/ADR/092_ADR_immutable_per_file_content_delivery.md",
+        "sha256": "ef3058fb98068d7ef6d796b521b54553e39acb4c34061cea478462cc203af0d3"
+      },
+      {
+        "path": "docs/ADR/093_ADR_atomic_release_selector_and_save_generations.md",
+        "sha256": "cbd16837ffcc0552c373ee088be3f6de0fbe80614ca226f72d1ead8bc5cec61d"
+      },
+      {
+        "path": "docs/ADR/094_ADR_explicit_media_updates_and_cleanup.md",
+        "sha256": "cfb800b7d42badd704674c017e4c86c4fea2d94718f2cdd83b236241160bb4ff"
+      },
+      {
+        "path": "docs/ADR/089_ADR_canonical_cards_and_focused_decks.md",
+        "sha256": "703586a0c91be11ed494dc00b5d8c79e97649c9934a49103654b3dd829d86c19"
+      }
+    ]
+  },
+  "assumptions": [
+    "All actual lane deltas under src/, tests/, e2e-acceptance/, plus eslint.config.js are independently accepted T1-T3 work.",
+    "Lane artifacts remain recovery evidence in original lane; root reconciliation report attributes excluded glossary row.",
+    "Root untracked plan/report files remain byte-identical unless this task explicitly creates named reconciliation artifacts."
+  ]
+}

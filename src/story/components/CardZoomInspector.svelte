@@ -14,7 +14,7 @@
       to mount this on focus as well. Nothing here takes the pointer or the
       focus: the root is `pointer-events: none`, so a card underneath keeps
       every event, including the `mouseleave` that ends the hover. */
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import type { ShopRarity } from "../model/story-state.ts";
   import StoryCardTile from "./StoryCardTile.svelte";
   import {

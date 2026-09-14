@@ -6,8 +6,8 @@ import DeckWorkspace from "../../../src/deck-editor/components/DeckWorkspace.sve
 import type {
   DeckRecord,
   DeckValidationIssue,
-} from "../../../src/decks/deck-contracts.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../../src/decks/contracts/index.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   deckFixture,
   prototypeCatalogMap,

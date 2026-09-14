@@ -1,8 +1,8 @@
 <script lang="ts">
   import { getContext, onMount } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
-  import type { DeckRecord } from "../../decks/deck-contracts.ts";
-  import { exportYdk, ydkFilename } from "../../decks/ydk-adapter.ts";
+  import type { DeckRecord } from "../../decks/contracts/index.ts";
+  import { exportYdk, ydkFilename } from "../../decks/editing/index.ts";
   import { TOAST_CONTEXT_KEY, type ToastPublisher } from "../../shell/index.ts";
 
   export let deck: DeckRecord;

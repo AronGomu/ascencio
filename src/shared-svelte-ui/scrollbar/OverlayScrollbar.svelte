@@ -4,7 +4,7 @@
     readStageFrame,
     toFrameDelta,
     type StageFrame,
-  } from "../../battle/app/presentation/stage-frame.ts";
+  } from "../geometry/index.ts";
 
   export let axis: "horizontal" | "vertical";
   export let scrollElement: HTMLElement | null = null;

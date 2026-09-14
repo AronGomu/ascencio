@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   cardPreviewForCode,
   cardPreviewForPublicCard,
@@ -34,28 +34,37 @@ describe("cardPreviewForCode", () => {
 
   it("known code resolves name and text", () => {
     expect(cardPreviewForCode(KNOWN, TEXTS)).toEqual({
-      code: KNOWN,
+      key: String(KNOWN),
       name: "The Legendary Fisherman",
       description: "This card is unaffected by Spell effects.",
       statsLine: null,
+      imageUrl: null,
+      imageAlt: "The Legendary Fisherman",
+      placeholderLabel: "Image unavailable",
     });
   });
 
   it("unknown code falls back", () => {
     expect(cardPreviewForCode(UNKNOWN, TEXTS)).toEqual({
-      code: UNKNOWN,
+      key: String(UNKNOWN),
       name: `Card ${UNKNOWN}`,
       description: "No card text available.",
       statsLine: null,
+      imageUrl: null,
+      imageAlt: `Card ${UNKNOWN}`,
+      placeholderLabel: "Image unavailable",
     });
   });
 
   it("missing description falls back", () => {
     expect(cardPreviewForCode(NAMELESS, TEXTS)).toEqual({
-      code: NAMELESS,
+      key: String(NAMELESS),
       name: "Blue-Eyes White Dragon",
       description: "No card text available.",
       statsLine: null,
+      imageUrl: null,
+      imageAlt: "Blue-Eyes White Dragon",
+      placeholderLabel: "Image unavailable",
     });
   });
 
@@ -98,10 +107,13 @@ function publicCard(
 describe("cardPreviewForPublicCard", () => {
   it("previews a card the local player controls", () => {
     expect(cardPreviewForPublicCard(publicCard(), TEXTS)).toEqual({
-      code: KNOWN,
+      key: String(KNOWN),
       name: "The Legendary Fisherman",
       description: "This card is unaffected by Spell effects.",
       statsLine: null,
+      imageUrl: null,
+      imageAlt: "The Legendary Fisherman",
+      placeholderLabel: "Image unavailable",
     });
   });
 
@@ -129,14 +141,18 @@ describe("cardPreviewForPublicCard", () => {
         TEXTS,
       ),
     ).toEqual({
-      code: KNOWN,
+      key: String(KNOWN),
       name: "The Legendary Fisherman",
       description: "This card is unaffected by Spell effects.",
       statsLine: null,
+      imageUrl: null,
+      imageAlt: "The Legendary Fisherman",
+      placeholderLabel: "Image unavailable",
     });
   });
 
-  it("keeps unknown concealed opponent identity private", () => {
+  it("Hidden identity", () => {
+    const get = vi.fn();
     expect(
       cardPreviewForPublicCard(
         {
@@ -144,9 +160,10 @@ describe("cardPreviewForPublicCard", () => {
           location: "hand",
           position: "faceDownAttack",
         },
-        TEXTS,
+        { get } as unknown as ReadonlyMap<number, CardPreviewText>,
       ),
     ).toBeNull();
+    expect(get).not.toHaveBeenCalled();
   });
 
   it("no code means no preview", () => {

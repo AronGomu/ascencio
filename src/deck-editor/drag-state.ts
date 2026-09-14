@@ -1,4 +1,4 @@
-import type { DeckZone } from "../decks/deck-contracts.ts";
+import type { DeckZone } from "../decks/contracts/index.ts";
 
 export type PickedCard = Readonly<{
   code: number;

@@ -13,13 +13,15 @@ import {
   catalogByCode,
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
+  validateDeckDraft,
+} from "../../../src/decks/validation/index.ts";
 import { packagedCatalog } from "../../../src/decks/catalog/packaged-catalog.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import type { DeckRecord, DeckRepository } from "../../../src/decks/index.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../../src/decks/editing/index.ts";
 import { DECK_CATALOG } from "../../../src/battle/duel/presets/deck-catalog.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);

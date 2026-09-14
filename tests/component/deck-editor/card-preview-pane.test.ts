@@ -5,28 +5,39 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { tick } from "svelte";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   prototypeCatalogMap,
   stateFixture,
 } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
+import { cardCode } from "../../../src/cards/index.ts";
+import type {
+  CardImageLease,
+  CardImageSource,
+} from "../../../src/cards/images/index.ts";
 
 installPrototypeActiveCatalog();
 
 afterEach(() => cleanup());
 
+const unavailableImages: CardImageSource = {
+  acquire: async () => null,
+};
+
 function renderEditor(
   mainCount = 0,
   cards = PROTOTYPE_CATALOG,
   catalog = prototypeCatalogMap,
+  images: CardImageSource = unavailableImages,
 ) {
   return render(DeckEditor, {
     state: stateFixture(mainCount),
     cards,
     catalog,
     ruleset: PROTOTYPE_RULESET,
+    images,
     returnLabel: "Deck Selection",
     onreturn: vi.fn(),
     onrename: vi.fn(),
@@ -84,44 +95,67 @@ describe("editor preview pane", () => {
     ).toContain(cardA.name);
   });
 
-  it("recovers valid preview art after a catalog image fails", async () => {
-    const cards = PROTOTYPE_CATALOG.map((card, index) => ({
-      ...card,
-      imageUrl:
-        index === 1
-          ? "/cards/missing.jpg"
-          : index === 2
-            ? "/cards/valid.jpg"
-            : card.imageUrl,
-    }));
-    renderEditor(0, cards, new Map(cards.map((card) => [card.code, card])));
+  it("Lease race", async () => {
+    const requests = new Map<
+      number,
+      ReturnType<typeof Promise.withResolvers<CardImageLease | null>>
+    >();
+    const signals = new Map<number, AbortSignal>();
+    const acquire = vi.fn(
+      (code: number, _variant: "full" | "cropped", signal: AbortSignal) => {
+        const pending = Promise.withResolvers<CardImageLease | null>();
+        requests.set(code, pending);
+        signals.set(code, signal);
+        return pending.promise;
+      },
+    );
+    const images: CardImageSource = { acquire };
+    renderEditor(0, PROTOTYPE_CATALOG, prototypeCatalogMap, images);
     const results = document.querySelector('[data-cy="deck-catalog-results"]')!;
-    const missingTile = results.querySelector(
-      `[data-cy="catalog-tile-${cards[1]!.code}"]`,
-    )!;
-    const validTile = results.querySelector(
-      `[data-cy="catalog-tile-${cards[2]!.code}"]`,
-    )!;
+    const tiles = Array.from(
+      results.querySelectorAll<HTMLElement>("[data-card-code]"),
+    );
+    const [tileA, tileB] = tiles;
+    const codeA = Number(tileA!.dataset.cardCode);
+    const codeB = Number(tileB!.dataset.cardCode);
 
-    fireEvent.mouseEnter(missingTile);
-    await tick();
-    const failedImage = document.querySelector<HTMLImageElement>(
-      '[data-cy="card-preview-image"]',
-    )!;
-    expect(failedImage.getAttribute("src")).toBe("/cards/missing.jpg");
-    await fireEvent.error(failedImage);
-    expect(
-      document.querySelector('[data-cy="card-preview-image-placeholder"]'),
-    ).not.toBeNull();
+    fireEvent.mouseEnter(tileA!);
+    await vi.waitFor(() =>
+      expect(acquire).toHaveBeenCalledWith(
+        cardCode(codeA),
+        "full",
+        expect.any(AbortSignal),
+      ),
+    );
+    fireEvent.mouseEnter(tileB!);
+    await vi.waitFor(() =>
+      expect(acquire).toHaveBeenCalledWith(
+        cardCode(codeB),
+        "full",
+        expect.any(AbortSignal),
+      ),
+    );
+    expect(signals.get(codeA)?.aborted).toBe(true);
 
-    fireEvent.mouseEnter(validTile);
-    await tick();
+    const releaseB = vi.fn();
+    requests.get(codeB)!.resolve({ url: "blob:card-b", release: releaseB });
+    await vi.waitFor(() =>
+      expect(
+        document
+          .querySelector('[data-cy="card-preview-image"]')
+          ?.getAttribute("src"),
+      ).toBe("blob:card-b"),
+    );
 
+    const releaseA = vi.fn();
+    requests.get(codeA)!.resolve({ url: "blob:card-a", release: releaseA });
+    await vi.waitFor(() => expect(releaseA).toHaveBeenCalledOnce());
     expect(
       document
         .querySelector('[data-cy="card-preview-image"]')
         ?.getAttribute("src"),
-    ).toBe("/cards/valid.jpg");
+    ).toBe("blob:card-b");
+    expect(releaseB).not.toHaveBeenCalled();
   });
 
   it("panes read preview, deck, catalog left to right", () => {

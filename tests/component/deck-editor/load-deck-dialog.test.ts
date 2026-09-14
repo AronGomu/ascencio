@@ -9,25 +9,29 @@ import { get } from "svelte/store";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
 import LoadDeckDialog from "../../../src/deck-editor/components/LoadDeckDialog.svelte";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+import {
+  IndexedDbDeckRepository,
+  type DeckRepository,
+} from "../../../src/decks/repository/index.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+} from "../../../src/decks/validation/index.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import {
   deckFixture,
   prototypeCatalogMap,
 } from "../../fixtures/deck-editor.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
+import {
+  createBlankDeck,
+  emptyDeckHistory,
+} from "../../../src/decks/editing/index.ts";
 import {
   deckId,
   type DeckAutosaveRecord,
   type DeckId,
   type StoredDeck,
-} from "../../../src/decks/deck-contracts.ts";
-import type { DeckRepository } from "../../../src/decks/deck-repository.ts";
+} from "../../../src/decks/contracts/index.ts";
 import { stateFixture } from "../../fixtures/deck-editor.ts";
 
 const dbNames: string[] = [];

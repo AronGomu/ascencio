@@ -3,7 +3,7 @@ import type {
   ContentSetRef,
   InstalledGameplay,
 } from "../../src/content/index.ts";
-import type { DeckBuilderCardView } from "../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../src/decks/catalog/index.ts";
 
 const hash = (character: string) => character.repeat(64);
 

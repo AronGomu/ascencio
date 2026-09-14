@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -9,11 +10,13 @@ import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
-import type { DeckContext } from "../../../src/decks/deck-repository-context.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
-import { STARTER_DECK_NAME } from "../../../src/decks/starter-deck.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import {
+  DECK_DATABASE_NAME,
+  type DeckContext,
+  IndexedDbDeckRepository,
+} from "../../../src/decks/repository/index.ts";
+import { STARTER_DECK_NAME } from "../../../src/decks/editing/index.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
@@ -83,7 +86,7 @@ function emptyStoryContext(): {
 describe("starter deck seeding on mount", () => {
   it("a first visit lands on a library holding the default starter deck", async () => {
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
     });
@@ -107,7 +110,7 @@ describe("starter deck seeding on mount", () => {
     const { context, state } = emptyStoryContext();
     render(DeckEditorApp, {
       props: {
-        gameplay: installedDuelGameplayFixture(),
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
         deckId: null,
         onnavigate: vi.fn(),
         context,
@@ -132,7 +135,7 @@ describe("starter deck seeding on mount", () => {
     const { context, state } = emptyStoryContext();
     render(DeckEditorApp, {
       props: {
-        gameplay: installedDuelGameplayFixture(),
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
         deckId: null,
         onnavigate: vi.fn(),
         context,
@@ -168,7 +171,7 @@ describe("starter deck seeding on mount", () => {
 
   it("a second visit does not add a second starter deck", async () => {
     const first = render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
     });
@@ -180,7 +183,7 @@ describe("starter deck seeding on mount", () => {
     first.unmount();
 
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
     });

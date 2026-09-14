@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
 describe("deck catalog fixture", () => {
   it("contains unique OCG-shaped review cards across every major family", () => {

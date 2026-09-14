@@ -77,3 +77,13 @@ export type { SavedContentRefsPort } from "./contracts/saved-content-refs-port.t
 export type { RuntimeReceiptFile } from "./contracts/runtime-receipt-file.ts";
 export type { InstalledRuntimeReceipt } from "./contracts/installed-runtime-receipt.ts";
 export { createContentInstaller, openContentReader } from "./content-api.ts";
+export type {
+  FileVersion,
+  CoreRange,
+  ReleaseFile,
+  ProgressiveManifest,
+  LatestContentPointer,
+  CoreBootstrap as ProgressiveCoreBootstrap,
+} from "./contracts/progressive-release.ts";
+export { parseProgressiveManifest } from "./parsers/progressive-release.ts";
+export { parseLatestContentPointer } from "./parsers/latest-content-pointer.ts";

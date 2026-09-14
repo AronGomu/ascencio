@@ -5,18 +5,18 @@
     DeckRecord,
     DeckValidationIssue,
     DeckZone,
-  } from "../../decks/deck-contracts.ts";
+  } from "../../decks/contracts/index.ts";
   import type { PickedCard } from "../drag-state.ts";
   import {
     FIFTEEN_CARD_GRID,
     mainDeckGridPlan,
-  } from "../../decks/deck-model.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
+  } from "../../decks/editing/index.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import {
+    type PinnedDeckRuleset,
     unlimitedCardOwnership,
     type CardOwnership,
-  } from "../../decks/card-ownership.ts";
+  } from "../../decks/validation/index.ts";
   import DeckZoneGrid from "./DeckZoneGrid.svelte";
 
   export let deck: DeckRecord;

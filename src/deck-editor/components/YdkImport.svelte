@@ -1,13 +1,13 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
-  import type { DeckCardLists } from "../../decks/deck-contracts.ts";
-  import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/deck-model.ts";
+  import type { DeckCardLists } from "../../decks/contracts/index.ts";
   import {
+    MAXIMUM_DECK_NAME_LENGTH,
     importYdk,
     MAXIMUM_YDK_SOURCE_LENGTH,
     type YdkImportResult,
-  } from "../../decks/ydk-adapter.ts";
+  } from "../../decks/editing/index.ts";
 
   export let onimport: (
     cards: DeckCardLists,

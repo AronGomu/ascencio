@@ -11,12 +11,12 @@
    derives the catalog from that same exact content set. */
 
 import type { InstalledGameplay } from "../../content/index.ts";
-import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
+import { installedDeckCatalog } from "../../decks/index.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../decks/catalog/pinned-ruleset.ts";
-import { emptyDeckHistory } from "../../decks/deck-history.ts";
+} from "../../decks/validation/index.ts";
+import { emptyDeckHistory } from "../../decks/editing/index.ts";
 import { resolveDeck, type ValidatedDeckSnapshot } from "../../decks/index.ts";
 import type { StoryState } from "../model/story-state.ts";
 import { storyCardOwnership } from "./card-ownership.ts";

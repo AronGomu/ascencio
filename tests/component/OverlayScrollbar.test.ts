@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import OverlayScrollbar from "../../src/shell/card-preview/OverlayScrollbar.svelte";
+import OverlayScrollbar from "../../src/shared-svelte-ui/scrollbar/OverlayScrollbar.svelte";
 
 const observers: Array<{
   readonly callback: ResizeObserverCallback;

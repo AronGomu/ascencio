@@ -18,7 +18,7 @@ import {
   deckId,
   type DeckRecord,
   type DeckValidationIssue,
-} from "../../../src/decks/deck-contracts.ts";
+} from "../../../src/decks/contracts/index.ts";
 
 afterEach(() => cleanup());
 

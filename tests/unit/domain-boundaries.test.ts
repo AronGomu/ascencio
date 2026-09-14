@@ -1,5 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import ts from "typescript";
+import { parse as parseSvelte } from "svelte/compiler";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import * as battle from "../../src/battle/index.ts";
@@ -31,10 +33,14 @@ type Domain =
   | "deck-select"
   | "battle"
   | "decks"
-  | "content";
+  | "content"
+  | "cards"
+  | "shared-svelte-ui";
 
 const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
   main: null,
+  cards: "src/cards/index.ts",
+  "shared-svelte-ui": null,
   content: "src/content/index.ts",
   shell: "src/shell/index.ts",
   story: "src/story/index.ts",
@@ -88,14 +94,6 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   "src/shell/handoff/handoff-coordinator.ts": [
     "src/story/handoff/story-handoff.ts",
   ],
-  /* The quarter-turn stage mapping the overlay thumb drags through. The panel
-     it belongs to is shared, so the component now lives in the shell, but the
-     mapping stays duel presentation: `src/battle/index.ts` exports
-     `BattleFacade`, and the shell entry is eager. The allowance disappears when
-     `stage-frame.ts` gets a legal home. */
-  "src/shell/card-preview/OverlayScrollbar.svelte": [
-    "src/battle/app/presentation/stage-frame.ts",
-  ],
   "src/decks/ydk-adapter.ts": ["src/battle/duel/presets/deck-parser.ts"],
 });
 
@@ -104,6 +102,8 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
 function domainOf(file: string): Domain {
   if (file === "src/main.ts" || file === "src/service-worker.ts") return "main";
   if (file === "src/acceptance-main.ts") return "battle";
+  if (file.startsWith("src/cards/")) return "cards";
+  if (file.startsWith("src/shared-svelte-ui/")) return "shared-svelte-ui";
   if (file.startsWith("src/content/")) return "content";
   if (file.startsWith("src/shell/")) return "shell";
   if (file.startsWith("src/story/")) return "story";
@@ -118,16 +118,40 @@ function domainOf(file: string): Domain {
 
 function isLegalImport(from: string, to: string): boolean {
   if (ALLOWANCES[from]?.includes(to) === true) return true;
+  if (to === "unresolved-dynamic-import") return false;
 
   const source = domainOf(from);
   if (source === "content") return to.startsWith("src/content/");
+  if (source === "cards") return to.startsWith("src/cards/");
+  if (source === "shared-svelte-ui")
+    return to.startsWith("src/shared-svelte-ui/");
   const target = domainOf(to);
+  if (target === "content" && ["decks", "deck-editor"].includes(source))
+    return false;
   if (source === target) return true;
+  if (source === "deck-select") return false;
 
   /* The entry document mounts the shell and nothing else. */
   if (source === "main") return target === "shell";
-  /* Shared deck data is open to every domain. */
-  if (target === "decks") return true;
+  if (target === "decks")
+    return [
+      "index",
+      "contracts/index",
+      "repository/index",
+      "editing/index",
+      "validation/index",
+      "catalog/index",
+    ].some((entry) => to === `src/decks/${entry}.ts`);
+  if (target === "cards")
+    return ["index", "classification/index", "images/index"].some(
+      (entry) => to === `src/cards/${entry}.ts`,
+    );
+  if (target === "shared-svelte-ui")
+    return ["card-preview", "geometry", "scrollbar"].some(
+      (entry) => to === `src/shared-svelte-ui/${entry}/index.ts`,
+    );
+  if (target === "deck-editor" && to === "src/deck-editor/ports/index.ts")
+    return source === "shell";
   /* The visual novel types a battle handoff without mounting one. */
   if (source === "story" && to === "src/battle/battle-contracts.ts")
     return true;
@@ -155,66 +179,336 @@ function sourceFiles(): readonly string[] {
   return found;
 }
 
-const SPECIFIER =
-  /(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*)["']([^"']+)["']/g;
+function syntaxTree(file: string, text: string): ts.SourceFile {
+  return ts.createSourceFile(
+    file,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+}
 
-/** Repo-relative code targets; content also checks bare/outside-src tooling imports. */
+/** Resolve AST imports, re-exports, dynamic imports and require calls. */
 function importsOf(
   file: string,
   text = readFileSync(path.join(projectRoot, file), "utf8"),
 ): readonly string[] {
-  const directory = path.posix.dirname(file);
   const targets: string[] = [];
-  for (const [, specifier] of text.matchAll(SPECIFIER)) {
-    if (specifier === undefined) continue;
+  const add = (specifier: string) => {
     if (!specifier.startsWith(".")) {
-      if (domainOf(file) === "content") targets.push(specifier);
-      continue;
+      if (["content", "cards"].includes(domainOf(file)))
+        targets.push(specifier);
+      return;
     }
-    const resolved = path.posix.normalize(
-      path.posix.join(directory, specifier.split("?")[0] ?? specifier),
+    let resolved = path.posix.normalize(
+      path.posix.join(path.posix.dirname(file), specifier.split("?")[0]!),
     );
-    if (domainOf(file) === "content") {
+    if (resolved.endsWith(".js")) resolved = resolved.slice(0, -3) + ".ts";
+    if (
+      ["content", "cards"].includes(domainOf(file)) ||
+      (resolved.startsWith("src/") && /\.(ts|svelte|ydk)$/.test(resolved))
+    )
       targets.push(resolved);
-      continue;
+  };
+  const visit = (node: ts.Node): void => {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    )
+      add(node.moduleSpecifier.text);
+    if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) &&
+          node.expression.text === "require"))
+    ) {
+      const argument = node.arguments[0];
+      if (argument && ts.isStringLiteral(argument)) add(argument.text);
+      else if (["cards", "decks", "deck-editor"].includes(domainOf(file)))
+        targets.push("unresolved-dynamic-import");
     }
-    if (!resolved.startsWith("src/")) continue;
-    if (!resolved.endsWith(".ts") && !resolved.endsWith(".svelte")) continue;
-    targets.push(resolved);
-  }
+    if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
+    )
+      add(node.argument.literal.text);
+    ts.forEachChild(node, visit);
+  };
+  if (file.endsWith(".svelte")) {
+    const walk = (value: unknown): void => {
+      if (!value || typeof value !== "object") return;
+      const node = value as Record<string, unknown>;
+      if (
+        [
+          "ImportDeclaration",
+          "ExportNamedDeclaration",
+          "ExportAllDeclaration",
+          "ImportExpression",
+          "TSImportType",
+        ].includes(String(node.type))
+      ) {
+        const source = (
+          node.type === "TSImportType" ? node.argument : node.source
+        ) as { value?: unknown } | undefined;
+        if (typeof source?.value === "string") add(source.value);
+        else if (
+          node.type === "ImportExpression" &&
+          ["cards", "decks", "deck-editor"].includes(domainOf(file))
+        )
+          targets.push("unresolved-dynamic-import");
+      }
+      if (node.type === "CallExpression") {
+        const callee = node.callee as
+          { type?: unknown; name?: unknown } | undefined;
+        if (callee?.type === "Identifier" && callee.name === "require") {
+          const argument = (node.arguments as { value?: unknown }[])[0];
+          if (typeof argument?.value === "string") add(argument.value);
+          else if (["cards", "decks", "deck-editor"].includes(domainOf(file)))
+            targets.push("unresolved-dynamic-import");
+        }
+      }
+      for (const child of Object.values(node)) walk(child);
+    };
+    walk(parseSvelte(text, { modern: true }));
+  } else visit(syntaxTree(file, text));
   return targets;
 }
 
 /** Value and type export names declared by a public entry's own source. */
-function declaredExports(entry: string): {
+function declaredExports(
+  entry: string,
+  text = readFileSync(path.join(projectRoot, entry), "utf8"),
+): {
   readonly values: readonly string[];
   readonly types: readonly string[];
 } {
-  const text = readFileSync(path.join(projectRoot, entry), "utf8");
+  const tree = syntaxTree(entry, text);
   const values: string[] = [];
   const types: string[] = [];
-  for (const [, typeKeyword, body] of text.matchAll(
-    /export\s+(type\s+)?\{([^}]*)\}/g,
-  )) {
-    for (const raw of (body ?? "").split(",")) {
-      const clause = raw.trim();
-      if (clause === "") continue;
-      const entryIsType =
-        typeKeyword !== undefined || clause.startsWith("type ");
-      const name = clause
-        .replace(/^type\s+/, "")
-        .split(/\s+as\s+/)
-        .at(-1);
-      if (name === undefined) continue;
-      (entryIsType ? types : values).push(name);
+  for (const node of tree.statements) {
+    if (ts.isExportAssignment(node))
+      values.push(node.isExportEquals ? "export=" : "default");
+    if (ts.isExportDeclaration(node)) {
+      if (!node.exportClause || !ts.isNamedExports(node.exportClause))
+        throw new Error(`Public export-star forbidden: ${entry}`);
+      for (const element of node.exportClause.elements)
+        (node.isTypeOnly || element.isTypeOnly ? types : values).push(
+          element.name.text,
+        );
+    }
+    if (
+      ts.canHaveModifiers(node) &&
+      ts
+        .getModifiers(node)
+        ?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+    ) {
+      if (
+        ts
+          .getModifiers(node)
+          ?.some((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword)
+      )
+        (ts.isInterfaceDeclaration(node) ? types : values).push("default");
+      else if (
+        ts.isInterfaceDeclaration(node) ||
+        ts.isTypeAliasDeclaration(node)
+      )
+        types.push(node.name.text);
+      else if (
+        (ts.isFunctionDeclaration(node) ||
+          ts.isClassDeclaration(node) ||
+          ts.isEnumDeclaration(node)) &&
+        node.name
+      )
+        values.push(node.name.text);
+      else if (ts.isVariableStatement(node)) {
+        for (const declaration of node.declarationList.declarations) {
+          if (!ts.isIdentifier(declaration.name))
+            throw new Error(`Public destructuring export forbidden: ${entry}`);
+          values.push(declaration.name.text);
+        }
+      }
     }
   }
-  for (const [, name] of text.matchAll(
-    /export\s+(?:const|function|class)\s+([A-Za-z0-9_$]+)/g,
-  ))
-    if (name !== undefined) values.push(name);
   return { values: values.sort(), types: types.sort() };
 }
+
+describe("focused Cards/Decks public entries", () => {
+  it.each([
+    "export default 123;",
+    "export default function named() {}",
+    "export default function() {}",
+    "export default class Named {}",
+    "export default class {}",
+    "export default interface Named {}",
+    'export { cardCode as default } from "./contracts.ts";',
+  ])("exact named export inventory detects %s", (extra) => {
+    const entry = "src/cards/index.ts";
+    const source = readFileSync(path.join(projectRoot, entry), "utf8");
+    const original = declaredExports(entry, source);
+    const changed = declaredExports(entry, `${source}\n${extra}`);
+    expect([...changed.values, ...changed.types]).toContain("default");
+    expect(changed).not.toEqual(original);
+  });
+  it("src/cards/index.ts exact named exports", () => {
+    const declared = declaredExports("src/cards/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      [
+        "CardCode",
+        "cardCode",
+        "CardDefinition",
+        "CardImageRef",
+        "CardImageVariant",
+        "Cards",
+        "createCards",
+        "parseCardDefinitions",
+        "validateCardConsistency",
+        "CardFrame",
+        "cardFrameOf",
+        "CARD_FRAME_COLORS",
+      ].sort(),
+    );
+  });
+  it("src/cards/classification/index.ts exact named exports", () => {
+    const declared = declaredExports("src/cards/classification/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      ["OCG_TYPE", "OCG_ATTRIBUTE", "OCG_RACE", "hasOcgType"].sort(),
+    );
+  });
+  it("src/cards/images/index.ts exact named exports", () => {
+    const declared = declaredExports("src/cards/images/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      ["CardImageLease", "CardImageSource"].sort(),
+    );
+  });
+  it("src/decks/contracts/index.ts exact named exports", () => {
+    const declared = declaredExports("src/decks/contracts/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      [
+        "deckId",
+        "DeckId",
+        "DeckZone",
+        "DeckIssueSeverity",
+        "DeckValidationIssue",
+        "DeckValidationSummary",
+        "DeckCardLists",
+        "DeckRecord",
+        "ValidatedDeckSnapshot",
+        "ResolveDeckResult",
+        "DeckCardUpdate",
+        "DeckHistory",
+        "StoredDeck",
+        "DeckAutosaveRecord",
+        "cloneCardLists",
+      ].sort(),
+    );
+  });
+  it("src/decks/repository/index.ts exact named exports", () => {
+    const declared = declaredExports("src/decks/repository/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      [
+        "DeckRepository",
+        "IndexedDbDeckRepository",
+        "DeckStorageError",
+        "DeckRevisionConflictError",
+        "DeckMigrationError",
+        "DECK_DATABASE_NAME",
+        "MAXIMUM_DECK_AUTOSAVES",
+        "DeckContext",
+        "resolveDeckRepository",
+        "resolveDeck",
+      ].sort(),
+    );
+  });
+  it("src/decks/editing/index.ts exact named exports", () => {
+    const declared = declaredExports("src/decks/editing/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      [
+        "emptyDeckHistory",
+        "pushDeckUpdate",
+        "redoDeckUpdate",
+        "undoDeckUpdate",
+        "MAXIMUM_DECK_NAME_LENGTH",
+        "SortDirection",
+        "SortMode",
+        "FIFTEEN_CARD_GRID",
+        "mainDeckGridPlan",
+        "DeckGridPlan",
+        "applyDeckCommand",
+        "createBlankDeck",
+        "derivedDeckName",
+        "normalizeDeckName",
+        "DeckCommand",
+        "ensureStarterDeck",
+        "STARTER_DECK_LIST",
+        "STARTER_DECK_NAME",
+        "exportYdk",
+        "ydkFilename",
+        "importYdk",
+        "MAXIMUM_YDK_SOURCE_LENGTH",
+        "YdkImportResult",
+        "LEGACY_STARTER_DECK_LIST",
+      ].sort(),
+    );
+  });
+  it("src/decks/validation/index.ts exact named exports", () => {
+    const declared = declaredExports("src/decks/validation/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      [
+        "validateDeckDraft",
+        "validatePublishedDecks",
+        "validationDigest",
+        "DeckValidationInput",
+        "PROTOTYPE_RULESET",
+        "quantityLimit",
+        "catalogByCode",
+        "PinnedDeckRuleset",
+        "unlimitedCardOwnership",
+        "CardOwnership",
+      ].sort(),
+    );
+  });
+  it("src/decks/catalog/index.ts exact named exports", () => {
+    const declared = declaredExports("src/decks/catalog/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      [
+        "cardsDeckCatalog",
+        "DeckBuilderCardView",
+        "deckBuildableCards",
+        "buildDeckCatalogIndex",
+        "filterQuickDeckCatalogIndex",
+        "filterDeckCatalogIndex",
+        "catalogTypeOptions",
+        "EMPTY_CATALOG_FILTERS",
+        "DeckCatalogFilters",
+        "EMPTY_ADVANCED_DECK_CATALOG_FILTERS",
+        "advancedDeckCatalogOptions",
+        "DeckCatalogQuery",
+        "EMPTY_DECK_CATALOG_QUERY",
+        "AdvancedDeckCatalogFilters",
+        "AdvancedDeckCatalogOptions",
+        "CardTrait",
+        "LinkMarkerRule",
+        "NameMatch",
+        "SpellProperty",
+        "SummonFrame",
+        "TrapProperty",
+        "CatalogTypeTag",
+        "numericCriterionError",
+        "NumericCriterion",
+        "NumericOperator",
+      ].sort(),
+    );
+  });
+  it("Editor port exact named exports", () => {
+    expect(declaredExports("src/deck-editor/ports/index.ts")).toEqual({
+      values: [],
+      types: ["EditorCatalogInput"],
+    });
+  });
+});
 
 describe("public domain APIs are frozen", () => {
   /* Widening any list below is a deliberate edit, not a silent change. */
@@ -243,6 +537,8 @@ describe("public domain APIs are frozen", () => {
         "parseContentIndex",
         "parseContentManifest",
         "parseCoreBootstrap",
+        "parseLatestContentPointer",
+        "parseProgressiveManifest",
       ],
       types: [
         "ChapterCard",
@@ -273,22 +569,28 @@ describe("public domain APIs are frozen", () => {
         "ContentSetRef",
         "CoreBootstrap",
         "CoreChapterId",
+        "CoreRange",
         "DownloadJob",
         "DownloadPhase",
         "DownloadProgress",
         "DownloadResult",
         "DownloadTarget",
+        "FileVersion",
         "InstallReceipt",
         "InstalledAssetLease",
         "InstalledContentSet",
         "InstalledGameplay",
         "InstalledImageLibrary",
         "InstalledRuntimeReceipt",
+        "LatestContentPointer",
         "ManifestRef",
         "OwnedContentReader",
         "PackId",
         "PackedFile",
         "PersistedDownloadJob",
+        "ProgressiveCoreBootstrap",
+        "ProgressiveManifest",
+        "ReleaseFile",
         "RuntimeActivationPort",
         "RuntimeReceiptFile",
         "RuntimeSnapshotRef",
@@ -506,8 +808,6 @@ describe("public domain APIs are frozen", () => {
       entry: "src/shell/index.ts",
       namespace: shell,
       values: [
-        "CardPreviewPanel",
-        "OverlayScrollbar",
         "STAGE_ASPECT_HEIGHT",
         "STAGE_ASPECT_WIDTH",
         "STAGE_BREAKPOINT_PX",
@@ -518,8 +818,6 @@ describe("public domain APIs are frozen", () => {
         "selectStageMode",
       ],
       types: [
-        "CardPreviewImageSource",
-        "CardPreviewView",
         "StageBox",
         "StageMode",
         "ToastPublisher",
@@ -538,6 +836,76 @@ describe("public domain APIs are frozen", () => {
 });
 
 describe("domain imports", () => {
+  it.each([
+    '<script lang="ts">type Reader = import("../content/index.ts").ContentReadPort;</script>',
+    '<script lang="ts">const reader = require("../content/index.ts");</script>',
+    '{#if require("../content/index.ts")}<p>loaded</p>{/if}',
+  ])("Svelte AST resolves forbidden Content dependency: %s", (text) => {
+    const file = "src/deck-editor/Probe.svelte";
+    const targets = importsOf(file, text);
+    expect(targets).toEqual(["src/content/index.ts"]);
+    expect(isLegalImport(file, targets[0]!)).toBe(false);
+  });
+  it("Svelte AST rejects computed require dependencies", () => {
+    const file = "src/deck-editor/Probe.svelte";
+    const targets = importsOf(
+      file,
+      "<script>const reader = require(target);</script>",
+    );
+    expect(targets).toEqual(["unresolved-dynamic-import"]);
+    expect(isLegalImport(file, targets[0]!)).toBe(false);
+  });
+  it("AST resolver ignores comments and resolves re-exports/dynamic .js imports", () => {
+    expect(
+      importsOf(
+        "src/decks/probe.ts",
+        '/* import "../content/index.ts" */ export { X } from "../content/index.js"; import("../content/index.ts");',
+      ),
+    ).toEqual(["src/content/index.ts", "src/content/index.ts"]);
+  });
+  it("AST resolver rejects type-only, Svelte-template and computed boundary bypasses", () => {
+    for (const [file, text] of [
+      [
+        "src/decks/probe.ts",
+        'type Reader = import("../content/index.ts").ContentReadPort;',
+      ],
+      [
+        "src/deck-editor/Probe.svelte",
+        '{#await import("../content/index.ts")}<p>loading</p>{/await}',
+      ],
+      ["src/decks/probe.ts", "import(target);"],
+    ]) {
+      const targets = importsOf(file!, text!);
+      expect(targets).toHaveLength(1);
+      expect(isLegalImport(file!, targets[0]!)).toBe(false);
+    }
+  });
+  it("Boundary negative fixture: Deck Select imports no sibling", () => {
+    expect(
+      isLegalImport("src/deck-select/probe.ts", "src/cards/index.ts"),
+    ).toBe(false);
+    expect(
+      isLegalImport(
+        "src/deck-select/probe.ts",
+        "src/shared-svelte-ui/card-preview/index.ts",
+      ),
+    ).toBe(false);
+  });
+
+  it("Boundary negative fixture: Decks imports Content / Cards imports Decks", () => {
+    expect(isLegalImport("src/decks/probe.ts", "src/content/index.ts")).toBe(
+      false,
+    );
+    expect(
+      isLegalImport("src/deck-editor/probe.ts", "src/content/index.ts"),
+    ).toBe(false);
+    expect(isLegalImport("src/cards/probe.ts", "src/decks/index.ts")).toBe(
+      false,
+    );
+    expect(isLegalImport("src/story/probe.ts", "src/decks/deck-model.ts")).toBe(
+      false,
+    );
+  });
   it("installer exceptions remain exact-file pure validation boundaries", () => {
     expect(
       isLegalImport(

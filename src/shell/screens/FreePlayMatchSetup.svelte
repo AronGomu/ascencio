@@ -13,12 +13,12 @@
     type DecklistView,
     type OpponentView,
   } from "../../deck-select/index.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import { catalogByCode } from "../../decks/catalog/pinned-ruleset.ts";
-  import { cardFrameOf } from "../../decks/card-frame.ts";
-  import { croppedCardImageUrl } from "../../decks/deck-cover.ts";
-  import { installedDeckCatalog } from "../../decks/catalog/installed-gameplay-cards.ts";
-  import { IndexedDbDeckRepository } from "../../decks/indexeddb-deck-repository.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+  import { catalogByCode } from "../../decks/validation/index.ts";
+  import { CARD_FRAME_COLORS, cardFrameOf } from "../../cards/index.ts";
+  import { croppedCardImageUrl } from "../cards/deck-cover.ts";
+  import { installedDeckCatalog } from "../../decks/index.ts";
+  import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
   import type {
     BattleDeckModule,
     BattleDomainLoader,
@@ -54,8 +54,8 @@
   /* The battle entry, loaded rather than imported: it also exports the duel,
      and a static import here would make the largest chunk in the build eager.
      Typed to the deck half of that entry, so this screen cannot mount a duel —
-     that stays the shell's own duel region, which the stage geometry measures
-     against (`src/battle/app/presentation/stage-frame.ts`). */
+     that stays the shell's own duel region, which shared stage geometry
+     measures against. */
   export let loadBattle: BattleDomainLoader | (() => Promise<BattleDeckModule>);
   export let onstart: (request: BattleRequest) => void = () => undefined;
   export let onback: () => void = () => undefined;
@@ -424,8 +424,8 @@
       return {
         code,
         name: card?.name ?? String(code),
-        frame: cardFrameOf(card?.rawType ?? 0),
-        artUrl: croppedCardImageUrl(card?.imageUrl ?? null),
+        frameColor: CARD_FRAME_COLORS[cardFrameOf(card?.rawType ?? 0)],
+        imageUrl: croppedCardImageUrl(card?.imageUrl ?? null),
       };
     });
   }

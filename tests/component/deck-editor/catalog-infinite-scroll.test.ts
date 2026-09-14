@@ -5,13 +5,13 @@ import { userEvent } from "@testing-library/user-event";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CardCatalog from "../../../src/deck-editor/components/CardCatalog.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { syntheticCatalog } from "../../fixtures/synthetic-catalog.ts";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+} from "../../../src/decks/validation/index.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 
 const originalIO = globalThis.IntersectionObserver;
 

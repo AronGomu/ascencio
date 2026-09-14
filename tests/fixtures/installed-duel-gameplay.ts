@@ -1,6 +1,6 @@
 import { presetSelectableDecks } from "../../src/battle/decks/selectable-decks.ts";
 import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "./catalog.ts";
 import { installedGameplayFromCatalog } from "./installed-gameplay.ts";
 
 export function installedDuelGameplayFixture() {

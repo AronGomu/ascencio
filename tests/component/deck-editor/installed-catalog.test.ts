@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -9,11 +10,13 @@ import { installedDeckCatalog } from "../../../src/decks/catalog/installed-gamep
 import {
   PROTOTYPE_RULESET,
   catalogByCode,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../../src/decks/validation/index.ts";
 import { deckId, DECK_DATABASE_NAME } from "../../../src/decks/index.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../../src/decks/editing/index.ts";
+import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 
 const gameplay = installedDuelGameplayFixture();
@@ -47,7 +50,7 @@ describe("installed deck editor catalog", () => {
   it("offers only installed non-token cards", async () => {
     await seedDeck();
     render(DeckEditorApp, {
-      gameplay,
+      catalogInput: installedEditorCatalog(gameplay),
       deckId: deckId("installed-pool"),
       onnavigate: vi.fn(),
     });

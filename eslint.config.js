@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import { builtinModules } from "node:module";
+import path from "node:path";
 import svelte from "eslint-plugin-svelte";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -15,6 +16,7 @@ import tseslint from "typescript-eslint";
    airtight half of the pair; both run in `check:headless`. */
 const STORY_INTERNALS = ["**/story/**", "!**/story/index.ts"];
 const DECK_EDITOR_INTERNALS = ["**/deck-editor/**", "!**/deck-editor/index.ts"];
+const EDITOR_PORT = ["!**/deck-editor/ports", "!**/deck-editor/ports/index.ts"];
 const DECK_SELECT_INTERNALS = ["**/deck-select/**", "!**/deck-select/index.ts"];
 const SHELL_INTERNALS = ["**/shell/**", "!**/shell/index.ts"];
 const BATTLE_INTERNALS = ["**/battle/**", "!**/battle/index.ts"];
@@ -62,18 +64,6 @@ const STORY_HANDOFF_TYPES_PENDING_RELOCATION = [
   "!**/story/handoff",
   "!**/story/handoff/story-handoff.ts",
 ];
-/* The duel's quarter-turn stage mapping, read by the overlay scrollbar thumb.
-   The scrollbar is part of the shared card preview panel, so the component
-   lives in the shell, while the mapping stays duel presentation. Same shape of
-   allowance as the four above, for the same reason, and it costs the entry
-   chunk one dependency-free module. It disappears when `stage-frame.ts` gets a
-   legal home. */
-const STAGE_FRAME_PENDING_RELOCATION = [
-  "!**/battle/app",
-  "!**/battle/app/presentation",
-  "!**/battle/app/presentation/stage-frame.ts",
-];
-
 const STORY_MESSAGE =
   "Reach the visual novel through `src/story/index.ts` (ADR-022 domain boundary).";
 const DECK_EDITOR_MESSAGE =
@@ -92,7 +82,29 @@ const boundaries = (files, patterns) => ({
       "error",
       {
         patterns: [
-          ...patterns,
+          ...patterns.map((pattern) =>
+            files.some(
+              (file) => file.startsWith("src/shell/") || file === "src/main.ts",
+            ) && pattern.group === DECK_EDITOR_INTERNALS
+              ? {
+                  ...pattern,
+                  group: [...DECK_EDITOR_INTERNALS, ...EDITOR_PORT],
+                }
+              : pattern,
+          ),
+          ...(files.some(
+            (file) =>
+              file.startsWith("src/decks/") ||
+              file.startsWith("src/deck-editor/"),
+          )
+            ? [
+                {
+                  group: ["**/content/**"],
+                  message:
+                    "Decks and Editor consume semantic Cards ports; Content is composed by Shell.",
+                },
+              ]
+            : []),
           ...(files.includes("src/content/**")
             ? []
             : [
@@ -189,6 +201,148 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ["src/**/*.ts", "src/**/*.svelte"],
+    plugins: {
+      "focused-domains": {
+        rules: {
+          imports: {
+            meta: {
+              type: "problem",
+              schema: [],
+              messages: {
+                boundary:
+                  "Use the exact Cards/Decks public entry; migrated domains cannot import Content or foreign internals.",
+              },
+            },
+            create(context) {
+              const from = path
+                .relative(import.meta.dirname, context.filename)
+                .split(path.sep)
+                .join("/");
+              const source = from.split("/")[1];
+              const check = (node) => {
+                if (!node || typeof node.value !== "string") return;
+                const to = node.value.startsWith(".")
+                  ? path.posix
+                      .normalize(
+                        path.posix.join(
+                          path.posix.dirname(from),
+                          node.value.split("?")[0],
+                        ),
+                      )
+                      .replace(/\.js$/, ".ts")
+                  : node.value;
+                const target = to.startsWith("src/") ? to.split("/")[1] : null;
+                if (source === target) return;
+                const verifierDebt =
+                  from === "src/content/install/verify-gameplay.ts" &&
+                  [
+                    "src/decks/catalog/ocg-mask.ts",
+                    "src/decks/catalog/pinned-ruleset.ts",
+                  ].includes(to);
+                const deckEntries = [
+                  "index",
+                  "contracts/index",
+                  "repository/index",
+                  "editing/index",
+                  "validation/index",
+                  "catalog/index",
+                ];
+                const cardEntries = [
+                  "index",
+                  "classification/index",
+                  "images/index",
+                ];
+                if (
+                  source === "cards" ||
+                  (["decks", "deck-editor"].includes(source) &&
+                    target === "content") ||
+                  (target === "decks" &&
+                    !verifierDebt &&
+                    !deckEntries.some(
+                      (entry) => to === `src/decks/${entry}.ts`,
+                    )) ||
+                  (target === "cards" &&
+                    !cardEntries.some(
+                      (entry) => to === `src/cards/${entry}.ts`,
+                    ))
+                )
+                  context.report({ node, messageId: "boundary" });
+              };
+              return {
+                ImportDeclaration: (node) => check(node.source),
+                ExportNamedDeclaration: (node) => check(node.source),
+                ExportAllDeclaration: (node) => check(node.source),
+                ImportExpression: (node) => {
+                  if (
+                    ["cards", "decks", "deck-editor"].includes(source) &&
+                    typeof node.source.value !== "string"
+                  )
+                    context.report({ node, messageId: "boundary" });
+                  else check(node.source);
+                },
+                TSImportType: (node) => check(node.source),
+                CallExpression: (node) => {
+                  if (
+                    node.callee.type === "Identifier" &&
+                    node.callee.name === "require"
+                  )
+                    check(node.arguments[0]);
+                },
+              };
+            },
+          },
+        },
+      },
+    },
+    rules: { "focused-domains/imports": "error" },
+  },
+  boundaries(
+    ["src/shared-svelte-ui/**"],
+    [
+      {
+        group: [
+          "**/cards/**",
+          "**/content/**",
+          "**/decks/**",
+          "**/deck-editor/**",
+          "**/deck-select/**",
+          "**/battle/**",
+          "**/shell/**",
+          "**/story/**",
+          "**/vendor/**",
+          "**/scripts/**",
+          "node:*",
+          ...builtinModules,
+        ],
+        message:
+          "Shared Svelte views import no domain, data source, persistence, engine, or tooling module.",
+      },
+    ],
+  ),
+  boundaries(
+    ["src/cards/**"],
+    [
+      {
+        group: [
+          "**/decks/**",
+          "**/deck-editor/**",
+          "**/deck-select/**",
+          "**/battle/**",
+          "**/shell/**",
+          "**/story/**",
+          "**/content/**",
+          "**/vendor/**",
+          "**/scripts/**",
+          "node:*",
+          ...builtinModules,
+        ],
+        message:
+          "Canonical Cards has no domain, vendor runtime, or tooling dependency.",
+      },
+    ],
+  ),
   boundaries(
     ["src/content/**"],
     [
@@ -265,6 +419,16 @@ export default tseslint.config(
   boundaries(
     ["src/deck-select/**"],
     [
+      {
+        group: [
+          "**/cards/**",
+          "**/content/**",
+          "**/decks/**",
+          "**/shared-svelte-ui/**",
+        ],
+        message:
+          "Deck Select is pure presentation; hosts provide complete view models.",
+      },
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
@@ -304,18 +468,6 @@ export default tseslint.config(
       { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
         group: [...BATTLE_INTERNALS, ...DUEL_SNAPSHOT_NAME_PENDING_RELOCATION],
-        message: BATTLE_MESSAGE,
-      },
-    ],
-  ),
-  boundaries(
-    ["src/shell/card-preview/OverlayScrollbar.svelte"],
-    [
-      { group: STORY_INTERNALS, message: STORY_MESSAGE },
-      { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
-      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
-      {
-        group: [...BATTLE_INTERNALS, ...STAGE_FRAME_PENDING_RELOCATION],
         message: BATTLE_MESSAGE,
       },
     ],

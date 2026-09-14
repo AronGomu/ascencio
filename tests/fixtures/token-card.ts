@@ -7,7 +7,7 @@ import {
   OCG_ATTRIBUTE,
   OCG_RACE,
   OCG_TYPE,
-} from "../../src/decks/catalog/ocg-mask.ts";
+} from "../../src/cards/classification/index.ts";
 
 export const SHEEP_TOKEN_CODE = 73915052;
 

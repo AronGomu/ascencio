@@ -1,11 +1,6 @@
 <script lang="ts">
   import { afterUpdate, getContext, onMount, tick } from "svelte";
-  import {
-    loadInstalledImages,
-    type ContentReadPort,
-    type InstalledGameplay,
-    type InstalledImageLibrary,
-  } from "../content/index.ts";
+  import type { EditorCatalogInput } from "./ports/index.ts";
   import { get, readable, type Readable } from "svelte/store";
   import {
     computeStageBox,
@@ -17,37 +12,36 @@
     DeckCardLists,
     DeckId,
     DeckRecord,
-  } from "../decks/deck-contracts.ts";
+  } from "../decks/contracts/index.ts";
   import { DeckMigrationError } from "../decks/index.ts";
   import {
     resolveDeckRepository,
     type DeckContext,
-  } from "../decks/deck-repository-context.ts";
+  } from "../decks/repository/index.ts";
   import {
     unlimitedCardOwnership,
     type CardOwnership,
-  } from "../decks/card-ownership.ts";
-  import { ownedCatalog } from "./catalog-availability.ts";
-  import { ensureStarterDeck } from "../decks/starter-deck.ts";
-  import {
     catalogByCode,
     PROTOTYPE_RULESET,
-  } from "../decks/catalog/pinned-ruleset.ts";
+  } from "../decks/validation/index.ts";
+  import { ownedCatalog } from "./catalog-availability.ts";
+  import { ensureStarterDeck, exportYdk } from "../decks/editing/index.ts";
   import {
     DeckBuilderController,
     type DeckBuilderState,
   } from "./deck-editor-store.ts";
   import type { DeckEditorRoute } from "./deck-editor-route.ts";
-  import { installedDeckCatalog } from "../decks/catalog/installed-gameplay-cards.ts";
-  import { deckBuildableCards } from "../decks/catalog/deck-buildable-cards.ts";
-  import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
+  import {
+    cardsDeckCatalog,
+    deckBuildableCards,
+    type DeckBuilderCardView,
+  } from "../decks/catalog/index.ts";
   import DeckEditor from "./components/DeckEditor.svelte";
   import DeckLibrary from "./components/DeckLibrary.svelte";
   import YdkExport from "./components/YdkExport.svelte";
   import YdkImport from "./components/YdkImport.svelte";
 
-  export let gameplay: InstalledGameplay;
-  export let reader: ContentReadPort | null = null;
+  export let catalogInput: EditorCatalogInput;
   /** Which deck the app route asks for; `null` is the context's library. */
   export let deckId: DeckId | null = null;
   /** Which of the two deck worlds this mount edits: the free-play library, or
@@ -77,15 +71,8 @@
   export let returnLabel = "Deck Selection";
   export let onreturn: () => void = () => undefined;
 
-  /* Every card this build packages, fetched once per page: the editor may only
-     offer what the duel can draw, so both await the same read. It is ~10 MB of
-     shards, which is why it arrives after mount rather than inside the bundle,
-     and why nothing below may render until it lands.
-
-     `cards` is what the catalog offers: it drops the Tokens no deck may hold,
-     then narrows to what this context owns. `catalog` keeps every card,
-     because a deck holding one the save no longer owns still has to name it in
-     the preview and in its validation errors. */
+  /* Required definitions arrive from Shell. Ownership narrows the offered
+     catalog; validation retains every known definition. Art never gates boot. */
   let buildableCards: readonly DeckBuilderCardView[] = [];
   let ownership: CardOwnership = unlimitedCardOwnership();
   $: cards = ownedCatalog(buildableCards, ownership);
@@ -128,19 +115,6 @@
      the tail re-checks a `deckId` that moved while storage was answering. */
   afterUpdate(() => void watchRoute());
 
-  function chapterDeckSource(deck: InstalledGameplay["decks"][number]): string {
-    return [
-      "#created by YGO Story Duel Simulator",
-      "#main",
-      ...deck.main.map(String),
-      "#extra",
-      ...deck.extra.map(String),
-      "!side",
-      ...deck.side.map(String),
-      "",
-    ].join("\n");
-  }
-
   async function watchRoute(): Promise<void> {
     if (controller === null || routing) return;
     if (routeApplied && deckId === appliedDeckId) return;
@@ -157,23 +131,7 @@
     let disposed = false;
     let unsubscribe: () => void = () => undefined;
     let close: () => void = () => undefined;
-    let imageLibrary: InstalledImageLibrary | null = null;
-    const loaded = installedDeckCatalog(gameplay).cards;
-    const prepareCatalog =
-      reader === null
-        ? Promise.resolve(loaded)
-        : loadInstalledImages(reader, gameplay).then((images) => {
-            if (disposed) {
-              images.dispose();
-              throw new Error("Deck Editor closed");
-            }
-            imageLibrary = images;
-            return loaded.map((card) => ({
-              ...card,
-              imageUrl: images.cardUrls.get(card.code) ?? null,
-            }));
-          });
-    void prepareCatalog
+    void Promise.resolve(cardsDeckCatalog(catalogInput.cards))
       .then((cards) => {
         if (disposed) return Promise.reject(new Error("Deck Editor closed"));
         buildableCards = deckBuildableCards(cards);
@@ -206,17 +164,13 @@
            together. Granting here instead would be a fountain: delete the deck,
            reopen the editor, receive the cards again. */
         if (context.kind === "free-play") {
-          const starter = gameplay.decks.find(
-            ({ id }) => id === gameplay.defaults.starterDeckId,
+          await ensureStarterDeck(
+            repository,
+            catalog,
+            PROTOTYPE_RULESET,
+            exportYdk(catalogInput.starter.cards),
+            catalogInput.starter.name,
           );
-          if (starter !== undefined)
-            await ensureStarterDeck(
-              repository,
-              catalog,
-              PROTOTYPE_RULESET,
-              chapterDeckSource(starter),
-              starter.name,
-            );
         }
         if (disposed) return;
         controller = new DeckBuilderController(
@@ -244,7 +198,6 @@
       disposed = true;
       unsubscribe();
       close();
-      imageLibrary?.dispose();
     };
   });
 
@@ -406,6 +359,7 @@
       {cards}
       {catalog}
       ruleset={PROTOTYPE_RULESET}
+      images={catalogInput.images}
       {ownership}
       {layoutMode}
       {returnLabel}

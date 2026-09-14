@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { CardPreviewPanel, type CardPreviewView } from "../../shell/index.ts";
+  import type { CardPreviewView } from "../../shared-svelte-ui/card-preview/index.ts";
+  import type { CardImageSource } from "../../cards/images/index.ts";
+  import CardPreviewHost from "../components/CardPreviewHost.svelte";
   import RaritySortButton from "../components/RaritySortButton.svelte";
   import StoryCardTile from "../components/StoryCardTile.svelte";
   import {
@@ -30,6 +32,7 @@
   export let setName = "";
   export let dp = 0;
   export let cards: readonly SetCard[] = [];
+  export let imageSource: CardImageSource | null = null;
   export let onbuysingle: (code: number, rarity: ShopRarity) => void = () =>
     undefined;
   export let onback: () => void = () => undefined;
@@ -51,9 +54,13 @@
     previewCard === null
       ? null
       : ({
-          code: previewCard.code,
+          key: String(previewCard.code),
           name: previewCard.name,
           description: previewCard.description,
+          statsLine: null,
+          imageUrl: null,
+          imageAlt: previewCard.name,
+          placeholderLabel: "Image unavailable",
         } satisfies CardPreviewView);
   /* One section list for both states, so the tile is written once: grouping off
      is the whole set under no heading, in the order it was handed in. */
@@ -87,9 +94,12 @@
 
   <div class="cards-layout" data-cy="story-shop-cards-layout">
     <aside class="cards-preview" data-cy="story-shop-cards-preview">
-      <CardPreviewPanel
+      <CardPreviewHost
+        code={previewCard?.code ?? null}
         {preview}
-        staticImageUrl={previewCard?.imageUrl ?? null}
+        {imageSource}
+        dataCyPrefix="story-shop-card-preview"
+        emptyLabel="Hover a card to see its details."
       />
       {#if previewCard !== null}
         <!-- What the panel has no vocabulary for: rarity is the set's fact

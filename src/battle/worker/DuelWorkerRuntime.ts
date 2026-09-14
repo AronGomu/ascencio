@@ -1,5 +1,5 @@
-import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+import type { PinnedDeckRuleset } from "../../decks/validation/index.ts";
 import type { ContentSetRef } from "../../content/index.ts";
 import { assertNever } from "../duel/contracts/assert-never.ts";
 import {

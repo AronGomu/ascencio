@@ -15,14 +15,14 @@ import type {
   DeckId,
   DeckRecord,
   StoredDeck,
-} from "../../decks/deck-contracts.ts";
-import { MAXIMUM_DECK_AUTOSAVES } from "../../decks/deck-database.ts";
-import { emptyDeckHistory } from "../../decks/deck-history.ts";
-import type { DeckRepository } from "../../decks/deck-repository.ts";
+} from "../../decks/contracts/index.ts";
 import {
+  MAXIMUM_DECK_AUTOSAVES,
+  type DeckRepository,
   DeckRevisionConflictError,
   DeckStorageError,
-} from "../../decks/deck-storage-errors.ts";
+} from "../../decks/repository/index.ts";
+import { emptyDeckHistory } from "../../decks/editing/index.ts";
 import type { StoryCommand } from "../model/story-reducer.ts";
 import type { StoryState } from "../model/story-state.ts";
 import { isStoryDeck } from "../saves/story-save-contracts.ts";

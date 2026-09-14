@@ -235,7 +235,8 @@ describe("the set card list's rarity sort", () => {
     );
 
     expect(
-      container.querySelector('[data-cy="card-preview-name"]')!.textContent,
+      container.querySelector('[data-cy="story-shop-card-preview-name"]')!
+        .textContent,
     ).toBe("Exodia the Forbidden One");
     expect(
       container.querySelector('[data-cy="story-shop-cards-preview-rarity"]')!

@@ -1,4 +1,7 @@
-import type { InstalledGameplay } from "../../content/index.ts";
+import type {
+  AssetDeckCardRecord,
+  DeckCatalogText,
+} from "./ocg-card-mapper.ts";
 import { sortDeckCatalogCards } from "./deck-catalog-order.ts";
 import {
   adaptAssetDeckCard,
@@ -6,9 +9,19 @@ import {
   type DeckBuilderCardView,
 } from "./ocg-card-mapper.ts";
 
-export function installedDeckCatalog(gameplay: InstalledGameplay): Readonly<{
+export function installedDeckCatalog<SetRecord>(
+  gameplay: Readonly<{
+    cards: readonly Readonly<{
+      record: Omit<AssetDeckCardRecord, "setcodes"> & {
+        readonly setcodes: readonly number[];
+      };
+      text: DeckCatalogText;
+    }>[];
+    sets: readonly SetRecord[];
+  }>,
+): Readonly<{
   cards: readonly DeckBuilderCardView[];
-  sets: InstalledGameplay["sets"];
+  sets: readonly SetRecord[];
 }> {
   const cards = gameplay.cards.map(({ record, text }) =>
     mapDeckBuilderCard(

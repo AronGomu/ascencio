@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STARTER_DECK_NAME } from "../../../src/decks/starter-deck.ts";
+import { STARTER_DECK_NAME } from "../../../src/decks/editing/index.ts";
 import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";

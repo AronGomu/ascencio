@@ -5,11 +5,11 @@ import {
   ZONE_CAPACITY,
   type DeckCounts,
 } from "../../../src/deck-editor/layout/tap-targets.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../../src/decks/validation/index.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 const blueEyes = catalog.get(89631139)!;

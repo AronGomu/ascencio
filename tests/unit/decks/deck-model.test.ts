@@ -10,7 +10,7 @@ import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { SHEEP_TOKEN, SHEEP_TOKEN_CODE } from "../../fixtures/token-card.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);

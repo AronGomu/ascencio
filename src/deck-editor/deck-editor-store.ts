@@ -7,35 +7,31 @@ import type {
   DeckRecord,
   DeckValidationSummary,
   StoredDeck,
-} from "../decks/deck-contracts.ts";
+} from "../decks/contracts/index.ts";
 import {
   applyDeckCommand,
   createBlankDeck,
   derivedDeckName,
   normalizeDeckName,
   type DeckCommand,
-} from "../decks/deck-model.ts";
-import {
   emptyDeckHistory,
   pushDeckUpdate,
   redoDeckUpdate,
   undoDeckUpdate,
-} from "../decks/deck-history.ts";
-import type { DeckRepository } from "../decks/deck-repository.ts";
-import { DeckRevisionConflictError } from "../decks/indexeddb-deck-repository.ts";
-import type { DeckBuilderCardView } from "../decks/catalog/ocg-card-mapper.ts";
+} from "../decks/editing/index.ts";
+import {
+  type DeckRepository,
+  DeckRevisionConflictError,
+} from "../decks/repository/index.ts";
+import type { DeckBuilderCardView } from "../decks/catalog/index.ts";
 import {
   quantityLimit,
   type PinnedDeckRuleset,
-} from "../decks/catalog/pinned-ruleset.ts";
-import {
   unlimitedCardOwnership,
   type CardOwnership,
-} from "../decks/card-ownership.ts";
-import {
   validateDeckDraft,
   type DeckValidationInput,
-} from "../decks/deck-validation.ts";
+} from "../decks/validation/index.ts";
 import { availableCopies, unavailableReason } from "./catalog-availability.ts";
 
 interface PendingDeckSave {

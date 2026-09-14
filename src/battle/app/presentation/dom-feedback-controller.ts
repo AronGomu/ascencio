@@ -5,7 +5,7 @@ import {
   toFrameDelta,
   toFramePoint,
   toFrameRect,
-} from "./stage-frame.ts";
+} from "../../../shared-svelte-ui/geometry/index.ts";
 
 const MAXIMUM_FEEDBACK_DURATION_MS = 600;
 const FIELD_PLANE_SELECTOR = '[data-cy="duel-field-board-plane"]';

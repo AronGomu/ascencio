@@ -19,9 +19,9 @@ import type { AssetDeckCardRecord } from "../../src/decks/catalog/ocg-card-mappe
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../src/decks/catalog/pinned-ruleset.ts";
-import { validateDeckDraft } from "../../src/decks/deck-validation.ts";
-import { STARTER_DECK_LIST } from "../../src/decks/starter-deck.ts";
+  validateDeckDraft,
+} from "../../src/decks/validation/index.ts";
+import { STARTER_DECK_LIST } from "../../src/decks/editing/index.ts";
 import { reduceStory } from "../../src/story/model/story-reducer.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 import { migrateStorySaveState } from "../../src/story/saves/story-save-contracts.ts";

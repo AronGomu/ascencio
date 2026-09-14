@@ -325,7 +325,7 @@ test("six and twenty card hands keep height with conditional overlay scrollbar",
 
 test("preview bounds text with stable width and vertical overlay", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto("?scenario=preview-short");
   const shortText = page.locator('[data-cy="card-preview-text"]');
   const shortWidth = await shortText.evaluate(
@@ -396,6 +396,12 @@ test("preview bounds text with stable width and vertical overlay", async ({
   await expect
     .poll(async () => text.evaluate((element) => element.scrollTop))
     .toBeGreaterThan(0);
+  const screenshotPath = testInfo.outputPath("t3-shared-preview.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await testInfo.attach("t3-shared-preview", {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
 });
 
 test("hand cards are centered when the hand fits", async ({ page }) => {

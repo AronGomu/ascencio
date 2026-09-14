@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CardPreviewPanel } from "../../../shell/index.ts";
+  import { CardPreviewPanel } from "../../../shared-svelte-ui/card-preview/index.ts";
   import DuelField from "../components/DuelField.svelte";
   import PhaseBar from "../components/PhaseBar.svelte";
   import ZoneListDialog from "../components/duel-field/ZoneListDialog.svelte";
@@ -100,11 +100,16 @@
   <main class="duel-shell" data-cy="acceptance-preview-scenario">
     <CardPreviewPanel
       preview={{
-        code: cardCode(97590747),
+        key: String(cardCode(97590747)),
         name: "The Legendary Fisherman",
         description: previewDescription,
         statsLine: null,
+        imageUrl: null,
+        imageAlt: "The Legendary Fisherman",
+        placeholderLabel: "Image unavailable",
       }}
+      dataCyPrefix="card-preview"
+      emptyLabel="Hover a card to see its details."
     />
     <div class="duel-field-slot" data-cy="acceptance-preview-field"></div>
     <aside data-cy="acceptance-preview-rail"></aside>

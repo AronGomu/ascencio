@@ -96,6 +96,7 @@ import {
 } from "../../src/battle/duel/contracts/ids.ts";
 import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
 import type { PublicDuelState } from "../../src/battle/duel/contracts/public-duel-state.ts";
+import type { CardImageSource } from "../../src/cards/images/index.ts";
 import {
   concealedStateCard,
   publicStateCard,
@@ -120,11 +121,12 @@ afterEach(() => {
   mockedWorkerClientCtor.instances.length = 0;
 });
 
-async function renderReadyApp() {
+async function renderReadyApp(imageSource: CardImageSource | null = null) {
   const rendered = render(App, {
     content: installedDuelGameplayFixture().content,
     gameplay: installedDuelGameplayFixture(),
     reader: contentReaderFixture(),
+    imageSource,
   });
   await vi.waitFor(() =>
     expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull(),
@@ -604,9 +606,13 @@ describe("App", () => {
     expect(main?.classList.contains("is-duel-viewport")).toBe(false);
   });
 
-  it("hovering a hidden card keeps the previous preview", async () => {
+  it("hovering a hidden card keeps the previous preview without acquiring identity", async () => {
     const user = userEvent.setup();
-    await renderReadyApp();
+    const acquire = vi.fn(async (code) => ({
+      url: `blob:card-${code}`,
+      release: vi.fn(),
+    }));
+    await renderReadyApp({ acquire });
     await startDuelFromPicker(user);
     emitDuelState(PREVIEW_TEST_STATE);
 
@@ -624,6 +630,7 @@ describe("App", () => {
       expect(el).not.toBeNull();
       return el!.textContent;
     });
+    await vi.waitFor(() => expect(acquire).toHaveBeenCalledOnce());
 
     const hiddenCard = document.querySelector(
       '[data-cy="field-card-preview-hidden-monster"]',
@@ -634,6 +641,7 @@ describe("App", () => {
     expect(
       document.querySelector('[data-cy="card-preview-name"]')?.textContent,
     ).toBe(nameBefore);
+    expect(acquire).toHaveBeenCalledOnce();
   });
 
   it("hovering before any known card leaves the empty state", async () => {

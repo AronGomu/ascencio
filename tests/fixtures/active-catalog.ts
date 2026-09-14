@@ -1,8 +1,5 @@
 import { setRuntimeCatalogForTests } from "../../src/decks/catalog/runtime-catalog.ts";
-import {
-  PROTOTYPE_CATALOG,
-  PROTOTYPE_CATALOG_ASSETS,
-} from "../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG, PROTOTYPE_CATALOG_ASSETS } from "./catalog.ts";
 
 /**
  * Points `runtimeCatalog()` at the small hand-written fixture, and gives the

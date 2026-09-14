@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -9,12 +10,16 @@ import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { deckId, type DeckId } from "../../../src/decks/deck-contracts.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
+import {
+  DECK_DATABASE_NAME,
+  IndexedDbDeckRepository,
+} from "../../../src/decks/repository/index.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import { deckId, type DeckId } from "../../../src/decks/contracts/index.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../../src/decks/editing/index.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
@@ -100,7 +105,7 @@ describe("a delete that storage refused", () => {
     const id = await seedDeck("d-route", "Doomed");
     const onnavigate = vi.fn();
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: deckId("d-route"),
       onnavigate,
     });

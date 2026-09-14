@@ -3,8 +3,8 @@
 import { describe, expect, it } from "vitest";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { DeckStorageError } from "../../../src/decks/deck-storage-errors.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import { DeckStorageError } from "../../../src/decks/repository/index.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";

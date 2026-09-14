@@ -6,7 +6,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
-} from "../../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../../src/decks/validation/index.ts";
 import {
   packagedCatalog,
   type PackagedCardText,
@@ -19,7 +19,7 @@ import type {
   AssetDeckCardRecord,
   DeckBuilderCardView,
 } from "../../../src/decks/catalog/ocg-card-mapper.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import {
   preBattleBlock,
   preBattleDeckOptions,

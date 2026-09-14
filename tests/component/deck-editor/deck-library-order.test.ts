@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -8,12 +9,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import DeckLibrary from "../../../src/deck-editor/components/DeckLibrary.svelte";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import type { DeckId, DeckRecord } from "../../../src/decks/deck-contracts.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import type { DeckId, DeckRecord } from "../../../src/decks/contracts/index.ts";
+import {
+  createBlankDeck,
+  emptyDeckHistory,
+} from "../../../src/decks/editing/index.ts";
+import {
+  DECK_DATABASE_NAME,
+  IndexedDbDeckRepository,
+} from "../../../src/decks/repository/index.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
@@ -110,7 +115,7 @@ describe("set default from the deck page", () => {
     repository.close();
 
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: chosen.id as DeckId,
       onnavigate: vi.fn(),
     });
@@ -155,7 +160,7 @@ describe("set default from the deck page", () => {
     /* Stored, not held: fresh mount reads filled disabled star back. */
     cleanup();
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: null,
       onnavigate: vi.fn(),
     });

@@ -6,7 +6,7 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type * as DeckCatalogIndexModule from "../../../src/decks/catalog/deck-catalog-index-base.ts";
 import type * as DeckCatalogModule from "../../../src/decks/catalog/deck-catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import { syntheticCatalog } from "../../fixtures/synthetic-catalog.ts";
 
 /* The catalog's cost is one lower-cased copy of 14,551 names. The index pays

@@ -1,56 +1,17 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
-  import OverlayScrollbar from "./OverlayScrollbar.svelte";
-  import type {
-    CardPreviewImageSource,
-    CardPreviewView,
-  } from "./card-preview-view.ts";
+  import { OverlayScrollbar } from "../scrollbar/index.ts";
+  import type { CardPreviewView } from "./card-preview-view.ts";
 
-  type CardImageLease = ReturnType<CardPreviewImageSource["lease"]>;
+  export let preview: CardPreviewView | null;
+  export let dataCyPrefix: string;
+  export let emptyLabel: string;
 
-  export let preview: CardPreviewView | null = null;
-  export let imageLibrary: CardPreviewImageSource | null = null;
-  export let placeholderUrl = "";
-  /** Art the caller already resolved to a URL, for a domain that has no image
-      library to lease from. The lease wins when both are present. */
-  export let staticImageUrl: string | null = null;
-
-  let activeImageLibrary: CardPreviewImageSource | null = null;
-  let activeImageCode: number | undefined;
-  let imageLease: CardImageLease | null = null;
-  let leasedImageUrl: string | null = null;
   let failedImageUrl: string | null = null;
   let textScroller: HTMLElement | null = null;
 
-  $: synchronizeImageLease(imageLibrary, preview?.code);
-  $: resolvedImageUrl =
-    leasedImageUrl !== null && leasedImageUrl !== placeholderUrl
-      ? leasedImageUrl
-      : staticImageUrl !== placeholderUrl
-        ? staticImageUrl
-        : null;
+  $: resolvedImageUrl = preview?.imageUrl ?? null;
   $: if (failedImageUrl !== null && failedImageUrl !== resolvedImageUrl)
     failedImageUrl = null;
-
-  onDestroy(() => imageLease?.release());
-
-  /* Copied from the retired card inspector: one lease at a time, released the
-     moment the previewed code or the library changes and again on destroy, so
-     the object URL never outlives the image that is actually mounted. */
-  function synchronizeImageLease(
-    library: CardPreviewImageSource | null,
-    code: number | undefined,
-  ): void {
-    if (library === activeImageLibrary && code === activeImageCode) return;
-    imageLease?.release();
-    activeImageLibrary = library;
-    activeImageCode = code;
-    imageLease =
-      library !== null && code !== undefined && code > 0
-        ? library.lease(code)
-        : null;
-    leasedImageUrl = imageLease?.url ?? null;
-  }
 
   function markImageFailed(event: Event): void {
     const failedUrl = (event.currentTarget as HTMLImageElement).dataset
@@ -74,21 +35,21 @@
 <aside
   class="card-preview-panel"
   aria-label="Card preview"
-  data-cy="card-preview-panel"
+  data-cy={`${dataCyPrefix}-panel`}
 >
   {#if preview === null}
-    <p data-cy="card-preview-empty">Hover a card to see its details.</p>
+    <p data-cy={`${dataCyPrefix}-empty`}>{emptyLabel}</p>
   {:else}
-    <div class="card-preview-panel__art" data-cy="card-preview-art">
+    <div class="card-preview-panel__art" data-cy={`${dataCyPrefix}-art`}>
       {#if resolvedImageUrl !== null && resolvedImageUrl !== failedImageUrl}
         {#key resolvedImageUrl}
           <img
             src={resolvedImageUrl}
-            alt={preview.name}
+            alt={preview.imageAlt}
             decoding="async"
             onerror={markImageFailed}
             data-preview-image-url={resolvedImageUrl}
-            data-cy="card-preview-image"
+            data-cy={`${dataCyPrefix}-image`}
           />
         {/key}
       {:else}
@@ -96,42 +57,33 @@
           class="card-preview-image-placeholder"
           role="img"
           aria-label={`Card image unavailable for ${preview.name}`}
-          data-cy="card-preview-image-placeholder"
+          data-cy={`${dataCyPrefix}-image-placeholder`}
         >
-          {#if placeholderUrl}
-            <img
-              class="card-preview-placeholder-image"
-              src={placeholderUrl}
-              alt=""
-              aria-hidden="true"
-              data-cy="card-preview-placeholder-image"
-            />
-          {:else}
-            <span
-              class="card-preview-placeholder-mark"
-              aria-hidden="true"
-              data-cy="card-preview-placeholder-mark">✦</span
-            >
-            <span
-              class="card-preview-placeholder-label"
-              aria-hidden="true"
-              data-cy="card-preview-placeholder-label">Image unavailable</span
-            >
-          {/if}
+          <span
+            class="card-preview-placeholder-mark"
+            aria-hidden="true"
+            data-cy={`${dataCyPrefix}-placeholder-mark`}>✦</span
+          >
+          <span
+            class="card-preview-placeholder-label"
+            aria-hidden="true"
+            data-cy={`${dataCyPrefix}-placeholder-label`}
+            >{preview.placeholderLabel}</span
+          >
         </div>
       {/if}
     </div>
-    <div class="card-preview-panel__body" data-cy="card-preview-body">
-      <h2 data-cy="card-preview-name">{preview.name}</h2>
+    <div class="card-preview-panel__body" data-cy={`${dataCyPrefix}-body`}>
+      <h2 data-cy={`${dataCyPrefix}-name`}>{preview.name}</h2>
       {#if preview.statsLine}<p
           class="card-preview-panel__stats"
-          data-cy="card-preview-stats"
+          data-cy={`${dataCyPrefix}-stats`}
         >
           {preview.statsLine}
         </p>{/if}
       <div
         class="card-preview-panel__text-region"
-        data-cy="card-preview-text-region"
+        data-cy={`${dataCyPrefix}-text-region`}
       >
         <!-- svelte-ignore a11y_no_noninteractive_tabindex a11y_no_noninteractive_element_interactions (native effect-text scroller is intentionally keyboard reachable) -->
         <div
@@ -141,15 +93,15 @@
           aria-label="Card effect text"
           onkeydown={scrollTextByKeyboard}
           bind:this={textScroller}
-          data-cy="card-preview-text"
+          data-cy={`${dataCyPrefix}-text`}
         >
           {preview.description}
         </div>
         <OverlayScrollbar
           axis="vertical"
           scrollElement={textScroller}
-          contentSizeKey={`${preview.code}:${preview.description.length}`}
-          dataCyPrefix="card-preview-text"
+          contentSizeKey={`${preview.key}:${preview.description.length}`}
+          dataCyPrefix={`${dataCyPrefix}-text`}
         />
       </div>
     </div>
@@ -191,15 +143,6 @@
 
   .card-preview-image-placeholder::after {
     width: 48%;
-  }
-
-  .card-preview-placeholder-image {
-    position: relative;
-    z-index: 1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
   }
 
   .card-preview-placeholder-mark,

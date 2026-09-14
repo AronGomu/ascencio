@@ -1,4 +1,4 @@
-import type { CardOwnership } from "../../decks/card-ownership.ts";
+import type { CardOwnership } from "../../decks/validation/index.ts";
 import type { StoryState } from "../model/story-state.ts";
 
 /** What one save owns, read straight off its collection.

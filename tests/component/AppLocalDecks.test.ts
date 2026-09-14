@@ -10,8 +10,9 @@ import {
   catalogByCode,
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+  validateDeckDraft,
+} from "../../src/decks/validation/index.ts";
+import { PROTOTYPE_CATALOG } from "../fixtures/catalog.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
@@ -111,10 +112,11 @@ vi.mock("../../src/battle/app/DuelWorkerClient.ts", () => {
 
 import App from "../../src/battle/app/App.svelte";
 import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
-import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../src/decks/deck-model.ts";
-import { validateDeckDraft } from "../../src/decks/deck-validation.ts";
-import { IndexedDbDeckRepository } from "../../src/decks/indexeddb-deck-repository.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../src/decks/editing/index.ts";
+import { IndexedDbDeckRepository } from "../../src/decks/repository/index.ts";
 
 /* The duel builds its catalog from the packaged card set, so the fixture has
    to be what this build packages for the seeded deck to be one it can draw.

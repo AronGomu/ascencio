@@ -1,5 +1,5 @@
 import type { ShopRarity } from "../../model/story-state.ts";
-import type { DeckBuilderCardView } from "../../../decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../decks/catalog/index.ts";
 
 export interface ShopCardOffer {
   readonly code: number;

@@ -22,7 +22,7 @@
      `position: fixed` inside the stage the phone layout turns a quarter turn,
      so that stage — not the viewport — is its containing block, and reading
      `innerWidth` here would clamp a frame-space left edge against a viewport
-     axis (`readFrameWidth` in `presentation/stage-frame.ts`). */
+     axis (`readFrameWidth` in shared geometry). */
   export let frameWidth: number;
   export let choices: readonly InteractionChoice[] = [];
   /* Semantic halo copied onto enlarged art: the overlay covers source card art,

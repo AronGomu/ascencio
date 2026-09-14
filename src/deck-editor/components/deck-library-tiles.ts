@@ -1,11 +1,11 @@
-import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type {
   DeckId,
   DeckRecord,
   DeckValidationSummary,
-} from "../../decks/deck-contracts.ts";
+} from "../../decks/contracts/index.ts";
 import type { DeckTileModel } from "../../deck-select/index.ts";
-import { deckCoverImageUrl } from "../../decks/deck-cover.ts";
+import { deckCoverImageUrl } from "../cards/deck-cover.ts";
 
 /** Default mark is stored separately from deck records, so host supplies it. */
 export interface DeckLibraryMarks {

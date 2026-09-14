@@ -2,15 +2,15 @@
   import type {
     DeckValidationIssue,
     DeckZone,
-  } from "../../decks/deck-contracts.ts";
-  import type { DeckGridPlan } from "../../decks/deck-model.ts";
-  import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-  import type { PinnedDeckRuleset } from "../../decks/catalog/pinned-ruleset.ts";
-  import { quantityLimit } from "../../decks/catalog/pinned-ruleset.ts";
+  } from "../../decks/contracts/index.ts";
+  import type { DeckGridPlan } from "../../decks/editing/index.ts";
+  import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import {
+    type PinnedDeckRuleset,
+    quantityLimit,
     unlimitedCardOwnership,
     type CardOwnership,
-  } from "../../decks/card-ownership.ts";
+  } from "../../decks/validation/index.ts";
   import CardTile from "./CardTile.svelte";
 
   export let zone: DeckZone;

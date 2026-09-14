@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
-  import type { CatalogTypeTag } from "../../decks/catalog/deck-catalog.ts";
+  import type { CatalogTypeTag } from "../../decks/catalog/index.ts";
 
   export let options: readonly CatalogTypeTag[];
   export let value: readonly CatalogTypeTag[];

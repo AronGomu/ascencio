@@ -8,8 +8,8 @@ import DeckWorkspace from "../../../src/deck-editor/components/DeckWorkspace.sve
 import {
   FIFTEEN_CARD_GRID,
   mainDeckGridPlan,
-} from "../../../src/decks/deck-model.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+} from "../../../src/decks/editing/index.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   deckFixture,
   prototypeCatalogMap,

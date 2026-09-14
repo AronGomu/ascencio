@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { catalogByCode } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { catalogByCode } from "../../../src/decks/validation/index.ts";
 import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { encounterDeck } from "../../../src/story/decks/encounter-deck.ts";
 import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 import {

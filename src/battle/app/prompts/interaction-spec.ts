@@ -1,4 +1,9 @@
-import type { CardCode, ChoiceId, PromptId } from "../../duel/contracts/ids.ts";
+import {
+  cardCode,
+  type CardCode,
+  type ChoiceId,
+  type PromptId,
+} from "../../duel/contracts/ids.ts";
 import type {
   ChoiceAction,
   PlayerPrompt,
@@ -474,7 +479,7 @@ function sanitizeChoice(choice: PromptChoice): InteractionChoice | undefined {
     ...(isValidCardTarget(choice.card) &&
     choice.card!.controller === 0 &&
     choice.card!.code !== undefined
-      ? { cardCode: choice.card!.code as CardCode }
+      ? { cardCode: cardCode(choice.card!.code) }
       : {}),
   });
 }

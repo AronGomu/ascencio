@@ -10,7 +10,7 @@ import {
   DEFAULT_STORY_PLAYBACK_SETTINGS,
   writeStoryPlaybackSettings,
 } from "../../../src/story/playback/story-playback-settings.ts";
-import type { DeckBuilderCardView } from "../../../src/decks/catalog/ocg-card-mapper.ts";
+import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 
 const SOURCE = readFileSync(

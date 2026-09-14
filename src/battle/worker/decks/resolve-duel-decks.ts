@@ -1,4 +1,4 @@
-import { validateDeckDraft } from "../../../decks/deck-validation.ts";
+import { validateDeckDraft } from "../../../decks/validation/index.ts";
 import type { DuelDeckSelection } from "../../duel/contracts/duel-deck-selection.ts";
 import { duelOperationError } from "../../duel/contracts/duel-error.ts";
 import { cardCode } from "../../duel/contracts/ids.ts";

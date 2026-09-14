@@ -11,8 +11,10 @@
    that into the story closure would put `idb`, the deck schema and its
    migration into a chunk that never opens the free-play library. */
 
-import type { DeckContext } from "../../decks/deck-repository-context.ts";
-import { DeckStorageError } from "../../decks/deck-storage-errors.ts";
+import {
+  type DeckContext,
+  DeckStorageError,
+} from "../../decks/repository/index.ts";
 import { storyCardOwnership } from "./card-ownership.ts";
 import { createStoryDeckRepository } from "./story-deck-repository.ts";
 import { reduceStory } from "../model/story-reducer.ts";

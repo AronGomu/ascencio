@@ -53,13 +53,17 @@ const STORY_OPPONENT: OpponentView = {
 };
 
 const PLAYER_LIST: DecklistView = {
-  main: [{ code: 101, name: "Aurora Scout", frame: "spell", artUrl: null }],
+  main: [
+    { code: 101, name: "Aurora Scout", frameColor: "#1d8f75", imageUrl: null },
+  ],
   extra: [],
   side: [],
 };
 
 const OPPONENT_LIST: DecklistView = {
-  main: [{ code: 201, name: "Vault Guard", frame: "effect", artUrl: null }],
+  main: [
+    { code: 201, name: "Vault Guard", frameColor: "#b06b32", imageUrl: null },
+  ],
   extra: [],
   side: [],
 };

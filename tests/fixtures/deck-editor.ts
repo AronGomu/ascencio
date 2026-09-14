@@ -1,14 +1,16 @@
 import type { DeckBuilderState } from "../../src/deck-editor/deck-editor-store.ts";
-import type { DeckRecord } from "../../src/decks/deck-contracts.ts";
-import { createBlankDeck } from "../../src/decks/deck-model.ts";
-import { emptyDeckHistory } from "../../src/decks/deck-history.ts";
-import { validateDeckDraft } from "../../src/decks/deck-validation.ts";
+import type { DeckRecord } from "../../src/decks/contracts/index.ts";
 import {
+  createBlankDeck,
+  emptyDeckHistory,
+} from "../../src/decks/editing/index.ts";
+import {
+  validateDeckDraft,
   catalogByCode,
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+} from "../../src/decks/validation/index.ts";
+import { PROTOTYPE_CATALOG } from "./catalog.ts";
 
 export const prototypeCatalogMap = catalogByCode(PROTOTYPE_CATALOG);
 const mainCodes = PROTOTYPE_CATALOG.filter(

@@ -1,7 +1,7 @@
 import type { SelectableDeck } from "../../battle/index.ts";
 import type { DeckTileModel } from "../../deck-select/index.ts";
-import type { DeckBuilderCardView } from "../../decks/catalog/ocg-card-mapper.ts";
-import { deckCoverImageUrl } from "../../decks/deck-cover.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+import { deckCoverImageUrl } from "../cards/deck-cover.ts";
 
 /** What free play knows about its decks beyond the decks themselves: cover
     art, default deck, and any exclusive AI owner of an installed deck. */

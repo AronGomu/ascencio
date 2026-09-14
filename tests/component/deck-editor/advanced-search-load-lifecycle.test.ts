@@ -3,9 +3,9 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CardCatalog from "../../../src/deck-editor/components/CardCatalog.svelte";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { EMPTY_ADVANCED_DECK_CATALOG_FILTERS } from "../../../src/decks/catalog/deck-catalog.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { EMPTY_ADVANCED_DECK_CATALOG_FILTERS } from "../../../src/decks/catalog/index.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import type {
   AdvancedSearchHost,
   AdvancedSearchSession,

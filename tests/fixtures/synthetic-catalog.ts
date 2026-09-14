@@ -1,5 +1,5 @@
-import type { DeckBuilderCardView } from "../../src/decks/catalog/ocg-card-mapper.ts";
-import { PROTOTYPE_CATALOG } from "../../src/deck-editor/fixtures/catalog.ts";
+import type { DeckBuilderCardView } from "../../src/decks/catalog/index.ts";
+import { PROTOTYPE_CATALOG } from "./catalog.ts";
 
 /**
  * Generates `count` synthetic `DeckBuilderCardView` entries by cloning the

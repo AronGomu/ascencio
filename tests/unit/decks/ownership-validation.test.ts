@@ -22,7 +22,7 @@ import {
 } from "../../../src/decks/catalog/runtime-catalog.ts";
 import type { DeckCardLists } from "../../../src/decks/deck-contracts.ts";
 import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";

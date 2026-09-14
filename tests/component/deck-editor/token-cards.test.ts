@@ -1,3 +1,4 @@
+import { installedEditorCatalog } from "../../../src/shell/cards/installed-editor-catalog.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -6,13 +7,17 @@ import { cleanup, render, waitFor } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/catalog/pinned-ruleset.ts";
-import { PROTOTYPE_CATALOG } from "../../../src/deck-editor/fixtures/catalog.ts";
-import { deckId } from "../../../src/decks/deck-contracts.ts";
-import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
-import { createBlankDeck } from "../../../src/decks/deck-model.ts";
+import {
+  DECK_DATABASE_NAME,
+  IndexedDbDeckRepository,
+} from "../../../src/decks/repository/index.ts";
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
+import { deckId } from "../../../src/decks/contracts/index.ts";
+import {
+  emptyDeckHistory,
+  createBlankDeck,
+} from "../../../src/decks/editing/index.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 import { SHEEP_TOKEN_CODE } from "../../fixtures/token-card.ts";
@@ -45,7 +50,7 @@ describe("Tokens in the shared runtime catalog", () => {
   it("are never offered by the editor's catalog", async () => {
     await seedDeck("d-token");
     render(DeckEditorApp, {
-      gameplay: installedDuelGameplayFixture(),
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
       deckId: deckId("d-token"),
       onnavigate: vi.fn(),
     });

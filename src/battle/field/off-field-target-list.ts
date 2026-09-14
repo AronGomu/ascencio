@@ -1,5 +1,4 @@
 import { isProjectedCardIdentityKnown } from "../duel/card-visibility.ts";
-import type { CardCode } from "../duel/contracts/ids.ts";
 import type {
   PlayerIndex,
   PublicCard,
@@ -109,9 +108,7 @@ function targetEntry(
         ];
   const projectedIdentityVisible =
     card !== undefined && isProjectedCardIdentityKnown(card);
-  const projectedCode = projectedIdentityVisible
-    ? (card.code as CardCode)
-    : undefined;
+  const projectedCode = projectedIdentityVisible ? card.code : undefined;
   const promptCode =
     address.controller === 0
       ? choices.find((choice) => choice.cardCode !== undefined)?.cardCode

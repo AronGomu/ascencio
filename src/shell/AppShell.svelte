@@ -9,7 +9,6 @@
   import { readonly, writable } from "svelte/store";
   import type {
     ShellSession,
-    ShellBootstrap,
     ShellGameplay,
     ShellImageLibrary,
   } from "./core/installed-inputs.ts";
@@ -71,6 +70,10 @@
     type StoryEntryIntent,
   } from "./shell-store.ts";
   import { computeStageBox, type StageBox } from "./stage-layout.ts";
+  import type {
+    ContentActionsController,
+    ContentActionsView,
+  } from "./application/content-actions.ts";
 
   export let store: ShellStore = createShellStore(
     globalThis.location.hash,
@@ -79,8 +82,21 @@
   export let loaders: DomainLoaders = DEFAULT_DOMAIN_LOADERS;
   export let settings: ShellSettingsStore = createShellSettingsStore();
   export let initialCoreGate: CoreGate | null = null;
-  export let initialCoreBootstrap: ShellBootstrap | null = null;
   export let application: ShellApplication | null = null;
+  export let contentActions: ContentActionsController | null = null;
+  let contentActionsView: ContentActionsView | null =
+    contentActions?.view ?? null;
+  let boundContentActions: ContentActionsController | null = null;
+  let unsubscribeContentActions: (() => void) | null = null;
+  $: bindContentActions(contentActions);
+  function bindContentActions(next: ContentActionsController | null): void {
+    if (next === boundContentActions) return;
+    unsubscribeContentActions?.();
+    boundContentActions = next;
+    contentActionsView = next?.view ?? null;
+    unsubscribeContentActions =
+      next?.subscribe((view) => (contentActionsView = view)) ?? null;
+  }
   let domainSession: ShellDomainSession | null = null;
   let domainReady = false;
   let opening: AbortController | null = null;
@@ -117,7 +133,16 @@
               await session.close();
             }
           })
-          .catch(recover);
+          .catch((error: unknown) => {
+            if (
+              error instanceof Error &&
+              error.message === "APP_CONTENT_REQUIRED"
+            ) {
+              coreGate = { kind: "locked", reason: "content-required" };
+              return;
+            }
+            recover(error);
+          });
       }) ?? null;
   }
 
@@ -231,7 +256,6 @@
     disposals.push(done);
   };
   let coreGate: CoreGate = initialCoreGate ?? { kind: "checking" };
-  let coreBootstrap: ShellBootstrap | null = initialCoreBootstrap;
   let duelDomain: ReturnType<DomainLoaders["duel"]> | null = null;
   const loadDuelDomain = (): ReturnType<DomainLoaders["duel"]> =>
     (duelDomain ??= loaders.duel());
@@ -778,7 +802,7 @@
             return;
           }
           application = startup.application ?? null;
-          coreBootstrap = startup.bootstrap;
+          contentActions = startup.contentActions ?? null;
           coreGate = startup.gate;
           gameplay =
             startup.gate.kind === "ready" ? startup.gate.gameplay : null;
@@ -824,6 +848,7 @@
       mounted = false;
       destroyed = true;
       unsubscribeApplication?.();
+      unsubscribeContentActions?.();
       globalThis.removeEventListener("unhandledrejection", asyncFailure);
       globalThis.removeEventListener("error", syncFailure);
       closeDomain();
@@ -867,6 +892,12 @@
         {recoveryMessage}
       </p>
     {/if}
+    {#if contentActionsView !== null && contentActionsView.missingMedia > 0 && route.kind !== "install-content"}
+      <aside role="status" data-cy="optional-media-global-warning">
+        Optional media is missing. You can keep playing. {contentActionsView.missingMedia.toLocaleString()}
+        placeholder{contentActionsView.missingMedia === 1 ? "" : "s"} active.
+      </aside>
+    {/if}
     {#if route.kind === "home"}
       <div class="shell-region shell-region--home" data-cy="shell-region-home">
         {#key coreGate.kind === "ready" ? coreGate.generation : coreGate.kind}
@@ -888,18 +919,7 @@
             <svelte:component
               this={module.default}
               gate={coreGate}
-              bootstrap={coreBootstrap}
-              oninstalled={(installed, reader, generation) => {
-                if (contentReader !== reader) contentReader?.close();
-                gameplay = installed;
-                contentReader = reader;
-                coreGate = {
-                  kind: "ready",
-                  gameplay: installed,
-                  reader,
-                  generation,
-                };
-              }}
+              actions={contentActions}
               onback={() => store.navigate(HOME_ROUTE)}
             />
           </svelte:boundary>

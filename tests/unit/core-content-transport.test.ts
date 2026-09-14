@@ -82,6 +82,20 @@ describe("CORE content transport", () => {
         middlewares: { use: (handler: Middleware) => handlers.push(handler) },
       } as unknown as ViteDevServer);
       const middleware = handlers[0]!;
+      const release = await request(
+        middleware,
+        "/private/core-release.json",
+        "GET",
+      );
+      expect(release.status).toBe(200);
+      expect(release.headers["Cache-Control"]).toBe("no-store");
+      expect(
+        JSON.parse(new TextDecoder().decode(release.body as Uint8Array)),
+      ).toEqual({
+        schemaVersion: 1,
+        buildId: "test-build",
+        coreContentApiVersion: 1,
+      });
       const key = [...delivery.objects.keys()][0]!;
       const get = await request(middleware, `/private/${key}`, "GET");
       expect(get.status).toBe(200);

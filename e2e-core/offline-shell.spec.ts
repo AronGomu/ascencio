@@ -190,12 +190,10 @@ test("cold service worker update waits for every old controlled tab", async ({
     await contentCache.put(new Request(key), new Response("installed-content"));
   });
   await selectShell(page, appUrl, "b");
-  await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.getRegistration();
-    if (registration === undefined)
-      throw new Error("Service worker is missing");
-    await registration.update();
-  });
+  await page.locator('[data-cy="main-menu-install-content"]').click();
+  await page.locator('[data-cy="content-check-updates"]').click();
+  await expect(page.locator('[data-cy="core-approve-update"]')).toBeEnabled();
+  await page.locator('[data-cy="core-approve-update"]').click();
   await expect
     .poll(() =>
       page.evaluate(async () => {
@@ -205,6 +203,7 @@ test("cold service worker update waits for every old controlled tab", async ({
     )
     .toBe("installed");
 
+  await page.locator('[data-cy="install-content-back"]').click();
   await page.locator('[data-cy="main-menu-settings"]').click();
   await expect(
     page.locator('[data-cy="shell-settings-offline-status"]'),

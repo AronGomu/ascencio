@@ -21,6 +21,8 @@ export default defineConfig(async (): Promise<UserConfig> => {
     process.env.CONTENT_RUN,
   );
   const appBuildDate = new Date().toISOString().slice(0, 10);
+  const coreContentApiVersion = 1;
+  const appBuildId = appBuildIdentity(projectRoot, delivery.bootstrapBytes);
 
   return {
     base: process.env.BASE_PATH ?? "/",
@@ -41,7 +43,12 @@ export default defineConfig(async (): Promise<UserConfig> => {
     plugins: [
       syncOnlyVendoredCorePlugin(projectRoot),
       svelte(),
-      coreContentPlugin(projectRoot, delivery),
+      coreContentPlugin(
+        projectRoot,
+        delivery,
+        appBuildId,
+        coreContentApiVersion,
+      ),
       VitePWA({
         strategies: "injectManifest",
         srcDir: "src",
@@ -88,10 +95,9 @@ export default defineConfig(async (): Promise<UserConfig> => {
       __RUNTIME_MANIFEST_SHA256__: "null",
       __RUNTIME_SNAPSHOT_ID__: "null",
       __ACTIVATION_SNAPSHOT_ID__: "null",
-      __APP_BUILD_ID__: JSON.stringify(
-        appBuildIdentity(projectRoot, delivery.bootstrapBytes),
-      ),
+      __APP_BUILD_ID__: JSON.stringify(appBuildId),
       __APP_BUILD_DATE__: JSON.stringify(appBuildDate),
+      __CORE_CONTENT_API_VERSION__: JSON.stringify(coreContentApiVersion),
       __ACTIVE_IMAGE_MANIFEST__: "null",
       __ACTIVE_IMAGE_MANIFEST_SHA256__: "null",
       __RUNTIME_REVISIONS__: "null",

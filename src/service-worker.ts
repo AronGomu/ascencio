@@ -1,9 +1,11 @@
 /// <reference lib="webworker" />
 
 import { PrecacheController } from "workbox-precaching";
+import { readCoreApproval } from "./shell/application/core-update-approval.ts";
 import {
   assertShellPrecacheEntries,
   isAppNavigationRequest,
+  isFirstCoreInstall,
   SHELL_CACHE_PREFIX,
   shellCacheName,
 } from "./shell/pwa/shell-cache-policy.ts";
@@ -14,8 +16,36 @@ const precache = new PrecacheController({ cacheName });
 const manifest = assertShellPrecacheEntries(
   (self as unknown as ServiceWorkerGlobalScope).__WB_MANIFEST,
 );
+precache.addToCacheList([...manifest]);
 
-precache.precache([...manifest]);
+worker.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      const firstInstall = isFirstCoreInstall(
+        worker.registration.active !== null,
+        await worker.caches.keys(),
+      );
+      if (!firstInstall) {
+        const approval = await readCoreApproval(worker.indexedDB);
+        if (
+          approval === null ||
+          approval.buildId !== __APP_BUILD_ID__ ||
+          approval.coreContentApiVersion !== __CORE_CONTENT_API_VERSION__
+        )
+          throw new Error("CORE_UPDATE_NOT_APPROVED");
+      }
+      await precache.install(event);
+    })(),
+  );
+});
+
+worker.addEventListener("message", (event) => {
+  if (event.data !== "CORE_BUILD_IDENTITY") return;
+  event.ports[0]?.postMessage({
+    buildId: __APP_BUILD_ID__,
+    coreContentApiVersion: __CORE_CONTENT_API_VERSION__,
+  });
+});
 
 const indexUrl = new URL("index.html", worker.registration.scope).href;
 worker.addEventListener("fetch", (event) => {

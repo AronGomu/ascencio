@@ -81,7 +81,6 @@ describe("asset-free CORE menu", () => {
       store,
       loaders,
       initialCoreGate: locked,
-      initialCoreBootstrap: createShellBootstrap(bootstrap),
     });
 
     for (const cy of [
@@ -109,8 +108,8 @@ describe("asset-free CORE menu", () => {
     await fireEvent.click(query("main-menu-install-content")!);
     expect(hashes).toStrictEqual(["#/install-content"]);
     await waitFor(() => expect(query("install-content-screen")).not.toBeNull());
-    expect(query("install-content-chapter-chapter-01")?.textContent).toContain(
-      "DM",
+    expect(query("install-content-unavailable")?.textContent).toContain(
+      "Content controls are unavailable",
     );
     expect(loaders.duel).not.toHaveBeenCalled();
     expect(loaders.decks).not.toHaveBeenCalled();
@@ -132,7 +131,6 @@ describe("asset-free CORE menu", () => {
         ),
         loaders,
         initialCoreGate: locked,
-        initialCoreBootstrap: createShellBootstrap(bootstrap),
       });
       await tick();
 

@@ -1,4 +1,5 @@
 import type { ShellApplication } from "./shell-application.ts";
+import type { ContentActionsController } from "../application/content-actions.ts";
 import type {
   ShellGameplay,
   ShellBootstrap,
@@ -23,6 +24,7 @@ export type CoreGate =
 
 export interface CoreStartup {
   readonly application?: ShellApplication;
+  readonly contentActions?: ContentActionsController;
   readonly bootstrap: ShellBootstrap | null;
   readonly gate: CoreGate;
 }

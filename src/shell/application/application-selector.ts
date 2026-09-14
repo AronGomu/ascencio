@@ -5,6 +5,7 @@ import {
   selectionTransaction,
   type ApplicationSelection,
 } from "./application-state.ts";
+import { pendingCoreApproval } from "./core-update-approval.ts";
 import {
   APPLICATION_LIFECYCLE_LOCK,
   CONTENT_DOWNLOAD_LOCK,
@@ -48,6 +49,7 @@ export function createApplicationSelector(options: {
   readonly locks: LockManager;
   readonly store: ProgressiveContentStore;
   readonly coreContentApiVersion: number;
+  readonly currentBuildId?: string;
   readonly notify?: (selection: ApplicationSelection) => void;
   readonly notificationError?: (error: unknown) => void;
 }): ApplicationSelector {
@@ -82,10 +84,20 @@ export function createApplicationSelector(options: {
                 const manifest = await options.store.readManifest(
                   prepared.content.manifestVersion,
                 );
+                const pending = options.currentBuildId
+                  ? await pendingCoreApproval(
+                      options.factory,
+                      options.currentBuildId,
+                    )
+                  : null;
                 if (
                   manifest.coreRange.min > options.coreContentApiVersion ||
                   manifest.coreRange.maxExclusive <=
-                    options.coreContentApiVersion
+                    options.coreContentApiVersion ||
+                  (pending !== null &&
+                    (manifest.coreRange.min > pending.coreContentApiVersion ||
+                      manifest.coreRange.maxExclusive <=
+                        pending.coreContentApiVersion))
                 )
                   return { kind: "blocked", code: "APP_CORE_INCOMPATIBLE" };
                 if (

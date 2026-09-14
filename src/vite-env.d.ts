@@ -5,6 +5,7 @@ declare const __RUNTIME_SNAPSHOT_ID__: string | null;
 declare const __ACTIVATION_SNAPSHOT_ID__: string | null;
 declare const __APP_BUILD_ID__: string;
 declare const __APP_BUILD_DATE__: string;
+declare const __CORE_CONTENT_API_VERSION__: number;
 declare const __ACTIVE_IMAGE_MANIFEST_SHA256__: string | null;
 declare const __ACTIVE_IMAGE_MANIFEST__: Readonly<{
   schemaVersion: 1;

@@ -97,7 +97,7 @@
       class="secondary"
       data-cy="main-menu-install-content"
       onclick={() => store.navigate(INSTALL_CONTENT_ROUTE)}
-      >Install Content</button
+      >Content & Updates</button
     >
     <button
       type="button"

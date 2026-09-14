@@ -163,11 +163,32 @@ State: **ACCEPTED — independent `artifacts/REVIEW-T9.md`: 59/59 Vitest, 1/1 na
 - [x] T9.5 Run ticket commands and preserve quality evidence. Verify: scoped checks/build/boundaries pass; legacy 220/220, component 1237/1237, integration 54/54; four baseline unit asset failures remain under T11. `artifacts/IMPLEMENTATION-REPORT-T9.md`, exact paths/commands under `artifacts/T9-EVIDENCE/`.
 - [ ] T9.A1 Independent acceptance. Verify: reviewer checks complete changed-path inventory, red/green assertions, native production trace. No self-acceptance.
 
+## T10 — explicit media, content/CORE consent, asset cleanup
+
+State: **ACCEPTED retry1 — `artifacts/REVIEW-T10-repair.md` clears B1–B5; independent Vitest29/29 and native Chromium2/2. Original TDD chronology remains unmet process deviation**. Sole root writer; no subagents/stage/commit/push/deploy. T9 accepted at `344ffe2` per task input and `artifacts/REVIEW-T9.md`.
+
+- [x] T10.1 Implement separate Shell-owned check/install/activate/media/resume/cleanup/CORE approval actions with persistent ViewModel state. Validation: exact focused Vitest 14/14; `artifacts/T10-EVIDENCE/green-vitest.log`.
+- [x] T10.2 Keep optional media cache-only/nonblocking and warning persistent across domains. Validation: local Chromium Story fixture shows one placeholder warning and zero media GET before explicit media action; `media-placeholder.png`, native trace.
+- [x] T10.3 Serialize cleanup lifecycle→download, clear only selector Content on Delete all, preserve Story generation/saves/settings/CORE/unknown cache entries. Validation: native populated preservation assertion plus unit partial-failure/retry/lock checks.
+- [x] T10.4 Gate SW update install on durable exact-build approval with strict first-install exemption; keep cold activation/no claim. Validation: local two-build Chromium proves unapproved B remains old after cold reopen, approved B waits then activates; three-build/pending epoch tests pass.
+- [x] T10.5 Run build/type/scoped quality/T9 regressions and publish exact inventory/evidence. Validation: build Shell 99224/115000; typecheck 0 errors; boundaries/data-cy 87/87; T9 basic 124/124; native 5/5; vendor diff clean.
+- [ ] T10.A1 Independent repair acceptance. Validation: reviewer checks `artifacts/IMPLEMENTATION-REPORT-T10-repair.md`, 27-path combined inventory / 8-path repair inventory, chronological repair RED/GREEN/native logs under `artifacts/T10-REPAIR-EVIDENCE/`. Initial report/evidence preserved byte-identical.
+
+Process note: strict test-first D1/P1 remains unchecked in ticket. Acceptance tests were added during implementation; retrospective T9-baseline run proves three feature failures (`APP_CORE_INCOMPATIBLE`, manual SW gate, selector `content:null`) but does not rewrite chronology.
+
+### T10 bounded repair — checked, not independently accepted
+
+- [x] R1. Repair B1/B2 discovery. Verify: absent/lying Content-Length overflow cancels at fifth 1024-byte chunk; exact 4096 bytes accepted; each failed channel visible while successful channel/offline pair survives. `artifacts/T10-REPAIR-EVIDENCE/green-vitest.log`.
+- [x] R2. Repair B3/B4/B5 lifecycle/media. Verify: epoch-guarded check/preparation/progress/local reads; final selector reread; selected closed chapter/runtime/shared media count; cross-tab cache-only refresh. Chronological RED 10 failures → GREEN; follow-up media broadcast RED 1 → GREEN.
+- [x] R3. Extend native evidence. Verify: five required-only domains, actual WASM duel, zero media HTTP; populated saves/decks/settings/CORE marker retained; second-tab actions/warning refresh. Exact approval row read before update; actual controller IDs A → A cold unapproved → A while B waits → B cold/offline approved. `native-playwright.log`, native JSON/screenshots/traces: 2/2.
+- [x] R4. Preserve gates/inventory. Verify: focused 29/29 (14 original + 15 repair), regressions 124/124, boundaries/data-cy 87/87, native regressions 5/5, build/type/scoped quality pass; 27-path hashes; prior report/evidence hashes unchanged; vendor/budgets/staging untouched.
+- [ ] R5. Independent reviewer accepts repair. Verify: review report resolves `artifacts/REVIEW-T10.md` B1–B5. Initial D1/P1 remain unchecked permanently; T11 assets deferred.
+
 ## Pending implementation order
 
 - [x] T4 → T5. Validation: T4 accepted at `5c2ddff`; T5 independently accepted; parent verified 91/91 focused tests. Native Chromium evidence in T5 repair report.
 - [x] T6/T7 → T8. Validation: T8 implemented with exact 53/53 Vitest, 26/26 producer/publisher, 198/198 legacy, 78/78 affected tests; independent review pending.
-- [ ] T9 → T10 → T11. Validation: execute sequential ticket acceptance contracts; aggregate final boundary/Chromium evidence at T11.
+- [ ] T10 → T11. Validation: T10 repair implementation/evidence complete; independent repair review required before T11.
 
 ## Paths
 

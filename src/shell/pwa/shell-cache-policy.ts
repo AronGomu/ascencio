@@ -27,6 +27,16 @@ export function shellCacheName(buildId: string): string {
   return `${SHELL_CACHE_PREFIX}${buildId}`;
 }
 
+export function isFirstCoreInstall(
+  hasActiveWorker: boolean,
+  cacheNames: readonly string[],
+): boolean {
+  return (
+    !hasActiveWorker &&
+    !cacheNames.some((name) => name.startsWith(SHELL_CACHE_PREFIX))
+  );
+}
+
 export function assertShellPrecacheEntries<
   T extends ShellPrecacheEntry | string,
 >(entries: readonly T[]): readonly T[] {

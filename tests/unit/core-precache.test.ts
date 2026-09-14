@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertShellPrecacheEntries,
   isAppNavigationRequest,
+  isFirstCoreInstall,
   resolveServiceWorkerState,
   shellCacheName,
 } from "../../src/shell/pwa/shell-cache-policy.ts";
@@ -31,6 +32,13 @@ describe("CORE shell precache policy", () => {
       expect(() =>
         assertShellPrecacheEntries([{ url, revision: "blocked" }]),
       ).toThrow(`CORE shell precache contains forbidden payload: ${url}`);
+  });
+
+  it("exempts only a true first install with no active worker or old shell cache", () => {
+    expect(isFirstCoreInstall(false, [])).toBe(true);
+    expect(isFirstCoreInstall(true, [])).toBe(false);
+    expect(isFirstCoreInstall(false, ["ygo-core-shell-old"])).toBe(false);
+    expect(isFirstCoreInstall(false, ["unowned-cache"])).toBe(true);
   });
 
   it("falls back only for the root or index document inside SW scope", () => {

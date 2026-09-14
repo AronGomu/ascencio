@@ -14,15 +14,22 @@ import {
 } from "./application-selector.ts";
 import { createApplicationReadiness } from "./application-readiness.ts";
 import { withContentDownloadLock } from "./application-locks.ts";
+import {
+  createContentActions,
+  type ContentActionsController,
+} from "./content-actions.ts";
 import type { PreparedRelease } from "./prepared-release.ts";
 import { selectedGameplay } from "./selected-gameplay.ts";
 
-/** T10's operational seam. Content DTOs remain within Shell application/adapters. */
+/** Shell operational seam. Content DTOs remain within Shell application/adapters. */
 export function createApplicationService(options: {
   readonly factory: IDBFactory;
   readonly locks: LockManager;
   readonly store: ProgressiveContentStore;
   readonly coreContentApiVersion: number;
+  readonly currentBuildId?: string;
+  readonly coreBaseUrl?: string;
+  readonly requestServiceWorkerUpdate?: () => Promise<void>;
   readonly isHome: () => boolean;
 }) {
   const listeners = new Set<() => void>();
@@ -33,9 +40,22 @@ export function createApplicationService(options: {
   const refresh = () => {
     for (const listener of listeners) listener();
   };
-  if (channel) channel.onmessage = refresh;
+  if (channel)
+    channel.onmessage = () => {
+      // refresh publishes local storage failures; never discovers or transfers bytes.
+      void contentActions?.refresh().catch(() => undefined);
+      refresh();
+    };
+  const currentBuildId = options.currentBuildId ?? "test-build";
+  const coreBaseUrl = options.coreBaseUrl ?? "https://core.invalid/";
+  const requestServiceWorkerUpdate =
+    options.requestServiceWorkerUpdate ??
+    (async () => {
+      throw new Error("CORE_UPDATE_UNAVAILABLE");
+    });
   const selector = createApplicationSelector({
     ...options,
+    currentBuildId,
     notify: () => {
       channel?.postMessage("changed");
       refresh();
@@ -48,6 +68,7 @@ export function createApplicationService(options: {
     generation: number;
     promise: ReturnType<typeof selectedGameplay>;
   } | null = null;
+  let contentActions: ContentActionsController | null = null;
   function clear() {
     readiness.clear();
     gameplay = null;
@@ -82,6 +103,7 @@ export function createApplicationService(options: {
     clear,
     close() {
       clear();
+      contentActions?.dispose();
       channel?.close();
       options.store.close();
     },
@@ -90,20 +112,33 @@ export function createApplicationService(options: {
       return () => listeners.delete(listener);
     },
   };
+  const activate = async (
+    expectedGeneration: number,
+    prepared: PreparedRelease,
+    signal: AbortSignal,
+  ): Promise<ActivationResult> => {
+    if (!options.isHome())
+      return { kind: "blocked", code: "APP_SESSION_ACTIVE" };
+    return selector.activate(expectedGeneration, prepared, saves, signal);
+  };
+  contentActions = createContentActions({
+    ...options,
+    currentBuildId,
+    coreBaseUrl,
+    requestServiceWorkerUpdate,
+    selector,
+    activate,
+    changed: () => {
+      clear();
+      channel?.postMessage("changed");
+      refresh();
+    },
+  });
   return {
     application,
     selector,
-    async activate(
-      expectedGeneration: number,
-      prepared: PreparedRelease,
-      signal: AbortSignal,
-    ): Promise<ActivationResult> {
-      if (!options.isHome())
-        return { kind: "blocked", code: "APP_SESSION_ACTIVE" };
-      // The next locked acquire invalidates by generation. Clearing here could
-      // dispose a new session already granted a shared lock after commit.
-      return selector.activate(expectedGeneration, prepared, saves, signal);
-    },
+    contentActions,
+    activate,
     download(
       request: DownloadRequest,
       signal: AbortSignal,

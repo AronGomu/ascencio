@@ -21,6 +21,13 @@ const CORE_ICON = Object.freeze({
   contentType: "image/svg+xml",
 });
 
+function coreReleaseBytes(
+  buildId: string,
+  coreContentApiVersion: number,
+): Uint8Array {
+  return jsonBytes({ schemaVersion: 1, buildId, coreContentApiVersion });
+}
+
 export interface CoreDelivery {
   readonly bootstrap: CoreBootstrap;
   readonly bootstrapBytes: Uint8Array;
@@ -115,14 +122,18 @@ function installCoreMiddleware(
   server: ViteDevServer,
   projectRoot: string,
   delivery: CoreDelivery,
+  buildId: string,
+  coreContentApiVersion: number,
 ): void {
   server.middlewares.use((request, response, next) => {
     if (request.url === undefined) return next();
     const relative = requestPath(request.url, server.config.base);
     const isBootstrap = relative === "core-bootstrap.json";
+    const isCoreRelease = relative === "core-release.json";
     const isCoreIcon = relative === CORE_ICON.output;
     const ref = relative === null ? undefined : delivery.objects.get(relative);
-    if (!isBootstrap && !isCoreIcon && ref === undefined) return next();
+    if (!isBootstrap && !isCoreRelease && !isCoreIcon && ref === undefined)
+      return next();
     if (request.method !== "GET" && request.method !== "HEAD") {
       response.statusCode = 405;
       response.setHeader("Allow", "GET, HEAD");
@@ -132,15 +143,17 @@ function installCoreMiddleware(
     void (
       isBootstrap
         ? Promise.resolve(delivery.bootstrapBytes)
-        : isCoreIcon
-          ? readFile(path.join(projectRoot, CORE_ICON.source))
-          : verifiedObject(projectRoot, delivery, ref!)
+        : isCoreRelease
+          ? Promise.resolve(coreReleaseBytes(buildId, coreContentApiVersion))
+          : isCoreIcon
+            ? readFile(path.join(projectRoot, CORE_ICON.source))
+            : verifiedObject(projectRoot, delivery, ref!)
     ).then(
       (bytes) => {
         response.statusCode = 200;
         response.setHeader(
           "Content-Type",
-          isBootstrap || ref?.key.endsWith(".json")
+          isBootstrap || isCoreRelease || ref?.key.endsWith(".json")
             ? "application/json; charset=utf-8"
             : isCoreIcon
               ? CORE_ICON.contentType
@@ -148,7 +161,9 @@ function installCoreMiddleware(
         );
         response.setHeader(
           "Cache-Control",
-          isBootstrap ? "no-store" : "public, max-age=31536000, immutable",
+          isBootstrap || isCoreRelease
+            ? "no-store"
+            : "public, max-age=31536000, immutable",
         );
         response.end(request.method === "HEAD" ? undefined : bytes);
       },
@@ -178,6 +193,8 @@ async function copyLicenses(projectRoot: string, outputRoot: string) {
 export function coreContentPlugin(
   projectRoot: string,
   delivery: CoreDelivery,
+  buildId = "test-build",
+  coreContentApiVersion = 1,
 ): Plugin {
   let config: ResolvedConfig | undefined;
   return {
@@ -190,7 +207,13 @@ export function coreContentPlugin(
         );
     },
     configureServer(server) {
-      installCoreMiddleware(server, projectRoot, delivery);
+      installCoreMiddleware(
+        server,
+        projectRoot,
+        delivery,
+        buildId,
+        coreContentApiVersion,
+      );
     },
     async writeBundle() {
       if (config?.command !== "build") return;
@@ -203,6 +226,10 @@ export function coreContentPlugin(
         writeFile(
           path.join(outputRoot, "PRIVATE_DEPLOYMENT_ONLY.txt"),
           PRIVATE_MARKER,
+        ),
+        writeFile(
+          path.join(outputRoot, "core-release.json"),
+          coreReleaseBytes(buildId, coreContentApiVersion),
         ),
         cp(
           path.join(projectRoot, CORE_ICON.source),

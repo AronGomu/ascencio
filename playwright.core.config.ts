@@ -8,7 +8,9 @@ export default defineConfig({
   testDir: "./e2e-core",
   testIgnore: "chapter-content-delivery.spec.ts",
   globalTeardown: "./scripts/core-source-only-teardown.ts",
-  outputDir: "artifacts/CORE_ACCEPTANCE/T9/test-results",
+  outputDir: process.env.T10_REPAIR_EVIDENCE
+    ? `${process.env.T10_REPAIR_EVIDENCE}/test-results`
+    : "artifacts/T10-EVIDENCE/test-results",
   fullyParallel: false,
   workers: 1,
   timeout: 180_000,
@@ -17,7 +19,11 @@ export default defineConfig({
     ["line"],
     [
       "json",
-      { outputFile: "artifacts/CORE_ACCEPTANCE/T9/playwright-report.json" },
+      {
+        outputFile: process.env.T10_REPAIR_EVIDENCE
+          ? `${process.env.T10_REPAIR_EVIDENCE}/playwright-report.json`
+          : "artifacts/T10-EVIDENCE/playwright-report.json",
+      },
     ],
   ],
   use: {

@@ -37,32 +37,35 @@ export function parseApplicationSelection(
   }
   const content = row.content;
   if (
-    !content ||
     typeof row.storyGenerationId !== "string" ||
     !/^[A-Za-z0-9-]{1,128}$/.test(row.storyGenerationId) ||
-    Object.keys(content).sort().join(",") !==
-      "chapterIds,manifestVersion,receiptId,releaseSequence" ||
-    !hash.test(content.receiptId) ||
-    !hash.test(content.manifestVersion) ||
-    !Number.isSafeInteger(content.releaseSequence) ||
-    content.releaseSequence < 1 ||
-    !Array.isArray(content.chapterIds) ||
-    content.chapterIds.length < 1 ||
-    content.chapterIds.length > 99 ||
-    Array.from(content.chapterIds).some(
-      (id, i) =>
-        typeof id !== "string" ||
-        !/^chapter-(0[1-9]|[1-9][0-9])$/.test(id) ||
-        (i > 0 && content.chapterIds[i - 1]! >= id),
-    )
+    (content !== null &&
+      (Object.keys(content).sort().join(",") !==
+        "chapterIds,manifestVersion,receiptId,releaseSequence" ||
+        !hash.test(content.receiptId) ||
+        !hash.test(content.manifestVersion) ||
+        !Number.isSafeInteger(content.releaseSequence) ||
+        content.releaseSequence < 1 ||
+        !Array.isArray(content.chapterIds) ||
+        content.chapterIds.length < 1 ||
+        content.chapterIds.length > 99 ||
+        Array.from(content.chapterIds).some(
+          (id, i) =>
+            typeof id !== "string" ||
+            !/^chapter-(0[1-9]|[1-9][0-9])$/.test(id) ||
+            (i > 0 && content.chapterIds[i - 1]! >= id),
+        )))
   )
     throw new Error("APP_STORAGE_UNAVAILABLE");
   return Object.freeze({
     ...row,
-    content: Object.freeze({
-      ...content,
-      chapterIds: Object.freeze([...content.chapterIds]),
-    }),
+    content:
+      content === null
+        ? null
+        : Object.freeze({
+            ...content,
+            chapterIds: Object.freeze([...content.chapterIds]),
+          }),
   });
 }
 
@@ -116,4 +119,24 @@ export async function selectionTransaction(
   } finally {
     db.close();
   }
+}
+
+export async function clearSelectedContent(
+  factory: IDBFactory,
+  expectedGeneration: number,
+): Promise<ApplicationSelection | null> {
+  const current = await selectionTransaction(factory);
+  if (
+    current === null ||
+    current.generation !== expectedGeneration ||
+    current.storyGenerationId === null ||
+    current.generation === Number.MAX_SAFE_INTEGER
+  )
+    return null;
+  return selectionTransaction(factory, {
+    schemaVersion: 1,
+    generation: current.generation + 1,
+    content: null,
+    storyGenerationId: current.storyGenerationId,
+  });
 }

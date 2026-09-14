@@ -18,11 +18,11 @@ C5. One writer per cwd; dependencies permit advisory parallel analysis, not shar
 
 ## Requirements
 
-- [ ] R1. Separate Check updates / Install required data / Activate content / Download media / Resume / Delete unused assets / Delete all assets / Approve CORE controls. Primary action depends on state; existing playable offline pair remains available while checking/downloading fails.
-- [ ] R2. Prominent persistent optional-media warning with placeholder counts, not repeated toast flood. Required-only Story/Free Play/Editor/collection/duel flows remain functional; cached media acquire never triggers HTTP.
-- [ ] R3. Activation/cleanup/CORE approval Main Menu only with cross-tab locks. Cleanup no active jobs; explicit confirmation states downloads removed, saves/settings retained. Partial failure visible/retryable; no wildcard DB/cache deletion.
-- [ ] R4. CORE metadata discovery no automatic content transfer. Explicit approval checks candidate epoch against installed manifest then writes durable matching approval before registration.update. SW update install gates caching on approval; first install exempt; cold update retains no skipWaiting/clients.claim.
-- [ ] R5. CORE approval can outlive session only for exact build; subsequent content activation must also fit approved target epoch. Unapproved update after all tabs close must not silently become active. Local two-build Chromium test proves this; no live deploy.
+- [x] R1. Separate Check updates / Install required data / Activate content / Download media / Resume / Delete unused assets / Delete all assets / Approve CORE controls. Primary action depends on state; existing playable offline pair remains available while checking/downloading fails.
+- [x] R2. Prominent persistent optional-media warning with placeholder counts, not repeated toast flood. Required-only Story/Free Play/Editor/collection/duel flows remain functional; cached media acquire never triggers HTTP.
+- [x] R3. Activation/cleanup/CORE approval Main Menu only with cross-tab locks. Cleanup no active jobs; explicit confirmation states downloads removed, saves/settings retained. Partial failure visible/retryable; no wildcard DB/cache deletion.
+- [x] R4. CORE metadata discovery no automatic content transfer. Explicit approval checks candidate epoch against installed manifest then writes durable matching approval before registration.update. SW update install gates caching on approval; first install exempt; cold update retains no skipWaiting/clients.claim.
+- [x] R5. CORE approval can outlive session only for exact build; subsequent content activation must also fit approved target epoch. Unapproved update after all tabs close must not silently become active. Local two-build Chromium test proves this; no live deploy.
 
 ## Inputs
 
@@ -315,8 +315,8 @@ Story ports contain no raw paths/Blob/Content refs. StoryRelease.revision equals
 ## TDD
 
 - [ ] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
-- [ ] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
-- [ ] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
+- [x] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
+- [x] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
 
 ## Test plan
 
@@ -335,21 +335,45 @@ Story ports contain no raw paths/Blob/Content refs. StoryRelease.revision equals
 ## Impl steps
 
 - [ ] P1. Red: missing media play, no implicit GET, separate approvals, cleanup preserving saves, unapproved SW cold-close update. Verify: existing wait-only SW fails consent requirement.
-- [ ] P2. Implement Shell ContentActions/ViewModels, action availability/state transitions/byte progress and error copy. Screens import Shell contracts only. Verify: keyboard focus, unique data-cy, cancel/resume behavior.
-- [ ] P3. Implement persistent media warning and cache-only leases; media batch selected installed closure explicit. Verify: null media across every UI surface, no hidden fallback fetch.
-- [ ] P4. Wire cleanup under application/download lock order; all clears content selection before owned-byte removal; unused retains full active manifest identities. Verify: actual populated Story/Decks/settings/CORE caches identical.
-- [ ] P5. Wire core-release.json/SW approval gate/manual precache lifecycle and cold instructions; remove automatic install listener bypass. Verify: exact two-build offline/approval/cross-tab tests, no forced reload.
+- [x] P2. Implement Shell ContentActions/ViewModels, action availability/state transitions/byte progress and error copy. Screens import Shell contracts only. Verify: keyboard focus, unique data-cy, cancel/resume behavior.
+- [x] P3. Implement persistent media warning and cache-only leases; media batch selected installed closure explicit. Verify: null media across every UI surface, no hidden fallback fetch.
+- [x] P4. Wire cleanup under application/download lock order; all clears content selection before owned-byte removal; unused retains full active manifest identities. Verify: actual populated Story/Decks/settings/CORE caches identical.
+- [x] P5. Wire core-release.json/SW approval gate/manual precache lifecycle and cold instructions; remove automatic install listener bypass. Verify: exact two-build offline/approval/cross-tab tests, no forced reload.
 
 ## Validation
 
-- [ ] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
+- [x] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
 
 ```sh
 npx vitest run tests/unit/content-actions.test.ts tests/unit/core-update-approval.test.ts tests/component/InstallContentScreen.test.ts --reporter=verbose
 npx playwright test -c playwright.core.config.ts --project=chromium e2e-core/content-media-cleanup.spec.ts e2e-core/core-update-consent.spec.ts
 ```
 
-- [ ] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
-- [ ] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
-- [ ] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
-- [ ] V5. Commit msg draft: `feat(shell): keep updates and media under player control`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+- [x] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
+- [x] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
+- [x] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
+- [x] V5. Commit msg draft: `feat(shell): keep updates and media under player control`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+
+## Implementation evidence
+
+State: **repaired — checked; independent repair acceptance pending**. Initial implementation evidence below remains historical.
+
+- [x] E1. Exact focused Vitest: 14/14. Validation: `artifacts/T10-EVIDENCE/green-vitest.log`.
+- [x] E2. Local Chromium media/cleanup + CORE consent: 2/2 with real Service Worker for CORE. Validation: `native-playwright.log`, `playwright-report.json`, `test-results/**/trace.zip`, `media-placeholder.png`, `core-approved-waiting.png`.
+- [x] E3. T9/basic regressions: 124/124 Vitest, 5/5 Chromium. Validation: `t9-basic-regressions.log`, `t9-native-regressions.log`.
+- [x] E4. Build/type/quality: Shell 99224/115000, vendor 21/21, typecheck 0 errors, boundaries/data-cy 87/87, scoped ESLint/Prettier clean. Validation: logs under `artifacts/T10-EVIDENCE/`.
+- [x] E5. Exact 27-path source/test/config inventory and SHA-256 recorded. Validation: `source-paths.txt`, `source-sha256.txt`.
+- [ ] E6. Independent repair acceptance. Validation: reviewer checks `artifacts/IMPLEMENTATION-REPORT-T10-repair.md`, `artifacts/T10-REPAIR-EVIDENCE/`, B1–B5; author does not self-accept.
+
+TDD deviation: D1/P1 remain unchecked. Final acceptance tests were not all authored before implementation. `red-baseline-vitest.log` proves three predecessor behavior failures retrospectively; it is not represented as chronological test-first evidence.
+
+
+## B1–B5 bounded repair evidence
+
+- [x] R6. Chronological repair RED before source fixes. Verify: `artifacts/T10-REPAIR-EVIDENCE/red-vitest.log` has 10 behavior failures; `red-native-4.log` proves stale second-tab action; `red-native.log` proves missing controller identity. Original D1/P1 remain unchecked permanently.
+- [x] R7. Bounded CORE stream / independent discovery channels / lifecycle epochs / exact selected media closure. Verify: same ticket Vitest command now 29/29 (14 original + 15 repair); superseded preparation disposed; superseded progress/local reads cannot override current selection. Follow-up media notification test RED → GREEN recorded separately.
+- [x] R8. Native required-only Story/Free Play/editor/collection/duel. Verify: actual WASM duel renders; zero media requests; populated Story/Decks snapshots hash-identical after isolated cleanup; local settings/CORE marker/unknown Content key retained; second-tab controls/warnings refresh without discovery. `native/media-native-observations.json`, screenshots/traces.
+- [x] R9. Native CORE identity/approval. Verify: readonly IDB transaction completes before intercepted native `registration.update()` call; exact candidate/generation/timestamp row recorded; active controller responds with compiled build ID/epoch before cold unapproved, approved waiting, cold/offline approved states. `native/core-native-observations.json`.
+- [x] R10. Final validation. Verify: exact native command 2/2; atomic/offline native 5/5; basic Vitest 124/124; boundaries/data-cy 87/87; build Shell 99224/115000; typecheck 0 errors/4 existing warnings; 27-path scoped lint/format + hashes; original report/evidence byte-identical. Cmds/exits in `artifacts/T10-REPAIR-EVIDENCE/commands.json`.
+
+Repair validation uses `T10_REPAIR_EVIDENCE=artifacts/T10-REPAIR-EVIDENCE/native` with exact ticket Playwright command, preserving old output. T11 locked asset acquisition remains deferred. Independent acceptance E6/R5 (ledger) remains pending.

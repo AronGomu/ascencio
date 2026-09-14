@@ -58,11 +58,7 @@ export function resolveDuelDecks(
     ...deckCodes(resolved.player),
     ...deckCodes(resolved.opponent),
   ];
-  assertSupportedCards(
-    codes,
-    resources.dependencies.cards,
-    new Set(resources.dependencies.images.keys()),
-  );
+  assertSupportedCards(codes, resources.dependencies.cards);
   if (resources.allowedCardCodes !== undefined)
     assertInstalledCardPool(codes, resources.allowedCardCodes);
   if (resources.allowPresetDecks === false) {
@@ -93,16 +89,15 @@ export function resolveDuelDecks(
   return resolved;
 }
 
-/** Refuses codes the active snapshot cannot play: absent card data means no
-    engine record and no script, absent art means an unrenderable board. */
+/** Refuses codes the active snapshot cannot play. Optional media never
+    determines whether engine card data can enter a duel. */
 export function assertSupportedCards(
   codes: readonly number[],
   cards: ReadonlyMap<number, unknown>,
-  imageCodes: ReadonlySet<number>,
 ): void {
   const offending: number[] = [];
   for (const code of new Set(codes)) {
-    if (!cards.has(code) || !imageCodes.has(code)) offending.push(code);
+    if (!cards.has(code)) offending.push(code);
   }
   if (offending.length === 0) return;
   const reported = offending.slice(0, MAXIMUM_REPORTED_CODES);

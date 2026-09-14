@@ -21,7 +21,7 @@ import { assertStructuredCloneSafe } from "../../src/battle/duel/contracts/struc
 import { deckSlots } from "../fixtures/board-public-states.ts";
 
 const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
-  { type: "initialize", content: TEST_CONTENT_REF },
+  { type: "initialize", runtime: TEST_CONTENT_REF },
   {
     type: "startDuel",
     duelId: duelId("mvp-preset-v1"),

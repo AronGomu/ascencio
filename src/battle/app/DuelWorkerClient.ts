@@ -1,4 +1,4 @@
-import type { ContentSetRef } from "../../content/index.ts";
+import type { BattleRuntimeSource } from "../ports/index.ts";
 import {
   parseDuelCommand,
   type DuelCommand,
@@ -20,7 +20,7 @@ export interface DuelWorkerPort {
   onerror: ((event: ErrorEvent) => void) | null;
   onmessageerror: ((event: MessageEvent<unknown>) => void) | null;
   onexit?: ((event: Event) => void) | null;
-  postMessage(command: DuelCommand): void;
+  postMessage(command: DuelCommand, transfer?: Transferable[]): void;
   terminate(): void;
 }
 
@@ -63,7 +63,7 @@ export interface DuelWorkerDisposalResult {
 export interface DuelClient {
   readonly context: DuelClientContext;
   subscribe(listener: DuelClientListener): () => void;
-  initialize(content: ContentSetRef): boolean;
+  initialize(source: BattleRuntimeSource): boolean;
   startDuel(
     duelId: DuelId,
     player: DuelDeckSelection,
@@ -116,6 +116,8 @@ export class DuelWorkerClient implements DuelClient {
   #replacement: Promise<DuelWorkerDisposalResult> | null = null;
   #watchdog: ReturnType<typeof setTimeout> | null = null;
   #startupFailure: DuelClientEvent | null = null;
+  #runtimeLoadAbort: AbortController | null = null;
+  #expectedSnapshotId: string | null = null;
   #closed = false;
 
   constructor(options: DuelWorkerClientOptions = {}) {
@@ -147,7 +149,7 @@ export class DuelWorkerClient implements DuelClient {
     return () => this.#listeners.delete(listener);
   }
 
-  initialize(content: ContentSetRef): boolean {
+  initialize(source: BattleRuntimeSource): boolean {
     if (
       this.#closed ||
       this.#worker === null ||
@@ -157,14 +159,69 @@ export class DuelWorkerClient implements DuelClient {
       return false;
     }
     this.#initializeSent = true;
-    if (!this.#post({ type: "initialize", content })) {
-      this.#initializeSent = false;
-      return false;
-    }
+    const generation = this.#workerGeneration;
+    const controller = new AbortController();
+    this.#runtimeLoadAbort = controller;
     this.#startWatchdog(
       this.#initializationTimeoutMs,
       `Duel Worker did not initialize within ${this.#initializationTimeoutMs}ms`,
     );
+    void source
+      .load(controller.signal)
+      .then(
+        (runtime) => {
+          if (
+            controller.signal.aborted ||
+            generation !== this.#workerGeneration ||
+            this.#worker === null ||
+            this.#closed ||
+            this.#shutdown !== null
+          )
+            return;
+          if (
+            this.#expectedSnapshotId !== null &&
+            this.#expectedSnapshotId !== runtime.snapshotId
+          )
+            throw new Error("BATTLE_RUNTIME_INVALID");
+          this.#expectedSnapshotId ??= runtime.snapshotId;
+          if (
+            !this.#post({ type: "initialize", runtime }, [runtime.wasmBinary])
+          )
+            this.#initializeSent = false;
+        },
+        (error: unknown) => {
+          if (
+            controller.signal.aborted ||
+            generation !== this.#workerGeneration ||
+            this.#worker === null
+          )
+            return;
+          this.#failWorker(
+            generation,
+            "worker_error",
+            "APP_REQUIRED_INPUT_FAILED",
+            { err: error, commandType: "initialize" },
+          );
+        },
+      )
+      .catch((error: unknown) => {
+        if (
+          controller.signal.aborted ||
+          generation !== this.#workerGeneration ||
+          this.#worker === null
+        )
+          return;
+        this.#failWorker(
+          generation,
+          "worker_error",
+          "APP_REQUIRED_INPUT_FAILED",
+          { err: error, commandType: "initialize" },
+        );
+      })
+      .finally(() => {
+        if (this.#runtimeLoadAbort === controller)
+          this.#runtimeLoadAbort = null;
+      });
     return true;
   }
 
@@ -385,6 +442,7 @@ export class DuelWorkerClient implements DuelClient {
     try {
       event = parseDuelWorkerEvent(value);
     } catch (error) {
+      if (this.#shutdown !== null || this.#disposalResolver !== null) return;
       this.#log("error", {
         event: "duel.client.worker.event.rejected",
         workerGeneration: generation,
@@ -408,6 +466,7 @@ export class DuelWorkerClient implements DuelClient {
       }
       return;
     }
+    if (this.#shutdown !== null || this.#disposalResolver !== null) return;
     if (event.type === "ready") {
       this.#ready = true;
       this.#clearWatchdog();
@@ -475,11 +534,11 @@ export class DuelWorkerClient implements DuelClient {
     return false;
   }
 
-  #post(command: DuelCommand): boolean {
+  #post(command: DuelCommand, transfer?: Transferable[]): boolean {
     const worker = this.#worker;
     if (worker === null) return false;
     try {
-      worker.postMessage(parseDuelCommand(command));
+      worker.postMessage(parseDuelCommand(command), transfer);
       return true;
     } catch (error) {
       this.#failWorker(
@@ -512,7 +571,13 @@ export class DuelWorkerClient implements DuelClient {
     message: string,
     evidence?: { readonly err?: unknown; readonly commandType?: string },
   ): void {
-    if (generation !== this.#workerGeneration || this.#worker === null) return;
+    if (
+      generation !== this.#workerGeneration ||
+      this.#worker === null ||
+      this.#shutdown !== null ||
+      this.#disposalResolver !== null
+    )
+      return;
     this.#clearWatchdog();
     const context = this.#context();
     this.#log("error", {
@@ -533,6 +598,8 @@ export class DuelWorkerClient implements DuelClient {
 
   #shutdownWorker(): Promise<DuelWorkerDisposalResult> {
     if (this.#shutdown !== null) return this.#shutdown;
+    this.#runtimeLoadAbort?.abort();
+    this.#runtimeLoadAbort = null;
     const worker = this.#worker;
     if (worker === null) return Promise.resolve({ graceful: true });
     const generation = this.#workerGeneration;
@@ -608,6 +675,8 @@ export class DuelWorkerClient implements DuelClient {
 
   #terminateCurrentWorker(): void {
     this.#clearWatchdog();
+    this.#runtimeLoadAbort?.abort();
+    this.#runtimeLoadAbort = null;
     const worker = this.#worker;
     if (worker === null) return;
     worker.onmessage = null;

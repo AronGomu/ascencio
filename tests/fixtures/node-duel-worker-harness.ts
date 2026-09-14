@@ -142,7 +142,7 @@ export class NodeDuelWorkerHarness {
     timeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
   ): Promise<unknown> {
     const afterSequence = this.cursor;
-    this.post({ type: "initialize", content: TEST_CONTENT_REF });
+    this.post({ type: "initialize", runtime: TEST_CONTENT_REF });
     try {
       const message = await this.waitForMessage(
         (value) => {

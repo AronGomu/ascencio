@@ -53,7 +53,7 @@ describe("typed duel Worker runtime", () => {
       snapshotId: snapshotId("a".repeat(64)),
     }));
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const started = await runtime.handle({
         type: "startDuel",
         duelId: duelId(preset.id),
@@ -79,7 +79,7 @@ describe("typed duel Worker runtime", () => {
         (
           await runtime.handle({
             type: "initialize",
-            content: TEST_CONTENT_REF,
+            runtime: TEST_CONTENT_REF,
           })
         ).at(-1),
       ).toEqual(
@@ -148,7 +148,7 @@ describe("typed duel Worker runtime", () => {
     try {
       const initialized = await runtime.handle({
         type: "initialize",
-        content: TEST_CONTENT_REF,
+        runtime: TEST_CONTENT_REF,
       });
       expect(initialized.at(-1)).toEqual(
         expect.objectContaining({
@@ -170,7 +170,7 @@ describe("typed duel Worker runtime", () => {
     try {
       const initialized = await runtime.handle({
         type: "initialize",
-        content: TEST_CONTENT_REF,
+        runtime: TEST_CONTENT_REF,
       });
       expect(initialized.at(-1)).toEqual({
         type: "ready",
@@ -299,7 +299,7 @@ describe("typed duel Worker runtime", () => {
       try {
         await replacementRuntime.handle({
           type: "initialize",
-          content: TEST_CONTENT_REF,
+          runtime: TEST_CONTENT_REF,
         });
         const replacementStarted = await replacementRuntime.handle({
           type: "startDuel",

@@ -1,4 +1,7 @@
-import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
+import {
+  TEST_RUNTIME_INPUT,
+  TEST_RUNTIME_SOURCE,
+} from "../fixtures/installed-gameplay.ts";
 import { describe, expect, it, vi } from "vitest";
 import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
 import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
@@ -28,12 +31,14 @@ class FakeWorkerPort implements DuelWorkerPort {
   onmessageerror: ((event: MessageEvent<unknown>) => void) | null = null;
   onexit: ((event: Event) => void) | null = null;
   readonly commands: DuelCommand[] = [];
+  readonly transfers: Transferable[][] = [];
   terminated = false;
   postError: Error | null = null;
 
-  postMessage(command: DuelCommand): void {
+  postMessage(command: DuelCommand, transfer: Transferable[] = []): void {
     if (this.postError !== null) throw this.postError;
-    this.commands.push(command);
+    this.transfers.push([...transfer]);
+    this.commands.push(structuredClone(command, { transfer }));
   }
 
   terminate(): void {
@@ -118,12 +123,13 @@ const BOUNDARY_TRACE: DuelDiagnosticTrace = {
 };
 
 describe("DuelWorkerClient", () => {
-  it("sends initialize, start, and each prompt response at most once", () => {
+  it("sends initialize, start, and each prompt response at most once", async () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
 
-    expect(client.initialize(TEST_CONTENT_REF)).toBe(true);
-    expect(client.initialize(TEST_CONTENT_REF)).toBe(false);
+    expect(client.initialize(TEST_RUNTIME_SOURCE)).toBe(true);
+    expect(client.initialize(TEST_RUNTIME_SOURCE)).toBe(false);
+    await vi.waitFor(() => expect(worker.commands).toHaveLength(1));
     worker.emit({ type: "ready", coreVersion: [11, 0] });
 
     const session = client.startDuel(
@@ -152,8 +158,15 @@ describe("DuelWorkerClient", () => {
       false,
     );
 
-    expect(worker.commands).toEqual([
-      { type: "initialize", content: TEST_CONTENT_REF },
+    expect(worker.commands[0]).toEqual({
+      type: "initialize",
+      runtime: expect.objectContaining({
+        schemaVersion: 1,
+        snapshotId: "c".repeat(64),
+        wasmBinary: expect.any(ArrayBuffer),
+      }),
+    });
+    expect(worker.commands.slice(1)).toEqual([
       {
         type: "startDuel",
         duelId: "mvp-preset-v1",
@@ -174,7 +187,7 @@ describe("DuelWorkerClient", () => {
 
     /* Nothing to rebuild before a duel has run. */
     expect(client.restore()).toBe(false);
-    client.initialize(TEST_CONTENT_REF);
+    client.initialize(TEST_RUNTIME_SOURCE);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     client.startDuel(
       duelId("mvp-preset-v1"),
@@ -216,7 +229,7 @@ describe("DuelWorkerClient", () => {
   it("lets a refused replay be attempted again", () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    client.initialize(TEST_CONTENT_REF);
+    client.initialize(TEST_RUNTIME_SOURCE);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     client.startDuel(
       duelId("mvp-preset-v1"),
@@ -247,12 +260,12 @@ describe("DuelWorkerClient", () => {
   it("emits one Worker response across field and prompt-control submits", async () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    const store = createDuelStore(client, TEST_CONTENT_REF);
+    const store = createDuelStore(client, TEST_RUNTIME_SOURCE);
     let key: InteractionKey | null = null;
     const unsubscribe = store.subscribe((state) => {
       key = state.interactionSession.key;
     });
-    client.initialize(TEST_CONTENT_REF);
+    client.initialize(TEST_RUNTIME_SOURCE);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     expect(
       store.start(
@@ -293,7 +306,7 @@ describe("DuelWorkerClient", () => {
     (code) => {
       const { client, workers } = createHarness();
       const worker = workers[0]!;
-      client.initialize(TEST_CONTENT_REF);
+      client.initialize(TEST_RUNTIME_SOURCE);
       worker.emit({ type: "ready", coreVersion: [11, 0] });
       client.startDuel(
         duelId("mvp-preset-v1"),
@@ -325,7 +338,7 @@ describe("DuelWorkerClient", () => {
   it("deduplicates diagnostic requests until the Worker responds", () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    client.initialize(TEST_CONTENT_REF);
+    client.initialize(TEST_RUNTIME_SOURCE);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     client.startDuel(
       duelId("mvp-preset-v1"),
@@ -380,7 +393,7 @@ describe("DuelWorkerClient", () => {
       });
       const received: DuelWorkerEvent[] = [];
       client.subscribe(({ event }) => received.push(event));
-      client.initialize(TEST_CONTENT_REF);
+      client.initialize(TEST_RUNTIME_SOURCE);
       workers[0]?.emit({ type: "ready", coreVersion: [11, 0] });
       client.startDuel(
         duelId("mvp-preset-v1"),
@@ -414,12 +427,12 @@ describe("DuelWorkerClient", () => {
   it("keeps delivering a boundary-failure trace the replacement cannot resend", () => {
     const { client, workers } = createHarness();
     const worker = workers[0]!;
-    const store = createDuelStore(client, TEST_CONTENT_REF);
+    const store = createDuelStore(client, TEST_RUNTIME_SOURCE);
     const seen: (DuelDiagnosticTrace | null)[] = [];
     const unsubscribe = store.subscribe((state) => {
       seen.push(state.diagnostics);
     });
-    client.initialize(TEST_CONTENT_REF);
+    client.initialize(TEST_RUNTIME_SOURCE);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     expect(
       store.start(
@@ -446,6 +459,79 @@ describe("DuelWorkerClient", () => {
     expect(worker.terminated).toBe(true);
     expect(workers).toHaveLength(2);
     unsubscribe();
+  });
+
+  it.each(["replace", "dispose"] as const)(
+    "suppresses every late non-disposal event during %s",
+    async (operation) => {
+      const { client, workers } = createHarness();
+      const store = createDuelStore(client, TEST_RUNTIME_SOURCE);
+      const states: unknown[] = [];
+      const unsubscribe = store.subscribe((state) => states.push(state));
+      const received: DuelWorkerEvent[] = [];
+      client.subscribe(({ event }) => received.push(event));
+      const first = workers[0]!;
+      const pending = client[operation]();
+      const count = states.length;
+      first.emit({ type: "ready", coreVersion: [11, 0] });
+      first.emit(promptEvent);
+      first.emit({
+        type: "result",
+        result: { type: "surrendered", winner: 1, loser: 0 },
+      });
+      first.emit({
+        type: "error",
+        error: { code: "engine_error", message: "late", recoverable: false },
+      });
+      first.emitRaw({ type: "invalid" });
+      first.emitError("late error");
+      first.emitMessageError();
+      first.emitExit();
+      expect(received).toEqual([]);
+      expect(states).toHaveLength(count);
+      first.emit({ type: "disposed", clean: true });
+      await expect(pending).resolves.toEqual({ graceful: true });
+      expect(first.terminated).toBe(true);
+      if (operation === "replace") {
+        expect(workers).toHaveLength(2);
+        expect(client.initialize(TEST_RUNTIME_SOURCE)).toBe(true);
+        await vi.waitFor(() => expect(workers[1]!.commands).toHaveLength(1));
+        workers[1]!.emit({ type: "ready", coreVersion: [11, 0] });
+        expect(received).toEqual([{ type: "ready", coreVersion: [11, 0] }]);
+      } else expect(workers).toHaveLength(1);
+      unsubscribe();
+    },
+  );
+
+  it("keeps a replace/dispose race closed while acknowledging disposal", async () => {
+    const { client, workers } = createHarness();
+    const received: DuelWorkerEvent[] = [];
+    client.subscribe(({ event }) => received.push(event));
+    const replacement = client.replace();
+    const disposal = client.dispose();
+    workers[0]!.emit({ type: "ready", coreVersion: [11, 0] });
+    workers[0]!.emit(promptEvent);
+    expect(received).toEqual([]);
+    workers[0]!.emit({ type: "disposed", clean: true });
+    await expect(replacement).resolves.toEqual({ graceful: true });
+    await expect(disposal).resolves.toEqual({ graceful: true });
+    expect(workers).toHaveLength(1);
+    expect(workers[0]!.commands).toEqual([{ type: "dispose" }]);
+    expect(client.initialize(TEST_RUNTIME_SOURCE)).toBe(false);
+  });
+
+  it("suppresses events delivered synchronously while posting dispose", async () => {
+    const { client, workers } = createHarness();
+    const received: DuelWorkerEvent[] = [];
+    client.subscribe(({ event }) => received.push(event));
+    vi.spyOn(workers[0]!, "postMessage").mockImplementation(() => {
+      workers[0]!.emit({ type: "ready", coreVersion: [11, 0] });
+      workers[0]!.emitError("late synchronous error");
+      workers[0]!.emit({ type: "disposed", clean: true });
+    });
+    await expect(client.replace()).resolves.toEqual({ graceful: true });
+    expect(received).toEqual([]);
+    expect(workers).toHaveLength(2);
   });
 
   it("ignores late events from a replaced Worker generation", async () => {
@@ -514,7 +600,7 @@ describe("DuelWorkerClient", () => {
       });
       const received: DuelWorkerEvent[] = [];
       client.subscribe(({ event }) => received.push(event));
-      expect(client.initialize(TEST_CONTENT_REF)).toBe(true);
+      expect(client.initialize(TEST_RUNTIME_SOURCE)).toBe(true);
 
       await vi.advanceTimersByTimeAsync(25);
       expect(workers[0]?.terminated).toBe(true);
@@ -542,7 +628,7 @@ describe("DuelWorkerClient", () => {
     const received: DuelWorkerEvent[] = [];
     client.subscribe(({ event }) => received.push(event));
 
-    expect(client.initialize(TEST_CONTENT_REF)).toBe(false);
+    expect(client.initialize(TEST_RUNTIME_SOURCE)).toBe(false);
     expect(received).toEqual([
       {
         type: "error",
@@ -565,7 +651,7 @@ describe("DuelWorkerClient", () => {
       received.push({ sessionGeneration: context.sessionGeneration, event }),
     );
     const worker = workers[0]!;
-    client.initialize(TEST_CONTENT_REF);
+    client.initialize(TEST_RUNTIME_SOURCE);
     worker.emit({ type: "ready", coreVersion: [11, 0] });
     worker.postError = new Error("post failed");
 
@@ -580,6 +666,86 @@ describe("DuelWorkerClient", () => {
       sessionGeneration: 0,
       event: { type: "error", error: { code: "worker_error" } },
     });
+  });
+
+  it("transfers each fresh WASM buffer once and reloads the same snapshot after replacement", async () => {
+    const { client, workers } = createHarness();
+    const loaded: ArrayBuffer[] = [];
+    const source = {
+      async load(signal: AbortSignal) {
+        signal.throwIfAborted();
+        const wasmBinary = TEST_RUNTIME_INPUT.wasmBinary.slice(0);
+        loaded.push(wasmBinary);
+        return { ...TEST_RUNTIME_INPUT, wasmBinary };
+      },
+    };
+
+    expect(client.initialize(source)).toBe(true);
+    await vi.waitFor(() => expect(workers[0]!.commands).toHaveLength(1));
+    expect(loaded[0]?.byteLength).toBe(0);
+    expect(workers[0]!.transfers[0]).toHaveLength(1);
+    workers[0]!.emit({
+      type: "ready",
+      coreVersion: [11, 0],
+      snapshotId: snapshotId(TEST_RUNTIME_INPUT.snapshotId),
+    });
+
+    const replacement = client.replace();
+    workers[0]!.emit({ type: "disposed", clean: true });
+    await expect(replacement).resolves.toEqual({ graceful: true });
+    expect(client.initialize(source)).toBe(true);
+    await vi.waitFor(() => expect(workers[1]!.commands).toHaveLength(1));
+    expect(loaded).toHaveLength(2);
+    expect(loaded[1]?.byteLength).toBe(0);
+    expect(workers[1]!.commands[0]).toMatchObject({
+      type: "initialize",
+      runtime: { snapshotId: TEST_RUNTIME_INPUT.snapshotId },
+    });
+  });
+
+  it("aborts a pending source load and suppresses its late initialize", async () => {
+    const { client, workers } = createHarness();
+    const pending = Promise.withResolvers<typeof TEST_RUNTIME_INPUT>();
+    const observedSignals: AbortSignal[] = [];
+    const source = {
+      load(signal: AbortSignal) {
+        observedSignals.push(signal);
+        return pending.promise;
+      },
+    };
+    expect(client.initialize(source)).toBe(true);
+
+    const replacement = client.replace();
+    expect(observedSignals[0]?.aborted).toBe(true);
+    workers[0]!.emit({ type: "disposed", clean: true });
+    await replacement;
+    pending.resolve(TEST_RUNTIME_INPUT);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(workers[0]!.commands).toEqual([{ type: "dispose" }]);
+    expect(workers[1]!.commands).toEqual([]);
+  });
+
+  it("surfaces source read failure as APP_REQUIRED_INPUT_FAILED", async () => {
+    const { client } = createHarness();
+    const received: DuelWorkerEvent[] = [];
+    client.subscribe(({ event }) => received.push(event));
+    client.initialize({
+      load: async () => {
+        throw new Error("CONTENT_MISSING");
+      },
+    });
+    await vi.waitFor(() =>
+      expect(received).toContainEqual({
+        type: "error",
+        error: {
+          code: "worker_error",
+          message: "APP_REQUIRED_INPUT_FAILED",
+          recoverable: false,
+        },
+      }),
+    );
   });
 
   it("bounds graceful disposal, reports the timeout, and replaces the Worker", async () => {

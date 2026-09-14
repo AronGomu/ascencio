@@ -12,6 +12,18 @@ export type {
 } from "./battle-contracts.ts";
 export { parseBattleRequest, BattleRequestError } from "./battle-contracts.ts";
 export { settleOnce } from "./settle-once.ts";
+export {
+  parseBattleRuntimeInput,
+  validateBattleRuntime,
+} from "./ports/index.ts";
+export type {
+  BattlePresentationDeck,
+  BattlePresentationInput,
+  BattlePresentationOpponent,
+  BattleRuntimeCard,
+  BattleRuntimeInput,
+  BattleRuntimeSource,
+} from "./ports/index.ts";
 export type { SelectableDeck } from "./decks/selectable-decks.ts";
 export {
   listSelectableDecks,

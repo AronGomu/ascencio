@@ -7,6 +7,7 @@ import {
 } from "../../decks/validation/index.ts";
 import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
 import type { BattleDeckModule } from "../domain-loaders.ts";
+import { legacyBattlePresentation } from "../adapters/legacy-battle-runtime.ts";
 
 export type BattleDeckLoader = () => Promise<BattleDeckModule>;
 
@@ -15,18 +16,19 @@ export async function loadFreePlayDecks(
   gameplay: InstalledGameplay,
 ): Promise<readonly SelectableDeck[]> {
   const catalog = catalogByCode(installedDeckCatalog(gameplay).cards);
+  const presentation = legacyBattlePresentation(gameplay);
   let repository: IndexedDbDeckRepository | null = null;
   try {
     repository = await IndexedDbDeckRepository.open();
     return await battle.installedSelectableDecks(
-      gameplay,
+      presentation,
       repository,
       catalog,
       PROTOTYPE_RULESET,
     );
   } catch {
     return await battle.installedSelectableDecks(
-      gameplay,
+      presentation,
       { list: async () => [], load: async () => null },
       catalog,
       PROTOTYPE_RULESET,

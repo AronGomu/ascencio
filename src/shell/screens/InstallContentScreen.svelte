@@ -14,7 +14,7 @@
     type LegacyDownloadProgress as DownloadProgress,
     type InstalledGameplay,
   } from "../../content/index.ts";
-  import { createRuntimeActivationPort } from "../../battle/content-activation.ts";
+  import { createRuntimeActivationPort } from "../adapters/runtime-activation.ts";
   import { contentErrorCopy } from "../content/content-error-copy.ts";
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
 

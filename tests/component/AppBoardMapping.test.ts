@@ -1,5 +1,8 @@
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
-import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
+import {
+  battlePresentationFixture,
+  TEST_RUNTIME_SOURCE,
+} from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
@@ -202,9 +205,8 @@ function emitPresentationEvent(
 
 async function renderReadyApp() {
   const rendered = render(App, {
-    content: installedDuelGameplayFixture().content,
-    gameplay: installedDuelGameplayFixture(),
-    reader: contentReaderFixture(),
+    runtimeSource: TEST_RUNTIME_SOURCE,
+    presentation: battlePresentationFixture(installedDuelGameplayFixture()),
   });
   await vi.waitFor(() =>
     expect(document.querySelector('[data-cy="deck-picker"]')).not.toBeNull(),

@@ -14,10 +14,7 @@ import {
   FAKE_PRESET,
   FAKE_SNAPSHOT_ID,
 } from "../fixtures/fake-ocgcore-adapter.ts";
-import type {
-  DuelRuntimeResources,
-  DuelRuntimeInitializer,
-} from "../../src/battle/worker/DuelWorkerRuntime.ts";
+import type { DuelRuntimeResources } from "../../src/battle/worker/DuelWorkerRuntime.ts";
 import {
   DuelWorkerRuntime,
   toDuelError,
@@ -100,56 +97,28 @@ const reconciliationFailureProgram = () => ({
 describe("DuelWorkerRuntime command lifecycle", () => {
   it.each([
     [
-      "catalog",
-      (ref: typeof TEST_CONTENT_REF) => ({
-        ...ref,
-        catalogSha256: "1".repeat(64),
+      "snapshot",
+      (input: typeof TEST_CONTENT_REF) => ({
+        ...input,
+        snapshotId: "4".repeat(64),
       }),
     ],
     [
-      "runtime hash",
-      (ref: typeof TEST_CONTENT_REF) => ({
-        ...ref,
-        runtime: { ...ref.runtime, sha256: "3".repeat(64) },
+      "core version",
+      (input: typeof TEST_CONTENT_REF) => ({
+        ...input,
+        coreVersion: [11, 1] as const,
       }),
     ],
     [
-      "runtime snapshot",
-      (ref: typeof TEST_CONTENT_REF) => ({
-        ...ref,
-        snapshot: { ...ref.snapshot, runtimeSnapshotId: "4".repeat(64) },
-      }),
-    ],
-    [
-      "runtime manifest",
-      (ref: typeof TEST_CONTENT_REF) => ({
-        ...ref,
-        snapshot: { ...ref.snapshot, runtimeManifestSha256: "5".repeat(64) },
-      }),
-    ],
-    [
-      "runtime bytes",
-      (ref: typeof TEST_CONTENT_REF) => ({
-        ...ref,
-        runtime: { ...ref.runtime, bytes: ref.runtime.bytes + 1 },
-      }),
-    ],
-    [
-      "chapter hash",
-      (ref: typeof TEST_CONTENT_REF) => ({
-        ...ref,
-        chapters: [{ ...ref.chapters[0]!, sha256: "2".repeat(64) }],
-      }),
-    ],
-    [
-      "chapter bytes",
-      (ref: typeof TEST_CONTENT_REF) => ({
-        ...ref,
-        chapters: [{ ...ref.chapters[0]!, bytes: 10 }],
+      "card-data revision",
+      (input: typeof TEST_CONTENT_REF) => ({
+        ...input,
+        revisions: { ...input.revisions, babelCdb: "changed" },
       }),
     ],
   ])(
-    "pins first content before concurrent %s initialize",
+    "pins first runtime before concurrent %s initialize",
     async (_, mutate) => {
       const harness = await createFakeOcgCoreAdapter(() => ({ steps: [] }));
       const pending = deferred<DuelRuntimeResources>();
@@ -157,11 +126,11 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       const runtime = new DuelWorkerRuntime(initialize);
       const first = runtime.handle({
         type: "initialize",
-        content: structuredClone(TEST_CONTENT_REF),
+        runtime: structuredClone(TEST_CONTENT_REF),
       });
       const second = runtime.handle({
         type: "initialize",
-        content: mutate(TEST_CONTENT_REF),
+        runtime: mutate(TEST_CONTENT_REF),
       });
       pending.resolve(createResources(harness.adapter));
       await first;
@@ -176,26 +145,13 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       expect(
         await runtime.handle({
           type: "initialize",
-          content: structuredClone(TEST_CONTENT_REF),
+          runtime: structuredClone(TEST_CONTENT_REF),
         }),
       ).not.toContainEqual(expect.objectContaining({ type: "error" }));
       expect(initialize).toHaveBeenCalledOnce();
       runtime.dispose();
     },
   );
-  it("copies the first content ref before callers can mutate queued input", async () => {
-    const harness = await createFakeOcgCoreAdapter(() => ({ steps: [] }));
-    const initialize = vi.fn<DuelRuntimeInitializer>(async () =>
-      createResources(harness.adapter),
-    );
-    const runtime = new DuelWorkerRuntime(initialize);
-    const content = structuredClone(TEST_CONTENT_REF);
-    const first = runtime.handle({ type: "initialize", content });
-    Object.assign(content.runtime, { bytes: content.runtime.bytes + 1 });
-    await first;
-    expect(initialize.mock.calls[0]?.[2]).toEqual(TEST_CONTENT_REF);
-    runtime.dispose();
-  });
   it("does not report a terminal controller failure as recoverable input", () => {
     expect(
       toDuelError(new Error("No supported basic opponent choice"), {
@@ -234,11 +190,11 @@ describe("DuelWorkerRuntime command lifecycle", () => {
 
     const firstInitialize = runtime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     const secondInitialize = runtime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     const firstStart = runtime.handle({
       type: "startDuel",
@@ -302,7 +258,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const runtime = new DuelWorkerRuntime(async () =>
       createResources(harness.adapter),
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     const first = await runtime.handle({
       type: "startDuel",
@@ -340,7 +296,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const progressEvents: unknown[] = [];
 
     const pending = runtime.handle(
-      { type: "initialize", content: TEST_CONTENT_REF },
+      { type: "initialize", runtime: TEST_CONTENT_REF },
       (event) => {
         progressEvents.push(event);
       },
@@ -375,7 +331,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
 
     const pending = runtime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     await Promise.resolve();
     expect(initializeResources).toHaveBeenCalledTimes(1);
@@ -387,7 +343,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
 
     await expect(pending).resolves.toEqual([]);
     await expect(
-      runtime.handle({ type: "initialize", content: TEST_CONTENT_REF }),
+      runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF }),
     ).resolves.toEqual([]);
     expect(harness.counters).toEqual({ createDuel: 0, destroyDuel: 0 });
   });
@@ -408,7 +364,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       { logger },
     );
     runtimeRef.current = runtime;
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     await expect(
       runtime.handle({
@@ -451,7 +407,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
         },
       },
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
     await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
@@ -503,7 +459,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       { logger },
     );
     runtimeRef.current = runtime;
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     await expect(
       runtime.handle({
@@ -550,7 +506,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
       async () => createResources(harness.adapter),
       { logger },
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
     await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
@@ -578,7 +534,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const runtime = new DuelWorkerRuntime(async () =>
       createResources(harness.adapter),
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     const failed = await runtime.handle({
       type: "startDuel",
@@ -612,12 +568,12 @@ describe("DuelWorkerRuntime command lifecycle", () => {
 
     const pending = runtime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     await Promise.resolve();
     const overflow = await runtime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     expect(overflow).toEqual([
       expect.objectContaining({
@@ -647,7 +603,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
 
     const initialized = await runtime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     expect(initialized).toEqual([
       {
@@ -657,7 +613,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     ]);
 
     expect(
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF }),
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF }),
     ).toEqual(initialized);
     expect(initializeResources).toHaveBeenCalledTimes(1);
 
@@ -692,7 +648,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
         activeImageManifestSha256: "f".repeat(64),
       },
     }));
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
     await runtime.handle({
       type: "startDuel",
       duelId: FAKE_PRESET.id,
@@ -738,7 +694,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     );
     await internalRuntime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     let internalFailure: unknown;
     const internalEvents = await internalRuntime.handle(
@@ -774,7 +730,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     );
     await loggedRuntime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     const publicEvents = await loggedRuntime.handle({
       type: "startDuel",
@@ -825,7 +781,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     );
     await internalRuntime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     let internalFailure: unknown;
     const internalEvents = await internalRuntime.handle(
@@ -877,7 +833,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     );
     await loggedRuntime.handle({
       type: "initialize",
-      content: TEST_CONTENT_REF,
+      runtime: TEST_CONTENT_REF,
     });
     const publicEvents = await loggedRuntime.handle({
       type: "startDuel",
@@ -934,7 +890,7 @@ describe("DuelWorkerRuntime command lifecycle", () => {
     const runtime = new DuelWorkerRuntime(async () =>
       createResources(harness.adapter),
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     const failures: { error: unknown; code: string }[] = [];
     const failed = await runtime.handle(
@@ -979,7 +935,7 @@ describe("duels started from an explicit card list", () => {
     const runtime = new DuelWorkerRuntime(async () =>
       createCardListResources(harness.adapter),
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     const started = await runtime.handle({
       type: "startDuel",
@@ -1000,7 +956,7 @@ describe("duels started from an explicit card list", () => {
     const runtime = new DuelWorkerRuntime(async () =>
       createCardListResources(harness.adapter),
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     const started = await runtime.handle({
       type: "startDuel",
@@ -1025,7 +981,7 @@ describe("duels started from an explicit card list", () => {
     const runtime = new DuelWorkerRuntime(async () =>
       createCardListResources(harness.adapter),
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     const refused = await runtime.handle({
       type: "startDuel",
@@ -1059,7 +1015,7 @@ describe("duels started from an explicit card list", () => {
       createResources(harness.adapter),
     );
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const started = await runtime.handle(START_FAKE_DUEL);
       const firstPrompt = started.find((event) => event.type === "prompt");
       if (firstPrompt?.type !== "prompt")
@@ -1135,7 +1091,7 @@ describe("duels started from an explicit card list", () => {
       createResources(harness.adapter),
     );
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const started = await runtime.handle(START_FAKE_DUEL);
       const firstPrompt = started.find((event) => event.type === "prompt");
       if (firstPrompt?.type !== "prompt")
@@ -1179,7 +1135,7 @@ describe("duels started from an explicit card list", () => {
     const runtime = new DuelWorkerRuntime(async () =>
       createResources(harness.adapter),
     );
-    await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+    await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
 
     expect(
       await runtime.handle({

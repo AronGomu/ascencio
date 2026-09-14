@@ -4,9 +4,10 @@ import type {
   ManifestRef,
   RuntimeSnapshotRef,
 } from "../../content/index.ts";
-import { verifyDigest } from "./snapshot-digest.ts";
-import { SNAPSHOT_DATABASE_NAME, SnapshotStore } from "./snapshot-store.ts";
+import { verifyDigest } from "./legacy-runtime-digest.ts";
 
+const RECEIPT_DATABASE_NAME = "ygo-story-runtime-receipts";
+const RECEIPT_STORE_NAME = "receipts";
 const paths = [
   "runtime/current/manifest.json",
   "runtime/assets/current/manifest.json",
@@ -126,11 +127,22 @@ export async function writeInstalledRuntimeReceipt(
   );
   if (parsed.kind === "failed") return parsed;
   try {
-    const store = await SnapshotStore.open();
+    const database = await openReceiptDatabaseForWrite();
     try {
-      await store.recordInstalledRuntimeReceipt(receipt);
+      await new Promise<void>((resolve, reject) => {
+        const transaction = database.transaction(
+          RECEIPT_STORE_NAME,
+          "readwrite",
+        );
+        transaction
+          .objectStore(RECEIPT_STORE_NAME)
+          .put(receipt, receipt.snapshot.activationId);
+        transaction.oncomplete = () => resolve();
+        transaction.onabort = () => reject(transaction.error);
+        transaction.onerror = () => reject(transaction.error);
+      });
     } finally {
-      store.close();
+      database.close();
     }
     return parsed;
   } catch (error) {
@@ -179,7 +191,7 @@ export async function readInstalledRuntimeReceipt(
     }, 5000);
     let request: IDBOpenDBRequest;
     try {
-      request = indexedDB.open(SNAPSHOT_DATABASE_NAME);
+      request = indexedDB.open(RECEIPT_DATABASE_NAME);
     } catch {
       finish(failed("CONTENT_STORAGE_UNAVAILABLE"));
       return;
@@ -201,14 +213,14 @@ export async function readInstalledRuntimeReceipt(
         return;
       }
       database = db;
-      if (!db.objectStoreNames.contains("installedRuntimeReceipts")) {
+      if (!db.objectStoreNames.contains(RECEIPT_STORE_NAME)) {
         finish(failed("CONTENT_MISSING"));
         return;
       }
       try {
-        transaction = db.transaction("installedRuntimeReceipts", "readonly");
+        transaction = db.transaction(RECEIPT_STORE_NAME, "readonly");
         const row = transaction
-          .objectStore("installedRuntimeReceipts")
+          .objectStore(RECEIPT_STORE_NAME)
           .get(ref.activationId);
         transaction.oncomplete = () =>
           finish(
@@ -224,5 +236,16 @@ export async function readInstalledRuntimeReceipt(
         finish(failed("CONTENT_STORAGE_UNAVAILABLE"));
       }
     };
+  });
+}
+
+function openReceiptDatabaseForWrite(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(RECEIPT_DATABASE_NAME, 1);
+    request.onupgradeneeded = () =>
+      request.result.createObjectStore(RECEIPT_STORE_NAME);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error("Receipt database is blocked"));
   });
 }

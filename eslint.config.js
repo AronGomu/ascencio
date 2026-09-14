@@ -27,6 +27,7 @@ const EDITOR_PORT = ["!**/deck-editor/ports", "!**/deck-editor/ports/index.ts"];
 const DECK_SELECT_INTERNALS = ["**/deck-select/**", "!**/deck-select/index.ts"];
 const SHELL_INTERNALS = ["**/shell/**", "!**/shell/index.ts"];
 const BATTLE_INTERNALS = ["**/battle/**", "!**/battle/index.ts"];
+const BATTLE_PORTS = ["!**/battle/ports", "!**/battle/ports/index.ts"];
 /* Three allowances, each pinned to one file in the blocks at the bottom of this
    config and to the same file in `tests/unit/domain-boundaries.test.ts`. All
    three exist because the only entry that could legally carry them —
@@ -395,7 +396,10 @@ export default tseslint.config(
       { group: STORY_INTERNALS, message: STORY_MESSAGE },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
-      { group: BATTLE_INTERNALS, message: BATTLE_MESSAGE },
+      {
+        group: [...BATTLE_INTERNALS, ...BATTLE_PORTS],
+        message: BATTLE_MESSAGE,
+      },
     ],
   ),
   boundaries(
@@ -512,18 +516,6 @@ export default tseslint.config(
       { group: SHELL_INTERNALS, message: SHELL_MESSAGE },
       {
         group: [...BATTLE_INTERNALS, ...DECK_FORMAT_PENDING_RELOCATION],
-        message: BATTLE_MESSAGE,
-      },
-    ],
-  ),
-  boundaries(
-    ["src/shell/screens/InstallContentScreen.svelte"],
-    [
-      { group: STORY_INTERNALS, message: STORY_MESSAGE },
-      { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
-      { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
-      {
-        group: [...BATTLE_INTERNALS, "!**/battle/content-activation.ts"],
         message: BATTLE_MESSAGE,
       },
     ],

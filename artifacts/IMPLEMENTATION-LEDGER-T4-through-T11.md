@@ -98,6 +98,32 @@ Paths: `package.json`; `scripts/content-publish.ts`; `scripts/lib/asset-delivery
 - [x] T6.R3 Clone/validate seals within semantic boundary before DB access; strictly validate scalar IDs/source/revision plus dense slots. Validation: malformed/uncloneable cases reject exact `STORY_MIGRATION_FAILED` with zero DB opens; valid seals retain unavailable/quota mappings. Exact T6 green 193/193.
 - [x] T6.R4 Run affected suites/typecheck/lint/format/diff/staging checks; publish repair-only diff, logs, report. Validation: affected 819/819; typecheck 0 errors/4 existing warnings; scoped ESLint/Prettier/diff/staging exit 0; 2210 baseline regular files unchanged, 5 intentional changes, zero unexpected changes. `artifacts/IMPLEMENTATION-REPORT-T6-repair.md`; `artifacts/T6-REPAIR-EVIDENCE/commands.json`, `scope-result.json`. Required independent review pending.
 
+## T7 — semantic Battle runtime injection
+
+| Field | Value |
+| --- | --- |
+| State | **ACCEPTED retry1** — `artifacts/REVIEW-T7-repair.md` clears runtime/measurement findings; parent inspected hash/shutdown guards, reran client/real-WASM tests exit 0 |
+| Writer | Sole root writer; no subagents; no commit/push/deploy |
+| Depends | Accepted T6 baseline `86631c9`; frozen `ocgcore-wasm@0.1.2` |
+| Boundary | Shell alone loads/decodes Content; Battle accepts clone-safe `BattleRuntimeInput` through `BattleRuntimeSource`; optional media remains non-authoritative |
+| Evidence | Initial evidence retained: `artifacts/T7-EVIDENCE/`; repair supersedes acceptance/performance claims: `artifacts/T7-REPAIR-EVIDENCE/`, `artifacts/IMPLEMENTATION-REPORT-T7-repair.md` |
+| Route/retry | Failed Sol-high acceptance → parent-routed `openai-codex/gpt-6-astra:high`, retry1 per N3; sole root writer, no subagents |
+| Retry reason | Parent accepts runtime review B1–B4 (missing Worker frozen hash, shutdown late events, missing public command, wrong version-mismatch code), integration B1 (non-reproducible Worker-only measurement), malformed prior acceptance JSON |
+
+- [x] T7.1 Capture RED-first parser failure, then implement bounded exact runtime DTO validation. Validation: `red-vitest.log` fails missing Battle runtime module; focused green covers duplicate/dense/bounds/script/allowed-pool cases.
+- [x] T7.2 Move installed Content lookup/decoding and runtime receipt preparation to Shell adapters; remove Content imports from Battle. Validation: domain boundary scan passes; obsolete Worker receipt/fallback readers removed.
+- [x] T7.3 Transfer fresh WASM once; initialize `OcgCoreAdapter` only inside Worker; retain runtime support versus chapter permission. Validation: client transfer/replacement/late-load tests plus both-seat real-WASM rejection pass.
+- [x] T7.4 Preserve replay identity, concealment, production seed path, optional-image degradation. Validation: Worker/client/facade/component regressions pass; card visibility suite green; browser transferred buffer detached.
+- [x] T7.5 Run exact acceptance, vendor/type checks, real WASM/Chromium evidence, startup/heap/payload comparison. Initial validation: exact 61/61; vendor 21 files; typecheck 0 errors/4 existing warnings; Chromium ready→prompt→result. Initial startup/heap comparison withdrawn: omitted Shell source assembly, missing rerunnable commands; superseded by T7.R4 below.
+
+## T7 retry1 — bounded runtime B1–B4 + measurement B1 repair
+
+- [x] T7.R1 Add named regressions before implementation. Validation: `red-vitest.log` exit 1, 7 failed/80 passed; intended failures cover mutant-before-initialize, actual-version typed code, shutdown/replace/dispose/synchronous races, exact public port inventory. Compile-only command equality checked by typecheck, not claimed runtime RED.
+- [x] T7.R2 Pin SHA-256 inside Worker before engine initialization; preserve typed actual-version failure; export exact public InitializeRuntimeCommand reused internally. Validation: `green-vitest.log` 87/87; exact T7 65/65; typecheck 0 errors/4 existing warnings; pin equals unchanged vendor manifest + WASM source digest.
+- [x] T7.R3 Ignore late non-disposal events/errors throughout shutdown, including synchronous post and replace/dispose race; retain disposed acknowledgement. Validation: client regressions plus affected suites 202/202; no stale listener/store updates, replacement initializes, racing dispose creates no new Worker.
+- [x] T7.R4 Retain rerunnable same-interval baseline/new client-to-Worker benchmark including Shell source.load; count both isolate heaps/process RSS correctly. Validation: `node --expose-gc artifacts/T7-REPAIR-EVIDENCE/benchmark.mjs`, `benchmark-attempt2.log` exit 0; five fresh-process samples/lane; baseline immutable `86631c98f616efc49ecf61e5a3e259c6130bd404`; identical 2136-file input digest; median startup 546.72 → 416.52 ms, combined sampled heap high-water 191753256 → 147289680 bytes. Node warm installed-storage harness, not browser-wide heap/absolute peak; no >20% regression, no DTO optimization required.
+- [x] T7.R5 Publish exact commands/exits, valid schema-shaped acceptance JSON, vendor/scoped quality/preservation evidence. Validation: repair report plus commands.json/validation logs; acceptance validator exit 0 (JSON, required fields, arrays, status/result enums); vendor 21 files, scoped ESLint/Prettier 10 files clean; 2239 pre-existing files unchanged/11 intentional changes/zero unexpected; diff/staging exit 0. Native Chromium 1/1 passed: frozen WASM ready→prompt→result, mutant rejected/no ready; graph updater/full lint/old installer skipped with recorded existing blockers. Parent review remains required.
+
 ## Pending implementation order
 
 - [x] T4 → T5. Validation: T4 accepted at `5c2ddff`; T5 independently accepted; parent verified 91/91 focused tests. Native Chromium evidence in T5 repair report.

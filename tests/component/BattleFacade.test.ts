@@ -5,10 +5,8 @@ import { tick } from "svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  installedGameplayFixture,
-  contentReaderFixture,
-  openContentReaderFixture,
-  TEST_CONTENT_REF,
+  battlePresentationFixture,
+  TEST_RUNTIME_SOURCE,
 } from "../fixtures/installed-gameplay.ts";
 
 const debugStore = vi.hoisted(() => ({
@@ -287,9 +285,8 @@ async function renderFacade(
   const rendered = render(BattleFacade, {
     request,
     oncomplete,
-    content: TEST_CONTENT_REF,
-    gameplay: installedGameplayFixture(),
-    openReader: openContentReaderFixture,
+    runtimeSource: TEST_RUNTIME_SOURCE,
+    presentation: battlePresentationFixture(),
   });
   await vi.waitFor(() =>
     request === null
@@ -300,67 +297,6 @@ async function renderFacade(
 }
 
 describe("BattleFacade", () => {
-  it.each(["ready", "failed", "cancelled", "borrowed"])(
-    "releases facade reader ownership on %s",
-    async (mode) => {
-      const close = vi.fn();
-      const release = vi.fn();
-      let finish!: (
-        value: Awaited<ReturnType<typeof openContentReaderFixture>>,
-      ) => void;
-      const reader = {
-        ...contentReaderFixture(),
-        close,
-        acquireSession: async () =>
-          mode === "failed"
-            ? {
-                kind: "failed" as const,
-                code: "CONTENT_MISSING" as const,
-                packId: null,
-                path: null,
-              }
-            : {
-                kind: "ok" as const,
-                value: { content: TEST_CONTENT_REF, release },
-              },
-      };
-      const openReader = vi.fn(() =>
-        mode === "cancelled"
-          ? new Promise<Awaited<ReturnType<typeof openContentReaderFixture>>>(
-              (resolve) => {
-                finish = resolve;
-              },
-            )
-          : Promise.resolve({ kind: "ok" as const, value: reader }),
-      );
-      const view = render(BattleFacade, {
-        content: TEST_CONTENT_REF,
-        gameplay: installedGameplayFixture(),
-        openReader,
-        sharedReader: mode === "borrowed" ? reader : null,
-      });
-      if (mode === "cancelled") {
-        view.unmount();
-        finish({ kind: "ok", value: reader });
-      } else {
-        await vi.waitFor(() =>
-          mode === "failed"
-            ? expect(close).toHaveBeenCalledOnce()
-            : expect(
-                document.querySelector('[data-cy="deck-picker"]'),
-              ).not.toBeNull(),
-        );
-        view.unmount();
-      }
-      await vi.waitFor(() =>
-        expect(close).toHaveBeenCalledTimes(mode === "borrowed" ? 0 : 1),
-      );
-      expect(release).toHaveBeenCalledTimes(
-        mode === "ready" || mode === "borrowed" ? 1 : 0,
-      );
-      if (mode === "borrowed") expect(openReader).not.toHaveBeenCalled();
-    },
-  );
   it("mounts the duel inside the battle root", async () => {
     await renderFacade(null, vi.fn());
 

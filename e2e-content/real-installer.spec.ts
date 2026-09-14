@@ -49,7 +49,7 @@ test("real Chapter 1 Free Play both seats enforce chapter pool", async ({
     );
     const { readInstalledRuntimeReceipt } = await import(
       /* @vite-ignore */ String(
-        "/src/battle/storage/installed-runtime-receipt.ts",
+        "/src/shell/adapters/legacy-installed-runtime-receipt.ts",
       )
     );
     const opened = await openContentReader();
@@ -138,6 +138,9 @@ test("real Chapter 1 Free Play both seats enforce chapter pool", async ({
     const { openContentReader, loadInstalledGameplay } = await import(
       /* @vite-ignore */ String("/src/content/index.ts")
     );
+    const { createLegacyBattleRuntimeSource } = await import(
+      /* @vite-ignore */ String("/src/shell/adapters/legacy-battle-runtime.ts")
+    );
     const opened = await openContentReader();
     if (opened.kind !== "ok") throw new Error(opened.code);
     const worker = (window as unknown as { t6Worker: Worker }).t6Worker;
@@ -157,7 +160,10 @@ test("real Chapter 1 Free Play both seats enforce chapter pool", async ({
           }
         }
         worker.addEventListener("message", receive);
-        worker.postMessage(command);
+        worker.postMessage(
+          command,
+          command.type === "initialize" ? [command.runtime.wasmBinary] : [],
+        );
       });
     try {
       const state = await opened.value.current();
@@ -166,6 +172,10 @@ test("real Chapter 1 Free Play both seats enforce chapter pool", async ({
       const content = state.value.current;
       const loaded = await loadInstalledGameplay(opened.value, content);
       if (loaded.kind !== "ok") throw new Error(loaded.code);
+      const runtime = await createLegacyBattleRuntimeSource(
+        opened.value,
+        loaded.value,
+      ).load(new AbortController().signal);
       const deck = loaded.value.decks.find(
         (deck: { id: string }) =>
           deck.id === loaded.value.defaults.starterDeckId,
@@ -184,7 +194,7 @@ test("real Chapter 1 Free Play both seats enforce chapter pool", async ({
       )
         throw new Error("Support-only probe entered chapter pool");
       const bad = { ...good, main: [outside, ...good.main.slice(1)] };
-      const initialized = await send({ type: "initialize", content }, "ready");
+      const initialized = await send({ type: "initialize", runtime }, "ready");
       if (!initialized.some(({ type }) => type === "ready"))
         throw new Error(JSON.stringify(initialized));
       const results = [];
@@ -245,7 +255,10 @@ test("real Chapter 1 Free Play both seats enforce chapter pool", async ({
           else resolve(event.data);
         }
         worker.addEventListener("message", receive);
-        worker.postMessage(command);
+        worker.postMessage(
+          command,
+          command.type === "initialize" ? [command.runtime.wasmBinary] : [],
+        );
       });
     await send(
       {

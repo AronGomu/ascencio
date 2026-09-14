@@ -41,6 +41,14 @@
     StoryBinding,
   } from "../story/saves/index.ts";
   import type { CardImageSource } from "../cards/images/index.ts";
+  import type {
+    BattlePresentationInput,
+    BattleRuntimeSource,
+  } from "../battle/ports/index.ts";
+  import {
+    createLegacyBattleRuntimeSource,
+    legacyBattlePresentation,
+  } from "./adapters/legacy-battle-runtime.ts";
   import DomainLoadError from "./screens/DomainLoadError.svelte";
   import MainMenuScreen from "./screens/MainMenuScreen.svelte";
   import type { BattleFacadeResult, BattleRequest } from "../battle/index.ts";
@@ -79,6 +87,22 @@
     coreGate.kind === "ready" ? coreGate.gameplay : null;
   let contentReader: OwnedContentReader | null =
     coreGate.kind === "ready" ? coreGate.reader : null;
+  let battleRuntimeSource: BattleRuntimeSource | null;
+  let battlePresentation: BattlePresentationInput | null;
+  $: if (gameplay !== null) {
+    battleRuntimeSource =
+      contentReader === null
+        ? Object.freeze({
+            load: async () => {
+              throw new Error("APP_REQUIRED_INPUT_FAILED");
+            },
+          })
+        : createLegacyBattleRuntimeSource(contentReader, gameplay);
+    battlePresentation = legacyBattlePresentation(gameplay);
+  } else {
+    battleRuntimeSource = null;
+    battlePresentation = null;
+  }
   let cardImages: CardImageSource | null = null;
   let boundImageReader: OwnedContentReader | null = null;
   let boundImageGameplay: InstalledGameplay | null = null;
@@ -846,16 +870,15 @@
         <p class="visually-hidden" data-cy="battle-session-pending">
           Preparing the story duel
         </p>
-      {:else if gameplay !== null}
+      {:else if battleRuntimeSource !== null && battlePresentation !== null}
         {#await loadDuelDomain() then module}
           <!-- The duel is rotated by the stylesheet, so the notice explaining
                it belongs to the duel; its one-time dismissal is a shell
                setting, so the flag and its setter cross as plain props. -->
           <svelte:component
             this={module.BattleFacade}
-            content={gameplay.content}
-            {gameplay}
-            sharedReader={contentReader}
+            runtimeSource={battleRuntimeSource}
+            presentation={battlePresentation}
             imageSource={cardImages}
             request={duelRequest}
             hosted={route.kind === "duel-session"}

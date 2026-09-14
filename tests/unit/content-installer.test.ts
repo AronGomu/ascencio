@@ -6,10 +6,10 @@ import { fileKey } from "../../src/content/storage/content-cache.ts";
 import { extractVerifiedPart } from "../../src/content/install/verified-archive.ts";
 import { fetchVerified } from "../../src/content/install/verified-fetch.ts";
 import { manifestClosure } from "../../src/content/install/manifest-closure.ts";
-import { createRuntimeActivationPort } from "../../src/battle/content-activation.ts";
+import { createRuntimeActivationPort } from "../../src/shell/adapters/runtime-activation.ts";
 import { ContentReader } from "../../src/content/storage/content-reader.ts";
 import { openContentDatabase } from "../../src/content/storage/content-database.ts";
-import { readInstalledRuntimeReceipt } from "../../src/battle/storage/installed-runtime-receipt.ts";
+import { readInstalledRuntimeReceipt } from "../../src/shell/adapters/legacy-installed-runtime-receipt.ts";
 import { contentErrorCopy } from "../../src/shell/content/content-error-copy.ts";
 import * as content from "../../src/content/index.ts";
 
@@ -197,12 +197,8 @@ describe("verified installer", () => {
       reader.close();
     }
   });
-  it.each([
-    { indexedScript: true, omitScript: true },
-    { omitImages: true },
-    { omitGlobal: true },
-  ])(
-    "missing supported script/image/global fails before receipt: %j",
+  it.each([{ indexedScript: true, omitScript: true }, { omitGlobal: true }])(
+    "missing supported script/global fails before receipt: %j",
     async (missing) => {
       const fixture = await setup(createRuntimeActivationPort().prepare, {
         realRuntime: true,
@@ -222,6 +218,24 @@ describe("verified installer", () => {
       });
     },
   );
+  it("missing optional images do not block runtime preparation", async () => {
+    const fixture = await setup(createRuntimeActivationPort().prepare, {
+      realRuntime: true,
+      omitImages: true,
+    });
+    expect(
+      await installer!.download({ kind: "all-published" }, () => undefined),
+    ).toMatchObject({ kind: "complete" });
+    expect(
+      await readInstalledRuntimeReceipt(
+        fixture.content.snapshot,
+        fixture.runtime.ref,
+      ),
+    ).toMatchObject({ kind: "ok" });
+    expect(await installer!.current()).toMatchObject({
+      value: { generation: 1, current: fixture.content },
+    });
+  });
   for (const name of ["constant.lua", "utility.lua"]) {
     it.each([undefined, "", null, " \n "])(
       `required ${name} must contain non-empty source: %j`,

@@ -1,10 +1,9 @@
 <script lang="ts">
   import { afterUpdate, getContext, onMount, tick } from "svelte";
   import type {
-    ContentReadPort,
-    ContentSetRef,
-    InstalledGameplay,
-  } from "../../content/index.ts";
+    BattlePresentationInput,
+    BattleRuntimeSource,
+  } from "../ports/index.ts";
   import type { DuelDeckSelection } from "../duel/contracts/duel-deck-selection.ts";
   import type { DuelDiagnosticTrace } from "../duel/contracts/duel-diagnostics.ts";
   import type { DuelError } from "../duel/contracts/duel-error.ts";
@@ -54,7 +53,7 @@
   import { downloadDuelDiagnostics } from "./diagnostics/download-diagnostics.ts";
   import { DuelWorkerClient } from "./DuelWorkerClient.ts";
   import {
-    createInstalledCardImageLibrary,
+    createCardImageSourceLibrary,
     type CardImageLibrary,
   } from "./images/card-image-cache.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
@@ -88,7 +87,6 @@
     catalogByCode,
     PROTOTYPE_RULESET,
   } from "../../decks/validation/index.ts";
-  import { installedDeckCatalog } from "../../decks/index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
   import {
@@ -115,9 +113,8 @@
     type UiSettingsState,
   } from "./stores/ui-settings-store.ts";
 
-  export let content: ContentSetRef;
-  export let gameplay: InstalledGameplay;
-  export let reader: ContentReadPort;
+  export let runtimeSource: BattleRuntimeSource;
+  export let presentation: BattlePresentationInput;
   export let imageSource: CardImageSource | null = null;
 
   /* Set by the battle facade when a host is waiting for this duel's outcome.
@@ -134,8 +131,7 @@
      Surrender. `null` where the host owns its own way out. */
   export let onleavematch: (() => void) | null = null;
 
-  const installedCatalog = installedDeckCatalog(gameplay);
-  let activeCards: readonly DeckBuilderCardView[] = installedCatalog.cards;
+  let activeCards: readonly DeckBuilderCardView[] = presentation.cards;
   $: activeCardTexts = new Map(
     activeCards.map((card) => [card.code, card] as const),
   );
@@ -146,8 +142,8 @@
   const EMPTY_OFF_FIELD_TARGETS: readonly OffFieldTargetEntry[] = [];
   let deckBuilderCatalog: ReadonlyMap<number, DeckBuilderCardView> =
     catalogByCode(activeCards);
-  const defaultOpponent = gameplay.opponents.find(
-    ({ id }) => id === gameplay.defaults.opponentId,
+  const defaultOpponent = presentation.opponents.find(
+    ({ id }) => id === presentation.defaults.opponentId,
   );
   if (defaultOpponent === undefined)
     throw new Error("Installed gameplay default opponent is missing");
@@ -155,7 +151,7 @@
   const DEFAULT_CARD_PLACEHOLDER =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2318243b'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%23697895' stroke-width='2'/%3E%3Ctext x='36' y='57' fill='%23a9b5ca' font-size='28' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
   const client = new DuelWorkerClient();
-  const duel = createDuelStore(client, content);
+  const duel = createDuelStore(client, runtimeSource);
   const persistedUi = createPersistedUiStore();
   const uiSettings = createUiSettingsStore({
     ...DEFAULT_UI_SETTINGS,
@@ -175,12 +171,17 @@
   let previousErrorKey = "";
   let imageLibrary: CardImageLibrary | null = null;
   let imageLoading = true;
+  let loadedImageSource: CardImageSource | null | undefined = undefined;
   let retryImages: () => void = () => undefined;
+  $: if (imageSource !== loadedImageSource) {
+    // eslint-disable-next-line no-useless-assignment -- retained across Svelte reactive executions
+    loadedImageSource = imageSource;
+    retryImages();
+  }
   $: imagesMatchRuntime =
     imageLibrary !== null &&
     $duel.runtimeSnapshotId !== null &&
     imageLibrary.snapshotId === $duel.runtimeSnapshotId;
-  let imageProgress = 0;
   let imageWarning: string | null = null;
   let previewCard: CardPreviewView | null = null;
   let previewCode: number | null = null;
@@ -249,7 +250,7 @@
      puts the failure's own duel back into play — is visible as an edge. */
   let duelInPlay = false;
   const snapshotStorageStatus = {
-    activeSnapshotId: snapshotId(content.snapshot.runtimeSnapshotId),
+    activeSnapshotId: snapshotId(presentation.snapshotId),
     fallbackSnapshotId: null,
   };
   let battleCompletionReported = false;
@@ -392,25 +393,28 @@
       const controller = new AbortController();
       imageAbortController = controller;
       imageLoading = true;
-      imageProgress = 0;
       imageWarning = null;
       releasePreviewImage();
       imageLibrary?.dispose();
       imageLibrary = null;
+      if (imageSource === null) {
+        imageWarning = "Card images are unavailable. You can keep playing.";
+        imageLoading = false;
+        return;
+      }
       try {
-        const library = await createInstalledCardImageLibrary(
-          reader,
-          gameplay,
-          (completed, total) => {
-            if (generation === imageLoadGeneration)
-              imageProgress = completed / Math.max(total, 1);
-          },
+        const library = await createCardImageSourceLibrary(
+          imageSource,
+          presentation.cards.map(({ code }) => code),
+          presentation.snapshotId,
+          presentation.catalogRevision,
+          undefined,
           controller.signal,
         );
         if (disposed || generation !== imageLoadGeneration) library.dispose();
         else {
           imageLibrary = library;
-          activeCards = installedCatalog.cards.map((card) => ({
+          activeCards = presentation.cards.map((card) => ({
             ...card,
             imageUrl: library.lease(card.code).url,
           }));
@@ -612,7 +616,7 @@
         buildId: __APP_BUILD_ID__,
         userAgent: navigator.userAgent,
         language: navigator.language,
-        activeSnapshotId: snapshotId(content.snapshot.runtimeSnapshotId),
+        activeSnapshotId: snapshotId(presentation.snapshotId),
         fallbackSnapshotId: null,
         imageCache: {
           provider: imageLibrary?.provider ?? "unavailable",
@@ -731,7 +735,7 @@
     try {
       repository = await IndexedDbDeckRepository.open();
       const decks = await installedSelectableDecks(
-        gameplay,
+        presentation,
         repository,
         deckBuilderCatalog,
         PROTOTYPE_RULESET,
@@ -751,7 +755,7 @@
       };
     } catch {
       const decks = await installedSelectableDecks(
-        gameplay,
+        presentation,
         { list: async () => [], load: async () => null },
         deckBuilderCatalog,
         PROTOTYPE_RULESET,
@@ -790,7 +794,7 @@
     const nextPlayerKey =
       chosen?.key ??
       defaultDeckKey ??
-      `chapter:${gameplay.defaults.starterDeckId}`;
+      `chapter:${presentation.defaults.starterDeckId}`;
     if (nextPlayerKey !== playerKey || opponentKey !== FIXED_OPPONENT_KEY)
       persistedUi.setDecks(nextPlayerKey, FIXED_OPPONENT_KEY);
   }
@@ -1083,12 +1087,7 @@
   class:is-duel-viewport={duelViewportOnly}
   data-duel-viewport={duelViewportOnly ? "true" : undefined}
 >
-  {#if imageLoading}
-    <LoadingOverlay
-      label="Preparing active card images"
-      progress={imageProgress}
-    />
-  {:else if $duel.loading}
+  {#if $duel.loading}
     <LoadingOverlay
       label={`Loading ${phaseLabel($duel.loading.stage)}`}
       progress={$duel.loading.progress ?? null}

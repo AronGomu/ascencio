@@ -6,6 +6,7 @@ import { installedSelectableDecks } from "../../src/battle/decks/installed-selec
 import { installedFreePlayOpponents } from "../../src/shell/screens/free-play-opponents.ts";
 import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
 import {
+  battlePresentationFixture,
   installedGameplayFixture,
   TEST_CONTENT_SET_REF,
 } from "../fixtures/installed-gameplay.ts";
@@ -55,7 +56,7 @@ describe("installed Free Play projection", () => {
     const gameplay = installedGameplayFixture();
     const catalog = installedDeckCatalog(gameplay).cards;
     const decks = await installedSelectableDecks(
-      gameplay,
+      battlePresentationFixture(gameplay),
       repositoryWithMissingCard(),
       new Map(catalog.map((card) => [card.code, card])),
       PROTOTYPE_RULESET,
@@ -84,7 +85,7 @@ describe("installed Free Play projection", () => {
     const gameplay = installedGameplayFixture();
     const cards = installedDeckCatalog(gameplay).cards;
     const decks = await installedSelectableDecks(
-      gameplay,
+      battlePresentationFixture(gameplay),
       repositoryWithMissingCard(),
       new Map(cards.map((card) => [card.code, card])),
       PROTOTYPE_RULESET,

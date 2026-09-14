@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import * as battle from "../../src/battle/index.ts";
 import * as content from "../../src/content/index.ts";
-import * as contentActivation from "../../src/battle/content-activation.ts";
 import * as deckEditor from "../../src/deck-editor/index.ts";
 import * as deckSelect from "../../src/deck-select/index.ts";
 import * as decks from "../../src/decks/index.ts";
@@ -68,10 +67,6 @@ const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
     "src/content/storage/content-reader.ts",
     "src/content/load-installed-gameplay.ts",
   ],
-  // Pure install-only validation avoids loading BattleFacade.
-  "src/shell/screens/InstallContentScreen.svelte": [
-    "src/battle/content-activation.ts",
-  ],
   // Shared pure deck rules, never UI/gameplay chunks; owner-approved T4 exception.
   "src/content/install/verify-gameplay.ts": [
     "src/decks/catalog/pinned-ruleset.ts",
@@ -128,7 +123,7 @@ function isLegalImport(from: string, to: string): boolean {
   const target = domainOf(to);
   if (
     target === "content" &&
-    ["decks", "deck-editor", "story"].includes(source)
+    ["battle", "decks", "deck-editor", "story"].includes(source)
   )
     return false;
   if (source === target) return true;
@@ -154,6 +149,8 @@ function isLegalImport(from: string, to: string): boolean {
       (entry) => to === `src/shared-svelte-ui/${entry}/index.ts`,
     );
   if (target === "deck-editor" && to === "src/deck-editor/ports/index.ts")
+    return source === "shell";
+  if (target === "battle" && to === "src/battle/ports/index.ts")
     return source === "shell";
   if (
     target === "story" &&
@@ -620,13 +617,6 @@ describe("public domain APIs are frozen", () => {
     },
 
     {
-      name: "battle content activation",
-      entry: "src/battle/content-activation.ts",
-      namespace: contentActivation,
-      values: ["createRuntimeActivationPort"],
-      types: [],
-    },
-    {
       name: "battle",
       entry: "src/battle/index.ts",
       namespace: battle,
@@ -648,14 +638,22 @@ describe("public domain APIs are frozen", () => {
         "installedSelectableDecks",
         "listSelectableDecks",
         "parseBattleRequest",
+        "parseBattleRuntimeInput",
         "presetSelectableDecks",
         "settleOnce",
+        "validateBattleRuntime",
       ],
       types: [
         "BattleDeckSelection",
         "BattleFacadeResult",
         "BattleOutcome",
+        "BattlePresentationDeck",
+        "BattlePresentationInput",
+        "BattlePresentationOpponent",
         "BattleRequest",
+        "BattleRuntimeCard",
+        "BattleRuntimeInput",
+        "BattleRuntimeSource",
         "SelectableDeck",
       ],
     },
@@ -961,11 +959,14 @@ describe("domain imports", () => {
     expect(
       isLegalImport(
         "src/shell/screens/InstallContentScreen.svelte",
-        "src/battle/content-activation.ts",
+        "src/shell/adapters/runtime-activation.ts",
       ),
     ).toBe(true);
     expect(
-      isLegalImport("src/shell/probe.ts", "src/battle/content-activation.ts"),
+      isLegalImport(
+        "src/battle/probe.ts",
+        "src/shell/adapters/runtime-activation.ts",
+      ),
     ).toBe(false);
   });
   it("content rejects dynamic Node and scripts imports", () => {
@@ -1018,6 +1019,21 @@ it("no catch-all source folders", () => {
     ["shared", "common", "utils", "core"].includes(entry),
   );
   expect(catchAll).toEqual([]);
+});
+
+describe("Battle Content isolation", () => {
+  it("rejects every Content import from Battle", () => {
+    expect(isLegalImport("src/battle/probe.ts", "src/content/index.ts")).toBe(
+      false,
+    );
+    expect(
+      sourceFiles()
+        .filter((file) => file.startsWith("src/battle/"))
+        .flatMap((file) =>
+          importsOf(file).filter((ref) => String(ref).includes("src/content/")),
+        ),
+    ).toEqual([]);
+  });
 });
 
 describe("Story Content isolation", () => {
@@ -1078,4 +1094,19 @@ it("Story pure ports/saves entries expose exact generation contracts without UI"
       false,
     );
   }
+});
+
+it("freezes the semantic Battle ports including InitializeRuntimeCommand", () => {
+  expect(declaredExports("src/battle/ports/index.ts")).toEqual({
+    values: ["parseBattleRuntimeInput", "validateBattleRuntime"],
+    types: [
+      "BattlePresentationDeck",
+      "BattlePresentationInput",
+      "BattlePresentationOpponent",
+      "BattleRuntimeCard",
+      "BattleRuntimeInput",
+      "BattleRuntimeSource",
+      "InitializeRuntimeCommand",
+    ],
+  });
 });

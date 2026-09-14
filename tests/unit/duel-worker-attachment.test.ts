@@ -112,7 +112,7 @@ describe("duel Worker attachment", () => {
     const detach = attachDuelWorker(scope, runtime, memoryLogger(logs));
 
     scope.onmessage?.({
-      data: { type: "initialize", content: TEST_CONTENT_REF },
+      data: { type: "initialize", runtime: TEST_CONTENT_REF },
     } as MessageEvent<unknown>);
     await Promise.resolve();
     await Promise.resolve();
@@ -357,7 +357,7 @@ describe("duel Worker attachment", () => {
 
     expect(scope.onmessage).toBe(replacement);
     await expect(
-      runtime.handle({ type: "initialize", content: TEST_CONTENT_REF }),
+      runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF }),
     ).resolves.toEqual([]);
   });
 

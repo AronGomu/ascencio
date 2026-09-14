@@ -227,9 +227,9 @@ cardsDeckCatalog reuses existing mapper semantics; imageUrl initially null, cont
 
 ## TDD
 
-- [ ] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
-- [ ] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
-- [ ] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
+- [x] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
+- [x] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
+- [x] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
 
 ## Test plan
 
@@ -244,15 +244,15 @@ cardsDeckCatalog reuses existing mapper semantics; imageUrl initially null, cont
 
 ## Impl steps
 
-- [ ] P1. Red: old initialize.content rejected, valid runtime DTO accepted; out-of-pool both seats; no Content imports; detached-buffer replay test. Verify: parser/source failures first.
-- [ ] P2. Implement Battle ports/pure validator and Shell runtime adapter from verified runtime catalog/text/script/system JSON; move file lookup mechanics out of Worker. Verify: complete frozen runtime payload, no optional art requirement.
-- [ ] P3. Change client/facade/worker command to runtime DTO; transfer wasm once, rebuild for restart/restore; maintain progress/error channels. Verify: structured-clone test plus Worker integration.
-- [ ] P4. Retain OcgCoreAdapter as sole engine owner; preload scripts/globals and validate getVersion. Remove unused Content-specific reader/receipt paths only after all Battle callers migrate. Verify: vendor tree unchanged.
-- [ ] P5. Run real-WASM installed-runtime test plus privacy tests; record payload bytes/peak heap/startup time with baseline. Verify: no unexplained >20% startup/memory regression; if exceeded, optimize clones within same DTO, do not invent RPC redesign silently.
+- [x] P1. Red: old initialize.content rejected, valid runtime DTO accepted; out-of-pool both seats; no Content imports; detached-buffer replay test. Verify: parser/source failures first.
+- [x] P2. Implement Battle ports/pure validator and Shell runtime adapter from verified runtime catalog/text/script/system JSON; move file lookup mechanics out of Worker. Verify: complete frozen runtime payload, no optional art requirement.
+- [x] P3. Change client/facade/worker command to runtime DTO; transfer wasm once, rebuild for restart/restore; maintain progress/error channels. Verify: structured-clone test plus Worker integration.
+- [x] P4. Retain OcgCoreAdapter as sole engine owner; preload scripts/globals and validate getVersion. Remove unused Content-specific reader/receipt paths only after all Battle callers migrate. Verify: vendor tree unchanged.
+- [x] P5. Run real-WASM installed-runtime test plus privacy tests; record payload bytes/peak heap/startup time with baseline. Verify: no unexplained >20% startup/memory regression; if exceeded, optimize clones within same DTO, do not invent RPC redesign silently.
 
 ## Validation
 
-- [ ] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
+- [x] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
 
 ```sh
 npx vitest run tests/unit/battle-runtime-input.test.ts tests/unit/card-visibility.test.ts tests/unit/domain-boundaries.test.ts tests/integration/installed-runtime.test.ts tests/integration/installed-runtime-wasm.test.ts --reporter=verbose
@@ -260,7 +260,7 @@ npm run vendor:verify
 npm run typecheck
 ```
 
-- [ ] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
-- [ ] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
-- [ ] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
-- [ ] V5. Commit msg draft: `refactor(battle): inject semantic runtime without storage coupling`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+- [x] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
+- [x] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
+- [x] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
+- [x] V5. Commit msg draft: `refactor(battle): inject semantic runtime without storage coupling`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.

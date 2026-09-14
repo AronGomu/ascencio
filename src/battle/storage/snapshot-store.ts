@@ -1,6 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { SnapshotId } from "../duel/contracts/ids.ts";
-import type { InstalledRuntimeReceipt } from "../../content/index.ts";
 
 const DATABASE_VERSION = 3;
 export const SNAPSHOT_DATABASE_NAME = "ygo-story-duel";
@@ -62,10 +61,6 @@ export interface SnapshotStorageStatus {
 }
 
 interface SnapshotDatabase extends DBSchema {
-  installedRuntimeReceipts: {
-    key: string;
-    value: InstalledRuntimeReceipt;
-  };
   snapshots: {
     key: string;
     value: StoredSnapshot;
@@ -149,8 +144,6 @@ export class SnapshotStore {
               await done;
               return;
             }
-            if (oldVersion < 3)
-              db.createObjectStore("installedRuntimeReceipts");
             if (oldVersion < 1) {
               const snapshots = db.createObjectStore("snapshots", {
                 keyPath: "snapshotId",
@@ -603,16 +596,6 @@ export class SnapshotStore {
   ): Promise<string | number | boolean | undefined> {
     requireSafeKey(key, "preference");
     return (await this.#database.get("preferences", key))?.value;
-  }
-
-  async recordInstalledRuntimeReceipt(
-    receipt: InstalledRuntimeReceipt,
-  ): Promise<void> {
-    await this.#database.put(
-      "installedRuntimeReceipts",
-      receipt,
-      receipt.snapshot.activationId,
-    );
   }
 
   async recordDebugRun(value: DebugRunMetadata): Promise<void> {

@@ -46,7 +46,7 @@ describe("duels started from an explicit card list", () => {
   it("initializes a real-WASM duel from a card list and reaches a terminal result", async () => {
     const { runtime, playerMain, playerExtra } = await createRuntime();
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const started = await runtime.handle({
         type: "startDuel",
         duelId: CUSTOM_DUEL_ID,
@@ -101,7 +101,7 @@ describe("duels started from an explicit card list", () => {
   it("refuses an unsupported code and never creates a duel session", async () => {
     const { runtime, playerMain } = await createRuntime();
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const refused = await runtime.handle({
         type: "startDuel",
         duelId: CUSTOM_DUEL_ID,

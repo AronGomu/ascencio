@@ -18,7 +18,7 @@ describe("real Node duel Worker thread", () => {
     expect(harness.threadId).toBeGreaterThan(0);
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
+    harness.post({ type: "initialize", runtime: TEST_CONTENT_REF });
     await expect(
       harness.waitForMessage(hasWorkerEventType("ready"), {
         afterSequence: initializeCursor,
@@ -88,7 +88,7 @@ describe("real Node duel Worker thread", () => {
     });
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
+    harness.post({ type: "initialize", runtime: TEST_CONTENT_REF });
     const failure = await harness.waitForMessage(hasWorkerEventType("error"), {
       afterSequence: initializeCursor,
     });
@@ -112,7 +112,7 @@ describe("real Node duel Worker thread", () => {
     });
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
+    harness.post({ type: "initialize", runtime: TEST_CONTENT_REF });
     await harness.waitForMessage(hasWorkerEventType("ready"), {
       afterSequence: initializeCursor,
     });
@@ -204,7 +204,7 @@ describe("real Node duel Worker thread", () => {
     });
 
     const initializeCursor = harness.cursor;
-    harness.post({ type: "initialize", content: TEST_CONTENT_REF });
+    harness.post({ type: "initialize", runtime: TEST_CONTENT_REF });
     await harness.waitForMessage(hasWorkerEventType("ready"), {
       afterSequence: initializeCursor,
     });

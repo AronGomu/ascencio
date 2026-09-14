@@ -10,7 +10,7 @@ import type {
 } from "../../src/content/index.ts";
 
 export const EXACT_CONTENT_RUN =
-  "generated/asset-delivery/runs/7660bc2c-520a-41fa-a6fd-dfdecc770807";
+  "generated/asset-delivery/runs/1f32c19c-6e2f-4dee-a809-8b7da7d4788c";
 const sha = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 

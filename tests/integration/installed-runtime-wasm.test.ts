@@ -1,13 +1,12 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { exactInstalledRuntime } from "../fixtures/exact-installed-runtime.ts";
-import {
-  createBrowserDuelWorkerRuntime,
-  assertInstalledRuntimeReceipt,
-} from "../../src/battle/worker/create-browser-runtime.ts";
+import { createBrowserDuelWorkerRuntime } from "../../src/battle/worker/create-browser-runtime.ts";
 import { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
-import { loadInstalledGameplay } from "../../src/content/index.ts";
-import { loadBrowserRuntimeAssets } from "../../src/battle/worker/assets/browser-runtime-assets.ts";
-import { loadInstalledRuntimeDependencies } from "../../src/battle/worker/assets/installed-runtime-dependencies.ts";
+import {
+  loadInstalledGameplay,
+  type InstalledGameplay,
+} from "../../src/content/index.ts";
+import { createLegacyBattleRuntimeSource } from "../../src/shell/adapters/legacy-battle-runtime.ts";
 import { DuelSession } from "../../src/battle/worker/engine/DuelSession.ts";
 import { HeadlessDuelController } from "../../src/battle/worker/HeadlessDuelController.ts";
 import {
@@ -15,31 +14,34 @@ import {
   duelId,
   snapshotId,
 } from "../../src/battle/duel/contracts/ids.ts";
+import type { BattleRuntimeInput } from "../../src/battle/ports/index.ts";
 
 let fixture: Awaited<ReturnType<typeof exactInstalledRuntime>>;
+let input: BattleRuntimeInput;
+let gameplay: InstalledGameplay;
+
 beforeAll(async () => {
   fixture = await exactInstalledRuntime();
+  const result = await loadInstalledGameplay(fixture.reader, fixture.content);
+  if (result.kind !== "ok") throw new Error(result.code);
+  gameplay = result.value;
+  input = await createLegacyBattleRuntimeSource(fixture.reader, gameplay).load(
+    new AbortController().signal,
+  );
 }, 120_000);
 
 describe("exact installed browser runtime on real WASM", () => {
-  it("closes Worker reader after typed forged-receipt failure before engine creation", async () => {
-    const closes = fixture.closes();
-    const createDuel = vi.spyOn(OcgCoreAdapter.prototype, "createDuel");
-    const runtime = createBrowserDuelWorkerRuntime({
-      openReader: async () => ({ kind: "ok", value: fixture.reader }),
-      readReceipt: async () => ({
-        kind: "ok",
-        value: {
-          ...fixture.receipt,
-          assetManifestFile: { ...fixture.receipt.assetManifestFile, bytes: 1 },
-        },
-      }),
-    });
+  it("rejects one-byte-mutated frozen WASM before engine initialization", async () => {
+    const runtime = createBrowserDuelWorkerRuntime();
+    const initialize = vi.spyOn(OcgCoreAdapter, "initialize");
+    const wasmBinary = input.wasmBinary.slice(0);
+    new Uint8Array(wasmBinary)[wasmBinary.byteLength - 1]! ^= 1;
     try {
       const events = await runtime.handle({
         type: "initialize",
-        content: fixture.content,
+        runtime: { ...input, wasmBinary },
       });
+      expect(initialize).not.toHaveBeenCalled();
       expect(events).toContainEqual(
         expect.objectContaining({
           type: "error",
@@ -48,66 +50,68 @@ describe("exact installed browser runtime on real WASM", () => {
           }),
         }),
       );
-      expect(fixture.closes()).toBe(closes + 1);
-      expect(createDuel).not.toHaveBeenCalled();
+      expect(events.some(({ type }) => type === "ready")).toBe(false);
     } finally {
       runtime.dispose();
-      createDuel.mockRestore();
-    }
-  });
-  it("verifies exact receipt raw files; rejects forged metadata", async () => {
-    await expect(
-      assertInstalledRuntimeReceipt(
-        fixture.receipt,
-        fixture.content,
-        fixture.reader,
-      ),
-    ).resolves.toBeUndefined();
-    for (const key of [
-      "assetManifestFile",
-      "engineManifestFile",
-      "runtimeManifestFile",
-    ] as const) {
-      for (const field of ["bytes", "sha256"] as const) {
-        const forged = {
-          ...fixture.receipt,
-          [key]: {
-            ...fixture.receipt[key],
-            [field]: field === "bytes" ? 1 : "0".repeat(64),
-          },
-        };
-        await expect(
-          assertInstalledRuntimeReceipt(
-            forged,
-            fixture.content,
-            fixture.reader,
-          ),
-        ).rejects.toThrow("CONTENT_INTEGRITY_FAILED");
-      }
+      initialize.mockRestore();
     }
   });
 
+  it("preserves engine_initialization_failed for actual engine version mismatch", async () => {
+    const runtime = createBrowserDuelWorkerRuntime();
+    const initialize = vi.spyOn(OcgCoreAdapter, "initialize");
+    const version = vi
+      .spyOn(OcgCoreAdapter.prototype, "getVersion")
+      .mockReturnValue([12, 0]);
+    try {
+      const events = await runtime.handle({
+        type: "initialize",
+        runtime: input,
+      });
+      expect(initialize).toHaveBeenCalledOnce();
+      expect(version).toHaveBeenCalled();
+      expect(events).toContainEqual(
+        expect.objectContaining({
+          type: "error",
+          error: expect.objectContaining({
+            code: "engine_initialization_failed",
+            recoverable: false,
+          }),
+        }),
+      );
+      expect(events.some(({ type }) => type === "ready")).toBe(false);
+    } finally {
+      runtime.dispose();
+      version.mockRestore();
+      initialize.mockRestore();
+    }
+  });
+
+  it("loads a fresh WASM buffer for the exact same snapshot", async () => {
+    const source = createLegacyBattleRuntimeSource(fixture.reader, gameplay);
+    const first = await source.load(new AbortController().signal);
+    const second = await source.load(new AbortController().signal);
+
+    expect(first.snapshotId).toBe(fixture.content.snapshot.runtimeSnapshotId);
+    expect(second.snapshotId).toBe(first.snapshotId);
+    expect(first.wasmBinary).not.toBe(second.wasmBinary);
+    expect(first.wasmBinary.byteLength).toBeGreaterThan(0);
+    expect(second.wasmBinary.byteLength).toBe(first.wasmBinary.byteLength);
+  }, 120_000);
+
   it("preloads support without permitting either seat to sleeve support-only cards", async () => {
-    const gameplayResult = await loadInstalledGameplay(
-      fixture.reader,
-      fixture.content,
-    );
-    if (gameplayResult.kind !== "ok") throw new Error(gameplayResult.code);
-    const gameplay = gameplayResult.value;
     expect(gameplay.cards.some(({ code }) => code === 73915052)).toBe(false);
-    const runtime = createBrowserDuelWorkerRuntime({
-      openReader: async () => ({ kind: "ok", value: fixture.reader }),
-      readReceipt: async () => ({ kind: "ok", value: fixture.receipt }),
-    });
+    const runtime = createBrowserDuelWorkerRuntime();
     const createDuel = vi.spyOn(OcgCoreAdapter.prototype, "createDuel");
-    const closes = fixture.closes();
     try {
       const initialized = await runtime.handle({
         type: "initialize",
-        content: fixture.content,
+        runtime: input,
       });
       expect(initialized.find(({ type }) => type === "error")).toBeUndefined();
-      expect(fixture.closes()).toBe(closes + 1);
+      expect(initialized).toContainEqual(
+        expect.objectContaining({ type: "ready", coreVersion: [11, 0] }),
+      );
       const deck = gameplay.decks.find(
         ({ id }) => id === gameplay.defaults.starterDeckId,
       )!;
@@ -161,38 +165,47 @@ describe("exact installed browser runtime on real WASM", () => {
     }
   }, 120_000);
 
-  it("legally activates Scapegoat and resolves four Sheep Tokens using exact runtime support", async () => {
-    const assets = await loadBrowserRuntimeAssets(
-      "https://installed.invalid/",
-      {
-        expectedManifestSha256: fixture.content.snapshot.runtimeManifestSha256,
-        cacheStorage: null,
-        fetch: async (input) =>
-          new Response(
-            fixture.files
-              .get(new URL(String(input)).pathname.slice(1))!
-              .slice(),
-          ),
-      },
+  it("legally activates Scapegoat and resolves four Sheep Tokens", async () => {
+    const adapter = await OcgCoreAdapter.initialize({
+      wasmBinary: input.wasmBinary.slice(0),
+    });
+    const cards = new Map(
+      input.cards.map((card) => [
+        Number(card.code),
+        {
+          ...card,
+          code: Number(card.code),
+          setcodes: [...card.setcodes],
+          race: BigInt(card.race),
+          link_marker: card.linkMarker,
+        },
+      ]),
     );
-    const dependencies = await loadInstalledRuntimeDependencies(assets);
-    expect(dependencies.counts).toEqual({
+    const dependencies = {
+      cards,
+      texts: new Map(input.texts.map((text) => [Number(text.code), text])),
+      scripts: new Map(input.scripts.map(({ name, source }) => [name, source])),
+      strings: input.strings,
+      images: new Map(),
+      counts: {
+        cards: input.cards.length,
+        texts: input.texts.length,
+        scripts: input.scripts.length,
+        globals: input.requiredScripts.globals.length,
+        images: 0,
+      },
+    };
+    expect(dependencies.counts).toMatchObject({
       cards: 14794,
       texts: 14794,
       scripts: 13549,
       globals: 25,
-      images: 14794,
     });
     for (const code of [73915052, 73915053, 73915054, 73915055])
       expect(dependencies.cards.has(code)).toBe(true);
-    const adapter = await OcgCoreAdapter.initialize({
-      wasmBinary: assets.wasmBinary,
-    });
-    const result = await loadInstalledGameplay(fixture.reader, fixture.content);
-    if (result.kind !== "ok") throw new Error(result.code);
     const main = [
       73915051,
-      ...result.value.decks[0]!.main.filter((code) => code !== 73915051),
+      ...gameplay.decks[0]!.main.filter((code) => code !== 73915051),
     ]
       .slice(0, 40)
       .map(cardCode);
@@ -215,7 +228,7 @@ describe("exact installed browser runtime on real WASM", () => {
     const controller = new HeadlessDuelController({
       session,
       dependencies,
-      snapshotId: snapshotId(fixture.content.snapshot.runtimeSnapshotId),
+      snapshotId: snapshotId(input.snapshotId),
       presetId: "installed-scapegoat",
       deckCounts: [main.length, main.length],
       extraDeckCounts: [0, 0],

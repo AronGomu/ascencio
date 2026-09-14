@@ -184,7 +184,7 @@ describe("replay-based duel recovery", () => {
     const core = injectableCore();
     const runtime = createRuntime(core);
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const forward = await playUntilFailure(runtime, core, 3);
       expect(forward.failure.canRestore).toBe(true);
       const before = await diagnostics(runtime);
@@ -221,7 +221,7 @@ describe("replay-based duel recovery", () => {
     const core = injectableCore();
     const runtime = createRuntime(core);
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       core.failNextProcess = true;
       const started = await runtime.handle({
         type: "startDuel",
@@ -247,7 +247,7 @@ describe("replay-based duel recovery", () => {
     const core = injectableCore();
     const runtime = createRuntime(core);
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const forward = await playUntilFailure(runtime, core, 2);
       const before = await diagnostics(runtime);
 
@@ -278,7 +278,7 @@ describe("replay-based duel recovery", () => {
     const core = injectableCore();
     const runtime = createRuntime(core);
     try {
-      await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+      await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
       const forward = await playUntilFailure(runtime, core, 2);
       const restored = await runtime.handle({ type: "restore" });
       const prompt = restored.find((event) => event.type === "prompt");

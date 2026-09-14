@@ -1,4 +1,4 @@
-import { FROZEN_VENDOR_MANIFEST_SHA256 } from "./frozen-vendor-pin.ts";
+import { FROZEN_VENDOR_MANIFEST_SHA256 } from "./legacy-frozen-vendor-pin.ts";
 import type {
   ContentReadPort,
   ContentResult,
@@ -7,10 +7,10 @@ import type {
   RuntimeReceiptFile,
   RuntimeSnapshotRef,
 } from "../../content/index.ts";
-import { verifyDigest } from "./snapshot-digest.ts";
-import { parseRuntimeSnapshotManifest } from "../worker/assets/runtime-manifest.ts";
-import { verifyRuntimeSupport } from "./verify-runtime-support.ts";
-import { writeInstalledRuntimeReceipt } from "./installed-runtime-receipt.ts";
+import { verifyDigest } from "./legacy-runtime-digest.ts";
+import { parseRuntimeSnapshotManifest } from "./legacy-runtime-manifest.ts";
+import { verifyRuntimeSupport } from "./legacy-verify-runtime-support.ts";
+import { writeInstalledRuntimeReceipt } from "./legacy-installed-runtime-receipt.ts";
 
 export async function prepareInstalledRuntime(
   ref: RuntimeSnapshotRef,

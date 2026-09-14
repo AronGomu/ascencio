@@ -1,9 +1,8 @@
-import {
-  acquireInstalledAsset,
-  type ContentReadPort,
-  type InstalledAssetLease,
-  type InstalledGameplay,
-} from "../../../content/index.ts";
+import type {
+  CardImageLease as SourceImageLease,
+  CardImageSource,
+} from "../../../cards/images/index.ts";
+import { cardCode as canonicalCardCode } from "../../../cards/index.ts";
 import {
   snapshotId,
   type CardCode,
@@ -54,7 +53,7 @@ export interface CardImageLease {
 export interface CardImageLibrary {
   readonly snapshotId: SnapshotId;
   readonly imageManifestSha256: string;
-  readonly provider: "bundled-archive";
+  readonly provider: "bundled-archive" | "semantic-source";
   readonly cardBackUrl: string;
   readonly placeholderUrl: string;
   readonly diagnostics: readonly CardImageDiagnostic[];
@@ -72,56 +71,65 @@ export interface CardImageCacheOptions {
   readonly imageTimeoutMs?: number;
 }
 
-export async function createInstalledCardImageLibrary(
-  reader: ContentReadPort,
-  gameplay: InstalledGameplay,
+export async function createCardImageSourceLibrary(
+  source: CardImageSource | null,
+  codes: readonly number[],
+  runtimeSnapshotId: string,
+  catalogRevision: string,
   onProgress: (completed: number, total: number) => void = () => undefined,
   signal?: AbortSignal,
 ): Promise<CardImageLibrary> {
-  const images = new Map<number, InstalledAssetLease>();
-  const leases: InstalledAssetLease[] = [];
-  const cards = [...gameplay.cards];
+  const images = new Map<number, SourceImageLease>();
+  const leases: SourceImageLease[] = [];
+  const diagnostics: CardImageDiagnostic[] = [];
+  const fallbackSignal = signal ?? new AbortController().signal;
   let next = 0;
   let completed = 0;
   let failed = false;
   let failure: unknown;
-  try {
-    await Promise.all(
-      Array.from(
-        { length: Math.min(PRELOAD_CONCURRENCY, cards.length) },
-        async () => {
-          try {
-            while (!failed && next < cards.length) {
-              signal?.throwIfAborted();
-              const card = cards[next++];
-              if (card === undefined) continue;
-              const acquired = await acquireInstalledAsset(
-                reader,
-                gameplay.content,
-                card.fullImage,
-              );
-              if (acquired.kind === "failed") throw new Error(acquired.code);
-              leases.push(acquired.value);
-              signal?.throwIfAborted();
-              if (failed) return;
-              images.set(card.code, acquired.value);
-              completed += 1;
-              onProgress(completed, cards.length);
-            }
-          } catch (error) {
-            if (!failed) failure = error;
-            failed = true;
+  await Promise.all(
+    Array.from({ length: Math.min(4, codes.length) }, async () => {
+      try {
+        while (!failed && source !== null && next < codes.length) {
+          signal?.throwIfAborted();
+          const code = codes[next++];
+          if (code === undefined) continue;
+          const lease = await source.acquire(
+            canonicalCardCode(code),
+            "full",
+            fallbackSignal,
+          );
+          if (lease !== null) leases.push(lease);
+          signal?.throwIfAborted();
+          if (failed) continue;
+          if (lease === null) {
+            diagnostics.push({
+              code,
+              status: "missing",
+              source: "semantic-card-image-source",
+            });
+          } else {
+            images.set(code, lease);
+            diagnostics.push({
+              code,
+              status: "cache-hit",
+              source: "semantic-card-image-source",
+            });
           }
-        },
-      ),
-    );
-    // Workers stop scheduling on failure; every in-flight acquire drains first.
-    if (failed) throw failure;
-    signal?.throwIfAborted();
-  } catch (error) {
+          completed += 1;
+          onProgress(completed, codes.length);
+        }
+      } catch (error) {
+        if (!failed) failure = error;
+        failed = true;
+      }
+    }),
+  );
+  if (failed) {
     for (const lease of leases) lease.release();
-    throw error;
+    throw failure;
   }
+  signal?.throwIfAborted();
   const cardBackUrl = svgDataUrl("Card back", "#241037", "#d9a441", "#6f2d62");
   const placeholderUrl = svgDataUrl(
     "Image unavailable",
@@ -131,18 +139,12 @@ export async function createInstalledCardImageLibrary(
   );
   let disposed = false;
   return Object.freeze({
-    snapshotId: snapshotId(gameplay.content.snapshot.runtimeSnapshotId),
-    imageManifestSha256: gameplay.content.catalogSha256,
-    provider: "bundled-archive" as const,
+    snapshotId: snapshotId(runtimeSnapshotId),
+    imageManifestSha256: catalogRevision,
+    provider: "semantic-source" as const,
     cardBackUrl,
     placeholderUrl,
-    diagnostics: Object.freeze(
-      cards.map(({ code, fullImage }) => ({
-        code,
-        status: "cache-hit" as const,
-        source: `${fullImage.packId}:${fullImage.path}`,
-      })),
-    ),
+    diagnostics: Object.freeze(diagnostics),
     lease(code: CardCode | number): CardImageLease {
       if (disposed) return staticImageLease(placeholderUrl);
       return staticImageLease(images.get(Number(code))?.url ?? placeholderUrl);

@@ -1,5 +1,5 @@
 import { writable, type Readable } from "svelte/store";
-import type { ContentSetRef } from "../../../content/index.ts";
+import type { BattleRuntimeSource } from "../../ports/index.ts";
 import type { DuelDiagnosticTrace } from "../../duel/contracts/duel-diagnostics.ts";
 import type { DuelError } from "../../duel/contracts/duel-error.ts";
 import type { DuelPresentationEvent } from "../../duel/contracts/duel-presentation-event.ts";
@@ -353,7 +353,7 @@ function duelIdForPair(
 
 export function createDuelStore(
   client: DuelClient,
-  content: ContentSetRef,
+  runtimeSource: BattleRuntimeSource,
 ): DuelStore {
   let current = createInitialDuelViewState(client.context);
   const state = writable(current);
@@ -518,7 +518,7 @@ export function createDuelStore(
           status: "initializing" as const,
         });
         set(next);
-        if (client.initialize(content)) return true;
+        if (client.initialize(runtimeSource)) return true;
         pendingReplacementStart = null;
         set(
           freezeState({
@@ -558,7 +558,7 @@ export function createDuelStore(
   return {
     subscribe: state.subscribe,
     initialize: () => {
-      if (!client.initialize(content)) return false;
+      if (!client.initialize(runtimeSource)) return false;
       set(
         freezeState({
           ...createInitialDuelViewState(client.context),

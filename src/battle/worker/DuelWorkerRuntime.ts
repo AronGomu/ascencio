@@ -1,6 +1,6 @@
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type { PinnedDeckRuleset } from "../../decks/validation/index.ts";
-import type { ContentSetRef } from "../../content/index.ts";
+import type { BattleRuntimeInput } from "../ports/index.ts";
 import { assertNever } from "../duel/contracts/assert-never.ts";
 import {
   DuelCommandValidationError,
@@ -85,7 +85,7 @@ export interface DuelRuntimeResources {
 export type DuelRuntimeInitializer = (
   progress: (stage: string, value?: number) => void,
   signal: AbortSignal,
-  content: ContentSetRef,
+  input: BattleRuntimeInput,
 ) => Promise<DuelRuntimeResources>;
 
 export type DuelRuntimeProgressSink = (
@@ -140,7 +140,7 @@ const MAXIMUM_RESTORE_DETAIL_LENGTH = 1_024;
 export class DuelWorkerRuntime {
   readonly #initializeResources: DuelRuntimeInitializer;
   #resources: DuelRuntimeResources | null = null;
-  #contentIdentity: string | null = null;
+  #runtimeIdentity: string | null = null;
   #initializationFailure: { readonly error: unknown } | null = null;
   #initializationAbortController: AbortController | null = null;
   #controller: HeadlessDuelController | null = null;
@@ -211,7 +211,6 @@ export class DuelWorkerRuntime {
       return Promise.resolve([{ type: "error", error: duelError }]);
     }
 
-    if (command.type === "initialize") command = structuredClone(command);
     this.#pendingCommands += 1;
     const operation = this.#commandQueue.then(async () => {
       if (this.#disposed || this.#replacementRequired) return [];
@@ -259,7 +258,7 @@ export class DuelWorkerRuntime {
     try {
       switch (command.type) {
         case "initialize": {
-          await this.#initialize(command.content, events, progressSink);
+          await this.#initialize(command.runtime, events, progressSink);
           if (this.#disposed) return [];
           const resources = this.#requireResources();
           events.push({
@@ -351,35 +350,21 @@ export class DuelWorkerRuntime {
   }
 
   async #initialize(
-    content: ContentSetRef,
+    input: BattleRuntimeInput,
     events: DuelWorkerEvent[],
     progressSink?: DuelRuntimeProgressSink,
   ): Promise<void> {
     const identity = JSON.stringify({
-      catalogSha256: content.catalogSha256,
-      snapshot: [
-        content.snapshot.activationId,
-        content.snapshot.runtimeSnapshotId,
-        content.snapshot.runtimeManifestSha256,
-        content.snapshot.releaseCatalogSha256,
-      ],
-      runtime: [
-        content.runtime.packId,
-        content.runtime.sha256,
-        content.runtime.bytes,
-      ],
-      chapters: content.chapters.map(({ packId, sha256, bytes }) => [
-        packId,
-        sha256,
-        bytes,
-      ]),
+      snapshotId: input.snapshotId,
+      coreVersion: input.coreVersion,
+      revisions: input.revisions,
     });
-    if (this.#contentIdentity !== null && this.#contentIdentity !== identity)
+    if (this.#runtimeIdentity !== null && this.#runtimeIdentity !== identity)
       throw duelOperationError(
         "snapshot_validation_failed",
-        "New installed content requires a new Worker",
+        "New runtime snapshot requires a new Worker",
       );
-    this.#contentIdentity ??= identity;
+    this.#runtimeIdentity ??= identity;
     if (this.#resources !== null) return;
     if (this.#initializationFailure !== null) {
       throw this.#initializationFailure.error;
@@ -400,7 +385,7 @@ export class DuelWorkerRuntime {
           else progressSink(event);
         },
         abortController.signal,
-        content,
+        input,
       );
       if (!this.#disposed) this.#resources = resources;
     } catch (error) {

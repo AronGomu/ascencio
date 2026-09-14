@@ -1,5 +1,8 @@
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
-import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
+import {
+  battlePresentationFixture,
+  TEST_RUNTIME_SOURCE,
+} from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -176,9 +179,8 @@ function query(value: string): HTMLElement | null {
 
 async function renderReadyApp() {
   const rendered = render(App, {
-    content: installedDuelGameplayFixture().content,
-    gameplay: installedDuelGameplayFixture(),
-    reader: contentReaderFixture(),
+    runtimeSource: TEST_RUNTIME_SOURCE,
+    presentation: battlePresentationFixture(installedDuelGameplayFixture()),
   });
   await vi.waitFor(() => expect(query("deck-picker")).not.toBeNull());
   return rendered;

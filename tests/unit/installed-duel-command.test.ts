@@ -3,44 +3,42 @@ import {
   parseDuelCommand,
   type DuelCommand,
 } from "../../src/battle/duel/contracts/duel-command.ts";
-import { TEST_CONTENT_SET_REF } from "../fixtures/installed-gameplay.ts";
+import {
+  TEST_CONTENT_SET_REF,
+  TEST_RUNTIME_INPUT,
+} from "../fixtures/installed-gameplay.ts";
 
-describe("installed duel initialize command", () => {
-  it("carries one exact clone-safe ContentSetRef", () => {
-    const command = parseDuelCommand({
-      type: "initialize",
-      content: structuredClone(TEST_CONTENT_SET_REF),
-    });
+describe("semantic duel initialize command", () => {
+  it("carries one clone-safe runtime DTO", () => {
+    const runtime = {
+      ...TEST_RUNTIME_INPUT,
+      wasmBinary: TEST_RUNTIME_INPUT.wasmBinary.slice(0),
+    };
+    const command = parseDuelCommand({ type: "initialize", runtime });
 
-    expect(command).toEqual({
-      type: "initialize",
-      content: TEST_CONTENT_SET_REF,
-    });
+    expect(command).toEqual({ type: "initialize", runtime });
     expect(command satisfies DuelCommand).toBe(command);
   });
 
-  it("rejects initialization without content or with an extra key", () => {
+  it("rejects initialization without runtime or with an extra key", () => {
     expect(() => parseDuelCommand({ type: "initialize" })).toThrow(
-      "Duel initialize command requires installed content",
+      "Duel initialize command requires runtime input",
     );
     expect(() =>
       parseDuelCommand({
         type: "initialize",
-        content: TEST_CONTENT_SET_REF,
+        runtime: TEST_RUNTIME_INPUT,
         fallback: true,
       }),
     ).toThrow();
   });
 
-  it("rejects malformed and mismatched exact refs", () => {
+  it("rejects legacy installed refs", () => {
     expect(() =>
       parseDuelCommand({
         type: "initialize",
-        content: {
-          ...TEST_CONTENT_SET_REF,
-          catalogSha256: "0".repeat(64),
-        },
+        runtime: TEST_CONTENT_SET_REF,
       }),
-    ).toThrow("Duel initialize command content ref is invalid");
+    ).toThrow("BATTLE_RUNTIME_INVALID");
   });
 });

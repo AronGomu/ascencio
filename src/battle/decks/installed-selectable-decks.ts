@@ -1,11 +1,11 @@
-import type { InstalledGameplay } from "../../content/index.ts";
+import type { BattlePresentationInput } from "../ports/index.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type { PinnedDeckRuleset } from "../../decks/validation/index.ts";
 import { deckId, resolveDeck, type DeckRepository } from "../../decks/index.ts";
 import type { SelectableDeck } from "./selectable-decks.ts";
 
 export async function installedSelectableDecks(
-  gameplay: InstalledGameplay,
+  gameplay: BattlePresentationInput,
   repository: Pick<DeckRepository, "list" | "load">,
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
   ruleset: PinnedDeckRuleset,
@@ -24,7 +24,7 @@ export async function installedSelectableDecks(
             revision: 0,
           }),
           name: deck.name,
-          validationDigest: `${gameplay.content.catalogSha256}:${deck.id}`,
+          validationDigest: `${gameplay.catalogRevision}:${deck.id}`,
           main: Object.freeze([...deck.main]),
           extra: Object.freeze([...deck.extra]),
           side: Object.freeze([...deck.side]),

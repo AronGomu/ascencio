@@ -1,5 +1,8 @@
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
-import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
+import {
+  battlePresentationFixture,
+  TEST_RUNTIME_SOURCE,
+} from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
@@ -123,9 +126,8 @@ afterEach(() => {
 
 async function renderReadyApp(imageSource: CardImageSource | null = null) {
   const rendered = render(App, {
-    content: installedDuelGameplayFixture().content,
-    gameplay: installedDuelGameplayFixture(),
-    reader: contentReaderFixture(),
+    runtimeSource: TEST_RUNTIME_SOURCE,
+    presentation: battlePresentationFixture(installedDuelGameplayFixture()),
     imageSource,
   });
   await vi.waitFor(() =>
@@ -613,6 +615,8 @@ describe("App", () => {
       release: vi.fn(),
     }));
     await renderReadyApp({ acquire });
+    await vi.waitFor(() => expect(acquire).toHaveBeenCalled());
+    acquire.mockClear();
     await startDuelFromPicker(user);
     emitDuelState(PREVIEW_TEST_STATE);
 

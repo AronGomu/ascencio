@@ -84,7 +84,7 @@ describe.each(["player", "opponent"] as const)(
             throw new Error("no presets");
           },
         }));
-        await runtime.handle({ type: "initialize", content: TEST_CONTENT_REF });
+        await runtime.handle({ type: "initialize", runtime: TEST_CONTENT_REF });
         const events = await runtime.handle({
           type: "startDuel",
           duelId: duelId("invalid-installed"),

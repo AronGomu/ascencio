@@ -177,13 +177,13 @@ describe("resolveDuelDecks", () => {
     );
   });
 
-  it("refuses a code that has card data but no packaged image", () => {
+  it("allows a supported code without optional packaged image media", () => {
     const withoutImage = resources({
       imageCodes: [...PLAYER_MAIN, ...OPPONENT_MAIN, ...CUSTOM_MAIN.slice(1)],
     });
-    expect(() =>
-      resolveDuelDecks(CUSTOM, PRESET_OPPONENT, withoutImage),
-    ).toThrow(/unsupported|outside the active snapshot/i);
+    expect(
+      resolveDuelDecks(CUSTOM, PRESET_OPPONENT, withoutImage).player.main,
+    ).toEqual(CUSTOM_MAIN);
   });
 
   /* The rejection message crosses back to the main thread, so it is the one
@@ -251,7 +251,7 @@ describe("resolveDuelDecks", () => {
 });
 
 describe("assertSupportedCards", () => {
-  it("accepts codes present in both the catalog and the image manifest", () => {
+  it("accepts codes present in the engine catalog without requiring optional media", () => {
     expect(() =>
       assertSupportedCards(
         [1, 2],
@@ -259,31 +259,15 @@ describe("assertSupportedCards", () => {
           [1, {}],
           [2, {}],
         ]),
-        new Set([1, 2]),
       ),
     ).not.toThrow();
   });
 
-  it("rejects a code missing from the catalog", () => {
-    expect(() =>
-      assertSupportedCards([1, 3], new Map([[1, {}]]), new Set([1, 3])),
-    ).toThrow(/3/);
-  });
-
-  it("rejects a code missing from the image manifest", () => {
-    expect(() =>
-      assertSupportedCards(
-        [1, 2],
-        new Map([
-          [1, {}],
-          [2, {}],
-        ]),
-        new Set([1]),
-      ),
-    ).toThrow(/2/);
+  it("rejects a code missing from the engine catalog", () => {
+    expect(() => assertSupportedCards([1, 3], new Map([[1, {}]]))).toThrow(/3/);
   });
 
   it("accepts an empty list", () => {
-    expect(() => assertSupportedCards([], new Map(), new Set())).not.toThrow();
+    expect(() => assertSupportedCards([], new Map())).not.toThrow();
   });
 });

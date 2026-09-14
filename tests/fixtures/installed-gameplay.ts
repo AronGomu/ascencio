@@ -3,7 +3,14 @@ import type {
   ContentSetRef,
   InstalledGameplay,
 } from "../../src/content/index.ts";
+import { cardCode } from "../../src/cards/index.ts";
 import type { DeckBuilderCardView } from "../../src/decks/catalog/index.ts";
+import { installedDeckCatalog } from "../../src/decks/index.ts";
+import type { BattlePresentationInput } from "../../src/battle/ports/index.ts";
+import type {
+  BattleRuntimeInput,
+  BattleRuntimeSource,
+} from "../../src/battle/ports/index.ts";
 
 const hash = (character: string) => character.repeat(64);
 
@@ -29,7 +36,69 @@ export const TEST_CONTENT_SET_REF: ContentSetRef = Object.freeze({
   ]),
 });
 
-export const TEST_CONTENT_REF = TEST_CONTENT_SET_REF;
+export const TEST_RUNTIME_INPUT: BattleRuntimeInput = Object.freeze({
+  schemaVersion: 1,
+  snapshotId: hash("c"),
+  coreVersion: Object.freeze([11, 0]) as readonly [number, number],
+  wasmBinary: new ArrayBuffer(8),
+  cards: Object.freeze([
+    Object.freeze({
+      code: cardCode(1),
+      alias: 0,
+      setcodes: Object.freeze([]),
+      type: 0x11,
+      level: 4,
+      attribute: 1,
+      race: "1",
+      attack: 1_000,
+      defense: 1_000,
+      lscale: 0,
+      rscale: 0,
+      linkMarker: 0,
+    }),
+  ]),
+  texts: Object.freeze([
+    Object.freeze({
+      code: cardCode(1),
+      name: "Test card",
+      description: "Test card",
+      strings: Object.freeze([]),
+    }),
+  ]),
+  scripts: Object.freeze([
+    Object.freeze({ name: "utility.lua", source: "return {}" }),
+  ]),
+  requiredScripts: Object.freeze({
+    cards: Object.freeze([]),
+    globals: Object.freeze(["utility.lua"]),
+  }),
+  strings: Object.freeze({
+    system: Object.freeze({ "1": "Normal Summon" }),
+    victory: Object.freeze({ "0x0": "Surrendered" }),
+    counter: Object.freeze({}),
+    setname: Object.freeze({}),
+  }),
+  allowedCardCodes: Object.freeze([cardCode(1)]),
+  ruleset: Object.freeze({
+    id: "prototype-single-ruleset",
+    revision: "prototype-2026-01",
+    quantityByCode: Object.freeze([]),
+  }),
+  revisions: Object.freeze({ babelCdb: "babel", cardScripts: "scripts" }),
+});
+
+/** Legacy name retained across runtime-focused historical fixtures. */
+export const TEST_CONTENT_REF = TEST_RUNTIME_INPUT;
+
+export const TEST_RUNTIME_SOURCE: BattleRuntimeSource = Object.freeze({
+  async load(signal: AbortSignal): Promise<BattleRuntimeInput> {
+    signal.throwIfAborted();
+    return {
+      ...TEST_RUNTIME_INPUT,
+      wasmBinary: TEST_RUNTIME_INPUT.wasmBinary.slice(0),
+    };
+  },
+});
 
 export function contentReaderFixture(): OwnedContentReader {
   return {
@@ -92,6 +161,19 @@ export function installedGameplayFromCatalog(
   return installedGameplayFixture({
     cards: Object.freeze(cards),
     ...overrides,
+  });
+}
+
+export function battlePresentationFixture(
+  gameplay: InstalledGameplay = installedGameplayFixture(),
+): BattlePresentationInput {
+  return Object.freeze({
+    snapshotId: gameplay.content.snapshot.runtimeSnapshotId,
+    catalogRevision: gameplay.content.catalogSha256,
+    cards: installedDeckCatalog(gameplay).cards,
+    decks: gameplay.decks,
+    opponents: gameplay.opponents,
+    defaults: gameplay.defaults,
   });
 }
 

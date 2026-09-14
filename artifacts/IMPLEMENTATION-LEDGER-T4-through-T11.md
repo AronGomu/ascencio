@@ -46,9 +46,35 @@ Risks/deps: T1 wire/parser reused unchanged; T8 semantic validator absent → li
 
 Paths: `package.json`; `scripts/content-publish.ts`; `scripts/lib/asset-delivery/{content-cli,content-publish-cli,progressive-error,progressive-producer,progressive-publisher}.ts`; `tests/{progressive-producer,progressive-publisher,asset-delivery-bundle}.test.ts`; `tests/unit/progressive-manifest.test.ts`; T4 ticket/ledger/report/evidence.
 
+## T5 — verified progressive staging and explicit resume
+
+| Field | Value |
+| --- | --- |
+| Objective | Stage, resume, read, seal, and explicitly clean immutable per-file structural Content without activation or optional-media acquisition |
+| Depends | T4 accepted at `5c2ddff`; T1–T3 baseline `e338808` |
+| Route/model | Initial Sol-high acceptance failed; retry1 parent-registered `openai-codex/gpt-6-astra:high` per N3; sole root writer; no subagents |
+| State | **ACCEPTED retry1** — `artifacts/REVIEW-T5-repair.md`; parent inspected repaired storage/parsers, reran 91/91 focused tests |
+| Risks | Native Chromium local structural harness passes; not production Shell/T9 integration. Cleanup caller lock ownership remains external contract; T9 activation intentionally absent |
+| Paths | `src/content/{contracts/progressive-content-store.ts,index.ts,storage/content-cache.ts,storage/content-database.ts,storage/progressive-content-store.ts,storage/progressive-storage-validation.ts}`; legacy alias consumers; progressive tests/fixture; boundary test; T5 ticket/report/evidence |
+| Retries | `1` — parent accepts `artifacts/REVIEW-T5.md` B1/B2/B3/N1 |
+| Parent decision | Exact T5 `DownloadProgress`/`DownloadJob` names approved; legacy public shapes moved narrowly to `LegacyDownloadProgress`/`LegacyDownloadJob` aliases with runtime behavior unchanged |
+
+- [x] T5.1 Write named storage/download/boundary tests first. Validation: focused red exit 1 with 13 `openProgressiveContentStore is not a function`/public-inventory failures; `artifacts/T5-EVIDENCE/red-vitest.log`.
+- [x] T5.2 Implement structural DB/cache/receipts, bounded transport, resumable concurrency-4 jobs, cache-only reader/seal, explicit cleanup. Validation: focused green 55/55; `artifacts/T5-EVIDENCE/green-vitest.log`.
+- [x] T5.3 Preserve legacy flow and frozen exception while exposing exact progressive contract. Validation: 66/66 affected Content regressions, boundary suite green, typecheck 0 errors.
+- [x] T5.4 Publish validation/report without commit, stage, push, or deploy. Validation: `artifacts/IMPLEMENTATION-REPORT-T5.md`; targeted ESLint/Prettier/diff/staging evidence.
+
+## T5 retry1 — accepted B1/B2/B3/N1 repair
+
+- [x] T5.R1 Remove global download lock reacquisition; retain per-job exclusion. Validation: `red-vitest.log` fails Shell-held-exclusive/cross-store tests; `green-vitest-attempt1.log` passes both. `browser-native-result.json` records native Chromium two-tab `CONTENT_JOB_CONFLICT` plus bounded Shell-held-exclusive completion.
+- [x] T5.R2 Enumerate strict owned cache keys independently of file rows; retain full active allow-set/unknown/legacy data; surface partial cleanup failures. Validation: red orphan/cache-delete regressions fail; green quota-immediate-delete, unused media/noncanonical/legacy preservation, cache-delete retry, IDB-clear retry pass. Native Chromium injected file-row quota leaves real Cache body without row; immediate delete-all removes body, preserves unknown/legacy keys.
+- [x] T5.R3 Check late cancellation before/after complete persistence. Validation: four red tests abort during last Cache/file-row/progress/complete write; green persists paused, rejects `CONTENT_CANCELLED`, emits no complete. Native Cache.put abort also records paused.
+- [x] T5.R4 Validate persisted job exact shape/DB key/UUID/manifest/closed sorted chapters/kind/progress identity/phase/safe bounded counters before list/open/resume. Validation: 22 corruption cases plus two closure/order cases red→green; metadata/network unchanged on rejection with `CONTENT_INTEGRITY_FAILED`.
+- [x] T5.R5 Final requested focused/regression/type/lint/format/diff checks; repair report/evidence. Validation: 91/91 focused, 66/66 affected, typecheck 0 errors/4 pre-existing warnings, full T5 targeted ESLint/Prettier, native Chromium, diff/staging checks pass. `artifacts/IMPLEMENTATION-REPORT-T5-repair.md`; exact logs/exit codes under `artifacts/T5-REPAIR-EVIDENCE/`. Baseline ledger/ticket Markdown Prettier warnings independently reproduced in before snapshots; preserved, not broadly reformatted. Independent acceptance still required.
+
 ## Pending implementation order
 
-- [ ] T4 → T5. Validation: execute ticket-specific acceptance contracts only after P1 review approval.
+- [x] T4 → T5. Validation: T4 accepted at `5c2ddff`; T5 independently accepted; parent verified 91/91 focused tests. Native Chromium evidence in T5 repair report.
 - [ ] T6/T7 → T8. Validation: execute dependency-gated ticket acceptance contracts only after T5 and required T3/T2 baselines.
 - [ ] T9 → T10 → T11. Validation: execute sequential ticket acceptance contracts; aggregate final boundary/Chromium evidence at T11.
 

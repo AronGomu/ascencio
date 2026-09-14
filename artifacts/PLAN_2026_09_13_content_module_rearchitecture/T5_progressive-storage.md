@@ -18,11 +18,11 @@ C5. One writer per cwd; dependencies permit advisory parallel analysis, not shar
 
 ## Requirements
 
-- [ ] R1. New ProgressiveContentStore owns structural bytes/receipts/jobs only; never Story/Battle/Decks semantics or active app pointer. Existing old installed flow may remain behind old mount until T9, but never consumes new receipts as activation.
-- [ ] R2. Per-file cache identity path+version reuses unchanged bytes across manifests. Partial downloads never receive receipt; full required closure verified before seal. Media excluded from required job.
-- [ ] R3. Explicit cancellation persists paused job; explicit resume validates exact job identity, skips actual verified files, retries partial file wholly. Restart resumes only on user action, not at bootstrap.
-- [ ] R4. Cache-only required/optional reads never network. Installed local reader opens with null remote delivery; remote latest failures cannot mutate previous installed state.
-- [ ] R5. Build negative incoming/outgoing fixtures for new progressive Content path now; new provider has zero semantic domain imports. Exact pre-existing legacy verifyGameplay exception stays frozen until T8 removes it; no new exception. Structural malformed JSON/path/body bounds distinct from semantic failure.
+- [x] R1. New ProgressiveContentStore owns structural bytes/receipts/jobs only; never Story/Battle/Decks semantics or active app pointer. Existing old installed flow may remain behind old mount until T9, but never consumes new receipts as activation.
+- [x] R2. Per-file cache identity path+version reuses unchanged bytes across manifests. Partial downloads never receive receipt; full required closure verified before seal. Media excluded from required job.
+- [x] R3. Explicit cancellation persists paused job; explicit resume validates exact job identity, skips actual verified files, retries partial file wholly. Restart resumes only on user action, not at bootstrap.
+- [x] R4. Cache-only required/optional reads never network. Installed local reader opens with null remote delivery; remote latest failures cannot mutate previous installed state.
+- [x] R5. Build negative incoming/outgoing fixtures for new progressive Content path now; new provider has zero semantic domain imports. Exact pre-existing legacy verifyGameplay exception stays frozen until T8 removes it; no new exception. Structural malformed JSON/path/body bounds distinct from semantic failure.
 
 ## Inputs
 
@@ -161,9 +161,9 @@ Fixture deterministic, local HTTP only; no real account or downloaded code.
 
 ## TDD
 
-- [ ] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
-- [ ] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
-- [ ] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
+- [x] D1. Red — write named test cases from Test plan first; execute focused command and capture intended failure. No passing test for behavior not yet exercised.
+- [x] D2. Green — minimum scoped implementation makes same assertions pass. Preserve existing regressions.
+- [x] D3. Refactor — only new duplication/unused imports caused by this slice; rerun exact tests. No adjacent cleanup.
 
 ## Test plan
 
@@ -179,22 +179,30 @@ Fixture deterministic, local HTTP only; no real account or downloaded code.
 
 ## Impl steps
 
-- [ ] P1. Red: unchanged-file reuse, interrupted file, missing/corrupt receipt cache, zero optional network. Verify: old manifest-keyed ZIP flow fails.
-- [ ] P2. Implement DB/cache/new receipts using idb and Web Crypto existing primitives; hash outside IDB tx. Verify: crash after Cache.put before receipt grants nothing, resume safely re-verifies.
-- [ ] P3. Implement bounded queue/download job persistence/progress/AbortSignal. Verify: correct total/completed bytes, max4 network tasks, cancellation release.
-- [ ] P4. Implement reader/readManifest/verifyRequired/sealRequired; no active writes. Verify: required seal checks every selected closure file, optional absence does not fail.
-- [ ] P5. Add explicit low-level cleanup methods, callable only under Shell lock contract; no automatic cleanup timers/GC. Verify: filesOutside uses entire active manifest allow-set, other stores untouched.
+- [x] P1. Red: unchanged-file reuse, interrupted file, missing/corrupt receipt cache, zero optional network. Verify: old manifest-keyed ZIP flow fails.
+- [x] P2. Implement DB/cache/new receipts using idb and Web Crypto existing primitives; hash outside IDB tx. Verify: crash after Cache.put before receipt grants nothing, resume safely re-verifies.
+- [x] P3. Implement bounded queue/download job persistence/progress/AbortSignal. Verify: correct total/completed bytes, max4 network tasks, cancellation release.
+- [x] P4. Implement reader/readManifest/verifyRequired/sealRequired; no active writes. Verify: required seal checks every selected closure file, optional absence does not fail.
+- [x] P5. Add explicit low-level cleanup methods, callable only under Shell lock contract; no automatic cleanup timers/GC. Verify: filesOutside uses entire active manifest allow-set, other stores untouched.
 
 ## Validation
 
-- [ ] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
+- [x] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
 
 ```sh
 npx vitest run tests/unit/progressive-storage.test.ts tests/unit/progressive-download.test.ts tests/unit/domain-boundaries.test.ts --reporter=verbose
 npm run typecheck
 ```
 
-- [ ] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
-- [ ] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
-- [ ] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
-- [ ] V5. Commit msg draft: `feat(content): stage resumable required files without activation`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+- [x] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
+- [x] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
+- [x] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
+- [x] V5. Commit msg draft: `feat(content): stage resumable required files without activation`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+
+## Retry1 acceptance repair — B1/B2/B3/N1
+
+- [x] F1. B1: Shell owns global exclusive download lock; Content retains only per-job exclusion. Verify: red/green Shell-held-lock and cross-store tests; native Chromium two-tab harness `artifacts/T5-REPAIR-EVIDENCE/browser-native-result.json`.
+- [x] F2. B2: Enumerate strict owned Cache keys, including Cache-before-IDB orphans; preserve unknown/noncanonical/legacy data and full-manifest allow-set; report partial failure and retry. Verify: red/green immediate-quota-cleanup and cache-delete retry; IDB-clear retry observes transaction failure; native Chromium quota-orphan removal/preservation.
+- [x] F3. B3: Last Cache/file-row/progress/complete write abort persists paused, rejects `CONTENT_CANCELLED`, never emits complete. Verify: four controlled-delay red/green tests plus native Chromium final Cache.put cancellation.
+- [x] F4. N1: Central persisted-job validation rejects corrupt rows at list/open/resume without repairing identity or metadata. Verify: 22 malformed-row cases plus two non-closed/unsorted chapter cases red→green.
+- [x] F5. Final repair checks/report complete. Verify: 91/91 exact focused suite (55 original + 36 added), 66/66 affected regressions, typecheck 0 errors/4 pre-existing warnings, full T5 targeted ESLint/Prettier/diff, no staged files; `artifacts/IMPLEMENTATION-REPORT-T5-repair.md`. Ledger/ticket Markdown Prettier warnings reproduced against before snapshots; broad reformat skipped. No T6, commit, push, or deploy; independent review required.

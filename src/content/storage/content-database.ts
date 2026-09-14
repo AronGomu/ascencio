@@ -3,12 +3,58 @@ import type { InstallReceipt } from "../contracts/install-receipt.ts";
 import type { PersistedDownloadJob } from "../contracts/persisted-download-job.ts";
 import type { InstalledContentSet } from "../contracts/installed-content-set.ts";
 import type { ContentFailure } from "../contracts/content-failure.ts";
+import type { DownloadJob as ProgressiveDownloadJob } from "../contracts/progressive-content-store.ts";
 import {
   CONTENT_DATABASE_NAME,
   CONTENT_DATABASE_VERSION,
 } from "../content-constants.ts";
 import { failure } from "../content-verification.ts";
 import { validateInstalledState } from "../install/manifest-closure.ts";
+
+export interface ProgressiveManifestRow {
+  readonly version: string;
+  readonly bytes: Uint8Array;
+}
+export interface ProgressiveFileRow {
+  readonly path: string;
+  readonly version: string;
+  readonly bytes: number;
+  readonly cacheKey: string;
+}
+export interface ProgressiveReceiptRow {
+  readonly receiptId: string;
+  readonly files: readonly Readonly<{
+    path: string;
+    version: string;
+    bytes: number;
+  }>[];
+}
+export interface ProgressiveContentDatabase extends DBSchema {
+  manifests: { key: string; value: ProgressiveManifestRow };
+  files: { key: [string, string]; value: ProgressiveFileRow };
+  jobs: { key: string; value: ProgressiveDownloadJob };
+  receipts: { key: string; value: ProgressiveReceiptRow };
+}
+export const PROGRESSIVE_CONTENT_DATABASE_NAME = "ygo-content-files-v1";
+export const PROGRESSIVE_CONTENT_DATABASE_VERSION = 1;
+
+export function openProgressiveContentDatabase(): Promise<
+  IDBPDatabase<ProgressiveContentDatabase>
+> {
+  return openDB<ProgressiveContentDatabase>(
+    PROGRESSIVE_CONTENT_DATABASE_NAME,
+    PROGRESSIVE_CONTENT_DATABASE_VERSION,
+    {
+      upgrade(db) {
+        for (const name of ["manifests", "files", "jobs", "receipts"] as const)
+          if (!db.objectStoreNames.contains(name)) db.createObjectStore(name);
+      },
+      blocking(_current, _blocked, event) {
+        (event.target as IDBDatabase).close();
+      },
+    },
+  );
+}
 
 export interface ContentDatabase extends DBSchema {
   catalogs: { key: string; value: Uint8Array };

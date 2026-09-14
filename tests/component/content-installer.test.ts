@@ -6,7 +6,7 @@ import InstallContentScreen from "../../src/shell/screens/InstallContentScreen.s
 import type {
   ContentInstaller,
   CoreBootstrap,
-  DownloadProgress,
+  LegacyDownloadProgress as DownloadProgress,
   DownloadResult,
 } from "../../src/content/index.ts";
 import { contentInstallFixture } from "../fixtures/content-install-fixture.ts";

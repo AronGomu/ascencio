@@ -1,8 +1,10 @@
 import type { ManifestRef } from "../contracts/manifest-ref.ts";
 import { hash, safePath } from "../parsers/schema.ts";
+import { progressivePath } from "../parsers/progressive-file.ts";
 import { failure } from "../content-verification.ts";
 
 export const STAGING_CACHE_NAME = "ygo-content-staging-v1";
+export const PROGRESSIVE_CONTENT_CACHE_NAME = "ygo-content-files-v1";
 export function applicationBase(): string {
   return new URL(import.meta.env.BASE_URL, location.origin).href;
 }
@@ -14,6 +16,18 @@ export function fileKey(ref: ManifestRef, path: string): string {
     throw failure("CONTENT_INVALID_MANIFEST");
   }
   return `${applicationBase()}__content/files/${ref.sha256}/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
+export function progressiveFileKey(path: string, version: string): string {
+  try {
+    progressivePath(path);
+    hash(version);
+  } catch {
+    throw failure("CONTENT_INVALID_MANIFEST");
+  }
+  return `${applicationBase()}__content/files/${version}/${path
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/")}`;
 }
 export function partKey(jobId: string, sha256: string): string {
   if (!/^[a-f0-9-]{36}$/.test(jobId) || !/^[a-f0-9]{64}$/.test(sha256))

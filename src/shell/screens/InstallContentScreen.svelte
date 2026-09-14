@@ -11,7 +11,7 @@
     type ContentInstaller,
     type ChapterId,
     type OwnedContentReader,
-    type DownloadProgress,
+    type LegacyDownloadProgress as DownloadProgress,
     type InstalledGameplay,
   } from "../../content/index.ts";
   import { createRuntimeActivationPort } from "../../battle/content-activation.ts";

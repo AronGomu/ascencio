@@ -36,7 +36,7 @@ export type { ContentFailure } from "./contracts/content-failure.ts";
 export type { ContentResult } from "./contracts/content-result.ts";
 export type { DownloadTarget } from "./contracts/download-target.ts";
 export type { DownloadPhase } from "./contracts/download-phase.ts";
-export type { DownloadProgress } from "./contracts/download-progress.ts";
+export type { DownloadProgress as LegacyDownloadProgress } from "./contracts/download-progress.ts";
 export type { DownloadResult } from "./contracts/download-result.ts";
 export type { ChapterReadiness } from "./contracts/chapter-readiness.ts";
 export type { StoryContentBinding } from "./contracts/story-content-binding.ts";
@@ -69,7 +69,7 @@ export {
   CONTENT_INSTALLER_LOCK,
 } from "./content-constants.ts";
 
-export type { DownloadJob } from "./contracts/download-job.ts";
+export type { DownloadJob as LegacyDownloadJob } from "./contracts/download-job.ts";
 export type { PersistedDownloadJob } from "./contracts/persisted-download-job.ts";
 export type { InstallReceipt } from "./contracts/install-receipt.ts";
 export type { ContentInstaller } from "./contracts/content-installer.ts";
@@ -87,3 +87,14 @@ export type {
 } from "./contracts/progressive-release.ts";
 export { parseProgressiveManifest } from "./parsers/progressive-release.ts";
 export { parseLatestContentPointer } from "./parsers/latest-content-pointer.ts";
+export type {
+  ContentError,
+  ContentErrorCode,
+  ContentReader,
+  DownloadJob,
+  DownloadProgress,
+  DownloadRequest,
+  ProgressiveContentStore,
+  StagedContent,
+} from "./contracts/progressive-content-store.ts";
+export { openProgressiveContentStore } from "./storage/progressive-content-store.ts";

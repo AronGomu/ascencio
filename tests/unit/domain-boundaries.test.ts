@@ -531,6 +531,7 @@ describe("public domain APIs are frozen", () => {
         "loadInstalledGameplay",
         "loadInstalledImages",
         "openContentReader",
+        "openProgressiveContentStore",
         "parseChapterGameplay",
         "parseChapterSelections",
         "parseChapterStoryDocument",
@@ -556,6 +557,8 @@ describe("public domain APIs are frozen", () => {
         "ChapterSelections",
         "ChapterSet",
         "ChapterStoryDocument",
+        "ContentError",
+        "ContentErrorCode",
         "ContentFailure",
         "ContentFailureCode",
         "ContentIndex",
@@ -564,6 +567,7 @@ describe("public domain APIs are frozen", () => {
         "ContentManifest",
         "ContentMediaType",
         "ContentReadPort",
+        "ContentReader",
         "ContentResult",
         "ContentSessionLease",
         "ContentSetRef",
@@ -573,6 +577,7 @@ describe("public domain APIs are frozen", () => {
         "DownloadJob",
         "DownloadPhase",
         "DownloadProgress",
+        "DownloadRequest",
         "DownloadResult",
         "DownloadTarget",
         "FileVersion",
@@ -583,11 +588,14 @@ describe("public domain APIs are frozen", () => {
         "InstalledImageLibrary",
         "InstalledRuntimeReceipt",
         "LatestContentPointer",
+        "LegacyDownloadJob",
+        "LegacyDownloadProgress",
         "ManifestRef",
         "OwnedContentReader",
         "PackId",
         "PackedFile",
         "PersistedDownloadJob",
+        "ProgressiveContentStore",
         "ProgressiveCoreBootstrap",
         "ProgressiveManifest",
         "ReleaseFile",
@@ -596,6 +604,7 @@ describe("public domain APIs are frozen", () => {
         "RuntimeSnapshotRef",
         "SavedContentRefsPort",
         "Sha256",
+        "StagedContent",
         "StoryContentBinding",
         "VerifiedMetadata",
         "ZipPart",
@@ -904,6 +913,23 @@ describe("domain imports", () => {
     );
     expect(isLegalImport("src/story/probe.ts", "src/decks/deck-model.ts")).toBe(
       false,
+    );
+  });
+  it("progressive storage rejects incoming deep imports and outgoing semantic domain imports", () => {
+    expect(
+      isLegalImport(
+        "src/story/probe.ts",
+        "src/content/storage/progressive-content-store.ts",
+      ),
+    ).toBe(false);
+    expect(
+      isLegalImport(
+        "src/content/storage/progressive-content-store.ts",
+        "src/story/index.ts",
+      ),
+    ).toBe(false);
+    expect(isLegalImport("src/shell/probe.ts", "src/content/index.ts")).toBe(
+      true,
     );
   });
   it("installer exceptions remain exact-file pure validation boundaries", () => {

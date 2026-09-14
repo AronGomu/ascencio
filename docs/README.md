@@ -7,7 +7,6 @@ This directory contains current project documentation and historical context. Ro
 | Document                                                                                                                               | Purpose                                                                                   |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [`architecture/architecture.md`](architecture/architecture.md)                                                                         | Canonical architecture index, invariants, and task-based routing                          |
-| [`GLOSSARY.md`](GLOSSARY.md)                                                                                                           | Shared user/agent vocabulary for naming parts of the codebase                             |
 | [`story/README.md`](story/README.md)                                                                                                   | Narrative canon: world rules, philosophy, chapters, characters                            |
 | [`DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md)                                                       | Completed TDD ticket ledger for semantic DOM-field migration                              |
 | [`ADR/001_ADR_semantic_dom_duel_field_rendering.md`](ADR/001_ADR_semantic_dom_duel_field_rendering.md)                                 | Accepted renderer ADR                                                                     |
@@ -79,6 +78,18 @@ architecture/
 ├── 06-quality/              # Testing and diagnostics
 └── 07-governance/           # Security, licensing, future extensions
 ```
+
+## Accepted Content/module rearchitecture — planned, not implemented
+
+| ID | Decision |
+| --- | --- |
+| A1 | [ADR-089](ADR/089_ADR_canonical_cards_and_focused_decks.md): canonical immutable Cards; focused Decks APIs |
+| A2 | [ADR-090](ADR/090_ADR_pure_shared_svelte_views.md): complete-ViewModel shared presentation |
+| A3 | [ADR-091](ADR/091_ADR_shell_composes_semantic_content_ports.md): Shell-only Content composition; consumer semantic ports |
+| A4 | [ADR-092](ADR/092_ADR_immutable_per_file_content_delivery.md): immutable per-file player releases |
+| A5 | [ADR-093](ADR/093_ADR_atomic_release_selector_and_save_generations.md): sole application selector; forward save generations |
+
+[ADR-094](ADR/094_ADR_explicit_media_updates_and_cleanup.md) defines explicit media/CORE/content approval, Main Menu coordination, asset-only cleanup. These decisions amend conflicting clauses in earlier installation ADRs; they are not implementation evidence.
 
 ## Accepted CORE installation decisions — planned, not implemented
 

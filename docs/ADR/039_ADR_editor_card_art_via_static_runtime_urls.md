@@ -1,6 +1,7 @@
 # ADR-039: Editor Card Art via Static Runtime URLs
 
 > Status: accepted; planned
+> Amended by [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D1: §§1–3 use semantic cache-only optional media; no direct static/upstream fallback in final player application.
 > Decided: 2026-08-16
 > Owners: decks data architecture
 > Relates: ADR-036 (shared preview panel)

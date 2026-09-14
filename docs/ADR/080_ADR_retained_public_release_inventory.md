@@ -1,6 +1,7 @@
 # ADR-080: Retain immutable content in every static public release
 
 > Status: accepted; planned
+> Amended by [ADR-092](092_ADR_immutable_per_file_content_delivery.md) D1–D5: D1/D2 player closure uses immutable per-file R2 objects/manifests, not retained player ZIPs; eligibility D3 remains.
 > Decided: 2026-09-07
 > Owners: release / governance
 > Relates: ADR-075 (static delivery), ADR-076 (saved exact refs)

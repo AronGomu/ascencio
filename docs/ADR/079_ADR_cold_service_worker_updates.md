@@ -1,6 +1,7 @@
 # ADR-079: Cold service-worker updates preserve active games
 
 > Status: accepted; planned
+> Amended by [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D3: D2 cold activation additionally requires explicit compatible candidate approval at install; waiting alone is not consent.
 > Decided: 2026-09-07
 > Owners: shell / PWA lifecycle
 > Relates: ADR-023 (single entry shell)

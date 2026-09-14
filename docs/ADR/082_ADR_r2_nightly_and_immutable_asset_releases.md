@@ -1,6 +1,7 @@
 # ADR-082: R2 nightly and immutable asset releases
 
 > Status: accepted; planned
+> Amended by [ADR-092](092_ADR_immutable_per_file_content_delivery.md) D1–D5: player D2/D5/D6 use full remote manifest and per-file immutable objects; D7 player publication also enforces semantic continuity. Developer archive policy remains separate.
 > Decided: 2026-09-09
 > Owners: release / asset tooling / shell
 > Baseline: `3fa800c` — source baseline, not implementation evidence.

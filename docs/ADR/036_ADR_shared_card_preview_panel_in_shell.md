@@ -1,6 +1,7 @@
 # ADR-036: Shared Card Preview Panel Lives in the Shell
 
 > Status: accepted; planned
+> Amended by [ADR-090](090_ADR_pure_shared_svelte_views.md) D1–D5: §§1–4 shared preview ownership/provider props move to pure shared UI plus host-owned leases.
 > Decided: 2026-08-16
 > Owners: integration/shell architecture
 > Relates: ADR-022 (boundaries), ADR-014 (preview identity attestation — untouched)

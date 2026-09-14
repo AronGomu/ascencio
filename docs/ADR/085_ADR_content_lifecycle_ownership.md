@@ -1,6 +1,7 @@
 # ADR-085: Content module owns verified installation lifecycle
 
 > Status: accepted; planned
+> Amended by [ADR-091](091_ADR_shell_composes_semantic_content_ports.md) D1–D5 and [ADR-093](093_ADR_atomic_release_selector_and_save_generations.md) D2–D4: Content stages mechanical receipts, Shell owns sole selector and semantic adapter composition; domains no longer consume Content refs/receipts.
 > Decided: 2026-09-12
 > Owners: content / shell / battle
 > Amends: ADR-076 D1–D3 (content storage ownership and activation seam)

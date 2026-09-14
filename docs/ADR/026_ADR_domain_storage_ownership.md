@@ -1,6 +1,7 @@
 # ADR-026: Domain Storage Ownership
 
 > Status: accepted
+> Amended by [ADR-093](093_ADR_atomic_release_selector_and_save_generations.md) D1–D5: separate Story generations plus Shell selector add logical atomic visibility; §8 still forbids physical cross-DB transaction assumptions.
 > Decided: 2026-08-14
 > Owners: deck-domain, story-domain, application-shell architecture
 > Commit: `c27f4b0` — T5, T12, T13

@@ -71,7 +71,7 @@ Foundation: objectivist (Ayn Rand) philosophy at every level — aesthetics, val
 - The product is a **fan game with 100% original characters and story**, a parallel universe with no canon link to the official Yu-Gi-Oh! universe.
 - The **engine binary, loader resolution and vendor manifest are permanently frozen.** Engine and Project Ignis assets are pinned and activated as one verified snapshot.
 - Synchronous core callbacks use preloaded memory and perform no async I/O.
-- **Terminology is the game's, not a synonym of it**: duel, duelist, deck, hand, field, zone, phase, Life Points, Extra Deck, Main Deck, Side Deck, summon, set, chain. `docs/GLOSSARY.md` is the shared vocabulary and is kept current.
+- **Terminology is the game's, not a synonym of it**: duel, duelist, deck, hand, field, zone, phase, Life Points, Extra Deck, Main Deck, Side Deck, summon, set, chain.
 
 **Explicitly undecided — do not invent answers.**
 

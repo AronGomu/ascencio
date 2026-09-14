@@ -57,7 +57,6 @@ Paths resolve at baseline SHA above; later edits shift line numbers. No ephemera
 | L11 | `docs/DECK_BUILDER_PROTOTYPE_IMPLEMENTATION_PLAN.md` | 207 |
 | L12 | `docs/DECK_BUILDER_PROTOTYPE_SCOPE.md` | 485, 511, 702, 816 |
 | L13 | `docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md` | 150 |
-| L14 | `docs/GLOSSARY.md` | 104, 131 |
 | L15 | `docs/MVP_IMPLEMENTATION_HANDOFF.md` | 278, 288 |
 | L16 | `docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md` | 94, 140, 193, 225, 236, 239, 240, 308, 327, 346, 525, 548, 596, 731, 875 |
 | L17 | `docs/architecture/03-engine/ocgcore-adapter.md` | 8 |

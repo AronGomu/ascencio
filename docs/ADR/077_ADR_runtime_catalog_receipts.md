@@ -1,6 +1,7 @@
 # ADR-077: Runtime activation binds catalog, not chapter artwork
 
 > Status: accepted; planned
+> Amended by [ADR-091](091_ADR_shell_composes_semantic_content_ports.md) D4–D5: D3 initialization receives semantic runtime data, no Content receipt/ref in Battle; engine authority remains Worker-only.
 > Amended by [ADR-086](086_ADR_installed_chapters_own_gameplay_catalog.md) D1–D4: runtime support remains whole; gameplay requires complete verified chapter data/media and never unlocks from runtime alone.
 > Decided: 2026-09-07
 > Owners: battle / content

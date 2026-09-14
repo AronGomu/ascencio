@@ -75,7 +75,7 @@ Voice stays consistent; tone adapts to the moment. Use plain language without fl
 - Keep screen-reader names aligned with visible labels and outcomes.
 - Do not rely on punctuation, color, or iconography to carry the message alone.
 
-Maintain a short terminology glossary when inconsistency spans the product. Do not vary words for literary effect in an interface.
+Use consistent terminology across the product. Do not vary words for literary effect in an interface.
 
 ## Verify
 

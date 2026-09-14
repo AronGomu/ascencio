@@ -48,6 +48,20 @@ This is the canonical architecture entry point. Detailed decisions are intention
 | Story-to-duel handoff, checkpoints, or result routing                              | [`../ADR/027_ADR_story_duel_handoff_saga.md`](../ADR/027_ADR_story_duel_handoff_saga.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Post-MVP systems                                                                   | [`07-governance/extension-path.md`](07-governance/extension-path.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
+## Accepted Content/module rearchitecture — planned
+
+A1. [ADR-089](../ADR/089_ADR_canonical_cards_and_focused_decks.md): immutable Cards ownership; strict focused Decks entries.
+
+A2. [ADR-090](../ADR/090_ADR_pure_shared_svelte_views.md): `src/shared-svelte-ui/` contains domain-agnostic complete-ViewModel components.
+
+A3. [ADR-091](../ADR/091_ADR_shell_composes_semantic_content_ports.md): only Shell application/adapters import Content; domains own semantic ports/validators, Worker remains engine authority.
+
+A4. [ADR-092](../ADR/092_ADR_immutable_per_file_content_delivery.md): remote immutable per-file manifest/objects replace player ZIP delivery; CORE stores pointer only.
+
+A5. [ADR-093](../ADR/093_ADR_atomic_release_selector_and_save_generations.md): separate Story save generations precede one application selector commit. [ADR-094](../ADR/094_ADR_explicit_media_updates_and_cleanup.md): required metadata gates play; optional media, independent updates, asset-only cleanup remain explicit Main Menu actions.
+
+Baseline `010401956d0cd59d8e6dda91bd367040f5de669e` contains installer/domain Content coupling, not this target architecture. Earlier conflicting planned clauses are amended by these records; no source implementation claimed here.
+
 ## Accepted CORE installation direction — planned
 
 | Concern | Decision |

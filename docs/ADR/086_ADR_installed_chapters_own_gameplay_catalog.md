@@ -1,6 +1,7 @@
 # ADR-086: Installed chapters own gameplay catalog
 
 > Status: accepted; planned
+> Amended by [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D1–D2: D4/D5 required metadata still gates play, missing images/audio/video remain optional with warning/placeholders; no media-driven chapter invalidation.
 > Decided: 2026-09-12
 > Owners: content / decks / story / battle / shell
 > Amends: ADR-043 whole-runtime UI availability, ADR-075 D2 runtime-only gameplay, ADR-077 D4 image-independent gameplay readiness, ADR-078 missing-media readiness

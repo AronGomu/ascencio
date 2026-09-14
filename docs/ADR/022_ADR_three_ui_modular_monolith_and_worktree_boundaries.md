@@ -1,6 +1,7 @@
 # ADR-022: Three-UI Modular Monolith and Worktree Boundaries
 
 > Status: accepted
+> Amended by [ADR-089](089_ADR_canonical_cards_and_focused_decks.md), [ADR-090](090_ADR_pure_shared_svelte_views.md), [ADR-091](091_ADR_shell_composes_semantic_content_ports.md): Cards/focused Decks entries, named pure shared UI, Shell-only Content composition replace conflicting dependency clauses.
 > Decided: 2026-08-14
 > Owners: application-shell, duel, deck-editor, visual-novel architecture
 > Amended by [ADR-085](085_ADR_content_lifecycle_ownership.md) D1–D2: content lifecycle module owns installation; narrow Battle validation-only public sub-entry avoids importing gameplay during verification.

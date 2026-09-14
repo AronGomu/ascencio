@@ -4,12 +4,10 @@ This file is the single context initialisation file for all AI agents working on
 
 ## Agent workspace layout
 
-- `docs/` : Project documentation. Contains GLOSSARY.md, ADR/, architecture/
+- `docs/` : Project documentation. Contains ADR/, architecture/
 - `artifacts/` : Ephemeral design/prototype artifacts and `make-plan-aron` plan indexes/tickets/HTML. Retired when a round ends; see Document rules.
 - `artifacts/manual_test_checklist.md` : Durable. The human test steps for every shipped slice, kept current, never retired with a plan.
 - `ai-artifact/manual_test_checklist.md` : Divergent sibling (221 lines vs 3887). Owner decides merge vs archive.
-
-Read and activate `/home/aron/.claude/skills/make-glossary-aron/SKILL.md` (also vendored at `.claude/skills/make-glossary-aron/SKILL.md`); keep [`docs/GLOSSARY.md`](docs/GLOSSARY.md) up to date.
 
 ## Knowledge graph (graphify) — use first
 
@@ -62,7 +60,7 @@ Commit `161d1e8` rewrote `feedback-decks.md`. The round-1 ADRs could then no lon
 
 ### Durable documents never link to ephemeral ones
 
-`docs/` is durable — ADRs, architecture pages, `README.md`, `GLOSSARY.md`. `artifacts/` (plans, tickets, grill records) and `.tmp/` (progress, scratch) are ephemeral and get deleted when a round ends.
+`docs/` is durable — ADRs, architecture pages, `README.md`. `artifacts/` (plans, tickets, grill records) and `.tmp/` (progress, scratch) are ephemeral and get deleted when a round ends.
 
 A durable document cites an immutable anchor instead — a commit SHA, a git tag, or a tracked file that outlives the round — and inlines the fact it is citing, so the reader never has to follow the link to get the point. The convention is a header line naming the tickets the commit covers:
 
@@ -146,7 +144,6 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 ├── artifacts/                         # Ephemeral plans/tickets/grills + the durable manual_test_checklist.md
 ├── docs/
 │   ├── README.md                      # Documentation index
-│   ├── GLOSSARY.md                    # Shared user/agent vocabulary
 │   ├── DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md
 │   ├── MVP_TECHNICAL_IMPLEMENTATION_PLAN.md  # Completed baseline
 │   ├── architecture/

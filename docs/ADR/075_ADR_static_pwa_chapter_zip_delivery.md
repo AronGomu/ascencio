@@ -1,6 +1,7 @@
 # ADR-075: Static PWA chapter ZIP delivery
 
 > Status: accepted; planned
+> Amended by [ADR-092](092_ADR_immutable_per_file_content_delivery.md) D1–D4: D1/D3/D4 player transport uses remote per-file manifest/objects, not ZIP parts; CORE holds pointer only.
 > Amended by [ADR-084](084_ADR_asset_free_core_boot.md) D1/D4 and [ADR-086](086_ADR_installed_chapters_own_gameplay_catalog.md) D1: executable CORE boots asset-free; runtime alone grants no gameplay, installed chapters define available union.
 > Decided: 2026-09-07
 > Owners: shell / content delivery

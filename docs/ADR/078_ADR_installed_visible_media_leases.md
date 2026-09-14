@@ -1,6 +1,7 @@
 # ADR-078: Installed visible-media leases replace direct art URLs
 
 > Status: accepted; planned
+> Amended by [ADR-091](091_ADR_shell_composes_semantic_content_ports.md) D1–D3 and [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D1–D2: Cards owns semantic image port, Shell adapter resolves cache-only optional media; missing media never gates gameplay.
 > Amended by [ADR-086](086_ADR_installed_chapters_own_gameplay_catalog.md) D4–D5: required-media failure invalidates owning chapter/dependants; placeholder is error presentation only, never a readiness bypass.
 > Decided: 2026-09-07
 > Owners: decks / shell / battle presentation

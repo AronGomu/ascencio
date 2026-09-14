@@ -1,0 +1,185 @@
+{
+  "plan": "./artifacts/PLAN_2026_09_13_content_module_rearchitecture.md",
+  "tickets": [
+    {
+      "id": "T1",
+      "path": "T1_baseline-preflight.md",
+      "depends": [],
+      "produces": [
+        "fixture",
+        "wire"
+      ],
+      "consumes": []
+    },
+    {
+      "id": "T2",
+      "path": "T2_cards-deck-editing.md",
+      "depends": [
+        "T1"
+      ],
+      "produces": [
+        "cards",
+        "images",
+        "decks",
+        "editor"
+      ],
+      "consumes": [
+        "fixture"
+      ]
+    },
+    {
+      "id": "T3",
+      "path": "T3_shared-presentation.md",
+      "depends": [
+        "T2"
+      ],
+      "produces": [
+        "preview"
+      ],
+      "consumes": [
+        "images",
+        "cards"
+      ]
+    },
+    {
+      "id": "T4",
+      "path": "T4_per-file-producer.md",
+      "depends": [
+        "T1"
+      ],
+      "produces": [
+        "wire"
+      ],
+      "consumes": [
+        "fixture"
+      ]
+    },
+    {
+      "id": "T5",
+      "path": "T5_progressive-storage.md",
+      "depends": [
+        "T4"
+      ],
+      "produces": [
+        "storage"
+      ],
+      "consumes": [
+        "wire",
+        "fixture"
+      ]
+    },
+    {
+      "id": "T6",
+      "path": "T6_story-save-generations.md",
+      "depends": [
+        "T3",
+        "T5"
+      ],
+      "produces": [
+        "story",
+        "saves"
+      ],
+      "consumes": [
+        "storage",
+        "cards",
+        "images",
+        "preview"
+      ]
+    },
+    {
+      "id": "T7",
+      "path": "T7_battle-runtime.md",
+      "depends": [
+        "T2",
+        "T5"
+      ],
+      "produces": [
+        "battle"
+      ],
+      "consumes": [
+        "storage",
+        "cards",
+        "images",
+        "decks"
+      ]
+    },
+    {
+      "id": "T8",
+      "path": "T8_semantic-preparation.md",
+      "depends": [
+        "T6",
+        "T7"
+      ],
+      "produces": [
+        "candidate",
+        "releaseValidation"
+      ],
+      "consumes": [
+        "storage",
+        "wire",
+        "cards",
+        "images",
+        "editor",
+        "story",
+        "saves",
+        "battle"
+      ]
+    },
+    {
+      "id": "T9",
+      "path": "T9_atomic-activation.md",
+      "depends": [
+        "T8"
+      ],
+      "produces": [
+        "selector"
+      ],
+      "consumes": [
+        "candidate",
+        "storage",
+        "wire",
+        "saves"
+      ]
+    },
+    {
+      "id": "T10",
+      "path": "T10_update-media-cleanup.md",
+      "depends": [
+        "T9"
+      ],
+      "produces": [
+        "lifecycle"
+      ],
+      "consumes": [
+        "selector",
+        "candidate",
+        "storage",
+        "wire",
+        "images",
+        "story"
+      ]
+    },
+    {
+      "id": "T11",
+      "path": "T11_acceptance.md",
+      "depends": [
+        "T10"
+      ],
+      "produces": [],
+      "consumes": [
+        "wire",
+        "storage",
+        "cards",
+        "images",
+        "preview",
+        "story",
+        "saves",
+        "battle",
+        "candidate",
+        "selector",
+        "lifecycle",
+        "releaseValidation"
+      ]
+    }
+  ]
+}

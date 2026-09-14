@@ -1130,17 +1130,43 @@ test("CLI adapters reject missing target/history, return exact hashes, preserve 
       ]),
       2,
     );
-    assert.equal(await runContent(root, "pack", ["--empty-history"]), 0);
+    assert.equal(
+      await runBundle(root, ["--target", "prod", "--empty-history"]),
+      0,
+    );
     const first = JSON.parse(stdout.at(-1)!);
     assert.equal(first.status, "ok");
     assert.match(first.snapshotSha256, /^[a-f0-9]{64}$/);
-    assert.equal(await runContent(root, "verify", []), 0);
+    assert.equal(await runContent(root, "pack", ["--help"]), 0);
+    assert.match(stdout.at(-1)!, /^content:pack --release-sequence/);
+    assert.equal(await runContent(root, "verify", ["--help"]), 0);
+    assert.match(stdout.at(-1)!, /^content:verify --run/);
     assert.equal(
-      JSON.parse(stdout.at(-1)!).snapshotSha256,
-      first.snapshotSha256,
+      await runContent(root, "pack", [
+        "--release-sequence",
+        "1",
+        "--core-min",
+        "1",
+        "--core-max-exclusive",
+        "2",
+      ]),
+      0,
+    );
+    const progressive = JSON.parse(stdout.at(-1)!);
+    assert.match(progressive.manifestVersion, /^[a-f0-9]{64}$/);
+    assert.equal(
+      await runContent(root, "verify", [
+        "--run",
+        progressive.run,
+        "--check-sources",
+      ]),
+      0,
     );
     await put(root, "generated/asset-delivery/prepared-player.json", "{");
-    assert.equal(await runContent(root, "pack", ["--empty-history"]), 2);
+    assert.equal(
+      await runBundle(root, ["--target", "prod", "--empty-history"]),
+      2,
+    );
     assert.equal(JSON.parse(stdout.at(-1)!).code, "ASSET_TARGET_UNAVAILABLE");
     await put(
       root,

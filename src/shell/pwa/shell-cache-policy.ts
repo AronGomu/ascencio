@@ -37,6 +37,19 @@ export function isFirstCoreInstall(
   );
 }
 
+export async function installShellPrecache(
+  firstInstall: boolean,
+  install: () => Promise<unknown>,
+  removeIncompleteCache: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    await install();
+  } catch (error) {
+    if (firstInstall) await removeIncompleteCache();
+    throw error;
+  }
+}
+
 export function assertShellPrecacheEntries<
   T extends ShellPrecacheEntry | string,
 >(entries: readonly T[]): readonly T[] {

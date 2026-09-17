@@ -46,6 +46,7 @@ export class ContentReader implements OwnedContentReader {
   readonly db: IDBPDatabase<ContentDatabase>;
   readonly cache: Cache;
   readonly privateKeys: ReadonlySet<string> | null;
+  private readerClosed = false;
   constructor(
     db: IDBPDatabase<ContentDatabase>,
     cache: Cache,
@@ -241,11 +242,16 @@ export class ContentReader implements OwnedContentReader {
   }
   acquireSession(ref: ContentSetRef) {
     return this.guard(async () => {
+      if (this.readerClosed) throw failure("CONTENT_STORAGE_UNAVAILABLE");
       if (this.privateKeys !== null) throw failure("CONTENT_BUSY");
       const content = unwrap(await inspectInstalledContent(this, ref));
       const lease = await acquireContentLease(content, () =>
         this.inspectContent(content),
       );
+      if (this.readerClosed) {
+        lease.release();
+        throw failure("CONTENT_STORAGE_UNAVAILABLE");
+      }
       const release = () => {
         lease.release();
         this.leases.delete(release);
@@ -255,6 +261,8 @@ export class ContentReader implements OwnedContentReader {
     });
   }
   close(): void {
+    if (this.readerClosed) return;
+    this.readerClosed = true;
     for (const release of this.leases) release();
     this.channel?.close();
     this.listeners.clear();

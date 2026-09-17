@@ -243,7 +243,15 @@ export class BasicOpponentPolicy implements OpponentPolicy {
           reason: "select_first_legal",
         };
       }
-      case "selectUnselectCard":
+      case "selectUnselectCard": {
+        const finish = prompt.choices.find(
+          (choice) => choice.action === "finish",
+        );
+        return {
+          choiceIds: [(finish ?? prompt.choices[0]!).id],
+          reason: "select_first_legal",
+        };
+      }
       case "option":
       case "selectPosition":
       case "announceNumber":

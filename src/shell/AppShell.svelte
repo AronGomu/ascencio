@@ -625,8 +625,8 @@
     if (world === boundDeckWorld) return;
     boundDeckWorld = world;
     editorContext = world === "free-play" ? { kind: "free-play" } : null;
-    if (world !== "story") return;
     const requested = ++storyDeckToken;
+    if (world !== "story") return;
     void openStoryDeckContext().then(
       (bound) => {
         if (requested !== storyDeckToken) return;

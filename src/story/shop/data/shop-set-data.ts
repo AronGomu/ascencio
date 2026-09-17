@@ -134,26 +134,39 @@ export function isSetReleased(
   return data?.sets.find((s) => s.id === setId)?.released === true;
 }
 
+const rarityIndexByData = new WeakMap<
+  ShopSetData,
+  ReadonlyMap<number, ShopRarity>
+>();
+
+function rarityIndex(data: ShopSetData): ReadonlyMap<number, ShopRarity> {
+  const cached = rarityIndexByData.get(data);
+  if (cached !== undefined) return cached;
+
+  const indexed = new Map<number, ShopRarity>();
+  for (const set of data.sets) {
+    for (const card of set.cards) {
+      const best = indexed.get(card.code);
+      if (
+        best === undefined ||
+        RARITY_ORDER.indexOf(card.rarity) > RARITY_ORDER.indexOf(best)
+      ) {
+        indexed.set(card.code, card.rarity);
+      }
+    }
+  }
+  rarityIndexByData.set(data, indexed);
+  return indexed;
+}
+
 export function resolveCardRarity(
   code: number,
   data: ShopSetData | null,
   view: DeckBuilderCardView | undefined,
 ): ShopRarity {
   if (data !== null) {
-    let best: ShopRarity | null = null;
-    for (const set of data.sets) {
-      for (const card of set.cards) {
-        if (card.code === code) {
-          if (
-            best === null ||
-            RARITY_ORDER.indexOf(card.rarity) > RARITY_ORDER.indexOf(best)
-          ) {
-            best = card.rarity;
-          }
-        }
-      }
-    }
-    if (best !== null) return best;
+    const rarity = rarityIndex(data).get(code);
+    if (rarity !== undefined) return rarity;
   }
   if (view !== undefined) return inferRarity(view);
   return "common";

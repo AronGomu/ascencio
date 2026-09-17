@@ -26,8 +26,15 @@ export async function fetchVerified(
     signal.throwIfAborted();
     throw failure("CONTENT_NETWORK_FAILED");
   }
-  if (!response.ok || response.redirected || !response.body)
+  if (!response.ok || response.redirected || !response.body) {
+    if (response.body)
+      try {
+        await response.body.cancel();
+      } catch {
+        console.warn("CONTENT_RESPONSE_CANCEL_FAILED");
+      }
     throw failure("CONTENT_NETWORK_FAILED");
+  }
   const body = response.body.getReader();
   const bytes = new Uint8Array(ref.bytes);
   let size = 0;

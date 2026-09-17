@@ -226,15 +226,14 @@ async function verifyRemoteManifest(
   }
 }
 
-async function putImmutable(
+async function verifyImmutable(
   transport: ProgressiveTransport,
   key: string,
   bytes: Uint8Array,
-): Promise<void> {
-  const result = await network(() => transport.putIfAbsent(key, bytes));
-  if (result === "created") return;
+): Promise<boolean> {
   const metadata = await network(() => transport.head(key));
-  if (!metadata || metadata.bytes !== bytes.length)
+  if (!metadata) return false;
+  if (metadata.bytes !== bytes.length)
     progressiveFail("PUBLISH_IMMUTABLE_CONFLICT");
   const existing = await network(() => transport.get(key, bytes.length));
   if (
@@ -244,6 +243,43 @@ async function putImmutable(
     !Buffer.from(existing.bytes).equals(Buffer.from(bytes))
   )
     progressiveFail("PUBLISH_IMMUTABLE_CONFLICT");
+  return true;
+}
+
+async function putImmutable(
+  transport: ProgressiveTransport,
+  key: string,
+  bytes: Uint8Array,
+): Promise<void> {
+  const result = await network(() => transport.putIfAbsent(key, bytes));
+  if (result === "created") return;
+  if (!(await verifyImmutable(transport, key, bytes)))
+    progressiveFail("PUBLISH_IMMUTABLE_CONFLICT");
+}
+
+async function ensureImmutable(
+  transport: ProgressiveTransport,
+  key: string,
+  bytes: Uint8Array,
+): Promise<void> {
+  if (!(await verifyImmutable(transport, key, bytes)))
+    await putImmutable(transport, key, bytes);
+}
+
+async function candidateFileBytes(
+  root: string,
+  run: string,
+  file: ProgressiveReleaseCandidate["manifest"]["files"][number],
+): Promise<Uint8Array> {
+  const key = `content/files/${file.version}/${file.path}`;
+  const bytes = new Uint8Array(
+    await readFile(
+      await assertSafeParents(root, `${run}/progressive/objects/${key}`),
+    ),
+  );
+  if (bytes.length !== file.bytes || sha(bytes) !== file.version)
+    progressiveFail("CONTENT_INVALID_MANIFEST");
+  return bytes;
 }
 
 export async function publishProgressiveRelease(
@@ -279,6 +315,19 @@ export async function publishProgressiveRelease(
     latest.manifest.version === candidate.manifestVersion &&
     latest.manifest.bytes === candidate.manifestBytes.length
   ) {
+    for (const file of candidate.manifest.files) {
+      const key = `content/files/${file.version}/${file.path}`;
+      await ensureImmutable(
+        transport,
+        key,
+        await candidateFileBytes(root, run, file),
+      );
+    }
+    await ensureImmutable(
+      transport,
+      `content/manifests/${candidate.manifestVersion}.json`,
+      candidate.manifestBytes,
+    );
     await verifyRemoteManifest(transport, latest);
     return { status: "idempotent", manifestVersion: candidate.manifestVersion };
   }
@@ -294,14 +343,11 @@ export async function publishProgressiveRelease(
 
   for (const file of candidate.manifest.files) {
     const key = `content/files/${file.version}/${file.path}`;
-    const bytes = new Uint8Array(
-      await readFile(
-        await assertSafeParents(root, `${run}/progressive/objects/${key}`),
-      ),
+    await putImmutable(
+      transport,
+      key,
+      await candidateFileBytes(root, run, file),
     );
-    if (bytes.length !== file.bytes || sha(bytes) !== file.version)
-      progressiveFail("CONTENT_INVALID_MANIFEST");
-    await putImmutable(transport, key, bytes);
   }
   const manifestKey = `content/manifests/${candidate.manifestVersion}.json`;
   await putImmutable(transport, manifestKey, candidate.manifestBytes);

@@ -26,6 +26,7 @@ export function createProgressiveReleaseMedia(
   setImageRefs: ReadonlyMap<string, ChapterFileRef>,
 ): ProgressiveReleaseMedia {
   const active = new Map<string, () => void>();
+  const lifetime = new AbortController();
   const manifestVersion = staged.manifestVersion;
   let reading = 0;
   const waiting: (() => void)[] = [];
@@ -75,7 +76,11 @@ export function createProgressiveReleaseMedia(
     try {
       checkAbort(signal);
       if (disposed) return null;
-      const bytes = await reader.readFile(manifestVersion, file.path, signal);
+      const bytes = await reader.readFile(
+        manifestVersion,
+        file.path,
+        AbortSignal.any([signal, lifetime.signal]),
+      );
       checkAbort(signal);
       if (disposed || bytes === null) return null;
       url = URL.createObjectURL(
@@ -127,6 +132,7 @@ export function createProgressiveReleaseMedia(
     dispose(): void {
       if (disposed) return;
       disposed = true;
+      lifetime.abort();
       for (const release of active.values()) release();
       active.clear();
     },

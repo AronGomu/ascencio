@@ -239,6 +239,25 @@ describe("SnapshotStore", () => {
       SnapshotStorageError,
     );
   });
+
+  it("surfaces a versionchange-closed debug-run connection as a typed storage error", async () => {
+    const name = "snapshot-debug-run-write-failure";
+    const value = await store(name);
+    await deleteDB(name);
+
+    await expect(
+      value.recordDebugRun({
+        id: "run-closed",
+        snapshotId: snapshotId("a".repeat(64)),
+        createdAt: "2026-07-13T00:00:00.000Z",
+        resultType: "completed",
+        traceEntries: 1,
+      }),
+    ).rejects.toMatchObject({
+      name: "SnapshotStorageError",
+      message: "Unable to record debug-run metadata",
+    });
+  });
 });
 
 async function stageVerifyActivate(

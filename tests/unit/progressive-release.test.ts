@@ -305,6 +305,12 @@ describe("progressive wire shape parsers", () => {
       ).toBe(mediaType);
   });
 
+  it("rejects a header-unsafe MIME type on a required file", () => {
+    const value = manifest();
+    value.files[1]!.mediaType = "application/json\r\nx-content: injected";
+    expect(() => parseProgressiveManifest(value)).toThrow(invalid);
+  });
+
   it("rejects a required runtime file without the runtime pack", () => {
     const value = manifest();
     value.files[1]!.packIds = ["chapter-01"];

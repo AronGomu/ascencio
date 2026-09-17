@@ -42,10 +42,10 @@ export function parseProgressiveFile(value: unknown): ReleaseFile {
     packs.length === 0 ||
     v.required !== (role !== "media") ||
     typeof v.mediaType !== "string" ||
-    (role === "media" &&
-      !/^(?:image|audio|video)\/[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(
-        v.mediaType,
-      )) ||
+    !/^[A-Za-z0-9!#$%&'*+.^_`|~-]+\/[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(
+      v.mediaType,
+    ) ||
+    (role === "media" && !/^(?:image|audio|video)\//.test(v.mediaType)) ||
     (role === "runtime" && !packs.includes("runtime"))
   )
     invalid();

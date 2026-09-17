@@ -36,10 +36,14 @@ describe("bounded deck history", () => {
       after: { main: [1], extra: [], side: [] },
       reason: "add",
     });
-    const undone = undoDeckUpdate(first)!;
+    const undone = undoDeckUpdate(first, {
+      main: [1],
+      extra: [],
+      side: [],
+    })!;
     expect(undone.cards.main).toEqual([]);
     expect(undone.history.redo).toHaveLength(1);
-    const redone = redoDeckUpdate(undone.history)!;
+    const redone = redoDeckUpdate(undone.history, undone.cards)!;
     expect(redone.cards.main).toEqual([1]);
     const branch = pushDeckUpdate(undone.history, {
       id: "branch",
@@ -62,7 +66,10 @@ describe("bounded deck history", () => {
       reason: "import",
     });
     expect(history.undo).toHaveLength(1);
-    expect(undoDeckUpdate(history)?.importedNeedsReview).toBe(false);
+    expect(
+      undoDeckUpdate(history, { main: [1], extra: [], side: [] })
+        ?.importedNeedsReview,
+    ).toBe(false);
   });
 
   it("restores import review state with import cards", () => {
@@ -75,9 +82,15 @@ describe("bounded deck history", () => {
       afterImportedNeedsReview: true,
       reason: "import",
     });
-    const undone = undoDeckUpdate(history)!;
+    const undone = undoDeckUpdate(history, {
+      main: [2],
+      extra: [],
+      side: [],
+    })!;
     expect(undone.importedNeedsReview).toBe(false);
-    expect(redoDeckUpdate(undone.history)?.importedNeedsReview).toBe(true);
+    expect(
+      redoDeckUpdate(undone.history, undone.cards)?.importedNeedsReview,
+    ).toBe(true);
   });
 
   it("forces a sort snapshot when before and after order already match", () => {
@@ -108,6 +121,26 @@ describe("bounded deck history", () => {
     });
 
     expect(history.undo).toHaveLength(1);
+  });
+
+  it("preserves duplicate survivor order while restoring membership", () => {
+    const history = pushDeckUpdate(emptyDeckHistory(), {
+      id: "remove-duplicate",
+      deckId: deckId("deck-a"),
+      before: { main: [1, 2, 1, 3], extra: [], side: [] },
+      after: { main: [1, 2, 3], extra: [], side: [] },
+      reason: "remove",
+    });
+    const undone = undoDeckUpdate(history, {
+      main: [3, 2, 1],
+      extra: [],
+      side: [],
+    })!;
+
+    expect(undone.cards.main).toEqual([3, 2, 1, 1]);
+    expect(redoDeckUpdate(undone.history, undone.cards)?.cards.main).toEqual([
+      3, 2, 1,
+    ]);
   });
 
   it("a pure reorder pushes no history entry", () => {

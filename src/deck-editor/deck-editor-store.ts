@@ -430,7 +430,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         !this.#isCurrentContext(contextGeneration)
       )
         return;
-      const result = undoDeckUpdate(current.history);
+      const result = undoDeckUpdate(current.history, current.deck);
       if (result === null) return;
       const restored = this.#withCards(
         current.deck,
@@ -454,7 +454,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         !this.#isCurrentContext(contextGeneration)
       )
         return;
-      const result = redoDeckUpdate(current.history);
+      const result = redoDeckUpdate(current.history, current.deck);
       if (result === null) return;
       const restored = this.#withCards(
         current.deck,

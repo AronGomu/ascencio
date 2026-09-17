@@ -199,6 +199,34 @@ describe("IndexedDbDeckRepository", () => {
     repo.close();
   });
 
+  it("keeps updatedAt monotonic when the system clock moves backward", async () => {
+    const name = "deck-repo-monotonic-updated-at";
+    names.push(name);
+    let now = new Date("2026-01-03T00:00:00.000Z");
+    const repo = await IndexedDbDeckRepository.open(name, () => now);
+    const draft = createBlankDeck(
+      "Clock rollback",
+      catalog,
+      PROTOTYPE_RULESET,
+      {
+        id: "clock-rollback",
+        now: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    );
+    const created = await repo.create(draft, emptyDeckHistory());
+    expect(created.deck.updatedAt).toBe("2026-01-03T00:00:00.000Z");
+
+    now = new Date("2026-01-02T00:00:00.000Z");
+    const saved = await repo.save(
+      created.deck.revision,
+      { ...created.deck, name: "Saved after rollback" },
+      created.history,
+    );
+
+    expect(saved.deck.updatedAt).toBe(created.deck.updatedAt);
+    repo.close();
+  });
+
   it("rejects stale revisions without overwriting committed state", async () => {
     const repo = await repository("deck-repo-conflict");
     const draft = createBlankDeck("Conflict", catalog, PROTOTYPE_RULESET, {

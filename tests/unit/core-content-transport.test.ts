@@ -96,6 +96,13 @@ describe("CORE content transport", () => {
         buildId: "test-build",
         coreContentApiVersion: 1,
       });
+      expect(
+        await request(
+          middleware,
+          "/private/core-release.json?cache-bust=1",
+          "GET",
+        ),
+      ).toMatchObject({ status: 200, next: false });
       const key = [...delivery.objects.keys()][0]!;
       const get = await request(middleware, `/private/${key}`, "GET");
       expect(get.status).toBe(200);

@@ -1,17 +1,19 @@
-import { expect, test, type Page } from "@playwright/test";
+import {
+  test,
+  openSelectedStoryState,
+  corruptSelectedStorySave,
+  repairSelectedStorySlot,
+  selectedSaveSnapshot,
+} from "./selected-content-fixture.ts";
+import { expect, type Page } from "@playwright/test";
 import {
   createInitialStoryState,
   type StoryState,
 } from "../src/story/model/story-state.ts";
-import {
-  STORY_SAVES_DATABASE_NAME,
-  STORY_SAVES_STORE_NAME,
-} from "../src/shell/screens/story-save-presence.ts";
-import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
 
 const SET_ID = "legend-of-blue-eyes-white-dragon";
-const IMPACT_CARD_CODE = 89631139;
+const IMPACT_CARD_CODE = 46986414;
 const STARTER = storyStarterSave();
 const OPENED_CARD = { code: IMPACT_CARD_CODE, rarity: "common" } as const;
 
@@ -39,53 +41,12 @@ function stateAt(
   };
 }
 
-async function putRecord(
-  page: Page,
-  record: unknown,
-  key: string,
-): Promise<void> {
-  await page.evaluate(
-    async ([databaseName, storeName, value, recordKey]) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(databaseName as string, 1);
-        request.onupgradeneeded = () =>
-          request.result.createObjectStore(storeName as string);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const transaction = database.transaction(
-        storeName as string,
-        "readwrite",
-      );
-      transaction.objectStore(storeName as string).put(value, recordKey);
-      await new Promise((resolve, reject) => {
-        transaction.oncomplete = resolve;
-        transaction.onerror = () => reject(transaction.error);
-      });
-      database.close();
-    },
-    [STORY_SAVES_DATABASE_NAME, STORY_SAVES_STORE_NAME, record, key] as const,
-  );
-}
-
 async function openSavedScreen(
   page: Page,
   state: StoryState,
   selector: string,
 ): Promise<void> {
-  await page.goto("./#/");
-  const envelope: StorySaveEnvelope = {
-    schemaVersion: 4,
-    slot: "autosave",
-    revision: 1,
-    savedAt: Date.now(),
-    state,
-  };
-  await putRecord(page, envelope, envelope.slot);
-  await page.reload();
-  const resume = page.locator('[data-cy="main-menu-continue"]');
-  await expect(resume).toBeVisible();
-  await resume.click();
+  await openSelectedStoryState(page, state);
   await expect(page.locator(selector)).toBeVisible({ timeout: 120_000 });
 }
 
@@ -357,18 +318,23 @@ for (const viewport of VIEWPORTS) {
     );
 
     await page.goto("./#/");
-    await putRecord(page, "not a save", "manual:1");
+    const healthy = await selectedSaveSnapshot(page);
+    await corruptSelectedStorySave(page, "manual:1", "not a save");
     await page.locator('[data-cy="main-menu-load"]').click();
-    await expect(page.locator('[data-cy="story-storage-error"]')).toBeVisible();
+    await expect(
+      page.locator('[data-cy="application-recovery-message"]'),
+    ).toBeVisible();
     await expectInsideStage(
       page,
-      '[data-cy="story-storage-error"]',
-      "storage banner",
+      '[data-cy="application-recovery-message"]',
+      "storage recovery banner",
     );
-    await page.locator('[data-cy="story-storage-error-reset"]').click();
-    await expect(page.locator('[data-cy="story-storage-error"]')).toHaveCount(
-      0,
-    );
+    const failed = await selectedSaveSnapshot(page);
+    expect(failed.selection).toEqual(healthy.selection);
+    expect(failed.slots.slice(1)).toEqual(healthy.slots.slice(1));
+    await repairSelectedStorySlot(page, "manual:1");
+    expect(await selectedSaveSnapshot(page)).toEqual(healthy);
+    await page.reload();
 
     await openNewGame(page);
     await page.locator('[data-cy="story-narrative-history"]').focus();

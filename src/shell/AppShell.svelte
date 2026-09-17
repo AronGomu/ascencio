@@ -819,6 +819,12 @@
       }
     };
     const syncFailure = (event: ErrorEvent) => {
+      if (
+        event.message ===
+          "ResizeObserver loop completed with undelivered notifications." &&
+        (event.error === undefined || event.error === null)
+      )
+        return;
       if (application !== null && domainSession !== null) {
         event.preventDefault();
         recover(event.error);

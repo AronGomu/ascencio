@@ -52,7 +52,7 @@
     ? visibleCards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
     : [];
   $: synchronizeImageLeases(imageLibrary, pageCards);
-  $: pageImages = pageCards.map((card) => cardImageUrl(card));
+  $: pageImages = pageCards.map((card) => cardImageUrl(card, leasedImageUrls));
   $: collectionCanOpen = zone !== "deck" && visibleCards.length > 0;
   $: firstVisible = page * PAGE_SIZE + 1;
   $: lastVisible = Math.min((page + 1) * PAGE_SIZE, visibleCards.length);
@@ -80,9 +80,17 @@
     }
     if (library !== null) {
       for (const code of codes) {
-        if (!imageLeases.has(code)) imageLeases.set(code, library.lease(code));
+        if (!imageLeases.has(code)) {
+          const lease = library.lease(code);
+          imageLeases.set(code, lease);
+          lease.subscribe?.(publishImageUrls);
+        }
       }
     }
+    publishImageUrls();
+  }
+
+  function publishImageUrls(): void {
     leasedImageUrls = new Map(
       [...imageLeases].map(([code, lease]) => [code, lease.url]),
     );
@@ -94,13 +102,14 @@
     leasedImageUrls = new Map();
   }
 
-  function cardImageUrl(card: PublicCard): string | undefined {
+  function cardImageUrl(
+    card: PublicCard,
+    urls: ReadonlyMap<number, string>,
+  ): string | undefined {
     const resolved = resolveCardImage(card);
     if (resolved !== undefined) return resolved;
     if (card.code === undefined) return undefined;
-    return (
-      leasedImageUrls.get(Number(card.code)) ?? (placeholderUrl || undefined)
-    );
+    return urls.get(Number(card.code)) ?? (placeholderUrl || undefined);
   }
 
   function useFallbackImage(event: Event): void {

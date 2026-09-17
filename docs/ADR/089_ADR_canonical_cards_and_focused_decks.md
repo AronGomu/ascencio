@@ -1,10 +1,11 @@
 # ADR-089: Canonical Cards ownership
 
-> Status: accepted; planned
+> Status: accepted; implemented
 > Decided: 2026-09-13
 > Owners: cards / decks / consumer adapters
 > Amends: ADR-022 dependency direction; ADR-043 catalog ownership
-> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected integration source, not implementation evidence for this decision.
+> Implemented: `e338808ffbe790d8dc9a3210a7467535fb293c58` — T1–T3 canonical Cards, focused Decks APIs, boundary freezes, concealment regressions.
+> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected pre-implementation source.
 
 ## Context
 

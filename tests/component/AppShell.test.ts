@@ -878,6 +878,129 @@ it("Post-gate eviction: explicit asynchronous error returns Main Menu after leas
   expect(document.querySelector('[data-cy="main-menu-screen"]')).not.toBeNull();
 });
 
+const resizeObserverWarning =
+  "ResizeObserver loop completed with undelivered notifications.";
+it.each([
+  {
+    name: "absent error, real Error with same message",
+    warningError: undefined,
+    failure: () =>
+      new ErrorEvent("error", {
+        message: resizeObserverWarning,
+        error: new Error(resizeObserverWarning),
+        cancelable: true,
+      }),
+  },
+  {
+    name: "null error, different message",
+    warningError: null,
+    failure: () =>
+      new ErrorEvent("error", { message: "Script error.", cancelable: true }),
+  },
+  {
+    name: "null error, message substring",
+    warningError: null,
+    failure: () =>
+      new ErrorEvent("error", {
+        message: `${resizeObserverWarning} extra`,
+        cancelable: true,
+      }),
+  },
+  {
+    name: "null error, unhandled rejection",
+    warningError: null,
+    failure: () =>
+      Object.assign(new Event("unhandledrejection", { cancelable: true }), {
+        reason: new Error("APP_REQUIRED_INPUT_FAILED"),
+      }),
+  },
+])(
+  "ResizeObserver diagnostic retains domain ownership; $name still recovers",
+  async ({ warningError, failure }) => {
+    const props = storyShellProps();
+    const close = vi.fn(async () => undefined);
+    const saves = { ...props.saves!, write: vi.fn(props.saves!.write) };
+    const session = {
+      generation: 1,
+      gameplay: installedGameplayFixture(),
+      storyRelease: props.storyRelease!,
+      storyCards: props.storyCards!,
+      storyMedia: {
+        acquireMap: async () => null,
+        acquireSetImage: async () => null,
+      },
+      images: {} as never,
+      saves,
+      close,
+    };
+    let activeLeases = 0;
+    const application = {
+      acquire: vi.fn(async () => {
+        activeLeases++;
+        let closed = false;
+        return {
+          ...session,
+          close: async () => {
+            if (closed) return;
+            closed = true;
+            activeLeases--;
+            await close();
+          },
+        };
+      }),
+      clear: vi.fn(),
+      close: vi.fn(),
+      subscribe: () => () => undefined,
+    };
+    const store = createShellStore("#/story", () => undefined);
+    render(AppShell, {
+      store,
+      loaders,
+      initialCoreGate: READY_CORE_GATE,
+      application,
+    });
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="shell-region-story"]'),
+      ).not.toBeNull(),
+    );
+    await vi.waitFor(() => expect(activeLeases).toBe(1));
+    const acquiredBefore = application.acquire.mock.calls.length;
+    const closedBefore = close.mock.calls.length;
+    const domain = document.querySelector('[data-cy="shell-region-story"]');
+    const warning = new ErrorEvent("error", {
+      message: resizeObserverWarning,
+      cancelable: true,
+    });
+    Object.defineProperty(warning, "error", { value: warningError });
+    window.dispatchEvent(warning);
+    await tick();
+    expect(document.querySelector('[data-cy="shell-region-story"]')).toBe(
+      domain,
+    );
+    expect(
+      document.querySelector('[data-cy="application-recovery-message"]'),
+    ).toBeNull();
+    expect(warning.defaultPrevented).toBe(false);
+    expect(activeLeases).toBe(1);
+    expect(close).toHaveBeenCalledTimes(closedBefore);
+    expect(application.clear).not.toHaveBeenCalled();
+    expect(application.acquire).toHaveBeenCalledTimes(acquiredBefore);
+    expect(session.generation).toBe(1);
+    expect(saves.write).not.toHaveBeenCalled();
+    window.dispatchEvent(failure());
+    await vi.waitFor(() => expect(application.clear).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(activeLeases).toBe(0));
+    expect(close.mock.calls.length).toBeGreaterThan(closedBefore);
+    expect(
+      document.querySelector('[data-cy="application-recovery-message"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-cy="main-menu-screen"]'),
+    ).not.toBeNull();
+  },
+);
+
 it("Svelte root boundary disposes failed render and recovers Main Menu", async () => {
   const { default: Probe } =
     await import("../fixtures/ApplicationFailureProbe.svelte");

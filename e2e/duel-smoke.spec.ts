@@ -1,8 +1,13 @@
+import { readFileSync } from "node:fs";
+import {
+  test,
+  selectedStorySlots,
+  selectedSaveSnapshot,
+} from "./selected-content-fixture.ts";
 import { ASSET_SOURCES } from "../scripts/lib/asset-roots.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import {
   expect,
-  test,
   type CDPSession,
   type Locator,
   type Page,
@@ -75,6 +80,19 @@ interface CapturedPromptEvent {
   readonly prompt: { readonly id: string; readonly kind: string };
 }
 
+const CHAPTER_DECKS = JSON.parse(
+  readFileSync("generated/asset-delivery/prepared-player.json", "utf8"),
+).chapters[0].gameplay.decks as readonly {
+  id: string;
+  main: number[];
+  extra: number[];
+  side: number[];
+}[];
+function chapterDeckInput(id: string) {
+  const deck = CHAPTER_DECKS.find((deck) => deck.id === id)!;
+  return { kind: "cards", main: deck.main, extra: deck.extra, side: deck.side };
+}
+
 const LOCAL_DECK_NAME = "E2E Local Deck";
 
 /* The catalog the running build offers, rebuilt here from the same manifests
@@ -129,6 +147,7 @@ async function deleteDeckDatabases(page: Page): Promise<void> {
    so a reload lands on the seats again and has to start a second one. */
 async function openDuel(page: Page, url = "./#/duel"): Promise<void> {
   await page.goto(url);
+  await page.reload();
 }
 
 /* T17: both seats are chosen in the shell's match setup, and the duel starts
@@ -291,8 +310,8 @@ test.beforeEach(async ({ page }) => {
       value: InspectableWorker,
     });
   });
+  await page.reload();
 });
-
 test("the root route shows the main menu without booting the duel", async ({
   page,
 }) => {
@@ -305,7 +324,7 @@ test("the root route shows the main menu without booting the duel", async ({
      fresh install meets are these four, Free Play last. */
   for (const entry of ["new-game", "load", "settings", "free-play"])
     await expect(page.locator(`[data-cy="main-menu-${entry}"]`)).toBeVisible();
-  await expect(page.locator('[data-cy="main-menu-continue"]')).toHaveCount(0);
+  await expect(page.locator('[data-cy="main-menu-continue"]')).toBeDisabled();
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),
   ).toHaveCount(0);
@@ -313,15 +332,8 @@ test("the root route shows the main menu without booting the duel", async ({
     false,
   );
 
-  /* Deciding whether to offer Continue must not conjure the story-saves
-     database: `createStorySaveRepository` builds the `saves` store only on
-     `upgradeneeded`, so a database the menu created could never be saved
-     into. This is the production browser's own verdict on that. */
-  expect(
-    await page.evaluate(async () =>
-      (await indexedDB.databases()).map(({ name }) => name),
-    ),
-  ).not.toContain("ygo-story-saves");
+  // Activation prepares an empty generation; probing the menu must create no saves.
+  expect(await selectedStorySlots(page)).toEqual([]);
 
   await page.locator('[data-cy="main-menu-free-play"]').click();
   expect(new URL(page.url()).hash).toBe("#/free-play");
@@ -350,7 +362,7 @@ test("the root route shows the main menu without booting the duel", async ({
      answered: the bundled decks are compiled into this build, so Start is live
      on the first paint rather than after a fetch. */
   await expect(
-    page.locator('[data-cy="deck-tile-preset:chapter-one-starter"]'),
+    page.locator('[data-cy="deck-tile-chapter:chapter-one-starter"]'),
   ).toHaveCount(1);
 
   await startPresetDuel(page);
@@ -370,38 +382,43 @@ test("the root route shows the main menu without booting the duel", async ({
   expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 });
 
-test("free-play deck tiles keep names and info inside card bounds", async ({
-  page,
-}) => {
-  await page.goto("./#/free-play");
+test.describe("installed media", () => {
+  test.use({ installedMedia: true });
+  test("free-play deck tiles keep names and info inside card bounds", async ({
+    page,
+  }) => {
+    await page.goto("./#/free-play");
 
-  const tile = page.locator('[data-cy="deck-tile-preset:chapter-one-starter"]');
-  await expect(tile).toBeVisible({ timeout: 120_000 });
-  const art = tile.locator("img.art");
-  await expect(art).toHaveCount(1, { timeout: 120_000 });
-  await expect
-    .poll(() =>
-      art.evaluate(
-        (image) =>
-          image instanceof HTMLImageElement &&
-          image.complete &&
-          image.naturalWidth > 0,
-      ),
-    )
-    .toBe(true);
-
-  const tileBox = await tile.boundingBox();
-  expect(tileBox).not.toBeNull();
-  for (const part of ["name", "tags"]) {
-    const box = await tile
-      .locator(`[data-cy="deck-tile-${part}-preset:chapter-one-starter"]`)
-      .boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.y).toBeGreaterThanOrEqual(tileBox!.y);
-    expect(box!.y + box!.height).toBeLessThanOrEqual(
-      tileBox!.y + tileBox!.height,
+    const tile = page.locator(
+      '[data-cy="deck-tile-chapter:chapter-one-starter"]',
     );
-  }
+    await expect(tile).toBeVisible({ timeout: 120_000 });
+    const art = tile.locator("img.art");
+    await expect(art).toHaveCount(1, { timeout: 120_000 });
+    await expect
+      .poll(() =>
+        art.evaluate(
+          (image) =>
+            image instanceof HTMLImageElement &&
+            image.complete &&
+            image.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
+
+    const tileBox = await tile.boundingBox();
+    expect(tileBox).not.toBeNull();
+    for (const part of ["name", "tags"]) {
+      const box = await tile
+        .locator(`[data-cy="deck-tile-${part}-chapter:chapter-one-starter"]`)
+        .boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.y).toBeGreaterThanOrEqual(tileBox!.y);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(
+        tileBox!.y + tileBox!.height,
+      );
+    }
+  });
 });
 
 test("free-play deck grid adds columns and fills tracks from available width", async ({
@@ -439,13 +456,17 @@ test("free-play deck grid adds columns and fills tracks from available width", a
 
   expect(wider.columns.length).toBeGreaterThan(narrower.columns.length);
   expect(phone.columns).toHaveLength(1);
-  expect(narrower.tileWidth).toBeCloseTo(narrower.columns[0]!, 0);
-  expect(wider.tileWidth).toBeCloseTo(wider.columns[0]!, 0);
-  expect(phone.tileWidth).toBeCloseTo(phone.columns[0]!, 0);
+  expect(narrower.tileWidth).toBeCloseTo(
+    Math.min(narrower.columns[0]!, 420),
+    0,
+  );
+  expect(wider.tileWidth).toBeCloseTo(Math.min(wider.columns[0]!, 420), 0);
+  expect(phone.tileWidth).toBeCloseTo(Math.min(phone.columns[0]!, 420), 0);
 });
 
 test("production bundle initializes the real Worker and sends one opaque choice once", async ({
   page,
+  contentTransfers,
 }) => {
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
@@ -548,25 +569,37 @@ test("production bundle initializes the real Worker and sends one opaque choice 
   expect(stateEvents.at(-1)?.state.snapshotId).toBe(runtimeManifest.snapshotId);
 
   expect(
-    requests.some((url) =>
-      url.includes("/ygo-story-duel/runtime/current/manifest.json"),
+    contentTransfers.some((url) =>
+      /\/content\/files\/[a-f0-9]{64}\/runtime\/current\/manifest.json$/.test(
+        url,
+      ),
     ),
   ).toBe(true);
   expect(
-    requests.some((url) =>
-      url.includes("/ygo-story-duel/runtime/engine/ocgcore.sync.wasm"),
+    contentTransfers.some((url) =>
+      /\/content\/files\/[a-f0-9]{64}\/runtime\/engine\/ocgcore.sync.wasm$/.test(
+        url,
+      ),
     ),
   ).toBe(true);
+  const cached = await page.evaluate(async () =>
+    (await (await caches.open("ygo-content-files-v1")).keys()).map(
+      (key) => key.url,
+    ),
+  );
   expect(
-    requests
+    cached
       .filter((url) => url.includes("/runtime/"))
-      .every((url) => url.includes("/ygo-story-duel/runtime/")),
+      .every((url) => url.includes("/ygo-story-duel/__content/files/")),
   ).toBe(true);
+  expect(requests.filter((url) => /\/runtime\/|\.wasm$/.test(url))).toEqual([]);
   expect(
-    requests.some((url) =>
-      /\/ygo-story-duel\/runtime\/images\/\d+\.jpg$/.test(url),
-    ),
-  ).toBe(true);
+    contentTransfers.filter((url) => /\/runtime\/images\/\d+\.jpg$/.test(url)),
+  ).toEqual([]);
+  await expect(field.getByRole("img").first()).toHaveAttribute(
+    "src",
+    /^data:image\/svg\+xml/,
+  );
 
   const prompt = capture.events.find(
     (event) => event.type === "prompt",
@@ -676,16 +709,16 @@ test("the match setup persists a chosen pair and Change decks returns without au
     '[data-cy="duel-start-opponent-deck-name"]',
   );
   await expect(
-    page.locator('[data-cy="deck-tile-press-preset:chapter-one-practice"]'),
+    page.locator('[data-cy="deck-tile-press-chapter:chapter-one-practice"]'),
   ).toBeEnabled({ timeout: 120_000 });
   await page
-    .locator('[data-cy="deck-tile-press-preset:chapter-one-practice"]')
+    .locator('[data-cy="deck-tile-press-chapter:chapter-one-practice"]')
     .click();
   /* Swap the default pair: both seats must dispatch the chosen deck rather
      than silently restoring their default. */
   await page.locator('[data-cy="duel-start-opponent-deck"]').click();
   await page
-    .locator('[data-cy="deck-tile-press-preset:chapter-one-starter"]')
+    .locator('[data-cy="deck-tile-press-chapter:chapter-one-starter"]')
     .click();
 
   await page.locator('[data-cy="deck-select-start"]').click();
@@ -699,9 +732,9 @@ test("the match setup persists a chosen pair and Change decks returns without au
   ).toEqual([
     {
       type: "startDuel",
-      duelId: "bundled-v1:chapter-one-practice:vs:chapter-one-starter",
-      player: { kind: "preset", deckId: "chapter-one-practice" },
-      opponent: { kind: "preset", deckId: "chapter-one-starter" },
+      duelId: "local-v1:local:vs:local",
+      player: chapterDeckInput("chapter-one-practice"),
+      opponent: chapterDeckInput("chapter-one-starter"),
     },
   ]);
   expect(
@@ -714,8 +747,8 @@ test("the match setup persists a chosen pair and Change decks returns without au
         )?.freePlayPairing,
     ),
   ).toEqual({
-    player: "preset:chapter-one-practice",
-    opponent: "preset:chapter-one-starter",
+    player: "chapter:chapter-one-practice",
+    opponent: "chapter:chapter-one-starter",
   });
   expect(
     await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
@@ -821,9 +854,7 @@ test("a local deck built from the packaged catalog is offered and duels", async 
     (command) => command.type === "startDuel",
   );
   expect(startCommands).toHaveLength(1);
-  expect(startCommands[0]?.duelId).toBe(
-    "local-v1:local:vs:chapter-one-practice",
-  );
+  expect(startCommands[0]?.duelId).toBe("local-v1:local:vs:local");
   /* The editor stores a deck in its own display order, so the dispatched list
      is compared as the multiset it is rather than the order it was typed. */
   const dispatched = startCommands[0]?.player as {
@@ -836,13 +867,12 @@ test("a local deck built from the packaged catalog is offered and duels", async 
   expect([...dispatched.main].sort()).toEqual([...LOCAL_DECK_MAIN].sort());
   expect(dispatched.extra).toEqual([]);
   expect(dispatched.side).toEqual([]);
-  expect(startCommands[0]?.opponent).toEqual({
-    kind: "preset",
-    deckId: "chapter-one-practice",
-  });
+  expect(startCommands[0]?.opponent).toEqual(
+    chapterDeckInput("chapter-one-practice"),
+  );
 });
 
-test("a local deck the pinned ruleset refuses is never offered", async ({
+test("a local deck the pinned ruleset refuses is never selectable", async ({
   page,
 }) => {
   await page.goto("./#/decks");
@@ -867,16 +897,20 @@ test("a local deck the pinned ruleset refuses is never offered", async ({
     timeout: 120_000,
   });
   await expect(
-    page.locator('[data-cy="deck-tile-preset:chapter-one-starter"]'),
+    page.locator('[data-cy="deck-tile-chapter:chapter-one-starter"]'),
   ).toHaveCount(1, { timeout: 120_000 });
-  /* The starter deck the editor seeded is a legal local tile, so local decks
-     may well be in the grid; what must never appear is the deck the ruleset
-     refused, and the grid is what fills both seats. */
+  const refused = page
+    .locator('[data-cy="deck-select-grid"] > [data-cy^="deck-tile-"]')
+    .filter({ hasText: "Thirty Nine" });
+  await expect(refused).toHaveCount(1);
+  const press = refused.locator('[data-cy^="deck-tile-press-"]');
+  await expect(press).toBeDisabled();
+  await expect(press).toHaveAccessibleName(
+    "Select Thirty Nine, Illegal · Local deck · Main Deck needs 1 more card(s).",
+  );
   await expect(
-    page
-      .locator('[data-cy="deck-select-grid"] [data-cy^="deck-tile-"]')
-      .filter({ hasText: "Thirty Nine" }),
-  ).toHaveCount(0);
+    page.locator('[data-cy="duel-start-your-deck"]'),
+  ).not.toContainText("Thirty Nine");
 });
 
 test("panels stay hidden until settings enable them", async ({ page }) => {
@@ -952,7 +986,7 @@ test("zone visuals persist through reload and Reset settings restores defaults",
        when the starter deck seeds, so only the fixed opponent is pinned. */
     decks: {
       playerKey: expect.any(String),
-      opponentKey: "preset:chapter-one-practice",
+      opponentKey: "chapter:chapter-one-practice",
     },
     settings: {
       showZoneOutlines: false,
@@ -1016,7 +1050,7 @@ test("zone visuals persist through reload and Reset settings restores defaults",
        when the starter deck seeds, so only the fixed opponent is pinned. */
     decks: {
       playerKey: expect.any(String),
-      opponentKey: "preset:chapter-one-practice",
+      opponentKey: "chapter:chapter-one-practice",
     },
     settings: {
       showZoneOutlines: true,
@@ -1168,29 +1202,28 @@ test("repeated restart replaces the Worker and clears presentation state", async
 test("refresh during loading and after completion starts a clean duel", async ({
   page,
 }, testInfo) => {
-  let releaseManifest!: () => void;
-  let markBlocked!: () => void;
-  const manifestBlocked = new Promise<void>((resolve) => {
-    markBlocked = resolve;
+  await page.addInitScript(() => {
+    const match = Cache.prototype.match;
+    Cache.prototype.match = async function (request, options) {
+      const url = request instanceof Request ? request.url : String(request);
+      if (
+        url.endsWith("/runtime/current/manifest.json") &&
+        sessionStorage.getItem("required-read-blocked") !== "yes"
+      ) {
+        sessionStorage.setItem("required-read-blocked", "yes");
+        Object.assign(window, { requiredReadBlocked: true });
+        await new Promise<void>(() => undefined);
+      }
+      return match.call(this, request, options);
+    };
   });
-  const manifestRelease = new Promise<void>((resolve) => {
-    releaseManifest = resolve;
-  });
-  let blockFirstManifest = true;
-  await page.route("**/runtime/current/manifest.json", async (route) => {
-    if (blockFirstManifest) {
-      blockFirstManifest = false;
-      markBlocked();
-      await manifestRelease;
-    }
-    await route.continue();
-  });
-
   await openDuel(page);
-  await manifestBlocked;
-  const reloadDuringLoading = page.reload();
-  releaseManifest();
-  await reloadDuringLoading;
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { requiredReadBlocked?: boolean })
+        .requiredReadBlocked,
+  );
+  await page.reload();
   await startPresetDuel(page);
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind]'),
@@ -1228,178 +1261,196 @@ test("refresh during loading and after completion starts a clean duel", async ({
   ).toHaveCount(0);
 });
 
-test("mounted card image leases return to baseline across tray, restart, and destroy", async ({
-  page,
-}, testInfo) => {
-  await openDuel(page);
-  await startPresetDuel(page);
-  await enableDuelHud(page);
-  await expect(
-    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
-  ).toBeVisible({
-    timeout: 120_000,
-  });
-  await expect
-    .poll(async () => {
-      const state = await mountedImageLeaseState(page);
-      return state.activeCount > 0 && state.activeMatchesMounted;
-    })
-    .toBe(true);
-  const baseline = await mountedImageLeaseState(page);
-  const revokedBefore = await page.evaluate(
-    () => window.__duelCapture.imageUrls.revoked.length,
-  );
-
-  const ownExtra = page.getByRole("button", {
-    name: /Open Your Extra Deck tray, \d+ cards/,
-  });
-  if ((await ownExtra.count()) > 0) {
-    await ownExtra.click();
+test.describe("installed media", () => {
+  test.use({ installedMedia: true });
+  test("mounted card image leases return to baseline across tray, restart, and destroy", async ({
+    page,
+  }, testInfo) => {
+    await openDuel(page);
+    await startPresetDuel(page);
+    await enableDuelHud(page);
     await expect(
-      page.getByRole("region", { name: "Your Extra Deck tray" }),
-    ).toBeVisible();
-    await page
-      .getByRole("button", { name: "Close Your Extra Deck tray" })
-      .click();
+      page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+    ).toBeVisible({
+      timeout: 120_000,
+    });
     await expect
-      .poll(async () => mountedImageLeaseState(page))
-      .toEqual(baseline);
-  }
+      .poll(async () => {
+        const state = await mountedImageLeaseState(page);
+        return state.activeCount > 0 && state.activeMatchesMounted;
+      })
+      .toBe(true);
+    const baseline = await mountedImageLeaseState(page);
+    const revokedBefore = await page.evaluate(
+      () => window.__duelCapture.imageUrls.revoked.length,
+    );
 
-  await surrenderThroughMenu(page);
-  await expect(
-    page.getByRole("heading", { name: "Duel surrendered" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Start another duel" }).click();
-  await expect(
-    page.locator('[data-cy="duel-field"][data-prompt-kind]'),
-  ).toBeVisible({
-    timeout: 120_000,
+    const ownExtra = page.getByRole("button", {
+      name: /Open Your Extra Deck tray, \d+ cards/,
+    });
+    if ((await ownExtra.count()) > 0) {
+      await ownExtra.click();
+      await expect(
+        page.getByRole("region", { name: "Your Extra Deck tray" }),
+      ).toBeVisible();
+      await page
+        .getByRole("button", { name: "Close Your Extra Deck tray" })
+        .click();
+      await expect
+        .poll(async () => mountedImageLeaseState(page))
+        .toEqual(baseline);
+    }
+
+    await surrenderThroughMenu(page);
+    await expect(
+      page.getByRole("heading", { name: "Duel surrendered" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Start another duel" }).click();
+    await expect(
+      page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+    ).toBeVisible({
+      timeout: 120_000,
+    });
+    await expect
+      .poll(async () => {
+        const state = await mountedImageLeaseState(page);
+        return state.activeCount > 0 && state.activeMatchesMounted;
+      })
+      .toBe(true);
+    const restarted = await mountedImageLeaseState(page);
+    expect(restarted.activeUrls).not.toEqual(baseline.activeUrls);
+    expect(
+      restarted.activeUrls.filter((url) => baseline.activeUrls.includes(url)),
+    ).toEqual([]);
+    expect(
+      await page.evaluate(() => window.__duelCapture.imageUrls.revoked.length),
+    ).toBeGreaterThan(revokedBefore);
+
+    const evidence = await page.evaluate(() => ({
+      created: window.__duelCapture.imageUrls.created.length,
+      revoked: window.__duelCapture.imageUrls.revoked.length,
+      active: window.__duelCapture.imageUrls.active.size,
+    }));
+    const evidencePath = testInfo.outputPath("df-13-object-url-lifecycle.json");
+    await writeFile(
+      evidencePath,
+      JSON.stringify({ baseline, restarted, ...evidence }, null, 2),
+    );
+    await testInfo.attach("df-13-object-url-lifecycle", {
+      path: evidencePath,
+      contentType: "application/json",
+    });
+
+    await page.goto("about:blank");
+    await expect
+      .poll(async () =>
+        page.evaluate(() => window.__duelCapture.imageUrls.active.size),
+      )
+      .toBe(0);
   });
-  await expect
-    .poll(async () => {
-      const state = await mountedImageLeaseState(page);
-      return state.activeCount > 0 && state.activeMatchesMounted;
-    })
-    .toBe(true);
-  const restarted = await mountedImageLeaseState(page);
-  expect(restarted.activeUrls).not.toEqual(baseline.activeUrls);
-  expect(
-    restarted.activeUrls.filter((url) => baseline.activeUrls.includes(url)),
-  ).toEqual([]);
-  expect(
-    await page.evaluate(() => window.__duelCapture.imageUrls.revoked.length),
-  ).toBeGreaterThan(revokedBefore);
-
-  const evidence = await page.evaluate(() => ({
-    created: window.__duelCapture.imageUrls.created.length,
-    revoked: window.__duelCapture.imageUrls.revoked.length,
-    active: window.__duelCapture.imageUrls.active.size,
-  }));
-  const evidencePath = testInfo.outputPath("df-13-object-url-lifecycle.json");
-  await writeFile(
-    evidencePath,
-    JSON.stringify({ baseline, restarted, ...evidence }, null, 2),
-  );
-  await testInfo.attach("df-13-object-url-lifecycle", {
-    path: evidencePath,
-    contentType: "application/json",
-  });
-
-  await page.goto("about:blank");
-  await expect
-    .poll(async () =>
-      page.evaluate(() => window.__duelCapture.imageUrls.active.size),
-    )
-    .toBe(0);
 });
 
-test("slow image preload cannot delay a legal Worker response", async ({
-  page,
-}, testInfo) => {
-  let markBlocked!: () => void;
-  let releaseImages!: () => void;
-  const blocked = new Promise<void>((resolve) => (markBlocked = resolve));
-  const released = new Promise<void>((resolve) => (releaseImages = resolve));
-  let first = true;
-  await page.route(/\/runtime\/images\/\d+\.jpg$/, async (route) => {
-    if (first) {
-      first = false;
-      markBlocked();
-    }
-    await released;
-    await route.abort("failed");
+test.describe("installed media", () => {
+  test.use({ installedMedia: true });
+  test("slow image preload cannot delay a legal Worker response", async ({
+    page,
+  }, testInfo) => {
+    await page.addInitScript(() => {
+      const match = Cache.prototype.match;
+      let release!: () => void;
+      const wait = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      Object.assign(window, { releaseImageReads: release });
+      Cache.prototype.match = async function (request, options) {
+        const url = request instanceof Request ? request.url : String(request);
+        if (/\/runtime\/images\/\d+\.jpg$/.test(url)) {
+          Object.assign(window, { imageReadBlocked: true });
+          await wait;
+        }
+        return match.call(this, request, options);
+      };
+    });
+    await openDuel(page);
+    await startPresetDuel(page);
+    await page.waitForFunction(
+      () =>
+        (window as unknown as { imageReadBlocked?: boolean }).imageReadBlocked,
+    );
+    const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
+    await expect(controls).toBeVisible({ timeout: 120_000 });
+    await expect(controls.getByRole("button").first()).toBeEnabled();
+    const field = page.getByRole("region", { name: "Duel field" });
+    await expect(field.getByRole("img").first()).toHaveAttribute(
+      "src",
+      /^data:image\/svg\+xml/,
+    );
+    const capture = await readCapture(page);
+    const prompt = capture.events.find(
+      (event) => event.type === "prompt",
+    ) as unknown as CapturedPromptEvent;
+    await page.locator('[data-cy="field-end-turn-button"]').click();
+    await expect
+      .poll(
+        async () =>
+          (await readCapture(page)).commands.filter(
+            (command) =>
+              command.type === "respond" &&
+              command.promptId === prompt.prompt.id,
+          ).length,
+      )
+      .toBe(1);
+    const evidencePath = testInfo.outputPath("df-13-nonblocking-input.json");
+    await writeFile(
+      evidencePath,
+      JSON.stringify(
+        {
+          imagePreloadSettled: false,
+          workerResponseCount: 1,
+          fieldImageSource: await field
+            .getByRole("img")
+            .first()
+            .getAttribute("src"),
+        },
+        null,
+        2,
+      ),
+    );
+    await testInfo.attach("df-13-nonblocking-input", {
+      path: evidencePath,
+      contentType: "application/json",
+    });
+    await page.evaluate(() =>
+      (
+        window as unknown as { releaseImageReads: () => void }
+      ).releaseImageReads(),
+    );
   });
-
-  await openDuel(page);
-  await startPresetDuel(page);
-  await blocked;
-  const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
-  await expect(controls).toBeVisible({ timeout: 120_000 });
-  await expect(controls.getByRole("button").first()).toBeEnabled();
-  const field = page.getByRole("region", { name: "Duel field" });
-  await expect(field.getByRole("img").first()).toHaveAttribute(
-    "src",
-    /^data:image\/svg\+xml/,
-  );
-  const capture = await readCapture(page);
-  const prompt = capture.events.find(
-    (event) => event.type === "prompt",
-  ) as unknown as CapturedPromptEvent;
-  await page.locator('[data-cy="field-end-turn-button"]').click();
-  await expect
-    .poll(
-      async () =>
-        (await readCapture(page)).commands.filter(
-          (command) =>
-            command.type === "respond" && command.promptId === prompt.prompt.id,
-        ).length,
-    )
-    .toBe(1);
-  const evidencePath = testInfo.outputPath("df-13-nonblocking-input.json");
-  await writeFile(
-    evidencePath,
-    JSON.stringify(
-      {
-        imagePreloadSettled: false,
-        workerResponseCount: 1,
-        fieldImageSource: await field
-          .getByRole("img")
-          .first()
-          .getAttribute("src"),
-      },
-      null,
-      2,
-    ),
-  );
-  await testInfo.attach("df-13-nonblocking-input", {
-    path: evidencePath,
-    contentType: "application/json",
-  });
-  releaseImages();
 });
 
 test("missing active images use deterministic placeholders without blocking input", async ({
   page,
+  contentTransfers,
 }) => {
-  await page.route(/\/runtime\/images\/\d+\.jpg$/, (route) =>
-    route.abort("failed"),
-  );
   await openDuel(page);
   await startPresetDuel(page);
   const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
   await expect(controls).toBeVisible({ timeout: 120_000 });
   await expect(
-    page.locator(".image-warning").getByText(/card images? .*placeholder/i),
-  ).toBeVisible();
+    page.locator('[data-cy="optional-media-global-warning"]'),
+  ).toContainText(/Optional media is missing.*placeholders active/s);
+  expect(
+    contentTransfers.filter((url) => /\/runtime\/images\/\d+\.jpg$/.test(url)),
+  ).toEqual([]);
   const promptImage = controls.locator("img").first();
   await expect(promptImage).toHaveAttribute("src", /^data:image\/svg\+xml/);
   await expect(controls.getByRole("button").first()).toBeEnabled();
 });
 
-test("forced Worker initialization timeout terminates and replaces the Worker", async ({
+test("forced Worker initialization timeout terminates replacement Workers and fails closed without changing saves", async ({
   page,
 }) => {
+  const before = await selectedSaveSnapshot(page);
   await page.addInitScript(() => {
     const nativeSetTimeout = window.setTimeout;
     window.setTimeout = ((
@@ -1415,15 +1466,32 @@ test("forced Worker initialization timeout terminates and replaces the Worker", 
   });
   await openDuel(page);
   await startPresetDuel(page);
-  const timeoutHeading = page.getByRole("heading", {
-    name: /Duel Worker did not initialize within 120000ms/,
-  });
-  await expect(timeoutHeading).toBeVisible({ timeout: 30_000 });
-  await expect(timeoutHeading).toBeFocused();
-  await expect
-    .poll(async () => (await readCapture(page)).terminations)
-    .toBeGreaterThan(0);
+  // T9 disposes Battle: its fatal heading and heading focus no longer exist.
+  await expect(
+    page.locator('[data-cy="application-recovery-message"]'),
+  ).toHaveText(
+    "This session stopped because its required data became unavailable. Your saved progress was not replaced.",
+  );
+  await expect(page.locator('[data-cy="main-menu-screen"]')).toBeVisible();
+  await expect(page.locator('[data-cy="duel-field"]')).toHaveCount(0);
   expect((await readCapture(page)).workers).toBeGreaterThanOrEqual(2);
+  await expect
+    .poll(async () => {
+      const capture = await readCapture(page);
+      return capture.workers - capture.terminations;
+    })
+    .toBe(0);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        async () =>
+          (await navigator.locks.query()).held?.filter(
+            (lock) => lock.name === "ygo-application-lifecycle-v1",
+          ).length ?? 0,
+      ),
+    )
+    .toBe(0);
+  expect(await selectedSaveSnapshot(page)).toEqual(before);
 });
 
 test("injected DOM field failure preserves fallback controls and one opaque response", async ({
@@ -2018,7 +2086,7 @@ test("floating field windows stay inside the field, persist and never lose a dec
        when the starter deck seeds, so only the fixed opponent is pinned. */
     decks: {
       playerKey: expect.any(String),
-      opponentKey: "preset:chapter-one-practice",
+      opponentKey: "chapter:chapter-one-practice",
     },
     settings: {
       showZoneOutlines: true,
@@ -2244,8 +2312,8 @@ test("zone-list preview image never exceeds half the viewport height", async ({
 
 /* Shared by the pointer-drag tests below: sets up the field, finds a
    draggable hand card with a legal placement and returns pointer-drag
-   geometry, or `null` when the opening hand offers no placement to drag
-   (the caller must then skip). */
+   geometry, walking bounded live prompts/restarts when the opening hand
+   offers no placement. Missing evidence fails instead of skipping. */
 async function locateDraggablePlacement(page: Page): Promise<{
   readonly field: Locator;
   readonly dragTarget: Locator;
@@ -2262,7 +2330,7 @@ async function locateDraggablePlacement(page: Page): Promise<{
   /** The action the walker picked, which is also the answer to give the drop
       confirmation when the same card offers more than one (item 6). */
   readonly action: string;
-} | null> {
+}> {
   /* A pointer gesture is driven in viewport coordinates, so the whole board —
      the hand row and the monster row at once — has to be on screen. The
      default 720px-tall viewport puts the hand below the fold, where
@@ -2312,60 +2380,68 @@ async function locateDraggablePlacement(page: Page): Promise<{
       return null;
     }, zoneKind);
 
-  let chosen: {
-    readonly chip: Locator;
-    readonly zoneId: string;
-    readonly action: string;
-  } | null = null;
-  for (const placement of PLACEMENTS) {
-    const zoneId = await firstEmptyZone(placement.zoneKind);
-    if (zoneId === null) continue;
-    const chips = handChip(placement.action);
-    const total = await chips.count();
-    for (let index = 0; index < total; index += 1) {
-      const chip = chips.nth(index);
-      /* A card offering an activation would answer a backrow drop with the
+  const chosen = await acquireHandEvidence(
+    page,
+    async () => {
+      let chosen: {
+        readonly chip: Locator;
+        readonly zoneId: string;
+        readonly action: string;
+      } | null = null;
+      for (const placement of PLACEMENTS) {
+        const zoneId = await firstEmptyZone(placement.zoneKind);
+        if (zoneId === null) continue;
+        const chips = handChip(placement.action);
+        const total = await chips.count();
+        for (let index = 0; index < total; index += 1) {
+          const chip = chips.nth(index);
+          /* A card offering an activation would answer a backrow drop with the
          confirm dialog, which this test cannot assert on. Item 4 took the
          `activate` chip off the pointer surfaces, so the only way left to ask
          is to lift the card and look for its dashed zone, then abandon the
          gesture over dead ground — a release outside every zone dispatches
          nothing. */
-      if (placement.action === "setSpellTrap") {
-        const probeId = await chip.evaluate(
-          (element) =>
-            element.closest(".duel-field-card")?.getAttribute("data-card-id") ??
-            "",
-        );
-        const probeTarget = field.locator(
-          `[data-cy="field-card-target-${probeId}"]`,
-        );
-        await probeTarget.scrollIntoViewIfNeeded();
-        const probeBox = await probeTarget.boundingBox();
-        if (probeBox === null) continue;
-        const probeCentre = {
-          x: probeBox.x + probeBox.width / 2,
-          y: probeBox.y + probeBox.height / 2,
-        };
-        await page.mouse.move(probeCentre.x, probeCentre.y);
-        await page.mouse.down();
-        // 24px clears CardControl's 8px click-suppression gate.
-        await page.mouse.move(probeCentre.x + 24, probeCentre.y - 24, {
-          steps: 3,
-        });
-        const offersActivate =
-          (await page
-            .locator('[data-cy="hand-activation-drop-zone"]')
-            .count()) > 0;
-        await page.mouse.move(8, 8);
-        await page.mouse.up();
-        if (offersActivate) continue;
+          if (placement.action === "setSpellTrap") {
+            const probeId = await chip.evaluate(
+              (element) =>
+                element
+                  .closest(".duel-field-card")
+                  ?.getAttribute("data-card-id") ?? "",
+            );
+            const probeTarget = field.locator(
+              `[data-cy="field-card-target-${probeId}"]`,
+            );
+            await probeTarget.scrollIntoViewIfNeeded();
+            const probeBox = await probeTarget.boundingBox();
+            if (probeBox === null) continue;
+            const probeCentre = {
+              x: probeBox.x + probeBox.width / 2,
+              y: probeBox.y + probeBox.height / 2,
+            };
+            await page.mouse.move(probeCentre.x, probeCentre.y);
+            await page.mouse.down();
+            // 24px clears CardControl's 8px click-suppression gate.
+            await page.mouse.move(probeCentre.x + 24, probeCentre.y - 24, {
+              steps: 3,
+            });
+            const offersActivate =
+              (await page
+                .locator('[data-cy="hand-activation-drop-zone"]')
+                .count()) > 0;
+            await page.mouse.move(8, 8);
+            await page.mouse.up();
+            if (offersActivate) continue;
+          }
+          chosen = { chip, zoneId, action: placement.action };
+          break;
+        }
+        if (chosen !== null) break;
       }
-      chosen = { chip, zoneId, action: placement.action };
-      break;
-    }
-    if (chosen !== null) break;
-  }
-  if (chosen === null) return null;
+      if (chosen === null) await assertHandCouldOfferAPlacement(page);
+      return chosen;
+    },
+    "No draggable placement after prompt walk and restart",
+  );
 
   const { chip, zoneId: targetZoneId, action } = chosen;
   const cardId = await chip.evaluate(
@@ -2409,12 +2485,9 @@ async function locateDraggablePlacement(page: Page): Promise<{
 }
 
 /**
- * A `null` placement is only a legitimate seed outcome while the hand is
- * actually mounted and actionable. Chips that stopped rendering, a changed
- * `data-cy` scheme, hand cards that stopped being actionable and a hand band
- * that stopped mounting all produce the same `null` — and would silently
- * delete both of T13's only real-browser pointer proofs. Assert the
- * preconditions first; only an actionable hand may skip.
+ * A missed placement probe must still have a mounted actionable hand. Preserve
+ * the original widget guards before advancing legal prompts: a broken chip,
+ * `data-cy` scheme or hand band must fail rather than masquerade as a seed miss.
  */
 async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
   const field = page.getByRole("region", { name: "Duel field" });
@@ -2423,21 +2496,21 @@ async function assertHandCouldOfferAPlacement(page: Page): Promise<void> {
   );
   expect(
     await handCards.count(),
-    "the player hand band must mount at least one card before a drag test may skip",
+    "the player hand band must mount at least one card before a drag probe may advance",
   ).toBeGreaterThan(0);
   const actionableHandCards = field.locator(
     '.duel-field-card.is-actionable[data-card-zone-id="p0:hand"]',
   );
   expect(
     await actionableHandCards.count(),
-    "at least one mounted hand card must be actionable before a drag test may skip",
+    "at least one mounted hand card must be actionable before a drag probe may advance",
   ).toBeGreaterThan(0);
 }
 
 async function advanceToPlayerPhase(
   page: Page,
   playerHalf: Locator,
-  phase: "main1" | "main2",
+  phase: "main1" | "battle" | "main2",
   readyControl: Locator,
 ): Promise<void> {
   const setup = { needsDefense: false };
@@ -2445,6 +2518,7 @@ async function advanceToPlayerPhase(
     const result = page.locator(".result-panel");
     if (
       (await playerHalf.getAttribute("data-current-phase")) === phase &&
+      (await readyControl.count()) > 0 &&
       (await readyControl.isEnabled())
     )
       return;
@@ -2455,10 +2529,10 @@ async function advanceToPlayerPhase(
     const kind = await controls.getAttribute("data-prompt-kind");
     if (kind === null) throw new Error("Prompt kind is missing");
     /* Prompt id changes before phase controls finish enabling. Once the target
-       phase owns its idle command, wait for that same control instead of
-       answering the idle prompt and accidentally ending the phase. */
+       phase owns its command, wait for that same control instead of answering
+       the command and accidentally ending the phase. */
     if (
-      kind === "idleCommand" &&
+      kind === (phase === "battle" ? "battleCommand" : "idleCommand") &&
       (await playerHalf.getAttribute("data-current-phase")) === phase
     ) {
       await expect(readyControl).toBeEnabled();
@@ -2520,6 +2594,33 @@ test("End Turn one press reaches the opponent turn while phase bar stays visible
   const phaseBar = page.locator('[data-cy="phase-bar"]');
   const playerHalf = page.locator('[data-cy="phase-bar-player"]');
   const opponentHalf = page.locator('[data-cy="phase-bar-opponent"]');
+  async function resolveEndPhaseChains(): Promise<void> {
+    // End Turn requests the transition; it must not bypass a real chain.
+    // Only an attached, still-unanswered chain may delay the opponent turn.
+    for (let step = 0; step < 40; step += 1) {
+      await expect
+        .poll(async () => {
+          if (await opponentHalf.getAttribute("data-current-phase"))
+            return true;
+          const promptId = await readLatestPromptId(page);
+          return (
+            (await field.getAttribute("data-prompt-kind")) === "chain" &&
+            promptId !== undefined &&
+            (await countResponsesTo(page, promptId)) === 0
+          );
+        })
+        .toBe(true);
+      if (await opponentHalf.getAttribute("data-current-phase")) return;
+      await expect(field).toHaveAttribute("data-prompt-kind", "chain");
+      const promptId = await readLatestPromptId(page);
+      if (promptId === undefined) throw new Error("Captured prompt is missing");
+      await answerPromptWithKeyboard(page, field, "chain", {
+        needsDefense: false,
+      });
+      await expect.poll(() => countResponsesTo(page, promptId)).toBe(1);
+    }
+    throw new Error("Opponent turn not reached within 40 chain prompts");
+  }
   await expect(playerHalf).toHaveAttribute("data-current-phase", "main1");
   await disableAutoResolveTrivialPrompts(page);
   await disableAutoPlaceCards(page);
@@ -2529,6 +2630,7 @@ test("End Turn one press reaches the opponent turn while phase bar stays visible
   ).toHaveCount(0);
   await expect(endTurn).toBeEnabled();
   await endTurn.click();
+  await resolveEndPhaseChains();
   await expect(playerHalf).not.toHaveAttribute("data-current-phase", "main1");
   await expect(opponentHalf).toHaveAttribute("data-current-phase", /.+/);
   await expect(phaseBar.locator("button:enabled")).toHaveCount(0);
@@ -2542,6 +2644,7 @@ test("End Turn one press reaches the opponent turn while phase bar stays visible
   await expect(playerHalf).toHaveAttribute("data-current-phase", "battle");
 
   const main2 = page.locator('button[data-cy="phase-bar-you-main2"]');
+  await advanceToPlayerPhase(page, playerHalf, "battle", main2);
   await expect(main2).toBeEnabled();
   await main2.click();
   await advanceToPlayerPhase(page, playerHalf, "main2", endTurn);
@@ -2550,6 +2653,7 @@ test("End Turn one press reaches the opponent turn while phase bar stays visible
   await expect(endTurn).toHaveText("End turn");
   await expect(endTurn).toBeEnabled();
   await endTurn.click();
+  await resolveEndPhaseChains();
   await expect(page.locator('[data-cy="phase-bar-opponent"]')).toHaveAttribute(
     "data-current-phase",
     /.+/,
@@ -2731,14 +2835,6 @@ test("dragging a hand card onto a highlighted zone plays it", async ({
   page,
 }) => {
   const placement = await locateDraggablePlacement(page);
-  if (placement === null) {
-    await assertHandCouldOfferAPlacement(page);
-    test.skip(
-      true,
-      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
-    );
-    return;
-  }
   const { field, dragTarget, targetZone, targetZoneId, cardBox, from, to } =
     placement;
 
@@ -3124,9 +3220,62 @@ test("portrait rotated-stage drag lands on pointed monster zone", async ({
   await expect(monsterZone).not.toHaveAttribute("data-drop-candidate", "true");
 });
 
+async function acquireHandEvidence<T>(
+  page: Page,
+  probe: () => Promise<T | null>,
+  missing: string,
+): Promise<T> {
+  // A live prompt walk must not race the application's optional auto-response.
+  await disableAutoResolveTrivialPrompts(page);
+  await disableAutoPlaceCards(page);
+  const setup = { needsDefense: false };
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let step = 0; step < 40; step += 1) {
+      if (await page.locator(".result-panel").isVisible()) break;
+      const controls = await activePromptControls(page);
+      await controls.waitFor({ state: "visible", timeout: 30_000 });
+      const kind = await controls.getAttribute("data-prompt-kind");
+      if (kind === null) throw new Error("Prompt kind is missing");
+      if (kind === "idleCommand") {
+        const found = await probe();
+        if (found !== null) return found;
+      }
+      const promptId = await readLatestPromptId(page);
+      if (promptId === undefined) throw new Error("Captured prompt is missing");
+      await answerPromptWithKeyboard(page, controls, kind, setup);
+      await expect
+        .poll(async () => {
+          if (await page.locator(".result-panel").isVisible()) return true;
+          const latest = await readLatestPromptId(page);
+          return latest !== undefined && latest !== promptId;
+        })
+        .toBe(true);
+    }
+    if (attempt === 0) {
+      if (await page.locator(".result-panel").isVisible()) {
+        await page.getByRole("button", { name: "Start another duel" }).click();
+        await expect(page.locator("[data-prompt-kind]")).toBeVisible({
+          timeout: 120_000,
+        });
+      } else {
+        // A chain window can overlap the menu. Finish only offered prompts
+        // before restarting from the next player idle command.
+        await advanceToPlayerPhase(
+          page,
+          page.locator('[data-cy="phase-bar-player"]'),
+          "main1",
+          page.locator('[data-cy="field-end-turn-button"]'),
+        );
+        await runRestartCycle(page);
+      }
+    }
+  }
+  throw new Error(missing);
+}
+
 /* Item 4: the drag-to-activate target, and the cancel it asks for by name.
-   Cancel-only on purpose — nothing is dispatched, so whatever the seed dealt,
-   the duel state this test leaves behind is the one it found. */
+   Setup may walk legal prompts to find an activation. The measured gesture
+   cancels without dispatching or changing the state at the start of that drag. */
 test("dragging an activatable hand card into the dashed zone asks and can cancel", async ({
   page,
 }) => {
@@ -3140,37 +3289,38 @@ test("dragging an activatable hand card into the dashed zone asks and can cancel
   const field = page.getByRole("region", { name: "Duel field" });
   const activationZone = page.locator('[data-cy="hand-activation-drop-zone"]');
 
-  const respondsBefore = (await readCapture(page)).commands.filter(
-    (command) => command.type === "respond",
-  ).length;
-
   /* The chips no longer advertise an activation, so the only way to find a
      card that offers one is to lift each in turn and look for the zone. A
      release over dead ground abandons the gesture without dispatching. */
-  const handTargets = field.locator(
-    '.duel-field-card.is-actionable[data-card-zone-id="p0:hand"] [data-cy^="field-card-target-"]',
-  );
-  let dragging = false;
-  for (let index = 0; index < (await handTargets.count()); index += 1) {
-    const target = handTargets.nth(index);
-    await target.scrollIntoViewIfNeeded();
-    const box = await target.boundingBox();
-    if (box === null) continue;
-    const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    await page.mouse.move(centre.x, centre.y);
-    await page.mouse.down();
-    await page.mouse.move(centre.x + 24, centre.y - 24, { steps: 3 });
-    if ((await activationZone.count()) > 0) {
-      dragging = true;
-      break;
+  async function beginActivationDrag(): Promise<boolean> {
+    const handTargets = field.locator(
+      '.duel-field-card.is-actionable[data-card-zone-id="p0:hand"] [data-cy^="field-card-target-"]',
+    );
+    for (let index = 0; index < (await handTargets.count()); index += 1) {
+      const target = handTargets.nth(index);
+      await target.scrollIntoViewIfNeeded();
+      const box = await target.boundingBox();
+      if (box === null) continue;
+      const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      await page.mouse.move(centre.x, centre.y);
+      await page.mouse.down();
+      await page.mouse.move(centre.x + 24, centre.y - 24, { steps: 3 });
+      if ((await activationZone.count()) > 0) {
+        return true;
+      }
+      await page.mouse.move(8, 8);
+      await page.mouse.up();
     }
-    await page.mouse.move(8, 8);
-    await page.mouse.up();
+    return false;
   }
-  if (!dragging) {
-    test.skip(true, "opening hand offers no activatable effect");
-    return;
-  }
+  await acquireHandEvidence(
+    page,
+    async () => ((await beginActivationDrag()) ? true : null),
+    "No hand activation after prompt walk and restart",
+  );
+  const respondsBefore = (await readCapture(page)).commands.filter(
+    (command) => command.type === "respond",
+  ).length;
 
   const zoneBox = await activationZone.boundingBox();
   if (zoneBox === null) throw new Error("Missing activation zone geometry");
@@ -3202,14 +3352,6 @@ test("item 18: the hovered drop candidate gets its own emphasis, distinct from u
   page,
 }) => {
   const placement = await locateDraggablePlacement(page);
-  if (placement === null) {
-    await assertHandCouldOfferAPlacement(page);
-    test.skip(
-      true,
-      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
-    );
-    return;
-  }
   const { field, targetZone, targetZoneId, from, to } = placement;
 
   await page.mouse.move(from.x, from.y);
@@ -3254,14 +3396,6 @@ test("reduced motion drags follow the pointer with no tilt and settle with no li
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   const placement = await locateDraggablePlacement(page);
-  if (placement === null) {
-    await assertHandCouldOfferAPlacement(page);
-    test.skip(
-      true,
-      "opening hand offers no summon, no monster set and no settable spell or trap — there is no placement of any kind to drag",
-    );
-    return;
-  }
   const { from, to } = placement;
 
   const ghost = page.locator('[data-cy="drag-ghost"]');
@@ -3743,7 +3877,7 @@ test("T12: hand hover opens a 1.6x overlay, keyboard focus lifts the card 1.35x 
 
 test("item 5: field cards stay outside the hand band and hand action chips remain clickable", async ({
   page,
-}) => {
+}, testInfo) => {
   // Full board on screen: hand row plus spellTrap row remain measurable in
   // real layout, without substituting design-grid arithmetic.
   await page.setViewportSize({ width: 1440, height: 1400 });
@@ -3755,16 +3889,29 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
   await page.evaluate(() => window.scrollTo(0, 0));
   const field = page.getByRole("region", { name: "Duel field" });
 
-  // Count-and-assert guard (R1 pattern): the hand must actually be mounted
-  // and actionable before a spell/trap-set miss is allowed to skip this
-  // seed, so a broken chip/data-cy scheme cannot silently pass as a skip.
+  // Preserve the original widget guards before bounded live-prompt setup;
+  // a broken chip/data-cy scheme cannot silently pass as a seed miss.
   await assertHandCouldOfferAPlacement(page);
 
-  const placed = await setHandSpellTrapWithKeyboard(page, field);
-  test.skip(
-    !placed,
-    "this seed's opening hand offers no spell/trap set for field/hand separation evidence",
+  await acquireHandEvidence(
+    page,
+    async () =>
+      (await field
+        .locator(
+          `.duel-field-card[data-card-zone-id="p0:hand"] ${SPELLTRAP_SET_CHIP}`,
+        )
+        .count()) > 0
+        ? true
+        : null,
+    "No spell/trap set after prompt walk and restart",
   );
+  // The probe only finds a legal set. Restore the original automatic prompt
+  // settings before measuring the existing keyboard-set/field interaction.
+  await openSettingsDialog(page);
+  await page.locator('[data-cy="settings-auto-resolve-checkbox"]').check();
+  await page.locator('[data-cy="settings-auto-place-cards-checkbox"]').check();
+  await page.locator('[data-cy="settings-dialog-close-button"]').click();
+  expect(await setHandSpellTrapWithKeyboard(page, field)).toBe(true);
 
   await expect(
     page.locator('[data-cy="duel-field"][data-prompt-kind="idleCommand"]'),
@@ -3823,10 +3970,43 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
   expect(await chips.evaluate((e) => getComputedStyle(e).flexDirection)).toBe(
     "column-reverse",
   );
-  const cardBox = await field
-    .locator(`[data-card-id="${cardId}"]`)
-    .boundingBox();
+  const card = field.locator(`[data-card-id="${cardId}"]`);
+  // Focus scales the card over 120ms; compare settled geometry, not two frames
+  // sampled at different points along that transform.
+  await expect
+    .poll(() =>
+      card.evaluate(
+        (element) =>
+          element
+            .getAnimations()
+            .filter((animation) => animation.playState === "running").length,
+      ),
+    )
+    .toBe(0);
+  const cardBox = await card.boundingBox();
   const chipsBox = await chips.boundingBox();
+  await testInfo.attach("hand-chip-geometry", {
+    body: JSON.stringify(
+      {
+        cardBox,
+        chipsBox,
+        atomic: await chips.evaluate((element) => {
+          const parent = element.closest(".duel-field-card")!;
+          const card = parent.getBoundingClientRect();
+          const chips = element.getBoundingClientRect();
+          return {
+            card: card.toJSON(),
+            chips: chips.toJSON(),
+            transform: getComputedStyle(parent).transform,
+            fan: getComputedStyle(parent).getPropertyValue("--card-fan"),
+          };
+        }),
+      },
+      null,
+      2,
+    ),
+    contentType: "application/json",
+  });
   expect(
     Math.abs(cardBox!.y + cardBox!.height - (chipsBox!.y + chipsBox!.height)),
   ).toBeLessThanOrEqual(2);
@@ -5045,6 +5225,10 @@ test("a full preset duel can be completed using keyboard controls only with one 
   ).toBeEnabled({ timeout: 30_000 });
 
   const field = page.getByRole("region", { name: "Duel field" });
+  // Settings setup used the pointer. Keep its hover separate from the
+  // keyboard-only walk: a zoom hides the in-band chips without submitting.
+  await page.mouse.move(0, 0);
+  await expect(page.locator(".hand-zoom-overlay")).toHaveCount(0);
   const answeredPromptIds = new Set<string>();
   // Recorded in the evidence below so a future slow run can be read as a long
   // duel or a stalled one without re-instrumenting this walk.

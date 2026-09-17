@@ -11,6 +11,7 @@
   import type { ShopRarity } from "../model/story-state.ts";
 
   interface SetCard {
+    readonly key: string;
     readonly code: number;
     readonly name: string;
     /** The card's effect text, from the catalog rather than the set data — a
@@ -40,12 +41,12 @@
   /* View state, not a preference: the set list opens in the order the set
      itself is packaged in, which is what an ungrouped list is for. */
   let rarityGrouping: RarityGrouping = "off";
-  let previewCode: number | null = cards[0]?.code ?? null;
+  let previewKey: string | null = cards[0]?.key ?? null;
   let sections: readonly CardSection[];
 
   $: previewCard =
-    previewCode !== null
-      ? (cards.find((c) => c.code === previewCode) ?? cards[0] ?? null)
+    previewKey !== null
+      ? (cards.find((c) => c.key === previewKey) ?? cards[0] ?? null)
       : (cards[0] ?? null);
   /* The shared panel the duel and the deck editor dock, built the way the
      collection screen builds it: deciding what to buy is reading a card, and
@@ -54,7 +55,7 @@
     previewCard === null
       ? null
       : ({
-          key: String(previewCard.code),
+          key: previewCard.key,
           name: previewCard.name,
           description: previewCard.description,
           statsLine: null,
@@ -122,34 +123,35 @@
             {section.rarity}
           </h2>
         {/if}
-        {#each section.cards as card (card.code)}
+        {#each section.cards as card (card.key)}
           <div
             class="card-tile rarity-halo"
-            data-cy={`story-shop-card-${card.code}`}
+            data-cy={`story-shop-card-${encodeURIComponent(card.key)}`}
             data-rarity={card.rarity}
             role="group"
             aria-label={card.name}
             onmouseenter={() => {
-              previewCode = card.code;
+              previewKey = card.key;
             }}
             onfocusin={() => {
-              previewCode = card.code;
+              previewKey = card.key;
             }}
           >
             <StoryCardTile
               name={card.name}
               imageUrl={card.imageUrl}
               dataCyPrefix="story-shop-card"
-              dataCyId={card.code}
+              dataCyId={encodeURIComponent(card.key)}
             />
             <span
               class="card-name"
-              data-cy={`story-shop-card-name-${card.code}`}>{card.name}</span
+              data-cy={`story-shop-card-name-${encodeURIComponent(card.key)}`}
+              >{card.name}</span
             >
             <button
               type="button"
               class="buy-btn"
-              data-cy={`story-shop-card-buy-${card.code}`}
+              data-cy={`story-shop-card-buy-${encodeURIComponent(card.key)}`}
               disabled={dp < card.priceDp}
               onclick={() => onbuysingle(card.code, card.rarity)}
               >{card.priceDp} DP</button

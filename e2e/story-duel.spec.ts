@@ -1,4 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import {
+  test,
+  putSelectedStorySave,
+  corruptSelectedStorySave,
+  selectedSaveSnapshot,
+  repairSelectedStorySlot,
+} from "./selected-content-fixture.ts";
+import { expect, type Page } from "@playwright/test";
 import { createInitialStoryState } from "../src/story/model/story-state.ts";
 /* The two names come from the shell's own copy of them rather than from
    `src/story/saves/story-save-contracts.ts`: that module now reaches the
@@ -8,10 +15,6 @@ import { createInitialStoryState } from "../src/story/model/story-state.ts";
    `tests/unit/story-save-presence.test.ts` is what keeps the shell's two
    strings and the story's one fact. The envelope type is erased at load, so
    it still comes from the contract it describes. */
-import {
-  STORY_SAVES_DATABASE_NAME,
-  STORY_SAVES_STORE_NAME,
-} from "../src/shell/screens/story-save-presence.ts";
 import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
 
@@ -31,28 +34,7 @@ async function putStorySave(
   page: Page,
   envelope: StorySaveEnvelope,
 ): Promise<void> {
-  await page.evaluate(
-    async ([databaseName, storeName, record]) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(databaseName as string, 1);
-        request.onupgradeneeded = () =>
-          request.result.createObjectStore(storeName as string);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const transaction = database.transaction(
-        storeName as string,
-        "readwrite",
-      );
-      const envelope = record as { readonly slot: string };
-      transaction.objectStore(storeName as string).put(record, envelope.slot);
-      await new Promise((resolve) => {
-        transaction.oncomplete = resolve;
-      });
-      database.close();
-    },
-    [STORY_SAVES_DATABASE_NAME, STORY_SAVES_STORE_NAME, envelope] as const,
-  );
+  await putSelectedStorySave(page, envelope);
 }
 
 async function seedMapProgress(page: Page): Promise<void> {
@@ -291,41 +273,46 @@ test("a session route whose checkpoint names another handoff lands on the story"
 
 /* A record the build cannot parse is the same as no checkpoint: the player
    goes back to the story rather than into a half-restored duel. */
-test("a corrupt checkpoint lands on the story with progress intact", async ({
+test("a corrupt checkpoint fails closed; explicit fixture repair restores intact story progress", async ({
   page,
 }) => {
   await seedMapProgress(page);
-  await page.evaluate(
-    async ([databaseName, storeName]) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(databaseName as string, 1);
-        request.onupgradeneeded = () =>
-          request.result.createObjectStore(storeName as string);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const transaction = database.transaction(
-        storeName as string,
-        "readwrite",
-      );
-      transaction
-        .objectStore(storeName as string)
-        .put("not a checkpoint", "checkpoint:pre-duel");
-      await new Promise((resolve) => {
-        transaction.oncomplete = resolve;
-      });
-      database.close();
-    },
-    [STORY_SAVES_DATABASE_NAME, STORY_SAVES_STORE_NAME] as const,
+  const before = await selectedSaveSnapshot(page);
+  await corruptSelectedStorySave(
+    page,
+    "checkpoint:pre-duel",
+    "not a checkpoint",
   );
 
   await page.goto("./#/duel/session/55555555-2222-4333-8444-555555555555");
 
-  await expect(page.locator(STORY_REGION)).toBeVisible();
-  await expect(page).toHaveURL(/#\/story$/);
-  await expect(page.getByText(/Rain turned/)).toBeVisible();
-
+  await expect(
+    page.locator('[data-cy="application-recovery-message"]'),
+  ).toHaveText(
+    "This session stopped because its required data became unavailable. Your saved progress was not replaced.",
+  );
+  await expect(page.locator(DUEL_REGION)).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        async () =>
+          (await navigator.locks.query()).held?.filter(
+            (lock) => lock.name === "ygo-application-lifecycle-v1",
+          ).length ?? 0,
+      ),
+    )
+    .toBe(0);
+  const failed = await selectedSaveSnapshot(page);
+  expect(failed.selection).toEqual(before.selection);
+  expect(failed.slots.slice(0, 4)).toEqual(before.slots.slice(0, 4));
+  expect(failed.slots[4]).toMatchObject({
+    kind: "corrupt",
+    slot: "checkpoint:pre-duel",
+  });
+  await repairSelectedStorySlot(page, "checkpoint:pre-duel");
+  expect(await selectedSaveSnapshot(page)).toEqual(before);
   await page.goto("./#/");
+  await page.reload();
   await page.locator('[data-cy="main-menu-continue"]').click();
   await expect(
     page.getByRole("heading", { name: "City signal map" }),

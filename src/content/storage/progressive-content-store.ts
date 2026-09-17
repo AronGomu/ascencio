@@ -53,6 +53,12 @@ type ProgressiveDatabase = Awaited<
   ReturnType<typeof openProgressiveContentDatabase>
 >;
 
+type VerifiedManifestIndex = Readonly<{
+  version: string;
+  manifest: ProgressiveManifest;
+  files: ReadonlyMap<string, ReleaseFile>;
+}>;
+
 class BrowserProgressiveContentStore implements ProgressiveContentStore {
   readonly db: ProgressiveDatabase;
   readonly cache: Cache;
@@ -60,6 +66,7 @@ class BrowserProgressiveContentStore implements ProgressiveContentStore {
   readonly controllers = new Map<string, AbortController>();
   readonly activeJobs = new Set<string>();
   closed = false;
+  private manifestMemo: VerifiedManifestIndex | null = null;
 
   constructor(db: ProgressiveDatabase, cache: Cache, baseUrl: string | null) {
     this.db = db;
@@ -161,20 +168,37 @@ class BrowserProgressiveContentStore implements ProgressiveContentStore {
   }
 
   async readManifest(version: string): Promise<ProgressiveManifest> {
-    return guarded(async () => {
-      this.assertOpen();
-      if (!validHash(version)) fail("CONTENT_INVALID_MANIFEST");
-      const row = await this.db.get("manifests", version);
-      if (!row) fail("CONTENT_MISSING");
-      if (
-        row.version !== version ||
-        !(row.bytes instanceof Uint8Array) ||
-        row.bytes.byteLength > MAX_MANIFEST_BYTES ||
-        (await digest(row.bytes)) !== version
-      )
-        fail("CONTENT_INTEGRITY_FAILED");
-      return parsedManifest(row.bytes);
-    });
+    return guarded(async () =>
+      structuredClone((await this.readVerifiedManifest(version)).manifest),
+    );
+  }
+
+  private async readVerifiedManifest(
+    version: string,
+  ): Promise<VerifiedManifestIndex> {
+    this.assertOpen();
+    if (!validHash(version)) fail("CONTENT_INVALID_MANIFEST");
+    const row = await this.db.get("manifests", version);
+    if (!row) fail("CONTENT_MISSING");
+    if (
+      row.version !== version ||
+      !(row.bytes instanceof Uint8Array) ||
+      row.bytes.byteLength > MAX_MANIFEST_BYTES ||
+      (await digest(row.bytes)) !== version
+    )
+      fail("CONTENT_INTEGRITY_FAILED");
+    this.assertOpen();
+    // Reuse parsing only after verifying current persisted bytes on every read.
+    // One private entry bounds memory; public readers receive a fresh deep clone.
+    if (this.manifestMemo?.version !== version) {
+      const manifest = parsedManifest(row.bytes);
+      this.manifestMemo = {
+        version,
+        manifest,
+        files: new Map(manifest.files.map((file) => [file.path, file])),
+      };
+    }
+    return this.manifestMemo;
   }
 
   private async cachedBytes(
@@ -205,8 +229,8 @@ class BrowserProgressiveContentStore implements ProgressiveContentStore {
       } catch {
         fail("CONTENT_INVALID_MANIFEST");
       }
-      const manifest = await this.readManifest(manifestVersion);
-      const file = manifest.files.find((candidate) => candidate.path === path);
+      const manifest = await this.readVerifiedManifest(manifestVersion);
+      const file = manifest.files.get(path);
       if (!file) fail("CONTENT_INVALID_MANIFEST");
       const bytes = await this.cachedBytes(file, signal);
       return bytes?.slice() ?? null;
@@ -568,6 +592,7 @@ class BrowserProgressiveContentStore implements ProgressiveContentStore {
   close(): void {
     if (this.closed) return;
     this.closed = true;
+    this.manifestMemo = null;
     for (const controller of this.controllers.values()) controller.abort();
     if (this.controllers.size === 0) this.db.close();
   }

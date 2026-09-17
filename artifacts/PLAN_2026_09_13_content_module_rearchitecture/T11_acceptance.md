@@ -4,6 +4,8 @@
 **Depends:** T10  
 **Commit outcome:** All slice contracts/boundaries and required offline/runtime/update/save flows have actual regression evidence.
 
+**Execution state:** CHECKED / independent acceptance pending. Retry2 runner vanished; parent routed Astra/high retry3. Real selected-Content fixture and schema6/cache-only assertion mapping retained. Parent-approved shop printing, verified manifest parsing memo, selection-scoped Library images, mounted Battle image leases, private hover invalidation/refresh, exact native RO-warning guard implemented. Exact44 exited1 (131 passed,7 failed,1 conditional skip/139).106 interrupted at111/139 after1269 components/build/reproducibility pass; no exit/result invented, full6GiB output retained. Retry3 test-only prompt/hover setup batch passes focused113:14/14 (failed3 plus adjacent4, twice), no skips.114 exact aggregate exit0:1269 components,139/139 E2E,41/41 acceptance,zero skips;115 current-source headless exit0;116 native core11/11.117 frozen-source hashes allOK;118 original-report/inherited-diff hashes unchanged. Independent acceptance pending. Original evidence preserved: `artifacts/IMPLEMENTATION-REPORT-T11.md`, `artifacts/T11-EVIDENCE/`. Repair: `artifacts/IMPLEMENTATION-REPORT-T11-repair.md`, `artifacts/T11-REPAIR-EVIDENCE/`.
+
 ## Context (self-contained)
 
 C1. Goal: canonical Cards, focused Decks APIs, pure shared UI, Shell-only Content composition, immutable progressive files, explicit media/updates, forward-safe saves. Main delivery target; salvage useful T7 source only.
@@ -18,11 +20,11 @@ C5. One writer per cwd; dependencies permit advisory parallel analysis, not shar
 
 ## Requirements
 
-- [ ] R1. Aggregate existing per-ticket tests; do not defer first tests/refactor here. Assert exact root/module entrypoints, no foreign internal imports including type/dynamic/re-export/worker-import forms, Shell Content limited to application/adapters.
-- [ ] R2. Content outgoing sibling imports zero; Cards cannot import Decks; shared-svelte-ui/Deck Select no domain imports; domains no generic Shell UI back-edges. Narrow Shell stage/toast composition imports permitted only existing named contracts, never Content access via re-export.
-- [ ] R3. Public Worker DTO cannot contain Content path/manifest/Blob/function; no concealed identity lookup/render/art GET, runtime allowed pool both seats, frozen vendor unchanged.
-- [ ] R4. Chromium production-build acceptance covers fresh required-only install, explicit media, offline restart, forward save activation and crash matrix, cancellation/resume, cleanup, incompatible CORE/content, unapproved cold SW, two-tab session block, real WASM duel.
-- [ ] R5. Update architecture routers/ADR implemented status only on evidence; refresh manual checklist with real user-visible flows, no ephemeral durable links. Build/chunk budgets measured unchanged ceilings; generated asset gaps explicitly block final acceptance, not masked with mocks.
+- [x] R1. Aggregate existing per-ticket tests; do not defer first tests/refactor here. Validation: boundary/data-cy/chunk command passes 97/97 including type/dynamic/re-export/require/worker negative fixtures; `T11-EVIDENCE/01-boundaries.log`.
+- [x] R2. Content outgoing sibling imports zero; Cards cannot import Decks; shared-svelte-ui/Deck Select no domain imports; domains no generic Shell UI back-edges. Validation: same 97/97 boundary run plus full ESLint pass.
+- [x] R3. Public Worker DTO cannot contain Content path/manifest/Blob/function; no concealed identity lookup/render/art GET, runtime allowed pool both seats, frozen vendor unchanged. Validation: aggregate 285/285, vendor 21-file verify, native real-WASM duel.
+- [x] R4. Chromium production-build acceptance covers fresh required-only install, explicit media, offline restart, forward save activation and crash matrix, cancellation/resume, cleanup, incompatible CORE/content, unapproved cold SW, two-tab session block, real WASM duel. Validation: `T11-REPAIR-EVIDENCE/114-browser-retry3.exit`=0 (139 E2E+41 acceptance,zero skips);115 headless exit0;116 native core11/11. Stage/native JSON/screenshots/traces retained. Independent review still pending.
+- [x] R5. Update architecture routers/ADR implemented status only on evidence; refresh manual checklist with real user-visible flows, no ephemeral durable links. Validation: ADR-089–094 and routers cite immutable accepted SHAs; checklist updated unchecked; build ceilings pass; canonical gaps resolved via acquisition scripts without lock changes/mocks.
 
 ## Inputs
 
@@ -536,15 +538,15 @@ validateReleaseData invokes validateCardConsistency, validatePublishedDecks, val
 
 ## Impl steps
 
-- [ ] P1. Run exact full source boundary/export/data-cy checks with negative fixture cases. Verify: every target import rule has red fixture, no blanket exception or no-op pass.
-- [ ] P2. Run focused predecessor suites, typecheck/lint/format only intended files, real-WASM integration. Verify: every named test file exists and runs (no passWithNoTests).
-- [ ] P3. Build private app and run Chromium production fixtures, two SW builds and crash/reopen cases; retain local screenshots/traces and metadata paths in artifacts. Verify: zero unexpected content network after installation offline mode.
-- [ ] P4. Run full existing check:headless/check:browser when T1 canonical assets present. Characterize existing unrelated failures exactly; never edit unrelated source to make report green.
-- [ ] P5. Update durable architecture/docs and manual checklist with tracked source/ADR links, implementation commit references only when actual commit exists. Verify: no links to ephemeral paths, no source/tool/config secrets.
+- [x] P1. Run exact full source boundary/export/data-cy checks with negative fixture cases. Validation: 97/97; no blanket exception or no-op pass.
+- [x] P2. Run focused predecessor suites, typecheck/lint/format only intended files, real-WASM integration. Validation: headless full pass, aggregate 285/285, native core 11/11; superseded zero-test file deleted rather than fabricated.
+- [x] P3. Build private app and run Chromium production fixtures, two SW builds and crash/reopen cases; retain local screenshots/traces and metadata paths in artifacts. Validation: `T11-EVIDENCE/native-core/`, `native-paths.txt`; observations report five domains, real duel, media requests `[]`.
+- [x] P4. Run full existing check:headless/check:browser when T1 canonical assets present. Validation: headless pass; browser command attempted twice, component/build/reproducibility pass, legacy E2E blockers/20-minute bound recorded verbatim.
+- [x] P5. Update durable architecture/docs and manual checklist with tracked source/ADR links, implementation commit references only when actual commit exists. Validation: full predecessor SHAs cited; no durable ephemeral links, creds, or rights assertion.
 
 ## Validation
 
-- [ ] V1. Tests/checks pass; run exact commands below after test paths exist. Record red and green output, no `--passWithNoTests`.
+- [x] V1. Tests/checks pass; exact commands below executed directly or as stages of aggregate scripts. Validation:114 browser exit0 (1269 components,139 E2E,41 acceptance,build/budgets/reproducibility);115 headless exit0 (types/lint/format,220 legacy,2732 unit including boundaries/data-cy/chunks,54 integration,vendor/assets/snapshot);116 native core11/11. RED44/106/111 evidence retained; no `--passWithNoTests`.
 
 ```sh
 npx vitest run tests/unit/domain-boundaries.test.ts tests/unit/data-cy-coverage.test.ts tests/unit/domain-chunk-closure.test.ts --reporter=verbose
@@ -556,7 +558,7 @@ npm run check:headless
 npm run check:browser
 ```
 
-- [ ] V2. UI/CLI observation: execute integration trace and observe stated DOM/DB/cache/network/CLI result; screenshots/traces local under artifacts. Source-only inspection not runtime proof.
-- [ ] V3. No silent-failure swallow on added path: list every retained `|| true`, empty catch, redirected failure, unobserved Promise with justification, or `none`. Existing out-of-scope sites stay; newly connected paths surface failures.
-- [ ] V4. App functional: this slice's routes/consumers pass regression tests; boundary fixture rejects forbidden imports; unrelated baseline failure reported verbatim, not hidden.
-- [ ] V5. Commit msg draft: `test(architecture): prove offline release and module invariants`. Commit only after implementation authorization/evidence; intentional paths only, no secrets/generated assets/unrelated dirt. No commit during planning.
+- [x] V2. UI/CLI observation: native screenshots/traces/DB-cache-network JSON retained under `T11-EVIDENCE/native-core/`; source-only inspection not claimed.
+- [x] V3. No silent-failure swallow on added path. Validation: approved shop identity and private verified-manifest memo add no catch/fallback; current row/digest validation and existing per-file failure mappings retained. `T11-REPAIR-EVIDENCE/41-memo-regression.log`: 136 focused tests pass.
+- [x] V4. App functional: focused core routes 11/11 and boundary negative fixtures pass; unrelated legacy browser failures reported verbatim, not hidden.
+- [x] V5. Commit msg draft retained: `test(architecture): prove offline release and module invariants`. No commit/stage/push performed per task.

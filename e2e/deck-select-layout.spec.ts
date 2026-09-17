@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { test } from "./selected-content-fixture.ts";
+import { expect, type Page } from "@playwright/test";
 
 const WIDE_VIEWPORT = { width: 1600, height: 900 } as const;
 /* Measured against the shipped production build after pane-only Start was
@@ -155,7 +156,7 @@ test("hover docks preview", async ({ page }) => {
   const restingRows = await rowIds();
 
   await page
-    .locator('[data-cy="deck-tile-preset:chapter-one-practice"]')
+    .locator('[data-cy="deck-tile-chapter:chapter-one-practice"]')
     .hover();
   await expect(wrapper).toHaveClass(/previewing/);
   await expect.poll(rowIds).not.toEqual(restingRows);
@@ -168,13 +169,13 @@ test("hover docks preview", async ({ page }) => {
   await expect.poll(rowIds).toEqual(restingRows);
 });
 
-test("bundled deck refuses editor open with disabled reason and toast", async ({
+test("installed chapter deck refuses editor open with disabled reason and toast", async ({
   page,
 }) => {
   await page.setViewportSize(WIDE_VIEWPORT);
   await openFreePlayDeckSelect(page);
 
-  const key = "preset:chapter-one-starter";
+  const key = "chapter:chapter-one-starter";
   await page.locator(`[data-cy="deck-tile-menu-${key}"]`).click();
   const open = page.locator(`[data-cy="deck-tile-menu-open-${key}"]`);
   const reason = page.locator(`[data-cy="deck-tile-menu-open-reason-${key}"]`);
@@ -183,12 +184,12 @@ test("bundled deck refuses editor open with disabled reason and toast", async ({
     "aria-describedby",
     (await reason.getAttribute("id")) as string,
   );
-  await expect(reason).toHaveText("Bundled deck: cannot be modified");
+  await expect(reason).toHaveText("Read-only deck: cannot be modified");
 
   await page.keyboard.press("Escape");
   await page.locator(`[data-cy="deck-tile-press-${key}"]`).dblclick();
   await expect(page.locator('[data-cy^="shell-toast-message-"]')).toHaveText(
-    "Bundled deck: cannot be modified",
+    "Installed chapter deck: cannot be modified",
   );
   await expect(page.locator('[data-cy="deck-select-screen"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/free-play");

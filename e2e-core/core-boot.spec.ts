@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { expectEmittedFonts } from "../tests/fixtures/emitted-font-contract.ts";
 
 const apps = [
   { name: "root", url: "http://127.0.0.1:4400/" },
@@ -41,6 +42,7 @@ for (const app of apps) {
     await page.request.post(`${app.url}__test/shell-version/a`);
     await page.goto(app.url);
     await assertCoreOnly(page, requests);
+    await expectEmittedFonts(page, app.url);
 
     const freePlay = page.locator('[data-cy="main-menu-free-play"]');
     await freePlay.hover({ force: true });
@@ -60,8 +62,11 @@ for (const app of apps) {
       page.locator('[data-cy="install-content-screen"]'),
     ).toBeVisible();
     await expect(
-      page.locator('[data-cy="install-content-chapter-chapter-01"]'),
-    ).toContainText("DM");
+      page.locator('[data-cy="content-actions-status"]'),
+    ).toContainText("Installed content remains available offline");
+    await expect(
+      page.locator('[data-cy="content-install-required"]'),
+    ).toBeDisabled();
     expect(workerCount).toBe(0);
     expect(
       requests.filter((url) =>

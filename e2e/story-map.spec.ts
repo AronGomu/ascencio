@@ -1,13 +1,12 @@
-import { expect, test, type Page } from "@playwright/test";
+import { test, putSelectedStorySave } from "./selected-content-fixture.ts";
+import { expect, type Page } from "@playwright/test";
 import {
   createInitialStoryState,
   type StoryState,
 } from "../src/story/model/story-state.ts";
-import {
-  STORY_SAVES_DATABASE_NAME,
-  STORY_SAVES_STORE_NAME,
-} from "../src/shell/screens/story-save-presence.ts";
 import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
+
+test.use({ installedMedia: true });
 
 const VIEWPORTS = [
   { id: "desktop", width: 1280, height: 720, foreground: "cover" },
@@ -73,28 +72,7 @@ async function putAutosave(page: Page, state: StoryState): Promise<void> {
     savedAt: Date.now(),
     state,
   };
-  await page.evaluate(
-    async ([databaseName, storeName, record]) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(databaseName as string, 1);
-        request.onupgradeneeded = () =>
-          request.result.createObjectStore(storeName as string);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const transaction = database.transaction(
-        storeName as string,
-        "readwrite",
-      );
-      transaction.objectStore(storeName as string).put(record, "autosave");
-      await new Promise((resolve, reject) => {
-        transaction.oncomplete = resolve;
-        transaction.onerror = () => reject(transaction.error);
-      });
-      database.close();
-    },
-    [STORY_SAVES_DATABASE_NAME, STORY_SAVES_STORE_NAME, envelope] as const,
-  );
+  await putSelectedStorySave(page, envelope);
 }
 
 async function openMap(page: Page): Promise<void> {

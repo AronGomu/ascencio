@@ -1,14 +1,11 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { test, putSelectedStorySave } from "./selected-content-fixture.ts";
+import { expect, type Locator, type Page } from "@playwright/test";
 import {
   DECK_DATABASE_NAME,
   LEGACY_DECK_DATABASE_NAME,
 } from "../src/decks/deck-database.ts";
 import { RESULT_WINDOW_CEILING } from "../src/deck-editor/layout/result-window.ts";
 import { createInitialStoryState } from "../src/story/model/story-state.ts";
-import {
-  STORY_SAVES_DATABASE_NAME,
-  STORY_SAVES_STORE_NAME,
-} from "../src/shell/screens/story-save-presence.ts";
 import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
 
@@ -17,7 +14,7 @@ const BLUE_EYES = 89631139;
 const OBELISK = 10000000;
 const RAIGEKI = 12580477;
 const MIRROR_FORCE = 44095762;
-const LONG_NAME_CARD = 50251045;
+const LONG_NAME_CARD = 72989439;
 const STORY_STARTER = storyStarterSave();
 /* The catalog is the whole card database, where a name is not unique: six
    printings answer to "Summoned Skull" and three to "Celtic Guardian". Pick the
@@ -59,30 +56,7 @@ async function openStoryEditor(page: Page): Promise<void> {
       collection: STORY_STARTER.collection,
     },
   };
-  await page.evaluate(
-    async ([databaseName, storeName, record]) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(databaseName as string, 1);
-        request.onupgradeneeded = () =>
-          request.result.createObjectStore(storeName as string);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const transaction = database.transaction(
-        storeName as string,
-        "readwrite",
-      );
-      transaction
-        .objectStore(storeName as string)
-        .put(record, (record as { readonly slot: string }).slot);
-      await new Promise<void>((resolve, reject) => {
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-      });
-      database.close();
-    },
-    [STORY_SAVES_DATABASE_NAME, STORY_SAVES_STORE_NAME, envelope] as const,
-  );
+  await putSelectedStorySave(page, envelope);
   await page.goto(`./#/story/decks/${STORY_STARTER.deck.id}`);
   await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible({
     timeout: 120_000,
@@ -337,8 +311,8 @@ test("sorts every deck zone in all modes and directions with undo", async ({
 
   await replaceOpenDeckCards(page, {
     main: [12580477, 74677422, 46986414, 91152256, 53129443],
-    extra: [1322368, 8505920, 8809344, 6766208],
-    side: [8505920, 44095762, 89631139, 12580477],
+    extra: [1641882, 98502113, 9293977, 1412158],
+    side: [98502113, 44095762, 89631139, 12580477],
   });
   await page.reload();
   const sideToggle = page.locator('[data-cy="deck-zone-toggle-side"]');
@@ -351,91 +325,91 @@ test("sorts every deck zone in all modes and directions with undo", async ({
       mode: "alpha",
       asc: {
         main: [91152256, 53129443, 46986414, 12580477, 74677422],
-        extra: [6766208, 8505920, 8809344, 1322368],
-        side: [89631139, 8505920, 44095762, 12580477],
+        extra: [98502113, 1641882, 9293977, 1412158],
+        side: [89631139, 98502113, 44095762, 12580477],
       },
       desc: {
         main: [74677422, 12580477, 46986414, 53129443, 91152256],
-        extra: [1322368, 8809344, 8505920, 6766208],
-        side: [12580477, 44095762, 8505920, 89631139],
+        extra: [1412158, 9293977, 1641882, 98502113],
+        side: [12580477, 44095762, 98502113, 89631139],
       },
     },
     {
       mode: "type",
       asc: {
         main: [91152256, 46986414, 74677422, 53129443, 12580477],
-        extra: [8505920, 6766208, 8809344, 1322368],
-        side: [89631139, 12580477, 44095762, 8505920],
+        extra: [98502113, 1641882, 9293977, 1412158],
+        side: [89631139, 12580477, 44095762, 98502113],
       },
       desc: {
         main: [53129443, 12580477, 91152256, 46986414, 74677422],
-        extra: [1322368, 8809344, 6766208, 8505920],
-        side: [8505920, 44095762, 12580477, 89631139],
+        extra: [98502113, 1641882, 9293977, 1412158],
+        side: [98502113, 44095762, 12580477, 89631139],
       },
     },
     {
       mode: "level",
       asc: {
         main: [91152256, 46986414, 74677422, 53129443, 12580477],
-        extra: [1322368, 8809344, 6766208, 8505920],
-        side: [89631139, 8505920, 12580477, 44095762],
+        extra: [1641882, 9293977, 1412158, 98502113],
+        side: [89631139, 98502113, 12580477, 44095762],
       },
       desc: {
         main: [46986414, 74677422, 91152256, 53129443, 12580477],
-        extra: [8505920, 6766208, 8809344, 1322368],
-        side: [8505920, 89631139, 12580477, 44095762],
+        extra: [98502113, 9293977, 1412158, 1641882],
+        side: [89631139, 98502113, 12580477, 44095762],
       },
     },
     {
       mode: "attribute",
       asc: {
         main: [46986414, 74677422, 91152256, 53129443, 12580477],
-        extra: [8505920, 8809344, 1322368, 6766208],
-        side: [8505920, 89631139, 12580477, 44095762],
+        extra: [98502113, 1641882, 1412158, 9293977],
+        side: [98502113, 89631139, 12580477, 44095762],
       },
       desc: {
         main: [91152256, 46986414, 74677422, 53129443, 12580477],
-        extra: [6766208, 8809344, 1322368, 8505920],
-        side: [89631139, 8505920, 12580477, 44095762],
+        extra: [9293977, 1641882, 1412158, 98502113],
+        side: [89631139, 98502113, 12580477, 44095762],
       },
     },
     {
       mode: "race",
       asc: {
         main: [74677422, 46986414, 91152256, 53129443, 12580477],
-        extra: [6766208, 8809344, 8505920, 1322368],
-        side: [89631139, 8505920, 12580477, 44095762],
+        extra: [1641882, 9293977, 1412158, 98502113],
+        side: [89631139, 98502113, 12580477, 44095762],
       },
       desc: {
         main: [91152256, 46986414, 74677422, 53129443, 12580477],
-        extra: [8505920, 1322368, 6766208, 8809344],
-        side: [8505920, 89631139, 12580477, 44095762],
+        extra: [98502113, 9293977, 1412158, 1641882],
+        side: [98502113, 89631139, 12580477, 44095762],
       },
     },
     {
       mode: "atk",
       asc: {
         main: [91152256, 74677422, 46986414, 53129443, 12580477],
-        extra: [8809344, 1322368, 6766208, 8505920],
-        side: [89631139, 8505920, 12580477, 44095762],
+        extra: [1641882, 1412158, 9293977, 98502113],
+        side: [98502113, 89631139, 12580477, 44095762],
       },
       desc: {
         main: [46986414, 74677422, 91152256, 53129443, 12580477],
-        extra: [8505920, 6766208, 1322368, 8809344],
-        side: [8505920, 89631139, 12580477, 44095762],
+        extra: [98502113, 9293977, 1412158, 1641882],
+        side: [89631139, 98502113, 12580477, 44095762],
       },
     },
     {
       mode: "def",
       asc: {
         main: [91152256, 74677422, 46986414, 53129443, 12580477],
-        extra: [6766208, 8809344, 8505920, 1322368],
-        side: [89631139, 8505920, 12580477, 44095762],
+        extra: [1412158, 1641882, 9293977, 98502113],
+        side: [98502113, 89631139, 12580477, 44095762],
       },
       desc: {
         main: [46986414, 74677422, 91152256, 53129443, 12580477],
-        extra: [8505920, 8809344, 6766208, 1322368],
-        side: [8505920, 89631139, 12580477, 44095762],
+        extra: [98502113, 9293977, 1641882, 1412158],
+        side: [89631139, 98502113, 12580477, 44095762],
       },
     },
   ] as const;
@@ -807,7 +781,7 @@ test("the deck editor recovers real save failures and revision conflicts", async
 test("a prototype deck database is migrated on first load", async ({
   page,
 }) => {
-  await page.goto(libraryUrl);
+  await page.goto("./#/");
   await deleteDeckDatabase(page);
 
   /* The schema is spelled out rather than imported because this fixture has to
@@ -863,7 +837,7 @@ test("a prototype deck database is migrated on first load", async ({
     database.close();
   }, LEGACY_DECK_DATABASE_NAME);
 
-  await page.reload();
+  await page.goto(libraryUrl);
   /* Deck-name controls now identify their action before the stored name. */
   const migrated = page.getByRole("button", {
     name: /^Select Prototype Survivor,/,
@@ -1232,12 +1206,12 @@ test("the deck editor fits stage with stable gutter, single-line card name and h
 
   await page
     .getByRole("searchbox", { name: "Name" })
-    .fill("Calamity of the Sacred Beasts");
+    .fill("Black Luster Soldier - Envoy");
   const tileName = catalogTile(page, LONG_NAME_CARD).locator(
     `[data-cy="catalog-tile-name-${LONG_NAME_CARD}"]`,
   );
   await expect(tileName).toHaveText(
-    "Calamity of the Sacred Beasts - Hamon, Lord of Striking Thunder",
+    "Black Luster Soldier - Envoy of the Beginning",
   );
   const nameStyle = await tileName.evaluate((el) => {
     const style = getComputedStyle(el);
@@ -1743,49 +1717,68 @@ test("copy edits preserve the result window while committing deck updates", asyn
   await expect(tiles).toHaveCount(ceilingVisible);
 });
 
-test("deck library shows art rows with frame and copy count", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(libraryUrl);
-  await deleteDeckDatabase(page);
-  await page.reload();
+test.describe("installed media", () => {
+  test.use({ installedMedia: true });
+  test("deck library shows art rows with frame and copy count", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(libraryUrl);
+    await deleteDeckDatabase(page);
+    await page.reload();
 
-  await page.locator('[data-cy="deck-select-create"]').click();
-  await page.getByLabel("Deck name").fill("Decklist Rows");
-  await page.locator('[data-cy="deck-library-create-submit"]').click();
-  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
-  await catalogTile(page, BLUE_EYES).dblclick();
-  await page.getByRole("searchbox", { name: "Name" }).fill("");
-  const catalogTiles = page.locator(
-    '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
-  );
-  const catalogCodes = await catalogTiles.evaluateAll((tiles) =>
-    tiles.map((tile) => tile.getAttribute("data-card-code")),
-  );
-  const additionalCodes = catalogCodes
-    .filter(
-      (code): code is string => code !== null && code !== String(BLUE_EYES),
-    )
-    .slice(0, 59);
-  expect(additionalCodes.length).toBeGreaterThanOrEqual(39);
-  for (const code of additionalCodes) {
-    await catalogTile(page, Number(code)).dblclick();
-    if ((await zoneCount(page, "main").textContent())?.startsWith("40/")) break;
-  }
-  await expect(zoneCount(page, "main")).toHaveText("40/40");
-  /* T9 excludes unavailable cards, including four formerly sampled Extra
-     candidates, before catalog rendering. */
-  await expectSaveSettled(page, { main: 40, extra: 3, side: 0 });
+    await page.locator('[data-cy="deck-select-create"]').click();
+    await page.getByLabel("Deck name").fill("Decklist Rows");
+    await page.locator('[data-cy="deck-library-create-submit"]').click();
+    await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+    await catalogTile(page, BLUE_EYES).dblclick();
+    await page.getByRole("searchbox", { name: "Name" }).fill("");
+    const catalogTiles = page.locator(
+      '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
+    );
+    const catalogCodes = await catalogTiles.evaluateAll((tiles) =>
+      tiles.map((tile) => tile.getAttribute("data-card-code")),
+    );
+    const additionalCodes = catalogCodes
+      .filter(
+        (code): code is string => code !== null && code !== String(BLUE_EYES),
+      )
+      .slice(0, 59);
+    expect(additionalCodes.length).toBeGreaterThanOrEqual(39);
+    for (const code of additionalCodes) {
+      await catalogTile(page, Number(code)).dblclick();
+      if ((await zoneCount(page, "main").textContent())?.startsWith("40/"))
+        break;
+    }
+    await expect(zoneCount(page, "main")).toHaveText("40/40");
+    // Explicit selected-chapter Extra Deck entries keep the row-count fixture stable.
+    for (const [name, code] of [
+      ["Fusionist", 1641882],
+      ["Metal Dragon", 9293977],
+      ["Dark Paladin", 98502113],
+    ] as const) {
+      await page.getByRole("searchbox", { name: "Name" }).fill(name);
+      await catalogTile(page, code).dblclick();
+    }
+    await expectSaveSettled(page, { main: 40, extra: 3, side: 0 });
 
-  await page.goto(libraryUrl);
-  await page.getByRole("button", { name: /^Select Decklist Rows,/ }).click();
+    await page.goto(libraryUrl);
+    await page.getByRole("button", { name: /^Select Decklist Rows,/ }).click();
 
-  const row = page.locator('[data-cy^="deck-select-docked-list-row-"]').first();
-  await expect(row).toBeVisible();
-  await expect(row).toHaveCSS("border-left-width", "5px");
-  await expect(row.locator('[data-cy*="-row-copies-"]')).toHaveCount(1);
-  await expect(row.locator('[data-cy*="-row-art-"]')).toHaveCount(1);
+    const row = page
+      .locator('[data-cy^="deck-select-docked-list-row-"]')
+      .first();
+    await expect(row).toBeVisible();
+    await expect(row).toHaveCSS("border-left-width", "5px");
+    await expect(row.locator('[data-cy*="-row-copies-"]')).toHaveCount(1);
+    await expect(row.locator('[data-cy*="-row-art-"]')).toHaveCount(1);
+    const image = testInfo.outputPath("deck-library-installed-images.png");
+    await page.screenshot({ path: image });
+    await testInfo.attach("deck-library-installed-images", {
+      path: image,
+      contentType: "image/png",
+    });
+  });
 });
 
 test.describe("touch click regression", () => {

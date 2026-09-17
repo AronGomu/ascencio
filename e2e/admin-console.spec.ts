@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { test } from "./selected-content-fixture.ts";
+import { expect, type Page } from "@playwright/test";
 import { DECK_DATABASE_NAME } from "../src/decks/deck-database.ts";
 
 const adminUrl = "./#/admin";

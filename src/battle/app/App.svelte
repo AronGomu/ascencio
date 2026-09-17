@@ -9,11 +9,7 @@
   import type { DuelError } from "../duel/contracts/duel-error.ts";
   import type { PlayerPrompt } from "../duel/contracts/player-prompt.ts";
   import { snapshotId, type PromptId } from "../duel/contracts/ids.ts";
-  import { cardCode as canonicalCardCode } from "../../cards/index.ts";
-  import type {
-    CardImageLease as SharedCardImageLease,
-    CardImageSource,
-  } from "../../cards/images/index.ts";
+  import type { CardImageSource } from "../../cards/images/index.ts";
   import type {
     PlayerIndex,
     PublicCard,
@@ -54,6 +50,7 @@
   import { DuelWorkerClient } from "./DuelWorkerClient.ts";
   import {
     createCardImageSourceLibrary,
+    type CardImageLease,
     type CardImageLibrary,
   } from "./images/card-image-cache.ts";
   import PromptControls from "./prompts/PromptControls.svelte";
@@ -133,8 +130,8 @@
      Surrender. `null` where the host owns its own way out. */
   export let onleavematch: (() => void) | null = null;
 
-  let activeCards: readonly DeckBuilderCardView[] = presentation.cards;
-  $: activeCardTexts = new Map(
+  const activeCards: readonly DeckBuilderCardView[] = presentation.cards;
+  const activeCardTexts = new Map(
     activeCards.map((card) => [card.code, card] as const),
   );
   const EMPTY_ZONE_LISTS: ReadonlyMap<
@@ -142,7 +139,7 @@
     readonly ZoneListEntry[]
   > = new Map();
   const EMPTY_OFF_FIELD_TARGETS: readonly OffFieldTargetEntry[] = [];
-  let deckBuilderCatalog: ReadonlyMap<number, DeckBuilderCardView> =
+  const deckBuilderCatalog: ReadonlyMap<number, DeckBuilderCardView> =
     catalogByCode(activeCards);
   const defaultOpponent = presentation.opponents.find(
     ({ id }) => id === presentation.defaults.opponentId,
@@ -187,12 +184,11 @@
   let imageWarning: string | null = null;
   let previewCard: CardPreviewView | null = null;
   let previewCode: number | null = null;
-  let activePreviewSource: CardImageSource | null = null;
+  let activePreviewLibrary: CardImageLibrary | null = null;
   let activePreviewCode: number | null = null;
-  let activePreviewAbort: AbortController | null = null;
-  let activePreviewLease: SharedCardImageLease | null = null;
+  let activePreviewLease: CardImageLease | null = null;
   let previewImageUrl: string | null = null;
-  $: synchronizePreviewImage(imageSource, previewCode);
+  $: synchronizePreviewImage(imageLibrary, previewCode);
   $: renderedPreview =
     previewCard === null ? null : { ...previewCard, imageUrl: previewImageUrl };
   let autoResolvedPromptId: PromptId | null = null;
@@ -416,11 +412,6 @@
         if (disposed || generation !== imageLoadGeneration) library.dispose();
         else {
           imageLibrary = library;
-          activeCards = presentation.cards.map((card) => ({
-            ...card,
-            imageUrl: library.lease(card.code).url,
-          }));
-          deckBuilderCatalog = catalogByCode(activeCards);
           void refreshSelectableDecks();
         }
       } catch (error) {
@@ -988,47 +979,23 @@
   }
 
   function releasePreviewImage(): void {
-    activePreviewAbort?.abort();
-    activePreviewAbort = null;
     activePreviewLease?.release();
     activePreviewLease = null;
     previewImageUrl = null;
   }
 
   function synchronizePreviewImage(
-    source: CardImageSource | null,
+    library: CardImageLibrary | null,
     code: number | null,
   ): void {
-    if (source === activePreviewSource && code === activePreviewCode) return;
+    if (library === activePreviewLibrary && code === activePreviewCode) return;
     releasePreviewImage();
-    activePreviewSource = source;
+    activePreviewLibrary = library;
     activePreviewCode = code;
-    if (source === null || code === null) return;
-    const controller = new AbortController();
-    activePreviewAbort = controller;
-    void source
-      .acquire(canonicalCardCode(code), "full", controller.signal)
-      .then(
-        (lease) => {
-          if (
-            controller.signal.aborted ||
-            activePreviewAbort !== controller ||
-            activePreviewSource !== source ||
-            activePreviewCode !== code
-          ) {
-            lease?.release();
-            return;
-          }
-          activePreviewLease = lease;
-          previewImageUrl = lease?.url ?? null;
-        },
-        (error: unknown) => {
-          if (controller.signal.aborted) return;
-          imageWarning = `Installed card image is unavailable: ${
-            error instanceof Error ? error.message : String(error)
-          }`;
-        },
-      );
+    if (library === null || code === null) return;
+    activePreviewLease = library.lease(code);
+    previewImageUrl = activePreviewLease.url;
+    activePreviewLease.subscribe?.((url) => (previewImageUrl = url));
   }
 
   function retryCardImageLoading(): void {

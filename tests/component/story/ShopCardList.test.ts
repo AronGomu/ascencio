@@ -5,10 +5,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import ShopCardListScreen from "../../../src/story/shop/ShopCardListScreen.svelte";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 import type { CardImageSource } from "../../../src/cards/images/index.ts";
+import { readFileSync } from "node:fs";
+import { parsePreparedPlayerMetadata } from "../../../scripts/lib/asset-delivery/prepared-player-metadata.ts";
 
 afterEach(() => cleanup());
 
 type CardEntry = {
+  key: string;
   code: number;
   name: string;
   description: string;
@@ -19,6 +22,7 @@ type CardEntry = {
 
 const FIVE_CARDS: readonly CardEntry[] = [
   {
+    key: "111",
     code: 111,
     name: "Blue-Eyes White Dragon",
     description: "This legendary dragon is a powerful engine of destruction.",
@@ -27,6 +31,7 @@ const FIVE_CARDS: readonly CardEntry[] = [
     priceDp: 40,
   },
   {
+    key: "222",
     code: 222,
     name: "Dark Magician",
     description: "The ultimate wizard in terms of attack and defense.",
@@ -35,6 +40,7 @@ const FIVE_CARDS: readonly CardEntry[] = [
     priceDp: 100,
   },
   {
+    key: "333",
     code: 333,
     name: "Exodia the Forbidden One",
     description:
@@ -44,6 +50,7 @@ const FIVE_CARDS: readonly CardEntry[] = [
     priceDp: 400,
   },
   {
+    key: "444",
     code: 444,
     name: "Summoned Skull",
     description: "A fiend with dark powers for confusing the enemy.",
@@ -52,6 +59,7 @@ const FIVE_CARDS: readonly CardEntry[] = [
     priceDp: 200,
   },
   {
+    key: "555",
     code: 555,
     name: "Red-Eyes Black Dragon",
     description: "A ferocious dragon with a deadly attack.",
@@ -70,6 +78,59 @@ const previewImages: CardImageSource = {
 };
 
 describe("ShopCardListScreen", () => {
+  it("canonical regional printings retain unique tiles and purchase identity", async () => {
+    const metadata = parsePreparedPlayerMetadata(
+      JSON.parse(
+        readFileSync("generated/asset-delivery/prepared-player.json", "utf8"),
+      ),
+    );
+    const set = metadata.chapters[0]!.gameplay.sets.find(
+      ({ id }) => id === "metal-raiders",
+    )!;
+    const printings = set.cards.filter(
+      ({ code }) => code === 62121 || code === 5818798,
+    );
+    expect(
+      printings
+        .filter(({ code }) => code === 62121)
+        .map(({ printingCode }) => printingCode),
+    ).toEqual(["MRD-073", "MRD-E073", "MRD-EN073"]);
+    const onbuysingle = vi.fn();
+    const cards = printings.map((card) => ({
+      ...card,
+      key: JSON.stringify([
+        card.code,
+        card.printingCode,
+        card.sourceRarity,
+        card.sourceRarityCode,
+      ]),
+      description: "",
+      imageUrl: null,
+      priceDp: 40,
+    }));
+    const { container } = render(ShopCardListScreen, {
+      cards,
+      dp: 40,
+      onbuysingle,
+    });
+    const ids = [...container.querySelectorAll("[data-cy]")].map((element) =>
+      element.getAttribute("data-cy"),
+    );
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(
+      container.querySelectorAll('[data-cy^="story-shop-card-buy-"]'),
+    ).toHaveLength(7);
+    for (const card of cards) {
+      const button = container.querySelector(
+        `[data-cy="story-shop-card-buy-${encodeURIComponent(card.key)}"]`,
+      ) as HTMLButtonElement;
+      expect(button.textContent?.trim()).toBe("40 DP");
+      expect(button.disabled).toBe(false);
+      await userEvent.setup().click(button);
+      expect(onbuysingle).toHaveBeenLastCalledWith(card.code, card.rarity);
+    }
+    expect(onbuysingle).toHaveBeenCalledTimes(7);
+  });
   it("grid renders one halo tile per card", () => {
     const { container } = render(ShopCardListScreen, {
       setName: "Legend of Blue-Eyes White Dragon",

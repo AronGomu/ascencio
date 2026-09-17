@@ -73,6 +73,7 @@ describe("StoryCardTile", () => {
       dp: 9999,
       cards: [
         {
+          key: "333",
           code: 333,
           name: "Exodia the Forbidden One",
           description: "Cannot be Normal Summoned or Set.",
@@ -100,6 +101,7 @@ describe("StoryCardTile", () => {
       dp: 9999,
       cards: [
         {
+          key: "111",
           code: 111,
           name: "Blue-Eyes White Dragon",
           description: "A powerful engine of destruction.",

@@ -1,8 +1,5 @@
-import type {
-  CardImageLease as SourceImageLease,
-  CardImageSource,
-} from "../../../cards/images/index.ts";
-import { cardCode as canonicalCardCode } from "../../../cards/index.ts";
+import type { CardImageSource } from "../../../cards/images/index.ts";
+import { createSemanticImageLeases } from "./semantic-image-leases.ts";
 import {
   snapshotId,
   type CardCode,
@@ -47,6 +44,8 @@ export interface CardImageDiagnostic {
 
 export interface CardImageLease {
   readonly url: string;
+  /** Immediate snapshot, then readiness updates; release removes all listeners. */
+  subscribe?(listener: (url: string) => void): () => void;
   release(): void;
 }
 
@@ -79,57 +78,6 @@ export async function createCardImageSourceLibrary(
   onProgress: (completed: number, total: number) => void = () => undefined,
   signal?: AbortSignal,
 ): Promise<CardImageLibrary> {
-  const images = new Map<number, SourceImageLease>();
-  const leases: SourceImageLease[] = [];
-  const diagnostics: CardImageDiagnostic[] = [];
-  const fallbackSignal = signal ?? new AbortController().signal;
-  let next = 0;
-  let completed = 0;
-  let failed = false;
-  let failure: unknown;
-  await Promise.all(
-    Array.from({ length: Math.min(4, codes.length) }, async () => {
-      try {
-        while (!failed && source !== null && next < codes.length) {
-          signal?.throwIfAborted();
-          const code = codes[next++];
-          if (code === undefined) continue;
-          const lease = await source.acquire(
-            canonicalCardCode(code),
-            "full",
-            fallbackSignal,
-          );
-          if (lease !== null) leases.push(lease);
-          signal?.throwIfAborted();
-          if (failed) continue;
-          if (lease === null) {
-            diagnostics.push({
-              code,
-              status: "missing",
-              source: "semantic-card-image-source",
-            });
-          } else {
-            images.set(code, lease);
-            diagnostics.push({
-              code,
-              status: "cache-hit",
-              source: "semantic-card-image-source",
-            });
-          }
-          completed += 1;
-          onProgress(completed, codes.length);
-        }
-      } catch (error) {
-        if (!failed) failure = error;
-        failed = true;
-      }
-    }),
-  );
-  if (failed) {
-    for (const lease of leases) lease.release();
-    throw failure;
-  }
-  signal?.throwIfAborted();
   const cardBackUrl = svgDataUrl("Card back", "#241037", "#d9a441", "#6f2d62");
   const placeholderUrl = svgDataUrl(
     "Image unavailable",
@@ -137,25 +85,24 @@ export async function createCardImageSourceLibrary(
     "#76839a",
     "#27344d",
   );
-  let disposed = false;
+  const mounted = createSemanticImageLeases(
+    source,
+    codes,
+    placeholderUrl,
+    onProgress,
+    signal,
+  );
   return Object.freeze({
     snapshotId: snapshotId(runtimeSnapshotId),
     imageManifestSha256: catalogRevision,
     provider: "semantic-source" as const,
     cardBackUrl,
     placeholderUrl,
-    diagnostics: Object.freeze(diagnostics),
-    lease(code: CardCode | number): CardImageLease {
-      if (disposed) return staticImageLease(placeholderUrl);
-      return staticImageLease(images.get(Number(code))?.url ?? placeholderUrl);
+    get diagnostics() {
+      return mounted.diagnostics;
     },
-    dispose(): void {
-      if (disposed) return;
-      disposed = true;
-      for (const lease of leases) lease.release();
-      leases.length = 0;
-      images.clear();
-    },
+    lease: mounted.lease,
+    dispose: mounted.dispose,
   });
 }
 

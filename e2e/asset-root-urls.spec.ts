@@ -1,59 +1,27 @@
-import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
-import { ASSET_SOURCES } from "../scripts/lib/asset-roots.ts";
+import { expectEmittedFonts } from "../tests/fixtures/emitted-font-contract.ts";
 
-const hash = (bytes: Uint8Array) =>
-  createHash("sha256").update(bytes).digest("hex");
-
-test("canonical source relocation retains browser asset URLs and exact bytes", async ({
+test("canonical source relocation retains emitted font URLs and exact bytes", async ({
   page,
-  request,
+  baseURL,
 }) => {
-  await page.goto("./");
-  for (const [source, logical] of [
-    [
-      "src/assets/fonts/forum-latin.woff2",
-      "fonts/forum-latin.woff2",
-    ],
-    [
-      "src/assets/fonts/source-serif-4-latin.woff2",
-      "fonts/source-serif-4-latin.woff2",
-    ],
-    [
-      `${ASSET_SOURCES.runtime.source}/manifest.json`,
-      "runtime/current/manifest.json",
-    ],
-    [
-      `${ASSET_SOURCES.data.source}/manifest.json`,
-      "runtime/assets/current/manifest.json",
-    ],
-    [
-      `${ASSET_SOURCES.fullImages.source}/97590747.jpg`,
-      "runtime/images/97590747.jpg",
-    ],
-    [
-      `${ASSET_SOURCES.croppedImages.source}/97590747.jpg`,
-      "runtime/images-cropped/97590747.jpg",
-    ],
-    [ASSET_SOURCES.cardBack.source, "runtime/images/card-back.jpg"],
-    [
-      "vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm",
-      "runtime/engine/ocgcore.sync.wasm",
-    ],
+  await expectEmittedFonts(page, baseURL!);
+  // Gameplay sources are no longer public CORE URLs. A SPA fallback must not
+  // be mistaken for a successful runtime, image, WASM or authoring response.
+  for (const logical of [
+    "runtime/current/manifest.json",
+    "runtime/assets/current/manifest.json",
+    "runtime/images/97590747.jpg",
+    "runtime/images-cropped/97590747.jpg",
+    "runtime/images/card-back.jpg",
+    "runtime/engine/ocgcore.sync.wasm",
+    "assets/story/PROVENANCE.md",
   ]) {
-    const response = await request.get(logical!);
-    expect(response.status(), logical).toBe(200);
-    expect(hash(await response.body()), logical).toBe(
-      hash(await readFile(source!)),
-    );
+    const response = await page.request.get(new URL(logical, baseURL).href);
+    expect(
+      response.status() === 404 ||
+        response.headers()["content-type"]?.includes("text/html"),
+      logical,
+    ).toBe(true);
   }
-  expect(
-    await page.evaluate(async () => {
-      const fonts = await document.fonts.load('16px "Forum"');
-      return fonts.some((font) => font.status === "loaded");
-    }),
-  ).toBe(true);
-  const provenance = await request.get("assets/story/PROVENANCE.md");
-  expect(provenance.status()).toBe(404);
 });

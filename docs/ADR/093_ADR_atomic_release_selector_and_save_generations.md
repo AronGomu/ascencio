@@ -1,10 +1,11 @@
 # ADR-093: One selector exposes content with forward-migrated saves
 
-> Status: accepted; planned
+> Status: accepted; implemented
 > Decided: 2026-09-13
 > Owners: shell application / story persistence / content receipts
 > Amends: ADR-085 D3; ADR-088 D1–D5; ADR-076 D3–D5; ADR-026 §8 clarified
-> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected integration source, not implementation evidence for this decision.
+> Implemented: `86631c98f616efc49ecf61e5a3e259c6130bd404` (T6 save generations) and `344ffe2d5bbf1beafad53ad6d10dc517bbaf1b2a` (T9 atomic selector/readiness).
+> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected pre-implementation source.
 
 ## Context
 

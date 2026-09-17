@@ -1,4 +1,12 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  test,
+  putSelectedStorySave,
+  selectedStorySlots,
+  corruptSelectedStorySave,
+  selectedSaveSnapshot,
+  repairSelectedStorySlot,
+} from "./selected-content-fixture.ts";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { createInitialStoryState } from "../src/story/model/story-state.ts";
 import type { BattleResult } from "../src/story/model/story-state.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
@@ -47,48 +55,27 @@ async function startNarrative(page: Page): Promise<void> {
 
     The save carries the granted deck and the cards behind it, because Retry on
     these scenes starts a real encounter and an encounter is fought with this
-    save's own deck. A save holding none cannot start one at all. The record is
-    written at schema 1 on purpose — the migration keeps fields a v1 record
-    already carries — so the read path stays under test with it. */
+    save's own deck. A save holding none cannot start one at all. The supported selected-generation repository binds this state to installed
+    Content. Legacy migration has separate compatibility tests. */
 async function resumeAtOutcome(
   page: Page,
   outcome: BattleResult,
 ): Promise<void> {
   await openStory(page);
-  await page.evaluate(
-    async (record) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open("ygo-story-saves", 1);
-        request.onupgradeneeded = () =>
-          request.result.createObjectStore("saves");
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const transaction = database.transaction("saves", "readwrite");
-      transaction.objectStore("saves").put(record, "autosave");
-      await new Promise((resolve) => {
-        transaction.oncomplete = resolve;
-      });
-      database.close();
+  await putSelectedStorySave(page, {
+    slot: "autosave",
+    state: {
+      ...createInitialStoryState(),
+      screen: "outcome",
+      savedScreen: "outcome",
+      progressExists: true,
+      encounterId: "old-arena",
+      outcome,
+      decks: [STARTER.deck],
+      defaultDeckId: STARTER.deck.id,
+      collection: STARTER.collection,
     },
-    {
-      schemaVersion: 1,
-      slot: "autosave",
-      revision: 1,
-      savedAt: Date.now(),
-      state: {
-        ...createInitialStoryState(),
-        screen: "outcome",
-        savedScreen: "outcome",
-        progressExists: true,
-        encounterId: "old-arena",
-        outcome,
-        decks: [STARTER.deck],
-        defaultDeckId: STARTER.deck.id,
-        collection: STARTER.collection,
-      },
-    },
-  );
+  });
   await reloadMainMenu(page);
   await page.getByRole("button", { name: "Continue" }).click();
 }
@@ -301,27 +288,15 @@ test("manual save and delete only touch the manual slot", async ({ page }) => {
   await page.getByRole("button", { name: "Close Load game" }).click();
 
   await reloadMainMenu(page);
-  await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Continue", exact: true }),
+  ).toBeDisabled();
 });
 
 /** The slot keys the story database actually holds, read from outside the app
     so a passing save cannot be one the component only remembers. */
 async function storySaveSlots(page: Page): Promise<readonly string[]> {
-  return await page.evaluate(async () => {
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("ygo-story-saves", 1);
-      request.onupgradeneeded = () => request.result.createObjectStore("saves");
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    const transaction = database.transaction("saves", "readonly");
-    const keys = transaction.objectStore("saves").getAllKeys();
-    await new Promise((resolve) => {
-      transaction.oncomplete = resolve;
-    });
-    database.close();
-    return keys.result.map(String);
-  });
+  return selectedStorySlots(page);
 }
 
 /* The reload is the whole point: the manual slot has to come back out of
@@ -349,35 +324,52 @@ test("a manual save is reloadable from the Load screen after a reload", async ({
 
 /* A record this build cannot read costs the player that slot and nothing
    else. The failure this guards against is a blank screen on mount. */
-test("a corrupt slot degrades to no save and the story still plays", async ({
+test("a corrupt slot fails closed without replacing healthy progress", async ({
   page,
 }) => {
-  await openStory(page);
-  await page.evaluate(async () => {
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("ygo-story-saves", 1);
-      request.onupgradeneeded = () => request.result.createObjectStore("saves");
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    const transaction = database.transaction("saves", "readwrite");
-    transaction.objectStore("saves").put("not a save", "manual:1");
-    await new Promise((resolve) => {
-      transaction.oncomplete = resolve;
-    });
-    database.close();
+  await putSelectedStorySave(page, {
+    slot: "autosave",
+    state: {
+      ...createInitialStoryState(),
+      screen: "map",
+      savedScreen: "map",
+      progressExists: true,
+      decks: [STARTER.deck],
+      defaultDeckId: STARTER.deck.id,
+      collection: STARTER.collection,
+    },
   });
-
+  const before = await selectedSaveSnapshot(page);
+  await corruptSelectedStorySave(page, "manual:1", "not a save");
+  await page.goto("./#/story");
+  await expect(
+    page.locator('[data-cy="application-recovery-message"]'),
+  ).toHaveText(
+    "This session stopped because its required data became unavailable. Your saved progress was not replaced.",
+  );
+  await expect(page.locator('[data-cy="shell-region-duel"]')).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        async () =>
+          (await navigator.locks.query()).held?.filter(
+            (lock) => lock.name === "ygo-application-lifecycle-v1",
+          ).length ?? 0,
+      ),
+    )
+    .toBe(0);
+  const failed = await selectedSaveSnapshot(page);
+  expect(failed.selection).toEqual(before.selection);
+  expect(failed.slots.slice(1)).toEqual(before.slots.slice(1));
+  expect(failed.slots[0]).toMatchObject({ kind: "corrupt", slot: "manual:1" });
+  await repairSelectedStorySlot(page, "manual:1");
+  expect(await selectedSaveSnapshot(page)).toEqual(before);
+  await page.goto("./#/");
   await page.reload();
-  await expect(page.getByRole("alert")).toContainText("manual:1");
-  await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
-  await expect(page.getByText(/Rain turned/)).toBeVisible();
-
-  /* The banner's reset clears every slot, so the next save writes cleanly on
-     top of the record that could not be read. */
-  await page.getByRole("button", { name: "Reset prototype storage" }).click();
-  await expect(page.getByRole("alert")).toHaveCount(0);
-  expect(await storySaveSlots(page)).toEqual([]);
+  await page.locator('[data-cy="main-menu-continue"]').click();
+  await expect(
+    page.getByRole("heading", { name: "City signal map" }),
+  ).toBeVisible();
 });
 
 test("every story overlay opens, traps focus, and restores it on close", async ({
@@ -733,6 +725,9 @@ test("the story route ships from index.html without booting the duel runtime", a
     Object.defineProperty(window, "Worker", { value: CountingWorker });
     Object.defineProperty(window, "__storyWorkerCount", { get: () => count });
   });
+  // The selected-content fixture already owns a document; hash navigation does
+  // not run init scripts. Reload before measuring this route's Worker work.
+  await page.reload();
   await startNarrative(page);
   expect(
     await page.evaluate(

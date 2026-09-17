@@ -1,14 +1,14 @@
 # Manual test checklist
 
-## Verified CORE installation and ready gameplay (T6)
+## Progressive content, saves, media, and CORE lifecycle (T11)
 
-Use a disposable Chromium profile, an approved private `CONTENT_RUN`, loopback origin. Verified installation unlocks installed gameplay; compiled decks/catalogs never grant readiness.
+Use a disposable Chromium profile, approved private release fixtures, and loopback origin. Required data enables play; optional media and every update remain explicit.
 
-- [ ] C1. Open `#/install-content`; verify chapter title/description, availability, exact download/installed byte totals, dependency list. Install; verify progress ends at verified installed; verify “Installed content is ready.” Story/Free Play become available.
-- [ ] C2. Reload; verify installed status persists. Open `#/free-play`; verify installed chapter deck tiles appear without installer redirect or bundled preset tiles. Settings remains local CORE UI.
-- [ ] C3. Interrupt download by closing the tab. Reopen installer; verify persisted paused job retains completed parts, no partially installed chapter. Explicit resume/update/remove controls remain unavailable.
-- [ ] C4. Run `npx playwright test -c playwright.content.config.ts --project=chromium --grep "installer|atomic|quota|archive"` with `CONTENT_RUN` exported. Verify real Cache quota/IDB abort cases retain old current, orphan runtime receipt grants no readiness, private staging is never publicly readable. The legacy-v2 two-tab cases must return a typed failure or pause without holding the installer lock; queued receipt reads must fail within five seconds. Closing the legacy tab must not trigger a late upgrade; retry must preserve its preferences.
-- [ ] C5. During installation, disconnect the disposable profile using Chromium DevTools network controls. Verify the fixed network error and enabled Retry installation button. Restore connectivity, retry, and verify progress plus verified-installed status; gameplay becomes ready only after verified activation.
+- [ ] C1. Open `#/install-content`; click **Check updates**, then **Install required data**, then **Activate content**. Verify each phase changes only after its click; Story, Free Play, Deck Editor, Collection, and a real duel open after activation. Reload offline; verify all five remain usable with zero optional-media requests.
+- [ ] C2. Pause a required or media download, close the tab, then reopen Content & Updates. Verify job is shown paused and no network resumes until **Resume required download** or **Resume media download** is clicked. Resume; verify completed files are reused while interrupted file restarts.
+- [ ] C3. With saves in manual slots, autosave, and pre-duel checkpoint, activate a forward-compatible release. Verify beat position remaps by semantic beat ID while economy, decks, timestamps, and slot revisions persist. Repeat with corrupt/future save, quota failure, cancellation after seal, and selector conflict; verify old content/save pair remains selected.
+- [ ] C4. Keep Story or duel open in tab A; attempt activation or cleanup from tab B. Verify immediate active-session block and no queued commit after tab A closes. From Main Menu, run **Delete unused assets**, then confirm **Delete all assets**; verify saves, Decks, settings, CORE shell caches, and unknown/legacy cache entries persist while playable Content selection clears.
+- [ ] C5. Discover an incompatible CORE candidate; verify approval refuses without changing installed play. Discover a compatible candidate; verify no download or install occurs before **Approve CORE update**. Close every app tab, reopen offline, and verify old controller survives unapproved candidate while approved waiting controller activates only on cold reopen.
 
 ## Chapter 1 installed gameplay
 
@@ -24,8 +24,8 @@ These checks require verified Chapter 1 installation. Source-module Chromium cov
 
 ## Assumptions
 
-A1. Repository checkout contained no prior manual checklist; this file records only this prerequisite slice.
-A2. Private local assets and automated headless engine evidence do not grant publication rights or establish installed/offline readiness.
+A1. Checklist remains human-run; unchecked boxes make no manual-pass claim.
+A2. Private local/Chromium evidence establishes no publication rights, native mobile result, or live-host approval.
 
 
 ## Asset roots and profiles (T2 local candidate)

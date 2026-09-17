@@ -341,6 +341,7 @@
     <DeckLibrary
       decks={state.decks}
       {catalog}
+      images={catalogInput.images}
       message={state.message}
       oncreate={(name) => runAndSync(controller?.createDeck(name))}
       onopen={(id) => onnavigate({ deckId: id })}

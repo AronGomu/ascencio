@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import DecklistPanel from "./DecklistPanel.svelte";
   import DeckTile from "./DeckTile.svelte";
   import DeckTileMenu from "./DeckTileMenu.svelte";
@@ -9,6 +9,7 @@
     DeckSelectMode,
     DeckSort,
     DeckTileModel,
+    DecklistRow,
     DecklistView,
     OpponentView,
   } from "./deck-select-contracts.ts";
@@ -100,11 +101,19 @@
   let opponentRestList: DecklistView | null = null;
   let artToken = 0;
   let art: {
+    readonly code: number;
+    readonly sourceUrl: string;
     readonly token: number;
     readonly url: string;
     readonly fallbackUrl: string | null;
     readonly place: string;
   } | null = null;
+  // Compare original resolution, not the legacy cropped fallback after an error.
+  $: if (
+    art !== null &&
+    fullCardImageUrl(cardImageFor?.(art.code) ?? null) !== art.sourceUrl
+  )
+    hideArt();
   /* The portrait opened the picker and is where the caret was, so it is bound
      here to take focus back however the picker closes. */
   let portrait: HTMLElement | null = null;
@@ -234,6 +243,7 @@
     seatPanel && previews && seat === "opponent" && hoverKey !== null;
   $: playerList = playerPreviewing ? hoverList : playerRestList;
   $: opponentList = opponentPreviewing ? hoverList : opponentRestList;
+  $: void loadHover(decklistFor, hoverKey, previews);
   $: void loadRest(decklistFor, selectedKey, docked);
   $: void loadPlayerRest(decklistFor, selectedKey, seatPanel);
   $: void loadOpponentRest(decklistFor, opponentDeck?.key ?? null, seatPanel);
@@ -330,17 +340,42 @@
     clearPreview();
   }
 
-  async function preview(key: string): Promise<void> {
-    const resolve = decklistFor;
-    if (resolve === null) return;
-    const token = ++hoverToken;
+  function preview(key: string): void {
     hoverKey = key;
     hoverList = null;
-    const resolved = await resolve(key);
-    /* A slow deck resolving after the pointer moved on is answering a question
-       nobody is asking any more. */
-    if (token !== hoverToken) return;
-    hoverList = resolved;
+  }
+
+  onDestroy(() => {
+    hoverToken += 1;
+  });
+
+  async function loadHover(
+    resolve: ((key: string) => Promise<DecklistView | null>) | null,
+    key: string | null,
+    active: boolean,
+  ): Promise<void> {
+    const token = ++hoverToken;
+    if (!active || resolve === null || key === null) {
+      hoverList = null;
+      return;
+    }
+    if (hoverList !== null) {
+      // A new resolver may have revoked old URLs; retain row identity/focus,
+      // not unverified art, while its replacement snapshot is pending.
+      const withoutImage = (row: DecklistRow): DecklistRow =>
+        row.imageUrl === null ? row : { ...row, imageUrl: null };
+      hoverList = {
+        main: hoverList.main.map(withoutImage),
+        extra: hoverList.extra.map(withoutImage),
+        side: hoverList.side.map(withoutImage),
+      };
+    }
+    try {
+      const resolved = await resolve(key);
+      if (token === hoverToken) hoverList = resolved;
+    } catch {
+      if (token === hoverToken) hoverList = null;
+    }
   }
 
   function clearPreview(): void {
@@ -439,6 +474,8 @@
       ? sourceUrl
       : sourceUrl.replace("/runtime/images/", "/runtime/images-cropped/");
     art = {
+      code,
+      sourceUrl: url,
       token,
       url,
       fallbackUrl: fallbackUrl === url ? null : fallbackUrl,

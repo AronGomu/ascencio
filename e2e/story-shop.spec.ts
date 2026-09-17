@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { test } from "./selected-content-fixture.ts";
+import { expect, type Page } from "@playwright/test";
 
 const BEATS_BEFORE_CHOICE = 13;
 const BEATS_AFTER_CHOICE = 17;

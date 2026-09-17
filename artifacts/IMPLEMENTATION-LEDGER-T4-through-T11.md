@@ -150,7 +150,7 @@ Paths: `package.json`; `scripts/content-publish.ts`; `scripts/lib/asset-delivery
 
 ### Acceptance gate
 
-- [ ] A1. Independent reviewer accepts B1–B4/E1–E2 publisher + B1–B3/N1 preparation repairs. Verify: reviewer checks `artifacts/IMPLEMENTATION-REPORT-T8-repair.md`, `artifacts/T8-REPAIR-EVIDENCE/`; no self-acceptance. Initial evidence/reviews/source snapshot preserved.
+- [x] A1. Independent reviewer accepts B1–B4/E1–E2 publisher + B1–B3/N1 preparation repairs. Validation: accepted state and independent reruns recorded above; implementation commit `c9466f69ef3d4f550ee70d986a2d7f36b4c924b1`.
 
 ## T9 — atomic application selection and cross-tab readiness
 
@@ -161,7 +161,7 @@ State: **ACCEPTED — independent `artifacts/REVIEW-T9.md`: 59/59 Vitest, 1/1 na
 - [x] T9.3 Restore selected Story/Cards/repository and fresh Battle source injection; offline local semantic preparation cached per generation; normal writes use `verifyActiveGeneration`, not immutable preparation seals. Verify: production Story Save UI exact envelope survives reload; missing generation/Cache byte fails closed without selecting fallback.
 - [x] T9.4 Add root/awaited Svelte boundaries plus explicit async/Worker recovery; postcommit notification failure remains successful activation. Verify: `artifacts/T9-EVIDENCE/native-observations.log`, native screenshots/trace, unit/component recovery cases.
 - [x] T9.5 Run ticket commands and preserve quality evidence. Verify: scoped checks/build/boundaries pass; legacy 220/220, component 1237/1237, integration 54/54; four baseline unit asset failures remain under T11. `artifacts/IMPLEMENTATION-REPORT-T9.md`, exact paths/commands under `artifacts/T9-EVIDENCE/`.
-- [ ] T9.A1 Independent acceptance. Verify: reviewer checks complete changed-path inventory, red/green assertions, native production trace. No self-acceptance.
+- [x] T9.A1 Independent acceptance. Validation: `artifacts/REVIEW-T9.md`; accepted implementation commit `344ffe2d5bbf1beafad53ad6d10dc517bbaf1b2a`.
 
 ## T10 — explicit media, content/CORE consent, asset cleanup
 
@@ -172,7 +172,7 @@ State: **ACCEPTED retry1 — `artifacts/REVIEW-T10-repair.md` clears B1–B5; in
 - [x] T10.3 Serialize cleanup lifecycle→download, clear only selector Content on Delete all, preserve Story generation/saves/settings/CORE/unknown cache entries. Validation: native populated preservation assertion plus unit partial-failure/retry/lock checks.
 - [x] T10.4 Gate SW update install on durable exact-build approval with strict first-install exemption; keep cold activation/no claim. Validation: local two-build Chromium proves unapproved B remains old after cold reopen, approved B waits then activates; three-build/pending epoch tests pass.
 - [x] T10.5 Run build/type/scoped quality/T9 regressions and publish exact inventory/evidence. Validation: build Shell 99224/115000; typecheck 0 errors; boundaries/data-cy 87/87; T9 basic 124/124; native 5/5; vendor diff clean.
-- [ ] T10.A1 Independent repair acceptance. Validation: reviewer checks `artifacts/IMPLEMENTATION-REPORT-T10-repair.md`, 27-path combined inventory / 8-path repair inventory, chronological repair RED/GREEN/native logs under `artifacts/T10-REPAIR-EVIDENCE/`. Initial report/evidence preserved byte-identical.
+- [x] T10.A1 Independent repair acceptance. Validation: `artifacts/REVIEW-T10-repair.md`; accepted implementation commit `f3f3c541fd912717bc743d7a6508c3ebda7c5e82`. Initial report/evidence preserved byte-identical.
 
 Process note: strict test-first D1/P1 remains unchecked in ticket. Acceptance tests were added during implementation; retrospective T9-baseline run proves three feature failures (`APP_CORE_INCOMPATIBLE`, manual SW gate, selector `content:null`) but does not rewrite chronology.
 
@@ -182,13 +182,50 @@ Process note: strict test-first D1/P1 remains unchecked in ticket. Acceptance te
 - [x] R2. Repair B3/B4/B5 lifecycle/media. Verify: epoch-guarded check/preparation/progress/local reads; final selector reread; selected closed chapter/runtime/shared media count; cross-tab cache-only refresh. Chronological RED 10 failures → GREEN; follow-up media broadcast RED 1 → GREEN.
 - [x] R3. Extend native evidence. Verify: five required-only domains, actual WASM duel, zero media HTTP; populated saves/decks/settings/CORE marker retained; second-tab actions/warning refresh. Exact approval row read before update; actual controller IDs A → A cold unapproved → A while B waits → B cold/offline approved. `native-playwright.log`, native JSON/screenshots/traces: 2/2.
 - [x] R4. Preserve gates/inventory. Verify: focused 29/29 (14 original + 15 repair), regressions 124/124, boundaries/data-cy 87/87, native regressions 5/5, build/type/scoped quality pass; 27-path hashes; prior report/evidence hashes unchanged; vendor/budgets/staging untouched.
-- [ ] R5. Independent reviewer accepts repair. Verify: review report resolves `artifacts/REVIEW-T10.md` B1–B5. Initial D1/P1 remain unchecked permanently; T11 assets deferred.
+- [x] R5. Independent reviewer accepts repair. Validation: `artifacts/REVIEW-T10-repair.md` resolves B1–B5. Initial D1/P1 remain unchecked permanently.
+
+## T11 — aggregate architecture and Chromium acceptance
+
+State: **ACCEPTED — independent production and acceptance reviews clean (`REVIEW-T11-production.md`, `REVIEW-T11-acceptance.md`); 287 reviewer tests passed; 1173/1173 frozen hashes matched** — final114 browser exit0 (1269 components,139 E2E,41 acceptance,zero skips);115 headless exit0;116 native core11/11. Original blockers and failed/interrupted evidence retained; retry3 test-only batch complete.
+
+- [x] T11.1 Aggregate exact public entrypoint/domain/DTO/concealment matrix. Validation: `artifacts/T11-EVIDENCE/01-boundaries.log` 97/97; `23-aggregate-matrix.log` 285/285.
+- [x] T11.2 Resolve canonical selected asset gaps without mock/lock weakening. Validation: existing acquisition scripts downloaded 1,591 missing crops and completed 92 set images; focused 74/74; `codeReady: true`.
+- [x] T11.3 Execute headless/build/native gates and retain actual paths. Validation: `check:headless` pass; build budgets pass; core Chromium 11/11 plus acceptance 41/41; `native-paths.txt`.
+- [x] T11.4 Update ADR-089–094/router/checklist facts. Validation: immutable accepted SHAs only; no durable links to ephemeral evidence; checklist boxes remain unchecked.
+- [ ] T11.5 Full browser/review acceptance. Validation: `npm run check:browser` passes114; independent reviewer must still accept. Current repair report: `artifacts/IMPLEMENTATION-REPORT-T11-repair.md`. Original blocked report preserved.
+
+### T11 browser repair — retry3 checked
+
+State: **ACCEPTED — both independent T11 reviews clean; residual limitations retained**. Accepted baseline `f3f3c541fd912717bc743d7a6508c3ebda7c5e82`. Failed Astra/high retry2 runner vanished without exit/result; parent routed Astra/high retry3.106 interrupted at111/139, full output retained. Test-only batch passes113:14/14 twice-repeated cases;114 exact aggregate exit0;115 headless exit0;116 native core11/11. Sole root writer; no subagents/stage/commit/push/deploy. Prior report and evidence retained.
+
+- [x] T11.R1 Diagnose retained logs, preserve real install/select schema6 fixture and exact canonical consolidation equivalence. Validation: `T11-REPAIR-EVIDENCE/08-equivalence.log`; retry2 `29-check-headless.log` includes equivalence regression. Original empty component shell deletion justified by `T11-EVIDENCE/18-check-browser.log`: `Error: No test suite found in file /home/aron/projects/ascencio/tests/component/content-installer.test.ts`.
+- [x] T11.R2 Repair shop printing consumers without losing existing component assertions; retain original all-four-Extra-subtype sort matrix/undo/redo outside chapter-scoped browser catalog. Validation: `28-sort-printing-contracts.log`, 40/40; `29-check-headless.log`, 220 legacy + 2714 unit + 54 integration, zero type errors/four existing warnings.
+- [x] T11.R3 Finish focused Chromium repair. Validation: `43-focused-after-memo.log` proves disabled reason, T9 Worker recovery and stage desktop; `45-missing-media-final.log` proves placeholder/warning/zero media GET with original 30s timeout; canonical sort passed in `24-focused.log`. RED logs retained; parent approved obsolete Battle heading-focus assertion removal, no equivalent Shell focus coverage claimed.
+- [x] T11.R4 Execute complete exact browser/headless/native gates. Validation: `npm run check:browser`, `npm run check:headless`, `npm run test:core` exit 0 on final tree with retained logs/paths; no skips or budget changes. Exact44 exit1:131 passed/7 failed/1 pre-existing conditional skip; component/build/reproducibility passed. Image77 headless exit0; native75 7/9; native93 remaining product failures/perf passed;96/101 complete no-skip pointer coverage;102 headless0;103 core11/11;106 interrupted at111/139 after1269 component/build/reproducibility pass, no exit/result;113 focused14/14 passes;114 final1269 components/139 E2E/41 acceptance exit0,zero skips;115 headless220 legacy/2732 unit/54 integration exit0;116 native core11/11 exit0;117 frozen-source hashes allOK.
+- [x] T11.R5 Record repair report, assertion mapping, exact source inventory/command exits/no-staged proof. Validation: `artifacts/IMPLEMENTATION-REPORT-T11-repair.md`; `T11-REPAIR-EVIDENCE/source-inventory-retry3.json`, `commands-retry3.json`,117 frozen hashes/118 original preservation/119 diff-check/120 no-staged/121 production-preserved all exit0. Independent review remains separate; no publication performed.
+
+### T11 parent-approved canonical-scale performance repair
+
+- [x] M1. Capture canonical RED warning latency and actual manifest work, isolated menu versus Battle. Validation: `34-canonical-media-red.log`, 3311 media refs unchanged; warning absent at 120338ms menu / 120664ms Battle; 1708 / 1661 parses. Exact storage RED `36-memo-red.log`: parser invoked 12 times rather than once.
+- [x] M2. Implement approved one-entry private parsed-manifest memo/index without public API change. Validation: every read retains current IDB row/version/size/SHA checks; file receipt/body verification unchanged; fresh public deep clones; close clears memo and blocks digest-racing completion. `41-memo-regression.log`: type0/four warnings, 136 storage/T9/T10/Worker/equivalence tests, scoped lint pass.
+- [x] M3. Re-measure same canonical production Chromium workload. Validation: `42-canonical-media-green.log`, menu warning8993ms / Battle12420ms; parses1 in both; 3331 / 5090 current-row reads and hashes retained. Battle legal prompt10784→4260ms. Independent performance/security acceptance pending.
+
+### T11 approved image / browser-warning repairs
+
+- [x] L1. Add cache-only Deck Library image ownership, no broad preload; invalidate stale private hover art. Validation: RED52/62; GREEN54 31/31 and63 7/7; native75 exposed additional hovered-list snapshot issue, retained.
+- [x] L2. Replace Battle catalog-wide URL retention with mounted asynchronous readiness/subscription ownership. Validation: RED55/58; GREEN60 69/69 and76 92/92; native75 mounted tray/restart/destroy + preview cases pass; cap/late/hidden-source tests retained.
+- [x] L3. Refresh stale hovered deck snapshot on resolver changes without shared API/remount/acquisition. Validation: RED87 pointer-enter/click; GREEN89 165/165; native diagnostic86 shows acquired URLs alongside stale rows before this fix. Native final Library101 PASS7.9s.
+- [x] L4. Distinguish exact native RO diagnostic without Error object from actual failures. Validation: RED81; GREEN85 43/43 and89. Same-message Error, different/substring messages, rejection still recover; warning keeps active domain lease. Native final WebKit93 PASS.
+- [x] L5. Finish native remaining product failures/perf/no-skip pointer matrix. Validation:93 Library/WebKit/DF-16 pass;96 activation/placement3 pass;101 final Library/geometry2 pass; original thresholds/assertions retained.
+- [x] L6. Clear potentially revoked pending hover crops without row/remount/caller mutation. Validation: RED98; GREEN100 166/166; late rejection/token/focus/source preservation tests; native101 Library pass.
+- [x] L7. Run frozen-source headless/core gates. Validation:102 exit0,220 legacy/2732 unit/54 integration;103 exit0,11/11 native core.
+- [ ] L8. Finish exact browser aggregate plus independent acceptance. Validation:114 exit0 with139 E2E/41 acceptance and zero skips achieved; parent still reviews frozen source/evidence.106 interrupted, no completion claim.
 
 ## Pending implementation order
 
 - [x] T4 → T5. Validation: T4 accepted at `5c2ddff`; T5 independently accepted; parent verified 91/91 focused tests. Native Chromium evidence in T5 repair report.
 - [x] T6/T7 → T8. Validation: T8 implemented with exact 53/53 Vitest, 26/26 producer/publisher, 198/198 legacy, 78/78 affected tests; independent review pending.
-- [ ] T10 → T11. Validation: T10 repair implementation/evidence complete; independent repair review required before T11.
+- [x] T10 → T11. Validation: T10 accepted at `f3f3c541fd912717bc743d7a6508c3ebda7c5e82`; T11 executed with blocker retained above.
 
 ## Paths
 

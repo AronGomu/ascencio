@@ -1,10 +1,11 @@
 # ADR-094: User-controlled media, updates, asset cleanup
 
-> Status: accepted; planned
+> Status: accepted; implemented
 > Decided: 2026-09-13
 > Owners: shell lifecycle / content / PWA
 > Amends: ADR-086 D4–D5; ADR-078 D1–D4; ADR-079 D2; ADR-088 D3–D5; ADR-039 §§1–3
-> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected integration source, not implementation evidence for this decision.
+> Implemented: `f3f3c541fd912717bc743d7a6508c3ebda7c5e82` — T10 explicit required/media actions, cleanup preservation, CORE consent, cold activation.
+> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected pre-implementation source.
 
 ## Context
 

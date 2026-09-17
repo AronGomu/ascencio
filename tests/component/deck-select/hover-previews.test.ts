@@ -108,6 +108,158 @@ function props(overrides: Record<string, unknown> = {}) {
 }
 
 describe("DeckSelectScreen hover previews", () => {
+  it("refreshes the hovered resolver without remounting valid rows or looping requests", async () => {
+    const original: DecklistView = {
+      ...AURORA,
+      side: [{ ...RELIC.main[0]!, imageUrl: "blob:side" }],
+    };
+    const first = vi.fn(async () => original);
+    const pending = Promise.withResolvers<DecklistView | null>();
+    const next = vi.fn(() => pending.promise);
+    const view = render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        selectedKey: null,
+        opponent: null,
+        decklistFor: first,
+        cardImageFor: () => "blob:full",
+      }),
+    );
+    await fireEvent.input(cy("deck-select-filter"), {
+      target: { value: "Aurora" },
+    });
+    await fireEvent.change(cy("deck-select-sort"), {
+      target: { value: "name" },
+    });
+    await fireEvent.pointerEnter(cy("deck-tile-k1"));
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-101")).not.toBeNull(),
+    );
+    const row = cy("deck-select-docked-list-row-101");
+    row.focus();
+    await view.rerender({ decklistFor: next });
+    expect(cy("deck-select-docked-list-row-101")).toBe(row);
+    expect(document.activeElement).toBe(row);
+    // A replacement resolver may revoke old cropped URLs before it settles.
+    expect(row.style.getPropertyValue("--img")).not.toContain("blob:x");
+    expect(
+      cy("deck-select-docked-list-row-201").style.getPropertyValue("--img"),
+    ).not.toContain("blob:extra");
+    expect(
+      cy("deck-select-docked-list-row-301").style.getPropertyValue("--img"),
+    ).not.toContain("blob:side");
+    expect(original.main[0]!.imageUrl).toBe("blob:x");
+    expect(original.extra[0]!.imageUrl).toBe("blob:extra");
+    expect(original.side[0]!.imageUrl).toBe("blob:side");
+    pending.resolve({
+      ...AURORA,
+      main: AURORA.main.map((entry) => ({ ...entry, imageUrl: "blob:ready" })),
+    });
+    await waitFor(() =>
+      expect(row.style.getPropertyValue("--img")).toContain("blob:ready"),
+    );
+    expect(cy("deck-select-docked-list-row-101")).toBe(row);
+    expect(document.activeElement).toBe(row);
+    expect((cy("deck-select-filter") as HTMLInputElement).value).toBe("Aurora");
+    expect((cy("deck-select-sort") as HTMLSelectElement).value).toBe("name");
+    expect(first).toHaveBeenCalledOnce();
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("a replaced hovered resolver cannot commit a late result", async () => {
+    const pending = Promise.withResolvers<DecklistView | null>();
+    const first = vi.fn(() => pending.promise);
+    const next = vi.fn(async () => RELIC);
+    const view = render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        selectedKey: null,
+        opponent: null,
+        decklistFor: first,
+      }),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k1"));
+    await view.rerender({ decklistFor: next });
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-301")).not.toBeNull(),
+    );
+    pending.resolve(AURORA);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(find("deck-select-docked-list-row-101")).toBeNull();
+    expect(first).toHaveBeenCalledOnce();
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("a late rejected resolver cannot clear a newer hovered result", async () => {
+    const pending = Promise.withResolvers<DecklistView | null>();
+    const view = render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        selectedKey: null,
+        opponent: null,
+        decklistFor: () => pending.promise,
+      }),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k1"));
+    await view.rerender({ decklistFor: async () => RELIC });
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-301")).not.toBeNull(),
+    );
+    pending.reject(new Error("obsolete preview unavailable"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(find("deck-select-docked-list-row-301")).not.toBeNull();
+    expect(find("deck-select-docked-list-row-101")).toBeNull();
+    await view.rerender({ decklistFor: null });
+    expect(find("deck-select-docked-list-row-301")).toBeNull();
+  });
+
+  it("a rejected hovered refresh clears the optional preview", async () => {
+    const view = render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        selectedKey: null,
+        opponent: null,
+        decklistFor: async () => AURORA,
+      }),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k1"));
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-101")).not.toBeNull(),
+    );
+    const failed = vi.fn(async () => {
+      throw new Error("preview unavailable");
+    });
+    await view.rerender({ decklistFor: failed });
+    await waitFor(() =>
+      expect(find("deck-select-docked-list-row-101")).toBeNull(),
+    );
+    expect(failed).toHaveBeenCalledOnce();
+  });
+
+  it("a hovered resolution after unmount cannot render or start more requests", async () => {
+    const pending = Promise.withResolvers<DecklistView | null>();
+    const decklistFor = vi.fn(() => pending.promise);
+    const view = render(
+      DeckSelectScreen,
+      props({
+        mode: "library",
+        selectedKey: null,
+        opponent: null,
+        decklistFor,
+      }),
+    );
+    await fireEvent.pointerEnter(cy("deck-tile-k1"));
+    view.unmount();
+    pending.resolve(AURORA);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(find("deck-select-docked-list-row-101")).toBeNull();
+    expect(decklistFor).toHaveBeenCalledOnce();
+  });
+
   it("duel-start hover docks the decklist into the active player seat", async () => {
     const decklistFor = resolver();
     render(DeckSelectScreen, props({ decklistFor }));

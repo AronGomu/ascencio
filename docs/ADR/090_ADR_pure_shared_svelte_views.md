@@ -1,10 +1,11 @@
 # ADR-090: Shared Svelte views receive complete presentation data
 
-> Status: accepted; planned
+> Status: accepted; implemented
 > Decided: 2026-09-13
 > Owners: shared-svelte-ui / shell / domain containers
 > Amends: ADR-036 §§1–4; ADR-022 generic-source-folder prohibition, narrowed to named UI module
-> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected integration source, not implementation evidence for this decision.
+> Implemented: `e338808ffbe790d8dc9a3210a7467535fb293c58` — T1–T3 pure shared views, host-owned leases, boundary/data-cy regressions.
+> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected pre-implementation source.
 
 ## Context
 

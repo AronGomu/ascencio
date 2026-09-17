@@ -432,13 +432,23 @@
   }));
   $: shopSet = shopData?.sets.find(({ id }) => id === state.shopSetId) ?? null;
   $: shopSetName = shopSet?.name ?? "";
-  $: shopCards = (shopSet?.cards ?? []).map((card) => {
+  $: shopPrintings =
+    release.chapters
+      .flatMap((chapter) => chapter.sets)
+      .find(({ id }) => id === state.shopSetId)?.cards ?? [];
+  $: shopCards = shopPrintings.map((card) => {
     /* The set data lists what is for sale; what a card does comes from the
        catalog, which this screen already waits on for the art. Both are
        absent for the frame before it lands, and the shared preview panel
        renders a name with no text rather than a claim about the card. */
     const view = cardViewByCode.get(card.code);
     return {
+      key: JSON.stringify([
+        card.code,
+        card.printingCode,
+        card.sourceRarity,
+        card.sourceRarityCode,
+      ]),
       code: card.code,
       name: card.name,
       description: view?.description ?? "",

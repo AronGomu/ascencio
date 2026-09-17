@@ -1,10 +1,11 @@
 # ADR-092: Immutable per-file release delivery replaces player ZIPs
 
-> Status: accepted; planned
+> Status: accepted; implemented
 > Decided: 2026-09-13
 > Owners: content producer / release infrastructure
 > Amends: ADR-075 D1,D3–D4; ADR-080 D1–D2; ADR-082 D2,D5–D7 for player releases only
-> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected integration source, not implementation evidence for this decision.
+> Implemented: `5c2ddff95fe224276d5f72f746c3458fe26a0f30` (T4 producer/publisher) and `8a0d513b185addec82ff1b103d6a27287768d3bd` (T5 verified staging/resume/cache).
+> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected pre-implementation source.
 
 ## Context
 

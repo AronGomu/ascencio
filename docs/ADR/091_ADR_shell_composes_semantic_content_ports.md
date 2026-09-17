@@ -1,10 +1,11 @@
 # ADR-091: Shell alone composes Content into semantic ports
 
-> Status: accepted; planned
+> Status: accepted; implemented
 > Decided: 2026-09-13
 > Owners: shell application / content / cards / story / battle
 > Amends: ADR-085 D1–D2,D4–D5; ADR-077 D3; ADR-078 D2
-> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected integration source, not implementation evidence for this decision.
+> Implemented: `5a3ba36f5f165d3a4db24574e1bdaaf46ac551f6` (T7 Battle runtime port) and `c9466f69ef3d4f550ee70d986a2d7f36b4c924b1` (T8 Shell semantic composition/validation).
+> Baseline: `010401956d0cd59d8e6dda91bd367040f5de669e` — inspected pre-implementation source.
 
 ## Context
 

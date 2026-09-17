@@ -72,7 +72,10 @@
     for (const { id, cardCode } of values) {
       if (library === null || cardCode === undefined) continue;
       const existing = previous.get(id);
-      wanted.set(id, existing ?? library.lease(cardCode));
+      const lease = existing ?? library.lease(cardCode);
+      wanted.set(id, lease);
+      if (existing === undefined)
+        lease.subscribe?.(() => (leases = new SvelteMap(leases)));
       previous.delete(id);
     }
     releaseLeases(previous);

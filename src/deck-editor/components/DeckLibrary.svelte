@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, tick } from "svelte";
+  import { getContext, onDestroy, tick } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
   import {
     DeckSelectScreen,
@@ -8,7 +8,12 @@
   } from "../../deck-select/index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import { CARD_FRAME_COLORS, cardFrameOf } from "../../cards/index.ts";
-  import { croppedCardImageUrl } from "../cards/deck-cover.ts";
+  import {
+    croppedCardImageUrl,
+    deckCoverCardCode,
+  } from "../cards/deck-cover.ts";
+  import type { CardImageSource } from "../../cards/images/index.ts";
+  import { createDeckLibraryImages } from "../cards/deck-library-images.ts";
   import type { DeckId, DeckRecord } from "../../decks/contracts/index.ts";
   import { MAXIMUM_DECK_NAME_LENGTH } from "../../decks/editing/index.ts";
   import { deckLibraryTiles } from "./deck-library-tiles.ts";
@@ -19,6 +24,7 @@
       cards in the docked decklist. Defaulted so a harness that mounts the
       library alone still renders it, art or no art. */
   export let catalog: ReadonlyMap<number, DeckBuilderCardView> = new Map();
+  export let images: CardImageSource | null = null;
   export let message: string | null = null;
   export let oncreate: (name: string) => unknown | Promise<unknown>;
   export let onopen: (id: DeckId) => unknown | Promise<unknown>;
@@ -52,6 +58,29 @@
   let dialogBusy = false;
   let toastedMessage: string | null = null;
   const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
+  let imageUrls: ReadonlyMap<string, string> = new Map();
+  const libraryImages = createDeckLibraryImages(
+    (urls) => (imageUrls = urls),
+    (error) =>
+      toasts?.show({
+        message: `Card image is unavailable: ${error instanceof Error ? error.message : String(error)}`,
+        tone: "warning",
+      }),
+  );
+  onDestroy(() => libraryImages.dispose());
+  $: coverCodes = decks
+    .map(deckCoverCardCode)
+    .filter((code): code is number => code !== null && catalog.has(code));
+  $: selectedDeck = decks.find((deck) => deck.id === selectedKey);
+  $: selectedCodes =
+    selectedDeck === undefined
+      ? []
+      : [
+          ...selectedDeck.main,
+          ...selectedDeck.extra,
+          ...selectedDeck.side,
+        ].filter((code) => catalog.has(code));
+  $: libraryImages.synchronize(images, coverCodes, selectedCodes);
 
   $: if (message !== null && message !== toastedMessage) {
     // eslint-disable-next-line no-useless-assignment -- retained across reactive runs
@@ -66,7 +95,17 @@
       createName.trim().length > 0 &&
       deck.name.toLocaleLowerCase() === createName.trim().toLocaleLowerCase(),
   );
-  $: tiles = deckLibraryTiles(decks, catalog, { defaultDeckId });
+  $: tiles = deckLibraryTiles(decks, catalog, { defaultDeckId }).map(
+    (tile, index) => {
+      if (images === null) return tile;
+      const code = deckCoverCardCode(decks[index]!);
+      return {
+        ...tile,
+        coverImageUrl:
+          code === null ? null : (imageUrls.get(`${code}:cropped`) ?? null),
+      };
+    },
+  );
 
   /* The screen names a deck by the key it was given, which is the deck's id;
      the record behind it carries the revision a delete has to quote. */
@@ -78,13 +117,18 @@
   function rowOf(
     cards: ReadonlyMap<number, DeckBuilderCardView>,
     code: number,
+    source: CardImageSource | null,
+    urls: ReadonlyMap<string, string>,
   ): DecklistRow {
     const card = cards.get(code);
     return {
       code,
       name: card?.name ?? `Missing card ${code}`,
       frameColor: CARD_FRAME_COLORS[cardFrameOf(card?.rawType ?? 0)],
-      imageUrl: croppedCardImageUrl(card?.imageUrl ?? null),
+      imageUrl:
+        source === null
+          ? croppedCardImageUrl(card?.imageUrl ?? null)
+          : (urls.get(`${code}:cropped`) ?? null),
     };
   }
 
@@ -99,6 +143,8 @@
   function decklistResolver(
     pool: readonly DeckRecord[],
     cards: ReadonlyMap<number, DeckBuilderCardView>,
+    source: CardImageSource | null,
+    urls: ReadonlyMap<string, string>,
   ): (key: string) => Promise<DecklistView | null> {
     return (key) => {
       const deck = pool.find((candidate) => candidate.id === key);
@@ -106,18 +152,26 @@
         deck === undefined
           ? null
           : {
-              main: deck.main.map((code) => rowOf(cards, code)),
-              extra: deck.extra.map((code) => rowOf(cards, code)),
-              side: deck.side.map((code) => rowOf(cards, code)),
+              main: deck.main.map((code) => rowOf(cards, code, source, urls)),
+              extra: deck.extra.map((code) => rowOf(cards, code, source, urls)),
+              side: deck.side.map((code) => rowOf(cards, code, source, urls)),
             },
       );
     };
   }
 
-  $: decklistFor = decklistResolver(decks, catalog);
+  $: decklistFor = decklistResolver(decks, catalog, images, imageUrls);
+  $: cardImageFor = imageResolver(images, imageUrls, catalog);
 
-  function cardImageFor(code: number): string | null {
-    return catalog.get(code)?.imageUrl ?? null;
+  function imageResolver(
+    source: CardImageSource | null,
+    urls: ReadonlyMap<string, string>,
+    cards: ReadonlyMap<number, DeckBuilderCardView>,
+  ): (code: number) => string | null {
+    return (code) =>
+      source === null
+        ? (cards.get(code)?.imageUrl ?? null)
+        : (urls.get(`${code}:full`) ?? null);
   }
 
   function openCreateDialog(): void {

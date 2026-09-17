@@ -61,6 +61,7 @@
       activeImageCode = code;
       imageLease =
         library !== null && code !== undefined ? library.lease(code) : null;
+      imageLease?.subscribe?.((url) => (renderedImageUrl = url));
     }
     renderedImageUrl = imageLease?.url ?? fallbackUrl;
   }

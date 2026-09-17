@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { test } from "./selected-content-fixture.ts";
+import { expect, type Page } from "@playwright/test";
 
 declare global {
   interface Window {

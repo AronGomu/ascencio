@@ -79,17 +79,18 @@ architecture/
 └── 07-governance/           # Security, licensing, future extensions
 ```
 
-## Accepted Content/module rearchitecture — planned, not implemented
+## Implemented Content/module rearchitecture
 
-| ID | Decision |
-| --- | --- |
-| A1 | [ADR-089](ADR/089_ADR_canonical_cards_and_focused_decks.md): canonical immutable Cards; focused Decks APIs |
-| A2 | [ADR-090](ADR/090_ADR_pure_shared_svelte_views.md): complete-ViewModel shared presentation |
-| A3 | [ADR-091](ADR/091_ADR_shell_composes_semantic_content_ports.md): Shell-only Content composition; consumer semantic ports |
-| A4 | [ADR-092](ADR/092_ADR_immutable_per_file_content_delivery.md): immutable per-file player releases |
-| A5 | [ADR-093](ADR/093_ADR_atomic_release_selector_and_save_generations.md): sole application selector; forward save generations |
+| ID | Decision | Accepted implementation |
+| --- | --- | --- |
+| A1 | [ADR-089](ADR/089_ADR_canonical_cards_and_focused_decks.md): canonical immutable Cards; focused Decks APIs | `e338808ffbe790d8dc9a3210a7467535fb293c58` |
+| A2 | [ADR-090](ADR/090_ADR_pure_shared_svelte_views.md): complete-ViewModel shared presentation | `e338808ffbe790d8dc9a3210a7467535fb293c58` |
+| A3 | [ADR-091](ADR/091_ADR_shell_composes_semantic_content_ports.md): Shell-only Content composition; consumer semantic ports | `5a3ba36f5f165d3a4db24574e1bdaaf46ac551f6`, `c9466f69ef3d4f550ee70d986a2d7f36b4c924b1` |
+| A4 | [ADR-092](ADR/092_ADR_immutable_per_file_content_delivery.md): immutable per-file player releases | `5c2ddff95fe224276d5f72f746c3458fe26a0f30`, `8a0d513b185addec82ff1b103d6a27287768d3bd` |
+| A5 | [ADR-093](ADR/093_ADR_atomic_release_selector_and_save_generations.md): sole application selector; forward save generations | `86631c98f616efc49ecf61e5a3e259c6130bd404`, `344ffe2d5bbf1beafad53ad6d10dc517bbaf1b2a` |
+| A6 | [ADR-094](ADR/094_ADR_explicit_media_updates_and_cleanup.md): explicit media/CORE/content approval, Main Menu coordination, asset-only cleanup | `f3f3c541fd912717bc743d7a6508c3ebda7c5e82` |
 
-[ADR-094](ADR/094_ADR_explicit_media_updates_and_cleanup.md) defines explicit media/CORE/content approval, Main Menu coordination, asset-only cleanup. These decisions amend conflicting clauses in earlier installation ADRs; they are not implementation evidence.
+These records amend conflicting clauses in earlier installation ADRs. Public publication remains separately gated by rights and host approval.
 
 ## Accepted CORE installation decisions — planned, not implemented
 

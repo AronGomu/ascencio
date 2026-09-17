@@ -76,7 +76,7 @@ function mount() {
   return render(ShopCardListScreen, {
     setName: "Legend of Blue-Eyes White Dragon",
     dp: 9999,
-    cards: SET_CARDS,
+    cards: SET_CARDS.map((card) => ({ ...card, key: String(card.code) })),
     onbuysingle: () => undefined,
     onback: () => undefined,
   });

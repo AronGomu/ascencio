@@ -88,6 +88,7 @@ const RETURN_CONTROLS: readonly {
         dp: 0,
         cards: [
           {
+            key: "4007",
             code: 4007,
             name: CARD.name,
             description: CARD.description,

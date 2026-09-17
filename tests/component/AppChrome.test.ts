@@ -615,8 +615,7 @@ describe("App", () => {
       release: vi.fn(),
     }));
     await renderReadyApp({ acquire });
-    await vi.waitFor(() => expect(acquire).toHaveBeenCalled());
-    acquire.mockClear();
+    expect(acquire).not.toHaveBeenCalled();
     await startDuelFromPicker(user);
     emitDuelState(PREVIEW_TEST_STATE);
 
@@ -646,6 +645,9 @@ describe("App", () => {
       document.querySelector('[data-cy="card-preview-name"]')?.textContent,
     ).toBe(nameBefore);
     expect(acquire).toHaveBeenCalledOnce();
+    expect(acquire.mock.calls.map(([code]) => code)).toEqual([
+      PREVIEW_KNOWN_MONSTER.code,
+    ]);
   });
 
   it("hovering before any known card leaves the empty state", async () => {

@@ -8,10 +8,18 @@
 
   let failedImageUrl: string | null = null;
   let textScroller: HTMLElement | null = null;
+  let scrolledPreviewKey: string | null = null;
 
   $: resolvedImageUrl = preview?.imageUrl ?? null;
   $: if (failedImageUrl !== null && failedImageUrl !== resolvedImageUrl)
     failedImageUrl = null;
+  $: resetTextScroll(preview?.key ?? null);
+
+  function resetTextScroll(previewKey: string | null): void {
+    if (previewKey === scrolledPreviewKey) return;
+    scrolledPreviewKey = previewKey;
+    if (textScroller !== null) textScroller.scrollTop = 0;
+  }
 
   function markImageFailed(event: Event): void {
     const failedUrl = (event.currentTarget as HTMLImageElement).dataset

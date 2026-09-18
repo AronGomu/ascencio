@@ -120,6 +120,7 @@
   let importButton: HTMLButtonElement | null = null;
   let confirmingDelete = false;
   let deleteButton: HTMLButtonElement | null = null;
+  let deleteHeading: HTMLHeadingElement | null = null;
   let loadedAutosaves: readonly DeckAutosaveRecord[] = [];
   let toastedMessage: string | null = null;
   const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
@@ -556,6 +557,12 @@
     importButton?.focus();
   }
 
+  async function openDelete(): Promise<void> {
+    confirmingDelete = true;
+    await tick();
+    deleteHeading?.focus();
+  }
+
   async function closeDelete(): Promise<void> {
     confirmingDelete = false;
     await tick();
@@ -684,7 +691,7 @@
         class="danger"
         data-cy="deck-editor-delete"
         bind:this={deleteButton}
-        onclick={() => (confirmingDelete = true)}>Delete</button
+        onclick={() => void openDelete()}>Delete</button
       >
       <button
         type="button"
@@ -924,6 +931,7 @@
         id="deck-editor-delete-dialog-heading"
         tabindex="-1"
         data-cy="deck-editor-delete-heading"
+        bind:this={deleteHeading}
       >
         Delete {deck.name}?
       </h2>

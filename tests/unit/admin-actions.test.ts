@@ -181,3 +181,40 @@ it("Story admin reset clears only injected generation slots, never deletes Story
     resetStorageTarget(target("story-saves"), factory, { removeItem: vi.fn() }),
   ).rejects.toThrow("STORY_MIGRATION_FAILED");
 });
+
+it("Story admin reset waits for every started clear before reporting failure", async () => {
+  const failure = new Error("synthetic clear failure");
+  let finishSlowClear!: () => void;
+  const slowClear = new Promise<void>((resolve) => {
+    finishSlowClear = resolve;
+  });
+  const clear = vi.fn(async (slot: string) => {
+    if (slot === "manual:1") throw failure;
+    if (slot === "manual:2") await slowClear;
+  });
+  const saves = { read: vi.fn(), write: vi.fn(), list: vi.fn(), clear };
+
+  let settled = false;
+  let rejection: unknown;
+  const reset = resetStorageTarget(
+    target("story-saves"),
+    indexedDB,
+    { removeItem: vi.fn() },
+    saves,
+  ).then(
+    () => {
+      settled = true;
+    },
+    (error: unknown) => {
+      settled = true;
+      rejection = error;
+    },
+  );
+
+  await vi.waitFor(() => expect(clear).toHaveBeenCalledTimes(5));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(settled).toBe(false);
+  finishSlowClear();
+  await reset;
+  expect(rejection).toBe(failure);
+});

@@ -553,7 +553,7 @@
   /** Move the pick among legal decks in the order the grid shows them. */
   function step(delta: number): void {
     const legal = shown.filter((candidate) => candidate.legal);
-    const index = legal.findIndex((candidate) => candidate.key === selectedKey);
+    const index = legal.findIndex((candidate) => candidate.key === activeKey);
     const target =
       legal[index < 0 ? (delta > 0 ? 0 : legal.length - 1) : index + delta];
     if (target === undefined) return;

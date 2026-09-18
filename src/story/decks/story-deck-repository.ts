@@ -76,14 +76,17 @@ export function createStoryDeckRepository({
 
      The state captured first comes back through `restore` on any refusal, so a
      thrown commit leaves memory exactly where disk still is: a retry carries
-     the revision the save holds instead of being refused as a conflict. */
+     the revision the save holds instead of being refused as a conflict. Any
+     optimistic check runs inside the chain too, after earlier commits settle. */
   function commit(
     command: StoryCommand,
     landed: (state: StoryState) => boolean,
+    beforeDispatch?: () => void,
   ): Promise<void> {
     return serialize(async () => {
       const previous = readState();
       try {
+        beforeDispatch?.();
         dispatch(command);
         if (!landed(readState()))
           throw new DeckStorageError(
@@ -164,15 +167,17 @@ export function createStoryDeckRepository({
 
     async save(expectedRevision, deck, history) {
       guard(deck);
-      const current = find(deck.id);
-      if (current === undefined || current.revision !== expectedRevision)
-        throw new DeckRevisionConflictError(current?.revision ?? null);
       const next = stamp(deck, expectedRevision + 1);
       await commit(
         { type: "deck-save", deck: next },
         (state) =>
           state.decks.find(({ id }) => id === next.id)?.revision ===
           next.revision,
+        () => {
+          const current = find(deck.id);
+          if (current === undefined || current.revision !== expectedRevision)
+            throw new DeckRevisionConflictError(current?.revision ?? null);
+        },
       );
       histories.set(next.id, history);
       return Object.freeze({ deck: next, history });

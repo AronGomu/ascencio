@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import {
   isSafeManifestPath,
@@ -105,17 +105,27 @@ export async function verifyRuntimeSnapshotFiles(
   assetRoot: string,
 ): Promise<void> {
   const failures: string[] = [];
+  let canonicalRoot: string | undefined;
   for (const file of manifest.assets.files) {
     const absolutePath = safeArtifactPath(assetRoot, file.path);
     try {
-      const metadata = await stat(absolutePath);
+      canonicalRoot ??= await realpath(assetRoot);
+      const canonicalPath = await realpath(absolutePath);
+      const relative = path.relative(canonicalRoot, canonicalPath);
+      if (
+        relative === ".." ||
+        relative.startsWith(`..${path.sep}`) ||
+        path.isAbsolute(relative)
+      )
+        throw new Error(`Artifact path escapes snapshot root: ${file.path}`);
+      const metadata = await stat(canonicalPath);
       if (metadata.size !== file.bytes) {
         failures.push(
           `${file.path}: expected ${file.bytes} bytes, found ${metadata.size}`,
         );
         continue;
       }
-      const digest = sha256(await readFile(absolutePath));
+      const digest = sha256(await readFile(canonicalPath));
       if (digest !== file.sha256)
         failures.push(`${file.path}: SHA-256 mismatch`);
     } catch (error) {

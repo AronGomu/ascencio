@@ -333,6 +333,7 @@
           active={navigationState.activeTarget === stack.targetId}
           actionable={!disabled &&
             spec?.stackChoices.has(stack.targetId) === true}
+          {disabled}
           onpreview={() => onstackpreview(stack)}
           onactivate={() => onstackactivate(stack)}
           {imageLibrary}

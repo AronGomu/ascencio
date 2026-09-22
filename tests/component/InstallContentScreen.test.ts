@@ -83,6 +83,37 @@ describe("InstallContentScreen explicit actions", () => {
       expect(view.getByRole("button", { name })).toBeTruthy();
   });
 
+  it("adopts content actions that finish booting after the screen mounts", async () => {
+    const controller = actions({ canInstall: true });
+    const view = render(InstallContentScreen, {
+      gate: { kind: "checking" },
+      actions: null,
+      onback: vi.fn(),
+    });
+
+    expect(
+      view.getByText(
+        "Content controls are unavailable. Reopen from Main Menu.",
+      ),
+    ).toBeTruthy();
+
+    await view.rerender({
+      gate: { kind: "locked", reason: "content-required" },
+      actions: controller,
+      onback: vi.fn(),
+    });
+
+    expect(
+      view.queryByText(
+        "Content controls are unavailable. Reopen from Main Menu.",
+      ),
+    ).toBeNull();
+    expect(view.getByText(base.message)).toBeTruthy();
+    expect(
+      view.getByRole("button", { name: "Install required data" }),
+    ).toHaveProperty("disabled", false);
+  });
+
   it("requires explicit delete-all confirmation stating saves/settings retention", async () => {
     const controller = actions({ canDeleteAssets: true });
     const view = render(InstallContentScreen, {

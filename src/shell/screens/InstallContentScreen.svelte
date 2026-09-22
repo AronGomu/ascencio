@@ -12,6 +12,18 @@
   export let onback: () => void;
 
   let view: ContentActionsView | null = actions?.view ?? null;
+  let boundActions: ContentActionsController | null = null;
+  let unsubscribeActions: (() => void) | null = null;
+  $: bindActions(actions);
+
+  function bindActions(next: ContentActionsController | null): void {
+    if (next === boundActions) return;
+    unsubscribeActions?.();
+    boundActions = next;
+    view = next?.view ?? null;
+    unsubscribeActions = next?.subscribe((value) => (view = value)) ?? null;
+  }
+
   let confirmDeleteAll = false;
   let active: AbortController | null = null;
 
@@ -32,10 +44,9 @@
   }
 
   onMount(() => {
-    const unsubscribe = actions?.subscribe((next) => (view = next));
     return () => {
       active?.abort();
-      unsubscribe?.();
+      unsubscribeActions?.();
     };
   });
 </script>

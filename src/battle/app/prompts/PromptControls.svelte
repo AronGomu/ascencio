@@ -289,6 +289,8 @@
               <input
                 type="checkbox"
                 checked={selected.includes(choice.id)}
+                disabled={selected.length >= prompt.maximum &&
+                  !selected.includes(choice.id)}
                 aria-invalid={!selectedValidation.valid && selected.length > 0}
                 onchange={(event) =>
                   setSelected(choice.id, event.currentTarget.checked)}

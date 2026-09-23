@@ -4192,6 +4192,67 @@ describe("DuelStateProjector", () => {
     expect(JSON.stringify(link)).not.toContain("Private");
   });
 
+  it.each([0, 1] as const)(
+    "projects player %i LP payments before damage, recovery, and absolute updates",
+    (player) => {
+      const value = projector();
+      const payment = value.apply({
+        type: EngineMessageType.PAY_LIFE_POINTS,
+        player,
+        amount: 1000,
+      });
+      expect(value.snapshot().players[player].lifePoints).toBe(7000);
+      expect(payment.events).toEqual([
+        { type: "lifePointsChanged", player, lifePoints: 7000 },
+      ]);
+      expect(
+        parseDuelWorkerEvent({
+          type: "event",
+          eventSequence: 1,
+          event: payment.events[0],
+        }),
+      ).toMatchObject({ event: { type: "lifePointsChanged" } });
+
+      const damage = value.apply({
+        type: EngineMessageType.DAMAGE,
+        player,
+        amount: 1800,
+      });
+      expect(value.snapshot().players[player].lifePoints).toBe(5200);
+      expect(damage.events).toEqual([{ type: "damage", player, amount: 1800 }]);
+      const recovery = value.apply({
+        type: EngineMessageType.RECOVER,
+        player,
+        amount: 500,
+      });
+      expect(value.snapshot().players[player].lifePoints).toBe(5700);
+      expect(recovery.events).toEqual([
+        { type: "recover", player, amount: 500 },
+      ]);
+
+      value.apply({
+        type: EngineMessageType.LIFE_POINTS_UPDATE,
+        player,
+        lp: 1200,
+      });
+      const finalPayment = value.apply({
+        type: EngineMessageType.PAY_LIFE_POINTS,
+        player,
+        amount: 1200,
+      });
+      expect(finalPayment.events).toEqual([
+        { type: "lifePointsChanged", player, lifePoints: 0 },
+      ]);
+      const state = value.snapshot();
+      expect(state.players[player].lifePoints).toBe(0);
+      expect(state.players[player === 0 ? 1 : 0].lifePoints).toBe(8000);
+      expect(parseDuelWorkerEvent({ type: "state", state })).toEqual({
+        type: "state",
+        state,
+      });
+    },
+  );
+
   it("tracks life points, turns, phases, and core-provided results", () => {
     const value = projector();
     value.apply({ type: EngineMessageType.NEW_TURN, player: 0 });

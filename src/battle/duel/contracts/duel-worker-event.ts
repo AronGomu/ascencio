@@ -60,6 +60,8 @@ export type RestoreFailureReason =
 const MAXIMUM_ID_LENGTH = 512;
 const MAXIMUM_TEXT_LENGTH = 32_768;
 const MAXIMUM_CHOICES = 256;
+// Announcements may name any card admitted by parseBattleRuntimeInput.
+const MAXIMUM_ANNOUNCEMENT_CHOICES = 50_000;
 const MAXIMUM_PUBLIC_CARDS = 256;
 const MAXIMUM_COUNTERS_PER_CARD = 256;
 const MAXIMUM_STATE_COUNTERS = 1_024;
@@ -301,7 +303,9 @@ function validatePrompt(value: unknown): void {
   const choices = requireArray(
     prompt.choices,
     "prompt.choices",
-    MAXIMUM_CHOICES,
+    prompt.kind === "announceCard"
+      ? MAXIMUM_ANNOUNCEMENT_CHOICES
+      : MAXIMUM_CHOICES,
   );
   const choiceIds = new Set<string>();
   for (const [index, choice] of choices.entries()) {
@@ -415,6 +419,7 @@ function validatePromptCard(value: unknown, label: string): void {
       "position",
       "contribution",
       "alternativeContribution",
+      "overlay",
     ],
     label,
   );
@@ -433,6 +438,8 @@ function validatePromptCard(value: unknown, label: string): void {
   requirePlayer(card.controller, `${label}.controller`);
   requireEnum(card.location, LOCATIONS, `${label}.location`);
   requireSafeInteger(card.sequence, `${label}.sequence`, 0, 255);
+  if (Object.hasOwn(card, "overlay") && card.overlay !== true)
+    throw invalid(`${label}.overlay`);
   if (card.position !== undefined)
     requireEnum(card.position, POSITIONS, `${label}.position`);
   if (card.contribution !== undefined)

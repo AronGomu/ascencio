@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -16,6 +22,7 @@ import type {
   PromptKind,
 } from "../../src/battle/duel/contracts/player-prompt.ts";
 import PromptControls from "../../src/battle/app/prompts/PromptControls.svelte";
+import { parseDuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
 
 afterEach(() => cleanup());
 
@@ -50,11 +57,144 @@ function prompt(
   };
 }
 
+function announcement(count: number): PlayerPrompt {
+  return prompt("announceCard", {
+    choices: Array.from({ length: count }, (_, index) =>
+      choice(`card-${index}`, `Card ${index}`, { value: 10_000_000 + index }),
+    ),
+  });
+}
+
+function pageButton(name: string): HTMLButtonElement {
+  return within(
+    screen.getByRole("navigation", { name: "Card announcement pages" }),
+  ).getByRole("button", { name }) as HTMLButtonElement;
+}
+
 function button(name: string | RegExp): HTMLButtonElement {
   return screen.getByRole("button", { name }) as HTMLButtonElement;
 }
 
 describe("PromptControls", () => {
+  it("keeps announcements at the 256-choice threshold unpaged", () => {
+    const { container } = render(PromptControls, {
+      prompt: announcement(256),
+      onsubmit: vi.fn(),
+    });
+    expect(
+      container.querySelectorAll(
+        '[data-cy="prompt-controls-single-grid"] button',
+      ),
+    ).toHaveLength(256);
+    expect(screen.queryByRole("navigation")).toBeNull();
+  });
+
+  it.each([257, 50_000])(
+    "pages %i announcement candidates without dropping the final choice",
+    async (count) => {
+      const event = parseDuelWorkerEvent({
+        type: "prompt",
+        prompt: announcement(count),
+      });
+      if (event.type !== "prompt") throw new Error("Expected prompt event");
+      const onsubmit = vi.fn<(choiceIds: readonly ChoiceId[]) => void>();
+      const { container } = render(PromptControls, {
+        prompt: event.prompt,
+        onsubmit,
+      });
+      const renderedChoices = () =>
+        container.querySelectorAll(
+          '[data-cy="prompt-controls-single-grid"] button',
+        );
+      const user = userEvent.setup();
+
+      expect(renderedChoices()).toHaveLength(256);
+      expect(pageButton("Previous page").disabled).toBe(true);
+      await user.click(pageButton("Last page"));
+      expect(renderedChoices()).toHaveLength(count % 256);
+      expect(pageButton("Next page").disabled).toBe(true);
+      await user.click(button(`Card ${count - 1}`));
+      expect(onsubmit).toHaveBeenCalledExactlyOnceWith([
+        choiceId(`card-${count - 1}`),
+      ]);
+      expect(pageButton("Previous page").disabled).toBe(true);
+      expect(pageButton("First page").disabled).toBe(true);
+    },
+  );
+
+  it("disables announcement paging while pending and resets it for a new prompt", async () => {
+    const user = userEvent.setup();
+    const rendered = render(PromptControls, {
+      prompt: announcement(257),
+      disabled: true,
+      onsubmit: vi.fn(),
+    });
+    expect(pageButton("Next page").disabled).toBe(true);
+    expect(pageButton("Last page").disabled).toBe(true);
+    await rendered.rerender({ disabled: false });
+    await user.click(pageButton("Next page"));
+    expect(button("Card 256")).toBeTruthy();
+    await user.click(pageButton("Previous page"));
+    expect(screen.getByText("Card 0", { exact: true })).toBeTruthy();
+    await user.click(pageButton("Last page"));
+    await user.click(pageButton("First page"));
+    expect(screen.getByText("Card 0", { exact: true })).toBeTruthy();
+    await user.click(pageButton("Last page"));
+    await rendered.rerender({
+      prompt: { ...announcement(300), id: promptId("next-announcement") },
+    });
+    await waitFor(() =>
+      expect(screen.getByText("Card 0", { exact: true })).toBeTruthy(),
+    );
+    expect(pageButton("Previous page").disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: "Card 299" })).toBeNull();
+  });
+
+  it("clears a submitted announcement page and its old choice IDs for the next prompt", async () => {
+    const user = userEvent.setup();
+    const onsubmit = vi.fn<(choiceIds: readonly ChoiceId[]) => void>();
+    const { container, rerender } = render(PromptControls, {
+      prompt: announcement(512),
+      onsubmit,
+    });
+    pageButton("Last page").focus();
+    await user.keyboard("{Enter}");
+    expect(
+      container.querySelectorAll(
+        '[data-cy="prompt-controls-single-grid"] button',
+      ),
+    ).toHaveLength(256);
+    await user.click(button("Card 511"));
+    expect(onsubmit).toHaveBeenCalledExactlyOnceWith([choiceId("card-511")]);
+
+    const next = announcement(257);
+    await rerender({
+      prompt: {
+        ...next,
+        id: promptId("fresh-announcement"),
+        choices: next.choices.map((choice) => ({
+          ...choice,
+          id: choiceId(`fresh-${choice.id}`),
+        })),
+      },
+    });
+    await waitFor(() => expect(button("Card 0").disabled).toBe(false));
+    expect(pageButton("Previous page").disabled).toBe(true);
+    expect(pageButton("Next page").disabled).toBe(false);
+    expect(
+      container.querySelector('[data-cy="prompt-controls-choice-card-511"]'),
+    ).toBeNull();
+    expect(document.activeElement).toBe(
+      screen.getByRole("heading", { level: 2 }),
+    );
+    expect(onsubmit).toHaveBeenCalledTimes(1);
+    await user.click(pageButton("Next page"));
+    button("Card 256").focus();
+    await user.keyboard("{Enter}");
+    expect(onsubmit).toHaveBeenLastCalledWith([choiceId("fresh-card-256")]);
+    expect(onsubmit).toHaveBeenCalledTimes(2);
+  });
+
   it("submits a single keyboard choice once and disables every active control", async () => {
     const user = userEvent.setup();
     const onsubmit = vi.fn<(choiceIds: readonly ChoiceId[]) => void>();

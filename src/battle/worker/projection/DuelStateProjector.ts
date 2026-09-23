@@ -452,6 +452,16 @@ export class DuelStateProjector {
           amount: message.amount,
         });
         break;
+      case EngineMessageType.PAY_LIFE_POINTS: {
+        const player = asPlayer(message.player);
+        this.#players[player].lifePoints -= message.amount;
+        events.push({
+          type: "lifePointsChanged",
+          player,
+          lifePoints: this.#players[player].lifePoints,
+        });
+        break;
+      }
       case EngineMessageType.RECOVER:
         this.#players[asPlayer(message.player)].lifePoints += message.amount;
         events.push({

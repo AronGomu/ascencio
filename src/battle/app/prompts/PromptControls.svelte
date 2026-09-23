@@ -33,7 +33,20 @@
   let localError: string | null = null;
   let reorderAnnouncement = "";
   let handledIntentNonce = -1;
+  const ANNOUNCEMENT_PAGE_SIZE = 256;
+  let announcementPage = 0;
 
+  $: announcementPageCount =
+    prompt.kind === "announceCard"
+      ? Math.ceil(prompt.choices.length / ANNOUNCEMENT_PAGE_SIZE)
+      : 1;
+  $: visibleChoices =
+    announcementPageCount > 1
+      ? prompt.choices.slice(
+          announcementPage * ANNOUNCEMENT_PAGE_SIZE,
+          (announcementPage + 1) * ANNOUNCEMENT_PAGE_SIZE,
+        )
+      : prompt.choices;
   $: family = promptControlFamily(prompt.kind);
   $: constraintsId = `${prompt.id}-constraints`;
   $: validationId = `${prompt.id}-validation`;
@@ -70,6 +83,7 @@
     if (promptChanged) {
       activePromptId = prompt.id;
       selected = [];
+      announcementPage = 0;
       order = [...prompt.choices];
       allocations = {};
       submitted = false;
@@ -244,13 +258,50 @@
       </div>
     {/if}
   {:else if family === "single" || family === "toggle"}
+    {#if announcementPageCount > 1}
+      <nav
+        aria-label="Card announcement pages"
+        data-cy="prompt-controls-announcement-pages"
+      >
+        <button
+          type="button"
+          disabled={controlsDisabled || announcementPage === 0}
+          onclick={() => (announcementPage = 0)}
+          data-cy="prompt-controls-announcement-first-page">First page</button
+        >
+        <button
+          type="button"
+          disabled={controlsDisabled || announcementPage === 0}
+          onclick={() => (announcementPage -= 1)}
+          data-cy="prompt-controls-announcement-previous-page"
+          >Previous page</button
+        >
+        <p aria-live="polite" data-cy="prompt-controls-announcement-page">
+          Page {announcementPage + 1} of {announcementPageCount}
+        </p>
+        <button
+          type="button"
+          disabled={controlsDisabled ||
+            announcementPage >= announcementPageCount - 1}
+          onclick={() => (announcementPage += 1)}
+          data-cy="prompt-controls-announcement-next-page">Next page</button
+        >
+        <button
+          type="button"
+          disabled={controlsDisabled ||
+            announcementPage >= announcementPageCount - 1}
+          onclick={() => (announcementPage = announcementPageCount - 1)}
+          data-cy="prompt-controls-announcement-last-page">Last page</button
+        >
+      </nav>
+    {/if}
     <div
       class="action-grid"
       role="group"
       aria-label={prompt.title}
       data-cy="prompt-controls-single-grid"
     >
-      {#each prompt.choices as choice (choice.id)}
+      {#each visibleChoices as choice (choice.id)}
         <div
           class="choice-with-detail"
           data-cy={`prompt-controls-single-choice-row-${choice.id}`}

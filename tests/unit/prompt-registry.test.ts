@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { parseDuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
+import { validatePromptSelection } from "../../src/battle/app/prompts/prompt-selection.ts";
 import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
 import {
   PromptRegistry,
@@ -22,6 +24,7 @@ import type {
    not: the message types admit only the combinations the engine declares. */
 import {
   OcgAttribute,
+  type OcgLocation,
   OcgOpCode,
   OcgPosition,
   OcgRace,
@@ -475,6 +478,162 @@ describe("PromptRegistry", () => {
       type: EngineResponseType.SELECT_CARD,
       indicies: [0],
     });
+  });
+
+  describe("browser prompt contract", () => {
+    const overlayCard = {
+      code: 97590747,
+      controller: 0 as const,
+      sequence: 0,
+      position: EnginePosition.FACE_UP_ATTACK,
+      // The core combines location bits; the vendor union lists single masks.
+      location: (EngineLocation.MONSTER |
+        EngineLocation.OVERLAY) as OcgLocation,
+    };
+
+    const overlayMessages = [
+      {
+        type: EngineMessageType.SELECT_CARD,
+        player: 0,
+        can_cancel: false,
+        min: 1,
+        max: 1,
+        selects: [overlayCard],
+      },
+      {
+        type: EngineMessageType.SELECT_EFFECT_YES_NO,
+        player: 0,
+        ...overlayCard,
+        description: 0n,
+      },
+    ] satisfies EngineMessage[];
+
+    it.each(overlayMessages)(
+      "accepts the producer's overlay marker for message $type",
+      (message) => {
+        const { prompt } = buildPrompt(message);
+        const card = prompt.contextCard ?? prompt.choices[0]?.card;
+        expect(card).toMatchObject({ overlay: true, location: "monster" });
+        const event = { type: "prompt", prompt };
+        expect(parseDuelWorkerEvent(event)).toEqual(event);
+      },
+    );
+
+    it.each(overlayMessages)(
+      "validates overlay markers without weakening card privacy for message $type",
+      (message) => {
+        const { prompt } = buildPrompt(message);
+        for (const overlay of [false, 0, 1, "true", null, undefined]) {
+          const invalid = structuredClone(prompt);
+          const card = invalid.contextCard ?? invalid.choices[0]?.card;
+          Object.assign(card!, { overlay });
+          expect(() =>
+            parseDuelWorkerEvent({ type: "prompt", prompt: invalid }),
+          ).toThrow(/\.overlay/);
+        }
+        const concealed = structuredClone(prompt);
+        const card = concealed.contextCard ?? concealed.choices[0]?.card;
+        Object.assign(card!, { controller: 1, position: "faceDownDefense" });
+        expect(() =>
+          parseDuelWorkerEvent({ type: "prompt", prompt: concealed }),
+        ).toThrow(/identity privacy/);
+      },
+    );
+
+    it("rejects stale paged announcement prompt and choice IDs without consuming the current prompt", () => {
+      const cards = Array.from({ length: 257 }, (_, index) => {
+        const code = 10_000_000 + index;
+        return [code, monsterCardData(code)] as const;
+      });
+      const registry = new PromptRegistry({
+        ...dependencies,
+        cards: new Map(cards),
+      });
+      const message = {
+        type: EngineMessageType.ANNOUNCE_CARD,
+        player: 0,
+        opcodes: [BigInt(OcgType.MONSTER), OcgOpCode.ISTYPE],
+      } satisfies EngineMessage;
+      const previous = registry.publish(message)!;
+      const current = registry.publish(message)!;
+      const event = parseDuelWorkerEvent({ type: "prompt", prompt: current });
+      if (event.type !== "prompt") throw new Error("Expected prompt event");
+      const oldChoice = previous.choices.at(-1)!;
+      const last = event.prompt.choices.at(-1)!;
+      expect(last.id).not.toBe(oldChoice.id);
+      expect(() => registry.respond(previous.id, [oldChoice.id])).toThrow(
+        "Stale or unknown prompt ID",
+      );
+      expect(() => registry.respond(current.id, [oldChoice.id])).toThrow(
+        "Unknown choice ID",
+      );
+      expect(registry.current).toBe(current);
+      expect(registry.respond(current.id, [last.id])).toEqual({
+        type: EngineResponseType.ANNOUNCE_CARD,
+        card: 10_000_256,
+      });
+      expect(registry.current).toBeNull();
+    });
+
+    it.each([257, 50_000])(
+      "preserves all %i legal announcements across the browser boundary",
+      (count) => {
+        const cards = Array.from({ length: count }, (_, index) => {
+          const code = 10_000_000 + index;
+          return [code, monsterCardData(code)] as const;
+        });
+        const binding = buildPrompt(
+          {
+            type: EngineMessageType.ANNOUNCE_CARD,
+            player: 0,
+            opcodes: [BigInt(OcgType.MONSTER), OcgOpCode.ISTYPE],
+          },
+          { ...dependencies, cards: new Map(cards) },
+        );
+        const event = parseDuelWorkerEvent({
+          type: "prompt",
+          prompt: binding.prompt,
+        });
+        if (event.type !== "prompt") throw new Error("Expected prompt event");
+        expect(event.prompt.choices).toHaveLength(count);
+        expect(event.prompt).toMatchObject({ minimum: 1, maximum: 1 });
+        const last = event.prompt.choices[count - 1]!;
+        expect(validatePromptSelection(event.prompt, [last.id])).toEqual({
+          valid: true,
+        });
+        expect(binding.resolve([last.id])).toEqual({
+          type: EngineResponseType.ANNOUNCE_CARD,
+          card: 10_000_000 + count - 1,
+        });
+        expect(() => binding.resolve([])).toThrow("Select exactly one choice");
+        expect(() =>
+          binding.resolve([event.prompt.choices[0]!.id, last.id]),
+        ).toThrow("Select exactly one choice");
+        expect(() =>
+          parseDuelWorkerEvent({
+            type: "prompt",
+            prompt: { ...event.prompt, kind: "selectCard" },
+          }),
+        ).toThrow("prompt.choices length");
+        expect(() =>
+          parseDuelWorkerEvent({
+            type: "prompt",
+            prompt: { ...event.prompt, maximum: 257 },
+          }),
+        ).toThrow("prompt.maximum");
+        if (count === 50_000) {
+          expect(() =>
+            parseDuelWorkerEvent({
+              type: "prompt",
+              prompt: {
+                ...event.prompt,
+                choices: [...event.prompt.choices, last],
+              },
+            }),
+          ).toThrow("prompt.choices length");
+        }
+      },
+    );
   });
 
   /* ADR-046: one pinning test per prompt kind that answers the engine. Every

@@ -45,13 +45,25 @@ export function createDomFeedbackController(
   const animations = new Set<Animation>();
   let generation = 0;
   let highlighted: Element | null = null;
+  let clearTimer: ReturnType<typeof setTimeout> | null = null;
 
   const clearTransient = (): void => {
     generation += 1;
+    if (clearTimer !== null) clearTimeout(clearTimer);
+    clearTimer = null;
     for (const animation of animations) animation.cancel();
     animations.clear();
     highlighted?.classList.remove("is-feedback-target");
     highlighted = null;
+  };
+
+  const clearAfter = (durationMs: number): void => {
+    if (durationMs === 0) return;
+    clearTimer = setTimeout(() => {
+      clearTimer = null;
+      clearTransient();
+      onState(EMPTY_DOM_FEEDBACK_STATE);
+    }, durationMs);
   };
 
   const notice = (command: DomPresentationCommand): void => {
@@ -124,6 +136,7 @@ export function createDomFeedbackController(
         } else {
           animate(to, [{ opacity: 0.65 }, { opacity: 1 }], durationMs);
         }
+        clearAfter(durationMs);
         return;
       }
       case "summon":
@@ -143,6 +156,7 @@ export function createDomFeedbackController(
           targetId: command.targetId,
         });
         animate(target, [{ opacity: 0.68 }, { opacity: 1 }], durationMs);
+        clearAfter(durationMs);
         return;
       }
       case "life-points":

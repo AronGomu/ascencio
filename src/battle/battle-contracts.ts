@@ -56,7 +56,12 @@ export function battleResultForDuelResult(
     case "completed":
       return Object.freeze({
         kind: "resolved" as const,
-        outcome: result.winner === 0 ? "player-win" : "player-loss",
+        outcome:
+          result.winner === null
+            ? "draw"
+            : result.winner === 0
+              ? "player-win"
+              : "player-loss",
       });
     case "surrendered":
       return Object.freeze({ kind: "aborted" as const, reason: "surrender" });

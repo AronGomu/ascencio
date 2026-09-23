@@ -129,6 +129,9 @@ export function reduceInteractionSession(
     case "toggleChoice": {
       if (session.status !== "editing" || !choices.has(action.choiceId))
         return unchanged(session);
+      // Toggle prompts answer one click; selected IDs only decorate core state.
+      if (spec.constraints.controlFamily === "toggle")
+        return submit(session, spec, Object.freeze([action.choiceId]));
       const selected = new Set(session.selectedChoiceIds);
       if (selected.has(action.choiceId)) selected.delete(action.choiceId);
       else if (selected.size < spec.constraints.maximum)
@@ -196,13 +199,23 @@ export function reduceInteractionSession(
         ? changed(session, { menuTarget: null })
         : unchanged(session);
     case "confirm":
-      return session.status === "editing"
+      return session.status === "editing" &&
+        spec.constraints.controlFamily !== "toggle"
         ? submit(session, spec, interactionSessionChoiceIds(session, spec))
         : unchanged(session);
-    case "cancel":
-      return session.status === "editing" && spec.constraints.cancelable
-        ? submit(session, spec, EMPTY_CHOICE_IDS)
-        : unchanged(session);
+    case "cancel": {
+      if (session.status !== "editing" || !spec.constraints.cancelable)
+        return unchanged(session);
+      if (spec.constraints.controlFamily === "toggle") {
+        const cancel = [...choices.values()].find(
+          ({ action }) => action === "cancel",
+        );
+        return cancel === undefined
+          ? unchanged(session)
+          : submit(session, spec, Object.freeze([cancel.id]));
+      }
+      return submit(session, spec, EMPTY_CHOICE_IDS);
+    }
     case "submissionAccepted":
       return session.status === "editing"
         ? changed(session, { status: "submitting" })

@@ -8,6 +8,12 @@ export type DuelResult =
       readonly reason: number;
     }
   | {
+      readonly type: "completed";
+      readonly winner: null;
+      readonly loser: null;
+      readonly reason: number;
+    }
+  | {
       readonly type: "surrendered";
       readonly winner: PlayerIndex;
       readonly loser: PlayerIndex;

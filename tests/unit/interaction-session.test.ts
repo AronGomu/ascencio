@@ -91,6 +91,43 @@ describe("interactionChoicesInPromptOrder", () => {
 });
 
 describe("interaction session reducer", () => {
+  it("keeps core toggle decoration separate from responses and uses an explicit Cancel ID", () => {
+    const active = spec({
+      promptKind: "selectUnselectCard",
+      constraints: { ...spec().constraints, controlFamily: "toggle" },
+      cardChoices: new Map([
+        [
+          TARGET,
+          [
+            { ...choice(FIRST), toggleState: "selected" },
+            { ...choice(SECOND), toggleState: "selected" },
+          ],
+        ],
+      ]),
+      globalChoices: new Map([[THIRD, { ...choice(THIRD), action: "cancel" }]]),
+    });
+    const session = createInteractionSession(active);
+    const clicked = reduceInteractionSession(session, active, {
+      type: "toggleChoice",
+      choiceId: FIRST,
+      key: active.key,
+    });
+    expect(clicked.command?.choiceIds).toEqual([FIRST]);
+    expect(clicked.session.selectedChoiceIds).toEqual([FIRST, SECOND]);
+    expect(
+      reduceInteractionSession(session, active, {
+        type: "confirm",
+        key: active.key,
+      }).command,
+    ).toBeNull();
+    expect(
+      reduceInteractionSession(session, active, {
+        type: "cancel",
+        key: active.key,
+      }).command?.choiceIds,
+    ).toEqual([THIRD]);
+  });
+
   it("accepts an off-field id and submits every category in prompt order", () => {
     const active = mixedSpec();
     let session = createInteractionSession(active);

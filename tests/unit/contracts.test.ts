@@ -94,6 +94,10 @@ const examples: readonly (DuelCommand | DuelWorkerEvent)[] = [
     result: { type: "completed", winner: 0, loser: 1, reason: 1 },
   },
   {
+    type: "result",
+    result: { type: "completed", winner: null, loser: null, reason: 1 },
+  },
+  {
     type: "prompt",
     prompt: {
       id: promptId("sum-prompt"),
@@ -487,6 +491,22 @@ describe("Worker contracts", () => {
       },
     },
     { type: "result", result: { type: "completed", winner: 0 } },
+    {
+      type: "result",
+      result: { type: "completed", winner: null, loser: 1, reason: 1 },
+    },
+    {
+      type: "result",
+      result: { type: "completed", winner: 0, loser: null, reason: 1 },
+    },
+    {
+      type: "result",
+      result: { type: "completed", winner: 2, loser: 2, reason: 1 },
+    },
+    {
+      type: "result",
+      result: { type: "surrendered", winner: null, loser: null },
+    },
   ])("rejects malformed Worker event payloads", (event) => {
     expect(() => parseDuelWorkerEvent(event)).toThrow(
       /invalid|must be an object/,

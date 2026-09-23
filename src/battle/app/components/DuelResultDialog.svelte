@@ -47,7 +47,11 @@
           data-cy="app-result-heading"
         >
           {#if result.type === "completed"}
-            {result.winner === 0 ? "You won" : "Opponent won"}
+            {result.winner === null
+              ? "Draw"
+              : result.winner === 0
+                ? "You won"
+                : "Opponent won"}
           {:else if result.type === "surrendered"}
             Duel surrendered
           {:else if result.type === "unsupported"}

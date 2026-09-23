@@ -34,6 +34,7 @@
   export let selectionStatus: string | null = null;
   export let confirmValid = false;
   export let cancelable = false;
+  export let toggleResponse = false;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
   export let cardBackUrl = "";
   export let placeholderUrl = "";
@@ -212,7 +213,9 @@
                 selectedChoiceIds.includes(id),
               )}
               {selectedChoiceIds}
-              unavailableChoiceIds={selectionState.unavailableChoiceIds}
+              unavailableChoiceIds={toggleResponse
+                ? new Set()
+                : selectionState.unavailableChoiceIds}
               {imageLibrary}
               {cardBackUrl}
               {placeholderUrl}
@@ -268,7 +271,7 @@
           />
           Alphabetical
         </label>
-        {#if targetMode}
+        {#if targetMode && !toggleResponse}
           <button
             type="button"
             disabled={disabled || !selectionState.validateEnabled}
@@ -284,7 +287,7 @@
               data-cy="zone-list-dialog-target-cancel-button">Cancel</button
             >
           {/if}
-        {:else}
+        {:else if !targetMode}
           <button
             type="button"
             class="danger zone-list-dialog__cancel"

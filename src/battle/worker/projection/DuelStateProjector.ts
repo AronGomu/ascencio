@@ -545,6 +545,15 @@ export class DuelStateProjector {
         });
         break;
       case EngineMessageType.WIN: {
+        if (message.player === 2) {
+          result = {
+            type: "completed",
+            winner: null,
+            loser: null,
+            reason: message.reason,
+          };
+          break;
+        }
         const winner = asPlayer(message.player);
         result = {
           type: "completed",

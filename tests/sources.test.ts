@@ -93,7 +93,7 @@ for (const offline of [true, false]) {
         name: "source",
         repository: upstream,
         ref: "main",
-        sparsePaths,
+        ...(sparsePaths === undefined ? {} : { sparsePaths }),
       };
       const events: { operation: string; args?: string[] }[] = [];
       t.mock.method(process.stderr, "write", (chunk: string) => {
@@ -177,8 +177,10 @@ for (const offline of [true, false]) {
         /[Ss]ource cache is .*invalid/,
       );
       assert.ok(
-        commands.every(([command]) =>
-          ["rev-parse", "config", "--no-optional-locks"].includes(command),
+        commands.every(
+          ([command]) =>
+            command !== undefined &&
+            ["rev-parse", "config", "--no-optional-locks"].includes(command),
         ),
       );
       assert.deepEqual(await parentState(directory), before);
@@ -209,7 +211,7 @@ for (const sparsePaths of [undefined, ["cards"]]) {
           name: "source",
           repository: directory,
           ref: "f".repeat(40),
-          sparsePaths,
+          ...(sparsePaths === undefined ? {} : { sparsePaths }),
         },
         true,
       ),
@@ -222,8 +224,10 @@ for (const sparsePaths of [undefined, ["cards"]]) {
     );
     assert.deepEqual(await parentState(directory), before);
     assert.ok(
-      commands.every(([command]) =>
-        ["rev-parse", "config", "--no-optional-locks"].includes(command),
+      commands.every(
+        ([command]) =>
+          command !== undefined &&
+          ["rev-parse", "config", "--no-optional-locks"].includes(command),
       ),
     );
   });
@@ -255,7 +259,7 @@ for (const sparsePaths of [undefined, ["cards"]]) {
       name: "source",
       repository: upstream,
       ref: commit,
-      sparsePaths,
+      ...(sparsePaths === undefined ? {} : { sparsePaths }),
     };
     const synced = await syncRepository(root, definition, false);
     assert.equal(synced.revision.commit, commit);

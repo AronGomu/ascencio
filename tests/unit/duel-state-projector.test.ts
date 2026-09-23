@@ -246,12 +246,7 @@ describe("DuelStateProjector", () => {
     });
   });
 
-  /* ADR-014: only a fixed field slot may carry an attested code for a
-     concealed opponent card. `#changePosition` keeps the code it already had
-     when the engine flips a public banished card face-down, so the projector
-     has to fail on its own output rather than let the client validator kill
-     the Worker after the leak has already been posted. */
-  it("fails closed when a concealed opponent card outside a fixed slot keeps a code", () => {
+  it("publishes a concealed opponent position change without leaking identity", () => {
     const value = projector();
     moveOpponent(
       value,
@@ -265,7 +260,6 @@ describe("DuelStateProjector", () => {
         position: EnginePosition.FACE_UP_ATTACK,
       },
     );
-    expect(value.snapshot().players[1].banished[0]?.code).toBe(5053103);
 
     value.apply({
       type: EngineMessageType.POSITION_CHANGE,
@@ -277,9 +271,11 @@ describe("DuelStateProjector", () => {
       position: EnginePosition.FACE_DOWN_DEFENSE,
     });
 
-    expect(() => value.snapshot()).toThrow(
-      "Concealed opponent card outside a fixed field slot carries a code",
-    );
+    const snapshot = value.snapshot();
+    expect(snapshot.players[1].banished[0]).not.toHaveProperty("code");
+    expect(() =>
+      parseDuelWorkerEvent({ type: "state", state: snapshot }),
+    ).not.toThrow();
   });
 
   it.each([

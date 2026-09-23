@@ -223,6 +223,84 @@ describe("ContentActions", () => {
     );
   });
 
+  it("corrupt historical jobs remain visible while lock-authorized delete-all preserves Story generation", async () => {
+    const factory = new IDBFactory();
+    const selected = await active(factory);
+    const contentStore = store();
+    contentStore.listJobs.mockRejectedValue(
+      new Error("CONTENT_INTEGRITY_FAILED"),
+    );
+    const f = fixture(factory, contentStore);
+    await expect(f.actions.refresh()).rejects.toThrow(
+      "CONTENT_INTEGRITY_FAILED",
+    );
+    expect(f.actions.view).toMatchObject({
+      phase: "failed",
+      canDeleteAssets: true,
+    });
+    expect(await selectionTransaction(factory)).toEqual(selected);
+    await f.actions.deleteAllAssets();
+    expect(contentStore.deleteAllDownloaded).toHaveBeenCalledOnce();
+    expect(await selectionTransaction(factory)).toMatchObject({
+      content: null,
+      storyGenerationId: selected.storyGenerationId,
+    });
+    f.actions.dispose();
+  });
+
+  it("same-release required loss enables explicit repair without selector or save-generation activation", async () => {
+    const factory = new IDBFactory();
+    const selected = await active(factory);
+    const contentStore = store();
+    contentStore.fetchLatest.mockResolvedValue({
+      schemaVersion: 1,
+      releaseSequence: 1,
+      manifest: { version: selected.content!.manifestVersion, bytes: 10 },
+    });
+    contentStore.verifyRequired.mockRejectedValue(
+      new Error("CONTENT_INTEGRITY_FAILED"),
+    );
+    contentStore.sealRequired.mockResolvedValue(selected.content);
+    const activate = vi.fn();
+    const dispose = vi.fn();
+    const changed = vi.fn();
+    const f = fixture(factory, contentStore, {
+      activate,
+      changed,
+      prepare: vi.fn(
+        async () =>
+          ({
+            content: selected.content,
+            dispose,
+          }) as unknown as PreparedRelease,
+      ),
+    });
+    await f.actions.check(new AbortController().signal);
+    expect(f.actions.view.canInstall).toBe(true);
+    expect(f.actions.view.message).toContain("repair");
+    expect(contentStore.download).not.toHaveBeenCalled();
+    contentStore.verifyRequired.mockResolvedValue(undefined);
+    await f.actions.installRequired(new AbortController().signal);
+    expect(contentStore.download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manifestVersion: selected.content!.manifestVersion,
+        kind: "required",
+        chapterIds: selected.content!.chapterIds,
+      }),
+      expect.any(AbortSignal),
+      expect.any(Function),
+    );
+    expect(activate).not.toHaveBeenCalled();
+    expect(dispose).toHaveBeenCalledOnce();
+    expect(changed).toHaveBeenCalledOnce();
+    expect(await selectionTransaction(factory)).toEqual(selected);
+    expect(f.actions.view).toMatchObject({
+      canInstall: false,
+      canActivate: false,
+    });
+    f.actions.dispose();
+  });
+
   it("Partial delete fail: remains visible and retryable", async () => {
     const factory = new IDBFactory();
     await active(factory);

@@ -310,7 +310,7 @@ describe("ProgressiveContentStore structural storage", () => {
     ],
   ];
   it.each(corruptions)(
-    "rejects persisted %s on list/open/resume without changing metadata",
+    "opens recovery access but rejects persisted %s on list/resume without changing metadata",
     async (_name, corrupt) => {
       const { store, request, fixture } = await prepareDownloadedStore();
       const row = (await store.listJobs())[0]!;
@@ -325,11 +325,21 @@ describe("ProgressiveContentStore structural storage", () => {
       await expect(
         store.download(request, new AbortController().signal, () => undefined),
       ).rejects.toMatchObject(error("CONTENT_INTEGRITY_FAILED"));
-      await expect(open(null)).rejects.toMatchObject(
+      const reopened = await open(null);
+      await expect(
+        reopened.readFile(
+          request.manifestVersion,
+          "runtime/manifest.json",
+          new AbortController().signal,
+        ),
+      ).resolves.toBeInstanceOf(Uint8Array);
+      await expect(reopened.listJobs()).rejects.toMatchObject(
         error("CONTENT_INTEGRITY_FAILED"),
       );
       expect(await progressiveDatabaseSnapshot()).toEqual(before);
       expect(fixture.requests).toHaveLength(requests);
+      await reopened.deleteAllDownloaded();
+      expect((await progressiveDatabaseSnapshot()).jobs).toEqual([]);
     },
   );
 
@@ -550,6 +560,48 @@ describe("ProgressiveContentStore structural storage", () => {
     release();
     const interrupted = await open(null);
     expect((await interrupted.listJobs())[0]?.progress.phase).toBe("paused");
+  });
+
+  it("job enumeration cannot resurrect an interrupted row after lock-authorized cleanup", async () => {
+    const { store, request } = await prepareDownloadedStore();
+    const row = (await store.listJobs())[0]!;
+    const db = await openDB(PROGRESSIVE_DATABASE_NAME);
+    await db.put(
+      "jobs",
+      { ...row, progress: { ...row.progress, phase: "running" } },
+      request.jobId,
+    );
+    db.close();
+    const locks = new TestLockManager();
+    vi.stubGlobal("navigator", { locks });
+    const entered = Promise.withResolvers<void>();
+    const resume = Promise.withResolvers<void>();
+    const readManifest = store.readManifest.bind(store);
+    let reads = 0;
+    vi.spyOn(store, "readManifest").mockImplementation(async (version) => {
+      const manifest = await readManifest(version);
+      if (++reads === 2) {
+        entered.resolve();
+        await resume.promise;
+      }
+      return manifest;
+    });
+    const listing = store.listJobs();
+    await entered.promise;
+    await locks.request(
+      "ygo-application-lifecycle-v1",
+      { mode: "exclusive", ifAvailable: true },
+      () =>
+        locks.request(
+          "ygo-content-download-v1",
+          { mode: "exclusive", ifAvailable: true },
+          () => store.deleteAllDownloaded(),
+        ),
+    );
+    resume.resolve();
+    await listing;
+    expect((await progressiveDatabaseSnapshot()).jobs).toEqual([]);
+    await expect(store.listJobs()).resolves.toEqual([]);
   });
 
   it("keeps DB/cache public names exact", () => {

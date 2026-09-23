@@ -98,17 +98,7 @@ export async function responseBytes(
   expected: number | null,
   signal: AbortSignal,
 ): Promise<Uint8Array> {
-  const declared = response.headers.get("Content-Length");
-  if (declared !== null) {
-    const length = Number(declared);
-    if (
-      !Number.isSafeInteger(length) ||
-      length < 0 ||
-      length > maximum ||
-      (expected !== null && length !== expected)
-    )
-      fail("CONTENT_INTEGRITY_FAILED");
-  }
+  // Fetch exposes decoded bytes; Content-Length may describe compressed transport.
   if (!response.body) fail("CONTENT_INTEGRITY_FAILED");
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -124,6 +114,8 @@ export async function responseBytes(
       chunks.push(chunk.value);
     }
   } catch (error) {
+    // Cancellation must not hide the original integrity/network failure.
+    await reader.cancel().catch(() => undefined);
     if (signal.aborted) throw new StoreContentError("CONTENT_CANCELLED");
     throw error;
   } finally {

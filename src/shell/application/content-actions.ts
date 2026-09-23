@@ -195,6 +195,7 @@ export function createContentActions(options: {
   let disposed = false;
   let epoch = 0;
   let localRefresh = 0;
+  let requiredRepair: StagedContent | null = null;
 
   const isCurrent = (expected: number): boolean =>
     !disposed && expected === epoch;
@@ -220,15 +221,18 @@ export function createContentActions(options: {
     if (signal.aborted) controller.abort();
     return controller.signal;
   };
-  const selectedChapters = async (
-    manifest: ProgressiveManifest,
-  ): Promise<readonly ProgressiveManifest["chapters"][number]["id"][]> => {
-    const selection = await options.selector.read();
-    if (selection.content !== null) return selection.content.chapterIds;
-    const first = manifest.chapters[0];
-    if (first === undefined) throw new Error("CONTENT_INVALID_MANIFEST");
-    return [first.id];
-  };
+  const canRepair = (selection: ApplicationSelection): boolean =>
+    latest !== null &&
+    requiredRepair !== null &&
+    selection.content?.manifestVersion === requiredRepair.manifestVersion &&
+    latest.manifest.version === requiredRepair.manifestVersion &&
+    latest.releaseSequence === requiredRepair.releaseSequence;
+  const canInstall = (selection: ApplicationSelection): boolean =>
+    latest !== null &&
+    prepared?.content.manifestVersion !== latest.manifest.version &&
+    (selection.content === null ||
+      latest.releaseSequence > selection.content.releaseSequence ||
+      canRepair(selection));
   const inspectMissingMedia = async (
     content: StagedContent | null,
   ): Promise<number> => {
@@ -270,10 +274,29 @@ export function createContentActions(options: {
         options.selector.read(),
         options.store.listJobs(),
       ]);
+      let repair: StagedContent | null = null;
+      if (selection.content !== null) {
+        try {
+          await options.store.verifyRequired(
+            selection.content,
+            new AbortController().signal,
+          );
+        } catch (error) {
+          if (
+            !(error instanceof Error) ||
+            !["CONTENT_MISSING", "CONTENT_INTEGRITY_FAILED"].includes(
+              error.message,
+            )
+          )
+            throw error;
+          repair = selection.content;
+        }
+      }
       const missingMedia = await inspectMissingMedia(selection.content);
       const final = await options.selector.read();
       if (!isCurrent(expected) || refreshId !== localRefresh) return null;
       if (final.generation !== selection.generation) continue;
+      requiredRepair = repair;
       const resumable = Object.freeze(
         jobs.filter(
           ({ progress }) =>
@@ -283,11 +306,7 @@ export function createContentActions(options: {
       publish({
         missingMedia,
         canDeleteAssets: true,
-        canInstall:
-          latest !== null &&
-          prepared?.content.manifestVersion !== latest.manifest.version &&
-          (final.content === null ||
-            latest.releaseSequence > final.content.releaseSequence),
+        canInstall: canInstall(final),
         canActivate: prepared !== null,
         canDownloadMedia: final.content !== null && missingMedia > 0,
         resumableJobs: resumable,
@@ -355,6 +374,58 @@ export function createContentActions(options: {
       throw error;
     }
   };
+  const completeRequired = async (
+    request: DownloadJob["request"],
+    selection: ApplicationSelection,
+    signal: AbortSignal,
+    expected: number,
+  ): Promise<void> => {
+    const staged = await options.store.sealRequired(
+      request.manifestVersion,
+      request.chapterIds,
+    );
+    const result = await (options.prepare ?? prepareRelease)(
+      options.store,
+      staged,
+      signal,
+    );
+    if (!isCurrent(expected) || signal.aborted) {
+      result.dispose();
+      return;
+    }
+    // Repair restores the selected immutable bytes, never migrates saves or CASes selection.
+    if (selection.content?.manifestVersion === request.manifestVersion) {
+      try {
+        await options.store.verifyRequired(selection.content, signal);
+        const final = await options.selector.read();
+        if (
+          !isCurrent(expected) ||
+          signal.aborted ||
+          final.generation !== selection.generation
+        )
+          return;
+        prepared?.dispose();
+        prepared = null;
+        publish({
+          phase: "ready",
+          message: "Required content repaired.",
+          canInstall: false,
+          canActivate: false,
+        });
+      } finally {
+        result.dispose();
+      }
+      return;
+    }
+    prepared?.dispose();
+    prepared = result;
+    publish({
+      phase: "ready",
+      message: "Required content is ready to activate.",
+      canInstall: false,
+      canActivate: true,
+    });
+  };
   const withCleanupLocks = async (work: () => Promise<void>): Promise<void> => {
     requireHome();
     await options.locks.request(
@@ -367,9 +438,7 @@ export function createContentActions(options: {
           { mode: "exclusive", ifAvailable: true },
           async (downloadLock) => {
             if (!downloadLock) throw new Error("APP_DOWNLOAD_ACTIVE");
-            const jobs = await options.store.listJobs();
-            if (jobs.some(({ progress }) => progress.phase === "running"))
-              throw new Error("APP_DOWNLOAD_ACTIVE");
+            // The download lock, not untrusted historical job rows, excludes writers.
             await work();
           },
         );
@@ -486,14 +555,15 @@ export function createContentActions(options: {
         message:
           failedChannel !== null
             ? `${failedChannel} update check failed. Installed offline content remains available. Retry the failed check; other actions remain available.`
-            : newerContent || newerCore
-              ? "Updates found. Choose each download separately."
-              : "Installed content is up to date.",
+            : canRepair(installed)
+              ? "Required content needs repair. Choose Install to restore verified bytes."
+              : newerContent || newerCore
+                ? "Updates found. Choose each download separately."
+                : "Installed content is up to date.",
         coreCandidate: candidate,
         canApproveCore: newerCore,
         canInstall:
-          newerContent &&
-          prepared?.content.manifestVersion !== latest?.manifest.version,
+          contentResult.status === "fulfilled" && canInstall(installed),
       });
     },
     async installRequired(signal) {
@@ -503,7 +573,11 @@ export function createContentActions(options: {
       const activeSignal = start(signal);
       const expected = epoch;
       const pointer = latest;
-      const chapterIds = await selectedChapters(latestManifest);
+      const selection = await options.selector.read();
+      const first = latestManifest.chapters[0];
+      if (selection.content === null && first === undefined)
+        throw new Error("CONTENT_INVALID_MANIFEST");
+      const chapterIds = selection.content?.chapterIds ?? [first!.id];
       if (!isCurrent(expected)) return;
       const request = {
         jobId: crypto.randomUUID(),
@@ -511,39 +585,15 @@ export function createContentActions(options: {
         chapterIds,
         kind: "required" as const,
       };
-      await runDownload(
-        request,
-        activeSignal,
-        expected,
-        async (activeSignal) => {
-          const staged = await options.store.sealRequired(
-            request.manifestVersion,
-            chapterIds,
-          );
-          const result = await (options.prepare ?? prepareRelease)(
-            options.store,
-            staged,
-            activeSignal,
-          );
-          if (!isCurrent(expected) || activeSignal.aborted) {
-            result.dispose();
-            return;
-          }
-          prepared?.dispose();
-          prepared = result;
-          publish({
-            phase: "ready",
-            message: "Required content is ready to activate.",
-            canInstall: false,
-            canActivate: true,
-          });
-        },
+      await runDownload(request, activeSignal, expected, (activeSignal) =>
+        completeRequired(request, selection, activeSignal, expected),
       );
     },
     async resume(jobId, signal) {
       requireHome();
       const activeSignal = start(signal);
       const expected = epoch;
+      const selection = await options.selector.read();
       const job = (await options.store.listJobs()).find(
         ({ request }) => request.jobId === jobId,
       );
@@ -554,28 +604,8 @@ export function createContentActions(options: {
         activeSignal,
         expected,
         job.request.kind === "required"
-          ? async (activeSignal) => {
-              const staged = await options.store.sealRequired(
-                job.request.manifestVersion,
-                job.request.chapterIds,
-              );
-              const result = await (options.prepare ?? prepareRelease)(
-                options.store,
-                staged,
-                activeSignal,
-              );
-              if (!isCurrent(expected) || activeSignal.aborted) {
-                result.dispose();
-                return;
-              }
-              prepared?.dispose();
-              prepared = result;
-              publish({
-                phase: "ready",
-                message: "Required content is ready to activate.",
-                canActivate: true,
-              });
-            }
+          ? (activeSignal) =>
+              completeRequired(job.request, selection, activeSignal, expected)
           : undefined,
       );
     },

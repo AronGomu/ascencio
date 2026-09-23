@@ -4,6 +4,7 @@ import { PrecacheController } from "workbox-precaching";
 import { readCoreApproval } from "./shell/application/core-update-approval.ts";
 import {
   assertShellPrecacheEntries,
+  CORE_INSTALL_STATE_CACHE,
   isAppNavigationRequest,
   isFirstCoreInstall,
   SHELL_CACHE_PREFIX,
@@ -21,9 +22,10 @@ precache.addToCacheList([...manifest]);
 worker.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
+      const installState = await worker.caches.open(CORE_INSTALL_STATE_CACHE);
       const firstInstall = isFirstCoreInstall(
         worker.registration.active !== null,
-        await worker.caches.keys(),
+        (await installState.match(worker.registration.scope)) !== undefined,
       );
       if (!firstInstall) {
         const approval = await readCoreApproval(worker.indexedDB);
@@ -72,6 +74,12 @@ worker.addEventListener("fetch", (event) => {
 worker.addEventListener("activate", (event) => {
   event.waitUntil(
     worker.caches.keys().then(async (names) => {
+      // Activation proves installation completed; partial candidate caches do not.
+      const installState = await worker.caches.open(CORE_INSTALL_STATE_CACHE);
+      await installState.put(
+        worker.registration.scope,
+        new Response(__APP_BUILD_ID__),
+      );
       await Promise.all(
         names
           .filter(

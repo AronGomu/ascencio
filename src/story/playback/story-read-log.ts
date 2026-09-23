@@ -52,11 +52,13 @@ export function withBeatRead(
 
 export function writeStoryReadLog(
   beats: ReadonlySet<string>,
-  storage: Pick<Storage, "setItem"> | null = defaultStorage(),
+  storage: Pick<Storage, "getItem" | "setItem"> | null = defaultStorage(),
 ): void {
   if (storage === null) return;
   try {
-    const payload: StoredReadLog = { version: 1, beats: [...beats] };
+    const merged = new Set(readStoryReadLog(storage));
+    beats.forEach((id) => merged.add(id));
+    const payload: StoredReadLog = { version: 1, beats: [...merged] };
     storage.setItem(STORY_READ_LOG_KEY, JSON.stringify(payload));
   } catch {
     // Best-effort: storage that refuses the log never interrupts reading.

@@ -89,7 +89,13 @@ export async function resetStorageTarget(
 ): Promise<AdminResetResult> {
   if (target.name === STORY_SAVES_DATABASE_NAME) {
     if (saves === null) throw new Error("STORY_MIGRATION_FAILED");
-    await Promise.all(STORY_SLOT_KEYS.map((slot) => saves.clear(slot)));
+    const results = await Promise.allSettled(
+      STORY_SLOT_KEYS.map((slot) => saves.clear(slot)),
+    );
+    const failure = results.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (failure !== undefined) throw failure.reason;
     return { outcome: "deleted" };
   }
   if (target.kind === "localstorage") {

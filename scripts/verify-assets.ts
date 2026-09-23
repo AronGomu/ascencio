@@ -85,16 +85,19 @@ const cards = await readShards<EngineCardRecord>(
   root,
   "catalog/cards",
   CATALOG_SHARD_COUNT,
+  "Card",
 );
 const texts = await readShards<CardTextRecord>(
   root,
   "catalog/texts/en",
   CATALOG_SHARD_COUNT,
+  "Text",
 );
 const images = await readShards<ImageRecord>(
   root,
   "images",
   CATALOG_SHARD_COUNT,
+  "Image",
 );
 const strings = await readJson<SystemStrings>(
   path.join(root, "strings", "en.json"),
@@ -283,19 +286,29 @@ async function readJson<T>(filePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
 }
 
-async function readShards<T>(
+async function readShards<T extends { code: number }>(
   rootDirectory: string,
   relativeDirectory: string,
   shardCount: number,
+  label: string,
 ): Promise<T[]> {
   const records: T[] = [];
   for (let shard = 0; shard < shardCount; shard += 1) {
     const name = shard.toString(16).padStart(2, "0");
-    records.push(
-      ...(await readJson<T[]>(
-        path.join(rootDirectory, relativeDirectory, `${name}.json`),
-      )),
+    const shardRecords = await readJson<T[]>(
+      path.join(rootDirectory, relativeDirectory, `${name}.json`),
     );
+    for (const record of shardRecords) {
+      const expectedShard = (record.code % shardCount)
+        .toString(16)
+        .padStart(2, "0");
+      if (expectedShard !== name) {
+        failures.push(
+          `${label} ${record.code} is in shard ${name}; expected shard ${expectedShard}`,
+        );
+      }
+    }
+    records.push(...shardRecords);
   }
   return records;
 }

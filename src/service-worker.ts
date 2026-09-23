@@ -4,6 +4,7 @@ import { PrecacheController } from "workbox-precaching";
 import { readCoreApproval } from "./shell/application/core-update-approval.ts";
 import {
   assertShellPrecacheEntries,
+  installShellPrecache,
   isAppNavigationRequest,
   isFirstCoreInstall,
   SHELL_CACHE_PREFIX,
@@ -34,7 +35,11 @@ worker.addEventListener("install", (event) => {
         )
           throw new Error("CORE_UPDATE_NOT_APPROVED");
       }
-      await precache.install(event);
+      await installShellPrecache(
+        firstInstall,
+        async () => await precache.install(event),
+        async () => await worker.caches.delete(cacheName),
+      );
     })(),
   );
 });

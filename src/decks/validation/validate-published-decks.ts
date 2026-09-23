@@ -21,7 +21,11 @@ export function validatePublishedDecks(
       for (const code of deck[zone]) {
         if (!Number.isSafeInteger(code) || code <= 0) fail();
         const definition = cards.get(cardCode(code)) ?? fail();
-        if (hasOcgType(definition.type, OCG_TYPE.TOKEN)) fail();
+        if (
+          hasOcgType(definition.type, OCG_TYPE.TOKEN) ||
+          (definition.scope & 8) !== 0
+        )
+          fail();
         const extra = isExtraDeckType(definition.type);
         if ((zone === "main" && extra) || (zone === "extra" && !extra)) fail();
         const count = (counts.get(code) ?? 0) + 1;

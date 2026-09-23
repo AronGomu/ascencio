@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/svelte";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import YdkImport from "../../../src/deck-editor/components/YdkImport.svelte";
@@ -8,6 +14,99 @@ import YdkImport from "../../../src/deck-editor/components/YdkImport.svelte";
 afterEach(() => cleanup());
 
 describe("YDK import UI", () => {
+  it("invalidates old preview while a new file is reading", async () => {
+    const onimport = vi.fn();
+    render(YdkImport, { onimport, oncancel: vi.fn() });
+    const input = screen.getByLabelText("Choose .ydk file");
+    const pending = Promise.withResolvers<string>();
+    await fireEvent.change(input, {
+      target: {
+        files: [
+          {
+            name: "a.ydk",
+            size: 30,
+            text: async () => "#main\n1\n#extra\n!side",
+          },
+        ],
+      },
+    });
+    await screen.findByRole("button", { name: "Replace deck cards" });
+    await fireEvent.change(input, {
+      target: {
+        files: [{ name: "b.ydk", size: 30, text: () => pending.promise }],
+      },
+    });
+    expect(
+      screen.queryByRole("button", { name: "Replace deck cards" }),
+    ).toBeNull();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Preview import",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    pending.resolve("#main\n2\n#extra\n!side");
+    await userEvent
+      .setup()
+      .click(await screen.findByRole("button", { name: "Replace deck cards" }));
+    expect(onimport).toHaveBeenCalledWith(
+      { main: [2], extra: [], side: [] },
+      "Imported Deck",
+    );
+  });
+
+  it.each(["new-file", "paste"])(
+    "ignores late file results after %s supersession",
+    async (replacement) => {
+      const onimport = vi.fn();
+      render(YdkImport, { onimport, oncancel: vi.fn() });
+      const pending = Promise.withResolvers<string>();
+      const input = screen.getByLabelText("Choose .ydk file");
+      await fireEvent.change(input, {
+        target: {
+          files: [{ name: "a.ydk", size: 30, text: () => pending.promise }],
+        },
+      });
+      if (replacement === "new-file") {
+        await fireEvent.change(input, {
+          target: {
+            files: [
+              {
+                name: "b.ydk",
+                size: 30,
+                text: async () => "#main\n2\n#extra\n!side",
+              },
+            ],
+          },
+        });
+      } else {
+        await fireEvent.input(screen.getByLabelText("Or paste YDK text"), {
+          target: { value: "#main\n2\n#extra\n!side" },
+        });
+        await fireEvent.click(
+          screen.getByRole("button", { name: "Preview import" }),
+        );
+      }
+      await screen.findByRole("button", { name: "Replace deck cards" });
+      pending.resolve("#main\n1\n#extra\n!side");
+      await pending.promise;
+      await waitFor(() =>
+        expect(
+          (screen.getByLabelText("Or paste YDK text") as HTMLTextAreaElement)
+            .value,
+        ).toContain("\n2\n"),
+      );
+      await fireEvent.click(
+        screen.getByRole("button", { name: "Replace deck cards" }),
+      );
+      expect(onimport).toHaveBeenCalledWith(
+        { main: [2], extra: [], side: [] },
+        "Imported Deck",
+      );
+    },
+  );
+
   it("previews pasted YDK and preserves unknown codes", async () => {
     const user = userEvent.setup();
     const onimport = vi.fn();

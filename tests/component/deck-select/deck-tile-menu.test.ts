@@ -10,6 +10,7 @@ let anchor: HTMLButtonElement | null = null;
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   anchor?.remove();
   anchor = null;
 });
@@ -44,6 +45,27 @@ function kebabAt(top: number, left: number): HTMLButtonElement {
 }
 
 describe("DeckTileMenu", () => {
+  it.each([768, 120])(
+    "clamps a right-edge menu within a %ipx viewport",
+    (height) => {
+      window.innerHeight = height;
+      window.innerWidth = 390;
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+        new DOMRect(0, 0, 192, Math.min(200, height - 16)),
+      );
+      render(DeckTileMenu, {
+        props: { tile: tile(), anchor: kebabAt(height - 30, 358) },
+      });
+      const sheet = cy("deck-tile-menu-sheet-k1");
+      expect(Number.parseFloat(sheet.style.left)).toBeLessThanOrEqual(190);
+      expect(Number.parseFloat(sheet.style.left)).toBeGreaterThanOrEqual(8);
+      expect(Number.parseFloat(sheet.style.top)).toBeGreaterThanOrEqual(8);
+      expect(
+        Number.parseFloat(sheet.style.top) + Math.min(200, height - 16),
+      ).toBeLessThanOrEqual(height - 8);
+    },
+  );
+
   it("renders four items in order", () => {
     render(DeckTileMenu, { props: { tile: tile(), anchor: kebab() } });
 
@@ -171,7 +193,7 @@ describe("DeckTileMenu", () => {
     });
 
     const sheet = cy("deck-tile-menu-sheet-k1");
-    expect(sheet.style.top).toBe("880px");
+    expect(sheet.style.top).toBe("760px");
     expect(sheet.style.left).toBe("40px");
   });
 

@@ -346,6 +346,9 @@
   }
 
   onDestroy(() => {
+    restToken += 1;
+    playerRestToken += 1;
+    opponentRestToken += 1;
     hoverToken += 1;
   });
 
@@ -393,9 +396,12 @@
     const token = ++restToken;
     restList = null;
     if (!active || resolve === null || key === null) return;
-    const resolved = await resolve(key);
-    if (token !== restToken) return;
-    restList = resolved;
+    try {
+      const resolved = await resolve(key);
+      if (token === restToken) restList = resolved;
+    } catch {
+      if (token === restToken) restList = null;
+    }
   }
 
   async function loadPlayerRest(
@@ -406,9 +412,12 @@
     const token = ++playerRestToken;
     playerRestList = null;
     if (!active || resolve === null || key === null) return;
-    const resolved = await resolve(key);
-    if (token !== playerRestToken) return;
-    playerRestList = resolved;
+    try {
+      const resolved = await resolve(key);
+      if (token === playerRestToken) playerRestList = resolved;
+    } catch {
+      if (token === playerRestToken) playerRestList = null;
+    }
   }
 
   async function loadOpponentRest(
@@ -419,9 +428,12 @@
     const token = ++opponentRestToken;
     opponentRestList = null;
     if (!active || resolve === null || key === null) return;
-    const resolved = await resolve(key);
-    if (token !== opponentRestToken) return;
-    opponentRestList = resolved;
+    try {
+      const resolved = await resolve(key);
+      if (token === opponentRestToken) opponentRestList = resolved;
+    } catch {
+      if (token === opponentRestToken) opponentRestList = null;
+    }
   }
 
   /** Cropped runtime art → matching full card scan; other sources pass through. */
@@ -553,7 +565,7 @@
   /** Move the pick among legal decks in the order the grid shows them. */
   function step(delta: number): void {
     const legal = shown.filter((candidate) => candidate.legal);
-    const index = legal.findIndex((candidate) => candidate.key === selectedKey);
+    const index = legal.findIndex((candidate) => candidate.key === activeKey);
     const target =
       legal[index < 0 ? (delta > 0 ? 0 : legal.length - 1) : index + delta];
     if (target === undefined) return;

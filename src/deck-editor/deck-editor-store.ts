@@ -135,23 +135,41 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     }
   }
 
-  async showLibrary(): Promise<void> {
-    await this.#queue;
-    const state = get(this.#state);
-    if (state.saveState === "failed" || state.saveState === "conflict") {
-      this.#state.update((value) =>
-        Object.freeze({
-          ...value,
-          message: "Resolve unsaved deck changes before leaving the editor.",
-        }),
-      );
-      return;
-    }
-    const generation = this.#startContext();
-    await this.#refreshLibrary(null, generation);
+  showLibrary(): Promise<boolean> {
+    return this.#enqueue(async () => {
+      if (!this.#canLeave()) return false;
+      const generation = this.#startContext();
+      await this.#refreshLibrary(null, generation);
+      return true;
+    });
   }
 
-  async openDeck(id: DeckId): Promise<void> {
+  openDeck(id: DeckId): Promise<boolean> {
+    return this.#enqueue(async () => {
+      if (!this.#canLeave()) return false;
+      await this.#openDeck(id);
+      return true;
+    });
+  }
+
+  canLeave(): Promise<boolean> {
+    return this.#enqueue(async () => this.#canLeave());
+  }
+
+  #canLeave(): boolean {
+    const state = get(this.#state);
+    if (state.saveState !== "failed" && state.saveState !== "conflict")
+      return true;
+    this.#state.update((value) =>
+      Object.freeze({
+        ...value,
+        message: "Resolve unsaved deck changes before leaving the editor.",
+      }),
+    );
+    return false;
+  }
+
+  async #openDeck(id: DeckId): Promise<void> {
     const generation = this.#startContext();
     try {
       const stored = await this.#repository.load(id);
@@ -185,6 +203,14 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async createDeck(name: string): Promise<boolean> {
     if (this.#createInFlight) return false;
     this.#createInFlight = true;
+    return this.#enqueue(() => this.#createDeck(name));
+  }
+
+  async #createDeck(name: string): Promise<boolean> {
+    if (!this.#canLeave()) {
+      this.#createInFlight = false;
+      return false;
+    }
     const generation = this.#startContext();
     let draft: DeckRecord | null = null;
     try {
@@ -213,7 +239,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
             : await this.#repository.load(draft.id).catch(() => null);
         if (!this.#isCurrentContext(generation)) return false;
         if (committed !== null) {
-          await this.openDeck(committed.deck.id);
+          await this.#openDeck(committed.deck.id);
           return true;
         }
         this.#fail("Deck could not be created", error);
@@ -227,6 +253,14 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async importDeck(name: string, cards: DeckCardLists): Promise<boolean> {
     if (this.#createInFlight) return false;
     this.#createInFlight = true;
+    return this.#enqueue(() => this.#importDeck(name, cards));
+  }
+
+  async #importDeck(name: string, cards: DeckCardLists): Promise<boolean> {
+    if (!this.#canLeave()) {
+      this.#createInFlight = false;
+      return false;
+    }
     const generation = this.#startContext();
     let deck: DeckRecord;
     let committed: StoredDeck | null = null;
@@ -541,6 +575,14 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
   async duplicate(id: DeckId): Promise<void> {
     if (this.#createInFlight) return;
     this.#createInFlight = true;
+    return this.#enqueue(() => this.#duplicate(id));
+  }
+
+  async #duplicate(id: DeckId): Promise<void> {
+    if (!this.#canLeave()) {
+      this.#createInFlight = false;
+      return;
+    }
     const generation = this.#startContext();
     try {
       const source = await this.#repository.load(id);
@@ -647,9 +689,11 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
     });
   }
 
-  async reloadCurrent(): Promise<void> {
-    const current = get(this.#state).current;
-    if (current !== null) await this.openDeck(current.deck.id);
+  reloadCurrent(): Promise<void> {
+    return this.#enqueue(async () => {
+      const current = get(this.#state).current;
+      if (current !== null) await this.#openDeck(current.deck.id);
+    });
   }
 
   async listAutosaves(): Promise<readonly DeckAutosaveRecord[]> {
@@ -664,7 +708,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
        another deck's cards, so a failed open or create stops here and leaves
        its own failure state standing. */
     if (existing !== null) {
-      await this.openDeck(entry.deckId);
+      if (!(await this.openDeck(entry.deckId))) return;
       if (get(this.#state).current?.deck.id !== entry.deckId) return;
     } else if (!(await this.createDeck(entry.deckName))) {
       return;

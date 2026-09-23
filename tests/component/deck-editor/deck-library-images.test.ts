@@ -100,10 +100,12 @@ describe("Deck Library source-backed image ownership", () => {
     await waitFor(() => expect(acquire).toHaveBeenCalledTimes(5));
     await waitFor(() =>
       expect(
-        cy(`deck-select-docked-list-row-${C}`).style.getPropertyValue("--img"),
+        cy(`deck-select-docked-list-main-row-${C}`).style.getPropertyValue(
+          "--img",
+        ),
       ).toContain(`blob:first-cropped-${C}`),
     );
-    await fireEvent.pointerEnter(cy(`deck-select-docked-list-row-${A}`));
+    await fireEvent.pointerEnter(cy(`deck-select-docked-list-main-row-${A}`));
     expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
       `blob:first-full-${A}`,
     );
@@ -121,7 +123,9 @@ describe("Deck Library source-backed image ownership", () => {
     await waitFor(() => expect(acquire).toHaveBeenCalledTimes(5));
     await waitFor(() =>
       expect(
-        cy(`deck-select-docked-list-row-${C}`).style.getPropertyValue("--img"),
+        cy(`deck-select-docked-list-main-row-${C}`).style.getPropertyValue(
+          "--img",
+        ),
       ).toContain(`blob:hovered-cropped-${C}`),
     );
   });
@@ -146,7 +150,7 @@ describe("Deck Library source-backed image ownership", () => {
           ? 1
           : 0,
       );
-    await fireEvent.pointerEnter(cy(`deck-select-docked-list-row-${B}`));
+    await fireEvent.pointerEnter(cy(`deck-select-docked-list-main-row-${B}`));
     expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
       `blob:first-full-${B}`,
     );
@@ -166,7 +170,7 @@ describe("Deck Library source-backed image ownership", () => {
     expect(
       document.querySelector('[data-cy="deck-select-card-art-float"]'),
     ).toBeNull();
-    await fireEvent.pointerEnter(cy(`deck-select-docked-list-row-${B}`));
+    await fireEvent.pointerEnter(cy(`deck-select-docked-list-main-row-${B}`));
     expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
       `blob:second-full-${B}`,
     );
@@ -261,9 +265,11 @@ describe("Deck Library source-backed image ownership", () => {
       ),
     );
     expect(
-      document.querySelector(`[data-cy="deck-select-docked-list-row-${C}"]`),
+      document.querySelector(
+        `[data-cy="deck-select-docked-list-main-row-${C}"]`,
+      ),
     ).toBeNull();
-    await fireEvent.pointerEnter(cy(`deck-select-docked-list-row-${B}`));
+    await fireEvent.pointerEnter(cy(`deck-select-docked-list-main-row-${B}`));
     expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
       `blob:selected-${B}`,
     );
@@ -285,7 +291,7 @@ describe("Deck Library source-backed image ownership", () => {
     await fireEvent.change(cy("deck-select-sort"), {
       target: { value: "name" },
     });
-    await fireEvent.pointerEnter(cy(`deck-select-docked-list-row-${C}`));
+    await fireEvent.pointerEnter(cy(`deck-select-docked-list-main-row-${C}`));
     expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
       `blob:hover-full-${C}`,
     );
@@ -301,7 +307,7 @@ describe("Deck Library source-backed image ownership", () => {
     expect((cy("deck-select-sort") as HTMLSelectElement).value).toBe("name");
     await fireEvent.click(cy("deck-tile-press-a"));
     await waitFor(() => expect(acquire).toHaveBeenCalledTimes(9));
-    await fireEvent.pointerEnter(cy(`deck-select-docked-list-row-${C}`));
+    await fireEvent.pointerEnter(cy(`deck-select-docked-list-main-row-${C}`));
     await view.rerender({
       decks: [decks[0]!, { ...decks[1]!, name: "Prototype renamed" }],
       catalog,
@@ -333,10 +339,10 @@ describe("Deck Library source-backed image ownership", () => {
     ).toHaveLength(0);
     expect(
       document.querySelector(
-        `[data-cy="deck-select-docked-list-row-art-${A}"]`,
+        `[data-cy="deck-select-docked-list-main-row-art-${A}"]`,
       ),
     ).toBeNull();
-    await fireEvent.pointerEnter(cy(`deck-select-docked-list-row-${A}`));
+    await fireEvent.pointerEnter(cy(`deck-select-docked-list-main-row-${A}`));
     expect(
       document.querySelector('[data-cy="deck-select-card-art-float"]'),
     ).toBeNull();

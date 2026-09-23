@@ -350,15 +350,15 @@ describe("DeckLibrary", () => {
 
     await userEvent.setup().click(cy("deck-tile-press-t1"));
     await waitFor(() =>
-      expect(find("deck-select-docked-list-row-1")).not.toBeNull(),
+      expect(find("deck-select-docked-list-main-row-1")).not.toBeNull(),
     );
 
-    const row = cy("deck-select-docked-list-row-1");
+    const row = cy("deck-select-docked-list-main-row-1");
     expect(row.style.getPropertyValue("--fc")).toBe("#1d9e74");
     expect(row.style.getPropertyValue("--img")).toContain(
       "/runtime/images-cropped/1.jpg",
     );
-    expect(find("deck-select-docked-list-row-art-1")).not.toBeNull();
+    expect(find("deck-select-docked-list-main-row-art-1")).not.toBeNull();
   });
 
   it("the docked decklist follows the library it was resolved from", async () => {

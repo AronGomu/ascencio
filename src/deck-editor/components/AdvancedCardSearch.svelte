@@ -348,12 +348,13 @@
           />
           <AdvancedSelectField
             id="marker-rule"
+            nullable={false}
             label="Link marker rule"
             value={filters.advanced.linkMarkerRule}
             options={markerRules}
             onchange={(linkMarkerRule) =>
               updateAdvanced({
-                linkMarkerRule: linkMarkerRule as LinkMarkerRule,
+                linkMarkerRule: (linkMarkerRule ?? "any") as LinkMarkerRule,
               })}
           />
           <AdvancedCheckboxGroup

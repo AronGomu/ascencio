@@ -7,7 +7,8 @@ import CardCatalog from "../../../src/deck-editor/components/CardCatalog.svelte"
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 
-beforeEach(() => {
+beforeEach(async () => {
+  await import("../../../src/deck-editor/advanced-search-loader.ts");
   HTMLDialogElement.prototype.showModal = function showModal() {
     this.setAttribute("open", "");
   };
@@ -44,6 +45,35 @@ function renderCatalog() {
 }
 
 describe("AdvancedCardSearch", () => {
+  it("offers only non-null marker rules with unique selectors", async () => {
+    renderCatalog();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Advanced Search" }));
+    await screen.findByRole("dialog", { name: "Advanced Search" });
+    const rule = screen.getByLabelText("Link marker rule") as HTMLSelectElement;
+    expect([...rule.options].map(({ value }) => value)).toEqual([
+      "any",
+      "all",
+      "exact",
+    ]);
+    await user.click(screen.getByLabelText("Bottom"));
+    await user.click(screen.getByLabelText("Left"));
+    for (const option of ["all", "exact", "any"]) {
+      await user.selectOptions(rule, option);
+      expect(rule.value).toBe(option);
+      expect(
+        document.querySelector('[data-cy="advanced-search-result-value"]')
+          ?.textContent,
+      ).not.toBe("0");
+    }
+    const selectors = [...document.querySelectorAll("[data-cy]")].map(
+      (element) => element.getAttribute("data-cy"),
+    );
+    expect(
+      selectors.filter((value, index) => selectors.indexOf(value) !== index),
+    ).toEqual([]);
+  });
+
   it("starts closed, opens on the workspace bounds and focuses close", async () => {
     renderCatalog();
     expect(

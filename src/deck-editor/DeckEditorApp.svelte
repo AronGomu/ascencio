@@ -103,6 +103,7 @@
      and a deep link can never flash the wrong deck. */
   let routeApplied = false;
   let appliedDeckId: DeckId | null = null;
+  let requestedDeckId: DeckId | null = null;
   let notFound: DeckId | null = null;
   let routing = false;
   /* A failed migration is not a failed load: the decks still exist, in the
@@ -116,8 +117,8 @@
   afterUpdate(() => void watchRoute());
 
   async function watchRoute(): Promise<void> {
-    if (controller === null || routing) return;
-    if (routeApplied && deckId === appliedDeckId) return;
+    if (controller === null || routing || state.mode === "loading") return;
+    if (routeApplied && deckId === requestedDeckId) return;
     routing = true;
     try {
       await applyRoute(deckId);
@@ -204,14 +205,18 @@
   async function applyRoute(id: DeckId | null): Promise<void> {
     const active = controller;
     if (active === null) return;
-    appliedDeckId = id;
+    requestedDeckId = id;
     notFound = null;
-    if (id === null) await active.showLibrary();
-    else if (get(active).current?.deck.id !== id) {
-      await active.openDeck(id);
-      /* A later route won the race, so this one no longer owns the view. */
-      if (appliedDeckId !== id) return;
-      if (get(active).current?.deck.id !== id) notFound = id;
+    const accepted =
+      id === null
+        ? await active.showLibrary()
+        : get(active).current?.deck.id === id || (await active.openDeck(id));
+    if (accepted) {
+      appliedDeckId = id;
+      if (id !== null && get(active).current?.deck.id !== id) notFound = id;
+    } else {
+      appliedDeckId = get(active).current?.deck.id ?? null;
+      onnavigate({ deckId: appliedDeckId });
     }
     routeApplied = true;
   }
@@ -234,7 +239,6 @@
     const open =
       settled?.mode === "editor" ? (settled.current?.deck.id ?? null) : null;
     if (open === appliedDeckId) return;
-    appliedDeckId = open;
     notFound = null;
     onnavigate({ deckId: open });
   }
@@ -337,7 +341,7 @@
       <h1 data-cy="deck-editor-loading-heading">Loading local decks…</h1>
       <div class="skeleton" data-cy="deck-editor-loading-skeleton"></div>
     </main>
-  {:else if deckId === null}
+  {:else if appliedDeckId === null}
     <DeckLibrary
       decks={state.decks}
       {catalog}
@@ -354,7 +358,7 @@
       onduplicate={(id) => void controller?.duplicate(id)}
       ondelete={(id, revision) => void controller?.deleteDeck(id, revision)}
     />
-  {:else if state.current !== null && state.current.deck.id === deckId}
+  {:else if state.current !== null && state.current.deck.id === appliedDeckId}
     <DeckEditor
       {state}
       {cards}
@@ -364,7 +368,11 @@
       {ownership}
       {layoutMode}
       {returnLabel}
-      {onreturn}
+      onreturn={() => {
+        void controller?.canLeave().then((accepted) => {
+          if (accepted) onreturn();
+        });
+      }}
       onrename={(name) => void controller?.rename(name)}
       onmutate={(command) =>
         controller?.mutate(command) ?? Promise.resolve(false)}
@@ -378,14 +386,20 @@
       onlistautosaves={() => controller?.listAutosaves() ?? Promise.resolve([])}
       onrestoreautosave={(entry) =>
         void runAndSync(controller?.restoreAutosave(entry))}
-      onopendeckbyid={(id) => onnavigate({ deckId: id })}
+      onopendeckbyid={(id) => {
+        void controller?.canLeave().then((accepted) => {
+          if (accepted) onnavigate({ deckId: id });
+        });
+      }}
       defaultDeckId={state.defaultDeckId}
-      onduplicate={() => void runAndSync(controller?.duplicate(deckId!))}
+      onduplicate={() =>
+        void runAndSync(controller?.duplicate(state.current!.deck.id))}
       onexport={() => {
         if (state.current !== null)
           openLibraryModal("export", state.current.deck);
       }}
-      onsetdefault={() => void controller?.setDefaultDeck(deckId!)}
+      onsetdefault={() =>
+        void controller?.setDefaultDeck(state.current!.deck.id)}
       ondelete={() => {
         const deck = state.current?.deck;
         if (deck === undefined) return;

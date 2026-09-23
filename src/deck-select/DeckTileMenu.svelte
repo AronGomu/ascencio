@@ -39,10 +39,20 @@
      tile clips its own overflow and would cut the sheet in half. */
   function place(): void {
     const opener = anchor.getBoundingClientRect();
-    const height = sheet.getBoundingClientRect().height;
+    const { width, height } = sheet.getBoundingClientRect();
+    const margin = 8;
     const fitsBelow = opener.bottom + height <= window.innerHeight;
-    top = fitsBelow ? opener.bottom : opener.top - height;
-    left = opener.left;
+    top = Math.max(
+      margin,
+      Math.min(
+        fitsBelow ? opener.bottom : opener.top - height,
+        window.innerHeight - height - margin,
+      ),
+    );
+    left = Math.max(
+      margin,
+      Math.min(opener.left, window.innerWidth - width - margin),
+    );
   }
 
   function choose(action: () => void): void {
@@ -119,7 +129,11 @@
     position: fixed;
     z-index: 30;
     display: grid;
-    min-width: 12rem;
+    box-sizing: border-box;
+    min-width: min(12rem, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow: auto;
     gap: var(--space-1);
     padding: var(--space-1);
     border: 1px solid var(--border);

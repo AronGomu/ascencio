@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { CardImageSource } from "../../cards/images/index.ts";
+  export let images: CardImageSource | null = null;
   import { tick } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
   import type {
@@ -129,6 +131,7 @@
   data-cy="deck-workspace"
 >
   <DeckZoneGrid
+    {images}
     zone="main"
     label="Main Deck"
     codes={deck.main}
@@ -157,6 +160,7 @@
       (collapsedZones = { ...collapsedZones, main: !collapsedZones.main })}
   />
   <DeckZoneGrid
+    {images}
     zone="extra"
     label="Extra Deck"
     codes={deck.extra}
@@ -185,6 +189,7 @@
       (collapsedZones = { ...collapsedZones, extra: !collapsedZones.extra })}
   />
   <DeckZoneGrid
+    {images}
     zone="side"
     label="Side Deck"
     codes={deck.side}

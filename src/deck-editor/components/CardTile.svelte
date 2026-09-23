@@ -8,6 +8,8 @@
   export let selected = false;
   export let draggable = true;
   export let disabled = false;
+  export let unavailable = false;
+  export let imageUrl: string | null | undefined = undefined;
   export let compact = false;
   export let zone: string | null = null;
   export let onselect: () => void = () => undefined;
@@ -33,13 +35,12 @@
   export let dataCyPrefix: string;
   export let dataCyId: string | number;
 
-  /* Art is a URL by convention for every code, so a card this build packages no
-     image for is the normal case rather than an error: the tile keeps the glyph
-     instead of a broken-image icon. The failure is remembered as the URL that
-     failed rather than as a flag, so a tile recycled onto another card is not
-     still hiding art because the card before it had none. */
+  /* An image lease is optional. Remember failures by URL so a replacement
+     source can recover without remounting the tile. */
   let failedArtUrl: string | null = null;
-  $: artUrl = card?.imageUrl === failedArtUrl ? null : (card?.imageUrl ?? null);
+  $: suppliedArtUrl =
+    imageUrl === undefined ? (card?.imageUrl ?? null) : imageUrl;
+  $: artUrl = suppliedArtUrl === failedArtUrl ? null : suppliedArtUrl;
 
   $: name = card?.name ?? `Missing card ${code}`;
   $: limitLabel =
@@ -67,7 +68,7 @@
   class:compact
   class:selected
   class:missing={card === null}
-  class:unavailable={disabled}
+  class:unavailable={disabled || unavailable}
   class="card-tile"
   draggable={draggable && !disabled}
   {disabled}
@@ -177,8 +178,11 @@
     background: var(--danger-surface);
   }
 
-  .card-tile.unavailable {
+  .card-tile:disabled {
     cursor: not-allowed;
+  }
+
+  .card-tile.unavailable {
     filter: grayscale(1);
     opacity: 0.48;
   }

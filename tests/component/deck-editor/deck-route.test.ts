@@ -3,7 +3,13 @@ import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-game
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
-import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
@@ -27,6 +33,7 @@ installPrototypeActiveCatalog();
 
 afterEach(async () => {
   cleanup();
+  vi.restoreAllMocks();
   await deleteDB(DECK_DATABASE_NAME);
 });
 
@@ -108,6 +115,120 @@ describe("deck editor route binding", () => {
       expect(onnavigate).toHaveBeenCalledWith<[DeckEditorRoute]>({
         deckId: deckId("d1"),
       }),
+    );
+  });
+
+  it.each(["route-library", "route-deck", "load", "return"])(
+    "keeps failed draft visible through %s navigation",
+    async (target) => {
+      await seedDeck("d1", "Draft");
+      await seedDeck("d2", "Other");
+      const { rerender, onnavigate } = mount(deckId("d1"));
+      await waitFor(() => expect(query("deck-name-input")).not.toBeNull());
+      const save = vi
+        .spyOn(IndexedDbDeckRepository.prototype, "save")
+        .mockRejectedValue(new Error("quota simulation"));
+      query("deck-name-input")!.focus();
+      await fireEvent.input(query("deck-name-input")!, {
+        target: { value: "Unsaved draft" },
+      });
+      await fireEvent.blur(query("deck-name-input")!);
+      await waitFor(() => expect(save).toHaveBeenCalled());
+      await screen.findByText("quota simulation");
+      const onreturn = vi.fn();
+      await rerender({ onreturn });
+      if (target === "load") {
+        await fireEvent.click(screen.getByRole("button", { name: "Load" }));
+        await fireEvent.click(
+          await screen.findByRole("button", { name: /Other Main 0/ }),
+        );
+      } else if (target === "return") {
+        await fireEvent.click(
+          screen.getByRole("button", { name: "Return to Deck Selection" }),
+        );
+      } else {
+        await rerender({
+          deckId: target === "route-library" ? null : deckId("d2"),
+        });
+        await waitFor(() =>
+          expect(onnavigate).toHaveBeenCalledWith({ deckId: "d1" }),
+        );
+      }
+      await waitFor(() =>
+        expect(
+          screen.getByText(
+            "Resolve unsaved deck changes before leaving the editor.",
+          ),
+        ).toBeTruthy(),
+      );
+      expect(onreturn).not.toHaveBeenCalled();
+      expect((query("deck-name-input") as HTMLInputElement).value).toBe(
+        "Unsaved draft",
+      );
+      expect(query("deck-library")).toBeNull();
+      expect(query("deck-not-found")).toBeNull();
+      const retry = screen.getByRole("button", { name: "Retry autosave" });
+      save.mockRestore();
+      await fireEvent.click(retry);
+      await waitFor(() => expect(query("deck-editor-retry-save")).toBeNull());
+    },
+  );
+
+  it("keeps a saved deck visible when the host swallows Return", async () => {
+    await seedDeck("d1", "Saved");
+    const { rerender } = mount(deckId("d1"));
+    const onreturn = vi.fn();
+    await rerender({ onreturn });
+    await waitFor(() => expect(query("deck-name-input")).not.toBeNull());
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Return to Deck Selection" }),
+    );
+    await waitFor(() => expect(onreturn).toHaveBeenCalledOnce());
+    expect((query("deck-name-input") as HTMLInputElement).value).toBe("Saved");
+    expect(query("deck-editor-opening")).toBeNull();
+  });
+
+  it("keeps the current deck visible until the host echoes Load", async () => {
+    await seedDeck("d1", "Current");
+    await seedDeck("d2", "Other");
+    const { rerender, onnavigate } = mount(deckId("d1"));
+    await waitFor(() => expect(query("deck-name-input")).not.toBeNull());
+    await fireEvent.click(screen.getByRole("button", { name: "Load" }));
+    await fireEvent.click(
+      await screen.findByRole("button", { name: /Other Main 0/ }),
+    );
+    await waitFor(() =>
+      expect(onnavigate).toHaveBeenCalledWith({ deckId: "d2" }),
+    );
+    expect((query("deck-name-input") as HTMLInputElement | null)?.value).toBe(
+      "Current",
+    );
+    expect(query("deck-editor-opening")).toBeNull();
+    await rerender({ deckId: deckId("d2") });
+    await waitFor(() =>
+      expect((query("deck-name-input") as HTMLInputElement)?.value).toBe(
+        "Other",
+      ),
+    );
+  });
+
+  it("waits for the host route echo after creating a deck", async () => {
+    await seedDeck("d1", "Existing");
+    const { rerender, onnavigate } = mount(null);
+    await waitFor(() => expect(query("deck-library")).not.toBeNull());
+    await fireEvent.click(screen.getByRole("button", { name: "Create" }));
+    await fireEvent.input(query("deck-library-create-name-input")!, {
+      target: { value: "Created" },
+    });
+    await fireEvent.submit(query("deck-library-create-form")!);
+    await waitFor(() => expect(onnavigate).toHaveBeenCalled());
+    expect(query("deck-library")).not.toBeNull();
+    expect(query("deck-name-input")).toBeNull();
+    await rerender({ deckId: onnavigate.mock.calls.at(-1)![0].deckId });
+    await waitFor(() =>
+      expect((query("deck-name-input") as HTMLInputElement)?.value).toBe(
+        "Created",
+      ),
     );
   });
 

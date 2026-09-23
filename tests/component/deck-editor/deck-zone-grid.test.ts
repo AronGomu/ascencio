@@ -8,8 +8,12 @@ import DeckWorkspace from "../../../src/deck-editor/components/DeckWorkspace.sve
 import {
   FIFTEEN_CARD_GRID,
   mainDeckGridPlan,
+  applyDeckCommand,
 } from "../../../src/decks/editing/index.ts";
-import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
+import {
+  PROTOTYPE_RULESET,
+  validateDeckDraft,
+} from "../../../src/decks/validation/index.ts";
 import {
   deckFixture,
   prototypeCatalogMap,
@@ -18,6 +22,48 @@ import {
 afterEach(() => cleanup());
 
 describe("DeckZoneGrid", () => {
+  it("keeps deficit copies removable so ownership validation can recover", async () => {
+    const ownership = { isUnlimited: false, ownedCount: () => 1 };
+    const deck = { ...deckFixture(), main: [89631139, 89631139] };
+    const ondoubleclick = vi.fn(
+      (code: number, zone: "main" | "extra" | "side", index: number) => {
+        const result = applyDeckCommand(
+          deck,
+          { type: "remove", cardCode: code, zone, index },
+          prototypeCatalogMap,
+          PROTOTYPE_RULESET,
+        );
+        expect(result.type).toBe("accepted");
+        if (result.type !== "accepted") return;
+        expect(
+          validateDeckDraft(
+            result.cards,
+            prototypeCatalogMap,
+            PROTOTYPE_RULESET,
+            ownership,
+          ).issues.some(({ code }) => code === "not-owned"),
+        ).toBe(false);
+      },
+    );
+    render(DeckZoneGrid, {
+      zone: "main",
+      label: "Main Deck",
+      codes: deck.main,
+      plan: mainDeckGridPlan(2),
+      catalog: prototypeCatalogMap,
+      ruleset: PROTOTYPE_RULESET,
+      totalCopies: new Map([[89631139, 2]]),
+      ownership,
+      ondoubleclick,
+    });
+    await userEvent
+      .setup()
+      .dblClick(
+        screen.getAllByRole("button", { name: /Blue-Eyes White Dragon/ })[1]!,
+      );
+    expect(ondoubleclick).toHaveBeenCalledWith(89631139, "main", 1);
+  });
+
   it("renders repeated tiles plus 40 explicit slots through card 40", () => {
     const codes = [89631139, 89631139, 89631139];
     const { container } = render(DeckZoneGrid, {

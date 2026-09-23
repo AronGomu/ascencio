@@ -1505,15 +1505,13 @@ test("injected DOM field failure preserves fallback controls and one opaque resp
   await expect(
     page.getByText("Injected duel field component failure"),
   ).toHaveCount(0);
-  await page.locator('[data-cy="duel-right-rail-options"]').click();
+  // The fallback is available without opening Settings behind its backdrop.
+  const fallback = page.locator('[data-cy="prompt-dialog"]');
+  await expect(fallback).toBeVisible();
   await expect(
-    page.locator('[data-cy="menu-dialog-surrender-button"]'),
+    fallback.locator('[data-cy="prompt-dialog-retry-field"]'),
   ).toBeVisible();
-  await page.locator('[data-cy="menu-dialog-close-button"]').click();
-  // The interactive field failed to render, so the field surface can never
-  // host this prompt; reveal the workspace so the docked prompt panel can.
-  await enableWorkspace(page);
-  const promptControls = page.locator("[data-prompt-kind]");
+  const promptControls = fallback.locator("[data-prompt-kind]");
   await expect(promptControls).toBeVisible();
   const prompt = (await readCapture(page)).events.find(
     (event) => event.type === "prompt",
@@ -1537,8 +1535,26 @@ test("injected DOM field failure preserves fallback controls and one opaque resp
         ).length,
     )
     .toBe(1);
-  await page.getByRole("button", { name: "Retry duel field" }).click();
+});
+
+test("injected DOM field failure retries from its fallback without answering", async ({
+  page,
+}) => {
+  await openDuel(page, `${duelFieldRenderFailureUrl()}#/duel`);
+  await startPresetDuel(page);
+  const retry = page.locator('[data-cy="prompt-dialog-retry-field"]');
+  await expect(retry).toBeVisible({ timeout: 120_000 });
+  const responsesBefore = (await readCapture(page)).commands.filter(
+    (command) => command.type === "respond",
+  ).length;
+  await retry.click();
   await expect(page.getByRole("region", { name: "Duel field" })).toBeVisible();
+  await expect(page.locator('[data-cy="prompt-dialog"]')).toHaveCount(0);
+  expect(
+    (await readCapture(page)).commands.filter(
+      (command) => command.type === "respond",
+    ).length,
+  ).toBe(responsesBefore);
 });
 
 test("rail reduced motion keeps three thinking dots visible and static", async ({

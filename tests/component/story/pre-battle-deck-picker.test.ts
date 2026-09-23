@@ -499,6 +499,43 @@ describe("the briefing inside the story app", () => {
     };
   }
 
+  it.each([
+    ["old-arena", "Rin's Echo"],
+    ["archive", "Archive echo"],
+  ] as const)(
+    "uses the %s encounter label in briefing, locked seat and handoff",
+    async (encounterId, label) => {
+      installPrototypeActiveCatalog();
+      const onencounter = vi.fn<
+        (request: StoryEncounterRequest) => Promise<StoryHandoffOutcome>
+      >(() => Promise.resolve("ready"));
+      render(StoryApp, {
+        ...storyAppProps(),
+        resumeState: {
+          ...preBattleSave(),
+          screen: encounterId === "archive" ? "reward" : "map",
+          outcome: "win",
+          rewardGranted: encounterId === "archive",
+          defaultDeckId: FIELDABLE.deck.id,
+        },
+        onencounter,
+      });
+      const user = userEvent.setup();
+      if (encounterId === "archive")
+        await user.click(cy("story-reward-continue")!);
+      await user.click(cy(`story-map-hotspot-${encounterId}`)!);
+      await waitFor(() => expect(start().disabled).toBe(false));
+      expect(cy("deck-select-title")?.textContent).toBe(label);
+      expect(cy("duel-start-opponent-name")?.textContent).toBe(label);
+      await userEvent.setup().click(start());
+      await waitFor(() => expect(onencounter).toHaveBeenCalledOnce());
+      expect(onencounter.mock.calls[0]?.[0]).toMatchObject({
+        encounterId,
+        label,
+      });
+    },
+  );
+
   it("refuses a broken default, then starts on the deck the player picks", async () => {
     installPrototypeActiveCatalog();
     const onencounter = vi.fn<

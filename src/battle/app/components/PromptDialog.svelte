@@ -10,6 +10,7 @@
   export let disabled = false;
   export let onsubmit: (choiceIds: readonly ChoiceId[]) => unknown;
   export let contextMessage: readonly PromptMessageSegment[] = [];
+  export let onretryfield: (() => void) | null = null;
 
   let panel: HTMLDivElement | undefined;
 
@@ -44,5 +45,13 @@
         onsubmit(choiceIds);
       }}
     />
+    {#if onretryfield}
+      <button
+        type="button"
+        class="secondary"
+        data-cy="prompt-dialog-retry-field"
+        onclick={onretryfield}>Retry duel field</button
+      >
+    {/if}
   </div>
 </div>

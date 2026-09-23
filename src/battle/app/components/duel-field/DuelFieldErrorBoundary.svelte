@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import type { DuelPresentationEvent } from "../../../duel/contracts/duel-presentation-event.ts";
   import type { PromptMessageSegment } from "../../presentation/prompt-context-message.ts";
   import type { PlayerPrompt } from "../../../duel/contracts/player-prompt.ts";
@@ -34,6 +35,10 @@
   }[] = [];
   export let feedbackGeneration = "component";
   export let injectFailure = false;
+  export let onfailurechange: (
+    failed: boolean,
+    retryField?: () => void,
+  ) => void = () => undefined;
   export let oninteraction: (action: InteractionSessionAction) => unknown;
   /* `hitTest` is deliberately not forwarded: the component default
      (`document.elementFromPoint`) is the correct one in the app. */
@@ -67,8 +72,11 @@
 
   let shouldFail: boolean = injectFailure;
 
+  onDestroy(() => onfailurechange(false));
+
   function retry(reset: () => void): void {
     shouldFail = false;
+    onfailurechange(false);
     reset();
   }
 
@@ -105,7 +113,10 @@
   </section>
 {/snippet}
 
-<svelte:boundary {failed}>
+<svelte:boundary
+  {failed}
+  onerror={(_error, reset) => onfailurechange(true, () => retry(reset))}
+>
   <DuelField
     {board}
     {layoutBoundaryElement}

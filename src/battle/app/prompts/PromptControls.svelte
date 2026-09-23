@@ -345,10 +345,13 @@
                   setSelected(choice.id, event.currentTarget.checked)}
                 data-cy={`prompt-controls-choice-${choice.id}`}
               />
-              <span data-cy="prompt-controls-multiple-choice-text">
+              <span
+                data-cy={`prompt-controls-multiple-choice-text-${choice.id}`}
+              >
                 {choice.label}
                 {#if contributionLabel(choice)}
-                  <small data-cy="prompt-controls-multiple-choice-contribution"
+                  <small
+                    data-cy={`prompt-controls-multiple-choice-contribution-${choice.id}`}
                     >{contributionLabel(choice)}</small
                   >
                 {/if}
@@ -396,7 +399,7 @@
       {#each order as choice, index (choice.id)}
         <li data-cy={`prompt-controls-choice-${choice.id}`}>
           <span data-cy={`prompt-controls-order-choice-label-${choice.id}`}
-            ><strong data-cy="prompt-controls-order-choice-index"
+            ><strong data-cy={`prompt-controls-order-choice-index-${choice.id}`}
               >{index + 1}.</strong
             >
             {choice.label}</span

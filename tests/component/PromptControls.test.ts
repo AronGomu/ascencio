@@ -76,6 +76,50 @@ function button(name: string | RegExp): HTMLButtonElement {
 }
 
 describe("PromptControls", () => {
+  it.each(["selectCard", "sortCard"] as const)(
+    "keeps %s descendant selectors unique by choice identity",
+    async (kind) => {
+      const { container } = render(PromptControls, {
+        prompt: prompt(kind, {
+          minimum: 2,
+          maximum: 2,
+          ordered: kind === "sortCard",
+          choices: ["one", "two"].map((id, sequence) =>
+            choice(id, sequence === 0 ? "One" : "Two", {
+              card: {
+                instanceId: cardInstanceId(id),
+                controller: 0,
+                location: "monster",
+                sequence,
+                contribution: 1,
+              },
+            }),
+          ),
+        }),
+        onsubmit: vi.fn(),
+      });
+      const selectors = () =>
+        [...container.querySelectorAll("[data-cy]")].map((node) =>
+          node.getAttribute("data-cy"),
+        );
+      const initial = selectors();
+      expect(new Set(initial).size).toBe(initial.length);
+      if (kind === "sortCard") {
+        await userEvent.setup().click(button("Move One down"));
+        expect(
+          container.querySelector(
+            '[data-cy="prompt-controls-order-choice-index-one"]',
+          )?.textContent,
+        ).toBe("2.");
+        expect(selectors().sort()).toEqual(initial.sort());
+      } else {
+        expect(initial).toContain("prompt-controls-multiple-choice-text-one");
+        expect(initial).toContain(
+          "prompt-controls-multiple-choice-contribution-one",
+        );
+      }
+    },
+  );
   it("keeps announcements at the 256-choice threshold unpaged", () => {
     const { container } = render(PromptControls, {
       prompt: announcement(256),

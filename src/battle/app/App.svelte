@@ -203,6 +203,8 @@
     lastDispatchedKey: null,
   };
   let injectDuelFieldFailure = false;
+  let duelFieldFailed = false;
+  let retryDuelField: (() => void) | null = null;
   let diagnosticPending = false;
   /* Whether the trace the store is about to hand over is one the player asked
      for. Kept apart from `diagnosticPending`, which the failed-duel branch of
@@ -356,7 +358,7 @@
     effectivePrompt,
     mappedInteractionSpec,
     $uiSettings.showWorkspace,
-    duelBoard !== null,
+    duelBoard !== null && !duelFieldFailed,
   );
   $: railStatus = duelRailStatusFor({
     prompt: effectivePrompt,
@@ -1220,6 +1222,10 @@
                 presentationEvents={$duel.presentationEvents}
                 feedbackGeneration={`${$duel.context.workerGeneration}:${$duel.context.sessionGeneration}`}
                 injectFailure={injectDuelFieldFailure}
+                onfailurechange={(failed, retryField) => {
+                  duelFieldFailed = failed;
+                  retryDuelField = retryField ?? null;
+                }}
                 oninteraction={duel.dispatchInteraction}
                 onplacementintent={duel.armPlacementIntent}
                 onpreview={previewFieldCard}
@@ -1282,6 +1288,7 @@
         disabled={$duel.responsePending}
         onsubmit={duel.respond}
         contextMessage={promptContextSegments}
+        onretryfield={retryDuelField}
       />
     {/key}
   {/if}

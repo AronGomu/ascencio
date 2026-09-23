@@ -81,35 +81,50 @@
         aria-label={player.player === 0 ? "Your state" : "Opponent state"}
         data-cy={`duel-hud-player-${player.player}`}
       >
-        <div class="player-heading" data-cy="duel-hud-player-heading">
-          <h3 data-cy="duel-hud-player-name">
+        <div
+          class="player-heading"
+          data-cy={`duel-hud-player-heading-${player.player}`}
+        >
+          <h3 data-cy={`duel-hud-player-name-${player.player}`}>
             {player.player === 0 ? "You" : "Opponent"}
           </h3>
-          <strong data-cy="duel-hud-player-life-points"
+          <strong data-cy={`duel-hud-player-life-points-${player.player}`}
             >{player.lifePoints.toLocaleString()} LP</strong
           >
         </div>
-        <dl class="duel-hud__counts" data-cy="duel-hud-player-counts">
-          <div data-cy="duel-hud-player-deck-count-row">
-            <dt data-cy="duel-hud-player-deck-count-label">Deck</dt>
-            <dd data-cy="duel-hud-player-deck-count-value">
+        <dl
+          class="duel-hud__counts"
+          data-cy={`duel-hud-player-counts-${player.player}`}
+        >
+          <div data-cy={`duel-hud-player-deck-count-row-${player.player}`}>
+            <dt data-cy={`duel-hud-player-deck-count-label-${player.player}`}>
+              Deck
+            </dt>
+            <dd data-cy={`duel-hud-player-deck-count-value-${player.player}`}>
               {player.deckCount}
             </dd>
           </div>
-          <div data-cy="duel-hud-player-extra-count-row">
-            <dt data-cy="duel-hud-player-extra-count-label">Extra</dt>
-            <dd data-cy="duel-hud-player-extra-count-value">
+          <div data-cy={`duel-hud-player-extra-count-row-${player.player}`}>
+            <dt data-cy={`duel-hud-player-extra-count-label-${player.player}`}>
+              Extra
+            </dt>
+            <dd data-cy={`duel-hud-player-extra-count-value-${player.player}`}>
               {player.extraDeckCount}
             </dd>
           </div>
-          <div data-cy="duel-hud-player-hand-count-row">
-            <dt data-cy="duel-hud-player-hand-count-label">Hand</dt>
-            <dd data-cy="duel-hud-player-hand-count-value">
+          <div data-cy={`duel-hud-player-hand-count-row-${player.player}`}>
+            <dt data-cy={`duel-hud-player-hand-count-label-${player.player}`}>
+              Hand
+            </dt>
+            <dd data-cy={`duel-hud-player-hand-count-value-${player.player}`}>
               {player.handCount}
             </dd>
           </div>
         </dl>
-        <div class="duel-hud__trays" data-cy="duel-hud-player-trays">
+        <div
+          class="duel-hud__trays"
+          data-cy={`duel-hud-player-trays-${player.player}`}
+        >
           <CardTray
             label={player.player === 0 ? "Your Deck" : "Opponent Deck"}
             player={player.player}
@@ -190,20 +205,23 @@
               data-cy={`duel-hud-card-inspect-button-${card.instanceId}`}
               >{cardName(card)}</button
             >
-            <span data-cy="duel-hud-card-position">{words(card.position)}</span>
+            <span data-cy={`duel-hud-card-position-${card.instanceId}`}
+              >{words(card.position)}</span
+            >
             {#if card.counters.length > 0}
               <ul
                 class="state-badges"
                 aria-label={`Counters on ${cardName(card)}`}
-                data-cy="duel-hud-card-counters-list"
+                data-cy={`duel-hud-card-counters-list-${card.instanceId}`}
               >
                 {#each card.counters as counter (`${counter.type}:${counter.name}`)}
                   <li
-                    data-cy={`duel-hud-card-counter-${counter.type}-${counter.name}`}
+                    data-cy={`duel-hud-card-counter-${card.instanceId}-${counter.type}-${counter.name}`}
                   >
                     <span
                       aria-hidden="true"
-                      data-cy="duel-hud-card-counter-icon">◆</span
+                      data-cy={`duel-hud-card-counter-icon-${card.instanceId}-${counter.type}-${counter.name}`}
+                      >◆</span
                     >
                     {counterLabel(counter.name, counter.count)}
                   </li>
@@ -213,9 +231,10 @@
             {#if card.overlayMaterials.length > 0}
               <div
                 class="material-summary"
-                data-cy="duel-hud-card-material-summary"
+                data-cy={`duel-hud-card-material-summary-${card.instanceId}`}
               >
-                <strong data-cy="duel-hud-card-material-count"
+                <strong
+                  data-cy={`duel-hud-card-material-count-${card.instanceId}`}
                   >{card.overlayMaterials.length}
                   {card.overlayMaterials.length === 1
                     ? "material"
@@ -223,7 +242,7 @@
                 >
                 <ol
                   aria-label={`Materials on ${cardName(card)}`}
-                  data-cy="duel-hud-card-materials-list"
+                  data-cy={`duel-hud-card-materials-list-${card.instanceId}`}
                 >
                   {#each card.overlayMaterials as material, index (material.instanceId)}
                     <li

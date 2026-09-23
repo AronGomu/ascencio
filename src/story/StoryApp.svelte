@@ -1099,6 +1099,7 @@
         </section>{/if}
     {:else if state.screen === "pre-battle"}
       <PreBattleScreen
+        opponentName={encounterLabel}
         allowReturn={true}
         decks={preBattleDeckChoices}
         deckRecords={state.decks}

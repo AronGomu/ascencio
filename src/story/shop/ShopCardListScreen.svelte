@@ -124,11 +124,13 @@
           </h2>
         {/if}
         {#each section.cards as card (card.key)}
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex (card details stay keyboard-previewable even when buying is disabled) -->
           <div
             class="card-tile rarity-halo"
             data-cy={`story-shop-card-${encodeURIComponent(card.key)}`}
             data-rarity={card.rarity}
             role="group"
+            tabindex="0"
             aria-label={card.name}
             onmouseenter={() => {
               previewKey = card.key;

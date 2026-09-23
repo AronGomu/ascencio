@@ -122,6 +122,7 @@ afterEach(() => {
   workerClientSpies.startDuel.mockReset();
   workerClientSpies.respond.mockReset();
   mockedWorkerClientCtor.instances.length = 0;
+  window.history.replaceState({}, "", "/");
 });
 
 async function renderReadyApp(imageSource: CardImageSource | null = null) {
@@ -296,6 +297,203 @@ const SHARED_ZONE_PLACE_PROMPT: PlayerPrompt = {
   cancelable: false,
   ordered: false,
 };
+
+describe("App field failure prompt lifecycle", () => {
+  function placePrompt(): PlayerPrompt {
+    return {
+      ...SHARED_ZONE_PLACE_PROMPT,
+      kind: "selectCard",
+      choices: [0, 1].map((sequence) => ({
+        id: choiceId(`fallback-place-${sequence}`),
+        label: `Card ${sequence}`,
+        action: "select" as const,
+        card: {
+          instanceId: publicStateCard(
+            `fallback-${sequence}`,
+            97590747,
+            0,
+            "monster",
+            sequence,
+          ).instanceId,
+          controller: 0 as const,
+          location: "monster" as const,
+          sequence,
+        },
+      })),
+    };
+  }
+
+  async function failedField() {
+    window.history.replaceState({}, "", "/?duelFieldFailure=once");
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState({
+      ...EMPTY_SNAPSHOT,
+      players: [
+        {
+          ...EMPTY_SNAPSHOT.players[0],
+          monsters: [0, 1].map((sequence) =>
+            publicStateCard(
+              `fallback-${sequence}`,
+              97590747,
+              0,
+              "monster",
+              sequence,
+            ),
+          ),
+        },
+        EMPTY_SNAPSHOT.players[1],
+      ],
+    });
+    emitPrompt(placePrompt());
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-cy="duel-field-error-boundary-panel"]'),
+      ).not.toBeNull(),
+    );
+    return user;
+  }
+
+  it("submits a field-capable prompt through fallback while field rendering failed", async () => {
+    workerClientSpies.respond.mockReturnValue(true);
+    const user = await failedField();
+    const choice = await vi.waitFor(() => {
+      const target = document.querySelector<HTMLButtonElement>(
+        '[data-cy="prompt-controls-choice-fallback-place-1"]',
+      );
+      expect(target).not.toBeNull();
+      return target!;
+    });
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+    await user.click(choice);
+    await user.click(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="prompt-controls-multiple-confirm-button"]',
+      )!,
+    );
+    expect(workerClientSpies.respond).toHaveBeenCalledExactlyOnceWith(
+      SHARED_ZONE_PLACE_PROMPT.id,
+      [choiceId("fallback-place-1")],
+    );
+  });
+
+  it("keeps live duel actions outside Settings keyboard traversal", async () => {
+    const user = userEvent.setup();
+    await renderReadyApp();
+    await startDuelFromPicker(user);
+    emitDuelState({
+      ...EMPTY_SNAPSHOT,
+      players: [
+        {
+          ...EMPTY_SNAPSHOT.players[0],
+          monsters: [0, 1].map((sequence) =>
+            publicStateCard(
+              `fallback-${sequence}`,
+              97590747,
+              0,
+              "monster",
+              sequence,
+            ),
+          ),
+        },
+        EMPTY_SNAPSHOT.players[1],
+      ],
+    });
+    emitPrompt(placePrompt());
+    const options = await vi.waitFor(() => {
+      const button = document.querySelector<HTMLButtonElement>(
+        '[data-cy="duel-right-rail-options"]',
+      );
+      expect(button).not.toBeNull();
+      return button!;
+    });
+    await user.click(options);
+    await user.click(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="menu-dialog-settings-button"]',
+      )!,
+    );
+    const first = document.querySelector<HTMLInputElement>(
+      '[data-cy="settings-show-duel-hud-checkbox"]',
+    )!;
+    const last = document.querySelector<HTMLButtonElement>(
+      '[data-cy="settings-dialog-close-button"]',
+    )!;
+    first.focus();
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(last);
+    await user.tab();
+    expect(document.activeElement).toBe(first);
+    expect(
+      document
+        .querySelector('[data-cy="field-card-fallback-0"]')
+        ?.closest("[inert]"),
+    ).not.toBeNull();
+    await user.keyboard(" ");
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+    await user.keyboard("{Escape}");
+    expect(document.activeElement).toBe(options);
+    expect(options.closest("[inert]")).toBeNull();
+  });
+
+  it.each([false, true])(
+    "isolates prompt surfaces mounted while Settings is open (portaled=%s)",
+    async (portaled) => {
+      const user = userEvent.setup();
+      const rendered = await renderReadyApp();
+      if (portaled) rendered.container.classList.add("shell-region--duel");
+      await startDuelFromPicker(user);
+      emitDuelState(EMPTY_SNAPSHOT);
+      emitPrompt(placePrompt());
+      await tick();
+      await user.click(
+        document.querySelector<HTMLButtonElement>(
+          '[data-cy="duel-right-rail-options"]',
+        )!,
+      );
+      await user.click(
+        document.querySelector<HTMLButtonElement>(
+          '[data-cy="menu-dialog-settings-button"]',
+        )!,
+      );
+      const toggle = document.querySelector<HTMLInputElement>(
+        '[data-cy="settings-show-workspace-checkbox"]',
+      )!;
+      await user.click(toggle);
+      const workspace = document.querySelector('[data-cy="workspace-grid"]')!;
+      expect(workspace).not.toBeNull();
+      expect(workspace.closest("[inert]")).not.toBeNull();
+      await user.click(toggle);
+      const prompt = document.querySelector('[data-cy="prompt-dialog"]')!;
+      expect(prompt).not.toBeNull();
+      expect(prompt.closest("[inert]")).not.toBeNull();
+      expect(document.activeElement).toBe(toggle);
+      await user.keyboard(" ");
+      expect(workerClientSpies.respond).not.toHaveBeenCalled();
+      await user.keyboard("{Escape}");
+      expect(document.querySelector('[data-cy="settings-dialog"]')).toBeNull();
+      expect(
+        document.querySelector('[data-cy="app-main"]')?.closest("[inert]"),
+      ).toBeNull();
+    },
+  );
+
+  it("removes fallback after retry restores field rendering", async () => {
+    const user = await failedField();
+    expect(document.querySelector('[data-cy="prompt-dialog"]')).not.toBeNull();
+    await user.click(
+      document.querySelector<HTMLButtonElement>(
+        '[data-cy="prompt-dialog-retry-field"]',
+      )!,
+    );
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-cy="duel-field"]')).not.toBeNull(),
+    );
+    expect(document.querySelector('[data-cy="prompt-dialog"]')).toBeNull();
+    expect(workerClientSpies.respond).not.toHaveBeenCalled();
+  });
+});
 
 async function startLinkFreeConflict(
   user: ReturnType<typeof userEvent.setup>,

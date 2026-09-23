@@ -42,7 +42,85 @@
         }`;
 
   onMount(() => {
+    const trigger = document.activeElement;
+    const isolated: HTMLElement[] = [];
+    let lastFocus: HTMLElement | null = null;
+    /* Settings can mount workspace controls or a new portaled prompt. Follow
+       live ancestry and watch its siblings, not just the initial DOM. */
+    function isolateBackground(): void {
+      let branch = panel?.parentElement;
+      while (branch && branch !== document.body) {
+        for (const sibling of branch.parentElement?.children ?? []) {
+          if (
+            sibling instanceof HTMLElement &&
+            sibling !== branch &&
+            !sibling.hasAttribute("inert")
+          ) {
+            sibling.setAttribute("inert", "");
+            isolated.push(sibling);
+          }
+        }
+        branch = branch.parentElement;
+      }
+    }
+    function restoreFocus(): void {
+      const target =
+        lastFocus?.isConnected &&
+        panel?.contains(lastFocus) &&
+        !lastFocus.matches(":disabled")
+          ? lastFocus
+          : panel?.querySelector<HTMLElement>(
+              ":is(button, input):not(:disabled)",
+            );
+      target?.focus();
+    }
+    function containFocus(event: FocusEvent): void {
+      if (
+        event.target instanceof HTMLElement &&
+        panel?.contains(event.target)
+      ) {
+        lastFocus = event.target;
+      } else {
+        // A newly mounted prompt may focus before the observer runs.
+        isolateBackground();
+        restoreFocus();
+      }
+    }
+    isolateBackground();
+    const observer = new MutationObserver(() => {
+      isolateBackground();
+      if (
+        !panel?.contains(document.activeElement) ||
+        document.activeElement?.matches(":disabled")
+      ) {
+        restoreFocus();
+      }
+    });
+    if (panel) {
+      observer.observe(panel, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["disabled"],
+      });
+    }
+    let ancestor = panel?.parentElement?.parentElement;
+    while (ancestor) {
+      observer.observe(ancestor, { childList: true });
+      if (ancestor === document.body) break;
+      ancestor = ancestor.parentElement;
+    }
+    document.addEventListener("focusin", containFocus, true);
     panel?.querySelector("button")?.focus();
+    document.addEventListener("keydown", handleKeydown, true);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("focusin", containFocus, true);
+      document.removeEventListener("keydown", handleKeydown, true);
+      for (const element of isolated) element.removeAttribute("inert");
+      if (trigger instanceof HTMLElement && trigger.isConnected)
+        trigger.focus();
+    };
   });
 
   function handleBackdropClick(event: MouseEvent): void {
@@ -52,7 +130,21 @@
   function handleKeydown(event: KeyboardEvent): void {
     if (event.key === "Escape") {
       event.preventDefault();
+      event.stopPropagation();
       onclose();
+    } else if (event.key === "Tab") {
+      const controls = panel?.querySelectorAll<HTMLElement>(
+        ":is(button, input):not(:disabled)",
+      );
+      const first = controls?.[0];
+      const last = controls?.[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
     }
   }
 
@@ -91,12 +183,10 @@
   }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
-<!-- svelte-ignore a11y_click_events_have_key_events (Escape is handled globally via svelte:window) -->
+<!-- svelte-ignore a11y_click_events_have_key_events (Escape is handled by the modal's document listener) -->
 <!-- svelte-ignore a11y_no_static_element_interactions (backdrop only dismisses; the dialog panel holds all interactive content) -->
 <div
-  class="dialog-backdrop"
+  class="dialog-backdrop settings-backdrop"
   data-cy="settings-dialog-backdrop"
   use:portalDuelDialog
   onclick={handleBackdropClick}
@@ -224,3 +314,10 @@
     >
   </div>
 </div>
+
+<style>
+  /* A prompt portaled while Settings is open remains behind this modal. */
+  .settings-backdrop {
+    z-index: calc(var(--duel-field-layer-menu) + 1);
+  }
+</style>

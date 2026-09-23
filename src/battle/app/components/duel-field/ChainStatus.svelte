@@ -19,15 +19,21 @@
         <li data-cy={`chain-status-link-${link.index}`}>
           <p
             class="chain-status__provenance"
-            data-cy="chain-status-link-provenance"
+            data-cy={`chain-status-link-provenance-${link.index}`}
           >
             Link {link.index} · {link.controller === 0 ? "You" : "Opponent"}
           </p>
-          <strong data-cy="chain-status-link-label">{link.label}</strong>
-          <span class="chain-status__state" data-cy="chain-status-link-state"
+          <strong data-cy={`chain-status-link-label-${link.index}`}
+            >{link.label}</strong
+          >
+          <span
+            class="chain-status__state"
+            data-cy={`chain-status-link-state-${link.index}`}
             >{link.phase} · {link.outcome}</span
           >
-          {#if link.description}<p data-cy="chain-status-link-description">
+          {#if link.description}<p
+              data-cy={`chain-status-link-description-${link.index}`}
+            >
               {link.description}
             </p>{/if}
         </li>

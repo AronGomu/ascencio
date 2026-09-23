@@ -261,6 +261,30 @@ describe("ShopCardListScreen", () => {
     expect(onbuysingle).toHaveBeenCalledWith(111, "common");
   });
 
+  it("keeps unaffordable cards keyboard-previewable without purchasing", async () => {
+    const onbuysingle = vi.fn();
+    const { container } = render(ShopCardListScreen, {
+      cards: FIVE_CARDS,
+      dp: 0,
+      onbuysingle,
+    });
+    const user = userEvent.setup();
+    const second = container.querySelector('[data-cy="story-shop-card-222"]');
+    for (let step = 0; step < 12 && document.activeElement !== second; step++) {
+      await user.tab();
+    }
+    expect(document.activeElement).toBe(second);
+    expect(
+      container.querySelector('[data-cy="story-shop-card-preview-text"]')
+        ?.textContent,
+    ).toContain(FIVE_CARDS[1]!.description);
+    expect(
+      container.querySelector('[data-cy="story-shop-card-buy-222"]'),
+    ).toHaveProperty("disabled", true);
+    await user.keyboard("{Enter} ");
+    expect(onbuysingle).not.toHaveBeenCalled();
+  });
+
   it("poor wallet disables singles", () => {
     const { container } = render(ShopCardListScreen, {
       setName: "LOB",

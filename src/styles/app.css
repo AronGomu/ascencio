@@ -2581,7 +2581,10 @@ button.duel-field-zone,
 .duel-field-card {
   z-index: var(--duel-field-layer-card);
   min-width: 2.75rem;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow) 55%, transparent);
+  box-shadow: var(
+    --field-card-shadow,
+    0 2px 8px color-mix(in srgb, var(--shadow) 55%, transparent)
+  );
   min-height: 2.75rem;
   margin: 0;
   pointer-events: auto;
@@ -2589,8 +2592,9 @@ button.duel-field-zone,
   transition: transform 120ms ease-out;
 }
 
-.duel-field-board[data-card-shadows="false"] .duel-field-card {
-  box-shadow: none;
+.duel-field-board[data-card-shadows="false"] {
+  --field-card-shadow: none;
+  --field-card-art-shadow: none;
 }
 
 /* Hovered/focused/pinned card parent rises above normal card/stack/zone
@@ -2786,8 +2790,10 @@ button.duel-field-zone,
   border: 1px solid color-mix(in srgb, var(--field-card-edge) 78%, transparent);
   border-radius: 0.28rem;
   background: var(--surface-strong);
-  box-shadow: 0 0.35rem 0.8rem
-    color-mix(in srgb, var(--shadow) 32%, transparent);
+  box-shadow: var(
+    --field-card-art-shadow,
+    0 0.35rem 0.8rem color-mix(in srgb, var(--shadow) 32%, transparent)
+  );
   transform: translateX(calc((var(--material-index) + 1) * 12%));
   pointer-events: none;
 }
@@ -2810,8 +2816,10 @@ button.duel-field-zone,
   border: 1px solid color-mix(in srgb, var(--field-card-edge) 78%, transparent);
   border-radius: 0.28rem;
   background: var(--surface-strong);
-  box-shadow: 0 0.35rem 0.8rem
-    color-mix(in srgb, var(--shadow) 32%, transparent);
+  box-shadow: var(
+    --field-card-art-shadow,
+    0 0.35rem 0.8rem color-mix(in srgb, var(--shadow) 32%, transparent)
+  );
   transform-origin: center;
 }
 

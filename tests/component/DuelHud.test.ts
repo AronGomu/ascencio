@@ -16,6 +16,65 @@ import {
 afterEach(() => cleanup());
 
 describe("DuelHud", () => {
+  it("gives repeated player, card, counter, material and chain details stable unique selectors", async () => {
+    const host = RICH_PUBLIC_DUEL_STATE.players[0].monsters[0]!;
+    const second = {
+      ...host,
+      instanceId: "second-host" as typeof host.instanceId,
+      sequence: 1,
+      overlayMaterials: host.overlayMaterials.map((material) => ({
+        ...material,
+        instanceId:
+          `second-${material.instanceId}` as typeof material.instanceId,
+      })),
+    };
+    const snapshot = {
+      ...RICH_PUBLIC_DUEL_STATE,
+      chain: RICH_PUBLIC_DUEL_STATE.chain.map((link) => ({
+        ...link,
+        description: `Public description for link ${link.index}.`,
+      })),
+      players: [
+        { ...RICH_PUBLIC_DUEL_STATE.players[0], monsters: [host, second] },
+        RICH_PUBLIC_DUEL_STATE.players[1],
+      ] as typeof RICH_PUBLIC_DUEL_STATE.players,
+    };
+    const { container, rerender } = render(DuelHud, { snapshot });
+    const selectors = () =>
+      [...container.querySelectorAll("[data-cy]")].map((node) =>
+        node.getAttribute("data-cy"),
+      );
+    const initial = selectors();
+    expect(new Set(initial).size).toBe(initial.length);
+    for (const link of snapshot.chain) {
+      for (const [role, text] of [
+        ["provenance", `Link ${link.index}`],
+        ["label", link.label],
+        ["state", `${link.phase} · ${link.outcome}`],
+        ["description", link.description],
+      ]) {
+        expect(
+          container.querySelector(
+            `[data-cy="chain-status-link-${role}-${link.index}"]`,
+          )?.textContent,
+        ).toContain(text);
+      }
+    }
+    expect(initial).toContain(
+      `duel-hud-card-counter-icon-${host.instanceId}-${host.counters[0]!.type}-${host.counters[0]!.name}`,
+    );
+    await rerender({
+      snapshot: {
+        ...snapshot,
+        chain: [...snapshot.chain].reverse(),
+        players: [
+          { ...snapshot.players[0], monsters: [second, host] },
+          snapshot.players[1],
+        ],
+      },
+    });
+    expect(selectors().sort()).toEqual(initial.sort());
+  });
   it("renders truthful LP, turn, phase, chain provenance/status, counters, and materials", () => {
     render(DuelHud, {
       snapshot: RICH_PUBLIC_DUEL_STATE,

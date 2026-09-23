@@ -2035,7 +2035,9 @@ describe("DuelField", () => {
       mountedChoice("activate", "Activate", { action: "activate" }),
     ]);
     const spec = activeSpec(value);
-    render(DuelFieldErrorBoundary, {
+    const onfailurechange = vi.fn();
+    const rendered = render(DuelFieldErrorBoundary, {
+      onfailurechange,
       board: board("ST-05"),
       cardBackUrl: "",
       placeholderUrl: "",
@@ -2055,8 +2057,58 @@ describe("DuelField", () => {
     expect(document.body.textContent).not.toContain(
       "Injected duel field component failure",
     );
+    expect(onfailurechange).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
     await user.click(screen.getByRole("button", { name: "Retry duel field" }));
     expect(screen.getByRole("region", { name: "Duel field" })).toBeTruthy();
+    expect(onfailurechange).toHaveBeenLastCalledWith(false);
+    onfailurechange.mockClear();
+    rendered.unmount();
+    expect(onfailurechange).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it("keeps fallback enabled after retry fails again, then clears it on recovery", async () => {
+    const value = fieldPrompt("idleCommand", [
+      mountedChoice("activate", "Activate", { action: "activate" }),
+    ]);
+    const spec = activeSpec(value);
+    const current = board("ST-05");
+    const broken: BoardViewModel = {
+      ...current,
+      get cards(): BoardViewModel["cards"] {
+        throw new Error("Private render detail");
+      },
+    };
+    const onfailurechange = vi.fn();
+    const rendered = render(DuelFieldErrorBoundary, {
+      board: broken,
+      cardBackUrl: "",
+      placeholderUrl: "",
+      prompt: value,
+      spec,
+      session: createInteractionSession(spec),
+      pending: false,
+      oninteraction: vi.fn(),
+      onfailurechange,
+    });
+    expect(onfailurechange).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Retry duel field" }));
+    expect(onfailurechange.mock.calls.map(([failed]) => failed)).toEqual([
+      true,
+      false,
+      true,
+    ]);
+    expect(document.body.textContent).not.toContain("Private render detail");
+    await rendered.rerender({ board: current });
+    await user.click(screen.getByRole("button", { name: "Retry duel field" }));
+    expect(screen.getByRole("region", { name: "Duel field" })).toBeTruthy();
+    expect(onfailurechange).toHaveBeenLastCalledWith(false);
   });
 
   it("shows final feedback classes and an aria-hidden pointer-transparent SVG line", async () => {

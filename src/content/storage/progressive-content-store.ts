@@ -110,10 +110,12 @@ class BrowserProgressiveContentStore implements ProgressiveContentStore {
         fail("CONTENT_CANCELLED");
       fail("CONTENT_NETWORK_FAILED");
     }
-    if (!response.ok)
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => undefined);
       fail(
         response.status === 404 ? "CONTENT_MISSING" : "CONTENT_NETWORK_FAILED",
       );
+    }
     try {
       return await responseBytes(response, maximum, expected, signal);
     } catch (error) {
@@ -516,16 +518,19 @@ class BrowserProgressiveContentStore implements ProgressiveContentStore {
         tx.done,
       ]);
       const jobs = await Promise.all(
-        rows.map((row, index) =>
-          persistedDownloadJob(row, keys[index], (version) =>
+        rows.map(async (row, index) => {
+          const job = await persistedDownloadJob(row, keys[index], (version) =>
             this.readManifest(version),
-          ),
-        ),
+          );
+          return pauseInterruptedJob(this, job);
+        }),
       );
       return Object.freeze(
-        jobs.sort((left, right) =>
-          compare(left.request.jobId, right.request.jobId),
-        ),
+        jobs
+          .filter((job): job is DownloadJob => job !== null)
+          .sort((left, right) =>
+            compare(left.request.jobId, right.request.jobId),
+          ),
       );
     });
   }
@@ -598,42 +603,44 @@ class BrowserProgressiveContentStore implements ProgressiveContentStore {
   }
 }
 
-async function pauseInterruptedJobs(
+async function pauseInterruptedJob(
   store: BrowserProgressiveContentStore,
-): Promise<void> {
+  job: DownloadJob,
+): Promise<DownloadJob | null> {
+  if (
+    job.progress.phase !== "running" ||
+    store.activeJobs.has(job.request.jobId)
+  )
+    return job;
   const db = store.db;
-  const running = (await store.listJobs()).filter(
-    (job) => job.progress.phase === "running",
+  const pause = async (): Promise<DownloadJob | null> => {
+    const row = await db.get("jobs", job.request.jobId);
+    if (row === undefined) return null;
+    const observed = await persistedDownloadJob(
+      row,
+      job.request.jobId,
+      (version) => store.readManifest(version),
+    );
+    if (observed.progress.phase !== "running") return observed;
+    const paused = immutableJob({
+      ...observed,
+      progress: { ...observed.progress, phase: "paused" },
+    });
+    // Cleanup holds the application download lock, not this per-job lock.
+    // Compare/write atomically so enumeration cannot resurrect a cleared row.
+    const tx = db.transaction("jobs", "readwrite");
+    const current = await tx.store.get(observed.request.jobId);
+    const unchanged = same(current, row);
+    if (unchanged) await tx.store.put(paused, observed.request.jobId);
+    await tx.done;
+    return current === undefined ? null : unchanged ? paused : job;
+  };
+  if (!globalThis.navigator?.locks) return pause();
+  return navigator.locks.request(
+    downloadJobLock(job.request.jobId),
+    { mode: "exclusive", ifAvailable: true },
+    (lock) => (lock ? pause() : job),
   );
-  for (const job of running) {
-    const pause = async (): Promise<void> => {
-      const row = await db.get("jobs", job.request.jobId);
-      if (row === undefined) return;
-      const observed = await persistedDownloadJob(
-        row,
-        job.request.jobId,
-        (version) => store.readManifest(version),
-      );
-      if (observed.progress.phase === "running")
-        await db.put(
-          "jobs",
-          {
-            ...observed,
-            progress: { ...observed.progress, phase: "paused" },
-          },
-          observed.request.jobId,
-        );
-    };
-    if (!globalThis.navigator?.locks) await pause();
-    else
-      await navigator.locks.request(
-        downloadJobLock(job.request.jobId),
-        { mode: "exclusive", ifAvailable: true },
-        async (lock) => {
-          if (lock) await pause();
-        },
-      );
-  }
 }
 
 export async function openProgressiveContentStore(
@@ -648,7 +655,6 @@ export async function openProgressiveContentStore(
     try {
       const cache = await caches.open(PROGRESSIVE_CONTENT_CACHE_NAME);
       const store = new BrowserProgressiveContentStore(db, cache, baseUrl);
-      await pauseInterruptedJobs(store);
       return store;
     } catch (error) {
       db.close();

@@ -16,19 +16,30 @@ declare global {
     releaseLease: () => void;
     legacyBattle: IDBDatabase;
     battleBlocked: boolean;
-    installAbort: AbortController;
   }
 }
+const fixtureDocument = "/__content-installer-fixture";
+test.beforeEach(async ({ context }) => {
+  // Keep fixture storage isolated from live Shell boot, including reload/new-page recovery.
+  await context.route(`**${fixtureDocument}`, (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<!doctype html><title>Content installer fixture</title>",
+    }),
+  );
+});
+
 async function boot(page: Page, realActivation = false) {
   const fixture = await contentInstallFixture({ realRuntime: realActivation });
+  const baseUrl = new URL("/", test.info().project.use.baseURL!).href;
   fixture.bootstrap = {
     ...fixture.bootstrap,
     delivery: {
       ...fixture.bootstrap.delivery!,
-      baseUrl: "http://127.0.0.1:4402/",
+      baseUrl,
     },
   };
-  await page.route("http://127.0.0.1:4402/content/**", async (route) => {
+  await page.route(`${baseUrl}content/**`, async (route) => {
     const bytes = fixture.objects.get(
       new URL(route.request().url()).pathname.slice(1),
     );
@@ -37,7 +48,7 @@ async function boot(page: Page, realActivation = false) {
       body: bytes ? Buffer.from(bytes) : "missing",
     });
   });
-  await page.goto("/");
+  await page.goto(fixtureDocument);
   await initialize(page, fixture.bootstrap, realActivation);
   return fixture;
 }
@@ -57,7 +68,9 @@ async function initialize(
         activation: realActivation
           ? (
               await import(
-                /* @vite-ignore */ String("/src/battle/content-activation.ts")
+                /* @vite-ignore */ String(
+                  "/src/shell/adapters/runtime-activation.ts",
+                )
               )
             ).createRuntimeActivationPort()
           : {
@@ -352,7 +365,7 @@ test("installer prepared receipt orphan never grants readiness after page crash"
     );
     const receipts = await import(
       /* @vite-ignore */ String(
-        "/src/battle/storage/installed-runtime-receipt.ts",
+        "/src/shell/adapters/legacy-installed-runtime-receipt.ts",
       )
     );
     const result = await api.createContentInstaller({
@@ -415,7 +428,7 @@ test("installer prepared receipt orphan never grants readiness after page crash"
     });
   await page.close();
   const reopened = await context.newPage();
-  await reopened.goto("/");
+  await reopened.goto(fixtureDocument);
   await initialize(reopened, fixture.bootstrap);
   expect(
     await reopened.evaluate(() => window.contentInstaller.current()),
@@ -427,7 +440,7 @@ test("installer prepared receipt orphan never grants readiness after page crash"
     await reopened.evaluate(async (content) => {
       const receipts = await import(
         /* @vite-ignore */ String(
-          "/src/battle/storage/installed-runtime-receipt.ts",
+          "/src/shell/adapters/legacy-installed-runtime-receipt.ts",
         )
       );
       return receipts.readInstalledRuntimeReceipt(
@@ -438,149 +451,91 @@ test("installer prepared receipt orphan never grants readiness after page crash"
   ).toMatchObject({ kind: "ok", value: { kind: "installed-runtime-v1" } });
 });
 
-for (const abort of [false, true]) {
-  test(`atomic Battle v3 blocked legacy tab ${abort ? "abort settles" : "fails bounded"} without late upgrade`, async ({
-    page,
-  }) => {
-    const legacy = await page.context().newPage();
-    await legacy.goto("/");
-    await legacy.evaluate(async () => {
-      window.battleBlocked = false;
-      window.legacyBattle = await new Promise<IDBDatabase>(
-        (resolve, reject) => {
-          const request = indexedDB.open("ygo-story-duel", 2);
-          request.onupgradeneeded = () => {
-            for (const [name, keyPath] of [
-              ["snapshots", "snapshotId"],
-              ["pointers", "name"],
-              ["preferences", "key"],
-              ["debugRuns", "id"],
-            ] as const)
-              request.result.createObjectStore(name, { keyPath });
-          };
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () => resolve(request.result);
-        },
-      );
-      window.legacyBattle.onversionchange = () => {
-        window.battleBlocked = true;
+test("Shell runtime activation leaves an open legacy Battle v2 database untouched", async ({
+  page,
+}) => {
+  const legacy = await page.context().newPage();
+  await legacy.goto(fixtureDocument);
+  await legacy.evaluate(async () => {
+    window.battleBlocked = false;
+    window.legacyBattle = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("ygo-story-duel", 2);
+      request.onupgradeneeded = () => {
+        for (const [name, keyPath] of [
+          ["snapshots", "snapshotId"],
+          ["pointers", "name"],
+          ["preferences", "key"],
+          ["debugRuns", "id"],
+        ] as const)
+          request.result.createObjectStore(name, { keyPath });
       };
-      const tx = window.legacyBattle.transaction("preferences", "readwrite");
-      tx.objectStore("preferences").put({ key: "legacy", value: "preserved" });
-      await new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => resolve();
-        tx.onabort = () => reject(tx.error);
-      });
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
     });
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
+    window.legacyBattle.onversionchange = () => {
+      window.battleBlocked = true;
+    };
+    const tx = window.legacyBattle.transaction("preferences", "readwrite");
+    tx.objectStore("preferences").put({ key: "legacy", value: "preserved" });
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error);
+    });
+  });
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  try {
     const fixture = await boot(page, true);
-    await page.evaluate((abort) => {
-      window.installAbort = new AbortController();
-      if (abort) {
-        const original = indexedDB.open.bind(indexedDB);
-        indexedDB.open = function (name: string, version?: number) {
-          const request =
-            version === undefined ? original(name) : original(name, version);
-          if (name === "ygo-story-duel" && version === 3)
-            request.addEventListener("blocked", () =>
-              window.installAbort.abort(),
-            );
-          return request;
-        };
-      }
-    }, abort);
-    const pending = page.evaluate(() =>
-      window.contentInstaller.download(
-        { kind: "all-published" },
-        () => undefined,
-        window.installAbort.signal,
-      ),
-    );
-    try {
-      await expect
-        .poll(() => legacy.evaluate(() => window.battleBlocked))
-        .toBe(true);
-      const result = await Promise.race([
-        pending,
-        new Promise((resolve) => setTimeout(() => resolve(null), 1500)),
-      ]);
-      expect(result).toMatchObject(
-        abort
-          ? { kind: "paused" }
-          : { kind: "failed", code: "CONTENT_STORAGE_UNAVAILABLE" },
-      );
-      expect(
-        await page.evaluate(() => window.contentInstaller.current()),
-      ).toMatchObject({ value: { generation: 0, current: null } });
-      expect(await page.evaluate(() => navigator.locks.query())).toMatchObject({
-        held: [],
-      });
-      if (!abort) {
-        const read = page.evaluate(
-          async ({ snapshot, runtime }) =>
-            (
-              await import(
-                /* @vite-ignore */ String(
-                  "/src/battle/storage/installed-runtime-receipt.ts",
-                )
-              )
-            ).readInstalledRuntimeReceipt(snapshot, runtime),
-          { snapshot: fixture.content.snapshot, runtime: fixture.runtime.ref },
+    expect((await install(page)).kind).toBe("complete");
+    expect(
+      await page.evaluate(() => window.contentInstaller.current()),
+    ).toMatchObject({ value: { generation: 1 } });
+    expect(
+      await page.evaluate(async (content) => {
+        const receipts = await import(
+          /* @vite-ignore */ String(
+            "/src/shell/adapters/legacy-installed-runtime-receipt.ts",
+          )
         );
-        expect(
-          await Promise.race([
-            read,
-            new Promise((resolve) => setTimeout(() => resolve(null), 6000)),
-          ]),
-        ).toMatchObject({
-          kind: "failed",
-          code: "CONTENT_STORAGE_UNAVAILABLE",
-        });
-      }
-    } finally {
-      await legacy.close();
-      await pending;
-    }
-    const state = await page.evaluate(
-      () =>
-        new Promise((resolve, reject) => {
-          const request = indexedDB.open("ygo-story-duel");
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () => {
-            const db = request.result;
+        return receipts.readInstalledRuntimeReceipt(
+          content.snapshot,
+          content.runtime,
+        );
+      }, fixture.content),
+    ).toMatchObject({ kind: "ok", value: { kind: "installed-runtime-v1" } });
+    expect(await page.evaluate(() => navigator.locks.query())).toMatchObject({
+      held: [],
+    });
+    expect(
+      await legacy.evaluate(
+        () =>
+          new Promise((resolve, reject) => {
+            const db = window.legacyBattle;
             const tx = db.transaction("preferences", "readonly");
             const row = tx.objectStore("preferences").get("legacy");
-            tx.oncomplete = () => {
+            tx.oncomplete = () =>
               resolve({
+                blocked: window.battleBlocked,
                 version: db.version,
                 receiptStore: db.objectStoreNames.contains(
                   "installedRuntimeReceipts",
                 ),
                 preference: row.result,
               });
-              db.close();
-            };
-            tx.onabort = () => {
-              db.close();
-              reject(tx.error);
-            };
-          };
-        }),
-    );
-    expect(state).toEqual({
+            tx.onabort = () => reject(tx.error);
+          }),
+      ),
+    ).toEqual({
+      blocked: false,
       version: 2,
       receiptStore: false,
       preference: { key: "legacy", value: "preserved" },
     });
     expect(errors).toEqual([]);
-    expect((await install(page)).kind).toBe("complete");
-    expect(
-      await page.evaluate(() => window.contentInstaller.current()),
-    ).toMatchObject({ value: { generation: 1 } });
-    expect(errors).toEqual([]);
-  });
-}
+  } finally {
+    await legacy.close();
+  }
+});
 
 test("installer rejects present undefined invalid marker in real IndexedDB", async ({
   page,

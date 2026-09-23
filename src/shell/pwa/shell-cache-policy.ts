@@ -1,4 +1,5 @@
 export const SHELL_CACHE_PREFIX = "ygo-core-shell-";
+export const CORE_INSTALL_STATE_CACHE = "ygo-core-install-state-v1";
 
 export interface ShellPrecacheEntry {
   readonly url: string;
@@ -29,12 +30,9 @@ export function shellCacheName(buildId: string): string {
 
 export function isFirstCoreInstall(
   hasActiveWorker: boolean,
-  cacheNames: readonly string[],
+  hasCompletedInstall: boolean,
 ): boolean {
-  return (
-    !hasActiveWorker &&
-    !cacheNames.some((name) => name.startsWith(SHELL_CACHE_PREFIX))
-  );
+  return !hasActiveWorker && !hasCompletedInstall;
 }
 
 export function assertShellPrecacheEntries<

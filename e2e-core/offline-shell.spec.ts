@@ -146,7 +146,7 @@ for (const app of apps) {
   });
 }
 
-test("failed precache reports visible service worker failure", async ({
+test("failed first precache reports failure then retries without update approval", async ({
   page,
 }) => {
   const appUrl = apps[0].url;
@@ -167,6 +167,13 @@ test("failed precache reports visible service worker failure", async ({
       }),
     )
     .toEqual({ active: null, controlled: false });
+  expect((await cacheInventory(page)).names.length).toBeGreaterThan(0);
+  await selectShell(page, appUrl, "a");
+  await openControlled(page, appUrl);
+  await page.locator('[data-cy="main-menu-settings"]').click();
+  await expect(
+    page.locator('[data-cy="shell-settings-offline-status"]'),
+  ).toContainText("Offline reopening is ready");
 });
 
 test("cold service worker update waits for every old controlled tab", async ({

@@ -355,7 +355,8 @@ describe("progressive download jobs", () => {
     await expect(
       store.download(request, new AbortController().signal, () => undefined),
     ).rejects.toMatchObject(error("CONTENT_INTEGRITY_FAILED"));
-    await expect(open(null)).rejects.toMatchObject(
+    const reopened = await open(null);
+    await expect(reopened.listJobs()).rejects.toMatchObject(
       error("CONTENT_INTEGRITY_FAILED"),
     );
   });

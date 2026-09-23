@@ -34,11 +34,11 @@ describe("CORE shell precache policy", () => {
       ).toThrow(`CORE shell precache contains forbidden payload: ${url}`);
   });
 
-  it("exempts only a true first install with no active worker or old shell cache", () => {
-    expect(isFirstCoreInstall(false, [])).toBe(true);
-    expect(isFirstCoreInstall(true, [])).toBe(false);
-    expect(isFirstCoreInstall(false, ["ygo-core-shell-old"])).toBe(false);
-    expect(isFirstCoreInstall(false, ["unowned-cache"])).toBe(true);
+  it("exempts incomplete installs only without active or previously completed CORE", () => {
+    expect(isFirstCoreInstall(false, false)).toBe(true);
+    expect(isFirstCoreInstall(true, false)).toBe(false);
+    expect(isFirstCoreInstall(false, true)).toBe(false);
+    expect(isFirstCoreInstall(true, true)).toBe(false);
   });
 
   it("falls back only for the root or index document inside SW scope", () => {

@@ -353,4 +353,32 @@ describe("deck editor context binding", () => {
     expect(await libraryDeckNames()).not.toContain("Deck saved-one");
     expect(query("deck-editor-context-banner")).toBeNull();
   });
+
+  it("ignores a story context read that finishes after switching to free play", async () => {
+    await seedFreePlayDeck("free-one", "Free Deck One");
+    const pending = Promise.withResolvers<void>();
+    const storySaves = savesHolding(storySave(["saved-one"]));
+    const read = vi.fn(async (slot: StorySlotKey) => {
+      await pending.promise;
+      return await storySaves.read(slot);
+    });
+    const store = createShellStore("#/story/decks", () => undefined);
+    render(AppShell, {
+      ...storyShellProps(),
+      store,
+      loaders,
+      saves: { ...storySaves, read },
+      initialCoreGate: READY_CORE_GATE,
+    });
+    await vi.waitFor(() => expect(read).toHaveBeenCalled(), REAL_IMPORT);
+
+    store.syncFromHash("#/free-play/decks");
+    expect(await libraryDeckNames()).toContain("Free Deck One");
+    pending.resolve();
+
+    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2), REAL_IMPORT);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(query("deck-editor-context-banner")).toBeNull();
+    expect(await libraryDeckNames()).toContain("Free Deck One");
+  });
 });

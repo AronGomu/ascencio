@@ -143,7 +143,8 @@ export function advancedDeckCatalogOptions(
     families.add(card.family);
     if (card.attribute !== null) attributes.add(card.attribute);
     if (card.race !== null) races.add(card.race);
-    for (const subtype of card.subtypes) subtypes.add(subtype);
+    if (card.family === "monster")
+      for (const subtype of card.subtypes) subtypes.add(subtype);
     if (card.family === "spell") spellProperties.add(spellProperty(card));
     if (card.family === "trap") trapProperties.add(trapProperty(card));
     for (const marker of card.linkMarkers) linkMarkers.add(marker);
@@ -366,7 +367,10 @@ export function compileAdvancedDeckCatalogMatcher(
     if (filters.attribute !== null && card.attribute !== filters.attribute)
       return false;
     if (filters.race !== null && card.race !== filters.race) return false;
-    if (filters.summonFrame !== null && !hasSubtype(filters.summonFrame))
+    if (
+      filters.summonFrame !== null &&
+      (card.family !== "monster" || !hasSubtype(filters.summonFrame))
+    )
       return false;
     if (!filters.traits.every(hasSubtype)) return false;
     if (

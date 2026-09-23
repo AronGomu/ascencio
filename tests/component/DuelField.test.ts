@@ -1500,18 +1500,13 @@ describe("DuelField", () => {
     expect(rendered.container.querySelector('[role="menu"]')).toBeNull();
   });
 
-  it("toggles multi and optional-unselect drafts without submitting before explicit Confirm", async () => {
+  it("toggles multi-select drafts without submitting before explicit Confirm", async () => {
     const user = userEvent.setup();
     for (const [kind, choice, overrides] of [
       [
         "selectCard",
         mountedChoice("multi", "Select monster"),
         { minimum: 1, maximum: 2 },
-      ],
-      [
-        "selectUnselectCard",
-        mountedChoice("toggle", "Toggle monster"),
-        { minimum: 0, maximum: 1 },
       ],
     ] as const) {
       cleanup();

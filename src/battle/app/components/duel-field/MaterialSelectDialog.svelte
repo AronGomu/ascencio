@@ -14,6 +14,8 @@
   export let choices: readonly InteractionChoice[];
   export let minSelections: number;
   export let maxSelections: number;
+  export let toggleResponse = false;
+  export let onfinish: (() => void) | null = null;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null;
   export let cardBackUrl: string;
   export let disabled: boolean;
@@ -88,6 +90,10 @@
 
   function toggle(choiceId: ChoiceId): void {
     if (disabled) return;
+    if (toggleResponse) {
+      onconfirm([choiceId]);
+      return;
+    }
     if (selectedChoiceIds.includes(choiceId)) {
       selectedChoiceIds = selectedChoiceIds.filter((id) => id !== choiceId);
       return;
@@ -156,12 +162,22 @@
           ? minSelections
           : `${minSelections}-${maxSelections}`} selected</output
       >
-      <button
-        type="button"
-        disabled={!confirmEnabled}
-        onclick={() => onconfirm(selectedChoiceIds)}
-        data-cy="material-select-confirm">Confirm</button
-      >
+      {#if !toggleResponse}
+        <button
+          type="button"
+          disabled={!confirmEnabled}
+          onclick={() => onconfirm(selectedChoiceIds)}
+          data-cy="material-select-confirm">Confirm</button
+        >
+      {/if}
+      {#if onfinish !== null}
+        <button
+          type="button"
+          {disabled}
+          onclick={() => onfinish?.()}
+          data-cy="material-select-finish">Finish</button
+        >
+      {/if}
       {#if oncancel !== null}
         <button
           type="button"

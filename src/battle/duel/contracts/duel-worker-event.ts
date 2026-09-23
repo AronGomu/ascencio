@@ -1230,9 +1230,11 @@ function validateResult(value: unknown): void {
         ["type", "winner", "loser", "reason"],
         "result.completed",
       );
-      requirePlayer(result.winner, "result.winner");
-      requirePlayer(result.loser, "result.loser");
-      if (result.winner === result.loser) throw invalid("result players");
+      if (result.winner !== null || result.loser !== null) {
+        requirePlayer(result.winner, "result.winner");
+        requirePlayer(result.loser, "result.loser");
+        if (result.winner === result.loser) throw invalid("result players");
+      }
       requireSafeInteger(
         result.reason,
         "result.reason",

@@ -215,7 +215,10 @@ export function isPhaseTransitionChoice(
 export function isImmediateSingleSelection(
   spec: ActiveInteractionSpec,
 ): boolean {
-  return spec.constraints.minimum === 1 && spec.constraints.maximum === 1;
+  return (
+    spec.constraints.controlFamily === "toggle" ||
+    (spec.constraints.minimum === 1 && spec.constraints.maximum === 1)
+  );
 }
 
 /**

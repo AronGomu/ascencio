@@ -3,10 +3,69 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ShopGreetingScreen from "../../../src/story/shop/ShopGreetingScreen.svelte";
+import StoryTopBar from "../../../src/story/components/StoryTopBar.svelte";
+import OverlayShell from "../../../src/story/overlays/OverlayShell.svelte";
 
 afterEach(() => cleanup());
 
 describe("ShopGreetingScreen", () => {
+  it.each(["{Enter}", " "])(
+    "preserves focused control activation for %s",
+    async (key) => {
+      render(ShopGreetingScreen);
+      const activate = vi.fn();
+      render(StoryTopBar, { onsettings: activate });
+      screen.getByRole("button", { name: "Open settings" }).focus();
+
+      await userEvent.setup().keyboard(key);
+
+      expect(activate).toHaveBeenCalledOnce();
+      expect(screen.getByText(/Welcome in/)).toBeTruthy();
+    },
+  );
+
+  it.each(["Enter", " "])(
+    "ignores %s inside a dialog, including non-control focus",
+    async (key) => {
+      render(ShopGreetingScreen);
+      render(OverlayShell, { title: "Settings" });
+      const dialog = screen.getByRole("dialog");
+      const button = screen.getByRole("button", { name: "Close Settings" });
+      for (const target of [button, dialog]) {
+        target.focus();
+        const event = new KeyboardEvent("keydown", {
+          key,
+          bubbles: true,
+          cancelable: true,
+        });
+        await fireEvent(target, event);
+        expect(event.defaultPrevented).toBe(false);
+        expect(screen.getByText(/Welcome in/)).toBeTruthy();
+      }
+    },
+  );
+
+  it.each(["Enter", " "])(
+    "honors consumed/repeated %s, then advances the bare stage",
+    async (key) => {
+      const { container } = render(ShopGreetingScreen);
+      const stage = container.querySelector('[data-cy="story-shop-greeting"]')!;
+      const consumed = new KeyboardEvent("keydown", {
+        key,
+        bubbles: true,
+        cancelable: true,
+      });
+      consumed.preventDefault();
+      await fireEvent(stage, consumed);
+      await fireEvent.keyDown(stage, { key, repeat: true });
+      expect(screen.getByText(/Welcome in/)).toBeTruthy();
+      await fireEvent.keyDown(stage, { key });
+      expect(screen.getByText(/Selling doubles/)).toBeTruthy();
+      await fireEvent.keyDown(stage, { key });
+      expect(screen.getByRole("button", { name: "Buy Cards" })).toBeTruthy();
+    },
+  );
+
   it("shopkeeper speaks in beats then offers the menu", async () => {
     const { container } = render(ShopGreetingScreen, { onleave: vi.fn() });
     // First beat visible, menu absent

@@ -123,6 +123,9 @@ import {
 } from "../../src/battle/index.ts";
 import type { DuelDiagnosticTrace } from "../../src/battle/duel/contracts/duel-diagnostics.ts";
 import type { DuelResult } from "../../src/battle/duel/contracts/duel-result.ts";
+import { parseDuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
+import { DuelStateProjector } from "../../src/battle/worker/projection/DuelStateProjector.ts";
+import { EngineMessageType } from "../../src/battle/worker/engine/engine-constants.ts";
 import type { PlayerPrompt } from "../../src/battle/duel/contracts/player-prompt.ts";
 import {
   choiceId,
@@ -335,6 +338,37 @@ describe("BattleFacade", () => {
     );
 
     expect(oncomplete).not.toHaveBeenCalled();
+  });
+
+  it("shows and hands off an authoritative draw exactly once", async () => {
+    const oncomplete = vi.fn();
+    const rendered = await renderFacade(HOSTED_REQUEST, oncomplete);
+    const projector = new DuelStateProjector(
+      snapshotId("a".repeat(64)),
+      [0, 0],
+      [0, 0],
+      { extraMonsterZones: true },
+    );
+    // Exact pinned-WASM output, independently exercised in real-wasm-smoke.
+    const projected = projector.apply({
+      type: EngineMessageType.WIN,
+      player: 2,
+      reason: 1,
+    });
+    const event = parseDuelWorkerEvent(
+      structuredClone({ type: "result", result: projected.result }),
+    );
+    emit(event);
+    emit(event);
+    await vi.waitFor(() => expect(oncomplete).toHaveBeenCalledOnce());
+    expect(oncomplete).toHaveBeenCalledWith({
+      kind: "resolved",
+      outcome: "draw",
+    });
+    expect(element("app-result-heading").textContent).toBe("Draw");
+    expect(element("app-result-finish-reason").textContent).toContain("1");
+    rendered.unmount();
+    expect(oncomplete).toHaveBeenCalledOnce();
   });
 
   it("settles a hosted session exactly once", async () => {

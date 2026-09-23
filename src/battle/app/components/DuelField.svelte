@@ -1380,6 +1380,11 @@
     ) {
       return;
     }
+    if (spec.constraints.controlFamily === "toggle") {
+      const choiceId = resolved[0];
+      if (choiceId !== undefined) dispatch({ type: "chooseChoice", choiceId });
+      return;
+    }
     const resolvedSet = new Set(resolved);
     for (const choiceId of session.selectedChoiceIds) {
       if (!resolvedSet.has(choiceId))
@@ -1540,7 +1545,14 @@
     />
   {/if}
   {#if overlayChoices.length > 0 && spec !== null}
+    {@const finishChoice = [...spec.globalChoices.values()].find(
+      ({ action }) => action === "finish",
+    )}
     <MaterialSelectDialog
+      toggleResponse={spec.constraints.controlFamily === "toggle"}
+      onfinish={finishChoice === undefined
+        ? null
+        : () => dispatch({ type: "chooseChoice", choiceId: finishChoice.id })}
       choices={overlayChoices}
       minSelections={spec.constraints.minimum}
       maxSelections={spec.constraints.maximum}
@@ -1587,6 +1599,7 @@
       {selectionStatus}
       confirmValid={validation.valid}
       cancelable={spec.constraints.cancelable}
+      toggleResponse={spec.constraints.controlFamily === "toggle"}
       {imageLibrary}
       cardBackUrl={resolvedCardBackUrl}
       placeholderUrl={resolvedPlaceholderUrl}

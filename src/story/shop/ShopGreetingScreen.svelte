@@ -45,7 +45,13 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
-    if (showMenu || event.repeat) return;
+    if (
+      showMenu ||
+      event.repeat ||
+      event.defaultPrevented ||
+      isControl(event.target)
+    )
+      return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       advance();

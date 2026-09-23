@@ -608,6 +608,7 @@ test("ZIP verifier rejects ZIP64 player fixtures, encryption, dirs, extras, unde
     msDosCompatible: true,
     externalFileAttributes: 0,
     useUnicodeFileNames: true,
+    dataDescriptor: false,
   });
   await writer.add(
     file.path,
@@ -620,16 +621,43 @@ test("ZIP verifier rejects ZIP64 player fixtures, encryption, dirs, extras, unde
     bytes: valid.length,
     sha256: sha(valid),
   };
+  await verifyArchive(root, "valid.zip", ref, [file], true);
   await assert.rejects(
     verifyArchive(root, "valid.zip", ref, [], true),
     /ASSET_ARCHIVE_REJECTED/,
   );
-  const bad = Uint8Array.from(valid);
-  bad[30 + file.path.length] = bad[30 + file.path.length]! ^ 0xff;
+  await assert.rejects(
+    verifyArchive(
+      root,
+      "valid.zip",
+      ref,
+      [{ ...file, sha256: sha(new TextEncoder().encode("else")) }],
+      true,
+    ),
+    { message: "ASSET_INTEGRITY_FAILED" },
+  );
+  const bad = Buffer.from(valid);
+  const central = bad.readUInt32LE(bad.length - 22 + 16);
+  assert.equal(bad.readUInt32LE(central), 0x02014b50);
+  assert.equal(bad.readUInt16LE(6) & 8, 0);
+  // Keep payload/SHA intact and CRC fields consistent: only CRC validation can reject.
+  const badCrc = (bad.readUInt32LE(14) ^ 0xffffffff) >>> 0;
+  bad.writeUInt32LE(badCrc, 14);
+  bad.writeUInt32LE(badCrc, central + 16);
   await put(root, "crc.zip", bad);
   await assert.rejects(
-    verifyArchive(root, "crc.zip", { ...ref, bytes: bad.length }, [file], true),
-    /ASSET_ARCHIVE_REJECTED|ASSET_INTEGRITY_FAILED/,
+    verifyArchive(
+      root,
+      "crc.zip",
+      {
+        key: `content/parts/${sha(bad)}.zip`,
+        bytes: bad.length,
+        sha256: sha(bad),
+      },
+      [file],
+      true,
+    ),
+    { message: "ASSET_ARCHIVE_REJECTED" },
   );
 });
 

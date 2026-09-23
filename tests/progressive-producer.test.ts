@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile, mkdir } from "node:fs/promises";
-import os from "node:os";
+import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
+import test, { after } from "node:test";
 import { createHash } from "node:crypto";
 import {
   parseFrozenInventory,
@@ -33,7 +32,9 @@ async function fixture(reverseCreation = false): Promise<{
   root: string;
   inventory: FrozenInventory;
 }> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "ascencio-progressive-"));
+  await mkdir(".tmp", { recursive: true });
+  const root = await mkdtemp(path.resolve(".tmp/ascencio-progressive-"));
+  after(() => rm(root, { recursive: true, force: true }));
   const runtime = await contentRuntimeFixture(
     prepared.chapters[0]!.gameplay.cards,
     {},
@@ -455,6 +456,8 @@ async function rewriteManifest(
   });
   const candidatePath = path.join(root, run, "progressive/candidate.json");
   const candidate = JSON.parse(await readFile(candidatePath, "utf8"));
+  const validationPath = path.join(root, run, "progressive/validation.json");
+  const validation = JSON.parse(await readFile(validationPath, "utf8"));
   const objectPath = path.join(
     root,
     run,
@@ -478,7 +481,34 @@ async function rewriteManifest(
       pointer: { version: sha(pointerBytes), bytes: pointerBytes.length },
     }),
   );
+  await writeFile(
+    validationPath,
+    canonicalBytes({ ...validation, manifestVersion: ref.version }),
+  );
+  assert.deepEqual(JSON.parse(await readFile(validationPath, "utf8")), {
+    schemaVersion: 1,
+    manifestVersion: ref.version,
+    previousManifestVersion: candidate.previousManifestVersion,
+    validation: "passed",
+  });
 }
+
+test("rewriteManifest preserves a valid release and its predecessor identity", async () => {
+  const { root, inventory } = await fixture();
+  const options = { releaseSequence: 1, coreMin: 1, coreMaxExclusive: 2 };
+  const first = await packProgressiveRelease(root, inventory, options);
+  const second = await packProgressiveRelease(root, inventory, {
+    ...options,
+    releaseSequence: 2,
+    previousRun: first.run,
+  });
+  await rewriteManifest(root, second.run, second.manifest);
+  const verified = await verifyProgressiveRelease(root, second.run, true);
+  assert.equal(
+    verified.candidate.previousManifestVersion,
+    first.manifestVersion,
+  );
+});
 
 const manifestCorruptions: readonly {
   name: string;

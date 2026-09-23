@@ -153,13 +153,15 @@ describe("the pre-battle deck picker", () => {
 
     await fireEvent.pointerEnter(cy(`deck-tile-${LEGAL.id}`)!);
     await waitFor(() =>
-      expect(cy("deck-select-seat-list-player-row-1322368")).not.toBeNull(),
+      expect(
+        cy("deck-select-seat-list-player-main-row-1322368"),
+      ).not.toBeNull(),
     );
 
     expect(
-      cy("deck-select-seat-list-player-row-1322368")?.style.getPropertyValue(
-        "--fc",
-      ),
+      cy(
+        "deck-select-seat-list-player-main-row-1322368",
+      )?.style.getPropertyValue("--fc"),
     ).toBe("#1d6ea8");
   });
 

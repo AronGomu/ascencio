@@ -12,7 +12,15 @@ import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 import "fake-indexeddb/auto";
 import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 /* The duel's worker client is the only piece of the battle domain this test
    cannot run for real in jsdom, so it is replaced with the same hand-driven
@@ -279,6 +287,14 @@ async function deleteStorySaves(): Promise<void> {
   });
 }
 
+/* Compile the real lazy domains before timing UI readiness. Cold Vite imports
+   can outlast the DOM/start waits and leak pending handoffs into later tests.
+   This loads code only; each test still mounts its own shell and restores its
+   own saves, including the cold-session checkpoint cases. */
+beforeAll(async () => {
+  await Promise.all([loaders.duel(), loaders.story()]);
+});
+
 beforeEach(async () => {
   hash = "#/story";
   checkpointWriteFailure = null;
@@ -449,6 +465,7 @@ describe("story duel handoff", () => {
      of the checkpoint. `e2e/story-duel.spec.ts` does the real reload. */
   it("restarts the encounter from the checkpoint on a cold start into the session", async () => {
     const handoffId = "66666666-2222-4333-8444-555555555555";
+    const { deck, collection } = fieldableStoryDeck();
     await saves.write(
       "checkpoint:pre-duel",
       {
@@ -458,6 +475,9 @@ describe("story duel handoff", () => {
         progressExists: true,
         encounterId: "old-arena",
         pendingHandoffId: handoffId,
+        decks: [deck],
+        defaultDeckId: deck.id,
+        collection,
       },
       null,
       storyBindingFixture(),
@@ -466,6 +486,14 @@ describe("story duel handoff", () => {
     renderShell();
 
     await waitForCy("battle-root");
+    const { player } = await startedSeats();
+    expect(player).toEqual({
+      kind: "cards",
+      main: deck.main,
+      extra: deck.extra,
+      side: deck.side,
+    });
+    expect(document.querySelector('[data-cy="deck-picker"]')).toBeNull();
     expect(hash).toBe(`#/duel/session/${handoffId}`);
 
     emitResult({ type: "surrendered", player: 0 });

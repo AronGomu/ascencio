@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
-import os from "node:os";
+import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
+import test, { after } from "node:test";
 import {
   parseFrozenInventory,
   type FrozenInventory,
@@ -24,7 +23,9 @@ async function fixture(): Promise<{
   root: string;
   inventory: FrozenInventory;
 }> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "ascencio-publish-"));
+  await mkdir(".tmp", { recursive: true });
+  const root = await mkdtemp(path.resolve(".tmp/ascencio-publish-"));
+  after(() => rm(root, { recursive: true, force: true }));
   const runtime = await contentRuntimeFixture(
     prepared.chapters[0]!.gameplay.cards,
     {},

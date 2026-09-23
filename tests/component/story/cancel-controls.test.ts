@@ -181,7 +181,10 @@ describe("every control that returns the player to where they came from is red",
    the danger colour is spent on the deletion. */
 describe("a destructive confirmation keeps the red on the destructive button", () => {
   it("delete is red and its cancel is not", () => {
-    const { container } = render(LoadScreen, { showCorrupt: false });
+    const { container } = render(LoadScreen, {
+      showCorrupt: false,
+      manualSummary: "Chapter 1 · Old Arena",
+    });
     const trigger = container.querySelector(
       '[data-cy="story-load-slot-manual-delete"]',
     ) as HTMLButtonElement;

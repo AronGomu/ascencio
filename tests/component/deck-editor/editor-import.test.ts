@@ -165,7 +165,9 @@ describe("open-deck YDK import", () => {
     );
   });
 
-  it("greys and disables known deck cards unavailable in story ownership", () => {
+  it("greys unavailable story cards but allows inspection and removal, not adding", async () => {
+    const user = userEvent.setup();
+    const onmutate = vi.fn().mockResolvedValue(true);
     const code = PROTOTYPE_CATALOG.find(
       ({ canonicalZone }) => canonicalZone === "main",
     )!.code;
@@ -183,6 +185,7 @@ describe("open-deck YDK import", () => {
     });
     renderEditor({
       state,
+      onmutate,
       ownership: {
         isUnlimited: false,
         ownedCount: () => 0,
@@ -192,7 +195,24 @@ describe("open-deck YDK import", () => {
     const tile = document.querySelector<HTMLButtonElement>(
       '[data-cy="main-tile-0"]',
     );
-    expect(tile?.disabled).toBe(true);
+    expect(tile?.disabled).toBe(false);
     expect(tile?.classList.contains("unavailable")).toBe(true);
+    expect(
+      document.querySelector(`[data-cy="catalog-tile-${code}"]`),
+    ).toBeNull();
+
+    await user.click(tile!);
+    expect(
+      document.querySelector('[data-cy="card-preview-name"]')?.textContent,
+    ).toBe(prototypeCatalogMap.get(code)!.name);
+    expect(onmutate).not.toHaveBeenCalled();
+
+    await user.dblClick(tile!);
+    expect(onmutate).toHaveBeenCalledExactlyOnceWith({
+      type: "remove",
+      cardCode: code,
+      zone: "main",
+      index: 0,
+    });
   });
 });

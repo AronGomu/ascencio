@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [svelte(), svelteTesting()],
   test: {
     environment: "node",
+    // Node 26 globals shadow JSDOM storage before environment setup.
+    execArgv: ["--no-experimental-webstorage"],
     include: ["tests/{unit,integration,component}/**/*.test.ts"],
     setupFiles: ["tests/fixtures/runtime-build-constants.ts"],
     testTimeout: 30_000,

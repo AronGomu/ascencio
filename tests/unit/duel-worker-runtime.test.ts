@@ -1,7 +1,8 @@
 import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { inspect } from "node:util";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
+import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
 import {
   DuelOperationError,
   duelOperationError,
@@ -952,6 +953,15 @@ describe("duels started from an explicit card list", () => {
   });
 
   it("keeps the opponent card list out of every event it sends back", async () => {
+    const seed = [12200034567890123456n, 2n, 3n, 4n];
+    const randomWords = vi
+      .spyOn(crypto, "getRandomValues")
+      .mockImplementationOnce((array) => {
+        expect(array).toBeInstanceOf(BigUint64Array);
+        (array as BigUint64Array).set(seed);
+        return array;
+      });
+    onTestFinished(() => randomWords.mockRestore());
     const harness = await createFakeOcgCoreAdapter(winImmediately);
     const runtime = new DuelWorkerRuntime(async () =>
       createCardListResources(harness.adapter),
@@ -966,13 +976,53 @@ describe("duels started from an explicit card list", () => {
     });
     const diagnostics = await runtime.handle({ type: "requestDiagnostics" });
 
-    /* The opponent's codes are disjoint from the player's, so any appearance
-       in the Worker's outbound traffic is the Worker disclosing a deck the
-       main thread is not meant to read. */
-    const outbound = JSON.stringify([...started, ...diagnostics]);
-    for (const code of OPPONENT_MAIN) {
-      expect(outbound).not.toContain(String(code));
+    const diagnostic = diagnostics[0];
+    if (diagnostic?.type !== "diagnostics")
+      throw new Error("Expected diagnostics event");
+    expect(diagnostic.trace.sensitivity).toBe("contains-production-seed");
+    expect(diagnostic.trace.seed).toEqual(seed.map(String));
+
+    /* Only the documented seed words may coincidentally contain card codes.
+       Scan every other event field, trace entry and metadata field unchanged. */
+    function assertConcealed(events: readonly DuelWorkerEvent[]): void {
+      const outbound = JSON.stringify(
+        events.map((event) =>
+          event.type === "diagnostics"
+            ? { ...event, trace: { ...event.trace, seed: undefined } }
+            : event,
+        ),
+      );
+      for (const code of OPPONENT_MAIN)
+        expect(outbound).not.toContain(String(code));
     }
+    assertConcealed([...started, ...diagnostics]);
+
+    const hiddenCode = String(OPPONENT_MAIN[0]);
+    expect(() =>
+      assertConcealed([{ type: "loading", stage: hiddenCode }]),
+    ).toThrow(hiddenCode);
+    expect(() =>
+      assertConcealed([
+        {
+          ...diagnostic,
+          trace: { ...diagnostic.trace, presetId: hiddenCode },
+        },
+      ]),
+    ).toThrow(hiddenCode);
+    expect(() =>
+      assertConcealed([
+        {
+          ...diagnostic,
+          trace: {
+            ...diagnostic.trace,
+            entries: [
+              ...diagnostic.trace.entries,
+              { sequence: 99, kind: "engineDiagnostic", detail: hiddenCode },
+            ],
+          },
+        },
+      ]),
+    ).toThrow(hiddenCode);
     runtime.dispose();
   });
 

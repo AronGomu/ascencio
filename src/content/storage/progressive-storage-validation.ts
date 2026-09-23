@@ -124,6 +124,11 @@ export async function responseBytes(
       chunks.push(chunk.value);
     }
   } catch (error) {
+    try {
+      await reader.cancel();
+    } catch {
+      console.warn("CONTENT_RESPONSE_CANCEL_FAILED");
+    }
     if (signal.aborted) throw new StoreContentError("CONTENT_CANCELLED");
     throw error;
   } finally {

@@ -697,6 +697,31 @@ describe("progressive download jobs", () => {
     ]);
   });
 
+  it("cancels an oversized manifest response instead of downloading the remaining body", async () => {
+    const fixture = await createProgressiveFixture();
+    vi.stubGlobal("fetch", fixture.fetch.bind(fixture));
+    const store = await open(fixture.baseUrl);
+    const pointer = await store.fetchLatest(new AbortController().signal);
+    const cancel = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(new Uint8Array(pointer.manifest.bytes + 1));
+            },
+            cancel,
+          }),
+        ),
+    );
+
+    await expect(
+      store.cacheManifest(pointer, new AbortController().signal),
+    ).rejects.toMatchObject(error("CONTENT_INTEGRITY_FAILED"));
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
   it("rejects non-UUID job IDs before network or persistence", async () => {
     const fixture = await createProgressiveFixture();
     vi.stubGlobal("fetch", fixture.fetch.bind(fixture));

@@ -3,6 +3,8 @@
   import OverlayShell from "./OverlayShell.svelte";
 
   export let showCorrupt = false;
+  export let manualSummary: string | null = null;
+  export let autosaveSummary: string | null = null;
   export let onload: (slot: "manual" | "autosave") => void = () => undefined;
   export let ondelete: () => boolean | Promise<boolean> = () => true;
   export let onclose: () => void = () => undefined;
@@ -19,6 +21,8 @@
 >
   <LoadScreen
     {showCorrupt}
+    {manualSummary}
+    {autosaveSummary}
     {onload}
     {ondelete}
     onconfirmchange={(open) => (confirmationOpen = open)}

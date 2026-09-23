@@ -3,6 +3,8 @@
   import { trapTabWithin } from "../overlays/focus-trap.ts";
 
   export let showCorrupt = false;
+  export let manualSummary: string | null = null;
+  export let autosaveSummary: string | null = null;
   export let onload: (slot: "manual" | "autosave") => void = () => undefined;
   /* Deleting a save is a round trip to IndexedDB now, so the caller may answer
      asynchronously; the slot only reads as empty once the delete confirms. */
@@ -55,17 +57,17 @@
   data-cy="story-load-screen"
 >
   <header data-cy="story-load-header">
-    <p class="eyebrow" data-cy="story-load-eyebrow">Mock local progress</p>
+    <p class="eyebrow" data-cy="story-load-eyebrow">Local progress</p>
     <h1 id="load-heading" data-cy="story-load-heading">Load</h1>
   </header>
   <div class="slots" data-cy="story-load-slots">
-    {#if manualDeleted}
+    {#if manualDeleted || manualSummary === null}
       <article class="empty" data-cy="story-load-slot-manual-deleted">
         <h2 data-cy="story-load-slot-manual-deleted-heading">
           Manual slot 1 · Empty
         </h2>
         <p data-cy="story-load-slot-manual-deleted-message">
-          Save deleted for this review session.
+          No compatible manual save.
         </p>
         <button type="button" disabled data-cy="story-load-slot-manual-disabled"
           >Load manual slot 1</button
@@ -76,16 +78,14 @@
         <div
           class="slot-preview"
           role="img"
-          aria-label="Old Arena save preview"
+          aria-label={manualSummary}
           data-cy="story-load-slot-manual-preview"
         >
-          Old Arena preview
+          {manualSummary}
         </div>
         <h2 data-cy="story-load-slot-manual-heading">Manual slot 1</h2>
-        <p data-cy="story-load-slot-manual-location">Chapter 1 · Old Arena</p>
-        <p data-cy="story-load-slot-manual-playtime">
-          Playtime 00:18:42 · Yesterday, 21:14
-        </p>
+        <p data-cy="story-load-slot-manual-location">{manualSummary}</p>
+        <p data-cy="story-load-slot-manual-playtime">Saved progress.</p>
         <div class="actions" data-cy="story-load-slot-manual-actions">
           <button
             type="button"
@@ -105,19 +105,22 @@
       <div
         class="slot-preview"
         role="img"
-        aria-label="Concourse autosave preview"
+        aria-label={autosaveSummary ?? "No compatible autosave"}
         data-cy="story-load-slot-autosave-preview"
       >
-        Concourse preview
+        {autosaveSummary ?? "Empty"}
       </div>
       <h2 data-cy="story-load-slot-autosave-heading">Autosave</h2>
-      <p data-cy="story-load-slot-autosave-location">Chapter 1 · City Map</p>
+      <p data-cy="story-load-slot-autosave-location">
+        {autosaveSummary ?? "No compatible autosave."}
+      </p>
       <p data-cy="story-load-slot-autosave-playtime">
-        Playtime 00:21:08 · Today, 00:04
+        {autosaveSummary === null ? "No saved progress." : "Saved progress."}
       </p>
       <button
         type="button"
         data-cy="story-load-slot-autosave-load"
+        disabled={autosaveSummary === null}
         onclick={() => onload("autosave")}>Load autosave</button
       >
     </article>
@@ -162,7 +165,7 @@
         Delete save?
       </h2>
       <p data-cy="story-load-delete-message">
-        This mock manual slot will become empty.
+        This manual slot will become empty.
       </p>
       <div class="actions" data-cy="story-load-delete-actions">
         <button

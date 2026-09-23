@@ -77,24 +77,20 @@ export function createStoryDeckRepository({
      The state captured first comes back through `restore` on any refusal, so a
      thrown commit leaves memory exactly where disk still is: a retry carries
      the revision the save holds instead of being refused as a conflict. */
-  function commit(
+  async function commit(
     command: StoryCommand,
     landed: (state: StoryState) => boolean,
   ): Promise<void> {
-    return serialize(async () => {
-      const previous = readState();
-      try {
-        dispatch(command);
-        if (!landed(readState()))
-          throw new DeckStorageError(
-            "The story save did not accept the change",
-          );
-        await persist();
-      } catch (error) {
-        restore(previous);
-        throw error;
-      }
-    });
+    const previous = readState();
+    try {
+      dispatch(command);
+      if (!landed(readState()))
+        throw new DeckStorageError("The story save did not accept the change");
+      await persist();
+    } catch (error) {
+      restore(previous);
+      throw error;
+    }
   }
 
   /* The save layer's own predicate rather than a second copy of the free-play
@@ -123,18 +119,22 @@ export function createStoryDeckRepository({
     history: DeckHistory,
     open: boolean,
   ): Promise<StoredDeck> {
-    guard(deck);
-    if (find(deck.id) !== undefined)
-      throw new DeckRevisionConflictError(deck.revision);
-    const next = stamp(deck, 1);
-    await commit({ type: "deck-create", deck: next }, (state) =>
-      state.decks.some(({ id }) => id === next.id),
-    );
-    /* Session state only after the write landed: a refused create must leave no
-       trace for the editor's recovery probe to mistake for a committed deck. */
-    histories.set(next.id, history);
-    if (open) lastOpened = next.id;
-    return Object.freeze({ deck: next, history });
+    return serialize(async () => {
+      guard(deck);
+      const current = find(deck.id);
+      if (current !== undefined)
+        throw new DeckRevisionConflictError(current.revision);
+      const next = stamp(deck, 1);
+      await commit(
+        { type: "deck-create", deck: next },
+        (state) => state.decks.find(({ id }) => id === next.id) === next,
+      );
+      /* Session state only after the write landed: a refused create must leave no
+         trace for the editor's recovery probe to mistake for a committed deck. */
+      histories.set(next.id, history);
+      if (open) lastOpened = next.id;
+      return Object.freeze({ deck: next, history });
+    });
   }
 
   return {
@@ -163,38 +163,40 @@ export function createStoryDeckRepository({
     },
 
     async save(expectedRevision, deck, history) {
-      guard(deck);
-      const current = find(deck.id);
-      if (current === undefined || current.revision !== expectedRevision)
-        throw new DeckRevisionConflictError(current?.revision ?? null);
-      const next = stamp(deck, expectedRevision + 1);
-      await commit(
-        { type: "deck-save", deck: next },
-        (state) =>
-          state.decks.find(({ id }) => id === next.id)?.revision ===
-          next.revision,
-      );
-      histories.set(next.id, history);
-      return Object.freeze({ deck: next, history });
+      return serialize(async () => {
+        guard(deck);
+        const current = find(deck.id);
+        if (current === undefined || current.revision !== expectedRevision)
+          throw new DeckRevisionConflictError(current?.revision ?? null);
+        const next = stamp(deck, expectedRevision + 1);
+        await commit(
+          { type: "deck-save", deck: next },
+          (state) => state.decks.find(({ id }) => id === next.id) === next,
+        );
+        histories.set(next.id, history);
+        return Object.freeze({ deck: next, history });
+      });
     },
 
     async delete(id, expectedRevision) {
-      const current = find(id);
-      if (current !== undefined && current.revision !== expectedRevision)
-        throw new DeckRevisionConflictError(current.revision);
-      /* A deck that is already gone is not a conflict — a retried delete has to
-         settle — but it is also not a change worth writing a save for. */
-      if (current !== undefined)
-        await commit(
-          { type: "deck-delete", id },
-          (state) => !state.decks.some((deck) => deck.id === id),
-        );
-      /* Everything that named the deck goes out with it, so no part of the
-         session is left pointing at a deck the save no longer has — but only
-         once the write landed, so a refused delete leaves the session pointing
-         at a deck the save still has. */
-      histories.delete(id);
-      if (lastOpened === id) lastOpened = null;
+      return serialize(async () => {
+        const current = find(id);
+        if (current !== undefined && current.revision !== expectedRevision)
+          throw new DeckRevisionConflictError(current.revision);
+        /* A deck that is already gone is not a conflict — a retried delete has to
+           settle — but it is also not a change worth writing a save for. */
+        if (current !== undefined)
+          await commit(
+            { type: "deck-delete", id },
+            (state) => !state.decks.some((deck) => deck.id === id),
+          );
+        /* Everything that named the deck goes out with it, so no part of the
+           session is left pointing at a deck the save no longer has — but only
+           once the write landed, so a refused delete leaves the session pointing
+           at a deck the save still has. */
+        histories.delete(id);
+        if (lastOpened === id) lastOpened = null;
+      });
     },
 
     getLastOpened() {
@@ -224,12 +226,14 @@ export function createStoryDeckRepository({
     },
 
     async setDefaultDeck(id) {
-      if (id !== null && find(id) === undefined)
-        throw new DeckStorageError("Cannot default a missing deck");
-      await commit(
-        { type: "deck-set-default", id },
-        (state) => state.defaultDeckId === id,
-      );
+      return serialize(async () => {
+        if (id !== null && find(id) === undefined)
+          throw new DeckStorageError("Cannot default a missing deck");
+        await commit(
+          { type: "deck-set-default", id },
+          (state) => state.defaultDeckId === id,
+        );
+      });
     },
 
     /* Capped like the free-play log, so a long editing session cannot grow it

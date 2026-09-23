@@ -369,8 +369,16 @@
      through the same lazy import as the saves above — a static one would make
      the visual novel eager and collapse its chunk into the entry. */
   async function openStoryDeckContext(): Promise<DeckContext | null> {
+    const repository = saves ?? lazySaves;
+    /* Lookup failures belong to the route token below, not the session-wide
+       observer: a stale read must not tear down a newer route. Keep writes
+       observed so an active editor still escalates fatal storage failures. */
+    const reads = domainSession?.saves ?? repository;
     const story = await import("../story/index.ts");
-    return await story.openStoryDeckContext(saves ?? lazySaves);
+    return await story.openStoryDeckContext({
+      ...repository,
+      read: (slot) => reads.read(slot),
+    });
   }
 
   /* What the story is handed when it comes back from a duel: the state that
@@ -625,11 +633,15 @@
     if (world === boundDeckWorld) return;
     boundDeckWorld = world;
     editorContext = world === "free-play" ? { kind: "free-play" } : null;
-    if (world !== "story") return;
     const requested = ++storyDeckToken;
+    if (world !== "story") return;
     void openStoryDeckContext().then(
       (bound) => {
-        if (requested !== storyDeckToken) return;
+        if (
+          requested !== storyDeckToken ||
+          deckRouteContext(requestedRoute) !== "story"
+        )
+          return;
         /* No save is loaded, so there are no decks to edit and nothing to name.
            The main menu is where a story route with nothing to show goes
            (ADR-051); replaced rather than pushed, because the player asked for
@@ -638,7 +650,10 @@
         else editorContext = bound;
       },
       () => {
-        if (requested === storyDeckToken)
+        if (
+          requested === storyDeckToken &&
+          deckRouteContext(requestedRoute) === "story"
+        )
           if (application === null)
             store.navigate(HOME_ROUTE, { replace: true });
           else recover(new Error("APP_REQUIRED_INPUT_FAILED"));
@@ -709,13 +724,16 @@
     world: RouteContext,
     requested: number,
   ): Promise<OpenCollection | null> {
+    /* Read-only lookup: the collection token owns failure recovery, just as
+       the deck lookup does. Capture its session before either lazy import. */
+    const repository = domainSession?.saves ?? saves ?? lazySaves;
     const [story, { unlimitedCardOwnership }] = await Promise.all([
       import("../story/index.ts"),
       import("../decks/validation/index.ts"),
     ]);
     let ownership: CardOwnership = unlimitedCardOwnership();
     if (world === "story") {
-      const bound = await story.openStoryDeckContext(saves ?? lazySaves);
+      const bound = await story.openStoryDeckContext(repository);
       if (bound === null || bound.kind !== "story") return null;
       ownership = bound.ownership;
     }
@@ -868,6 +886,7 @@
       unsubscribeStage();
       unsubscribe();
       collectionToken += 1;
+      storyDeckToken += 1;
       collection?.images?.dispose();
       contentReader?.close();
     };

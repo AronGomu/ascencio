@@ -1,6 +1,6 @@
 import type { GenerationSaveRepository } from "../../story/saves/index.ts";
 
-/** Keep domain result unions intact while forwarding I/O failures to Shell recovery. */
+/** Quota refusals stay retryable in-domain; fatal I/O failures reach Shell recovery. */
 export function sessionSaves(
   repository: GenerationSaveRepository,
   onerror: (error: unknown) => void,
@@ -12,7 +12,9 @@ export function sessionSaves(
           value &&
           typeof value === "object" &&
           "kind" in value &&
-          (value.kind === "failed" || value.kind === "corrupt")
+          (value.kind === "corrupt" ||
+            (value.kind === "failed" &&
+              !("reason" in value && value.reason === "quota")))
         )
           onerror(new Error("APP_SAVE_MIGRATION_FAILED"));
         return value;

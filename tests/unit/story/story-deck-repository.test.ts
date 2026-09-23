@@ -77,6 +77,66 @@ function autosave(id: string, deck: string): DeckAutosaveRecord {
 const history: DeckHistory = emptyDeckHistory();
 
 describe("story deck repository", () => {
+  it("serializes same-revision saves before checking CAS", async () => {
+    const context = harness({ decks: [storyDeck("alpha", { revision: 4 })] });
+    const results = await Promise.allSettled([
+      context.repository.save(
+        4,
+        storyDeck("alpha", { name: "First" }),
+        history,
+      ),
+      context.repository.save(
+        4,
+        storyDeck("alpha", { name: "Second" }),
+        history,
+      ),
+    ]);
+    expect(results[0]!.status).toBe("fulfilled");
+    expect(results[1]).toMatchObject({
+      status: "rejected",
+      reason: { name: "DeckRevisionConflictError", actualRevision: 5 },
+    });
+    expect(context.state.decks[0]!.name).toBe("First");
+    expect(context.persisted).toHaveLength(1);
+  });
+
+  it("serializes duplicate creates before checking identity", async () => {
+    const context = harness();
+    const results = await Promise.allSettled([
+      context.repository.create(storyDeck("alpha", { name: "First" }), history),
+      context.repository.createAndOpen(
+        storyDeck("alpha", { name: "Second" }),
+        history,
+      ),
+    ]);
+    expect(results[0]!.status).toBe("fulfilled");
+    expect(results[1]).toMatchObject({
+      status: "rejected",
+      reason: { name: "DeckRevisionConflictError" },
+    });
+    expect(await context.repository.getLastOpened()).toBeNull();
+    expect(context.state.decks[0]!.name).toBe("First");
+    expect(context.persisted).toHaveLength(1);
+  });
+
+  it("checks a queued delete revision after the preceding save", async () => {
+    const context = harness({ decks: [storyDeck("alpha", { revision: 4 })] });
+    const results = await Promise.allSettled([
+      context.repository.save(
+        4,
+        storyDeck("alpha", { name: "First" }),
+        history,
+      ),
+      context.repository.delete(deckId("alpha"), 4),
+    ]);
+    expect(results[1]).toMatchObject({
+      status: "rejected",
+      reason: { name: "DeckRevisionConflictError", actualRevision: 5 },
+    });
+    expect(context.state.decks[0]!.name).toBe("First");
+    expect(context.persisted).toHaveLength(1);
+  });
+
   it("list returns the save's decks, in state order", async () => {
     const { repository } = harness({
       decks: [storyDeck("alpha"), storyDeck("beta")],
@@ -303,6 +363,32 @@ describe("story deck repository", () => {
   /* The second defining invariant: a command the story dropped must never be
      followed by a write, or the editor is told a deck was saved while the save
      that lands still holds the old one. */
+  it("rejects a matching revision that did not accept the requested deck", async () => {
+    const previous: StoryState = {
+      ...createInitialStoryState(),
+      decks: [storyDeck("alpha", { revision: 4 })],
+    };
+    let state = previous;
+    const persisted: StoryState[] = [];
+    const repository = createStoryDeckRepository({
+      readState: () => state,
+      dispatch: () => {
+        state = { ...state, decks: [storyDeck("alpha", { revision: 5 })] };
+      },
+      restore: (snapshot) => {
+        state = snapshot;
+      },
+      persist: async () => {
+        persisted.push(state);
+      },
+    });
+    await expect(
+      repository.save(4, storyDeck("alpha", { name: "Requested" }), history),
+    ).rejects.toBeInstanceOf(DeckStorageError);
+    expect(state).toBe(previous);
+    expect(persisted).toEqual([]);
+  });
+
   it("never persists when the story dropped the command", async () => {
     const state: StoryState = createInitialStoryState();
     const persisted: StoryState[] = [];

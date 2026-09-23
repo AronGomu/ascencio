@@ -79,7 +79,10 @@
   import { encounterDeck } from "./decks/encounter-deck.ts";
   import { buildInstalledStarterGrant } from "./decks/starter-grant.ts";
   import { preBattleDeckOptions } from "./decks/pre-battle-decks.ts";
-  import { STORY_SLOT_KEYS } from "./saves/story-save-contracts.ts";
+  import {
+    STORY_SLOT_KEYS,
+    storyChapterLabel,
+  } from "./saves/story-save-contracts.ts";
   /* Scoped to `.story-app`, so it travels with the component instead of
      leaking into the duel and deck editor the shell mounts beside it. */
   import "./styles.css";
@@ -127,7 +130,8 @@
   /* Which main-menu entry sent the player here, so the shell's menu and this
      domain's title screen are not two menus in a row (ADR-051). `null` is a
      story route reached any other way — a bookmark, the address bar, a duel
-     handing a settled session back — which still opens on the title.
+     handing a settled session back — which starts fresh unless resumeState
+     supplies a checkpoint. Internal editor returns use "continue".
 
      The union is written out rather than imported: it is the shell's
      `StoryEntryIntent` (`src/shell/shell-store.ts`), and the visual novel may
@@ -773,9 +777,6 @@
       binding =
         (slot === "manual" ? manualBinding : autosaveBinding) ?? binding;
       resumeSnapshot(snapshot);
-    } else {
-      state = reduceStory(state, { type: "load", slot });
-      dirty = false;
     }
   }
   async function deleteManualSave(): Promise<boolean> {
@@ -1040,6 +1041,12 @@
   <div class="story-body" data-cy="story-screen-body">
     {#if state.screen === "load"}
       <LoadScreen
+        manualSummary={manualState === null
+          ? null
+          : storyChapterLabel(manualState)}
+        autosaveSummary={autosaveState === null
+          ? null
+          : storyChapterLabel(autosaveState)}
         onload={loadSlot}
         ondelete={deleteManualSave}
         onback={onmainmenu}
@@ -1319,6 +1326,12 @@
       restoreFocusTo={overlayTrigger}
     />
   {:else if overlay === "load"}<LoadOverlay
+      manualSummary={manualState === null
+        ? null
+        : storyChapterLabel(manualState)}
+      autosaveSummary={autosaveState === null
+        ? null
+        : storyChapterLabel(autosaveState)}
       onload={(slot) => {
         loadSlot(slot);
         closeOverlay();

@@ -459,6 +459,26 @@ describe("DeckSelectScreen", () => {
     expect(values.onselect).toHaveBeenCalledTimes(1);
   });
 
+  it("arrows move from the opponent deck while filling that seat", async () => {
+    const values = handlers();
+    const pool = decks();
+    render(
+      DeckSelectScreen,
+      props({
+        ...values,
+        tiles: pool,
+        selectedKey: "k1",
+        seat: "opponent",
+        opponentDeck: pool[2],
+        playerDeck: pool[0],
+      }),
+    );
+
+    await fireEvent.keyDown(window, { key: "ArrowUp" });
+
+    expect(values.onselect).toHaveBeenCalledExactlyOnceWith("k1");
+  });
+
   it("opponent seat mode paints selected grid tile orange and badges yours", () => {
     const pool = decks();
     render(

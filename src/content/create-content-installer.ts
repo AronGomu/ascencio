@@ -366,6 +366,7 @@ class Installer extends ContentReader implements ContentInstaller {
         throw failure("CONTENT_INTEGRITY_FAILED");
       signal.throwIfAborted();
       emit({ phase: "activating" });
+      signal.throwIfAborted();
       await commitInstall(
         this.db,
         job,

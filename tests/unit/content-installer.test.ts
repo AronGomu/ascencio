@@ -336,6 +336,25 @@ describe("verified installer", () => {
       value: [{ progress: { phase: "paused" } }],
     });
   });
+  it("abort from activating progress does not commit content", async () => {
+    await setup();
+    const controller = new AbortController();
+    const phases: string[] = [];
+    const result = await installer!.download(
+      { kind: "chapter", chapterId: "chapter-01" },
+      (progress) => {
+        phases.push(progress.phase);
+        if (progress.phase === "activating") controller.abort();
+      },
+      controller.signal,
+    );
+    expect(result.kind).toBe("paused");
+    expect(phases).not.toContain("complete");
+    expect(await installer!.current()).toMatchObject({
+      kind: "ok",
+      value: { generation: 0, current: null },
+    });
+  });
   it("mid-body network failure retains its fixed network code", async () => {
     const fixture = await setup();
     const part = fixture.runtime.manifest.parts[0]!;

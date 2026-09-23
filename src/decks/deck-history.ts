@@ -61,7 +61,10 @@ export function pushDeckUpdate(
   });
 }
 
-export function undoDeckUpdate(history: DeckHistory): Readonly<{
+export function undoDeckUpdate(
+  history: DeckHistory,
+  currentCards: DeckCardLists,
+): Readonly<{
   history: DeckHistory;
   cards: DeckCardLists;
   importedNeedsReview: boolean;
@@ -69,19 +72,26 @@ export function undoDeckUpdate(history: DeckHistory): Readonly<{
 }> | null {
   const update = history.undo.at(-1);
   if (update === undefined) return null;
+  const cards = restoreCards(currentCards, update.before, update.reason);
   return Object.freeze({
-    cards: cloneCardLists(update.before),
+    cards,
     importedNeedsReview: update.beforeImportedNeedsReview,
     illustrationCardCode: update.beforeIllustrationCardCode,
     history: Object.freeze({
       undo: Object.freeze(history.undo.slice(0, -1)),
-      redo: Object.freeze([update, ...history.redo]),
+      redo: Object.freeze([
+        withCardSnapshots(update, cards, currentCards),
+        ...history.redo,
+      ]),
       nextSequence: history.nextSequence,
     }),
   });
 }
 
-export function redoDeckUpdate(history: DeckHistory): Readonly<{
+export function redoDeckUpdate(
+  history: DeckHistory,
+  currentCards: DeckCardLists,
+): Readonly<{
   history: DeckHistory;
   cards: DeckCardLists;
   importedNeedsReview: boolean;
@@ -89,17 +99,80 @@ export function redoDeckUpdate(history: DeckHistory): Readonly<{
 }> | null {
   const update = history.redo[0];
   if (update === undefined) return null;
+  const cards = restoreCards(currentCards, update.after, update.reason);
   return Object.freeze({
-    cards: cloneCardLists(update.after),
+    cards,
     importedNeedsReview: update.afterImportedNeedsReview,
     illustrationCardCode: update.afterIllustrationCardCode,
     history: Object.freeze({
       undo: Object.freeze(
-        [...history.undo, update].slice(-MAXIMUM_DECK_UPDATES),
+        [...history.undo, withCardSnapshots(update, currentCards, cards)].slice(
+          -MAXIMUM_DECK_UPDATES,
+        ),
       ),
       redo: Object.freeze(history.redo.slice(1)),
       nextSequence: history.nextSequence,
     }),
+  });
+}
+
+function restoreCards(
+  current: DeckCardLists,
+  target: DeckCardLists,
+  reason: DeckCardUpdate["reason"],
+): DeckCardLists {
+  if (reason === "import" || reason === "restore" || reason === "sort")
+    return cloneCardLists(target);
+  return cloneCardLists({
+    main: restoreZoneMembership(current.main, target.main),
+    extra: restoreZoneMembership(current.extra, target.extra),
+    side: restoreZoneMembership(current.side, target.side),
+  });
+}
+
+function restoreZoneMembership(
+  current: readonly number[],
+  target: readonly number[],
+): readonly number[] {
+  const targetCounts = counts(target);
+  const retainedCounts = new Map<number, number>();
+  const restored = current.filter((code) => {
+    const retained = retainedCounts.get(code) ?? 0;
+    if (retained >= (targetCounts.get(code) ?? 0)) return false;
+    retainedCounts.set(code, retained + 1);
+    return true;
+  });
+  const representedCounts = new Map<number, number>();
+  target.forEach((code, index) => {
+    const represented = representedCounts.get(code) ?? 0;
+    representedCounts.set(code, represented + 1);
+    if (represented < (retainedCounts.get(code) ?? 0)) return;
+    restored.splice(Math.min(index, restored.length), 0, code);
+  });
+  return restored;
+}
+
+function counts(values: readonly number[]): ReadonlyMap<number, number> {
+  const result = new Map<number, number>();
+  values.forEach((value) => result.set(value, (result.get(value) ?? 0) + 1));
+  return result;
+}
+
+function withCardSnapshots(
+  update: DeckCardUpdate,
+  before: DeckCardLists,
+  after: DeckCardLists,
+): DeckCardUpdate {
+  if (
+    update.reason === "import" ||
+    update.reason === "restore" ||
+    update.reason === "sort"
+  )
+    return update;
+  return Object.freeze({
+    ...update,
+    before: cloneCardLists(before),
+    after: cloneCardLists(after),
   });
 }
 

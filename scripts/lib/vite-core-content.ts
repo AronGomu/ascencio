@@ -112,7 +112,7 @@ function normalizedBase(base: string): string {
 }
 
 function requestPath(requestUrl: string, base: string): string | null {
-  if (/%|\\|\?|#/.test(requestUrl)) return null;
+  if (/%|\\|#/.test(requestUrl)) return null;
   const pathname = new URL(requestUrl, "http://vite.local").pathname;
   const prefix = normalizedBase(base);
   return pathname.startsWith(prefix) ? pathname.slice(prefix.length) : null;

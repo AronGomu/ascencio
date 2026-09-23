@@ -13,7 +13,7 @@ export interface ShellSettingsStore extends Readable<ShellSettings> {
   rememberFreePlayOpponent(id: string): void;
 }
 
-/* One live owner for shell settings: every setter writes the complete state,
+/* Every setter rebases on persisted state before writing the complete state,
    and a storage failure never interrupts navigation. */
 export function createShellSettingsStore(
   storage: Pick<Storage, "getItem" | "setItem"> | null = defaultStorage(),
@@ -22,10 +22,39 @@ export function createShellSettingsStore(
     storage === null ? DEFAULT_SHELL_SETTINGS : readShellSettings(storage),
   );
 
-  function persist(next: (state: ShellSettings) => ShellSettings): void {
+  // Retain only local mutations until a write succeeds, not a stale snapshot.
+  let pending: Partial<ShellSettings> = {};
+
+  function persist(patch: Partial<ShellSettings>): void {
+    pending = { ...pending, ...patch };
     update((state) => {
-      const value = next(state);
-      if (storage !== null) writeShellSettings(storage, value);
+      let current = state;
+      if (storage !== null) {
+        let readFailed = false;
+        const persisted = readShellSettings({
+          getItem(key): string | null {
+            try {
+              return storage.getItem(key);
+            } catch {
+              readFailed = true;
+              return null;
+            }
+          },
+        });
+        if (!readFailed) current = persisted;
+      }
+      const value = Object.freeze({ ...current, ...pending });
+      if (storage !== null) {
+        writeShellSettings(
+          {
+            setItem(key, serialized): void {
+              storage.setItem(key, serialized);
+              pending = {};
+            },
+          },
+          value,
+        );
+      }
       return value;
     });
   }
@@ -33,17 +62,13 @@ export function createShellSettingsStore(
   return {
     subscribe,
     dismissRotationNotice(): void {
-      persist((state) =>
-        Object.freeze({ ...state, rotationNoticeDismissed: true }),
-      );
+      persist({ rotationNoticeDismissed: true });
     },
     rememberFreePlayPairing(pairing: FreePlayPairing): void {
-      persist((state) =>
-        Object.freeze({ ...state, freePlayPairing: Object.freeze(pairing) }),
-      );
+      persist({ freePlayPairing: Object.freeze(pairing) });
     },
     rememberFreePlayOpponent(id: string): void {
-      persist((state) => Object.freeze({ ...state, freePlayOpponentId: id }));
+      persist({ freePlayOpponentId: id });
     },
   };
 }

@@ -177,7 +177,18 @@ function parseOptions(args: string[]): DownloadOptions {
       active = true;
       continue;
     }
-    if (!argument?.startsWith("--")) {
+    if (
+      !argument?.startsWith("--") ||
+      ![
+        "--assets",
+        "--output",
+        "--concurrency",
+        "--requests-per-second",
+        "--limit",
+        "--kind",
+        "--chapter",
+      ].includes(argument)
+    ) {
       throw new Error(`Unknown argument: ${argument ?? "<missing>"}`);
     }
     const value = args[index + 1];

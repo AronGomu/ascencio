@@ -230,7 +230,7 @@ export class IndexedDbDeckRepository implements DeckRepository {
       const next = Object.freeze({
         ...deck,
         revision: expectedRevision + 1,
-        updatedAt: latestTimestamp(deck.createdAt, this.#now()),
+        updatedAt: latestTimestamp(current.updatedAt, this.#now()),
       });
       await Promise.all([
         transaction.objectStore("decks").put(next),

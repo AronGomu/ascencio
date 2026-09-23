@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+
+// Shared by both servers and teardown; old runs never grant cleanup ownership.
+process.env.CORE_SOURCE_TOKEN = randomUUID();
 
 const rootPort = 4400;
 const subpathPort = 4401;

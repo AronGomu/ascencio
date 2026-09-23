@@ -7,8 +7,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { foldSetCards } from "./lib/shop-set-fold.ts";
-import type { CardEntry, FoldedCard } from "./lib/shop-set-fold.ts";
+import { fetchSetCards } from "./lib/shop-set-fetch.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -380,16 +379,6 @@ const SETS: readonly SetSpec[] = [
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchSetCards(apiName: string): Promise<FoldedCard[]> {
-  const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?cardset=${encodeURIComponent(apiName)}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} fetching "${apiName}"`);
-  }
-  const json = (await response.json()) as { data: CardEntry[] };
-  return foldSetCards(json.data, apiName);
 }
 
 console.log(`Fetching ${SETS.length} sets from YGOPRODeck…`);

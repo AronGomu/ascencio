@@ -29,13 +29,22 @@ jobs:
           path: |
             .cache/upstream
             generated
-          key: mvp-assets-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/sync-*.ts', 'scripts/download-images.ts', 'src/battle/duel/presets/decks/*.ydk') }}
+            assets/battle/engine/current
+            assets/shared/data/current
+            assets/shared/runtime/current
+            assets/shared/card-images/full
+            assets/shared/card-images/cropped
+            assets/shared/card-back.jpg
+            assets/shared/set-images
+          key: mvp-assets-v2-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/sync-*.ts', 'scripts/download-images.ts', 'scripts/download-set-images.ts', 'scripts/lib/**/*.ts', 'content/**/*.json', 'public/story/shop-sets.v1.json', 'image-content-lock.json', 'assets-source-lock.json', 'src/battle/duel/presets/decks/*.ydk') }}
           restore-keys: |
-            mvp-assets-${{ runner.os }}-
+            mvp-assets-v2-${{ runner.os }}-
 
       - run: npm ci
       - name: Regenerate and verify the pinned snapshot
         run: npm run assets:mvp -- --concurrency 8 --requests-per-second 8
+      - name: Acquire and verify required shop set images
+        run: npm run assets:sets && npm run assets:sets:verify
       - name: Verify an isolated offline headless checkout
         shell: bash
         run: |
@@ -66,7 +75,7 @@ jobs:
           if-no-files-found: error
           path: |
             dist/
-            generated/runtime/current/manifest.json
+            assets/shared/runtime/current/manifest.json
             vendor/ocgcore-wasm/0.1.2/vendor-manifest.json
             vendor/ocgcore-wasm/0.1.2/VENDORING.md
 
@@ -82,4 +91,6 @@ jobs:
             playwright-report/
             generated/**/*report*.json
             generated/mvp-assets-status.json
-            generated/runtime/current/manifest.json
+            assets/shared/runtime/current/manifest.json
+            artifacts/T10-EVIDENCE/
+            artifacts/CORE_ACCEPTANCE/T6/

@@ -9,6 +9,7 @@ import {
   staticHtmlScriptClosure,
 } from "./lib/domain-chunk-closure.ts";
 import { verifyBundle } from "./lib/asset-delivery/verify-bundle.ts";
+import { verifyPackagedContent } from "./lib/browser-content-verification.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -124,15 +125,7 @@ async function verifyContentSelection(
     bootstrap.delivery.index.bytes !== snapshot.prod.index.bytes
   )
     throw new Error("CORE bootstrap does not name the selected content index");
-  const expected = snapshot.objects
-    .map((ref) => ref.key)
-    .filter((key) => /^content\/(indexes|catalogs|manifests|parts)\//.test(key))
-    .sort();
-  const packaged = (await findFiles(path.join(outputRoot, "content")))
-    .map((file) => path.relative(outputRoot, file).replaceAll("\\", "/"))
-    .sort();
-  if (packaged.join("\n") !== expected.join("\n"))
-    throw new Error("CORE build content objects differ from selected run");
+  await verifyPackagedContent(outputRoot, snapshot.objects);
 }
 
 async function verifySingleHtmlEntry(): Promise<void> {

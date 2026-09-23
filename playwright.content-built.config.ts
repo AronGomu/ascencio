@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+
+// Setup and teardown share ownership; build artifacts never grant it.
+process.env.CONTENT_BUILT_TOKEN = randomUUID();
 
 export default defineConfig({
   testDir: "./e2e-content",
@@ -35,7 +39,7 @@ export default defineConfig({
     },
     {
       command:
-        "env BASE_PATH=/ygo-story-duel/ sh -c 'npm run build:app -- --outDir .tmp/t6-installed-built-subpath && npx vite preview --outDir .tmp/t6-installed-built-subpath --host 127.0.0.1 --port 4404 --strictPort'",
+        "node scripts/content-built-setup.ts && env BASE_PATH=/ygo-story-duel/ sh -c 'npm run build:app -- --outDir .tmp/t6-installed-built-subpath/dist && npx vite preview --outDir .tmp/t6-installed-built-subpath/dist --host 127.0.0.1 --port 4404 --strictPort'",
       url: "http://127.0.0.1:4404/ygo-story-duel/",
       reuseExistingServer: false,
       timeout: 180_000,

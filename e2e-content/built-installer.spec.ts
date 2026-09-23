@@ -8,7 +8,7 @@ for (const target of [
   {
     id: "subpath",
     base: "http://127.0.0.1:4404/ygo-story-duel/",
-    dist: ".tmp/t6-installed-built-subpath",
+    dist: ".tmp/t6-installed-built-subpath/dist",
   },
 ]) {
   test(`private built Chapter 1 install → Free Play → emitted Worker → surrender (${target.id})`, async ({

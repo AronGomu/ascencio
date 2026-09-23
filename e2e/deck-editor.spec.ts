@@ -1766,7 +1766,7 @@ test.describe("installed media", () => {
     await page.getByRole("button", { name: /^Select Decklist Rows,/ }).click();
 
     const row = page
-      .locator('[data-cy^="deck-select-docked-list-row-"]')
+      .locator('[data-cy^="deck-select-docked-list-main-row-"]')
       .first();
     await expect(row).toBeVisible();
     await expect(row).toHaveCSS("border-left-width", "5px");

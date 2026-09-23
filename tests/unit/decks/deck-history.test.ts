@@ -9,6 +9,21 @@ import {
 } from "../../../src/decks/deck-history.ts";
 
 describe("bounded deck history", () => {
+  it("restores exact order through undo and redo without membership changes", () => {
+    const before = { main: [1, 2], extra: [], side: [] };
+    const after = { main: [2, 1], extra: [], side: [] };
+    const history = pushDeckUpdate(emptyDeckHistory(), {
+      deckId: deckId("deck-a"),
+      before,
+      after,
+      reason: "restore",
+    });
+    expect(history.undo).toHaveLength(1);
+    const undone = undoDeckUpdate(history)!;
+    expect(undone.cards).toEqual(before);
+    expect(redoDeckUpdate(undone.history)?.cards).toEqual(after);
+  });
+
   it("retains exactly 50 card updates with monotonic sequence", () => {
     let history = emptyDeckHistory();
     for (let index = 0; index < 51; index += 1) {

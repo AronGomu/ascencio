@@ -31,6 +31,54 @@ afterEach(async () => {
 });
 
 describe("deck editor catalog boot", () => {
+  it("renders installed art in catalog and workspace, releasing replaced and unmounted leases", async () => {
+    const catalogInput = installedEditorCatalog(installedDuelGameplayFixture());
+    const releases: ReturnType<typeof vi.fn>[] = [];
+    const images = {
+      acquire: vi.fn(async (code: number) => {
+        const release = vi.fn();
+        releases.push(release);
+        return { url: `blob:installed-${code}`, release };
+      }),
+    };
+    const { rerender, unmount } = render(DeckEditorApp, {
+      catalogInput: { ...catalogInput, images },
+    });
+    await waitFor(() => expect(query("deck-library")).not.toBeNull());
+    const repo = await IndexedDbDeckRepository.open();
+    const decks = await repo.list();
+    repo.close();
+    await rerender({ deckId: decks[0]!.id });
+    await waitFor(() =>
+      expect(
+        document
+          .querySelector('[data-cy^="catalog-tile-image-"]')
+          ?.getAttribute("src"),
+      ).toMatch(/^blob:installed-/),
+    );
+    await waitFor(() =>
+      expect(query("main-tile-image-0")?.getAttribute("src")).toMatch(
+        /^blob:installed-/,
+      ),
+    );
+    await rerender({
+      catalogInput: { ...catalogInput, images: { acquire: async () => null } },
+    });
+    await waitFor(() => expect(query("main-tile-image-0")).toBeNull());
+    expect(
+      document.querySelector('[data-cy^="catalog-tile-image-"]'),
+    ).toBeNull();
+    expect(releases.every((release) => release.mock.calls.length === 1)).toBe(
+      true,
+    );
+    await rerender({ catalogInput: { ...catalogInput, images } });
+    await waitFor(() => expect(query("main-tile-image-0")).not.toBeNull());
+    unmount();
+    expect(releases.every((release) => release.mock.calls.length === 1)).toBe(
+      true,
+    );
+  });
+
   it.each([
     "/runtime/images/123.jpg",
     "runtime/images/123.jpg",

@@ -35,6 +35,11 @@ describe("deck revision conflict recovery", () => {
     await first.mutate({ type: "add", cardCode: 89631139 });
     await second.mutate({ type: "add", cardCode: 46986414 });
     expect(get(second).saveState).toBe("conflict");
+    await second.openDeck(id);
+    expect(get(second).saveState).toBe("conflict");
+    expect(get(second).current?.deck.main).toEqual([46986414]);
+    await second.showLibrary();
+    expect(get(second).mode).toBe("editor");
     await second.reloadCurrent();
     expect(get(second).saveState).toBe("saved");
     expect(get(second).current?.deck.main).toEqual([89631139]);

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
+  import type { CardImageSource } from "../../cards/images/index.ts";
+  import { createDeckLibraryImages } from "../cards/deck-library-images.ts";
   import type {
     DeckValidationIssue,
     DeckZone,
@@ -12,6 +15,14 @@
     type CardOwnership,
   } from "../../decks/validation/index.ts";
   import CardTile from "./CardTile.svelte";
+
+  export let images: CardImageSource | null = null;
+  let tileUrls: ReadonlyMap<string, string> = new Map();
+  const tileImages = createDeckLibraryImages(
+    (urls) => (tileUrls = urls),
+    () => undefined,
+  );
+  onDestroy(() => tileImages.dispose());
 
   export let zone: DeckZone;
   export let label: string;
@@ -66,6 +77,7 @@
   let tooltipOpen = false;
   let pointerPressed = false;
 
+  $: tileImages.synchronize(images, collapsed ? [] : codes, []);
   $: emptyCount = Math.max(0, plan.slots - codes.length);
   $: invalid = issues.some(({ severity }) => severity === "error");
   $: if (issues.length === 0) closeTooltip();
@@ -222,11 +234,14 @@
             <CardTile
               card={catalog.get(code) ?? null}
               {code}
+              imageUrl={images === null
+                ? (catalog.get(code)?.imageUrl ?? null)
+                : (tileUrls.get(`${code}:cropped`) ?? null)}
               {zone}
               limit={quantityLimit(ruleset, code)}
               currentCopies={totalCopies.get(code) ?? 0}
               selected={selectedCode === code}
-              disabled={ownership.ownedCount(code) <
+              unavailable={ownership.ownedCount(code) <
                 (totalCopies.get(code) ?? 0)}
               compact={plan.compact}
               dataCyPrefix={zone}

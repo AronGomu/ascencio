@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
@@ -108,12 +108,15 @@ describe("deck autosave controller", () => {
     await controller.showLibrary();
     expect(get(controller).mode).toBe("editor");
     expect(get(controller).message).toContain("Resolve unsaved deck changes");
+    await controller.openDeck(lastOpened!);
+    expect(get(controller).saveState).toBe("failed");
+    expect(get(controller).current?.deck.main).toEqual([89631139]);
     await controller.retrySave();
     expect(get(controller).saveState).toBe("saved");
     expect((await repository.load(lastOpened!))?.deck.main).toEqual([89631139]);
   });
 
-  it("ignores late saves after another deck opens", async () => {
+  it("waits for pending saves before another deck opens", async () => {
     let resolveDeferredSave!: (value: StoredDeck) => void;
     const deferredSave = new Promise<StoredDeck>((resolve) => {
       resolveDeferredSave = resolve;
@@ -169,13 +172,253 @@ describe("deck autosave controller", () => {
     await controller.initialize();
     const save = controller.mutate({ type: "add", cardCode: 89631139 });
     await Promise.resolve();
-    await controller.openDeck(second.deck.id);
+    const opening = controller.openDeck(second.deck.id);
+    await Promise.resolve();
+    expect(get(controller).current?.deck.id).toBe(first.deck.id);
     resolveDeferredSave({
       deck: { ...first.deck, main: [89631139], revision: 2 },
       history: first.history,
     });
     await save;
+    await opening;
     expect(get(controller).current?.deck.id).toBe(second.deck.id);
+  });
+
+  it("refuses navigation after an in-flight save fails, retaining retry and draft", async () => {
+    const name = "controller-navigation-failure";
+    names.push(name);
+    const repository = await IndexedDbDeckRepository.open(name);
+    try {
+      const controller = new DeckBuilderController(
+        repository,
+        catalogByCode(PROTOTYPE_CATALOG),
+        PROTOTYPE_RULESET,
+      );
+      await controller.initialize();
+      await controller.createDeck("Other");
+      const other = get(controller).current!.deck.id;
+      await controller.createDeck("Draft");
+      const current = get(controller).current!.deck.id;
+      const pending = Promise.withResolvers<StoredDeck>();
+      const saving = vi
+        .spyOn(repository, "save")
+        .mockReturnValueOnce(pending.promise);
+      const edit = controller.mutate({ type: "add", cardCode: 89631139 });
+      const navigation = controller.openDeck(other);
+      await Promise.resolve();
+      expect(get(controller).current?.deck.id).toBe(current);
+      pending.reject(new Error("quota simulation"));
+      await edit;
+      expect(await navigation).toBe(false);
+      expect(get(controller).saveState).toBe("failed");
+      expect(get(controller).current?.deck.main).toEqual([89631139]);
+      await controller.duplicate(other);
+      expect(await controller.createDeck("No discard")).toBe(false);
+      expect(
+        await controller.importDeck("No discard", {
+          main: [],
+          extra: [],
+          side: [],
+        }),
+      ).toBe(false);
+      expect(get(controller).current?.deck.id).toBe(current);
+      expect(saving).toHaveBeenCalledOnce();
+      await controller.retrySave();
+      expect(get(controller).saveState).toBe("saved");
+      expect((await repository.load(current))?.deck.main).toEqual([89631139]);
+    } finally {
+      repository.close();
+    }
+  });
+
+  it.each([
+    ["create", false],
+    ["import", false],
+    ["duplicate", false],
+    ["create", true],
+    ["import", true],
+    ["duplicate", true],
+  ] as const)(
+    "orders %s after a pending save (failure=%s), before later navigation",
+    async (operation, failure) => {
+      const name = `controller-save-before-${operation}-${failure}`;
+      names.push(name);
+      const repository = await IndexedDbDeckRepository.open(name);
+      const controller = new DeckBuilderController(
+        repository,
+        catalogByCode(PROTOTYPE_CATALOG),
+        PROTOTYPE_RULESET,
+      );
+      await controller.initialize();
+      await controller.createDeck("Original");
+      const original = get(controller).current!.deck.id;
+      const gate = Promise.withResolvers<void>();
+      const save = repository.save.bind(repository);
+      const saving = vi
+        .spyOn(repository, "save")
+        .mockImplementationOnce(async (...args) => {
+          await gate.promise;
+          if (failure) throw new Error("quota simulation");
+          return save(...args);
+        });
+      const edit = controller.mutate({ type: "add", cardCode: 46986414 });
+      await vi.waitFor(() => expect(saving).toHaveBeenCalledOnce());
+      const creating = vi.spyOn(repository, "createAndOpen");
+      const transition =
+        operation === "create"
+          ? controller.createDeck("Created")
+          : operation === "import"
+            ? controller.importDeck("Imported", {
+                main: [89631139],
+                extra: [],
+                side: [],
+              })
+            : controller.duplicate(original);
+      const navigation = controller.openDeck(original);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(creating).not.toHaveBeenCalled();
+        expect(get(controller).saveState).toBe("saving");
+        gate.resolve();
+        const [, created, navigated] = await Promise.all([
+          edit,
+          transition,
+          navigation,
+        ]);
+        expect(creating).toHaveBeenCalledTimes(failure ? 0 : 1);
+        if (operation !== "duplicate") expect(created).toBe(!failure);
+        expect(navigated).toBe(!failure);
+        expect(get(controller).current?.deck.id).toBe(original);
+        expect(get(controller).current?.deck.main).toEqual([46986414]);
+        expect(get(controller).saveState).toBe(failure ? "failed" : "saved");
+        if (failure) await controller.retrySave();
+        expect((await repository.load(original))?.deck.main).toEqual([
+          46986414,
+        ]);
+      } finally {
+        gate.resolve();
+        await Promise.all([edit, transition, navigation]);
+        repository.close();
+      }
+    },
+  );
+
+  it.each(["create", "import", "duplicate"] as const)(
+    "serializes pending %s before edits and leave checks",
+    async (operation) => {
+      const name = `controller-pending-${operation}`;
+      names.push(name);
+      const repository = await IndexedDbDeckRepository.open(name);
+      const controller = new DeckBuilderController(
+        repository,
+        catalogByCode(PROTOTYPE_CATALOG),
+        PROTOTYPE_RULESET,
+      );
+      await controller.initialize();
+      await controller.createDeck("Original");
+      const original = get(controller).current!.deck.id;
+      const gate = Promise.withResolvers<void>();
+      const createAndOpen = repository.createAndOpen.bind(repository);
+      const creating = vi
+        .spyOn(repository, "createAndOpen")
+        .mockImplementationOnce(async (deck, history) => {
+          await gate.promise;
+          return createAndOpen(deck, history);
+        });
+      const saving = vi
+        .spyOn(repository, "save")
+        .mockRejectedValue(new Error("quota simulation"));
+      const transition =
+        operation === "create"
+          ? controller.createDeck("Created")
+          : operation === "import"
+            ? controller.importDeck("Imported", {
+                main: [89631139],
+                extra: [],
+                side: [],
+              })
+            : controller.duplicate(original);
+      await vi.waitFor(() => expect(creating).toHaveBeenCalledOnce());
+      const edit = controller.mutate({ type: "add", cardCode: 46986414 });
+      const leave = vi.fn();
+      const leaving = controller.canLeave().then(leave);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(saving).not.toHaveBeenCalled();
+        expect(leave).not.toHaveBeenCalled();
+      } finally {
+        gate.resolve();
+        await Promise.all([transition, edit, leaving]);
+        repository.close();
+      }
+      expect(await edit).toBe(false);
+      expect(leave).toHaveBeenCalledWith(true);
+      expect(get(controller).current?.deck.id).not.toBe(original);
+      expect(get(controller).saveState).toBe("saved");
+    },
+  );
+
+  it("order-only autosave restore persists undo and redo snapshots", async () => {
+    const name = "controller-order-restore";
+    names.push(name);
+    const repository = await IndexedDbDeckRepository.open(name);
+    try {
+      const controller = new DeckBuilderController(
+        repository,
+        catalogByCode(PROTOTYPE_CATALOG),
+        PROTOTYPE_RULESET,
+      );
+      await controller.initialize();
+      await controller.createDeck("Ordered");
+      await controller.mutate({ type: "add", cardCode: 89631139 });
+      await controller.mutate({ type: "add", cardCode: 46986414 });
+      const deck = get(controller).current!.deck;
+      await controller.restoreAutosave({
+        id: "order",
+        deckId: deck.id,
+        deckName: deck.name,
+        createdAt: deck.updatedAt,
+        main: [46986414, 89631139],
+        extra: [],
+        side: [],
+      });
+      expect(get(controller).current?.history.undo.at(-1)?.reason).toBe(
+        "restore",
+      );
+      await controller.undo();
+      expect(get(controller).current?.deck.main).toEqual([89631139, 46986414]);
+      await controller.redo();
+      expect((await repository.load(deck.id))?.deck.main).toEqual([
+        46986414, 89631139,
+      ]);
+    } finally {
+      repository.close();
+    }
+  });
+
+  it("recovers a committed create inside the queue without deadlocking later navigation", async () => {
+    const name = "controller-create-refresh-failure";
+    names.push(name);
+    const repository = await IndexedDbDeckRepository.open(name);
+    try {
+      const controller = new DeckBuilderController(
+        repository,
+        catalogByCode(PROTOTYPE_CATALOG),
+        PROTOTYPE_RULESET,
+      );
+      await controller.initialize();
+      vi.spyOn(repository, "list").mockRejectedValueOnce(
+        new Error("list unavailable"),
+      );
+      await expect(controller.createDeck("Committed")).resolves.toBe(true);
+      expect(get(controller).current?.deck.name).toBe("Committed");
+      await expect(controller.showLibrary()).resolves.toBe(true);
+      expect(get(controller).mode).toBe("library");
+      await expect(controller.createDeck("Next")).resolves.toBe(true);
+      expect(get(controller).current?.deck.name).toBe("Next");
+    } finally {
+      repository.close();
+    }
   });
 
   it("does not offer duplicate import retry after post-commit refresh failure", async () => {

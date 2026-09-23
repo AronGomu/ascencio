@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { handleModalKeydown } from "../focus-trap.ts";
   import type { DeckCardLists } from "../../decks/contracts/index.ts";
   import {
@@ -23,6 +23,8 @@
   let result: YdkImportResult | null = null;
   let selectedFilename: string | null = null;
   let isImporting = false;
+  let isReading = false;
+  let readGeneration = 0;
   let importError: string | null = null;
   let heading: HTMLHeadingElement;
   let commitButton: HTMLButtonElement;
@@ -44,14 +46,22 @@
   );
 
   onMount(() => heading.focus());
+  onDestroy(() => {
+    readGeneration += 1;
+  });
 
   function preview(): void {
-    result = importYdk(source);
+    if (!isReading) result = importYdk(source);
   }
 
   async function loadFile(event: Event): Promise<void> {
     const file = (event.currentTarget as HTMLInputElement).files?.[0];
     if (file === undefined) return;
+    const generation = ++readGeneration;
+    result = null;
+    importError = null;
+    source = "";
+    isReading = false;
     selectedFilename = file.name;
     if (file.size > MAXIMUM_YDK_SOURCE_LENGTH) {
       result = {
@@ -61,19 +71,27 @@
       };
       return;
     }
+    isReading = true;
     try {
-      source = await file.text();
-      preview();
+      const text = await file.text();
+      if (generation !== readGeneration) return;
+      source = text;
+      result = importYdk(source);
     } catch (error) {
+      if (generation !== readGeneration) return;
       result = {
         type: "invalid",
         message: `File read failed: ${error instanceof Error ? error.message : "Browser could not read file"}`,
         line: null,
       };
+    } finally {
+      if (generation === readGeneration) isReading = false;
     }
   }
 
   function sourceChanged(): void {
+    readGeneration += 1;
+    isReading = false;
     result = null;
     importError = null;
     selectedFilename = null;
@@ -82,6 +100,7 @@
   async function commitImport(): Promise<void> {
     if (
       isImporting ||
+      isReading ||
       result?.type !== "ready" ||
       (requireName &&
         (deckName.trim().length === 0 ||
@@ -116,7 +135,7 @@
   tabindex="-1"
   aria-modal="true"
   aria-labelledby="ydk-import-heading"
-  aria-busy={isImporting}
+  aria-busy={isImporting || isReading}
   data-cy="deck-ydk-import"
   onkeydown={(event) =>
     handleModalKeydown(event, () => {
@@ -185,7 +204,7 @@
   </label>
   <button
     type="button"
-    disabled={isImporting || source.trim().length === 0}
+    disabled={isImporting || isReading || source.trim().length === 0}
     data-cy="deck-ydk-import-preview"
     onclick={preview}>Preview import</button
   >

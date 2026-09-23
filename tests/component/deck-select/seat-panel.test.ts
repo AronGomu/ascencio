@@ -131,9 +131,9 @@ describe("DeckSelectScreen seat panel", () => {
     expect(theirs.textContent).not.toContain("Main");
 
     await waitFor(() =>
-      expect(find("deck-select-seat-list-player-row-101")).not.toBeNull(),
+      expect(find("deck-select-seat-list-player-main-row-101")).not.toBeNull(),
     );
-    expect(find("deck-select-seat-list-opponent-row-201")).not.toBeNull();
+    expect(find("deck-select-seat-list-opponent-main-row-201")).not.toBeNull();
   });
 
   it("declares the approved twin-column pane and grid parameters", () => {
@@ -296,4 +296,31 @@ describe("DeckSelectScreen seat panel", () => {
     expect(find("duel-start-opponent-picker")).toBeNull();
     expect(values.onpickopponent).not.toHaveBeenCalled();
   });
+});
+
+it("arrow navigation follows the active opponent seat across controlled updates", async () => {
+  const tiles = [
+    tile({ key: "a", name: "A" }),
+    tile({ key: "b", name: "B" }),
+    tile({ key: "c", name: "C" }),
+  ];
+  const onselect = vi.fn();
+  const { rerender } = render(
+    DeckSelectScreen,
+    props({
+      tiles,
+      selectedKey: "a",
+      opponentDeck: tiles[1],
+      seat: "opponent",
+      onselect,
+    }),
+  );
+  await fireEvent.keyDown(window, { key: "ArrowDown" });
+  expect(onselect).toHaveBeenLastCalledWith("c");
+  await rerender({ opponentDeck: tiles[2]! });
+  await fireEvent.keyDown(window, { key: "ArrowUp" });
+  expect(onselect).toHaveBeenLastCalledWith("b");
+  await rerender({ opponentDeck: tiles[1]! });
+  await fireEvent.keyDown(window, { key: "ArrowUp" });
+  expect(onselect).toHaveBeenLastCalledWith("a");
 });

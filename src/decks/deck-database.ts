@@ -73,8 +73,8 @@ const NOTHING_TO_MIGRATE: DeckMigrationReport = Object.freeze({
   legacyDeleted: false,
 });
 
-/* Only the fields the copy has to compare. The rows themselves are written back
-   untouched, so a schema addition needs no change here. */
+/* Keys align complete rows for comparison. The rows themselves are copied and
+   compared untouched, so a schema addition needs no change here. */
 interface DeckRow {
   readonly id: string;
   readonly revision: number;
@@ -102,8 +102,7 @@ interface DeckSnapshot {
  * - prototype only — copy every store in one transaction, re-read the
  *   production database and compare, then delete the prototype.
  * - prototype present and empty — nothing to copy, but the husk still goes.
- * - both present, production already holding every prototype deck at the same
- *   revision — a previous run copied but never got to delete. Finish the delete.
+ * - both present, production already holding every prototype row unchanged — a previous run copied but never got to delete. Finish the delete.
  * - both present and diverged — the two databases hold different decks, so
  *   copying could clobber and deleting would lose data. Keep both, report
  *   nothing done, and let the player keep using the production database.
@@ -140,7 +139,7 @@ export async function migrateLegacyDeckDatabase(
     );
   }
 
-  if (existing.decks.length > 0) {
+  if (DECK_STORE_NAMES.some((store) => existing[store].length > 0)) {
     production.close();
     if (!contains(existing, source)) return NOTHING_TO_MIGRATE;
     await deleteLegacyDatabase(factory);
@@ -289,27 +288,51 @@ async function writeSnapshot(
   await settled(transaction);
 }
 
-/** Whether `subject` holds every row of `expected`, comparing decks by id and
-    revision so a stale copy never passes for a complete one. */
+/** Deletion requires complete row equality, not independently incremented revisions. */
 function contains(subject: DeckSnapshot, expected: DeckSnapshot): boolean {
-  const decks = new Set(subject.decks.map(deckKey));
-  const histories = new Set(subject.histories.map(({ deckId }) => deckId));
-  const preferences = new Set(subject.preferences.map(preferenceKey));
+  const decks = new Map(subject.decks.map((row) => [row.id, row]));
+  const histories = new Map(subject.histories.map((row) => [row.deckId, row]));
+  const preferences = new Map(subject.preferences.map((row) => [row.key, row]));
   return (
-    expected.decks.every((deck) => decks.has(deckKey(deck))) &&
-    expected.histories.every(({ deckId }) => histories.has(deckId)) &&
-    expected.preferences.every((preference) =>
-      preferences.has(preferenceKey(preference)),
-    )
+    expected.decks.every((row) => sameRow(decks.get(row.id), row)) &&
+    expected.histories.every((row) =>
+      sameRow(histories.get(row.deckId), row),
+    ) &&
+    expected.preferences.every((row) => sameRow(preferences.get(row.key), row))
   );
 }
 
-function deckKey(deck: DeckRow): string {
-  return `${deck.id}@${String(deck.revision)}`;
-}
-
-function preferenceKey(preference: PreferenceRow): string {
-  return `${preference.key}=${preference.value}`;
+/* Stored rows contain plain records, arrays and primitives. Compare keys without
+   depending on property insertion order; array order remains significant. */
+function sameRow(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (
+    left === null ||
+    right === null ||
+    typeof left !== "object" ||
+    typeof right !== "object"
+  )
+    return false;
+  if (Array.isArray(left) || Array.isArray(right))
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => sameRow(value, right[index]))
+    );
+  if (
+    Object.getPrototypeOf(left) !== Object.prototype ||
+    Object.getPrototypeOf(right) !== Object.prototype
+  )
+    return false;
+  const a = left as Record<string, unknown>;
+  const b = right as Record<string, unknown>;
+  return (
+    Object.keys(a).length === Object.keys(b).length &&
+    Object.keys(a).every(
+      (key) => Object.hasOwn(b, key) && sameRow(a[key], b[key]),
+    )
+  );
 }
 
 function toPromise<T>(request: IDBRequest<T>): Promise<T> {

@@ -435,6 +435,7 @@
         cardCode: src.code,
         from: src.source,
         to: zone,
+        ...(src.index === null ? {} : { index: src.index }),
       });
       announcement = `${card!.name} moved to ${zone}.`;
     } else {
@@ -816,6 +817,7 @@
           data-cy="deck-pane-deck"
         >
           <DeckWorkspace
+            {images}
             {deck}
             {catalog}
             {ruleset}
@@ -852,6 +854,7 @@
           data-cy="deck-pane-catalog"
         >
           <CardCatalog
+            {images}
             {cards}
             {ruleset}
             {ownership}

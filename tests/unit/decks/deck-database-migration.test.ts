@@ -20,6 +20,7 @@ import {
   deckDatabaseVersion,
   openDeckDatabase,
   seedDeckDatabase,
+  transactionSettled,
 } from "../../fixtures/deck-database.ts";
 
 /* The migration is the one code path that can destroy a real player's decks,
@@ -219,6 +220,104 @@ describe("migrateLegacyDeckDatabase", () => {
     });
     expect(await deckDatabaseNames()).not.toContain(LEGACY_DECK_DATABASE_NAME);
     expect(await deckIdsIn(DECK_DATABASE_NAME)).toEqual(["a", "b"]);
+  });
+
+  it.each(["cards", "name", "history", "preferences-only"])(
+    "retains both databases when equal revisions diverge in %s",
+    async (difference) => {
+      const decks = difference === "preferences-only" ? [] : [deckRecord("a")];
+      await seedDeckDatabase(LEGACY_DECK_DATABASE_NAME, {
+        decks,
+        lastOpened: "a",
+      });
+      await seedDeckDatabase(DECK_DATABASE_NAME, { decks, lastOpened: "a" });
+      const database = await openDeckDatabase(DECK_DATABASE_NAME);
+      const transaction = database.transaction(
+        ["decks", "histories", "preferences"],
+        "readwrite",
+      );
+      if (difference === "cards")
+        transaction
+          .objectStore("decks")
+          .put({ ...deckRecord("a"), main: [46986414] });
+      if (difference === "name")
+        transaction
+          .objectStore("decks")
+          .put({ ...deckRecord("a"), name: "Independent edit" });
+      if (difference === "history")
+        transaction.objectStore("histories").put({
+          deckId: "a",
+          history: { undo: [], redo: [], nextSequence: 2 },
+        });
+      if (difference === "preferences-only")
+        transaction
+          .objectStore("preferences")
+          .put({ key: LAST_OPENED_KEY, value: "b" });
+      await transactionSettled(transaction);
+      database.close();
+      const before = await Promise.all(
+        ["decks", "histories", "preferences"].map((store) =>
+          deckDatabaseRows(DECK_DATABASE_NAME, store),
+        ),
+      );
+
+      expect(await migrateLegacyDeckDatabase(indexedDB)).toEqual({
+        migrated: 0,
+        legacyDeleted: false,
+      });
+      expect(await deckDatabaseNames()).toContain(LEGACY_DECK_DATABASE_NAME);
+      expect(
+        await Promise.all(
+          ["decks", "histories", "preferences"].map((store) =>
+            deckDatabaseRows(DECK_DATABASE_NAME, store),
+          ),
+        ),
+      ).toEqual(before);
+    },
+  );
+
+  it("preserves a production history-only database instead of overwriting it", async () => {
+    await seedDeckDatabase(LEGACY_DECK_DATABASE_NAME, {
+      decks: [deckRecord("a")],
+    });
+    const database = await openDeckDatabase(DECK_DATABASE_NAME);
+    const transaction = database.transaction("histories", "readwrite");
+    const history = {
+      deckId: "a",
+      history: { undo: [], redo: [], nextSequence: 7 },
+    };
+    transaction.objectStore("histories").put(history);
+    await transactionSettled(transaction);
+    database.close();
+
+    expect(await migrateLegacyDeckDatabase(indexedDB)).toEqual({
+      migrated: 0,
+      legacyDeleted: false,
+    });
+    expect(await deckDatabaseNames()).toContain(LEGACY_DECK_DATABASE_NAME);
+    expect(await deckDatabaseRows(DECK_DATABASE_NAME, "histories")).toEqual([
+      history,
+    ]);
+    expect(await deckIdsIn(DECK_DATABASE_NAME)).toEqual([]);
+  });
+
+  it("accepts identical complete rows despite object key insertion order", async () => {
+    await seedDeckDatabase(LEGACY_DECK_DATABASE_NAME, {
+      decks: [deckRecord("a")],
+      lastOpened: "a",
+    });
+    const reversed = Object.fromEntries(
+      Object.entries(deckRecord("a")).reverse(),
+    ) as unknown as DeckRecord;
+    await seedDeckDatabase(DECK_DATABASE_NAME, {
+      decks: [reversed],
+      lastOpened: "a",
+    });
+    expect(await migrateLegacyDeckDatabase(indexedDB)).toEqual({
+      migrated: 0,
+      legacyDeleted: true,
+    });
+    expect(await deckDatabaseNames()).not.toContain(LEGACY_DECK_DATABASE_NAME);
   });
 
   it("keeps a prototype database that holds decks the production one lacks", async () => {

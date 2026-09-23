@@ -9,7 +9,10 @@ import {
   quantityLimit,
 } from "../../../src/decks/validation/index.ts";
 import type { DeckBuilderState } from "../../../src/deck-editor/deck-editor-store.ts";
-import type { DeckCommand } from "../../../src/decks/editing/index.ts";
+import {
+  applyDeckCommand,
+  type DeckCommand,
+} from "../../../src/decks/editing/index.ts";
 import {
   prototypeCatalogMap,
   stateFixture,
@@ -70,6 +73,41 @@ describe("pointer deck editing", () => {
       type: "add",
       cardCode: 89631139,
       zone: "main",
+    });
+  });
+
+  it("moves the dragged duplicate without reordering remaining source cards", async () => {
+    const a = MAIN_LIMIT_3_CODES[0]!;
+    const b = MAIN_LIMIT_3_CODES[1]!;
+    const c = MAIN_LIMIT_3_CODES[2]!;
+    const state = stateWithMain([a, b, a, c]);
+    const onmutate = vi.fn<(command: DeckCommand) => void>();
+    const { container } = render(DeckEditor, props(onmutate, 0, state));
+    await fireEvent.click(
+      container.querySelector('[data-cy="deck-zone-toggle-side"]')!,
+    );
+    await fireEvent.dragStart(
+      container.querySelector('[data-cy="deck-slot-main-2"] button')!,
+    );
+    await fireEvent.drop(
+      screen.getByRole("group", { name: "Side Deck drop area" }),
+    );
+    expect(onmutate).toHaveBeenCalledWith({
+      type: "move",
+      cardCode: a,
+      from: "main",
+      to: "side",
+      index: 2,
+    });
+    const result = applyDeckCommand(
+      state.current!.deck,
+      onmutate.mock.calls[0]![0],
+      prototypeCatalogMap,
+      PROTOTYPE_RULESET,
+    );
+    expect(result).toMatchObject({
+      type: "accepted",
+      cards: { main: [a, b, c], side: [a] },
     });
   });
 

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { CardImageSource } from "../../cards/images/index.ts";
+  import { createDeckLibraryImages } from "../cards/deck-library-images.ts";
   import { onDestroy, onMount } from "svelte";
   import {
     type AdvancedDeckCatalogFilters,
@@ -25,6 +27,14 @@
   import CardTile from "./CardTile.svelte";
   import type CatalogTypeInputComponent from "./CatalogTypeInput.svelte";
   import type { AdvancedSearchHost } from "../advanced-search-loader.ts";
+
+  export let images: CardImageSource | null = null;
+  let tileUrls: ReadonlyMap<string, string> = new Map();
+  const tileImages = createDeckLibraryImages(
+    (urls) => (tileUrls = urls),
+    () => undefined,
+  );
+  onDestroy(() => tileImages.dispose());
 
   export let cards: readonly DeckBuilderCardView[];
   export let ruleset: PinnedDeckRuleset;
@@ -119,6 +129,11 @@
   $: visible = observerSupported
     ? results.slice(0, visibleCount)
     : results.slice(0, FALLBACK_RESULT_CAP);
+  $: tileImages.synchronize(
+    images,
+    visible.map(({ code }) => code),
+    [],
+  );
   $: fallbackTruncated =
     !observerSupported && results.length > FALLBACK_RESULT_CAP;
   $: ceilingTruncated =
@@ -295,6 +310,9 @@
         {#each visible as card (card.code)}
           <CardTile
             {card}
+            imageUrl={images === null
+              ? card.imageUrl
+              : (tileUrls.get(`${card.code}:cropped`) ?? null)}
             code={card.code}
             limit={quantityLimit(ruleset, card.code)}
             currentCopies={copies.get(card.code) ?? 0}

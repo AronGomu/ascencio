@@ -7,6 +7,7 @@
   export let id: string;
   export let label: string;
   export let value: string | null;
+  export let nullable = true;
   export let options: readonly AdvancedSelectOption[];
   export let onchange: (value: string | null) => void;
 </script>
@@ -18,11 +19,15 @@
     data-cy={`advanced-search-${id}`}
     onchange={(event) => onchange(event.currentTarget.value || null)}
   >
-    <option value="" data-cy={`advanced-search-${id}-any`}>Any</option>
+    {#if nullable}
+      <option value="" data-cy={`advanced-search-${id}-option-unset`}
+        >Any</option
+      >
+    {/if}
     {#each options as option (option.value)}
       <option
         value={option.value}
-        data-cy={`advanced-search-${id}-${option.value.toLowerCase().replaceAll(" ", "-")}`}
+        data-cy={`advanced-search-${id}-option-${option.value.toLowerCase().replaceAll(" ", "-")}`}
         >{option.label}</option
       >
     {/each}

@@ -93,22 +93,29 @@
             onpointerleave={() => onrowleave?.()}
             onfocus={(event) => onrowhover?.(entry.code, event.currentTarget)}
             onblur={() => onrowleave?.()}
-            data-cy={`${cy}-row-${entry.code}`}
+            data-cy={`${cy}-${part.id}-row-${entry.code}`}
           >
             <span
               class="cp"
               class:single={entry.copies === 1}
-              data-cy={`${cy}-row-copies-${entry.code}`}>{entry.copies}</span
+              data-cy={`${cy}-${part.id}-row-copies-${entry.code}`}
+              >{entry.copies}</span
             >
             {#if entry.imageUrl !== null}
-              <span class="art" data-cy={`${cy}-row-art-${entry.code}`}></span>
-              <span class="fade" data-cy={`${cy}-row-fade-${entry.code}`}
+              <span
+                class="art"
+                data-cy={`${cy}-${part.id}-row-art-${entry.code}`}
+              ></span>
+              <span
+                class="fade"
+                data-cy={`${cy}-${part.id}-row-fade-${entry.code}`}
               ></span>
             {/if}
             <span
               class="name"
               title={entry.name}
-              data-cy={`${cy}-row-name-${entry.code}`}>{entry.name}</span
+              data-cy={`${cy}-${part.id}-row-name-${entry.code}`}
+              >{entry.name}</span
             >
           </li>
         {/each}

@@ -411,6 +411,9 @@ async function verifyProgressiveReleaseInternal(
         Buffer.from(manifestBytes),
       ) ||
       !Buffer.from(canonicalBytes(pointer)).equals(Buffer.from(pointerBytes)) ||
+      !Buffer.from(canonicalBytes(candidate)).equals(
+        Buffer.from(candidateBytes),
+      ) ||
       pointer.releaseSequence !== manifest.releaseSequence ||
       pointer.manifest.version !== manifestVersion ||
       pointer.manifest.bytes !== manifestBytes.length ||

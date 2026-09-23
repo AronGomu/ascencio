@@ -592,6 +592,28 @@ for (const { name, tamper } of manifestCorruptions) {
   });
 }
 
+test("verifier rejects non-canonical candidate metadata", async () => {
+  const { root, inventory } = await fixture();
+  const candidate = await packProgressiveRelease(root, inventory, {
+    releaseSequence: 1,
+    coreMin: 1,
+    coreMaxExclusive: 2,
+  });
+  await assert.doesNotReject(
+    verifyProgressiveRelease(root, candidate.run, false),
+  );
+  const candidatePath = path.join(
+    root,
+    candidate.run,
+    "progressive/candidate.json",
+  );
+  const value = JSON.parse(await readFile(candidatePath, "utf8"));
+  await writeFile(candidatePath, `${JSON.stringify(value, null, 2)}\n`);
+  await assert.rejects(verifyProgressiveRelease(root, candidate.run, false), {
+    message: "CONTENT_INVALID_MANIFEST",
+  });
+});
+
 test("inventory schema: unknown field rejects verify and publish before remote calls", async () => {
   const { root, inventory } = await fixture();
   const candidate = await packProgressiveRelease(root, inventory, {

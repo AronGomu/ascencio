@@ -298,6 +298,21 @@ test("publish ordering: files precede manifest, pointer is last, identical retry
   );
 });
 
+test("idempotent publish restores a missing immutable file", async () => {
+  const { root, first } = await candidates();
+  const client = new FakeS3Client();
+  await publishProgressiveRelease(root, first.run, transport(client));
+  const fileKey = `ascencio-assets/v1/${first.objectKeys.find((key) => key.startsWith("content/files/"))!}`;
+  client.rows.delete(fileKey);
+
+  assert.equal(
+    (await publishProgressiveRelease(root, first.run, transport(client)))
+      .status,
+    "idempotent",
+  );
+  assert(client.rows.has(fileKey));
+});
+
 test("concurrent publisher: candidates from same predecessor permit one pointer CAS winner", async () => {
   const { root, first, second, third } = await candidates();
   const client = new FakeS3Client();

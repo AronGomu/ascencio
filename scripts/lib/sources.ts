@@ -61,6 +61,10 @@ export async function syncRepository(
 
   try {
     runGit(["rev-parse", "--git-dir"], directory);
+    const repository = runGit(["remote", "get-url", "origin"], directory);
+    if (repository !== definition.repository) {
+      throw new Error("Cached source repository mismatch");
+    }
   } catch (error) {
     emit({
       operation: "validateSourceCache",

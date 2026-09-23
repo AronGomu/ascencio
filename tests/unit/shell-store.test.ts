@@ -132,6 +132,45 @@ describe("createShellStore", () => {
     expect(seen).toEqual([null, "continue", null]);
   });
 
+  it.each(["navigate", "back"])(
+    "resumes internal editor return through %s",
+    (via) => {
+      const store = createShellStore("#/story", vi.fn());
+      let intent: string | null = null;
+      store.subscribe((state) => (intent = state.storyEntryIntent));
+      expect(intent).toBeNull();
+      store.navigate({ kind: "story-decks" });
+      if (via === "back") store.syncFromHash("#/story");
+      else store.navigate({ kind: "story" });
+      expect(intent).toBe("continue");
+      store.syncFromHash("#/story");
+      expect(intent).toBe("continue");
+    },
+  );
+
+  it.each(["#/story/decks", "#/story/decks/alpha", "#/story/collection"])(
+    "keeps explicit New above resume inference from %s",
+    (hash) => {
+      const store = createShellStore(hash, vi.fn());
+      const intents: (string | null)[] = [];
+      store.subscribe((state) => intents.push(state.storyEntryIntent));
+      store.enterStory("new");
+      store.syncFromHash("#/story");
+      expect(intents).toEqual([null, "new"]);
+    },
+  );
+
+  it("resumes a collection return without replaying New", () => {
+    const store = createShellStore("#/", vi.fn());
+    const intents: (string | null)[] = [];
+    store.subscribe((state) => intents.push(state.storyEntryIntent));
+    store.enterStory("new");
+    store.navigate({ kind: "story-collection" });
+    store.syncFromHash("#/story");
+    store.syncFromHash("#/story");
+    expect(intents).toEqual([null, "new", null, "continue"]);
+  });
+
   it("stops notifying after unsubscribe", () => {
     const store = createShellStore("#/", vi.fn());
     const seen: string[] = [];

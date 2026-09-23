@@ -15,6 +15,7 @@ import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-game
 import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { deleteDB } from "idb";
+import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
@@ -180,6 +181,224 @@ async function libraryDeckNames(): Promise<readonly string[]> {
 }
 
 describe("deck editor context binding", () => {
+  it.each(
+    (["error", "corrupt"] as const).flatMap((outcome) =>
+      (["free-play-decks", "free-play", "unmount", "stay"] as const).flatMap(
+        (destination) =>
+          (["story-decks", "story-collection"] as const).map((origin) => ({
+            outcome,
+            destination,
+            origin,
+          })),
+      ),
+    ),
+  )(
+    "scopes $origin $outcome lookup recovery to $destination through the production session wrapper",
+    async ({ outcome, destination, origin }) => {
+      await import("../../../src/story/index.ts");
+      await seedFreePlayDeck("free-one", "Free Deck One");
+      const pending = Promise.withResolvers<void>();
+      const props = storyShellProps();
+      const read = vi.fn(
+        async (slot: StorySlotKey): Promise<StorySaveReadResult> => {
+          await pending.promise;
+          return { kind: "corrupt", slot, reason: "read failed" };
+        },
+      );
+      const application = {
+        acquire: vi.fn(async () => ({
+          generation: 1,
+          gameplay: READY_CORE_GATE.gameplay,
+          storyRelease: props.storyRelease,
+          storyCards: props.storyCards,
+          storyMedia: {
+            acquireMap: async () => null,
+            acquireSetImage: async () => null,
+          },
+          images: { acquire: async () => null },
+          saves: { ...savesHolding(null), read },
+          close: vi.fn(async () => {}),
+        })),
+        clear: vi.fn(),
+        close: vi.fn(),
+        subscribe: () => () => {},
+      };
+      const setHash = vi.fn();
+      const store = createShellStore(
+        origin === "story-decks" ? "#/story/decks" : "#/story/collection",
+        setHash,
+      );
+      const routes: string[] = [];
+      store.subscribe((state) => routes.push(state.route.kind));
+      const view = render(AppShell, {
+        store,
+        loaders,
+        application,
+        initialCoreGate: READY_CORE_GATE,
+      });
+      // Two transient menu probes, then two route-scoped lookup reads.
+      await vi.waitFor(
+        () => expect(read).toHaveBeenCalledTimes(4),
+        REAL_IMPORT,
+      );
+      if (destination === "unmount") view.unmount();
+      else if (destination !== "stay") store.navigate({ kind: destination });
+      if (destination === "free-play-decks")
+        expect(await libraryDeckNames()).toContain("Free Deck One");
+      setHash.mockClear();
+      if (outcome === "error") pending.reject(new Error("read failed"));
+      else pending.resolve();
+      await Promise.allSettled(read.mock.results.map((result) => result.value));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (destination === "stay") {
+        await vi.waitFor(() =>
+          expect(application.clear).toHaveBeenCalledOnce(),
+        );
+        expect(routes.at(-1)).toBe("home");
+      } else {
+        expect(routes.at(-1)).toBe(
+          destination === "unmount" ? origin : destination,
+        );
+        expect(setHash).not.toHaveBeenCalled();
+        expect(application.clear).not.toHaveBeenCalled();
+        expect(query("application-recovery-message")).toBeNull();
+        if (destination === "free-play-decks")
+          expect(await libraryDeckNames()).toContain("Free Deck One");
+      }
+    },
+  );
+
+  it.each(["empty", "error", "ready"])(
+    "ignores stale %s story lookup after leaving for free play",
+    async (outcome) => {
+      await import("../../../src/story/index.ts");
+      await seedFreePlayDeck("free-one", "Free Deck One");
+      const pending = Promise.withResolvers<void>();
+      const source = savesHolding(
+        outcome === "ready" ? storySave(["stale"]) : null,
+      );
+      const read = vi.fn(async (slot: StorySlotKey) => {
+        await pending.promise;
+        return source.read(slot);
+      });
+      const store = createShellStore("#/story/decks", vi.fn());
+      const routes: string[] = [];
+      store.subscribe((state) => routes.push(state.route.kind));
+      render(AppShell, {
+        ...storyShellProps(),
+        store,
+        loaders,
+        saves: { ...source, read },
+        initialCoreGate: READY_CORE_GATE,
+      });
+      await vi.waitFor(
+        () => expect(read).toHaveBeenCalledTimes(2),
+        REAL_IMPORT,
+      );
+      store.navigate({ kind: "free-play-decks" });
+      expect(await libraryDeckNames()).toContain("Free Deck One");
+      if (outcome === "error") pending.reject(new Error("read failed"));
+      else pending.resolve();
+      await Promise.allSettled(read.mock.results.map((result) => result.value));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(routes.at(-1)).toBe("free-play-decks");
+      expect(query("deck-editor-context-banner")).toBeNull();
+      expect(await libraryDeckNames()).toContain("Free Deck One");
+    },
+  );
+
+  it("ignores a pending story lookup after shell teardown", async () => {
+    const pending = Promise.withResolvers<void>();
+    const source = savesHolding(null);
+    const read = vi.fn(async (slot: StorySlotKey) => {
+      await pending.promise;
+      return source.read(slot);
+    });
+    const setHash = vi.fn();
+    const store = createShellStore("#/story/decks", setHash);
+    const view = render(AppShell, {
+      ...storyShellProps(),
+      store,
+      loaders,
+      saves: { ...source, read },
+      initialCoreGate: READY_CORE_GATE,
+    });
+    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2), REAL_IMPORT);
+    view.unmount();
+    pending.resolve();
+    await Promise.allSettled(read.mock.results.map((result) => result.value));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(setHash).not.toHaveBeenCalled();
+  });
+
+  it.each(["return", "back"])(
+    "resumes saved progress and edited deck through editor %s",
+    async (via) => {
+      const original = {
+        ...storySave(["round-trip"]),
+        screen: "narrative" as const,
+        savedScreen: "narrative" as const,
+        narrativeIndex: 3,
+        dp: 731,
+        collection: { 89631139: 7 },
+      };
+      const saves = createStorySaveRepository(indexedDB);
+      await saves.write("autosave", original, null);
+      const store = createShellStore("#/", () => {});
+      render(AppShell, {
+        ...storyShellProps(),
+        store,
+        loaders: storyLoaders,
+        saves,
+        initialCoreGate: READY_CORE_GATE,
+      });
+      store.enterStory("continue");
+      await appears("story-narrative-cursor");
+      await vi.waitFor(() =>
+        expect(query("story-narrative-cursor")?.textContent).toBe("Beat 4"),
+      );
+      await fireEvent.click(await appears("story-narrative-dialogue"));
+      await fireEvent.click(await appears("story-top-bar-decks"));
+      expect(await libraryDeckNames()).toEqual(["Deck round-trip"]);
+      // A direct editor route retains Story as its return target.
+      store.syncFromHash("#/story");
+      await appears("story-narrative-stage");
+      await vi.waitFor(() =>
+        expect(query("story-narrative-cursor")?.textContent).toBe("Beat 5"),
+      );
+      store.syncFromHash("#/story/decks/round-trip");
+      const name = await appears("deck-name-input");
+      const user = userEvent.setup();
+      await user.clear(name);
+      await user.type(name, "Edited story deck");
+      await user.tab();
+      await vi.waitFor(async () => {
+        const saved = await saves.read("autosave");
+        expect(
+          saved.kind === "ready" && saved.envelope.state.decks[0]?.name,
+        ).toBe("Edited story deck");
+      });
+      if (via === "return")
+        await fireEvent.click(await appears("deck-editor-return"));
+      else store.syncFromHash("#/story");
+      await appears("story-narrative-stage");
+      await vi.waitFor(() =>
+        expect(query("story-narrative-cursor")?.textContent).toBe("Beat 5"),
+      );
+      expect(query("story-top-bar-dp")?.textContent).toBe("731 DP");
+      await fireEvent.click(await appears("story-top-bar-decks"));
+      expect(await libraryDeckNames()).toEqual(["Edited story deck"]);
+      const resumed = await saves.read("autosave");
+      expect(resumed.kind).toBe("ready");
+      if (resumed.kind === "ready") {
+        expect(resumed.envelope.state.narrativeIndex).toBe(4);
+        expect(resumed.envelope.state.dp).toBe(731);
+        expect(resumed.envelope.state.collection).toEqual(original.collection);
+        expect(resumed.envelope.state.decks[0]?.name).toBe("Edited story deck");
+      }
+    },
+  );
+
   it("routes a persisted story snapshot into its owned-only editor", async () => {
     const manual = storySave(["from-manual"]);
     const autosave = {

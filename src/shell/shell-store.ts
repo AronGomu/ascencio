@@ -1,4 +1,9 @@
-import { formatAppRoute, parseAppRoute, type AppRoute } from "./routes.ts";
+import {
+  deckRouteContext,
+  formatAppRoute,
+  parseAppRoute,
+  type AppRoute,
+} from "./routes.ts";
 
 /** Which main-menu entry asked for the story, so the visual novel can open on
     that screen instead of repeating its own title. */
@@ -7,9 +12,8 @@ export type StoryEntryIntent = "new" | "continue" | "load";
 export interface ShellState {
   readonly route: AppRoute;
   readonly previousRoute: AppRoute | null;
-  /** Set only by `enterStory`, and only for as long as the route is the story:
-      leaving it drops the intent, so coming back resumes where the player left
-      off rather than replaying the entry they once chose. */
+  /** Menu entry or internal editor return intent. Leaving Story drops it;
+      returning from its deck context explicitly resumes the saved run. */
   readonly storyEntryIntent: StoryEntryIntent | null;
 }
 
@@ -54,7 +58,14 @@ export function createShellStore(
        through `syncFromHash` is what lets it survive the `hashchange` the
        navigation that set it provokes; dropping it anywhere else is what stops
        it from outliving the visit. */
-    const carried = route.kind === "story" ? intent : null;
+    const carried =
+      route.kind === "story"
+        ? (intent ??
+          (deckRouteContext(state.route) === "story" ||
+          state.route.kind === "story-collection"
+            ? "continue"
+            : null))
+        : null;
     const routeChanged = formatAppRoute(route) !== formatAppRoute(state.route);
     if (!routeChanged && carried === state.storyEntryIntent) return;
     state = {

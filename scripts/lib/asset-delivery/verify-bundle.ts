@@ -10,12 +10,7 @@ import { parseFrozenInventory } from "./frozen-inventory.ts";
 import { parseDevManifest } from "./dev-manifest.ts";
 import { parseCoreManifest } from "./core-manifest.ts";
 import { canonicalBytes, parseJsonBytes } from "./canonical-json.ts";
-import {
-  digestSource,
-  readSource,
-  readSourceJson,
-  sameDigest,
-} from "./source-files.ts";
+import { readSource, readSourceJson, sameDigest } from "./source-files.ts";
 import { contentValue, walkContentClosure } from "./content-closure.ts";
 import { objectRef } from "./bundle-objects.ts";
 import { playerPayload } from "./player-payload.ts";
@@ -53,8 +48,7 @@ export async function verifyBundle(
     reachable.set(ref.key, ref);
     const file = `${run}/objects/${ref.key}`;
     if (!json) {
-      if (!sameDigest(await digestSource(root, file), ref))
-        fail("ASSET_INTEGRITY_FAILED", ref.key);
+      // Archive verification binds hash and structure to one open file handle.
       checked.set(ref.key, null);
       return null;
     }

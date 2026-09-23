@@ -9,7 +9,7 @@ import { verifyZipStructure } from "./zip-structure.ts";
 import { assertNoPathCollisions, assertSafeParents } from "./path-guards.ts";
 import { compareCodePoints } from "./canonical-json.ts";
 import { MAX_ARCHIVE_BYTES } from "./archive-limits.ts";
-import { sameDigest } from "./source-files.ts";
+import { sameDigest, sameFile, sourceStat } from "./source-files.ts";
 import { fail } from "./failure.ts";
 
 const zipErrors = new Set(
@@ -37,6 +37,9 @@ export async function verifyArchive(
     fail("ASSET_LIMIT_EXCEEDED");
   assertNoPathCollisions(files.map((f) => f.path));
   const expected = [...files].sort((a, b) => compareCodePoints(a.path, b.path));
+  const before = await sourceStat(root, relative);
+  if (!before?.isFile() || before.size !== BigInt(ref.bytes))
+    fail("ASSET_INTEGRITY_FAILED", ref.key);
   const handle = await open(
     await assertSafeParents(root, relative),
     constants.O_RDONLY | constants.O_NOFOLLOW,
@@ -49,6 +52,8 @@ export async function verifyArchive(
     strictness: "strict",
   });
   try {
+    if (!sameFile(before, await handle.stat({ bigint: true })))
+      fail("ASSET_SOURCE_CHANGED", ref.key);
     await verifyZipStructure(source, player, expected.length);
     let index = 0;
     const requestedCaptures = new Set(capturePaths);
@@ -101,6 +106,30 @@ export async function verifyArchive(
       capturePaths.some((entry) => !captured.has(entry))
     )
       fail("ASSET_ARCHIVE_REJECTED");
+    const archiveHash = createHash("sha256");
+    let archiveBytes = 0;
+    while (archiveBytes < source.size) {
+      const chunk = await source.readUint8Array(
+        archiveBytes,
+        Math.min(1024 * 1024, source.size - archiveBytes),
+      );
+      archiveHash.update(chunk);
+      archiveBytes += chunk.length;
+    }
+    const after = await sourceStat(root, relative);
+    if (
+      !after ||
+      !sameFile(before, after) ||
+      !sameFile(before, await handle.stat({ bigint: true }))
+    )
+      fail("ASSET_SOURCE_CHANGED", ref.key);
+    if (
+      !sameDigest(ref, {
+        bytes: archiveBytes,
+        sha256: archiveHash.digest("hex"),
+      })
+    )
+      fail("ASSET_INTEGRITY_FAILED", ref.key);
     return captured;
   } catch (error) {
     if (error instanceof Error && zipErrors.has(error.message))

@@ -142,10 +142,16 @@ export function generationRepository(
           return {
             kind: "failed",
             reason:
-              error instanceof DOMException &&
-              error.name === "QuotaExceededError"
+              (error instanceof DOMException &&
+                error.name === "QuotaExceededError") ||
+              (error instanceof Error &&
+                error.message === "STORY_STORAGE_QUOTA")
                 ? "quota"
-                : "unknown",
+                : error instanceof DOMException ||
+                    (error instanceof Error &&
+                      error.message === "STORY_STORAGE_UNAVAILABLE")
+                  ? "unavailable"
+                  : "unknown",
           };
         }
       })();

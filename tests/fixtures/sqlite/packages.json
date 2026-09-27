@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "manifest": {
+        "packageId": "duel-core",
+        "packageType": "duel-core",
+        "version": "1.0.0",
+        "schemaVersion": 1,
+        "dependencies": [],
+        "createdAt": "2026-09-24T00:00:00.000Z"
+      },
+      "sourceRoot": "tests/fixtures/sqlite/sources/duel-core"
+    },
+    {
+      "manifest": {
+        "packageId": "card-library",
+        "packageType": "card-library",
+        "version": "1.0.0",
+        "schemaVersion": 1,
+        "dependencies": [
+          {
+            "packageId": "duel-core",
+            "requirement": "exact",
+            "version": "1.0.0"
+          }
+        ],
+        "createdAt": "2026-09-24T00:00:00.000Z"
+      },
+      "sourceRoot": "tests/fixtures/sqlite/sources/card-library"
+    },
+    {
+      "manifest": {
+        "packageId": "freeplay",
+        "packageType": "freeplay",
+        "version": "1.0.0",
+        "schemaVersion": 1,
+        "dependencies": [
+          {
+            "packageId": "card-library",
+            "requirement": "exact",
+            "version": "1.0.0"
+          }
+        ],
+        "createdAt": "2026-09-24T00:00:00.000Z"
+      },
+      "sourceRoot": "tests/fixtures/sqlite/sources/freeplay"
+    },
+    {
+      "manifest": {
+        "packageId": "chapter-01",
+        "packageType": "chapter",
+        "version": "1.0.0",
+        "schemaVersion": 1,
+        "dependencies": [
+          {
+            "packageId": "freeplay",
+            "requirement": "exact",
+            "version": "1.0.0"
+          }
+        ],
+        "createdAt": "2026-09-24T00:00:00.000Z"
+      },
+      "sourceRoot": "tests/fixtures/sqlite/sources/chapter-01"
+    }
+  ]
+}

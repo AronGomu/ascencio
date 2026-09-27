@@ -1,6 +1,7 @@
 # ADR-084: Asset-free CORE boot
 
-> Status: accepted; planned
+> Status: accepted; implemented by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D4/C1
+> Baseline implementation details in body are historical; current build anchors are `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, and `scripts/verify-browser-build.ts`.
 > Decided: 2026-09-12
 > Owners: shell / build / content
 > Relates: ADR-023 (shell routes), ADR-079 (cold offline shell)

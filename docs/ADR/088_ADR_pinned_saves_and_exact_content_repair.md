@@ -2,6 +2,8 @@
 
 > Status: accepted; planned
 > Amended by [ADR-093](093_ADR_atomic_release_selector_and_save_generations.md) D1–D5 and [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D4–D5: D1–D5 forward save generations replace historical refs/repair; explicit asset cleanup preserves save bytes without historical content locks.
+> Amended by [ADR-097](097_ADR_user_data_isolation_without_save_compatibility.md) D1–D5: preserve user bytes only; no legacy migration, saved-version pinning/repair, compatibility gate, or content-update save rewrite.
+> Superseded for current save/content behavior by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D3. Body retained as historical rationale.
 > Decided: 2026-09-12
 > Owners: story / content / shell
 > Amends: ADR-076 D4–D5 (legacy binding and removal policy)

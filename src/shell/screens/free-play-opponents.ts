@@ -1,4 +1,4 @@
-import type { ShellGameplay } from "../core/installed-inputs.ts";
+import type { BattlePresentationInput } from "../../battle/ports/index.ts";
 
 export interface FreePlayOpponent {
   readonly id: string;
@@ -9,16 +9,16 @@ export interface FreePlayOpponent {
 }
 
 export function installedFreePlayOpponents(
-  gameplay: Pick<ShellGameplay, "opponents">,
+  presentation: Pick<BattlePresentationInput, "opponents">,
 ): readonly FreePlayOpponent[] {
   return Object.freeze(
-    gameplay.opponents.map((opponent) =>
+    presentation.opponents.map((opponent) =>
       Object.freeze({
         id: opponent.id,
         name: opponent.name,
         line: opponent.line,
         deckKey: `chapter:${opponent.deckId}`,
-        policyId: opponent.policyId,
+        policyId: "basic" as const,
       }),
     ),
   );

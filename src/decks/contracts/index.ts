@@ -15,3 +15,7 @@ export {
   type StoredDeck,
   type DeckAutosaveRecord,
 } from "../deck-contracts.ts";
+export {
+  isDeckAutosaveRecord,
+  isStoredDeck,
+} from "./stored-deck-validation.ts";

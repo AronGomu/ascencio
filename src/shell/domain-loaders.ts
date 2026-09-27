@@ -22,6 +22,11 @@ import type {
   StoryState,
 } from "../story/index.ts";
 import type { StoryEntryIntent } from "./shell-store.ts";
+import type {
+  AsyncPreferencePort,
+  StoryReadLogPort,
+} from "../storage/index.ts";
+import type { StoryPlaybackSettings } from "../story/playback/index.ts";
 
 /** Each UI domain root is code-split, so the shell only holds a loader. */
 export type DomainLoader<
@@ -76,11 +81,19 @@ export type BattleDeckModule = Omit<
     is handed back the checkpointed state plus the one result that encounter
     produced; the shell owns the handoff id, the route and the duel itself. */
 export type StoryDomainProps = {
+  readonly ruleset: EditorCatalogInput["ruleset"];
+  readonly initialStorageError?: string | null;
+  readonly initialAutosaveRevision?: number;
+  readonly onautosaverevision?: (revision: number) => void;
   readonly release: StoryRelease;
   readonly cards: Cards;
   readonly saves: GenerationSaveRepository;
   readonly media: StoryMedia | null;
   readonly imageSource: CardImageSource | null;
+  readonly playbackSettingsPort?: AsyncPreferencePort<StoryPlaybackSettings> | null;
+  readonly initialPlaybackSettings?: StoryPlaybackSettings;
+  readonly readLogPort?: StoryReadLogPort | null;
+  readonly initialReadLog?: ReadonlySet<string>;
   /** Which main-menu entry sent the player here, so the story can open on that
       screen rather than repeating a title the shell already showed. `null`
       when the route was reached any other way. */

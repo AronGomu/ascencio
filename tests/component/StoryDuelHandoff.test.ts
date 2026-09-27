@@ -1,12 +1,12 @@
-import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 import {
-  storyShellProps,
+  semanticShellFixture,
+  disposeSemanticShells,
+} from "../fixtures/semantic-shell.ts";
+import {
   createStorySaveRepository,
   resetStorySessionFixture,
 } from "../fixtures/story-session.ts";
 import { storyBindingFixture } from "../fixtures/story-release.ts";
-import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
-import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -107,7 +107,6 @@ import {
   type ShellStore,
 } from "../../src/shell/shell-store.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/index.ts";
 import type {
   StorySaveWriteResult,
   StorySlotKey,
@@ -134,13 +133,6 @@ const mockedWorkerClientCtor = MockedDuelWorkerClient as unknown as {
 /** Set to make the duel's own request parser refuse whatever the shell built,
     which is the one way the two contracts can be made to disagree from here. */
 let refuseBattleRequest = false;
-
-const READY_CORE_GATE = {
-  kind: "ready" as const,
-  gameplay: createShellGameplay(installedDuelGameplayFixture(), null),
-  reader: contentReaderFixture(),
-  generation: 1,
-};
 
 const loaders: DomainLoaders = {
   duel: async () => {
@@ -187,11 +179,10 @@ function renderShell() {
     hash = next;
   });
   return render(AppShell, {
-    ...storyShellProps(),
     store,
     loaders,
     saves,
-    initialCoreGate: READY_CORE_GATE,
+    ...semanticShellFixture(undefined, saves),
   });
 }
 
@@ -270,32 +261,22 @@ async function reachEncounter(): Promise<ReturnType<typeof userEvent.setup>> {
   return user;
 }
 
-async function deleteStorySaves(): Promise<void> {
-  await new Promise<void>((resolve) => {
-    const request = indexedDB.deleteDatabase(STORY_SAVES_DATABASE_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    request.onblocked = () => resolve();
-  });
-}
-
 beforeEach(async () => {
   hash = "#/story";
   checkpointWriteFailure = null;
   refuseBattleRequest = false;
   mockedWorkerClientCtor.starts.length = 0;
-  await deleteStorySaves();
   saves = failableSaves(createStorySaveRepository(globalThis.indexedDB));
   await seedMapProgress();
 });
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
+  await disposeSemanticShells();
+  await resetStorySessionFixture();
   localStorage.clear();
   mockedWorkerClientCtor.instances.length = 0;
   mockedWorkerClientCtor.starts.length = 0;
-  await deleteStorySaves();
 });
 
 /** The seats the Worker was actually asked to duel with, once it has been. */

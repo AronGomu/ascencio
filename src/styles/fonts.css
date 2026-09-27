@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../assets/fonts/forum-latin.woff2") format("woff2");
+  src: url("../../assets/app/fonts/forum-latin.woff2") format("woff2");
 }
 
 @font-face {
@@ -16,7 +16,7 @@
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: url("../assets/fonts/source-serif-4-latin.woff2") format("woff2");
+  src: url("../../assets/app/fonts/source-serif-4-latin.woff2") format("woff2");
 }
 
 @font-face {
@@ -24,5 +24,6 @@
   font-style: italic;
   font-weight: 400 700;
   font-display: swap;
-  src: url("../assets/fonts/source-serif-4-italic-latin.woff2") format("woff2");
+  src: url("../../assets/app/fonts/source-serif-4-italic-latin.woff2")
+    format("woff2");
 }

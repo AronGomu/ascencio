@@ -2,6 +2,8 @@
 
 > Status: accepted; planned
 > Amended by [ADR-092](092_ADR_immutable_per_file_content_delivery.md) D1–D5: D1/D2 player closure uses immutable per-file R2 objects/manifests, not retained player ZIPs; eligibility D3 remains.
+> Amended by [ADR-095](095_ADR_manual_sqlite_package_delivery.md) D1–D5: manual SQLite delivery replaces D1–D2/D4 managed-host inventory/acceptance mechanics; D3 rights and explicit publication authorization remain.
+> Superseded for current release mechanics by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D1/B2–B3. Body retained as historical rationale; rights approval remains mandatory.
 > Decided: 2026-09-07
 > Owners: release / governance
 > Relates: ADR-075 (static delivery), ADR-076 (saved exact refs)

@@ -1,0 +1,11 @@
+{
+  "coreVersion": [11, 0],
+  "wasmPath": "engine/ocgcore.sync.wasm",
+  "vendorManifestPath": "engine/vendor-manifest.json",
+  "strings": {
+    "system": { "1": "one" },
+    "victory": { "1": "win" },
+    "counter": {},
+    "setname": {}
+  }
+}

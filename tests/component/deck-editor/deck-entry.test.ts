@@ -1,29 +1,28 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  withTestDeckDatabase,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
-import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
+
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/validation/index.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { deckId } from "../../../src/decks/contracts/index.ts";
-import { DECK_DATABASE_VERSION } from "../../../src/decks/deck-database.ts";
 
-const names: string[] = [];
-afterEach(async () =>
-  Promise.all(names.splice(0).map((name) => deleteDB(name))),
-);
+afterEach(async () => disposeTestDeckRepositories());
 
 describe("deck editor entry", () => {
   it("opens last-opened deck and clears stale pointers", async () => {
     const name = "entry-routing";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -44,21 +43,13 @@ describe("deck editor entry", () => {
     expect(get(next).mode).toBe("editor");
     expect(get(next).current?.deck.id).toBe(id);
 
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(name, DECK_DATABASE_VERSION);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+    withTestDeckDatabase(name, (database) => {
+      database
+        .prepare(
+          "UPDATE user_records SET payload_json=? WHERE namespace=? AND record_key=?",
+        )
+        .run(JSON.stringify(deckId("stale")), "deck-meta", "lastOpened");
     });
-    const transaction = database.transaction("preferences", "readwrite");
-    transaction.objectStore("preferences").put({
-      key: "last-opened-deck",
-      value: deckId("stale"),
-    });
-    await new Promise<void>((resolve, reject) => {
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
-    database.close();
     const stale = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -67,6 +58,6 @@ describe("deck editor entry", () => {
     await stale.initialize();
     expect(get(stale).mode).toBe("library");
     expect(await repo.getLastOpened()).toBeNull();
-    repo.close();
+    await repo.close();
   });
 });

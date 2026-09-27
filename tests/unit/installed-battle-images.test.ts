@@ -23,6 +23,31 @@ function lease(url = "blob:installed"): CardImageLease {
 beforeEach(() => acquire.mockReset());
 
 describe("semantic battle image teardown", () => {
+  it("keeps inline card-back and missing-art placeholders without a source", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+    try {
+      const library = await createCardImageSourceLibrary(
+        null,
+        [1],
+        "a".repeat(64),
+        "b".repeat(64),
+      );
+      expect(library.provider).toBe("semantic-source");
+      expect(library.cardBackUrl).toMatch(/^data:image\/svg\+xml,/);
+      expect(library.placeholderUrl).toMatch(/^data:image\/svg\+xml,/);
+      expect(library.cardBackUrl).not.toBe(library.placeholderUrl);
+      const handle = library.lease(1);
+      expect(handle.url).toBe(library.placeholderUrl);
+      handle.release();
+      library.dispose();
+      library.dispose();
+      expect(library.diagnostics).toEqual([]);
+      expect(fetch).not.toHaveBeenCalled();
+    } finally {
+      fetch.mockRestore();
+    }
+  });
+
   it("never acquires catalog images before a mounted lease exists", async () => {
     acquire.mockImplementation(async () => lease());
     const library = await create();

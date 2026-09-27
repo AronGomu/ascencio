@@ -1,88 +1,29 @@
-// @vitest-environment node
-import { describe, expect, it, vi } from "vitest";
-import { cardCode } from "../../src/cards/index.ts";
-import type {
-  ContentReader,
-  ProgressiveManifest,
-  StagedContent,
-} from "../../src/content/index.ts";
-import { createProgressiveReleaseMedia } from "../../src/shell/adapters/progressive-release-media.ts";
+import { afterEach, expect, it, vi } from "vitest";
+import { SqliteImageLeasePool } from "../../src/shell/adapters/sqlite-image-source.ts";
+import { createSqliteStoryMedia } from "../../src/shell/adapters/sqlite-story-media.ts";
+import { imageQueryFixture } from "../fixtures/sqlite-image-query.ts";
 
-const image = {
-  packId: "chapter-01" as const,
-  path: "chapters/chapter-01/card.png",
-};
-const staged: StagedContent = {
-  receiptId: "a".repeat(64),
-  manifestVersion: "b".repeat(64),
-  releaseSequence: 1,
-  chapterIds: ["chapter-01"],
-};
-const manifest: ProgressiveManifest = {
-  schemaVersion: 3,
-  releaseSequence: 1,
-  coreRange: { min: 1, maxExclusive: 2 },
-  runtimeSnapshotId: "c".repeat(64),
-  chapters: [
-    {
-      id: "chapter-01",
-      title: "Chapter One",
-      description: "Prologue",
-      depends: [],
-      gameplayPath: "chapters/chapter-01/gameplay.json",
-      storyPath: null,
-    },
-  ],
-  files: [
-    {
-      path: image.path,
-      version: "d".repeat(64),
-      bytes: 4,
-      mediaType: "image/png",
-      role: "media",
-      required: false,
-      packIds: ["chapter-01"],
-    },
-  ],
-};
-
-describe("progressive release media", () => {
-  it("cancels an in-flight cache read when the release is disposed", async () => {
-    const started = Promise.withResolvers<void>();
-    const finished = Promise.withResolvers<Uint8Array | null>();
-    let readSignal: AbortSignal | undefined;
-    const reader: ContentReader = {
-      readManifest: vi.fn(async () => manifest),
-      verifyRequired: vi.fn(async () => undefined),
-      readFile: vi.fn(async (_version, _path, signal) => {
-        readSignal = signal;
-        signal.addEventListener("abort", () => finished.resolve(null), {
-          once: true,
-        });
-        started.resolve();
-        return finished.promise;
-      }),
-    };
-    const media = createProgressiveReleaseMedia(
-      reader,
-      staged,
-      manifest,
-      new Map([[`${cardCode(1)}:full`, image]]),
-      new Map(),
-      new Map(),
-    );
-
-    const pending = media.images.acquire(
-      cardCode(1),
-      "full",
-      new AbortController().signal,
-    );
-    await started.promise;
-    media.dispose();
-    const cancelled = readSignal?.aborted;
-    finished.resolve(null);
-
-    await expect(pending).resolves.toBeNull();
-    expect(cancelled).toBe(true);
+afterEach(() => vi.restoreAllMocks());
+it("cancels an in-flight SQLite media query when the session closes", async () => {
+  const { query, content } = imageQueryFixture();
+  const pending = Promise.withResolvers<Awaited<ReturnType<typeof query>>>();
+  query.mockReturnValue(pending.promise);
+  const pool = new SqliteImageLeasePool(content);
+  const media = createSqliteStoryMedia(
+    pool,
+    "chapter-01",
+    "map.svg",
+    new Set(),
+  );
+  const create = vi.spyOn(URL, "createObjectURL");
+  const read = media.acquireMap("chapter-01", new AbortController().signal);
+  const failure = expect(read).rejects.toMatchObject({ name: "AbortError" });
+  pool.close();
+  expect(query.mock.calls[0]![1].aborted).toBe(true);
+  pending.resolve({
+    kind: "ok",
+    value: { mime: "image/svg+xml", bytes: new Uint8Array([1]) },
   });
+  await failure;
+  expect(create).not.toHaveBeenCalled();
 });

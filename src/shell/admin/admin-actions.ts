@@ -1,55 +1,51 @@
-import { DECK_DATABASE_NAME, deckId, type DeckId } from "../../decks/index.ts";
-import type { ShellGameplay } from "../core/installed-inputs.ts";
-import {
-  STORY_SAVES_DATABASE_NAME,
-  STORY_SLOT_KEYS,
-  type GenerationSaveRepository,
-} from "../../story/saves/index.ts";
-import { SNAPSHOT_DATABASE_NAME } from "../../battle/storage/snapshot-store.ts";
+import { deckId, type DeckId } from "../../decks/index.ts";
+import type { UserNamespace } from "../../storage/index.ts";
 import type { AppRoute } from "../routes.ts";
-import { SHELL_SETTINGS_KEY } from "../settings/shell-settings.ts";
+import type { ShellGameplay } from "../core/installed-inputs.ts";
+import type { ShellApplication } from "../core/shell-application.ts";
+import { emptyDeckHistory } from "../../decks/editing/index.ts";
+
+const SNAPSHOT_DATABASE_NAME = "ygo-story-duel";
 
 export interface AdminStorageTarget {
   readonly id: string;
   readonly label: string;
-  readonly kind: "indexeddb" | "localstorage";
-  /** Database name for `indexeddb`, storage key for `localstorage`. */
+  readonly kind: "user" | "indexeddb";
   readonly name: string;
+  readonly namespaces?: readonly UserNamespace[];
 }
 
-/* Every store the app writes today. A new database or key is only reachable
-   from the console once it is appended here. */
 export const ADMIN_STORAGE_TARGETS: readonly AdminStorageTarget[] =
   Object.freeze([
     Object.freeze({
       id: "decks",
       label: "Free-play deck library",
-      kind: "indexeddb",
-      name: DECK_DATABASE_NAME,
-    } as const),
-    Object.freeze({
-      id: "duel-snapshots",
-      label: "Duel snapshots",
-      kind: "indexeddb",
-      name: SNAPSHOT_DATABASE_NAME,
-    } as const),
-    Object.freeze({
-      id: "shell-settings",
-      label: "Shell settings",
-      kind: "localstorage",
-      name: SHELL_SETTINGS_KEY,
+      kind: "user",
+      name: "user-data.sqlite",
+      namespaces: ["decks", "deck-meta", "deck-autosaves"],
     } as const),
     Object.freeze({
       id: "story-saves",
       label: "Story saves",
+      kind: "user",
+      name: "user-data.sqlite",
+      namespaces: ["story"],
+    } as const),
+    Object.freeze({
+      id: "preferences",
+      label: "Player settings and read history",
+      kind: "user",
+      name: "user-data.sqlite",
+      namespaces: ["preferences", "story-read-log"],
+    } as const),
+    Object.freeze({
+      id: "duel-snapshots",
+      label: "Operational duel diagnostics",
       kind: "indexeddb",
-      name: STORY_SAVES_DATABASE_NAME,
+      name: SNAPSHOT_DATABASE_NAME,
     } as const),
   ]);
 
-/* Keyed by kind so adding an `AppRoute` member is a compile error here rather
-   than a route the console silently forgets. Routes that need an id, and the
-   console's own route, map to `null`. */
 const ROUTE_INDEX: Readonly<Record<AppRoute["kind"], AppRoute | null>> =
   Object.freeze({
     home: { kind: "home" },
@@ -75,43 +71,18 @@ export const ADMIN_ROUTES: readonly AppRoute[] = Object.freeze(
 export const ADMIN_TEST_DECK_ID: DeckId = deckId("admin-test-deck");
 export const ADMIN_TEST_DECK_NAME = "Admin test deck";
 
-/** A delete that another connection blocks is queued, not performed, so the
-    caller has to be able to tell the two apart before it claims a store is
-    gone. Failures keep throwing. */
 export type AdminResetResult =
   { readonly outcome: "deleted" } | { readonly outcome: "blocked" };
 
-export async function resetStorageTarget(
+export async function resetOperationalStorageTarget(
   target: AdminStorageTarget,
   factory: IDBFactory,
-  storage: Pick<Storage, "removeItem">,
-  saves: GenerationSaveRepository | null = null,
 ): Promise<AdminResetResult> {
-  if (target.name === STORY_SAVES_DATABASE_NAME) {
-    if (saves === null) throw new Error("STORY_MIGRATION_FAILED");
-    const results = await Promise.allSettled(
-      STORY_SLOT_KEYS.map((slot) => saves.clear(slot)),
-    );
-    const failure = results.find(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    );
-    if (failure !== undefined) throw failure.reason;
-    return { outcome: "deleted" };
-  }
-  if (target.kind === "localstorage") {
-    storage.removeItem(target.name);
-    return { outcome: "deleted" };
-  }
   if (target.kind !== "indexeddb")
-    throw new Error(`Unknown admin storage kind: ${String(target.kind)}`);
-
+    throw new Error(`User namespace reset requires injected SQLite capability`);
   return await new Promise<AdminResetResult>((resolve, reject) => {
     const request = factory.deleteDatabase(target.name);
     request.onsuccess = () => resolve({ outcome: "deleted" });
-    /* `blocked` means another tab still holds the database open. The delete
-       stays queued behind that connection, so this settles at once rather than
-       hanging — and says it was blocked, so nobody reports a wipe that has not
-       happened. */
     request.onblocked = () => resolve({ outcome: "blocked" });
     request.onerror = () =>
       reject(
@@ -122,7 +93,43 @@ export async function resetStorageTarget(
   });
 }
 
-/** Seed only the verified installed default deck. */
+export async function seedAdminTestDeck(
+  application: ShellApplication,
+  signal: AbortSignal,
+  now: () => Date = () => new Date(),
+): Promise<void> {
+  const session = await application.acquire("freeplay", signal);
+  try {
+    signal.throwIfAborted();
+    // Acquisition validates the published presets against this session's ruleset.
+    const { presentation, editor, users } = session.inputs;
+    const timestamp = now().toISOString();
+    await users.createDeckRepository().create(
+      {
+        schemaVersion: 1,
+        id: ADMIN_TEST_DECK_ID,
+        revision: 0,
+        name: ADMIN_TEST_DECK_NAME,
+        ...buildAdminTestDeck(presentation),
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        validation: {
+          status: "valid",
+          issues: [],
+          rulesetRevision: editor.ruleset.revision,
+        },
+        importedNeedsReview: false,
+        illustrationCardCode: null,
+      },
+      emptyDeckHistory(),
+    );
+  } finally {
+    // Flush admitted writes before releasing semantic inputs and package lease.
+    await session.close();
+  }
+  signal.throwIfAborted();
+}
+
 export function buildAdminTestDeck(
   gameplay: Pick<ShellGameplay, "decks" | "defaults">,
 ) {

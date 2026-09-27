@@ -1,27 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { InstalledGameplay } from "../../../src/content/index.ts";
+import type { FixtureGameplay } from "../../fixtures/installed-gameplay.ts";
 import { installedDeckCatalog } from "../../../src/decks/index.ts";
 import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 
-const hash = (character: string) => character.repeat(64);
-
-function gameplay(): InstalledGameplay {
+function gameplay(): FixtureGameplay {
   const image = {
     packId: "chapter-01" as const,
     path: "chapters/chapter-01/card.png",
   };
   return {
-    content: {
-      catalogSha256: hash("a"),
-      snapshot: {
-        activationId: hash("b"),
-        runtimeSnapshotId: hash("c"),
-        runtimeManifestSha256: hash("d"),
-        releaseCatalogSha256: hash("a"),
-      },
-      runtime: { packId: "runtime", sha256: hash("e"), bytes: 1 },
-      chapters: [{ packId: "chapter-01", sha256: hash("f"), bytes: 1 }],
-    },
     chapterIds: ["chapter-01"],
     cards: [
       {

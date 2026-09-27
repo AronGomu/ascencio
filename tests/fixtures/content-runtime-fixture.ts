@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import type { ChapterCard, ContentMediaType } from "../../src/content/index.ts";
+import type { ChapterCard } from "./gameplay-rows.ts";
 
 export interface ContentRuntimeFixtureOptions {
   readonly indexedScript?: boolean;
@@ -127,7 +127,7 @@ export async function contentRuntimeFixture(
   const payload: {
     path: string;
     bytes: Uint8Array;
-    mediaType: ContentMediaType;
+    mediaType: string;
   }[] = [
     ...[...assets].map(([path, bytes]) => ({
       path: `runtime/assets/current/${path}`,

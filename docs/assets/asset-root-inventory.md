@@ -1,5 +1,7 @@
 # Asset-root inventory — before migration
 
+> Status: historical pre-cutover inventory. Current package roots are defined by `scripts/lib/asset-roots.ts:PACKAGE_ASSET_SOURCES`, [`manual-sqlite-setup.md`](manual-sqlite-setup.md), and [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md). Body retained unchanged as audit history; stale paths are not current config.
+
 Baseline: `7a2538f04a3c234be0f0fa1132dc04d6fcb071ec`. No assets moved. Source-only literal inventory; absent ignored corpus is not exhaustive asset availability evidence.
 
 ## Cutover

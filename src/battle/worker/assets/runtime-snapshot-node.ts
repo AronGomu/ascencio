@@ -34,9 +34,10 @@ interface VendorManifest {
 export async function buildRuntimeSnapshotManifest(
   assetRoot: string,
   vendorRoot: string,
+  assetManifestPath: string = path.join(assetRoot, "manifest.json"),
 ): Promise<RuntimeSnapshotManifest> {
   const [assetBytes, vendorBytes] = await Promise.all([
-    readFile(path.join(assetRoot, "manifest.json")),
+    readFile(assetManifestPath),
     readFile(path.join(vendorRoot, "vendor-manifest.json")),
   ]);
   const assets = JSON.parse(assetBytes.toString("utf8")) as AssetManifest;
@@ -103,13 +104,23 @@ export function deriveRuntimeSnapshotId(
 export async function verifyRuntimeSnapshotFiles(
   manifest: RuntimeSnapshotManifest,
   assetRoot: string,
+  stringsRoot: string = path.join(assetRoot, "strings"),
 ): Promise<void> {
   const failures: string[] = [];
-  let canonicalRoot: string | undefined;
+  const canonicalRoots = new Map<string, string>();
   for (const file of manifest.assets.files) {
-    const absolutePath = safeArtifactPath(assetRoot, file.path);
+    const isStrings = file.path.startsWith("strings/");
+    const selectedRoot = isStrings ? stringsRoot : assetRoot;
+    const selectedPath = isStrings
+      ? file.path.slice("strings/".length)
+      : file.path;
+    const absolutePath = safeArtifactPath(selectedRoot, selectedPath);
     try {
-      canonicalRoot ??= await realpath(assetRoot);
+      let canonicalRoot = canonicalRoots.get(selectedRoot);
+      if (canonicalRoot === undefined) {
+        canonicalRoot = await realpath(selectedRoot);
+        canonicalRoots.set(selectedRoot, canonicalRoot);
+      }
       const canonicalPath = await realpath(absolutePath);
       const relative = path.relative(canonicalRoot, canonicalPath);
       if (

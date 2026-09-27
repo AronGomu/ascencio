@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
 import path from "node:path";
 import {
   activeImageManifestSha256,
@@ -38,6 +38,7 @@ export function createNodeDuelWorkerRuntime(
       signal.throwIfAborted();
       progress("manifest", 0);
       const assetRoot = path.join(projectRoot, ASSET_SOURCES.data.source);
+      const stringsRoot = path.join(projectRoot, ASSET_SOURCES.strings.source);
       const vendorRoot = path.join(
         projectRoot,
         "vendor",
@@ -47,14 +48,19 @@ export function createNodeDuelWorkerRuntime(
       const manifest = await runInitializationStage(
         "snapshot_validation_failed",
         "Unable to validate the runtime snapshot",
-        () => buildRuntimeSnapshotManifest(assetRoot, vendorRoot),
+        () =>
+          buildRuntimeSnapshotManifest(
+            assetRoot,
+            vendorRoot,
+            path.join(projectRoot, ASSET_SOURCES.dataManifest.source),
+          ),
       );
       signal.throwIfAborted();
       progress("snapshot-files", 0.1);
       await runInitializationStage(
         "snapshot_validation_failed",
         "Unable to verify runtime snapshot files",
-        () => verifyRuntimeSnapshotFiles(manifest, assetRoot),
+        () => verifyRuntimeSnapshotFiles(manifest, assetRoot, stringsRoot),
       );
       signal.throwIfAborted();
       progress("engine", 0.25);
@@ -101,6 +107,7 @@ export function createNodeDuelWorkerRuntime(
             assetRoot,
             new Set([...reviewedPool].map(cardCode)),
             reportDependencyProgress,
+            stringsRoot,
           ),
       );
       signal.throwIfAborted();

@@ -23,12 +23,8 @@ export type {
 /* A battle handoff is identified by the map node it was launched from, so the
    public name for that id is the encounter it starts. */
 export type { EncounterId } from "./model/story-state.ts";
-/* Story progress is persisted, so the store is part of the domain's contract:
-   the admin console resets the database by name, and the duel handoff writes
-   and restores the `checkpoint:pre-duel` slot through the repository. Every
-   type reachable from `StorySaveRepository` is named here, or a caller could
-   not annotate what it holds without reaching past this file. */
-export { STORY_SAVES_DATABASE_NAME } from "./saves/story-save-contracts.ts";
+/* Shell owns SQLite persistence; the duel handoff writes and restores the
+   checkpoint through the injected repository's revision-bound contract. */
 export type {
   StorySaveEnvelope,
   StorySaveReadResult,

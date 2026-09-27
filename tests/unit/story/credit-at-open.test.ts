@@ -1,12 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
 import { PACK_SIZE } from "../../../src/story/shop/data/shop-pricing.ts";
+import { createSqliteStoryRepository } from "../../../src/story/saves/index.ts";
 import {
-  parseStorySaveEnvelope,
-  STORY_SAVE_SCHEMA_VERSION,
-  STORY_SLOT_KEYS,
-} from "../../../src/story/saves/story-save-contracts.ts";
+  storyUserRuntime,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
+import { storyBindingFixture } from "../../fixtures/story-release.ts";
+
+afterEach(resetStorySessionFixture);
 import type { StoryState } from "../../../src/story/model/story-state.ts";
 
 /* When the cards become the player's. `feedback-vn.md`, Card Reveal item 5:
@@ -130,21 +133,18 @@ describe("the same pull is never credited twice", () => {
   /* A reload mid-reveal: the save carries the credited collection and the
      screen the player was on, and walking the rest of the reveal from there
      adds nothing. This is the save an interrupted opening actually leaves — it
-     goes through the real envelope parser rather than a hand-built clone, so
+     goes through the SQLite repository rather than a hand-built clone, so
      a state this build cannot read would fail here rather than pass. */
-  it("a reveal resumed from a save credits nothing further", () => {
+  it("a reveal resumed from a save credits nothing further", async () => {
     const opened = openOnePack(shopBrowse({ [SET]: 1 }));
-    const slot = STORY_SLOT_KEYS[0]!;
-    const read = parseStorySaveEnvelope(slot, {
-      schemaVersion: STORY_SAVE_SCHEMA_VERSION,
-      slot,
-      revision: 1,
-      savedAt: 1_700_000_000_000,
-      state: opened,
-    });
+    const saves = createSqliteStoryRepository(storyUserRuntime({}));
+    expect(
+      await saves.write("manual:1", opened, 0, storyBindingFixture()),
+    ).toEqual({ kind: "written", revision: 1 });
+    const read = await saves.read("manual:1");
 
     expect(read.kind).toBe("ready");
-    if (read.kind !== "ready") return;
+    if (read.kind !== "ready") throw new Error("expected a ready save");
     const resumed = read.envelope.state;
     expect(resumed.screen).toBe("shop-opening");
     expect(resumed.collection).toEqual(creditedOnce());

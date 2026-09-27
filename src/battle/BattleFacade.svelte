@@ -5,19 +5,34 @@
     BattleRuntimeSource,
   } from "./ports/index.ts";
   import App from "./app/App.svelte";
+  import type { PinnedDeckRuleset } from "../decks/validation/index.ts";
   import type {
     BattleFacadeResult,
     BattleRequest,
   } from "./battle-contracts.ts";
   import type { CardImageSource } from "../cards/images/index.ts";
+  import type { DeckRepository } from "../decks/repository/index.ts";
+  import type { AsyncPreferencePort } from "../storage/index.ts";
+  import {
+    defaultPersistedUiState,
+    type PersistedUiState,
+  } from "./ports/index.ts";
   import RotationNotice from "./components/RotationNotice.svelte";
   import { settleOnce } from "./settle-once.ts";
 
   export let runtimeSource: BattleRuntimeSource;
   export let presentation: BattlePresentationInput;
+  export let ruleset: PinnedDeckRuleset;
   export let imageSource: CardImageSource | null = null;
   export let onfatal: ((error: unknown) => void) | undefined = undefined;
   export let ondispose: ((done: Promise<void>) => void) | undefined = undefined;
+  export let createRepository: () => DeckRepository = () => {
+    throw new Error("USER_DATA_UNAVAILABLE");
+  };
+  export let persistedUiPort: AsyncPreferencePort<PersistedUiState> | null =
+    null;
+  export let initialPersistedUi: PersistedUiState = defaultPersistedUiState();
+  export let initialPersistedUiPresent = false;
 
   /* `null` is standalone mode: the duel renders its own deck picker, owns the
      whole session and reports nothing back, which is exactly what `#/duel`
@@ -59,9 +74,14 @@
   <App
     {runtimeSource}
     {presentation}
+    {ruleset}
     {imageSource}
     {onfatal}
     {ondispose}
+    {createRepository}
+    {persistedUiPort}
+    {initialPersistedUi}
+    {initialPersistedUiPresent}
     {request}
     {onleavematch}
     onbattlecomplete={hostWaiting ? settle : undefined}

@@ -61,14 +61,17 @@ function createFakeSaves(): FakeSaves {
         },
       });
     },
-    write(slot, state) {
+    write(slot, state, expected) {
       fake.writes.push(slot);
       const failure = fake.failWriteWith;
       if (failure !== null) {
         fake.failWriteWith = null;
         return Promise.resolve(failure);
       }
-      const revision = (records.get(slot)?.revision ?? 0) + 1;
+      const currentRevision = records.get(slot)?.revision ?? 0;
+      if (expected !== null && expected !== currentRevision)
+        return Promise.resolve({ kind: "stale", currentRevision });
+      const revision = currentRevision + 1;
       records.set(slot, {
         revision,
         savedAt: revision,
@@ -82,7 +85,12 @@ function createFakeSaves(): FakeSaves {
     list() {
       return Promise.resolve([]);
     },
-    clear(slot) {
+    clear(slot, expected) {
+      if (
+        expected !== undefined &&
+        (records.get(slot)?.revision ?? 0) !== expected
+      )
+        return Promise.reject(new Error("STORAGE_CONFLICT"));
       fake.cleared.push(slot);
       records.delete(slot);
       return Promise.resolve();
@@ -439,5 +447,87 @@ describe("settle", () => {
 
     expect(onResolution).toHaveBeenCalledTimes(1);
     expect(routes()).toEqual(["#/story"]);
+  });
+
+  it("invalidates stale handoff ownership after whole user-data restore without deleting restored rows", async () => {
+    const handoff = await started();
+    handoff.invalidate();
+    handoff.settle(INTENT.handoffId, { kind: "aborted", reason: "exit" });
+
+    expect(saves.cleared).toEqual([]);
+    expect(onResolution).not.toHaveBeenCalled();
+  });
+});
+
+describe("resume storage observability", () => {
+  it.each([
+    { kind: "corrupt", slot: CHECKPOINT, reason: "USER_DATA_INVALID" },
+    { kind: "corrupt", slot: CHECKPOINT, reason: "STORAGE_UNAVAILABLE" },
+    { kind: "incompatible", slot: CHECKPOINT, found: 5 },
+  ] as const)(
+    "reports $kind before safe redirect without mutating saves",
+    async (result) => {
+      saves.readAs = result;
+      const order: string[] = [];
+      const onReadError = vi.fn(() => order.push("error"));
+      const handoff = createHandoffCoordinator({
+        saves,
+        navigate: () => order.push("redirect"),
+        onResolution,
+        onRestore,
+        onReadError,
+      });
+      await expect(handoff.resume(INTENT.handoffId)).resolves.toBe("not-found");
+      expect(order).toEqual(["error", "redirect"]);
+      expect(onReadError).toHaveBeenCalledWith(result);
+      expect(saves.cleared).toEqual([]);
+      expect(saves.writes).toEqual([]);
+      expect(onRestore).not.toHaveBeenCalled();
+    },
+  );
+
+  it("catches rejected reads without global recovery; empty remains silent", async () => {
+    const onReadError = vi.fn();
+    const handoff = createHandoffCoordinator({
+      saves,
+      navigate,
+      onResolution,
+      onRestore,
+      onReadError,
+    });
+    await handoff.resume(INTENT.handoffId);
+    expect(onReadError).not.toHaveBeenCalled();
+    vi.spyOn(saves, "read").mockRejectedValueOnce(
+      new Error("STORAGE_UNAVAILABLE"),
+    );
+    await expect(handoff.resume(INTENT.handoffId)).resolves.toBe("not-found");
+    expect(onReadError).toHaveBeenCalledWith({
+      kind: "corrupt",
+      slot: CHECKPOINT,
+      reason: "STORAGE_UNAVAILABLE",
+    });
+    expect(routes()).toEqual(["#/story", "#/story"]);
+    expect(saves.cleared).toEqual([]);
+  });
+
+  it("does not publish a stale read failure after reset", async () => {
+    const deferred = Promise.withResolvers<StorySaveReadResult>();
+    vi.spyOn(saves, "read").mockReturnValueOnce(deferred.promise);
+    const onReadError = vi.fn();
+    const handoff = createHandoffCoordinator({
+      saves,
+      navigate,
+      onResolution,
+      onRestore,
+      onReadError,
+    });
+    const resumed = handoff.resume(INTENT.handoffId);
+    await Promise.resolve();
+    const reset = handoff.reset();
+    deferred.reject(new Error("STORAGE_UNAVAILABLE"));
+    await resumed;
+    await reset;
+    expect(onReadError).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

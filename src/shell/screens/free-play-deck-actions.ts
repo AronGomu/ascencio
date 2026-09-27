@@ -1,6 +1,6 @@
 import {
   catalogByCode,
-  PROTOTYPE_RULESET,
+  type PinnedDeckRuleset,
   validateDeckDraft,
 } from "../../decks/validation/index.ts";
 import { deckId, type DeckId } from "../../decks/contracts/index.ts";
@@ -10,7 +10,9 @@ import {
   derivedDeckName,
   normalizeDeckName,
 } from "../../decks/editing/index.ts";
-import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
+import type { DeckRepository } from "../../decks/repository/index.ts";
+
+export type DeckRepositoryFactory = () => DeckRepository;
 
 interface DuplicateSource {
   readonly name: string;
@@ -62,16 +64,14 @@ function localDeck(key: string): Readonly<{ id: DeckId; revision: number }> {
 }
 
 /** Makes the local deck `key` names the persisted default, then re-reads it. */
-export async function setDefaultLocalDeck(key: string): Promise<DeckId | null> {
+export async function setDefaultLocalDeck(
+  createRepository: DeckRepositoryFactory,
+  key: string,
+): Promise<DeckId | null> {
   const { id } = localDeck(key);
-  let repository: IndexedDbDeckRepository | null = null;
-  try {
-    repository = await IndexedDbDeckRepository.open();
-    await repository.setDefaultDeck(id);
-    return await repository.getDefaultDeck();
-  } finally {
-    repository?.close();
-  }
+  const repository = createRepository();
+  await repository.setDefaultDeck(id);
+  return await repository.getDefaultDeck();
 }
 
 /** Renames the deck `key` names, at whatever revision storage holds now.
@@ -82,24 +82,20 @@ export async function setDefaultLocalDeck(key: string): Promise<DeckId | null> {
     already gone is not an error — the caller re-reads the listing next, and it
     will not show it. */
 export async function renameLocalDeck(
+  createRepository: DeckRepositoryFactory,
   key: string,
   name: string,
 ): Promise<void> {
   const { id } = localDeck(key);
   const trimmed = normalizeDeckName(name);
-  let repository: IndexedDbDeckRepository | null = null;
-  try {
-    repository = await IndexedDbDeckRepository.open();
-    const stored = await repository.load(id);
-    if (stored === null) return;
-    await repository.save(
-      stored.deck.revision,
-      Object.freeze({ ...stored.deck, name: trimmed }),
-      stored.history,
-    );
-  } finally {
-    repository?.close();
-  }
+  const repository = createRepository();
+  const stored = await repository.load(id);
+  if (stored === null) return;
+  await repository.save(
+    stored.deck.revision,
+    Object.freeze({ ...stored.deck, name: trimmed }),
+    stored.history,
+  );
 }
 
 /** Copies the deck `key` names into a new deck of its own.
@@ -109,49 +105,44 @@ export async function renameLocalDeck(
     to the original. Its cards are validated again rather than copied over,
     because the ruleset the source was stored under may not be this build's. */
 export async function duplicateLocalDeck(
+  createRepository: DeckRepositoryFactory,
   key: string,
   bundledSource: DuplicateSource | undefined,
   catalogCards: Parameters<typeof catalogByCode>[0],
+  ruleset: PinnedDeckRuleset,
 ): Promise<void> {
-  let repository: IndexedDbDeckRepository | null = null;
-  try {
-    const catalog = catalogByCode(catalogCards);
-    const local = parseLocalDeckKey(key);
-    let source: DuplicateSource | null = bundledSource ?? null;
-    if (local !== null) {
-      repository = await IndexedDbDeckRepository.open();
-      const stored = await repository.load(local.id);
-      if (stored === null) return;
-      source = { name: stored.deck.name, lists: stored.deck };
-    }
-    if (source === null) throw new Error("Read-only decks cannot be modified");
-    const copy = createBlankDeck(
-      derivedDeckName(source.name, " Copy"),
-      catalog,
-      PROTOTYPE_RULESET,
-    );
-    const cards = {
-      main: Object.freeze([...source.lists.main]),
-      extra: Object.freeze([...source.lists.extra]),
-      side: Object.freeze([...source.lists.side]),
-    };
-    await (
-      repository ?? (repository = await IndexedDbDeckRepository.open())
-    ).create(
-      Object.freeze({
-        ...copy,
-        ...cards,
-        validation: validateDeckDraft(
-          { ...copy, ...cards, importedNeedsReview: false },
-          catalog,
-          PROTOTYPE_RULESET,
-        ),
-      }),
-      emptyDeckHistory(),
-    );
-  } finally {
-    repository?.close();
+  const repository = createRepository();
+  const catalog = catalogByCode(catalogCards);
+  const local = parseLocalDeckKey(key);
+  let source: DuplicateSource | null = bundledSource ?? null;
+  if (local !== null) {
+    const stored = await repository.load(local.id);
+    if (stored === null) return;
+    source = { name: stored.deck.name, lists: stored.deck };
   }
+  if (source === null) throw new Error("Read-only decks cannot be modified");
+  const copy = createBlankDeck(
+    derivedDeckName(source.name, " Copy"),
+    catalog,
+    ruleset,
+  );
+  const cards = {
+    main: Object.freeze([...source.lists.main]),
+    extra: Object.freeze([...source.lists.extra]),
+    side: Object.freeze([...source.lists.side]),
+  };
+  await repository.create(
+    Object.freeze({
+      ...copy,
+      ...cards,
+      validation: validateDeckDraft(
+        { ...copy, ...cards, importedNeedsReview: false },
+        catalog,
+        ruleset,
+      ),
+    }),
+    emptyDeckHistory(),
+  );
 }
 
 /** Deletes the deck `key` names, at the revision the key carries.
@@ -159,13 +150,10 @@ export async function duplicateLocalDeck(
     The revision is the guard: a deck edited in another tab since the listing
     is a different deck from the one the player pressed Delete on, and the
     repository refuses it rather than dropping work they have not seen. */
-export async function deleteLocalDeck(key: string): Promise<void> {
+export async function deleteLocalDeck(
+  createRepository: DeckRepositoryFactory,
+  key: string,
+): Promise<void> {
   const { id, revision } = localDeck(key);
-  let repository: IndexedDbDeckRepository | null = null;
-  try {
-    repository = await IndexedDbDeckRepository.open();
-    await repository.delete(id, revision);
-  } finally {
-    repository?.close();
-  }
+  await createRepository().delete(id, revision);
 }

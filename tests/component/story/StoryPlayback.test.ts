@@ -4,32 +4,25 @@ import {
 } from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PROLOGUE } from "../../../src/story/content/prologue.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
-import { writeStoryPlaybackSettings } from "../../../src/story/playback/story-playback-settings.ts";
-import {
-  readStoryReadLog,
-  writeStoryReadLog,
-} from "../../../src/story/playback/story-read-log.ts";
+import { storyReaderPorts } from "../../fixtures/story-reader-ports.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 
-/* Only the timer functions are faked: `fake-indexeddb` and the save
-   repository still need a real microtask queue to answer the mount. */
+/* Only timers are faked; SQLite saves still use the real microtask queue. */
+let reader = storyReaderPorts();
 beforeEach(() => {
+  reader = storyReaderPorts();
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 });
 
 afterEach(async () => {
-  resetStorySessionFixture();
+  await resetStorySessionFixture();
   vi.useRealTimers();
   cleanup();
-  localStorage.clear();
-  await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
 
 function beatId(index: number): string {
@@ -47,7 +40,13 @@ async function runPlayback(totalMs: number, stepMs = 60): Promise<void> {
 
 async function startNewGame(): Promise<ReturnType<typeof userEvent.setup>> {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-  render(StoryApp, { ...storyAppProps() });
+  render(StoryApp, {
+    ...storyAppProps(),
+    initialPlaybackSettings: await reader.playback.read(),
+    playbackSettingsPort: reader.playback,
+    initialReadLog: await reader.readLog.read(),
+    readLogPort: reader.readLog,
+  });
   await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
   return user;
 }
@@ -87,7 +86,9 @@ describe("story auto and skip playback", () => {
   });
 
   it("skip fast-forwards read beats and hands back control at the first unread one", async () => {
-    writeStoryReadLog(new Set([0, 1, 2, 3].map(beatId)));
+    await Promise.all(
+      [0, 1, 2, 3].map((index) => reader.readLog.markRead(beatId(index))),
+    );
     const user = await startNewGame();
     await user.click(screen.getByRole("button", { name: "Skip" }));
     await runPlayback(900);
@@ -97,7 +98,7 @@ describe("story auto and skip playback", () => {
   });
 
   it("the skip-unread setting carries skip through unread text up to the first choice", async () => {
-    writeStoryPlaybackSettings({
+    await reader.playback.update({
       autoSpeedSeconds: 3,
       skipUnread: true,
       autoFlip: false,
@@ -118,6 +119,10 @@ describe("story auto and skip playback", () => {
     const user = await startNewGame();
     await user.click(screen.getByTestId("narrative-stage"));
     await user.click(screen.getByTestId("narrative-stage"));
-    expect([...readStoryReadLog()]).toEqual([beatId(0), beatId(1), beatId(2)]);
+    expect([...(await reader.readLog.read())]).toEqual([
+      beatId(0),
+      beatId(1),
+      beatId(2),
+    ]);
   });
 });

@@ -1,21 +1,28 @@
-import { shellGameplayFixture as installedGameplayFixture } from "../fixtures/shell-gameplay.ts";
 // @vitest-environment jsdom
 
-import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import MainMenuScreen from "../../src/shell/screens/MainMenuScreen.svelte";
-import { STORY_SAVES_DATABASE_NAME } from "../../src/shell/screens/story-save-presence.ts";
 import {
   createShellStore,
   type ShellState,
 } from "../../src/shell/shell-store.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
+import { unlinkSync, rmdirSync } from "node:fs";
+import { createSqliteStoryRepository } from "../../src/story/saves/index.ts";
+import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { createUserDataFixture } from "../unit/storage/sqlite-fixtures.ts";
 import {
-  createStorySaveRepository,
-  resetStorySessionFixture,
-} from "../fixtures/story-session.ts";
+  createNodeFileStore,
+  databaseAdapter,
+} from "../unit/storage/runtime-fixtures.ts";
+import { storyBindingFixture } from "../fixtures/story-release.ts";
+
+let database: ReturnType<typeof createUserDataFixture>;
+let files: ReturnType<typeof createNodeFileStore>;
+let runtime: UserDataRuntime;
+let saves: ReturnType<typeof createSqliteStoryRepository>;
 
 function query(selector: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-cy="${selector}"]`);
@@ -27,29 +34,18 @@ function entryOrder(): readonly string[] {
   );
 }
 
-function deleteStoryDatabase(): Promise<void> {
-  return new Promise((resolve) => {
-    const request = indexedDB.deleteDatabase(STORY_SAVES_DATABASE_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    request.onblocked = () => resolve();
-  });
-}
-
 async function writeStorySave(): Promise<void> {
-  await createStorySaveRepository(indexedDB).write(
+  await saves.write(
     "autosave",
     createInitialStoryState(),
     null,
+    storyBindingFixture(),
   );
 }
 
-/** Waits for the menu's own save probe to have settled. The menu opens the
-    story-saves database in `onMount`, and IndexedDB serves open requests for
-    one database in the order they were made, so a probe started after the
-    render cannot answer before the menu's; one flush then applies it. */
+/** Wait for the injected repository read, then apply the menu's state. */
 async function settleSaveProbe(): Promise<void> {
-  await createStorySaveRepository(indexedDB).read("autosave");
+  await saves.read("autosave");
   await tick();
 }
 
@@ -59,12 +55,10 @@ function renderMenu(record: ShellState[] = []) {
   const store = createShellStore("#/", (hash) => hashes.push(hash));
   store.subscribe((state) => record.push(state));
   render(MainMenuScreen, {
-    saves: createStorySaveRepository(indexedDB),
+    saves,
     store,
     coreGate: {
       kind: "ready",
-      gameplay: installedGameplayFixture(),
-      reader: null,
       generation: 1,
     },
     onfreeplaywarm,
@@ -76,13 +70,22 @@ function renderMenu(record: ShellState[] = []) {
   };
 }
 
-beforeEach(async () => {
-  resetStorySessionFixture();
-  await deleteStoryDatabase();
+beforeEach(() => {
+  database = createUserDataFixture();
+  files = createNodeFileStore();
+  runtime = new UserDataRuntime({
+    database: databaseAdapter(database.database),
+    files,
+    randomId: () => crypto.randomUUID(),
+  });
+  saves = createSqliteStoryRepository(runtime);
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  await runtime.close();
+  unlinkSync(database.file);
+  rmdirSync(files.root);
 });
 
 describe("MainMenuScreen", () => {
@@ -152,6 +155,30 @@ describe("MainMenuScreen", () => {
     expect(menu.hashes).toEqual(["#/story"]);
     expect(menu.state().route).toStrictEqual({ kind: "story" });
     expect(menu.state().storyEntryIntent).toBe("new");
+  });
+
+  it("keeps New Game enabled while Continue readiness is stalled", async () => {
+    const hashes: string[] = [];
+    const store = createShellStore("#/", (hash) => hashes.push(hash));
+    render(MainMenuScreen, {
+      saves: {
+        read: () => new Promise(() => undefined),
+        write: async () => ({ kind: "failed", reason: "unavailable" }),
+        list: async () => [],
+        clear: async () => undefined,
+      },
+      store,
+      coreGate: {
+        kind: "ready",
+        generation: 1,
+      },
+      storyAvailable: true,
+    });
+
+    expect(query("main-menu-new-game")).toHaveProperty("disabled", false);
+    expect(query("main-menu-continue")).toHaveProperty("disabled", true);
+    await fireEvent.click(query("main-menu-new-game")!);
+    expect(hashes).toEqual(["#/story"]);
   });
 
   it("records the load intent on the same story route", async () => {

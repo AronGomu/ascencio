@@ -1,139 +1,80 @@
-import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 // @vitest-environment jsdom
-
 import "fake-indexeddb/auto";
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
 import { cardCode } from "../../src/cards/index.ts";
-import type { CardImageSource } from "../../src/cards/images/index.ts";
-import type { OwnedContentReader } from "../../src/content/index.ts";
-import type * as Content from "../../src/content/index.ts";
-import type * as InstalledEditorCatalog from "../../src/shell/adapters/installed-editor-catalog.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
+import * as coreGate from "../../src/shell/core/core-gate.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
-import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
+import { createSqliteCardImageSource } from "../../src/shell/adapters/sqlite-image-source.ts";
+import {
+  semanticShellStartup,
+  disposeSemanticShells,
+} from "../fixtures/semantic-shell.ts";
+import { resetStorySessionFixture } from "../fixtures/story-session.ts";
 
-const { acquireInstalledAsset, installedEditorCatalog } = vi.hoisted(() => ({
-  acquireInstalledAsset: vi.fn(),
-  installedEditorCatalog: vi.fn(),
-}));
-vi.mock("../../src/content/index.ts", async (importOriginal) => ({
-  ...(await importOriginal<typeof Content>()),
-  acquireInstalledAsset,
-}));
-vi.mock(
-  "../../src/shell/adapters/installed-editor-catalog.ts",
-  async (importOriginal) => {
-    const actual = await importOriginal<typeof InstalledEditorCatalog>();
-    installedEditorCatalog.mockImplementation(actual.installedEditorCatalog);
-    return { ...actual, installedEditorCatalog };
-  },
-);
-
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  await disposeSemanticShells();
+  await resetStorySessionFixture();
   vi.restoreAllMocks();
-  vi.clearAllMocks();
 });
-
-async function renderImageShell() {
-  const gameplay = installedGameplayFixture();
-  const reader = { close: vi.fn() } as unknown as OwnedContentReader;
-  const shellGameplay = createShellGameplay(gameplay, reader);
-  const editor = vi.fn(shellGameplay.editor);
+async function mount() {
+  const startup = await semanticShellStartup();
+  vi.spyOn(coreGate, "loadCoreStartup").mockResolvedValue(startup);
   const view = render(AppShell, {
-    initialCoreGate: {
-      kind: "ready",
-      gameplay: { ...shellGameplay, editor },
-      reader,
-      generation: 1,
-    },
-    store: createShellStore("#/decks", () => {}),
+    store: createShellStore("#/", () => {}),
     loaders: {
-      duel: () => new Promise<never>(() => {}),
-      decks: () => new Promise<never>(() => {}),
-      story: () => new Promise<never>(() => {}),
+      duel: () => new Promise(() => {}),
+      decks: () => new Promise(() => {}),
+      story: () => new Promise(() => {}),
     },
   });
-  acquireInstalledAsset.mockResolvedValue({
-    kind: "failed",
-    code: "CONTENT_MISSING",
-  });
-  const source = await vi.waitFor(() => {
-    const images = editor.mock.calls.find(([images]) => images != null)?.[0] as
-      CardImageSource | undefined;
-    expect(images).toBeDefined();
-    return images!;
-  });
-  return { view, source, code: cardCode(gameplay.cards[0]!.code) };
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="main-menu-free-play"]'),
+    ).toHaveProperty("disabled", false),
+  );
+  const source = createSqliteCardImageSource(
+    startup.userPersistence!.storage!.content,
+  );
+  return { view, source };
 }
-
-it("Shell observes real image-source failures once per reason and shows one optional-media warning", async () => {
-  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+it("Shell observes package optional-media warnings without fetching fallback art", async () => {
   const fetch = vi.spyOn(globalThis, "fetch");
-  const { view, source, code } = await renderImageShell();
+  const { view, source } = await mount();
   const aborted = new AbortController();
   aborted.abort();
-  await expect(source.acquire(code, "full", aborted.signal)).rejects.toEqual(
-    new DOMException("The operation was aborted.", "AbortError"),
-  );
-  expect(warn).not.toHaveBeenCalled();
-  expect(view.queryByRole("status")).toBeNull();
-
-  for (const failureCode of [
-    "CONTENT_MISSING",
-    "CONTENT_MISSING",
-    "CONTENT_INTEGRITY_FAILED",
-    "CONTENT_STORAGE_UNAVAILABLE",
-  ]) {
-    acquireInstalledAsset.mockResolvedValueOnce({
-      kind: "failed",
-      code: failureCode,
-      path: "private/path",
-      packId: "private-pack",
-    });
-    await expect(
-      source.acquire(code, "full", new AbortController().signal),
-    ).resolves.toBeNull();
-  }
-  acquireInstalledAsset.mockRejectedValueOnce(
-    new Error("private read details"),
-  );
   await expect(
-    source.acquire(code, "full", new AbortController().signal),
-  ).resolves.toBeNull();
-  await vi.waitFor(() => {
-    expect(view.getAllByRole("status")).toHaveLength(1);
-    expect(view.getByRole("status").textContent).toContain(
-      "Some card images are unavailable. You can keep playing.",
-    );
-  });
-  expect(warn.mock.calls).toEqual(
-    ["missing", "corrupt", "unreadable"].map((reason) => [
-      { event: "shell.card-images.missing-media", reason },
-    ]),
+    source.acquire(cardCode(1), "full", aborted.signal),
+  ).rejects.toMatchObject({ name: "AbortError" });
+  expect(
+    view.container.querySelector('[data-cy="optional-media-package-warning"]'),
+  ).toBeNull();
+  expect(
+    await source.acquire(cardCode(1), "full", new AbortController().signal),
+  ).toBeNull();
+  await vi.waitFor(() =>
+    expect(
+      view.container.querySelector('[data-cy="optional-media-package-warning"]')
+        ?.textContent,
+    ).toContain(
+      "Optional media unavailable: card-library/cards/full/1.jpg (missing).",
+    ),
   );
-  await fireEvent.click(
-    view.getByRole("button", { name: "Dismiss notification" }),
-  );
-  await expect(
-    source.acquire(code, "full", new AbortController().signal),
-  ).resolves.toBeNull();
-  expect(view.queryByRole("status")).toBeNull();
-  expect(warn).toHaveBeenCalledTimes(3);
+  expect(
+    view.container.querySelector('[data-cy="optional-media-package-warning"]')
+      ?.textContent,
+  ).toContain("You can keep playing.");
   expect(fetch).not.toHaveBeenCalled();
+  source.close();
 });
-
-it("Shell ignores a late missing-media callback after unmount", async () => {
-  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-  const { view, source, code } = await renderImageShell();
-  const deferred = Promise.withResolvers<unknown>();
-  acquireInstalledAsset.mockReturnValueOnce(deferred.promise);
-  const pending = source.acquire(code, "full", new AbortController().signal);
-  await vi.waitFor(() => expect(acquireInstalledAsset).toHaveBeenCalledOnce());
+it("Shell unsubscribes optional-media status after unmount", async () => {
+  const { view, source } = await mount();
   view.unmount();
-  deferred.resolve({ kind: "failed", code: "CONTENT_MISSING" });
-  await expect(pending).resolves.toBeNull();
-  expect(warn).not.toHaveBeenCalled();
-  expect(document.querySelector('[data-cy="shell-toast-region"]')).toBeNull();
+  await source.acquire(cardCode(1), "full", new AbortController().signal);
+  expect(
+    document.querySelector('[data-cy="optional-media-package-warning"]'),
+  ).toBeNull();
+  source.close();
 });

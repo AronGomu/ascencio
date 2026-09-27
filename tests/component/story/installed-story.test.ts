@@ -1,28 +1,35 @@
+import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 // @vitest-environment jsdom
-import { IDBFactory } from "fake-indexeddb";
+
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import StoryApp from "../../../src/story/StoryApp.svelte";
-import { createStoryMigrationPort } from "../../../src/story/saves/index.ts";
+import {
+  createStorySaveRepository,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
 import {
   storyReleaseFixture,
   storyCardsFixture,
 } from "../../fixtures/story-release.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
-afterEach(cleanup);
+afterEach(async () => {
+  cleanup();
+  await resetStorySessionFixture();
+});
 it("Optional Story media: null map boots narrative/map UI with usable placeholder", async () => {
   const release = storyReleaseFixture();
-  const port = createStoryMigrationPort(new IDBFactory());
-  const seal = await port.prepare(null, release);
+  const saves = createStorySaveRepository({});
   const media = {
     acquireMap: vi.fn(async () => null),
     acquireSetImage: vi.fn(async () => null),
   };
   const mounted = render(StoryApp, {
+    ruleset: PROTOTYPE_RULESET,
     release,
     cards: storyCardsFixture(),
-    saves: port.repository(seal.generationId),
+    saves,
     media,
   });
   expect(
@@ -30,9 +37,10 @@ it("Optional Story media: null map boots narrative/map UI with usable placeholde
   ).toBeTruthy();
   mounted.unmount();
   render(StoryApp, {
+    ruleset: PROTOTYPE_RULESET,
     release,
     cards: storyCardsFixture(),
-    saves: port.repository(seal.generationId),
+    saves,
     media,
     resumeState: { ...createInitialStoryState(), screen: "map" },
   });
@@ -46,12 +54,12 @@ it("Optional Story media: null map boots narrative/map UI with usable placeholde
 });
 it("Optional set media null never requests raw fallback art or blocks buying packs", async () => {
   const release = storyReleaseFixture();
-  const port = createStoryMigrationPort(new IDBFactory());
-  const seal = await port.prepare(null, release);
+  const saves = createStorySaveRepository({});
   render(StoryApp, {
+    ruleset: PROTOTYPE_RULESET,
     release,
     cards: storyCardsFixture(),
-    saves: port.repository(seal.generationId),
+    saves,
     media: { acquireMap: async () => null, acquireSetImage: async () => null },
     resumeState: { ...createInitialStoryState(), screen: "shop-browse" },
   });
@@ -76,9 +84,7 @@ it("Optional set media null never requests raw fallback art or blocks buying pac
 });
 it("handoff resume preserves completed chapter binding through autosave", async () => {
   const release = storyReleaseFixture();
-  const port = createStoryMigrationPort(new IDBFactory());
-  const seal = await port.prepare(null, release);
-  const saves = port.repository(seal.generationId);
+  const saves = createStorySaveRepository({});
   const story = {
     chapterId: "chapter-01",
     contentId: "prototype-prologue-v1" as const,
@@ -86,6 +92,7 @@ it("handoff resume preserves completed chapter binding through autosave", async 
     completedChapterIds: ["chapter-01"],
   };
   render(StoryApp, {
+    ruleset: PROTOTYPE_RULESET,
     release,
     cards: storyCardsFixture(),
     saves,

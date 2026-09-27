@@ -18,13 +18,10 @@ import {
   parseFrozenInventory,
   type FrozenInventory,
 } from "./frozen-inventory.ts";
-import type { RetainedMetadata } from "./retained-metadata.ts";
-import type { PreparedPlayerMetadata } from "./prepared-player-metadata.ts";
 import type { SelectedAsset } from "./selected-asset.ts";
-import { assertArchiveFiles } from "./archive-limits.ts";
+import { assertSourceInventory } from "./source-limits.ts";
 import { fail } from "./failure.ts";
 import { releaseVersion } from "./schema.ts";
-import { scanVendorFiles } from "./vendor-files.ts";
 import { assertMigrationReady } from "./migration-state.ts";
 
 export interface ProfileDiagnostic {
@@ -40,12 +37,6 @@ export interface ProfileScan {
   readonly inventory: FrozenInventory;
   readonly diagnostics: readonly ProfileDiagnostic[];
 }
-export const EMPTY_RETAINED_METADATA: RetainedMetadata = {
-  schemaVersion: 1,
-  catalogs: [],
-  manifests: [],
-};
-
 async function allFiles(
   root: string,
   observedRoots: Set<string>,
@@ -85,8 +76,6 @@ function checkSpellings(paths: readonly string[]): void {
 export async function scanAssetProfiles(
   root: string,
   selection: PlayerSelection,
-  retainedMetadata: RetainedMetadata,
-  playerMetadata: PreparedPlayerMetadata | null,
   profiles: readonly AssetProfile[] = [],
 ): Promise<ProfileScan> {
   await assertMigrationReady(root);
@@ -174,7 +163,7 @@ export async function scanAssetProfiles(
     )
   )
     fail("ASSET_SOURCE_CHANGED");
-  assertArchiveFiles(files, 0);
+  assertSourceInventory(files);
   const logicals = files.flatMap((f) =>
     f.logicalPath === null ? [] : [f.logicalPath],
   );
@@ -187,13 +176,9 @@ export async function scanAssetProfiles(
   const inventory = parseFrozenInventory({
     schemaVersion: 1,
     appVersion: releaseVersion(pkg?.version),
-    runtimeSnapshotId: playerMetadata?.runtimeSnapshotId ?? null,
     profiles: selected.profiles,
     selection: selected.selection,
     files,
-    vendorFiles: playerMetadata === null ? [] : await scanVendorFiles(root),
-    retainedMetadata,
-    playerMetadata,
   });
   await assertMigrationReady(root);
   return { inventory, diagnostics };
@@ -201,20 +186,11 @@ export async function scanAssetProfiles(
 export async function scanAssets(
   root: string,
   selection: PlayerSelection,
-  retainedMetadata: RetainedMetadata,
-  playerMetadata: PreparedPlayerMetadata | null,
 ): Promise<FrozenInventory> {
-  return (
-    await scanAssetProfiles(root, selection, retainedMetadata, playerMetadata)
-  ).inventory;
+  return (await scanAssetProfiles(root, selection)).inventory;
 }
 export async function checkAssetProfiles(root: string): Promise<ProfileScan> {
-  const report = await scanAssetProfiles(
-    root,
-    await loadSelection(root),
-    EMPTY_RETAINED_METADATA,
-    null,
-  );
+  const report = await scanAssetProfiles(root, await loadSelection(root));
   const missing = report.diagnostics.find((d) => d.phase === "file-missing");
   if (missing) fail("ASSET_REFERENCE_MISSING", missing.path);
   return report;

@@ -1,5 +1,9 @@
 # CORE installation setup
 
+> Status: historical source-policy/setup record. Browser CORE/content installer flow is superseded by [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md); current setup is [`manual-sqlite-setup.md`](manual-sqlite-setup.md).
+
+Historical body preserved unchanged for source-correction provenance. Commands removed from current `package.json` are not runnable current gates.
+
 T1 establishes Chapter 1 source-policy readiness. It does not install or publish Chapter 1.
 
 ## Private loopback prerequisites

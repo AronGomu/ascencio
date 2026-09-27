@@ -1,9 +1,8 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { link, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { inspectContentSetup } from "../../scripts/lib/content-setup-files.ts";
-import { loadBrowserRuntimeAssets } from "../../src/battle/worker/assets/browser-runtime-assets.ts";
 import { buildRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-snapshot-node.ts";
 import { createFetchShardReader } from "../../src/decks/catalog/runtime-catalog.ts";
 import { contentSetupFilesFixture } from "../fixtures/content-setup-files.ts";
@@ -27,7 +26,7 @@ const runtimePath = `${ASSET_SOURCES.runtime.source}/manifest.json`;
 const vendorRoot = "vendor/ocgcore-wasm/0.1.2";
 const mib = 1024 * 1024;
 
-async function browserFixture(input: Fixture) {
+async function shardFixture(input: Fixture) {
   const bytes = await readFile(path.join(input.root, runtimePath));
   const manifest = JSON.parse(bytes.toString("utf8"));
   const fetch: typeof globalThis.fetch = async (request) => {
@@ -42,9 +41,13 @@ async function browserFixture(input: Fixture) {
           ? `${vendorRoot}/vendor-manifest.json`
           : relative === "engine/ocgcore.sync.wasm"
             ? `${vendorRoot}/lib/ocgcore.sync.wasm`
-            : relative.startsWith("assets/current/")
-              ? `${ASSET_SOURCES.data.source}/${relative.slice("assets/current/".length)}`
-              : null;
+            : relative === "assets/current/manifest.json"
+              ? ASSET_SOURCES.dataManifest.source
+              : relative.startsWith("assets/current/strings/")
+                ? `${ASSET_SOURCES.strings.source}/${relative.slice("assets/current/strings/".length)}`
+                : relative.startsWith("assets/current/")
+                  ? `${ASSET_SOURCES.data.source}/${relative.slice("assets/current/".length)}`
+                  : null;
     if (url.origin !== "https://example.invalid" || file === null)
       return new Response("missing", { status: 404 });
     return new Response(
@@ -58,11 +61,6 @@ async function browserFixture(input: Fixture) {
   return {
     fetch,
     pin,
-    load: () =>
-      loadBrowserRuntimeAssets("https://example.invalid/", {
-        fetch,
-        expectedManifestSha256: pin.expectedManifestSha256,
-      }),
   };
 }
 
@@ -76,6 +74,7 @@ async function padManifest(input: Fixture, relative: string, size: number) {
     const runtime = await buildRuntimeSnapshotManifest(
       path.join(input.root, assetRoot),
       path.join(input.root, vendorRoot),
+      path.join(input.root, ASSET_SOURCES.dataManifest.source),
     );
     await input.putJson(runtimePath, runtime);
   }
@@ -149,32 +148,22 @@ async function changeCard(input: Fixture, fields: Record<string, unknown>) {
   await input.publishRuntimeManifest();
 }
 
-// Consumer limits stay private. These tests compare actual loaders, not copied cap helpers.
-describe("content setup runtime consumer parity", () => {
+// Source acquisition bounds remain independent of the retired hosted browser loader.
+describe("content setup runtime source bounds", () => {
   it.each([
-    [runtimePath, mib, "runtime manifest: response exceeds 1048576 bytes"],
-    [
-      `${assetRoot}/manifest.json`,
-      2 * mib,
-      "asset manifest: response exceeds 2097152 bytes",
-    ],
+    [runtimePath, mib],
+    [ASSET_SOURCES.dataManifest.source, 2 * mib],
   ] as const)(
-    "matches browser manifest byte boundary: %s",
-    async (relative, cap, message) => {
+    "enforces source manifest byte boundary: %s",
+    async (relative, cap) => {
       const input = await fixture();
       await padManifest(input, relative, cap);
-      await expect(
-        (await browserFixture(input)).load(),
-      ).resolves.toHaveProperty("wasmBinary");
       expect((await inspectContentSetup(input.root, {})).codeReady).toBe(true);
       await padManifest(input, relative, cap + 1);
-      await expect((await browserFixture(input)).load()).rejects.toThrow(
-        message,
-      );
       expect((await inspectContentSetup(input.root, {})).codeReady).toBe(false);
     },
   );
-  it("matches browser file-count boundary", async () => {
+  it("enforces source file-count boundary", async () => {
     const input = await fixture();
     while (input.assetManifest.files.length < 2048)
       await input.putAsset(
@@ -182,28 +171,16 @@ describe("content setup runtime consumer parity", () => {
         [],
       );
     await input.publishRuntimeManifest();
-    await expect((await browserFixture(input)).load()).resolves.toHaveProperty(
-      "wasmBinary",
-    );
     expect((await inspectContentSetup(input.root, {})).codeReady).toBe(true);
     await input.putAsset("support/overflow.json", []);
     await input.publishRuntimeManifest();
-    await expect((await browserFixture(input)).load()).rejects.toThrow(
-      "Runtime snapshot declares too many files: 2049",
-    );
     expect((await inspectContentSetup(input.root, {})).codeReady).toBe(false);
   });
   it.each([0, 1])(
-    "matches browser aggregate-byte boundary +%i",
+    "enforces source aggregate-byte boundary +%i",
     async (overflow) => {
       const input = await fixture();
       await padAggregate(input, 256 * mib + overflow);
-      const browser = await browserFixture(input);
-      if (overflow)
-        await expect(browser.load()).rejects.toThrow(
-          "Runtime snapshot exceeds the maximum aggregate size",
-        );
-      else await expect(browser.load()).resolves.toHaveProperty("wasmBinary");
       expect((await inspectContentSetup(input.root, {})).codeReady).toBe(
         overflow === 0,
       );
@@ -230,7 +207,7 @@ describe("content setup runtime consumer parity", () => {
     await input.putAsset(relative, []);
     await input.publishRuntimeManifest();
     if (relative === "catalog/cards/40.json") {
-      const browser = await browserFixture(input);
+      const browser = await shardFixture(input);
       vi.stubGlobal("fetch", browser.fetch);
       const reader = createFetchShardReader(
         "https://example.invalid/",

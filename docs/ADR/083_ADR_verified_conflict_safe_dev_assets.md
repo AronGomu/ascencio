@@ -1,6 +1,8 @@
 # ADR-083: Verified conflict-safe dev asset installation
 
 > Status: accepted; planned
+> Amended by [ADR-095](095_ADR_manual_sqlite_package_delivery.md) D1 and [ADR-096](096_ADR_package_owned_assets_and_global_card_library.md) D3: hosted dev ZIP transport/pruning retires; hash-verified non-clobbering source-preservation principles remain for local restructuring.
+> Superseded for current delivery by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D6/S2. Conflict-safe local source tooling remains; hosted dev transport body is historical.
 > Decided: 2026-09-09
 > Owners: developer tooling / asset storage
 > Baseline: `3fa800c` — source baseline, not implementation evidence.

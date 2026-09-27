@@ -14,7 +14,7 @@ import type { Cards } from "../../cards/index.ts";
 import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
 import {
   catalogByCode,
-  PROTOTYPE_RULESET,
+  type PinnedDeckRuleset,
 } from "../../decks/validation/index.ts";
 import { emptyDeckHistory } from "../../decks/editing/index.ts";
 import { resolveDeck, type ValidatedDeckSnapshot } from "../../decks/index.ts";
@@ -33,6 +33,7 @@ import { storyCardOwnership } from "./card-ownership.ts";
 export async function encounterDeck(
   state: StoryState,
   cards: Cards,
+  ruleset: PinnedDeckRuleset,
 ): Promise<ValidatedDeckSnapshot | null> {
   const chosen = state.decks.find(({ id }) => id === state.defaultDeckId);
   if (chosen === undefined) return null;
@@ -47,7 +48,7 @@ export async function encounterDeck(
         Promise.resolve({ deck: chosen, history: emptyDeckHistory() }),
     },
     catalog,
-    PROTOTYPE_RULESET,
+    ruleset,
     storyCardOwnership(state),
   );
   return resolved.type === "ready" ? resolved.deck : null;

@@ -4,20 +4,17 @@ import {
 } from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
 import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 import BoosterInventoryDialog from "../../../src/story/shop/BoosterInventoryDialog.svelte";
 import BoosterResultsScreen from "../../../src/story/shop/BoosterResultsScreen.svelte";
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
-  await deleteDB(STORY_SAVES_DATABASE_NAME);
+  await resetStorySessionFixture();
 });
 
 describe("BoosterOpening", () => {

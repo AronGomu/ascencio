@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./asset-roots.ts";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
@@ -16,7 +16,7 @@ import {
 import { json, readBounded, record } from "./content-setup-io.ts";
 import { CATALOG_SHARD_COUNT, SCRIPT_SHARD_COUNT } from "./model.ts";
 
-// Match browser-runtime-assets.ts private limits; parity tests exercise that loader.
+// Source acquisition bounds; exercised independently of browser package loading.
 const MAXIMUM_RUNTIME_MANIFEST_BYTES = 1024 * 1024;
 const MAXIMUM_ASSET_MANIFEST_BYTES = 2 * 1024 * 1024;
 const MAXIMUM_VENDOR_MANIFEST_BYTES = 1024 * 1024;
@@ -30,6 +30,10 @@ const digest = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 const decodeJson = (bytes: Uint8Array): unknown =>
   JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+const runtimeAssetSource = (relative: string): string =>
+  relative.startsWith("strings/")
+    ? `${ASSET_SOURCES.strings.source}/${relative.slice("strings/".length)}`
+    : `${ASSET_ROOT}/${relative}`;
 
 /** The checked-in frozen manifest, not the inspected root, supplies engine pins. */
 export async function inspectSetupRuntime(
@@ -53,7 +57,7 @@ export async function inspectSetupRuntime(
     return null;
   const assetBytes = await readBounded(
     root,
-    `${ASSET_ROOT}/manifest.json`,
+    ASSET_SOURCES.dataManifest.source,
     MAXIMUM_ASSET_MANIFEST_BYTES,
   );
   const vendorBytes = await readBounded(
@@ -138,7 +142,11 @@ export async function inspectSetupRuntime(
   const indexedScripts = new Set<string>();
   const packagedScripts = new Set<string>();
   for (const file of files.values()) {
-    const bytes = await verifiedBytes(root, `${ASSET_ROOT}/${file.path}`, file);
+    const bytes = await verifiedBytes(
+      root,
+      runtimeAssetSource(file.path),
+      file,
+    );
     if (!required.has(file.path)) continue;
     const value = decodeJson(bytes);
     if (!validRuntimeRecords(file.path, value)) return null;
@@ -172,7 +180,7 @@ export async function inspectSetupRuntime(
         if (file === undefined)
           throw new Error("Incomplete content setup runtime.");
         const value = decodeJson(
-          await verifiedBytes(root, `${ASSET_ROOT}/${relative}`, file),
+          await verifiedBytes(root, runtimeAssetSource(relative), file),
         );
         if (!validRuntimeRecords(relative, value))
           throw new Error("Invalid content setup runtime records.");

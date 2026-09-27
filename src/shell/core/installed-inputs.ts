@@ -12,9 +12,6 @@ export interface ShellImageLibrary {
   readonly setUrls: ReadonlyMap<string, string>;
   dispose(): void;
 }
-export interface ShellSession {
-  close(): void;
-}
 export interface ShellGameplay {
   readonly identity: string;
   readonly chapterIds: readonly string[];
@@ -35,56 +32,4 @@ export interface ShellGameplay {
       readonly reason: "missing" | "corrupt" | "unreadable";
     }) => void,
   ): Promise<CardImageSource>;
-}
-export type ShellResult<T> =
-  | { readonly kind: "ok"; readonly value: T }
-  | { readonly kind: "failed"; readonly code: string };
-export interface ShellChapterSizes {
-  readonly download: number;
-  readonly installed: number;
-  readonly deps: string;
-}
-export interface ShellInstallProgress {
-  readonly phase:
-    | "queued"
-    | "extracting"
-    | "complete"
-    | "downloading"
-    | "verifying"
-    | "activating"
-    | "paused"
-    | "failed"
-    | "cancelled";
-  readonly verifiedDownloadBytes: number;
-  readonly totalDownloadBytes: number;
-}
-export interface ShellInstaller extends ShellSession {
-  current(): Promise<ShellResult<readonly string[]>>;
-  subscribeCurrent(
-    listener: (state: ShellResult<readonly string[]>) => void,
-  ): () => void;
-  descriptions(): Promise<
-    ShellResult<Readonly<Record<string, ShellChapterSizes>>>
-  >;
-  install(
-    chapterId: string,
-    progress: (value: ShellInstallProgress) => void,
-    signal: AbortSignal,
-  ): Promise<
-    | ShellResult<{
-        readonly gameplay: ShellGameplay;
-        readonly reader: ShellSession;
-        readonly generation: number;
-      }>
-    | { readonly kind: "pending" }
-  >;
-}
-export interface ShellBootstrap {
-  readonly chapters: readonly {
-    readonly id: string;
-    readonly title: string;
-    readonly description: string;
-  }[];
-  readonly available: boolean;
-  openInstaller(): Promise<ShellResult<ShellInstaller>>;
 }

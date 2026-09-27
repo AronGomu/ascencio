@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "links": [
+    {
+      "packageId": "duel-core",
+      "title": "Duel Core",
+      "url": null
+    },
+    {
+      "packageId": "card-library",
+      "title": "Card Library",
+      "url": null
+    },
+    {
+      "packageId": "freeplay",
+      "title": "Free Play",
+      "url": null
+    },
+    {
+      "packageId": "chapter-01",
+      "title": "Chapter 1",
+      "url": null
+    }
+  ]
+}

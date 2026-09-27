@@ -1,14 +1,14 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
-import { afterEach, describe, expect, it } from "vitest";
-import { deleteDB } from "idb";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import {
-  IndexedDbDeckRepository,
-  type DeckRepository,
-} from "../../../src/decks/repository/index.ts";
+import { type DeckRepository } from "../../../src/decks/repository/index.ts";
 import {
   createBlankDeck,
   emptyDeckHistory,
@@ -24,10 +24,7 @@ import type {
   StoredDeck,
 } from "../../../src/decks/contracts/index.ts";
 
-const names: string[] = [];
-afterEach(async () =>
-  Promise.all(names.splice(0).map((name) => deleteDB(name))),
-);
+afterEach(async () => disposeTestDeckRepositories());
 
 /* Autosave appends are deliberately not awaited by the controller — a slow or
    failing log must never hold up a deck save — so a test that wants to read the
@@ -111,6 +108,32 @@ describe("deck autosave controller", () => {
     await controller.retrySave();
     expect(get(controller).saveState).toBe("saved");
     expect((await repository.load(lastOpened!))?.deck.main).toEqual([89631139]);
+  });
+
+  it("observes autosave failure without losing or blocking the deck edit", async () => {
+    const name = "controller-autosave-failure";
+    const repo = await openTestDeckRepository(name);
+    const warning = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+    const failure = new Error("autosave unavailable");
+    vi.spyOn(repo, "appendAutosave").mockRejectedValueOnce(failure);
+    try {
+      const controller = new DeckBuilderController(
+        repo,
+        catalogByCode(PROTOTYPE_CATALOG),
+        PROTOTYPE_RULESET,
+      );
+      await controller.initialize();
+      await controller.createDeck("Logged");
+      await controller.mutate({ type: "add", cardCode: 89631139 });
+      expect(warning).toHaveBeenCalledWith("DECK_AUTOSAVE_FAILED", failure);
+      expect(get(controller).saveState).toBe("saved");
+      expect(get(controller).current?.deck.main).toEqual([89631139]);
+    } finally {
+      warning.mockRestore();
+      await repo.close();
+    }
   });
 
   it("ignores late saves after another deck opens", async () => {
@@ -223,8 +246,7 @@ describe("deck autosave controller", () => {
 
   it("revalidates loaded decks when the pinned ruleset changes", async () => {
     const name = "controller-revalidation";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const catalog = catalogByCode(PROTOTYPE_CATALOG);
     const first = new DeckBuilderController(repo, catalog, PROTOTYPE_RULESET);
     await first.initialize();
@@ -240,13 +262,12 @@ describe("deck autosave controller", () => {
         ({ code }) => code === "ruleset-changed",
       ),
     ).toBe(true);
-    repo.close();
+    await repo.close();
   });
 
   it("autosaves invalid mutations and restores them after reload", async () => {
     const name = "controller-autosave";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -260,17 +281,16 @@ describe("deck autosave controller", () => {
     expect(saved.current?.deck.main).toEqual([89631139]);
     expect(saved.current?.deck.validation.status).toBe("errors");
     const id = saved.current!.deck.id;
-    repo.close();
+    await repo.close();
 
-    const reopened = await IndexedDbDeckRepository.open(name);
+    const reopened = await openTestDeckRepository(name);
     expect((await reopened.load(id))?.deck.main).toEqual([89631139]);
-    reopened.close();
+    await reopened.close();
   });
 
   it("each membership edit appends an autosave entry", async () => {
     const name = "controller-autosave-log";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -288,13 +308,12 @@ describe("deck autosave controller", () => {
        Compared as a set: two entries written inside one millisecond share a
        timestamp, so their relative order is not defined. */
     expect(entries.map(({ main }) => main.length).sort()).toEqual([1, 2]);
-    repo.close();
+    await repo.close();
   });
 
   it("a reorder appends an autosave entry", async () => {
     const name = "controller-autosave-reorder";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -311,13 +330,12 @@ describe("deck autosave controller", () => {
     const reorderedMain = get(controller).current?.deck.main;
     expect(entries).toHaveLength(3);
     expect(entries.map(({ main }) => main)).toContainEqual(reorderedMain);
-    repo.close();
+    await repo.close();
   });
 
   it("a sort appends one autosave and one undoable history entry", async () => {
     const name = "controller-autosave-sort";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -346,13 +364,12 @@ describe("deck autosave controller", () => {
     expect(get(controller).current?.deck.main).toEqual(unsorted);
     await controller.redo();
     expect(get(controller).current?.deck.main).toEqual([89631139, 46986414]);
-    repo.close();
+    await repo.close();
   });
 
   it("an already-satisfied selected sort and direction toggle each add one undo entry", async () => {
     const name = "controller-sort-forced-history";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -386,14 +403,13 @@ describe("deck autosave controller", () => {
         .map(({ reason }) => reason),
     ).toEqual(["sort", "sort"]);
     expect(await autosavesReaching(repo, 3)).toHaveLength(3);
-    repo.close();
+    await repo.close();
   });
 
   it("reloads persisted sort history for exact undo and redo", async () => {
     const name = "controller-sort-history-reload";
-    names.push(name);
     const catalog = catalogByCode(PROTOTYPE_CATALOG);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalog,
@@ -410,9 +426,9 @@ describe("deck autosave controller", () => {
       mode: "alpha",
       direction: "asc",
     });
-    repo.close();
+    await repo.close();
 
-    const reopenedRepo = await IndexedDbDeckRepository.open(name);
+    const reopenedRepo = await openTestDeckRepository(name);
     const reopened = new DeckBuilderController(
       reopenedRepo,
       catalog,
@@ -426,13 +442,12 @@ describe("deck autosave controller", () => {
     expect(get(reopened).current?.deck.main).toEqual(unsorted);
     await reopened.redo();
     expect(get(reopened).current?.deck.main).toEqual(sorted);
-    reopenedRepo.close();
+    await reopenedRepo.close();
   });
 
   it("a reorder is still not undoable", async () => {
     const name = "controller-autosave-not-undoable";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -451,6 +466,6 @@ describe("deck autosave controller", () => {
     expect(get(controller).current?.deck.main).not.toEqual([
       89631139, 46986414,
     ]);
-    repo.close();
+    await repo.close();
   });
 });

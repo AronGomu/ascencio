@@ -1,5 +1,10 @@
 # Asset delivery setup
 
+> Status: historical; hosted R2/S3 setup retired by [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md). Do not execute commands or bootstrap steps below for current product. No remote deletion is authorized.
+> Current setup: [`manual-sqlite-setup.md`](manual-sqlite-setup.md).
+
+Historical body preserved unchanged for provenance.
+
 T1 provides read-only setup, strict Node-only schemas, path guards, common local lock, rights-scope parsing. Migration, bundling, publishing, downloading, pruning and player installation remain separate slices. Existing `assets:mvp`, `content:setup:verify` and private build paths are unchanged.
 
 ## Developer setup — no publisher credentials

@@ -12,8 +12,9 @@ afterEach(() => cleanup());
 it("keeps installed AI ownership visible on its chapter deck", async () => {
   const battle = await import("../../src/battle/index.ts");
   render(FreePlayMatchSetup, {
-    gameplay: installedGameplayFixture(),
-    settings: createShellSettingsStore(null),
+    presentation: installedGameplayFixture().presentation,
+    ruleset: installedGameplayFixture().editor().ruleset,
+    settings: createShellSettingsStore(),
     loadBattle: async () => battle,
   });
 

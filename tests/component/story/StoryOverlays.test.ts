@@ -14,10 +14,9 @@ import OverlayShell from "../../../src/story/overlays/OverlayShell.svelte";
 import PauseOverlay from "../../../src/story/overlays/PauseOverlay.svelte";
 import SaveLoadOverlay from "../../../src/story/overlays/SaveLoadOverlay.svelte";
 import SettingsOverlay from "../../../src/story/overlays/SettingsOverlay.svelte";
-import {
-  DEFAULT_STORY_PLAYBACK_SETTINGS,
-  readStoryPlaybackSettings,
-} from "../../../src/story/playback/story-playback-settings.ts";
+import { DEFAULT_STORY_PLAYBACK_SETTINGS } from "../../../src/story/playback/story-playback-settings.ts";
+import { createStoryPlaybackSettingsStore } from "../../../src/story/playback/story-playback-settings-store.ts";
+import { storyReaderPorts } from "../../fixtures/story-reader-ports.ts";
 
 const OVERLAY_SHELL_SOURCE = readFileSync(
   "src/story/overlays/OverlayShell.svelte",
@@ -43,9 +42,6 @@ function declarations(selector: string): readonly string[] {
 
 afterEach(() => {
   cleanup();
-  /* The settings overlay persists auto speed and skip-unread, so one test's
-     choices must not become the next one's starting point. */
-  localStorage.clear();
 });
 
 describe("story utility overlays", () => {
@@ -119,8 +115,12 @@ describe("story utility overlays", () => {
     expect(transitions.value).toBe("standard");
   });
 
-  it("persists auto speed and skip-unread for the narrative screen to read", async () => {
-    const rendered = render(SettingsOverlay);
+  it("shares auto speed and skip-unread through the injected reader port", async () => {
+    const { playback: persistence } = storyReaderPorts();
+    const initial = await persistence.read();
+    const rendered = render(SettingsOverlay, {
+      settings: createStoryPlaybackSettingsStore(initial, persistence),
+    });
     const skipUnread = screen.getByLabelText(
       "Skip unread text",
     ) as HTMLInputElement;
@@ -129,14 +129,17 @@ describe("story utility overlays", () => {
       target: { value: "6" },
     });
     await userEvent.setup().click(skipUnread);
-    expect(readStoryPlaybackSettings()).toEqual({
+    expect(await persistence.read()).toEqual({
       autoSpeedSeconds: 6,
       skipUnread: true,
       autoFlip: false,
     });
 
     rendered.unmount();
-    render(SettingsOverlay);
+    const remounted = await persistence.read();
+    render(SettingsOverlay, {
+      settings: createStoryPlaybackSettingsStore(remounted, persistence),
+    });
     expect(
       (screen.getByLabelText("Auto speed") as HTMLInputElement).value,
     ).toBe("6");
@@ -146,9 +149,7 @@ describe("story utility overlays", () => {
     await userEvent
       .setup()
       .click(screen.getByRole("button", { name: "Reset settings" }));
-    expect(readStoryPlaybackSettings()).toEqual(
-      DEFAULT_STORY_PLAYBACK_SETTINGS,
-    );
+    expect(await persistence.read()).toEqual(DEFAULT_STORY_PLAYBACK_SETTINGS);
   });
 
   it("Escape closes top overlay and restores invoking control", async () => {

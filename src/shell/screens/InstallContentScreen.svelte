@@ -1,52 +1,109 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type {
-    ContentActionsController,
-    ContentActionsView,
-    CoreCandidate,
-  } from "../application/content-actions.ts";
+    AppUpdateController,
+    AppUpdateView,
+  } from "../application/app-update-controller.ts";
+  import { downloadUserData } from "../application/user-data-download.ts";
+  import { PACKAGE_DOWNLOAD_LINKS } from "../application/download-links.ts";
+  import {
+    failureCopy,
+    type ManualContentController,
+  } from "../application/manual-content-controller.ts";
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
+  import type { StorageFailure } from "../../storage/index.ts";
 
   export let gate: CoreGate;
-  export let actions: ContentActionsController | null = null;
+  export let manual: ManualContentController | null = null;
+  export let appUpdates: AppUpdateController | null = null;
+  export let storageFailure: StorageFailure | null = null;
   export let onback: () => void;
 
-  let view: ContentActionsView | null = actions?.view ?? null;
-  let boundActions: ContentActionsController | null = null;
-  let unsubscribeActions: (() => void) | null = null;
-  $: bindActions(actions);
+  let view = manual?.view ?? null;
+  let boundManual: ManualContentController | null = null;
+  let unsubscribeManual: (() => void) | null = null;
+  let updateView: AppUpdateView | null = appUpdates?.view ?? null;
+  let boundUpdates: AppUpdateController | null = null;
+  let unsubscribeUpdates: (() => void) | null = null;
+  $: removeCandidate = view?.removal ?? null;
+  $: actionsBlocked =
+    updateView?.phase === "approving" ||
+    updateView?.phase === "committing" ||
+    view?.busy === true ||
+    view?.refreshPending === true ||
+    view?.state.kind === "restore-outcome-unknown" ||
+    removeCandidate !== null;
+  $: bindManual(manual);
+  $: bindUpdates(appUpdates);
 
-  function bindActions(next: ContentActionsController | null): void {
-    if (next === boundActions) return;
-    unsubscribeActions?.();
-    boundActions = next;
+  function bindManual(next: ManualContentController | null): void {
+    if (next === boundManual) return;
+    unsubscribeManual?.();
+    boundManual = next;
     view = next?.view ?? null;
-    unsubscribeActions = next?.subscribe((value) => (view = value)) ?? null;
+    unsubscribeManual = next?.subscribe((value) => (view = value)) ?? null;
+    if (next !== null) void next.refresh();
   }
 
-  let confirmDeleteAll = false;
-  let active: AbortController | null = null;
+  function bindUpdates(next: AppUpdateController | null): void {
+    if (next === boundUpdates) return;
+    unsubscribeUpdates?.();
+    boundUpdates = next;
+    updateView = next?.view ?? null;
+    unsubscribeUpdates =
+      next?.subscribe((value) => (updateView = value)) ?? null;
+  }
 
-  function run(work: (signal: AbortSignal) => Promise<void>): void {
-    active?.abort();
-    active = new AbortController();
-    void work(active.signal).catch(() => undefined);
+  async function importFiles(event: Event): Promise<void> {
+    const input = event.currentTarget as HTMLInputElement;
+    const files = input.files === null ? [] : [...input.files];
+    try {
+      await manual?.importPackages(files);
+    } finally {
+      input.value = "";
+    }
   }
-  function approve(candidate: CoreCandidate): void {
-    void actions?.approveCore(candidate).catch(() => undefined);
+
+  async function inspectBackup(event: Event): Promise<void> {
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    try {
+      if (file !== undefined) await manual?.inspectUserDataBackup(file);
+    } finally {
+      input.value = "";
+    }
   }
-  function deleteUnused(): void {
-    void actions?.deleteUnusedAssets().catch(() => undefined);
+
+  async function exportBackup(): Promise<void> {
+    const blob = await manual?.exportUserData();
+    if (blob === null || blob === undefined) return;
+    await downloadUserData(blob, (message) => manual?.reportDownload(message));
   }
-  function deleteAll(): void {
-    confirmDeleteAll = false;
-    void actions?.deleteAllAssets().catch(() => undefined);
+
+  function bytes(value: number): string {
+    return `${value.toLocaleString()} bytes`;
+  }
+
+  async function checkAppUpdate(): Promise<void> {
+    if (actionsBlocked || appUpdates === null) return;
+    await appUpdates.check();
+  }
+
+  async function approveAppUpdate(): Promise<void> {
+    if (
+      actionsBlocked ||
+      appUpdates === null ||
+      updateView?.candidate === null ||
+      updateView?.candidate === undefined
+    )
+      return;
+    await appUpdates.approve(updateView.candidate);
   }
 
   onMount(() => {
     return () => {
-      active?.abort();
-      unsubscribeActions?.();
+      unsubscribeManual?.();
+      unsubscribeUpdates?.();
     };
   });
 </script>
@@ -57,160 +114,314 @@
     {coreGateMessage(gate)}
   </p>
 
-  {#if view === null}
+  {#if storageFailure?.code === "APP_ALREADY_OPEN" || view?.state.kind === "already-open"}
+    <p role="alert" data-cy="content-already-open">
+      App already open in another tab. Close that tab, then retry here.
+    </p>
+  {:else if view === null}
     <p role="alert" data-cy="install-content-unavailable">
-      Content controls are unavailable. Reopen from Main Menu.
+      {storageFailure === null
+        ? "Local content controls are unavailable. Reopen from Main Menu."
+        : failureCopy(storageFailure)}
     </p>
   {:else}
-    {#if view.missingMedia > 0}
-      <section class="media-warning" data-cy="optional-media-warning">
-        <h2 data-cy="optional-media-warning-heading">Optional media missing</h2>
-        <p data-cy="optional-media-warning-copy">
-          Optional media is missing. You can keep playing.
+    <p role="status" aria-live="polite" data-cy="manual-content-status">
+      {view.message}
+    </p>
+
+    {#if view.state.kind === "restore-outcome-unknown"}
+      <p role="alert" data-cy="user-data-restore-outcome-unknown">
+        {view.message}
+      </p>
+    {/if}
+
+    {#if view.state.kind === "failed"}
+      <p role="alert" data-cy="manual-content-error">{view.message}</p>
+      <button
+        type="button"
+        class="secondary"
+        data-cy="manual-content-retry"
+        disabled={view.busy}
+        onclick={() => manual!.retry()}
+        >{view.refreshPending ? "Retry refresh" : "Retry"}</button
+      >
+    {/if}
+
+    <section class="action-group" data-cy="manual-package-actions">
+      <h2 data-cy="manual-package-heading">Local packages</h2>
+      <p data-cy="manual-package-trust-warning">
+        Only import packages from sources you trust. Corruption checks do not
+        authenticate the publisher.
+      </p>
+      <div class="download-list" data-cy="content-download-list">
+        {#each PACKAGE_DOWNLOAD_LINKS as link (link.packageId)}
+          <p data-cy={`content-download-row-${link.packageId}`}>
+            <span data-cy={`content-download-title-${link.packageId}`}
+              >{link.title}</span
+            >
+            {#if link.url === null}
+              <span data-cy={`content-download-${link.packageId}`}>
+                Download unavailable
+              </span>
+            {:else}
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cy={`content-download-${link.packageId}`}
+                >Open download location</a
+              >
+            {/if}
+          </p>
+        {/each}
+      </div>
+      <label data-cy="content-import-label">
+        Import SQLite packages
+        <input
+          type="file"
+          multiple
+          accept=".sqlite,application/vnd.sqlite3"
+          data-cy="content-import-files"
+          disabled={actionsBlocked}
+          onchange={importFiles}
+        />
+      </label>
+      {#if view.state.kind === "importing"}
+        <p role="status" data-cy="content-import-progress">
+          {#if view.state.progress === null}
+            Preparing package import…
+          {:else}
+            {view.state.progress.phase}: {view.state.progress.fileName} — {bytes(
+              view.state.progress.copiedBytes,
+            )} / {bytes(view.state.progress.totalBytes)}
+          {/if}
         </p>
-        <p data-cy="optional-media-placeholder-count">
-          {view.missingMedia.toLocaleString()} placeholder{view.missingMedia ===
-          1
-            ? ""
-            : "s"} active.
-        </p>
+        <button
+          type="button"
+          class="secondary"
+          data-cy="content-import-cancel"
+          onclick={() => manual!.cancelImport()}>Cancel import</button
+        >
+      {/if}
+      <button
+        type="button"
+        data-cy="content-verify"
+        disabled={actionsBlocked || view.state.kind !== "ready"}
+        onclick={() => manual!.verifyInstalled()}
+        >Verify installed content</button
+      >
+      <button
+        type="button"
+        class="secondary"
+        data-cy="content-cleanup-unused"
+        disabled={actionsBlocked || view.state.kind !== "ready"}
+        onclick={() => manual!.cleanupUnused()}>Cleanup unused files</button
+      >
+    </section>
+
+    {#if view.state.kind === "ready"}
+      <section class="action-group" data-cy="installed-package-list">
+        <h2 data-cy="installed-package-heading">Installed packages</h2>
+        {#if view.state.stack.packages.length === 0}
+          <p data-cy="installed-package-empty">No packages installed.</p>
+        {:else}
+          {#each view.state.stack.packages as active (active.packageId)}
+            <article data-cy={`content-package-${active.packageId}`}>
+              <h3 data-cy={`content-package-title-${active.packageId}`}>
+                {active.packageId}
+              </h3>
+              <p data-cy={`content-package-details-${active.packageId}`}>
+                Version {active.version} · {bytes(active.bytes)}
+              </p>
+              <button
+                type="button"
+                class="secondary"
+                data-cy={`content-remove-${active.packageId}`}
+                disabled={actionsBlocked}
+                onclick={() => manual!.requestRemoval(active.packageId)}
+                >Remove</button
+              >
+            </article>
+          {/each}
+        {/if}
+        {#if view.state.readiness.missing.length > 0}
+          <p data-cy="content-missing-dependencies">
+            Install in order: {view.state.readiness.missing.join(", ")}.
+          </p>
+        {/if}
+        {#if view.state.mediaWarnings.length > 0}
+          <p role="status" data-cy="optional-media-warning">
+            Optional media is unavailable. You can keep playing. {view.state.mediaWarnings.length.toLocaleString()}
+            warning{view.state.mediaWarnings.length === 1 ? "" : "s"} recorded.
+          </p>
+        {/if}
       </section>
     {/if}
 
-    <p role="status" aria-live="polite" data-cy="content-actions-status">
-      {view.message}
-    </p>
-    {#if view.totalBytes > 0}
-      <p data-cy="content-actions-progress">
-        {view.completedBytes.toLocaleString()} / {view.totalBytes.toLocaleString()}
-        bytes
-      </p>
+    {#if removeCandidate !== null}
+      <div
+        role="alertdialog"
+        aria-labelledby="remove-package-heading"
+        data-cy="content-remove-confirmation"
+      >
+        <h3 id="remove-package-heading" data-cy="content-remove-heading">
+          Remove {removeCandidate.packageId} version {removeCandidate.version}?
+        </h3>
+        <p data-cy="content-remove-copy">
+          Installed dependants must be removed first. User decks and saves are
+          unchanged.
+        </p>
+        <button
+          type="button"
+          data-cy="content-remove-confirm"
+          disabled={view.busy}
+          onclick={() => manual!.removePackage(true)}>Remove package</button
+        >
+        <button
+          type="button"
+          class="secondary"
+          data-cy="content-remove-cancel"
+          disabled={view.busy}
+          onclick={() => manual!.cancelRemoval()}>Cancel</button
+        >
+      </div>
     {/if}
 
-    <section class="action-group" data-cy="content-update-actions">
-      <h2 data-cy="content-update-heading">Content</h2>
-      <button
-        type="button"
-        data-cy="content-check-updates"
-        disabled={view.phase === "checking" || view.phase === "downloading"}
-        onclick={() => run((signal) => actions!.check(signal))}
-        >Check updates</button
-      >
-      <button
-        type="button"
-        data-cy="content-install-required"
-        disabled={!view.canInstall || view.phase === "downloading"}
-        onclick={() => run((signal) => actions!.installRequired(signal))}
-        >Install required data</button
-      >
-      <button
-        type="button"
-        data-cy="content-activate"
-        disabled={!view.canActivate || view.phase === "downloading"}
-        onclick={() => run((signal) => actions!.activate(signal))}
-        >Activate content</button
-      >
-      <button
-        type="button"
-        data-cy="content-download-media"
-        disabled={!view.canDownloadMedia || view.phase === "downloading"}
-        onclick={() => run((signal) => actions!.downloadMedia(signal))}
-        >Download media</button
-      >
-      {#if view.phase === "downloading"}
-        <button
-          type="button"
-          class="secondary"
-          data-cy="content-pause-download"
-          onclick={() => actions!.cancel()}>Pause download</button
-        >
-      {/if}
-      {#each view.resumableJobs as job (job.request.jobId)}
-        <button
-          type="button"
-          class="secondary"
-          data-cy={`content-resume-${job.request.jobId}`}
-          onclick={() =>
-            run((signal) => actions!.resume(job.request.jobId, signal))}
-          >Resume {job.request.kind} download</button
-        >
-      {/each}
-    </section>
-
-    <section class="action-group" data-cy="core-update-actions">
-      <h2 data-cy="core-update-heading">CORE</h2>
-      <button
-        type="button"
-        data-cy="core-approve-update"
-        disabled={!view.canApproveCore || view.coreCandidate === null}
-        onclick={() => approve(view!.coreCandidate!)}
-        >Approve CORE update</button
-      >
-      <p data-cy="core-update-instructions">
-        Approved updates install in background. Close all app tabs, then reopen.
+    <section class="action-group" data-cy="user-data-backup-actions">
+      <h2 data-cy="user-data-backup-heading">User data backup</h2>
+      <p data-cy="user-data-backup-copy">
+        Export or replace decks, preferences, and story saves. Installed content
+        is separate.
       </p>
-    </section>
-
-    <section class="action-group" data-cy="content-cleanup-actions">
-      <h2 data-cy="content-cleanup-heading">Storage</h2>
       <button
         type="button"
-        class="secondary"
-        data-cy="content-delete-unused"
-        disabled={!view.canDeleteAssets || view.phase === "downloading"}
-        onclick={deleteUnused}>Delete unused assets</button
+        data-cy="user-data-export"
+        disabled={actionsBlocked}
+        onclick={exportBackup}>Export user-data.sqlite</button
       >
-      <button
-        type="button"
-        class="secondary"
-        data-cy="content-delete-all"
-        disabled={!view.canDeleteAssets || view.phase === "downloading"}
-        onclick={() => (confirmDeleteAll = true)}>Delete all assets</button
-      >
-      {#if confirmDeleteAll}
+      <label data-cy="user-data-import-label">
+        Inspect backup
+        <input
+          type="file"
+          accept=".sqlite,application/vnd.sqlite3"
+          data-cy="user-data-import-file"
+          disabled={actionsBlocked}
+          onchange={inspectBackup}
+        />
+      </label>
+      {#if view.state.kind === "restore-confirmation"}
         <div
           role="alertdialog"
-          aria-labelledby="delete-assets-heading"
-          data-cy="delete-assets-confirmation"
+          aria-labelledby="restore-user-data-heading"
+          data-cy="user-data-restore-dialog"
         >
           <h3
-            id="delete-assets-heading"
-            data-cy="delete-assets-confirmation-heading"
+            id="restore-user-data-heading"
+            data-cy="user-data-restore-heading"
           >
-            Delete downloaded assets?
+            Restore user data
           </h3>
-          <p data-cy="delete-assets-confirmation-copy">
-            Downloads and offline gameplay data will be removed. Saves and
-            settings will be retained.
+          <p data-cy="user-data-restore-copy">
+            Restore this backup? This replaces all current decks, preferences,
+            and story saves. Installed content is unchanged.
           </p>
+          <ul data-cy="user-data-restore-counts">
+            {#each Object.entries(view.state.preview.counts) as [namespace, count] (namespace)}
+              <li data-cy={`user-data-restore-count-${namespace}`}>
+                {namespace}: {count.toLocaleString()}
+              </li>
+            {/each}
+          </ul>
           <button
             type="button"
-            data-cy="delete-assets-confirm"
-            onclick={deleteAll}>Delete downloaded assets</button
+            class="secondary"
+            data-cy="user-data-export-before-restore"
+            disabled={actionsBlocked}
+            onclick={exportBackup}>Export current data first</button
+          >
+          <button
+            type="button"
+            data-cy="user-data-restore-confirm"
+            disabled={actionsBlocked}
+            onclick={() => manual!.confirmRestore()}
+            >Replace current user data</button
           >
           <button
             type="button"
             class="secondary"
-            data-cy="delete-assets-cancel"
-            onclick={() => (confirmDeleteAll = false)}>Cancel</button
+            data-cy="user-data-restore-cancel"
+            disabled={actionsBlocked}
+            onclick={() => manual!.cancelRestore()}>Cancel</button
           >
         </div>
       {/if}
     </section>
   {/if}
 
+  <section class="action-group" data-cy="core-update-actions">
+    <h2 data-cy="core-update-heading">App update</h2>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="content-check-updates"
+      disabled={actionsBlocked || updateView?.canCheck !== true}
+      onclick={checkAppUpdate}>Check for app update</button
+    >
+    {#if updateView?.phase === "checking" || updateView?.phase === "approving"}
+      <button
+        type="button"
+        class="secondary"
+        data-cy="core-update-cancel"
+        disabled={view?.navigationBlocked === true}
+        onclick={() => appUpdates?.cancel()}
+        >{updateView.phase === "checking"
+          ? "Cancel check"
+          : "Cancel approval"}</button
+      >
+    {/if}
+    {#if updateView?.candidate !== null && updateView?.candidate !== undefined}
+      <p data-cy="core-update-candidate">
+        Build {updateView.candidate.buildId} · content API {updateView.candidate
+          .coreContentApiVersion}
+      </p>
+    {/if}
+    <button
+      type="button"
+      data-cy="core-approve-update"
+      disabled={actionsBlocked || updateView?.canApprove !== true}
+      onclick={approveAppUpdate}>Approve app update</button
+    >
+    <p role="status" aria-live="polite" data-cy="core-update-status">
+      {updateView?.message ?? "App updates are unavailable in this browser."}
+    </p>
+    <p data-cy="core-update-instructions">
+      App updates remain separate from content packages. Close all app tabs,
+      then reopen after an approved update installs.
+    </p>
+  </section>
+
   <button
     type="button"
     class="secondary"
     data-cy="install-content-back"
-    onclick={onback}>Back to menu</button
+    disabled={view?.navigationBlocked === true ||
+      updateView?.phase === "committing"}
+    onclick={() => {
+      if (
+        view?.navigationBlocked !== true &&
+        updateView?.phase !== "committing"
+      ) {
+        appUpdates?.cancel();
+        onback();
+      }
+    }}>Back to Main Menu</button
   >
 </main>
 
 <style>
   .install-content {
     display: grid;
-    align-content: center;
+    align-content: start;
     gap: var(--space-3);
     width: min(46rem, 100%);
     min-height: 100%;
@@ -222,32 +433,67 @@
   h1,
   h2,
   h3,
-  p {
+  p,
+  ul {
     margin-block: 0;
   }
 
   .action-group,
-  .media-warning,
   [role="alertdialog"] {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
+    min-width: 0;
     padding: var(--space-3);
     border: 1px solid var(--line-soft);
     background: var(--glass);
   }
 
   .action-group h2,
-  .media-warning h2,
+  .action-group > p,
   [role="alertdialog"] h3,
-  .action-group p,
-  .media-warning p,
-  [role="alertdialog"] p {
+  [role="alertdialog"] p,
+  [role="alertdialog"] ul,
+  .download-list {
     flex-basis: 100%;
+    min-width: 0;
   }
 
-  .media-warning {
-    border-color: var(--warning);
+  .download-list {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .download-list p,
+  article {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  article {
+    flex-basis: 100%;
+    padding-block: var(--space-2);
+    border-block-end: 1px solid var(--line-soft);
+  }
+
+  article h3,
+  article p {
+    min-width: 0;
+  }
+
+  input[type="file"] {
+    display: block;
+    max-width: 100%;
+    margin-block-start: var(--space-1);
+  }
+
+  [role="alert"] {
+    overflow-wrap: anywhere;
   }
 </style>

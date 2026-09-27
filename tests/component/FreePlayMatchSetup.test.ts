@@ -1,7 +1,13 @@
-import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../fixtures/sqlite-deck-repository.ts";
+import { semanticShellGameplay } from "../fixtures/shell-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
+import { get } from "svelte/store";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -19,13 +25,13 @@ import {
   PROTOTYPE_RULESET,
   quantityLimit,
   validateDeckDraft,
+  type PinnedDeckRuleset,
 } from "../../src/decks/validation/index.ts";
 import {
   emptyDeckHistory,
   createBlankDeck,
 } from "../../src/decks/editing/index.ts";
-import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
-import { IndexedDbDeckRepository } from "../../src/decks/repository/index.ts";
+
 import { PROTOTYPE_CATALOG } from "../fixtures/catalog.ts";
 import {
   TOAST_CONTEXT_KEY,
@@ -39,6 +45,8 @@ import {
 } from "../../src/shell/screens/free-play-deck-listing.ts";
 import FreePlayMatchSetup from "../../src/shell/screens/FreePlayMatchSetup.svelte";
 import { createShellSettingsStore } from "../../src/shell/settings/shell-settings-store.ts";
+import { DEFAULT_SHELL_SETTINGS } from "../../src/shell/settings/shell-settings.ts";
+import { presentationPreferencePort } from "../fixtures/presentation-preference-port.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 import { installedGameplayFromCatalog } from "../fixtures/installed-gameplay.ts";
 
@@ -96,7 +104,7 @@ const RAW_GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG, {
     opponentId: "practice-bot",
   }),
 });
-const GAMEPLAY = createShellGameplay(RAW_GAMEPLAY, null);
+const GAMEPLAY = semanticShellGameplay(RAW_GAMEPLAY);
 
 const PLAYER_PRESET_KEY = "chapter:chapter-one-starter";
 const OPPONENT_PRESET_KEY = "chapter:chapter-one-practice";
@@ -117,17 +125,8 @@ function battleModule(
   };
 }
 
-function memoryStorage(entries: Record<string, string> = {}) {
-  return {
-    getItem: (key: string) => entries[key] ?? null,
-    setItem: (key: string, value: string) => {
-      entries[key] = value;
-    },
-  };
-}
-
 async function seedLocalDeck(): Promise<void> {
-  const repository = await IndexedDbDeckRepository.open();
+  const repository = await openTestDeckRepository();
   try {
     const base = createBlankDeck("Built Deck", catalog, PROTOTYPE_RULESET, {
       id: "built-deck",
@@ -145,17 +144,14 @@ async function seedLocalDeck(): Promise<void> {
       emptyDeckHistory(),
     );
   } finally {
-    repository.close();
+    await repository.close();
   }
 }
 
+let repository: TestDeckRepository;
+
 function deleteDeckDatabase(): Promise<void> {
-  return new Promise((resolve) => {
-    const request = indexedDB.deleteDatabase(DECK_DATABASE_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    request.onblocked = () => resolve();
-  });
+  return disposeTestDeckRepositories();
 }
 
 function query(value: string): HTMLElement | null {
@@ -195,7 +191,8 @@ function startButton(): HTMLButtonElement {
 }
 
 interface RenderOptions {
-  readonly storage?: ReturnType<typeof memoryStorage>;
+  readonly ruleset?: PinnedDeckRuleset;
+  readonly settings?: ReturnType<typeof createShellSettingsStore>;
   readonly module?: Partial<BattleDeckModule>;
   readonly loadBattle?: () => Promise<BattleDeckModule>;
   readonly toasts?: ToastPublisher;
@@ -206,11 +203,17 @@ function renderSetup(options: RenderOptions = {}) {
   const onback = vi.fn();
   const ondecks = vi.fn();
   const onopendeck = vi.fn();
-  const storage = options.storage ?? memoryStorage();
-  const settings = createShellSettingsStore(storage);
+  const settings =
+    options.settings ??
+    createShellSettingsStore(
+      DEFAULT_SHELL_SETTINGS,
+      presentationPreferencePort(DEFAULT_SHELL_SETTINGS),
+    );
   const props = {
-    gameplay: GAMEPLAY,
+    presentation: GAMEPLAY.presentation,
+    ruleset: options.ruleset ?? PROTOTYPE_RULESET,
     settings,
+    createRepository: () => repository,
     loadBattle:
       options.loadBattle ?? (async () => battleModule(options.module)),
     onstart,
@@ -231,7 +234,6 @@ function renderSetup(options: RenderOptions = {}) {
     onback,
     ondecks,
     onopendeck,
-    storage,
     settings,
   };
 }
@@ -257,14 +259,53 @@ beforeEach(async () => {
   resetFreePlayDeckCacheForTests();
   await deleteDeckDatabase();
   await seedLocalDeck();
+  repository = await openTestDeckRepository();
 });
 
 afterEach(async () => {
   cleanup();
+  await repository.close();
   await deleteDeckDatabase();
 });
 
 describe("FreePlayMatchSetup", () => {
+  it("rejects a package-forbidden local deck before request parsing or Worker start", async () => {
+    const ruleset = {
+      id: "package-freeplay",
+      revision: "package-sha",
+      quantityByCode: new Map([[VALID_MAIN[0]!, 0 as const]]),
+    };
+    const parse = vi.fn(parseBattleRequest);
+    const setup = await renderListedSetup({
+      ruleset,
+      module: { parseBattleRequest: parse },
+    });
+    await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
+    expect(startButton().disabled).toBe(true);
+    expect(query("deck-select-block-notice")?.textContent).toBe(
+      `${catalog.get(VALID_MAIN[0]!)!.name} is forbidden by the pinned ruleset.`,
+    );
+    await fireEvent.click(startButton());
+    expect(parse).not.toHaveBeenCalled();
+    expect(setup.onstart).not.toHaveBeenCalled();
+
+    await fireEvent.click(control("deck-select-duplicate"));
+    await vi.waitFor(() => expect(gridKeys()).toHaveLength(4));
+    const copy = (await repository.list()).find(
+      (deck) => deck.id !== "built-deck",
+    )!;
+    expect(copy.validation.status).toBe("errors");
+    expect(copy.validation.rulesetRevision).toBe(ruleset.revision);
+    expect(startButton().disabled).toBe(true);
+    expect(setup.onstart).not.toHaveBeenCalled();
+
+    await fireEvent.click(control(`deck-tile-press-${PLAYER_PRESET_KEY}`));
+    expect(startButton().disabled).toBe(false);
+    await fireEvent.click(startButton());
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(setup.onstart).toHaveBeenCalledTimes(1);
+  });
+
   it("opens on the shared selection screen with every deck as a tile", async () => {
     await renderListedSetup();
 
@@ -410,7 +451,7 @@ describe("FreePlayMatchSetup", () => {
      screen is said, and the grid stays live so another deck can be picked. */
   it("reports a refused write and keeps the screen usable", async () => {
     const save = vi
-      .spyOn(IndexedDbDeckRepository.prototype, "save")
+      .spyOn(repository, "save")
       .mockRejectedValue(new Error("Unable to save deck"));
     try {
       await renderListedSetup();
@@ -435,9 +476,17 @@ describe("FreePlayMatchSetup", () => {
      answer, so a second visit never waits on the battle entry again. The
      loader below would hang forever if this mount needed it. */
   it("opens on the library the page already read", async () => {
-    warmFreePlayDecks(async () => battleModule(), GAMEPLAY);
+    warmFreePlayDecks(
+      async () => battleModule(),
+      GAMEPLAY.presentation,
+      () => repository,
+      PROTOTYPE_RULESET,
+      () => undefined,
+    );
     await vi.waitFor(() =>
-      expect(listedFreePlayDecks(GAMEPLAY)).not.toBeNull(),
+      expect(
+        listedFreePlayDecks(GAMEPLAY.presentation, PROTOTYPE_RULESET),
+      ).not.toBeNull(),
     );
 
     await renderListedSetup({
@@ -483,8 +532,8 @@ describe("FreePlayMatchSetup", () => {
   });
 
   it("remembers the last pairing", async () => {
-    const storage = memoryStorage();
-    const first = await renderListedSetup({ storage });
+    const settings = createShellSettingsStore();
+    const first = await renderListedSetup({ settings });
 
     await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
     await fireEvent.click(control("duel-start-opponent-deck"));
@@ -493,22 +542,22 @@ describe("FreePlayMatchSetup", () => {
     expect(first.onstart).toHaveBeenCalledTimes(1);
     cleanup();
 
-    await renderListedSetup({ storage });
+    await renderListedSetup({ settings });
 
     expect(seatKey("yours")).toBe(LOCAL_KEY);
     expect(seatKey("opponent")).toBe(PLAYER_PRESET_KEY);
   });
 
   it("falls back when a remembered deck is gone", async () => {
-    const storage = memoryStorage();
-    const first = await renderListedSetup({ storage });
+    const settings = createShellSettingsStore();
+    const first = await renderListedSetup({ settings });
     await fireEvent.click(control(`deck-tile-press-${LOCAL_KEY}`));
     await fireEvent.click(startButton());
     expect(first.onstart).toHaveBeenCalledTimes(1);
     cleanup();
     await deleteDeckDatabase();
 
-    await renderLoadedSetup({ storage });
+    await renderLoadedSetup({ settings });
 
     expect(gridKeys()).toEqual([PLAYER_PRESET_KEY, OPPONENT_PRESET_KEY]);
     expect(seatKey("yours")).toBe(PLAYER_PRESET_KEY);
@@ -604,9 +653,7 @@ describe("FreePlayMatchSetup", () => {
       "Blaze Circuit",
     );
     expect(seatKey("opponent")).toBe(OPPONENT_PRESET_KEY);
-    expect(setup.storage.getItem("ygo.ui.v3")).toContain(
-      '"freePlayOpponentId":"blaze-circuit"',
-    );
+    expect(get(setup.settings).freePlayOpponentId).toBe("blaze-circuit");
     await fireEvent.click(startButton());
     expect(setup.onstart).toHaveBeenCalledTimes(1);
     expect(setup.onstart.mock.calls[0]?.[0]).toMatchObject({

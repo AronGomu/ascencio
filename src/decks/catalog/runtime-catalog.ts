@@ -123,9 +123,8 @@ export function createFetchShardReader(
  *
  * The digest comes from a build constant rather than from the network, so a
  * manifest served from anywhere but this build's snapshot fails before a single
- * shard is read. The Worker pins the same file the same way in
- * `loadBrowserRuntimeAssets`; the parse below reads only the two fields a
- * catalog needs from bytes those checks have already fixed.
+ * shard is read. The parse below reads only the two fields this retained
+ * catalog reader needs from bytes those checks have already fixed.
  */
 async function loadPinnedManifestFiles(
   baseUrl: string,

@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { buildRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-snapshot-node.ts";
@@ -16,13 +16,22 @@ export async function contentSetupFilesFixture(root: string) {
   const putJson = (relative: string, value: unknown) =>
     put(relative, JSON.stringify(value));
   const persistInputs = async () => {
-    await put("content/authoring/card-set-source.json", input.source);
+    await put(
+      "assets/content/card-library/authoring/card-set-source.json",
+      input.source,
+    );
     await putJson(
-      "content/authoring/chapter-one-corrections.json",
+      "assets/content/chapter-01/authoring/chapter-one-corrections.json",
       input.corrections,
     );
-    await putJson("content/chapter-selections.json", input.selections);
-    await putJson("content/authoring/chapter-policy.json", input.chapterPolicy);
+    await putJson(
+      "assets/content/chapter-01/authoring/chapter-selections.json",
+      input.selections,
+    );
+    await putJson(
+      "assets/content/chapter-01/authoring/chapter-policy.json",
+      input.chapterPolicy,
+    );
     await putJson("content/distribution-evidence.json", input.distribution);
   };
   await persistInputs();
@@ -38,7 +47,12 @@ export async function contentSetupFilesFixture(root: string) {
   const files: { path: string; bytes: number; sha256: string }[] = [];
   const putAsset = async (relative: string, value: unknown) => {
     const bytes = JSON.stringify(value);
-    await put(`${ASSET_SOURCES.data.source}/${relative}`, bytes);
+    await put(
+      relative.startsWith("strings/")
+        ? `${ASSET_SOURCES.strings.source}/${relative.slice("strings/".length)}`
+        : `${ASSET_SOURCES.data.source}/${relative}`,
+      bytes,
+    );
     const entry = {
       path: relative,
       bytes: Buffer.byteLength(bytes),
@@ -120,10 +134,15 @@ export async function contentSetupFilesFixture(root: string) {
     files,
   };
   const publishRuntimeManifest = async () => {
-    await putJson(`${ASSET_SOURCES.data.source}/manifest.json`, assetManifest);
+    await putJson(ASSET_SOURCES.dataManifest.source, assetManifest);
+    await put(
+      ASSET_SOURCES.dataManifestSha256.source,
+      `${contentDigest(JSON.stringify(assetManifest))}  manifest.json\n`,
+    );
     const runtime = await buildRuntimeSnapshotManifest(
       path.join(root, ASSET_SOURCES.data.source),
       path.join(root, "vendor/ocgcore-wasm/0.1.2"),
+      path.join(root, ASSET_SOURCES.dataManifest.source),
     );
     await putJson(`${ASSET_SOURCES.runtime.source}/manifest.json`, runtime);
     return runtime;
@@ -139,7 +158,7 @@ export async function contentSetupFilesFixture(root: string) {
         jpeg,
       );
   }
-  await putJson("public/story/shop-sets.v1.json", {
+  await putJson("assets/content/card-library/authoring/shop-sets.v1.json", {
     sets: input.selections.chapters.map(({ id }) => ({ id, name: id })),
   });
   const setManifest = {
@@ -155,12 +174,12 @@ export async function contentSetupFilesFixture(root: string) {
     await put(`${ASSET_SOURCES.setImages.source}/${id}.jpg`, jpeg);
   for (const relative of [
     "src/story/content/prologue.ts",
-    `${ASSET_SOURCES.story.source}/chapter-01/city-map-placeholder.svg`,
+    `${ASSET_SOURCES.story.source}/city-map-placeholder.svg`,
   ])
     await put(relative, "Lawful synthetic fixture; not production media.");
   for (const relative of [
     ...DECK_CATALOG.map(
-      ({ fileName }) => `src/battle/duel/presets/decks/${fileName}`,
+      ({ fileName }) => `assets/content/chapter-01/decks/${fileName}`,
     ),
     "src/decks/chapter-one-starter.ydk",
   ])

@@ -1,23 +1,12 @@
-/* Which deck library a context edits. Free play reads the database every deck
-   ever built already lives in; a story save reads its own deck list (ADR-049).
-
-   Nothing moves between the two. The split is this choice and nothing else, so
-   the free-play branch names no database of its own: it opens
-   `DECK_DATABASE_NAME` at the schema that is already on the player's disk.
-
-   The story adapter arrives as a factory the context carries rather than as an
-   import. `src/decks/` is the shared deck-data library every domain reads, and
-   `src/story/index.ts` exports the whole visual novel behind it — importing it
-   from here would pull the story chunk into the deck editor's closure and blow
-   its build budget. The caller that knows it is in a story already holds the
-   adapter, so it hands it over. */
+/* Contexts use only the caller's injected repository. Free play shares Shell's
+   SQLite client; Story supplies its save-owned adapter without importing Story
+   into this shared deck-data library. */
 
 import {
   unlimitedCardOwnership,
   type CardOwnership,
 } from "./card-ownership.ts";
 import type { DeckRepository } from "./deck-repository.ts";
-import { IndexedDbDeckRepository } from "./indexeddb-deck-repository.ts";
 
 /* Ownership travels with the repository rather than beside it (T23). They were
    two independent discriminators for one ticket, and a story repository paired
@@ -31,7 +20,10 @@ import { IndexedDbDeckRepository } from "./indexeddb-deck-repository.ts";
    screen, and a name resolved separately from the repository is a third thing
    that can disagree with the decks the player is looking at. */
 export type DeckContext =
-  | { readonly kind: "free-play" }
+  | {
+      readonly kind: "free-play";
+      createRepository(): DeckRepository;
+    }
   /** `createRepository` is `createStoryDeckRepository` bound to the save the
       context is running against, `ownership` is that save's collection and
       `label` names it on screen; see `src/story/index.ts`. */
@@ -47,9 +39,8 @@ export interface DeckRepositoryHandle {
   /** What the player editing through `repository` owns, resolved from the same
       context so the two can never describe different worlds (ADR-050). */
   readonly ownership: CardOwnership;
-  /** Releases whatever the context holds open. The free-play library holds an
-      IndexedDB connection, which has to go on unmount or the next reset finds
-      the database still in use; a save-backed context holds nothing. */
+  /** Releases context-owned resources. SQLite repositories share Shell's
+      lifetime client, so current contexts hold no independent connection. */
   close(): void;
 }
 
@@ -63,12 +54,9 @@ export async function resolveDeckRepository(
       ownership: context.ownership,
       close: () => undefined,
     });
-  const repository = await IndexedDbDeckRepository.open();
   return Object.freeze({
-    repository,
+    repository: context.createRepository(),
     ownership: unlimitedCardOwnership(),
-    close: () => {
-      repository.close();
-    },
+    close: () => undefined,
   });
 }

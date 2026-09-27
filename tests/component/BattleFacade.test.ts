@@ -1,3 +1,4 @@
+import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
@@ -286,6 +287,7 @@ async function renderFacade(
     request,
     oncomplete,
     runtimeSource: TEST_RUNTIME_SOURCE,
+    ruleset: PROTOTYPE_RULESET,
     presentation: battlePresentationFixture(),
   });
   await vi.waitFor(() =>

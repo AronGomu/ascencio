@@ -1,26 +1,25 @@
-import { createShellGameplay } from "../../../src/shell/application/legacy-content.ts";
+import {
+  semanticShellFixture,
+  disposeSemanticShells,
+} from "../../fixtures/semantic-shell.ts";
+import { createSqliteDeckRepository } from "../../../src/decks/repository/sqlite.ts";
+import { storyUserRuntime } from "../../fixtures/story-session.ts";
 import type {
   StorySaveReadResult,
   StorySlotKey,
 } from "../../../src/story/saves/index.ts";
 import {
-  storyShellProps,
   createStorySaveRepository,
   resetStorySessionFixture,
 } from "../../fixtures/story-session.ts";
 import { storyBindingFixture } from "../../fixtures/story-release.ts";
-import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { deleteDB } from "idb";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
-import {
-  DECK_DATABASE_NAME,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/repository/index.ts";
+
 import {
   emptyDeckHistory,
   createBlankDeck,
@@ -32,7 +31,6 @@ import {
   createInitialStoryState,
   type StoryState,
 } from "../../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/index.ts";
 import type { GenerationSaveRepository as StorySaveRepository } from "../../../src/story/saves/index.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
@@ -65,21 +63,20 @@ const storyLoaders: DomainLoaders = {
    the module graph behind it, which the default one-second budget knows
    nothing about. */
 const REAL_IMPORT = { timeout: 15_000 };
-const READY_CORE_GATE = {
-  kind: "ready" as const,
-  gameplay: createShellGameplay(installedDuelGameplayFixture(), null),
-  reader: null,
-  generation: 1,
-};
+
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: ReturnType<typeof createSqliteDeckRepository>;
+beforeEach(() => {
+  repository = createSqliteDeckRepository(
+    storyUserRuntime(globalThis.indexedDB),
+  );
+});
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
+  await disposeSemanticShells();
+  await resetStorySessionFixture();
   vi.restoreAllMocks();
-  await Promise.all([
-    deleteDB(DECK_DATABASE_NAME),
-    deleteDB(STORY_SAVES_DATABASE_NAME),
-  ]);
 });
 
 /** A story save store answering `manual:1` with `state` and every other slot
@@ -124,18 +121,13 @@ function storySave(deckIds: readonly string[]): StoryState {
 }
 
 async function seedFreePlayDeck(id: string, name: string): Promise<void> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    await repository.create(
-      createBlankDeck(name, prototypeCatalogMap, PROTOTYPE_RULESET, {
-        id,
-        now: new Date("2026-01-01T00:00:00.000Z"),
-      }),
-      emptyDeckHistory(),
-    );
-  } finally {
-    repository.close();
-  }
+  await repository.create(
+    createBlankDeck(name, prototypeCatalogMap, PROTOTYPE_RULESET, {
+      id,
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    }),
+    emptyDeckHistory(),
+  );
 }
 
 function renderAt(hash: string, state: StoryState | null = null) {
@@ -144,11 +136,10 @@ function renderAt(hash: string, state: StoryState | null = null) {
     current = next;
   });
   const rendered = render(AppShell, {
-    ...storyShellProps(),
     store,
     loaders,
     saves: savesHolding(state),
-    initialCoreGate: READY_CORE_GATE,
+    ...semanticShellFixture(undefined, savesHolding(state)),
   });
   return { ...rendered, store, hash: () => current };
 }
@@ -187,7 +178,7 @@ describe("deck editor context binding", () => {
       collection: { 89631139: 1 },
     };
     vi.spyOn(Date, "now").mockReturnValue(1);
-    const saves = createStorySaveRepository(globalThis.indexedDB, () => 1);
+    const saves = createStorySaveRepository(globalThis.indexedDB);
     expect((await saves.write("manual:1", manual, null)).kind).toBe("written");
     expect((await saves.write("autosave", autosave, null)).kind).toBe(
       "written",
@@ -198,11 +189,10 @@ describe("deck editor context binding", () => {
       current = next;
     });
     render(AppShell, {
-      ...storyShellProps(),
       store,
       loaders: storyLoaders,
       saves,
-      initialCoreGate: READY_CORE_GATE,
+      ...semanticShellFixture(undefined, saves),
     });
     store.enterStory("continue");
 
@@ -364,19 +354,18 @@ describe("deck editor context binding", () => {
     });
     const store = createShellStore("#/story/decks", () => undefined);
     render(AppShell, {
-      ...storyShellProps(),
       store,
       loaders,
       saves: { ...storySaves, read },
-      initialCoreGate: READY_CORE_GATE,
+      ...semanticShellFixture(undefined, { ...storySaves, read }),
     });
     await vi.waitFor(() => expect(read).toHaveBeenCalled(), REAL_IMPORT);
 
     store.syncFromHash("#/free-play/decks");
     expect(await libraryDeckNames()).toContain("Free Deck One");
+    const admittedReads = read.mock.results.map((result) => result.value);
     pending.resolve();
-
-    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2), REAL_IMPORT);
+    await Promise.all(admittedReads);
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(query("deck-editor-context-banner")).toBeNull();
     expect(await libraryDeckNames()).toContain("Free Deck One");

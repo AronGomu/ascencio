@@ -1,3 +1,4 @@
+import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
 import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
 import {
   battlePresentationFixture,
@@ -127,6 +128,7 @@ afterEach(() => {
 async function renderReadyApp(imageSource: CardImageSource | null = null) {
   const rendered = render(App, {
     runtimeSource: TEST_RUNTIME_SOURCE,
+    ruleset: PROTOTYPE_RULESET,
     presentation: battlePresentationFixture(installedDuelGameplayFixture()),
     imageSource,
   });

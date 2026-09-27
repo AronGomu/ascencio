@@ -3,6 +3,8 @@
 > Status: accepted; planned
 > Amended by [ADR-093](093_ADR_atomic_release_selector_and_save_generations.md) D1–D5: D3–D5 use sole Shell content/save selector and forward prepared save generations, not historical content selection.
 > Amended by [ADR-085](085_ADR_content_lifecycle_ownership.md) D1–D5 and [ADR-088](088_ADR_pinned_saves_and_exact_content_repair.md) D1–D5: content owns lifecycle/storage; new saves require exact refs without legacy binding; shared serialization protects removal and exact repair.
+> Amended by [ADR-095](095_ADR_manual_sqlite_package_delivery.md), [ADR-097](097_ADR_user_data_isolation_without_save_compatibility.md), [ADR-098](098_ADR_single_owner_sqlite_worker.md): OPFS package registry, isolated user DB, no saved-content compatibility guarantee, single-tab ownership replace D1–D5.
+> Superseded for current storage by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D2–D3. Body retained as historical rationale.
 > Decided: 2026-09-07
 > Owners: shell / battle / story
 > Relates: ADR-026 (domain DB ownership), ADR-049 (save-owned decks)

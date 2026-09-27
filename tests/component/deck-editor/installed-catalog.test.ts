@@ -1,58 +1,62 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, waitFor } from "@testing-library/svelte";
-import { deleteDB } from "idb";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import { installedDeckCatalog } from "../../../src/decks/catalog/installed-gameplay-cards.ts";
 import {
   PROTOTYPE_RULESET,
   catalogByCode,
 } from "../../../src/decks/validation/index.ts";
-import { deckId, DECK_DATABASE_NAME } from "../../../src/decks/index.ts";
+import { deckId } from "../../../src/decks/index.ts";
 import {
   emptyDeckHistory,
   createBlankDeck,
 } from "../../../src/decks/editing/index.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
+
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 
 const gameplay = installedDuelGameplayFixture();
 const cards = installedDeckCatalog(gameplay).cards;
 
 async function seedDeck(): Promise<void> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    await repository.create(
-      createBlankDeck(
-        "Installed Pool",
-        catalogByCode(cards),
-        PROTOTYPE_RULESET,
-        {
-          id: "installed-pool",
-        },
-      ),
-      emptyDeckHistory(),
-    );
-  } finally {
-    repository.close();
-  }
+  await repository.create(
+    createBlankDeck("Installed Pool", catalogByCode(cards), PROTOTYPE_RULESET, {
+      id: "installed-pool",
+    }),
+    emptyDeckHistory(),
+  );
 }
+
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
 
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 describe("installed deck editor catalog", () => {
   it("offers only installed non-token cards", async () => {
     await seedDeck();
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(gameplay),
-      deckId: deckId("installed-pool"),
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(gameplay),
+        deckId: deckId("installed-pool"),
+        onnavigate: vi.fn(),
+      },
     });
 
     await waitFor(() =>

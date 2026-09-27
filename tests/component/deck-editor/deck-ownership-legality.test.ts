@@ -1,20 +1,16 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, waitFor } from "@testing-library/svelte";
-import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../../../src/decks/validation/index.ts";
-import {
-  DECK_DATABASE_NAME,
-  type DeckContext,
-} from "../../../src/decks/repository/index.ts";
+import { type DeckContext } from "../../../src/decks/repository/index.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
@@ -56,7 +52,6 @@ const STORY_DECK_ID = "story-legality-deck";
 
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
 });
 
 function collectionOf(codes: readonly number[]): Record<number, number> {
@@ -154,4 +149,27 @@ describe("ownership legality in the deck library", () => {
     expect(reason()).toBe("Local deck");
     expect(press()?.disabled).toBe(false);
   });
+});
+
+it("R6 editor rejects an owned prototype-legal deck under actual chapter limit0", async () => {
+  const input = installedEditorCatalog(installedDuelGameplayFixture());
+  const ruleset = {
+    id: "chapter-01",
+    revision: "current",
+    quantityByCode: new Map([[MAIN[0]!, 0 as const]]),
+  };
+  render(DeckEditorApp, {
+    props: {
+      catalogInput: { ...input, ruleset },
+      deckId: null,
+      onnavigate: vi.fn(),
+      context: storyContext(collectionOf(MAIN)),
+    },
+  });
+  await waitFor(() => expect(press()).not.toBeNull());
+  expect(press()?.disabled).toBe(true);
+  expect(reason()).toContain("Illegal");
+  expect(
+    input.cards.get(MAIN[0]! as Parameters<typeof input.cards.get>[0]),
+  ).not.toBeNull();
 });

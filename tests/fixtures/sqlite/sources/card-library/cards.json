@@ -1,0 +1,32 @@
+[
+  {
+    "code": 1,
+    "alias": 0,
+    "setcodes": [],
+    "type": 1,
+    "level": 1,
+    "attribute": 1,
+    "race": "1",
+    "attack": 0,
+    "defense": 0,
+    "lscale": 0,
+    "rscale": 0,
+    "linkMarker": 0,
+    "scope": 0
+  },
+  {
+    "code": 2,
+    "alias": 0,
+    "setcodes": [],
+    "type": 1,
+    "level": 1,
+    "attribute": 1,
+    "race": "1",
+    "attack": 100,
+    "defense": 100,
+    "lscale": 0,
+    "rscale": 0,
+    "linkMarker": 0,
+    "scope": 0
+  }
+]

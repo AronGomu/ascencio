@@ -1,11 +1,8 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { mkdir, mkdtemp, readFile, rm, symlink } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  inspectContentSetup,
-  runContentSetup,
-} from "../../scripts/lib/content-setup-files.ts";
+import { inspectContentSetup } from "../../scripts/lib/content-setup-files.ts";
 import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
 import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 import { bindContentSource, contentDigest } from "../fixtures/content-setup.ts";
@@ -32,6 +29,8 @@ describe("content setup filesystem inspector", () => {
     const dependencies = await loadActiveDuelDependenciesNode(
       path.join(fixture.root, ASSET_SOURCES.data.source),
       new Set([1, 2, 3, 4, 5, 6].map(cardCode)),
+      undefined,
+      path.join(fixture.root, ASSET_SOURCES.strings.source),
     );
     expect(dependencies.counts).toEqual({
       cards: 6,
@@ -47,17 +46,6 @@ describe("content setup filesystem inspector", () => {
       "HOST_SETUP_REQUIRED",
       "DEVICE_ACCESS_REQUIRED",
     ]);
-    vi.spyOn(console, "log").mockImplementation(() => {});
-    expect(await runContentSetup(fixture.root, [], {})).toBe(0);
-    expect(await runContentSetup(fixture.root, ["--public"], {})).toBe(2);
-    expect(
-      JSON.parse(
-        await readFile(
-          path.join(fixture.root, "generated/content/setup-report.json"),
-          "utf8",
-        ),
-      ),
-    ).toEqual(report);
   });
   it("missing later-only art does not block Chapter 1; selected art still blocks", async () => {
     const fixture = await localFixture();
@@ -83,9 +71,8 @@ describe("content setup filesystem inspector", () => {
     expect((await inspectContentSetup(fixture.root, {})).codeReady).toBe(true);
   });
   it.each([
-    "src/battle/duel/presets/decks/chapter-one-starter.ydk",
-    "src/battle/duel/presets/decks/chapter-one-practice.ydk",
-    "src/decks/chapter-one-starter.ydk",
+    "assets/content/chapter-01/decks/chapter-one-starter.ydk",
+    "assets/content/chapter-01/decks/chapter-one-practice.ydk",
   ])(
     "missing exposed preset, default or starter blocks: %s",
     async (relative) => {
@@ -107,7 +94,7 @@ describe("content setup filesystem inspector", () => {
       const main = Array(40).fill(1);
       if (section === "main") main[0] = 2;
       await fixture.put(
-        "src/battle/duel/presets/decks/chapter-one-practice.ydk",
+        "assets/content/chapter-01/decks/chapter-one-practice.ydk",
         `#main\n${main.join("\n")}\n#extra\n${section === "extra" ? "2\n" : ""}!side\n${section === "side" ? "2\n" : ""}`,
       );
       expect((await inspectContentSetup(fixture.root, {})).codeReady).toBe(
@@ -126,7 +113,10 @@ describe("content setup filesystem inspector", () => {
         "malformed UTF-8": Buffer.from([0xff]),
         oversized: Buffer.alloc(1024 * 1024 + 1, 0x20),
       }[fault]!;
-      await fixture.put("src/decks/chapter-one-starter.ydk", source);
+      await fixture.put(
+        "assets/content/chapter-01/decks/chapter-one-starter.ydk",
+        source,
+      );
       const report = await inspectContentSetup(fixture.root, {});
       expect(report.codeReady).toBe(false);
       expect(JSON.stringify(report)).not.toContain(sentinel);
@@ -171,7 +161,17 @@ describe("content setup filesystem inspector", () => {
     "strings/en.json",
   ])("rejects missing runtime payload: %s", async (relative) => {
     const fixture = await localFixture();
-    await rm(path.join(fixture.root, ASSET_SOURCES.data.source, relative));
+    await rm(
+      path.join(
+        fixture.root,
+        relative.startsWith("strings/")
+          ? ASSET_SOURCES.strings.source
+          : ASSET_SOURCES.data.source,
+        relative.startsWith("strings/")
+          ? relative.slice("strings/".length)
+          : relative,
+      ),
+    );
     expect((await inspectContentSetup(fixture.root, {})).codeReady).toBe(false);
   });
   it.each([
@@ -255,7 +255,7 @@ describe("content setup filesystem inspector", () => {
   );
   it.each([
     `${ASSET_SOURCES.runtime.source}/manifest.json`,
-    `${ASSET_SOURCES.data.source}/manifest.json`,
+    ASSET_SOURCES.dataManifest.source,
     "vendor/ocgcore-wasm/0.1.2/vendor-manifest.json",
     `${ASSET_SOURCES.setImages.source}/manifest.json`,
   ])("rejects oversized manifest: %s", async (relative) => {
@@ -300,7 +300,7 @@ describe("content setup filesystem inspector", () => {
     `${ASSET_SOURCES.fullImages.source}/1.jpg`,
     `${ASSET_SOURCES.croppedImages.source}/1.jpg`,
     `${ASSET_SOURCES.setImages.source}/chapter-01.jpg`,
-    `${ASSET_SOURCES.story.source}/chapter-01/city-map-placeholder.svg`,
+    `${ASSET_SOURCES.story.source}/city-map-placeholder.svg`,
   ])("reports missing local asset: %s", async (relative) => {
     const fixture = await localFixture();
     await rm(path.join(fixture.root, relative));
@@ -366,21 +366,9 @@ describe("content setup filesystem inspector", () => {
     await fixture.persistInputs();
     expect((await inspectContentSetup(fixture.root, {})).codeReady).toBe(true);
   });
-  it("redacts data exceptions and unexpected filesystem exceptions", async () => {
+  it("source inspection rejects corrupt runtime paths and source symlinks", async () => {
     const fixture = await localFixture();
     const sentinel = "fake-secret-exception-sentinel";
-    const stdout: unknown[][] = [];
-    const stderr: unknown[][] = [];
-    vi.spyOn(console, "log").mockImplementation((...args) => {
-      stdout.push(args);
-    });
-    vi.spyOn(console, "error").mockImplementation((...args) => {
-      stderr.push(args);
-    });
-    const environment = {
-      CLOUDFLARE_API_TOKEN: sentinel,
-      CLOUDFLARE_ACCOUNT_ID: sentinel,
-    };
     const runtime = JSON.parse(
       await readFile(
         path.join(
@@ -395,25 +383,21 @@ describe("content setup filesystem inspector", () => {
       `${ASSET_SOURCES.runtime.source}/manifest.json`,
       runtime,
     );
-    expect(await runContentSetup(fixture.root, [], environment)).toBe(2);
-    const report = await readFile(
-      path.join(fixture.root, "generated/content/setup-report.json"),
-      "utf8",
-    );
+    expect((await inspectContentSetup(fixture.root, {})).codeReady).toBe(false);
     const sourcePath = path.join(
       fixture.root,
-      "content/authoring/card-set-source.json",
+      "assets/content/card-library/authoring/card-set-source.json",
     );
     await rm(sourcePath);
     await symlink(sentinel, sourcePath);
     await symlink(
       sentinel,
-      path.join(fixture.root, "content/authoring", sentinel),
+      path.join(
+        fixture.root,
+        "assets/content/card-library/authoring",
+        sentinel,
+      ),
     );
-    expect(await runContentSetup(fixture.root, [], environment)).toBe(1);
-    expect(stderr).toEqual([
-      ["Content setup verification failed unexpectedly."],
-    ]);
-    expect(JSON.stringify({ stdout, stderr, report })).not.toContain(sentinel);
+    await expect(inspectContentSetup(fixture.root, {})).rejects.toThrow();
   });
 });

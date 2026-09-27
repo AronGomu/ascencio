@@ -1,5 +1,3 @@
-import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
-import { createShellBootstrap } from "../../src/shell/application/legacy-installer.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -7,30 +5,11 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as coreStartup from "../../src/shell/core/core-gate.ts";
-import {
-  contentReaderFixture,
-  installedGameplayFixture,
-} from "../fixtures/installed-gameplay.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
-import type { CoreBootstrap } from "../../src/content/index.ts";
 import type { CoreGate } from "../../src/shell/core/core-gate.ts";
 
-const bootstrap: CoreBootstrap = {
-  schemaVersion: 1,
-  appSchemaVersion: 1,
-  contentSchemaVersion: 2,
-  hashAlgorithm: "SHA-256",
-  delivery: null,
-  chapters: [
-    {
-      id: "chapter-01",
-      title: "DM",
-      description: "Current Chapter 1 prototype.",
-    },
-  ],
-};
 const locked: CoreGate = { kind: "locked", reason: "content-required" };
 
 const query = (cy: string): HTMLElement | null =>
@@ -42,7 +21,7 @@ afterEach(() => {
 });
 
 describe("asset-free CORE menu", () => {
-  it("closes a ready startup reader delivered after shell unmount", async () => {
+  it("disposes a semantic startup delivered after shell unmount", async () => {
     const close = vi.fn();
     let finish!: (startup: coreStartup.CoreStartup) => void;
     vi.spyOn(coreStartup, "loadCoreStartup").mockImplementation(
@@ -56,19 +35,78 @@ describe("asset-free CORE menu", () => {
     });
     view.unmount();
     finish({
-      bootstrap: createShellBootstrap(bootstrap),
-      gate: {
-        kind: "ready",
-        gameplay: createShellGameplay(
-          installedGameplayFixture(),
-          contentReaderFixture(),
-        ),
-        generation: 1,
-        reader: { ...contentReaderFixture(), close },
-      },
+      gate: { kind: "ready", generation: 1 },
+      dispose: async () => close(),
     });
     await waitFor(() => expect(close).toHaveBeenCalledOnce());
   });
+  it("requires chapter package for Story, keeps Free Play ready, and retains exact media warnings", async () => {
+    let publishStatus!: (status: {
+      readonly warnings: readonly {
+        readonly packageId: "card-library";
+        readonly path: string;
+        readonly reason: "missing";
+      }[];
+    }) => void;
+    const unsubscribeStatus = vi.fn();
+    const application = {
+      acquire: vi.fn(),
+      clear: vi.fn(),
+      close: vi.fn(),
+      subscribe: () => () => undefined,
+    };
+    vi.spyOn(coreStartup, "loadCoreStartup").mockResolvedValue({
+      gate: { kind: "ready", generation: 4, missing: ["chapter-01"] },
+      application: application as never,
+      applicationStatus: { warnings: [] },
+      subscribeApplicationStatus(listener) {
+        publishStatus = listener as typeof publishStatus;
+        return unsubscribeStatus;
+      },
+      dispose: async () => undefined,
+    });
+    const view = render(AppShell, {
+      store: createShellStore("#/", () => undefined),
+    });
+
+    await waitFor(() =>
+      expect(query("main-menu-free-play")).toHaveProperty("disabled", false),
+    );
+    for (const cy of [
+      "main-menu-new-game",
+      "main-menu-continue",
+      "main-menu-load",
+    ])
+      expect(query(cy)).toHaveProperty("disabled", true);
+    expect(query("core-gate-status")?.textContent).toContain(
+      "New Game requires chapter-01",
+    );
+    await fireEvent.pointerEnter(query("main-menu-free-play")!);
+    await fireEvent.focus(query("main-menu-free-play")!);
+    expect(application.acquire).not.toHaveBeenCalled();
+
+    publishStatus({
+      warnings: [
+        {
+          packageId: "card-library",
+          path: "cards/full/7.jpg",
+          reason: "missing",
+        },
+      ],
+    });
+    await waitFor(() =>
+      expect(query("optional-media-package-warning")?.textContent).toContain(
+        "card-library/cards/full/7.jpg (missing)",
+      ),
+    );
+    application.clear();
+    expect(query("optional-media-package-warning")?.textContent).toContain(
+      "card-library/cards/full/7.jpg (missing)",
+    );
+    view.unmount();
+    expect(unsubscribeStatus).toHaveBeenCalledOnce();
+  });
+
   it("keeps settings and installer usable while gameplay stays visibly disabled", async () => {
     const hashes: string[] = [];
     const store = createShellStore("#/", (hash) => hashes.push(hash));
@@ -109,7 +147,7 @@ describe("asset-free CORE menu", () => {
     expect(hashes).toStrictEqual(["#/install-content"]);
     await waitFor(() => expect(query("install-content-screen")).not.toBeNull());
     expect(query("install-content-unavailable")?.textContent).toContain(
-      "Content controls are unavailable",
+      "Local content controls are unavailable. Reopen from Main Menu.",
     );
     expect(loaders.duel).not.toHaveBeenCalled();
     expect(loaders.decks).not.toHaveBeenCalled();

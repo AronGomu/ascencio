@@ -1,55 +1,48 @@
-import { describe, it, expect } from "vitest";
-import { selectedContentRelease } from "../fixtures/selected-content-release.ts";
-import { readProgressiveReleaseData } from "../../src/shell/adapters/progressive-release-data.ts";
-import type { ContentReader, StagedContent } from "../../src/content/index.ts";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 
-describe("selected Content regression fixture", () => {
-  it("consolidated delivery preserves complete canonical runtime and selected semantic data", async () => {
-    const release = await selectedContentRelease();
-    const load = async (input: typeof release.canonical) => {
-      const staged: StagedContent = {
-        receiptId: "a".repeat(64),
-        manifestVersion: "b".repeat(64),
-        releaseSequence: 1,
-        chapterIds: ["chapter-01"],
-      };
-      const reader: ContentReader = {
-        readManifest: async () => input.manifest,
-        readFile: async (_version, path) =>
-          input.bytes.get(path)?.slice() ?? null,
-        verifyRequired: async () => {
-          for (const file of input.manifest.files.filter(
-            ({ required }) => required,
-          )) {
-            const bytes = input.bytes.get(file.path)!;
-            expect(bytes.byteLength, file.path).toBe(file.bytes);
-            const hash = Buffer.from(
-              await crypto.subtle.digest("SHA-256", bytes.slice()),
-            ).toString("hex");
-            expect(hash, file.path).toBe(file.version);
-          }
-        },
-      };
-      return readProgressiveReleaseData(
-        reader,
-        staged,
-        new AbortController().signal,
+const read = (path: string) => readFileSync(path, "utf8");
+describe("domain fixture retirement contract", () => {
+  it("does not prepare hosted releases or migrate legacy saves", () => {
+    for (const path of [
+      "e2e/selected-content-fixture.ts",
+      "tests/fixtures/selected-content-browser.ts",
+    ]) {
+      expect(read(path)).not.toMatch(
+        /selected-content-release|selected-media-profile|createApplicationService|prepareRelease|openProgressiveContentStore|createStoryMigrationPort|generationSaves/,
       );
-    };
-    const canonical = await load(release.canonical);
-    const consolidated = await load(release.consolidated);
-    expect(
-      await consolidated.battle.load(new AbortController().signal),
-    ).toEqual(await canonical.battle.load(new AbortController().signal));
-    expect(consolidated.chapterCards).toEqual(canonical.chapterCards);
-    expect(consolidated.runtimeCards).toEqual(canonical.runtimeCards);
-    expect(consolidated.story).toEqual(canonical.story);
-    expect(consolidated.imageRefs).toEqual(canonical.imageRefs);
-    expect(consolidated.mapRefs).toEqual(canonical.mapRefs);
-    expect(consolidated.setImageRefs).toEqual(canonical.setImageRefs);
-    expect(
-      release.consolidated.manifest.files.filter(({ required }) => required)
-        .length,
-    ).toBeLessThan(20);
-  }, 180_000);
+    }
+  });
+  it("keeps test startup and SQLite fault hooks out of production configuration", () => {
+    expect(read("vite.config.ts")).not.toMatch(
+      /selected-content|domain-fixture/,
+    );
+    expect(read("src/storage/sqlite-worker.ts")).not.toMatch(
+      /domain-fixture|fixtureFault/,
+    );
+    expect(read("src/storage/contracts/rpc.ts")).not.toMatch(/fixture|corrupt/);
+  });
+});
+
+it("keeps one real user owner and same-store production repository factory", () => {
+  const fixture = read("tests/fixtures/selected-content-browser.ts");
+  expect(fixture.match(/await openLocalStorage\(\)/g)).toHaveLength(1);
+  expect(fixture).toContain("createUserPersistenceOwner(client, admission)");
+  expect(fixture).toContain("users: owner.services");
+  expect(fixture).toContain("await client.packages.acquireSession()");
+  expect(fixture).toContain("await service.dispose()");
+  expect(fixture).toContain("await owner.close()");
+  expect(fixture).not.toMatch(
+    /indexedDB|localStorage\.|createStoryMigrationPort/,
+  );
+});
+
+it("restricts raw Worker mutations to fixed test fault operations", () => {
+  const fixture = read("tests/fixtures/domain-sqlite-faults.ts");
+  expect(fixture).toContain("event.stopImmediatePropagation()");
+  expect(fixture).toContain('operation.kind === "corrupt-story"');
+  expect(fixture).toContain('operation.kind === "clear-story"');
+  expect(fixture).toContain('operation.kind === "fail-deck-write"');
+  expect(fixture).toContain("slots.has(operation.slot)");
+  expect(fixture).not.toMatch(/operation\.sql|importPackages|exportUserData/);
 });

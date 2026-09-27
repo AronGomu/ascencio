@@ -6,6 +6,7 @@ import {
   readFile,
   rm,
   writeFile,
+  symlink,
 } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,18 +39,20 @@ for (const entry of ["src", "scripts", "vendor"] as const)
   await cp(path.join(projectRoot, entry), path.join(scratch, entry), {
     recursive: true,
   });
-await mkdir(path.join(scratch, "content"), { recursive: true });
-await cp(
-  path.join(projectRoot, "content/core-bootstrap.json"),
-  path.join(scratch, "content/core-bootstrap.json"),
-);
 for (const asset of [
-  "assets/core/app-icon.svg",
-  "assets/story/chapter-01/city-map-placeholder.svg",
+  "assets/app/app-icon.svg",
+  "assets/app/download-links.json",
+  "assets/app/fonts/forum-latin.woff2",
+  "assets/app/fonts/source-serif-4-latin.woff2",
+  "assets/app/fonts/source-serif-4-italic-latin.woff2",
 ] as const) {
   await mkdir(path.dirname(path.join(scratch, asset)), { recursive: true });
   await cp(path.join(projectRoot, asset), path.join(scratch, asset));
 }
+await symlink(
+  path.join(projectRoot, "node_modules"),
+  path.join(scratch, "node_modules"),
+);
 for (const file of [
   "index.html",
   "package-lock.json",
@@ -81,7 +84,6 @@ async function run(args: readonly string[]): Promise<void> {
 }
 
 try {
-  await run(["ci"]);
   await run(["run", "build"]);
   await cp(path.join(scratch, "dist"), path.join(scratch, "dist-a"), {
     recursive: true,

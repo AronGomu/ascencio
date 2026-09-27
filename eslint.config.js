@@ -28,6 +28,15 @@ const DECK_SELECT_INTERNALS = ["**/deck-select/**", "!**/deck-select/index.ts"];
 const SHELL_INTERNALS = ["**/shell/**", "!**/shell/index.ts"];
 const BATTLE_INTERNALS = ["**/battle/**", "!**/battle/index.ts"];
 const BATTLE_PORTS = ["!**/battle/ports", "!**/battle/ports/index.ts"];
+const STORY_PLAYBACK_ENTRY = [
+  "!**/story/playback",
+  "!**/story/playback/index.ts",
+];
+const STORAGE_STORY_ENTRIES = [...STORY_PLAYBACK_ENTRY];
+const STORAGE_SHELL_SETTINGS = [
+  "!**/shell/settings",
+  "!**/shell/settings/index.ts",
+];
 /* Three allowances, each pinned to one file in the blocks at the bottom of this
    config and to the same file in `tests/unit/domain-boundaries.test.ts`. All
    three exist because the only entry that could legally carry them —
@@ -125,7 +134,7 @@ const boundaries = (files, patterns) => ({
                     "!**/content/content-error-copy.ts",
                   ],
                   message:
-                    "Reach player content through `src/content/index.ts`; parsers and type-only ports stay isolated.",
+                    "Hosted Content namespace is retired; use domain semantic ports.",
                 },
               ]),
         ],
@@ -224,6 +233,10 @@ export default tseslint.config(
               messages: {
                 boundary:
                   "Use the exact Cards/Decks public entry; migrated domains cannot import Content or foreign internals.",
+                unresolved:
+                  "Domain loader target must be a string literal so its boundary can be verified.",
+                storage:
+                  "Reach local SQLite storage through `src/storage/index.ts`; schema and implementation modules stay isolated.",
               },
             },
             create(context) {
@@ -234,22 +247,31 @@ export default tseslint.config(
               const source = from.split("/")[1];
               const check = (node) => {
                 if (!node || typeof node.value !== "string") return;
-                const to = node.value.startsWith(".")
-                  ? path.posix
-                      .normalize(
-                        path.posix.join(
-                          path.posix.dirname(from),
-                          node.value.split("?")[0],
-                        ),
-                      )
-                      .replace(/\.js$/, ".ts")
-                  : node.value;
+                const specifier = node.value
+                  .split("?")[0]
+                  .replace(/^\/src\//, "src/");
+                const to = path.posix
+                  .normalize(
+                    specifier.startsWith(".")
+                      ? path.posix.join(path.posix.dirname(from), specifier)
+                      : specifier,
+                  )
+                  .replace(/\.js$/, ".ts");
                 const target = to.startsWith("src/") ? to.split("/")[1] : null;
+                if (source === "content" || target === "content") {
+                  context.report({ node, messageId: "boundary" });
+                  return;
+                }
                 if (source === target) return;
+                if (target === "storage" && to !== "src/storage/index.ts") {
+                  context.report({ node, messageId: "storage" });
+                  return;
+                }
                 const deckEntries = [
                   "index",
                   "contracts/index",
                   "repository/index",
+                  "repository/sqlite",
                   "editing/index",
                   "validation/index",
                   "catalog/index",
@@ -261,12 +283,6 @@ export default tseslint.config(
                 ];
                 if (
                   source === "cards" ||
-                  (source === "shell" &&
-                    target === "content" &&
-                    !from.startsWith("src/shell/application/") &&
-                    !from.startsWith("src/shell/adapters/")) ||
-                  (["decks", "deck-editor", "story"].includes(source) &&
-                    target === "content") ||
                   (target === "decks" &&
                     !deckEntries.some(
                       (entry) => to === `src/decks/${entry}.ts`,
@@ -283,11 +299,8 @@ export default tseslint.config(
                 ExportNamedDeclaration: (node) => check(node.source),
                 ExportAllDeclaration: (node) => check(node.source),
                 ImportExpression: (node) => {
-                  if (
-                    ["cards", "decks", "deck-editor"].includes(source) &&
-                    typeof node.source.value !== "string"
-                  )
-                    context.report({ node, messageId: "boundary" });
+                  if (typeof node.source.value !== "string")
+                    context.report({ node, messageId: "unresolved" });
                   else check(node.source);
                 },
                 TSImportType: (node) => check(node.source),
@@ -295,8 +308,11 @@ export default tseslint.config(
                   if (
                     node.callee.type === "Identifier" &&
                     node.callee.name === "require"
-                  )
-                    check(node.arguments[0]);
+                  ) {
+                    if (typeof node.arguments[0]?.value !== "string")
+                      context.report({ node, messageId: "unresolved" });
+                    else check(node.arguments[0]);
+                  }
                 },
               };
             },
@@ -306,6 +322,30 @@ export default tseslint.config(
     },
     rules: { "focused-domains/imports": "error" },
   },
+  boundaries(
+    ["src/storage/**"],
+    [
+      {
+        group: [
+          ...STORY_INTERNALS,
+          ...STORAGE_STORY_ENTRIES,
+          ...SHELL_INTERNALS,
+          ...STORAGE_SHELL_SETTINGS,
+          ...BATTLE_INTERNALS,
+          ...BATTLE_PORTS,
+          ...DECK_EDITOR_INTERNALS,
+          ...DECK_SELECT_INTERNALS,
+          "**/content/**",
+          "**/shared-svelte-ui/**",
+          "**/scripts/**",
+          "node:*",
+          ...builtinModules,
+        ],
+        message:
+          "Storage imports only pure domain contract entries; no UI, Content, Node, or tooling modules.",
+      },
+    ],
+  ),
   boundaries(
     ["src/shared-svelte-ui/**"],
     [
@@ -393,7 +433,10 @@ export default tseslint.config(
   boundaries(
     ["src/main.ts", "src/shell/**"],
     [
-      { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      {
+        group: [...STORY_INTERNALS, ...STORY_PLAYBACK_ENTRY],
+        message: STORY_MESSAGE,
+      },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
@@ -474,7 +517,10 @@ export default tseslint.config(
   boundaries(
     ["src/shell/admin/admin-actions.ts"],
     [
-      { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      {
+        group: [...STORY_INTERNALS, ...STORY_PLAYBACK_ENTRY],
+        message: STORY_MESSAGE,
+      },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
@@ -486,7 +532,10 @@ export default tseslint.config(
   boundaries(
     ["src/shell/settings/shell-settings.ts"],
     [
-      { group: STORY_INTERNALS, message: STORY_MESSAGE },
+      {
+        group: [...STORY_INTERNALS, ...STORY_PLAYBACK_ENTRY],
+        message: STORY_MESSAGE,
+      },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },
       { group: DECK_SELECT_INTERNALS, message: DECK_SELECT_MESSAGE },
       {
@@ -499,7 +548,11 @@ export default tseslint.config(
     ["src/shell/handoff/handoff-coordinator.ts"],
     [
       {
-        group: [...STORY_INTERNALS, ...STORY_HANDOFF_TYPES_PENDING_RELOCATION],
+        group: [
+          ...STORY_INTERNALS,
+          ...STORY_PLAYBACK_ENTRY,
+          ...STORY_HANDOFF_TYPES_PENDING_RELOCATION,
+        ],
         message: STORY_MESSAGE,
       },
       { group: DECK_EDITOR_INTERNALS, message: DECK_EDITOR_MESSAGE },

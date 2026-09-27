@@ -1,15 +1,15 @@
+import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
+import type { ShellApplication } from "../../src/shell/core/shell-application.ts";
 import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 import "fake-indexeddb/auto";
-
 import { openDB } from "idb";
 import { describe, expect, it, vi } from "vitest";
-import { DECK_DATABASE_NAME } from "../../src/decks/index.ts";
 import {
   ADMIN_ROUTES,
   ADMIN_STORAGE_TARGETS,
   ADMIN_TEST_DECK_ID,
   buildAdminTestDeck,
-  resetStorageTarget,
+  resetOperationalStorageTarget,
   type AdminStorageTarget,
 } from "../../src/shell/admin/admin-actions.ts";
 
@@ -20,132 +20,80 @@ function target(id: string): AdminStorageTarget {
 }
 
 describe("admin route index", () => {
-  it("covers every route reachable without an id and excludes admin", () => {
+  it("covers routes reachable without an id and excludes admin", () => {
     const kinds = ADMIN_ROUTES.map((route) => route.kind);
-    expect(kinds).toContain("home");
-    expect(kinds).toContain("free-play");
-    expect(kinds).toContain("free-play-decks");
-    expect(kinds).toContain("free-play-collection");
-    expect(kinds).toContain("story");
-    expect(kinds).toContain("story-decks");
-    expect(kinds).toContain("story-collection");
+    expect(kinds).toEqual(
+      expect.arrayContaining([
+        "home",
+        "free-play",
+        "free-play-decks",
+        "free-play-collection",
+        "story",
+        "story-decks",
+        "story-collection",
+      ]),
+    );
     expect(kinds).not.toContain("admin");
   });
 });
 
 describe("admin storage targets", () => {
-  it("are unique by id and by name", () => {
-    const ids = ADMIN_STORAGE_TARGETS.map((entry) => entry.id);
-    const names = ADMIN_STORAGE_TARGETS.map((entry) => entry.name);
-    expect(new Set(ids).size).toBe(ids.length);
-    expect(new Set(names).size).toBe(names.length);
+  it("targets explicit SQLite user namespaces", () => {
+    expect(target("decks")).toMatchObject({
+      kind: "user",
+      name: "user-data.sqlite",
+      namespaces: ["decks", "deck-meta", "deck-autosaves"],
+    });
+    expect(target("story-saves").namespaces).toEqual(["story"]);
+    expect(target("preferences").namespaces).toEqual([
+      "preferences",
+      "story-read-log",
+    ]);
   });
 
-  it("names the decks and duel-snapshot databases", () => {
-    expect(target("decks").kind).toBe("indexeddb");
-    expect(target("duel-snapshots").name).toBe("ygo-story-duel");
-  });
-
-  /* The library the console clears is the free-play one, and saying so is the
-     whole of the rename: the database underneath it is the one every deck ever
-     built is already in, so the name may not follow the label (ADR-049). */
-  it("admin still targets the deck database", () => {
-    expect(target("decks").name).toBe(DECK_DATABASE_NAME);
-    expect(target("decks").label).toBe("Free-play deck library");
-  });
-
-  it("resets story saves under the production database name", () => {
-    expect(target("story-saves").kind).toBe("indexeddb");
-    expect(target("story-saves").name).toBe("ygo-story-saves");
+  it("classifies duel snapshots as operational IndexedDB", () => {
+    expect(target("duel-snapshots")).toMatchObject({
+      kind: "indexeddb",
+      name: "ygo-story-duel",
+    });
   });
 });
 
-describe("resetStorageTarget", () => {
-  it("deletes an IndexedDB database", async () => {
+describe("resetOperationalStorageTarget", () => {
+  it("deletes an operational IndexedDB database", async () => {
     const name = `admin-reset-${crypto.randomUUID()}`;
     const database = await openDB(name, 1, {
       upgrade(db) {
         db.createObjectStore("rows");
       },
     });
-    await database.put("rows", { value: 1 }, "only");
     database.close();
-    expect((await indexedDB.databases()).map((entry) => entry.name)).toContain(
-      name,
-    );
-
-    const result = await resetStorageTarget(
-      { id: "probe", label: "Probe", kind: "indexeddb", name },
-      indexedDB,
-      { removeItem: () => {} },
-    );
-
-    expect(result).toEqual({ outcome: "deleted" });
-    expect(
-      (await indexedDB.databases()).map((entry) => entry.name),
-    ).not.toContain(name);
-  });
-
-  /* A delete that another connection blocks is queued rather than performed, so
-     the console has to be able to say the store has not gone yet. */
-  it("reports a blocked delete as not cleared", async () => {
-    const factory = {
-      deleteDatabase: () => {
-        const request = {
-          onsuccess: null,
-          onblocked: null,
-          onerror: null,
-        } as unknown as IDBOpenDBRequest;
-        queueMicrotask(() =>
-          request.onblocked?.(new Event("blocked") as IDBVersionChangeEvent),
-        );
-        return request;
-      },
-    } as unknown as IDBFactory;
 
     await expect(
-      resetStorageTarget(target("decks"), factory, { removeItem: () => {} }),
-    ).resolves.toEqual({ outcome: "blocked" });
+      resetOperationalStorageTarget(
+        { id: "probe", label: "Probe", kind: "indexeddb", name },
+        indexedDB,
+      ),
+    ).resolves.toEqual({ outcome: "deleted" });
   });
 
-  it("clears a localStorage key", async () => {
-    const removeItem = vi.fn();
-    const result = await resetStorageTarget(
-      target("shell-settings"),
-      indexedDB,
-      { removeItem },
-    );
-    expect(removeItem).toHaveBeenCalledExactlyOnceWith("ygo.ui.v3");
-    expect(result).toEqual({ outcome: "deleted" });
-  });
-
-  it("rejects a forged target kind", async () => {
-    const forged = {
-      id: "forged",
-      label: "Forged",
-      kind: "cookies",
-      name: "nope",
-    } as unknown as AdminStorageTarget;
+  it("rejects user namespace targets without injected SQLite reset", async () => {
     await expect(
-      resetStorageTarget(forged, indexedDB, { removeItem: () => {} }),
-    ).rejects.toThrow(Error);
+      resetOperationalStorageTarget(target("decks"), indexedDB),
+    ).rejects.toThrow(
+      "User namespace reset requires injected SQLite capability",
+    );
   });
 });
 
 describe("buildAdminTestDeck", () => {
-  it("returns installed default deck, without bundled preset access", () => {
+  it("returns installed default deck", () => {
     const gameplay = installedGameplayFixture();
     const pool = new Set(gameplay.cards.map(({ code }) => code));
-    const deck = buildAdminTestDeck(installedGameplayFixture());
+    const deck = buildAdminTestDeck(gameplay);
     expect(deck.main).toHaveLength(40);
     for (const code of [...deck.main, ...deck.extra, ...deck.side])
       expect(pool.has(code)).toBe(true);
-  });
-
-  it("is stable across calls", () => {
-    expect(buildAdminTestDeck(installedGameplayFixture())).toEqual(
-      buildAdminTestDeck(installedGameplayFixture()),
-    );
   });
 
   it("uses a fixed deck id", () => {
@@ -153,68 +101,109 @@ describe("buildAdminTestDeck", () => {
   });
 });
 
-it("Story admin reset clears only injected generation slots, never deletes Story DB", async () => {
-  const clear = vi.fn<(slot: string) => Promise<void>>(async () => undefined);
-  const factory = {
-    deleteDatabase: vi.fn(() => {
-      throw new Error("must not delete Story DB");
-    }),
-  } as unknown as IDBFactory;
-  const saves = { read: vi.fn(), write: vi.fn(), list: vi.fn(), clear };
-  await expect(
-    resetStorageTarget(
-      target("story-saves"),
-      factory,
-      { removeItem: vi.fn() },
-      saves,
-    ),
-  ).resolves.toEqual({ outcome: "deleted" });
-  expect(clear.mock.calls.map((call) => call[0])).toEqual([
-    "manual:1",
-    "manual:2",
-    "manual:3",
-    "autosave",
-    "checkpoint:pre-duel",
-  ]);
-  expect(factory.deleteDatabase).not.toHaveBeenCalled();
-  await expect(
-    resetStorageTarget(target("story-saves"), factory, { removeItem: vi.fn() }),
-  ).rejects.toThrow("STORY_MIGRATION_FAILED");
-});
-
-it("Story admin reset waits for every started clear before reporting failure", async () => {
-  const failure = new Error("synthetic clear failure");
-  let finishSlowClear!: () => void;
-  const slowClear = new Promise<void>((resolve) => {
-    finishSlowClear = resolve;
+// Root owns acquisition; Admin gets only the cancellable action.
+describe("seedAdminTestDeck", () => {
+  it("acquires freeplay, writes through that session, closes before returning", async () => {
+    const { seedAdminTestDeck } =
+      await import("../../src/shell/admin/admin-actions.ts");
+    const order: string[] = [];
+    const gameplay = installedGameplayFixture();
+    const create = vi.fn(async () => {
+      order.push("write");
+    });
+    const application = {
+      acquire: vi.fn(async () => {
+        order.push("acquire");
+        return {
+          kind: "freeplay",
+          inputs: {
+            presentation: gameplay,
+            editor: { ruleset: PROTOTYPE_RULESET },
+            users: { createDeckRepository: () => ({ create }) },
+          },
+          close: async () => {
+            order.push("flush-close-release");
+          },
+        };
+      }),
+    } as unknown as ShellApplication;
+    const signal = new AbortController().signal;
+    await seedAdminTestDeck(
+      application,
+      signal,
+      () => new Date("2026-08-14T00:00:00.000Z"),
+    );
+    expect(application.acquire).toHaveBeenCalledWith("freeplay", signal);
+    expect(order).toEqual(["acquire", "write", "flush-close-release"]);
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: ADMIN_TEST_DECK_ID,
+        ...buildAdminTestDeck(gameplay),
+        validation: {
+          status: "valid",
+          issues: [],
+          rulesetRevision: { ruleset: PROTOTYPE_RULESET }.ruleset.revision,
+        },
+      }),
+      { undo: [], redo: [], nextSequence: 1 },
+    );
   });
-  const clear = vi.fn(async (slot: string) => {
-    if (slot === "manual:1") throw failure;
-    if (slot === "manual:2") await slowClear;
-  });
-  const saves = { read: vi.fn(), write: vi.fn(), list: vi.fn(), clear };
 
-  let settled = false;
-  let rejection: unknown;
-  const reset = resetStorageTarget(
-    target("story-saves"),
-    indexedDB,
-    { removeItem: vi.fn() },
-    saves,
-  ).then(
-    () => {
-      settled = true;
-    },
-    (error: unknown) => {
-      settled = true;
-      rejection = error;
+  it.each(["cancel", "write", "close"])(
+    "closes session after %s failure",
+    async (failure) => {
+      const { seedAdminTestDeck } =
+        await import("../../src/shell/admin/admin-actions.ts");
+      const controller = new AbortController();
+      const gameplay = installedGameplayFixture();
+      const create = vi.fn(async () => {
+        if (failure === "write") throw new Error("STORAGE_QUOTA_EXCEEDED");
+      });
+      const close = vi.fn(async () => {
+        if (failure === "close") throw new Error("STORAGE_UNAVAILABLE");
+      });
+      const application = {
+        acquire: async () => {
+          if (failure === "cancel") controller.abort();
+          return {
+            inputs: {
+              presentation: gameplay,
+              editor: { ruleset: PROTOTYPE_RULESET },
+              users: { createDeckRepository: () => ({ create }) },
+            },
+            close,
+          };
+        },
+      } as unknown as ShellApplication;
+      await expect(
+        seedAdminTestDeck(application, controller.signal),
+      ).rejects.toThrow(
+        failure === "cancel"
+          ? "aborted"
+          : failure === "write"
+            ? "STORAGE_QUOTA_EXCEEDED"
+            : "STORAGE_UNAVAILABLE",
+      );
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(create).toHaveBeenCalledTimes(failure === "cancel" ? 0 : 1);
     },
   );
 
-  await vi.waitFor(() => expect(clear).toHaveBeenCalledTimes(5));
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  expect(settled).toBe(false);
-  finishSlowClear();
-  await reset;
-  expect(rejection).toBe(failure);
+  it("preserves missing-package/admission failures without repository access", async () => {
+    const { seedAdminTestDeck } =
+      await import("../../src/shell/admin/admin-actions.ts");
+    for (const message of [
+      "APP_CONTENT_REQUIRED:duel-core,card-library,freeplay",
+      "APP_SESSION_ACTIVE",
+    ]) {
+      const application = {
+        acquire: async () => {
+          throw new Error(message);
+        },
+      } as unknown as ShellApplication;
+      await expect(
+        seedAdminTestDeck(application, new AbortController().signal),
+      ).rejects.toThrow(message);
+    }
+  });
 });

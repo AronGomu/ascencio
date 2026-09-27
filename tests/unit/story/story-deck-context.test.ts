@@ -1,8 +1,7 @@
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
 import { emptyDeckHistory } from "../../../src/decks/editing/index.ts";
 import { DeckStorageError } from "../../../src/decks/repository/index.ts";
@@ -11,10 +10,7 @@ import {
   createInitialStoryState,
   type StoryState,
 } from "../../../src/story/model/story-state.ts";
-import {
-  STORY_SAVES_DATABASE_NAME,
-  type StorySlotKey,
-} from "../../../src/story/saves/story-save-contracts.ts";
+import type { StorySlotKey } from "../../../src/story/saves/index.ts";
 import {
   createStorySaveRepository,
   resetStorySessionFixture,
@@ -23,13 +19,13 @@ import type { GenerationSaveRepository as StorySaveRepository } from "../../../s
 
 /* The one place a story deck context is built, so this is where "which save is
    the editor about to write into" is decided. Driven against the real save
-   repository over `fake-indexeddb`: the mistake worth catching is a context
+   repository over native SQLite: the mistake worth catching is a context
    that edits a slot the player is not resuming, or one that reports a refused
    write as a successful save. */
 
 afterEach(async () => {
-  resetStorySessionFixture();
-  await deleteDB(STORY_SAVES_DATABASE_NAME);
+  await resetStorySessionFixture();
+  vi.restoreAllMocks();
 });
 
 function saveState(overrides: Partial<StoryState> = {}): StoryState {
@@ -50,15 +46,17 @@ async function seed(
   state: StoryState,
   savedAt: number,
 ): Promise<void> {
-  const result = await createStorySaveRepository(
-    indexedDB,
-    () => savedAt,
-  ).write(slot, state, null);
+  vi.spyOn(Date, "now").mockReturnValue(savedAt);
+  const result = await createStorySaveRepository(indexedDB).write(
+    slot,
+    state,
+    null,
+  );
   expect(result.kind).toBe("written");
 }
 
 function saves(): StorySaveRepository {
-  return createStorySaveRepository(indexedDB, () => 1_700_000_000_000);
+  return createStorySaveRepository(indexedDB);
 }
 
 async function storedDeckIds(slot: StorySlotKey): Promise<readonly string[]> {
@@ -130,8 +128,14 @@ describe("openStoryDeckContext", () => {
     if (context?.kind !== "story") throw new Error("no story context");
     const repository = context.createRepository();
 
-    await repository.create(storyDeckFixture("first"), emptyDeckHistory());
-    await repository.create(storyDeckFixture("second"), emptyDeckHistory());
+    await repository.create(
+      structuredClone(storyDeckFixture("first")),
+      emptyDeckHistory(),
+    );
+    await repository.create(
+      structuredClone(storyDeckFixture("second")),
+      emptyDeckHistory(),
+    );
 
     expect(await storedDeckIds("manual:1")).toStrictEqual(["first", "second"]);
   });

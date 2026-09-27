@@ -2,7 +2,7 @@ import { buildStarterGrant } from "../../src/story/decks/starter-grant.ts";
 import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
 import { parseBattleRequest } from "../../src/battle/battle-contracts.ts";
 import { parseDuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
@@ -24,7 +24,14 @@ import {
 import { STARTER_DECK_LIST } from "../../src/decks/editing/index.ts";
 import { reduceStory } from "../../src/story/model/story-reducer.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
-import { migrateStorySaveState } from "../../src/story/saves/story-save-contracts.ts";
+import { createSqliteStoryRepository } from "../../src/story/saves/index.ts";
+import {
+  storyUserRuntime,
+  resetStorySessionFixture,
+} from "../fixtures/story-session.ts";
+import { storyBindingFixture } from "../fixtures/story-release.ts";
+
+afterEach(resetStorySessionFixture);
 import {
   normalizeChapterSource,
   type ChapterSourceCorrections,
@@ -180,48 +187,30 @@ describe("Chapter 1 bundled prerequisites", () => {
     expect(state.dp).toBe(1000);
   });
 
-  it("v1/v2 migration keeps the legacy grant; v3/v4 libraries, inventory and checkpoints remain unchanged", async () => {
-    const legacySource = await readFile("src/decks/starter-deck.ydk", "utf8");
-    expect(createHash("sha256").update(legacySource).digest("hex")).toBe(
-      "f95eb17972e87365b665bdc72596380448092612b9a9ac357f610236162f3bef",
+  it("current starter library, inventory and checkpoint round-trip without a grant on read", async () => {
+    const initial = reduceStory(createInitialStoryState(), {
+      type: "new-game",
+      starterGrant: buildStarterGrant(),
+    });
+    const state = {
+      ...initial,
+      dp: 150,
+      collection: { ...initial.collection, 89631139: 9 },
+      pendingHandoffId: "saved-checkpoint",
+    };
+    const runtime = storyUserRuntime({});
+    const saves = createSqliteStoryRepository(runtime);
+    expect(
+      await saves.write("checkpoint:pre-duel", state, 0, storyBindingFixture()),
+    ).toEqual({ kind: "written", revision: 1 });
+    const before = await runtime.readUser("story", "checkpoint:pre-duel");
+    for (let index = 0; index < 2; index += 1)
+      expect(await saves.read("checkpoint:pre-duel")).toMatchObject({
+        kind: "ready",
+        envelope: { schemaVersion: 6, state },
+      });
+    expect(await runtime.readUser("story", "checkpoint:pre-duel")).toEqual(
+      before,
     );
-    const legacy = parseYdk(legacySource);
-    const raw: Record<string, unknown> = { ...createInitialStoryState() };
-    delete raw.decks;
-    delete raw.defaultDeckId;
-    for (const version of [1, 2]) {
-      const input = {
-        ...raw,
-        dp: 150,
-        collection: { 89631139: 9 },
-        pendingHandoffId: "saved-checkpoint",
-      };
-      const before = structuredClone(input);
-      const migrated = migrateStorySaveState(input, version)!;
-      expect(migrated.decks[0]).toMatchObject({
-        name: "Starter Deck",
-        id: "story-starter-deck",
-        createdAt: "2026-08-20T00:00:00.000Z",
-        ...legacy,
-      });
-      expect(migrated.collection).toEqual({
-        ...Object.fromEntries(
-          [...new Set(legacy.main)].map((code) => [
-            code,
-            legacy.main.filter((value) => value === code).length,
-          ]),
-        ),
-        89631139: 9,
-      });
-      expect(migrated.collection[89631139]).toBe(9);
-      expect(migrated.collection[46986414]).toBeUndefined();
-      expect(migrated.collection[91152256]).toBe(3);
-      expect(migrated.dp).toBe(150);
-      expect(migrated.pendingHandoffId).toBe("saved-checkpoint");
-      expect(migrateStorySaveState(input, version)).toEqual(migrated);
-      expect(input).toEqual(before);
-      for (const current of [3, 4])
-        expect(migrateStorySaveState(migrated, current)).toEqual(migrated);
-    }
   });
 });

@@ -2,6 +2,8 @@
 
 > Status: accepted
 > Amended by [ADR-093](093_ADR_atomic_release_selector_and_save_generations.md) D1–D5: separate Story generations plus Shell selector add logical atomic visibility; §8 still forbids physical cross-DB transaction assumptions.
+> Amended by [ADR-097](097_ADR_user_data_isolation_without_save_compatibility.md) D1–D5: new user state uses isolated user-data.sqlite; no legacy migration; domain semantic ownership remains.
+> Current physical storage implementation is consolidated by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D2–D3; body remains historical domain-ownership rationale.
 > Decided: 2026-08-14
 > Owners: deck-domain, story-domain, application-shell architecture
 > Commit: `c27f4b0` — T5, T12, T13

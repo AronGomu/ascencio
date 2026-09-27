@@ -1,48 +1,53 @@
-import type { ShellGameplay } from "../core/installed-inputs.ts";
+import type { BattlePresentationInput } from "../../battle/ports/index.ts";
 import type { SelectableDeck } from "../../battle/index.ts";
 import {
   catalogByCode,
-  PROTOTYPE_RULESET,
+  type PinnedDeckRuleset,
 } from "../../decks/validation/index.ts";
-import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
+import type { DeckRepository } from "../../decks/repository/index.ts";
 import type { BattleDeckModule } from "../domain-loaders.ts";
 
 export type BattleDeckLoader = () => Promise<BattleDeckModule>;
 
 export async function loadFreePlayDecks(
   battle: BattleDeckModule,
-  gameplay: ShellGameplay,
+  presentation: BattlePresentationInput,
+  createRepository: () => DeckRepository,
+  ruleset: PinnedDeckRuleset,
 ): Promise<readonly SelectableDeck[]> {
-  const catalog = catalogByCode(gameplay.presentation.cards);
-  const presentation = gameplay.presentation;
-  let repository: IndexedDbDeckRepository | null = null;
+  const catalog = catalogByCode(presentation.cards);
   try {
-    repository = await IndexedDbDeckRepository.open();
     return await battle.installedSelectableDecks(
       presentation,
-      repository,
+      createRepository(),
       catalog,
-      PROTOTYPE_RULESET,
+      ruleset,
     );
   } catch {
     return await battle.installedSelectableDecks(
       presentation,
       { list: async () => [], load: async () => null },
       catalog,
-      PROTOTYPE_RULESET,
+      ruleset,
     );
-  } finally {
-    repository?.close();
   }
 }
 
 let cachedBattle: Promise<BattleDeckModule> | null = null;
 let cachedDecks: readonly SelectableDeck[] | null = null;
 let cachedContentKey: string | null = null;
-let listing: Promise<readonly SelectableDeck[]> | null = null;
+const pendingListings = new Map<string, Promise<readonly SelectableDeck[]>>();
+let listingGeneration = 0;
 
-function contentKey(gameplay: ShellGameplay): string {
-  return gameplay.identity;
+function contentKey(
+  presentation: BattlePresentationInput,
+  ruleset: PinnedDeckRuleset,
+): string {
+  return JSON.stringify([
+    presentation.snapshotId,
+    ruleset.id,
+    ruleset.revision,
+  ]);
 }
 
 export function freePlayBattleModule(
@@ -58,29 +63,40 @@ export function freePlayBattleModule(
 }
 
 export function listedFreePlayDecks(
-  gameplay: ShellGameplay,
+  presentation: BattlePresentationInput,
+  ruleset: PinnedDeckRuleset,
 ): readonly SelectableDeck[] | null {
-  return cachedContentKey === contentKey(gameplay) ? cachedDecks : null;
+  return cachedContentKey === contentKey(presentation, ruleset)
+    ? cachedDecks
+    : null;
 }
 
 export function refreshFreePlayDecks(
   load: BattleDeckLoader,
-  gameplay: ShellGameplay,
+  presentation: BattlePresentationInput,
+  createRepository: () => DeckRepository,
+  ruleset: PinnedDeckRuleset,
 ): Promise<readonly SelectableDeck[]> {
-  const key = contentKey(gameplay);
-  if (listing !== null && cachedContentKey === key) return listing;
+  const key = contentKey(presentation, ruleset);
+  const pending = pendingListings.get(key);
+  if (pending !== undefined) return pending;
+  const generation = ++listingGeneration;
   const started = (async () => {
     const decks = await loadFreePlayDecks(
       await freePlayBattleModule(load),
-      gameplay,
+      presentation,
+      createRepository,
+      ruleset,
     );
-    cachedContentKey = key;
-    cachedDecks = decks;
+    if (generation === listingGeneration) {
+      cachedContentKey = key;
+      cachedDecks = decks;
+    }
     return decks;
   })();
-  listing = started;
+  pendingListings.set(key, started);
   const settle = () => {
-    if (listing === started) listing = null;
+    if (pendingListings.get(key) === started) pendingListings.delete(key);
   };
   started.then(settle, settle);
   return started;
@@ -88,14 +104,27 @@ export function refreshFreePlayDecks(
 
 export function warmFreePlayDecks(
   load: BattleDeckLoader,
-  gameplay: ShellGameplay,
+  presentation: BattlePresentationInput,
+  createRepository: () => DeckRepository,
+  ruleset: PinnedDeckRuleset,
+  onFailure: (error: unknown) => void,
 ): void {
-  void refreshFreePlayDecks(load, gameplay).catch(() => undefined);
+  void refreshFreePlayDecks(
+    load,
+    presentation,
+    createRepository,
+    ruleset,
+  ).catch(onFailure);
 }
 
-export function resetFreePlayDeckCacheForTests(): void {
+export function invalidateFreePlayDeckCache(): void {
   cachedBattle = null;
   cachedDecks = null;
   cachedContentKey = null;
-  listing = null;
+  pendingListings.clear();
+  listingGeneration += 1;
+}
+
+export function resetFreePlayDeckCacheForTests(): void {
+  invalidateFreePlayDeckCache();
 }

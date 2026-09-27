@@ -1,7 +1,10 @@
 import { writable, type Readable } from "svelte/store";
+import type {
+  AsyncPreferencePort,
+  StorageFailure,
+} from "../../../storage/index.ts";
 import {
-  readPersistedUiState,
-  writePersistedUiState,
+  DEFAULT_PERSISTED_UI_STATE,
   type PersistedDisplaySettings,
   type PersistedUiState,
   type PersistedWindowPosition,
@@ -16,48 +19,55 @@ export interface PersistedUiStore extends Readable<PersistedUiState> {
   ): void;
 }
 
-/* One live owner for persisted UI state. Every setter replaces exactly one
-   branch and writes the complete state; storage failure never interrupts play. */
 export function createPersistedUiStore(
-  storage?: Pick<Storage, "getItem" | "setItem"> | null,
+  initial: PersistedUiState = DEFAULT_PERSISTED_UI_STATE,
+  persistence: AsyncPreferencePort<PersistedUiState> | null = null,
+  onFailure: (error: StorageFailure) => void = (error) =>
+    console.warn("USER_PERSISTENCE_FAILED", error),
 ): PersistedUiStore {
-  const { subscribe, update } = writable<PersistedUiState>(
-    readPersistedUiState(storage),
-  );
+  const { subscribe, update } = writable<PersistedUiState>(initial);
 
-  function persist(next: (state: PersistedUiState) => PersistedUiState): void {
-    update((state) => {
-      const value = next(state);
-      writePersistedUiState(value, storage);
-      return value;
-    });
+  function persist(
+    patch: Partial<PersistedUiState>,
+    next: (state: PersistedUiState) => PersistedUiState,
+  ): void {
+    update(next);
+    if (persistence === null) return;
+    void persistence.update(patch).then(
+      (result) => {
+        if (result.kind === "failed") onFailure(result.error);
+      },
+      () => onFailure({ code: "STORAGE_UNAVAILABLE" }),
+    );
   }
 
   return {
     subscribe,
     setDecks(playerKey: string, opponentKey: string): void {
-      persist((state) =>
-        Object.freeze({
-          ...state,
-          decks: Object.freeze({ playerKey, opponentKey }),
-        }),
-      );
+      const decks = Object.freeze({ playerKey, opponentKey });
+      persist({ decks }, (state) => Object.freeze({ ...state, decks }));
     },
     setDisplaySettings(settings: PersistedDisplaySettings): void {
-      persist((state) =>
-        Object.freeze({ ...state, settings: Object.freeze({ ...settings }) }),
+      const persisted = Object.freeze({ ...settings });
+      persist({ settings: persisted }, (state) =>
+        Object.freeze({ ...state, settings: persisted }),
       );
     },
     setWindowPosition(
       window: "zoneList" | "confirm",
       position: PersistedWindowPosition | null,
     ): void {
-      persist((state) =>
-        Object.freeze({
-          ...state,
-          windows: Object.freeze({ ...state.windows, [window]: position }),
-        }),
-      );
+      update((state) => {
+        const windows = Object.freeze({ ...state.windows, [window]: position });
+        if (persistence !== null)
+          void persistence.update({ windows }).then(
+            (result) => {
+              if (result.kind === "failed") onFailure(result.error);
+            },
+            () => onFailure({ code: "STORAGE_UNAVAILABLE" }),
+          );
+        return Object.freeze({ ...state, windows });
+      });
     },
   };
 }

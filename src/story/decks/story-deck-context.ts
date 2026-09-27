@@ -6,10 +6,8 @@
    — is read from a single envelope, so a caller cannot pair one save's decks
    with another save's collection, nor with free play's unlimited ownership.
 
-   `DeckContext` is typed from `src/decks/` and never imported for its value:
-   `deck-repository-context.ts` reaches `IndexedDbDeckRepository`, and pulling
-   that into the story closure would put `idb`, the deck schema and its
-   migration into a chunk that never opens the free-play library. */
+   `DeckContext` is a shared structural contract. Shell injects persistence;
+   the story adapter edits only the selected save's deck library. */
 
 import {
   type DeckContext,

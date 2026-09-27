@@ -1,12 +1,16 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DeckEditorApp, {
   type DeckEditorRoute,
 } from "../../../src/deck-editor/index.ts";
@@ -16,18 +20,22 @@ import {
   emptyDeckHistory,
   createBlankDeck,
 } from "../../../src/decks/editing/index.ts";
-import {
-  DECK_DATABASE_NAME,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/repository/index.ts";
+
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
 installPrototypeActiveCatalog();
 
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
+
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 /* The route is the only input the shell gives the domain, so every case here
@@ -35,25 +43,23 @@ afterEach(async () => {
    callback the shell turns into a hash write. */
 function mount(id: DeckId | null, onnavigate = vi.fn()) {
   const result = render(DeckEditorApp, {
-    catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-    deckId: id,
-    onnavigate,
+    props: {
+      context: { kind: "free-play", createRepository: () => repository },
+      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+      deckId: id,
+      onnavigate,
+    },
   });
   return { ...result, onnavigate };
 }
 
 async function seedDeck(id: string, name: string): Promise<DeckId> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    const deck = createBlankDeck(name, prototypeCatalogMap, PROTOTYPE_RULESET, {
-      id,
-      now: new Date("2026-01-01T00:00:00.000Z"),
-    });
-    await repository.create(deck, emptyDeckHistory());
-    return deck.id;
-  } finally {
-    repository.close();
-  }
+  const deck = createBlankDeck(name, prototypeCatalogMap, PROTOTYPE_RULESET, {
+    id,
+    now: new Date("2026-01-01T00:00:00.000Z"),
+  });
+  await repository.create(deck, emptyDeckHistory());
+  return deck.id;
 }
 
 function query(name: string): HTMLElement | null {

@@ -1,11 +1,15 @@
-import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
+import type * as StoryMediaAdapter from "../../src/shell/adapters/sqlite-story-media.ts";
+import {
+  semanticShellFixture,
+  disposeSemanticShells,
+} from "../fixtures/semantic-shell.ts";
+import { resetStorySessionFixture } from "../fixtures/story-session.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, waitFor } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { InstalledImageLibrary } from "../../src/content/index.ts";
 import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
 
 const mocks = vi.hoisted(() => ({
@@ -13,8 +17,9 @@ const mocks = vi.hoisted(() => ({
   catalog: vi.fn(),
   screen: vi.fn(),
 }));
-vi.mock("../../src/content/load-installed-images.ts", () => ({
-  loadInstalledImages: mocks.images,
+vi.mock("../../src/shell/adapters/sqlite-story-media.ts", async (original) => ({
+  ...(await original<typeof StoryMediaAdapter>()),
+  loadSqliteStoryImageLibrary: mocks.images,
 }));
 vi.mock("../../src/story/index.ts", () => ({
   loadCollectionCatalog: mocks.catalog,
@@ -28,8 +33,10 @@ beforeEach(() => {
   mocks.catalog.mockResolvedValue({ cards: [], rarityByCode: new Map() });
   mocks.screen.mockResolvedValue(undefined);
 });
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  await disposeSemanticShells();
+  await resetStorySessionFixture();
   vi.resetAllMocks();
 });
 
@@ -38,14 +45,7 @@ function mount() {
   const close = vi.fn();
   const mounted = render(AppShell, {
     store,
-    initialCoreGate: {
-      kind: "ready",
-      gameplay: createShellGameplay(installedGameplayFixture(), {
-        close,
-      } as never),
-      reader: { close } as never,
-      generation: 1,
-    },
+    ...semanticShellFixture(installedGameplayFixture()),
     loaders: {
       duel: () => new Promise(() => {}),
       decks: () => new Promise(() => {}),
@@ -56,49 +56,52 @@ function mount() {
 }
 
 it.each(["route exit", "unmount"])(
-  "disposes stale late collection images once after %s",
+  "drops stale late collection metadata after %s without aggregate image load",
   async (exit) => {
-    const pending = Promise.withResolvers<InstalledImageLibrary>();
-    mocks.images.mockReturnValueOnce(pending.promise);
+    const pending = Promise.withResolvers<{
+      readonly cards: readonly [];
+      readonly rarityByCode: ReadonlyMap<number, "common">;
+    }>();
+    mocks.catalog.mockReturnValueOnce(pending.promise);
     const { store, unmount } = mount();
-    await waitFor(() => expect(mocks.images).toHaveBeenCalledOnce());
+    await waitFor(() => expect(mocks.catalog).toHaveBeenCalledOnce());
     if (exit === "route exit") {
       store.navigate({ kind: "home" });
       await tick();
     } else unmount();
-    const dispose = vi.fn();
-    pending.resolve({ cardUrls: new Map(), setUrls: new Map(), dispose });
-    await waitFor(() => expect(dispose).toHaveBeenCalledOnce());
+    pending.resolve({
+      cards: [],
+      rarityByCode: new Map<number, "common">(),
+    });
+    await tick();
     expect(document.querySelector('[data-cy="collection-screen"]')).toBeNull();
-    cleanup();
-    expect(dispose).toHaveBeenCalledOnce();
+    expect(mocks.images).not.toHaveBeenCalled();
   },
 );
 
-it("ignores a stale collection rejection after route exit", async () => {
-  const pending = Promise.withResolvers<InstalledImageLibrary>();
-  mocks.images.mockReturnValueOnce(pending.promise);
+it("ignores a stale collection rejection after route exit without image preload", async () => {
+  const pending = Promise.withResolvers<never>();
+  mocks.catalog.mockReturnValueOnce(pending.promise);
   const { store } = mount();
-  await waitFor(() => expect(mocks.images).toHaveBeenCalledOnce());
+  await waitFor(() => expect(mocks.catalog).toHaveBeenCalledOnce());
   store.navigate({ kind: "free-play-decks" });
   await tick();
-  pending.reject(new Error("late image failure"));
+  pending.reject(new Error("late catalog failure"));
   await new Promise((resolve) => setTimeout(resolve, 0));
   await tick();
   expect(
     document.querySelector('[data-cy="shell-region-decks"]'),
   ).not.toBeNull();
+  expect(mocks.images).not.toHaveBeenCalled();
 });
 
-it("releases a late image library when a sibling collection read fails", async () => {
-  const pending = Promise.withResolvers<InstalledImageLibrary>();
-  mocks.images.mockReturnValueOnce(pending.promise);
+it("does not start aggregate images when a sibling collection read fails", async () => {
+  const pending = Promise.withResolvers<unknown>();
+  mocks.screen.mockReturnValueOnce(pending.promise);
   mocks.catalog.mockRejectedValueOnce(new Error("catalog failed"));
   mount();
-  await waitFor(() => expect(mocks.images).toHaveBeenCalledOnce());
-  const dispose = vi.fn();
-  pending.resolve({ cardUrls: new Map(), setUrls: new Map(), dispose });
-  await waitFor(() => expect(dispose).toHaveBeenCalledOnce());
-  cleanup();
-  expect(dispose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(mocks.catalog).toHaveBeenCalledOnce());
+  pending.resolve(undefined);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(mocks.images).not.toHaveBeenCalled();
 });

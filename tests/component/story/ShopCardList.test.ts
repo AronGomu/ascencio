@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import ShopCardListScreen from "../../../src/story/shop/ShopCardListScreen.svelte";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 import type { CardImageSource } from "../../../src/cards/images/index.ts";
-import { readFileSync } from "node:fs";
-import { parsePreparedPlayerMetadata } from "../../../scripts/lib/asset-delivery/prepared-player-metadata.ts";
+import { loadChapterOneContentSource } from "../../../scripts/lib/chapter-content-source.ts";
+import { mapRarity } from "../../../scripts/lib/shop-set-fold.ts";
 
 afterEach(() => cleanup());
 
@@ -79,17 +79,22 @@ const previewImages: CardImageSource = {
 
 describe("ShopCardListScreen", () => {
   it("canonical regional printings retain unique tiles and purchase identity", async () => {
-    const metadata = parsePreparedPlayerMetadata(
-      JSON.parse(
-        readFileSync("generated/asset-delivery/prepared-player.json", "utf8"),
-      ),
-    );
-    const set = metadata.chapters[0]!.gameplay.sets.find(
-      ({ id }) => id === "metal-raiders",
+    const source = await loadChapterOneContentSource(process.cwd());
+    const set = source.normalized.sets.find(
+      ({ name }) => name === "Metal Raiders",
     )!;
-    const printings = set.cards.filter(
-      ({ code }) => code === 62121 || code === 5818798,
-    );
+    const printings = set.cards
+      .filter(({ id }) => id === 62121 || id === 5818798)
+      .flatMap((card) =>
+        card.printings.map((printing) => ({
+          code: card.id,
+          name: card.name,
+          printingCode: printing.code,
+          sourceRarity: printing.rarity,
+          sourceRarityCode: printing.rarityCode,
+          rarity: mapRarity(printing.rarity),
+        })),
+      );
     expect(
       printings
         .filter(({ code }) => code === 62121)

@@ -8,7 +8,6 @@ import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
 import {
   battlePresentationFixture,
   installedGameplayFixture,
-  TEST_CONTENT_SET_REF,
 } from "../fixtures/installed-gameplay.ts";
 
 function repositoryWithMissingCard(): Pick<DeckRepository, "list" | "load"> {
@@ -78,7 +77,9 @@ describe("installed Free Play projection", () => {
         policyId: "basic",
       },
     ]);
-    expect(gameplay.content).toBe(TEST_CONTENT_SET_REF);
+    expect(battlePresentationFixture(gameplay).catalogRevision).toBe(
+      "fixture-1",
+    );
   });
 
   it("keeps invalid stored deck visible and explains missing installed card", async () => {

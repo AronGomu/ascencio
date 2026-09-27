@@ -1,6 +1,8 @@
 # ADR-093: One selector exposes content with forward-migrated saves
 
 > Status: accepted; implemented
+> Amended by [ADR-097](097_ADR_user_data_isolation_without_save_compatibility.md) D1–D5: independent package registry preserves user bytes without migration/continuity/paired selector; broken old saves accepted, New Game remains independent.
+> Superseded for current selection/save behavior by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D2–D3. Body retained as historical rationale.
 > Decided: 2026-09-13
 > Owners: shell application / story persistence / content receipts
 > Amends: ADR-085 D3; ADR-088 D1–D5; ADR-076 D3–D5; ADR-026 §8 clarified

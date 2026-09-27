@@ -1,5 +1,5 @@
 import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -34,6 +34,8 @@ describe("typed duel Worker runtime", () => {
     const dependencies = await loadActiveDuelDependenciesNode(
       path.resolve(ASSET_SOURCES.data.source),
       uniqueDeckCodes(preset.player, preset.opponent),
+      undefined,
+      path.resolve(ASSET_SOURCES.strings.source),
     );
     const linkCode = preset.player.main[0];
     const catalogEntry =
@@ -101,6 +103,10 @@ describe("typed duel Worker runtime", () => {
       path.join(os.tmpdir(), "ygo-runtime-snapshot-"),
     );
     const assetRoot = path.join(projectRoot, ASSET_SOURCES.data.source);
+    const manifestPath = path.join(
+      projectRoot,
+      ASSET_SOURCES.dataManifest.source,
+    );
     const vendorRoot = path.join(
       projectRoot,
       "vendor",
@@ -109,11 +115,12 @@ describe("typed duel Worker runtime", () => {
     );
     await Promise.all([
       mkdir(assetRoot, { recursive: true }),
+      mkdir(path.dirname(manifestPath), { recursive: true }),
       mkdir(vendorRoot, { recursive: true }),
     ]);
     await Promise.all([
       writeFile(
-        path.join(assetRoot, "manifest.json"),
+        manifestPath,
         JSON.stringify({
           schemaVersion: 1,
           generatedAt: "2026-07-13T00:00:00.000Z",

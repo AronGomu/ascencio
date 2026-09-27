@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 
+import sqliteWasmUrl from "@sqlite.org/sqlite-wasm/sqlite3.wasm?url";
 import { PrecacheController } from "workbox-precaching";
 import { readCoreApproval } from "./shell/application/core-update-approval.ts";
 import {
@@ -16,6 +17,7 @@ const cacheName = shellCacheName(__APP_BUILD_ID__);
 const precache = new PrecacheController({ cacheName });
 const manifest = assertShellPrecacheEntries(
   (self as unknown as ServiceWorkerGlobalScope).__WB_MANIFEST,
+  sqliteWasmUrl,
 );
 precache.addToCacheList([...manifest]);
 

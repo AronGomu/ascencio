@@ -6,10 +6,9 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import BoosterOpeningScreen from "../../../src/story/shop/BoosterOpeningScreen.svelte";
 import { AUTO_FLIP_INTERVAL_MS } from "../../../src/story/shop/auto-flip.ts";
-import {
-  DEFAULT_STORY_PLAYBACK_SETTINGS,
-  writeStoryPlaybackSettings,
-} from "../../../src/story/playback/story-playback-settings.ts";
+import { DEFAULT_STORY_PLAYBACK_SETTINGS } from "../../../src/story/playback/story-playback-settings.ts";
+import { createStoryPlaybackSettingsStore } from "../../../src/story/playback/story-playback-settings-store.ts";
+import { storyReaderPorts } from "../../fixtures/story-reader-ports.ts";
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 
@@ -68,6 +67,13 @@ function tile(container: HTMLElement, index: number): HTMLButtonElement {
   ) as HTMLButtonElement;
 }
 
+function playbackSettings(initial = DEFAULT_STORY_PLAYBACK_SETTINGS) {
+  return createStoryPlaybackSettingsStore(
+    initial,
+    storyReaderPorts(initial).playback,
+  );
+}
+
 function isFaceUp(container: HTMLElement, index: number): boolean {
   return (
     container.querySelector(`[data-cy="story-shop-opening-art-${index}"]`) !==
@@ -95,7 +101,6 @@ afterEach(() => {
   vi.useRealTimers();
   cleanup();
   vi.unstubAllGlobals();
-  localStorage.clear();
 });
 
 describe("booster reveal", () => {
@@ -218,7 +223,14 @@ describe("booster reveal", () => {
 
   it("auto-flip preference survives a remount", async () => {
     const user = userEvent.setup();
-    const first = render(BoosterOpeningScreen, { cards: pack() });
+    const { playback } = storyReaderPorts();
+    const first = render(BoosterOpeningScreen, {
+      cards: pack(),
+      settings: createStoryPlaybackSettingsStore(
+        await playback.read(),
+        playback,
+      ),
+    });
     await user.click(
       first.container.querySelector(
         '[data-cy="story-shop-opening-auto-flip"]',
@@ -226,7 +238,13 @@ describe("booster reveal", () => {
     );
     first.unmount();
 
-    const second = render(BoosterOpeningScreen, { cards: pack() });
+    const second = render(BoosterOpeningScreen, {
+      cards: pack(),
+      settings: createStoryPlaybackSettingsStore(
+        await playback.read(),
+        playback,
+      ),
+    });
     expect(
       (
         second.container.querySelector(
@@ -240,12 +258,14 @@ describe("booster reveal", () => {
     /* The point of remembering it: the player ticked the box on one pack and
        the next pack starts turning itself over, rather than starting ticked
        and stopped. */
-    writeStoryPlaybackSettings({
-      ...DEFAULT_STORY_PLAYBACK_SETTINGS,
-      autoFlip: true,
-    });
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    const { container } = render(BoosterOpeningScreen, { cards: pack() });
+    const { container } = render(BoosterOpeningScreen, {
+      cards: pack(),
+      settings: playbackSettings({
+        ...DEFAULT_STORY_PLAYBACK_SETTINGS,
+        autoFlip: true,
+      }),
+    });
 
     expect(isFaceUp(container, 0)).toBe(false);
     vi.advanceTimersByTime(AUTO_FLIP_INTERVAL_MS * 2);

@@ -1,12 +1,10 @@
-import type { ShellApplication } from "./shell-application.ts";
-import type { ContentActionsController } from "../application/content-actions.ts";
-import type {
-  ShellGameplay,
-  ShellBootstrap,
-  ShellSession,
-} from "./installed-inputs.ts";
+import type { ShellApplication } from "./sqlite-sessions.ts";
+import type { AppUpdateController } from "../application/app-update-controller.ts";
+import type { SqliteApplicationStatus } from "../application/sqlite-application-service.ts";
+import type { PackageId } from "../../storage/index.ts";
 export { loadCoreStartup } from "../application/core-startup.ts";
 import { INSTALL_CONTENT_ROUTE, type AppRoute } from "../routes.ts";
+import type { UserPersistenceOwner } from "../application/user-persistence-owner.ts";
 
 export type CoreGate =
   | { readonly kind: "checking" }
@@ -14,18 +12,23 @@ export type CoreGate =
       readonly kind: "locked";
       readonly reason:
         "content-required" | "storage-unavailable" | "content-invalid";
+      readonly missing?: readonly PackageId[];
     }
   | {
       readonly kind: "ready";
-      readonly gameplay: ShellGameplay;
-      readonly reader: ShellSession | null;
       readonly generation: number;
+      readonly missing?: readonly PackageId[];
     };
 
 export interface CoreStartup {
   readonly application?: ShellApplication;
-  readonly contentActions?: ContentActionsController;
-  readonly bootstrap: ShellBootstrap | null;
+  readonly appUpdates?: AppUpdateController;
+  readonly userPersistence?: UserPersistenceOwner;
+  readonly applicationStatus?: SqliteApplicationStatus;
+  readonly subscribeApplicationStatus?: (
+    listener: (status: SqliteApplicationStatus) => void,
+  ) => () => void;
+  readonly dispose?: () => Promise<void>;
   readonly gate: CoreGate;
 }
 
@@ -36,10 +39,15 @@ export type CoreFetch = (
 
 export function coreGateMessage(gate: CoreGate): string {
   if (gate.kind === "checking") return "Checking installed content…";
-  if (gate.kind === "ready") return "Installed content is ready.";
+  if (gate.kind === "ready")
+    return (gate.missing ?? []).includes("chapter-01")
+      ? "Free Play and Deck Builder are ready. New Game requires chapter-01."
+      : "Free Play, Deck Builder, and New Game are ready.";
   switch (gate.reason) {
     case "content-required":
-      return "Content is required before Story or Free Play can start.";
+      return gate.missing !== undefined && gate.missing.length > 0
+        ? `Free Play needs these packages in order: ${gate.missing.join(", ")}.`
+        : "Content is required before Free Play can start.";
     case "storage-unavailable":
       return "Browser storage is unavailable. Content cannot be verified.";
     case "content-invalid":

@@ -66,7 +66,7 @@ jobs:
           if-no-files-found: error
           path: |
             dist/
-            generated/runtime/current/manifest.json
+            generated/content-inputs/runtime/manifest.json
             vendor/ocgcore-wasm/0.1.2/vendor-manifest.json
             vendor/ocgcore-wasm/0.1.2/VENDORING.md
 
@@ -82,4 +82,4 @@ jobs:
             playwright-report/
             generated/**/*report*.json
             generated/mvp-assets-status.json
-            generated/runtime/current/manifest.json
+            generated/content-inputs/runtime/manifest.json

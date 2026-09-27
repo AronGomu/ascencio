@@ -2,6 +2,8 @@
 
 > Status: accepted; planned
 > Amended by [ADR-091](091_ADR_shell_composes_semantic_content_ports.md) D1–D5 and [ADR-093](093_ADR_atomic_release_selector_and_save_generations.md) D2–D4: Content stages mechanical receipts, Shell owns sole selector and semantic adapter composition; domains no longer consume Content refs/receipts.
+> Amended by [ADR-095](095_ADR_manual_sqlite_package_delivery.md) D1–D5 and [ADR-098](098_ADR_single_owner_sqlite_worker.md) D1–D5: SQLite Worker/OPFS registry replaces Cache/IndexedDB install machinery; OCG authority and frozen vendor remain.
+> Superseded for current lifecycle by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D1–D6. Content-module/Cache/IndexedDB details in body are historical.
 > Decided: 2026-09-12
 > Owners: content / shell / battle
 > Amends: ADR-076 D1–D3 (content storage ownership and activation seam)

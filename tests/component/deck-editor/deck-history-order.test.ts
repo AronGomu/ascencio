@@ -1,21 +1,21 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
-import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
+
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/validation/index.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
-const names: string[] = [];
-afterEach(async () =>
-  Promise.all(names.splice(0).map((name) => deleteDB(name))),
-);
+afterEach(async () => disposeTestDeckRepositories());
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 const BLUE_EYES = 89631139;
@@ -28,8 +28,7 @@ async function controllerFor(name: string): Promise<{
   readonly controller: DeckBuilderController;
   readonly close: () => void;
 }> {
-  names.push(name);
-  const repository = await IndexedDbDeckRepository.open(name);
+  const repository = await openTestDeckRepository(name);
   const controller = new DeckBuilderController(
     repository,
     catalog,

@@ -4,9 +4,9 @@ import { createHash } from "node:crypto";
    but the bytes are still pinned by hash so a build stays reproducible. These
    helpers are the pure half of that: `scripts/download-set-images.ts` performs
    the network and file I/O, `scripts/verify-set-images.ts` re-hashes, and
-   `scripts/lib/vite-runtime-assets.ts` publishes the result. */
+   SQLite package export reads the acquired source bytes. */
 
-/** A shop set as `public/story/shop-sets.v1.json` records it. */
+/** A shop set as `assets/content/card-library/authoring/shop-sets.v1.json` records it. */
 export interface ShopSetIdentity {
   readonly id: string;
   readonly name: string;
@@ -56,7 +56,7 @@ export interface SetImageVerification {
 
 /* Set ids become file names and URL segments, so they are confined to
    characters that cannot traverse, escape or encode. Every id in
-   `public/story/shop-sets.v1.json` is a lowercase slug; the pattern also
+   `assets/content/card-library/authoring/shop-sets.v1.json` is a lowercase slug; the pattern also
    admits the upstream set codes so a code-keyed caller stays legal. */
 const SAFE_SET_ID = /^[A-Za-z0-9_-]+$/;
 

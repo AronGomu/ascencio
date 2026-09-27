@@ -1,27 +1,26 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
-import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
+
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/validation/index.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
-const names: string[] = [];
-afterEach(async () =>
-  Promise.all(names.splice(0).map((name) => deleteDB(name))),
-);
+afterEach(async () => disposeTestDeckRepositories());
 
 describe("deck history orchestration", () => {
   it("persists illustration changes through Undo/Redo", async () => {
     const name = "controller-illustration-history";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -51,13 +50,12 @@ describe("deck history orchestration", () => {
     expect(get(controller).current?.deck.illustrationCardCode).toBeNull();
     await controller.undo();
     expect(get(controller).current?.deck.illustrationCardCode).toBe(89631139);
-    repo.close();
+    await repo.close();
   });
 
   it("retains 50 serialized updates and autosaves Undo/Redo", async () => {
     const name = "controller-history";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalogByCode(PROTOTYPE_CATALOG),
@@ -79,6 +77,6 @@ describe("deck history orchestration", () => {
     expect(get(controller).current?.deck.main.length).not.toBe(beforeUndo);
     await controller.redo();
     expect(get(controller).current?.deck.main.length).toBe(beforeUndo);
-    repo.close();
+    await repo.close();
   });
 });

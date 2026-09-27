@@ -10,6 +10,8 @@
 
   export let store: ShellStore;
   export let coreGate: CoreGate;
+  export let storyAvailable = coreGate.kind === "ready";
+  export let freeplayAvailable = coreGate.kind === "ready";
   /* Free play opens on a deck list, and reading that list means the whole
      packaged card database. Reported the moment a player reaches for the
      entry — pointer over it, or focus on it — so the read happens while they
@@ -19,13 +21,13 @@
 
   /* Starts hidden and appears once the probe answers: a Continue that turns
      out to have nothing behind it is worse than one that arrives a frame
-     late. The story domain is not loaded to decide this — see
-     `story-save-presence.ts`. */
+     late. Shell supplies the save repository; this probe neither opens a
+     legacy database nor loads the story domain. */
   let hasSave = false;
   let settingsOpen = false;
 
   onMount(() => {
-    if (coreGate.kind !== "ready") return;
+    if (!storyAvailable || coreGate.kind !== "ready") return;
     if (saves === null) return;
     void Promise.all([saves.read("manual:1"), saves.read("autosave")])
       .then((results) => {
@@ -44,11 +46,12 @@
       });
   });
 
-  const gameplayReady = (): boolean => coreGate.kind === "ready";
-  const gameplayReason = (): string =>
-    gameplayReady()
+  const storyReason = (): string =>
+    storyAvailable
       ? "No compatible save is available."
-      : coreGateMessage(coreGate);
+      : "New Game requires duel-core, card-library, freeplay, and chapter-01.";
+  const freeplayReason = (): string =>
+    freeplayAvailable ? "Free Play is ready." : coreGateMessage(coreGate);
 </script>
 
 <main class="main-menu" data-cy="main-menu-screen">
@@ -73,23 +76,23 @@
     <button
       type="button"
       data-cy="main-menu-new-game"
-      disabled={!gameplayReady()}
-      title={!gameplayReady() ? gameplayReason() : undefined}
+      disabled={!storyAvailable}
+      title={!storyAvailable ? storyReason() : undefined}
       onclick={() => store.enterStory("new")}>New Game</button
     >
     <button
       type="button"
       data-cy="main-menu-continue"
-      disabled={!gameplayReady() || !hasSave}
-      title={!gameplayReady() || !hasSave ? gameplayReason() : undefined}
+      disabled={!storyAvailable || !hasSave}
+      title={!storyAvailable || !hasSave ? storyReason() : undefined}
       onclick={() => store.enterStory("continue")}>Continue</button
     >
     <button
       type="button"
       class="secondary"
       data-cy="main-menu-load"
-      disabled={!gameplayReady()}
-      title={!gameplayReady() ? gameplayReason() : undefined}
+      disabled={!storyAvailable}
+      title={!storyAvailable ? storyReason() : undefined}
       onclick={() => store.enterStory("load")}>Load</button
     >
     <button
@@ -111,13 +114,13 @@
       type="button"
       class="secondary"
       data-cy="main-menu-free-play"
-      disabled={!gameplayReady()}
-      title={!gameplayReady() ? gameplayReason() : undefined}
+      disabled={!freeplayAvailable}
+      title={!freeplayAvailable ? freeplayReason() : undefined}
       onpointerenter={() => {
-        if (gameplayReady()) onfreeplaywarm();
+        if (freeplayAvailable) onfreeplaywarm();
       }}
       onfocus={() => {
-        if (gameplayReady()) onfreeplaywarm();
+        if (freeplayAvailable) onfreeplaywarm();
       }}
       onclick={() => store.navigate({ kind: "free-play" })}>Free Play</button
     >

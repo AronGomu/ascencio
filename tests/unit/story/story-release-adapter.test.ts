@@ -1,149 +1,57 @@
-// @vitest-environment node
 import { afterEach, expect, it, vi } from "vitest";
-import { readStagedStory } from "../../../src/shell/adapters/story-release.ts";
-import type {
-  ContentReader,
-  ProgressiveManifest,
-  StagedContent,
-} from "../../../src/content/index.ts";
-import { installedGameplayFixture } from "../../fixtures/installed-gameplay.ts";
-import { storyReleaseFixture } from "../../fixtures/story-release.ts";
+import { SqliteImageLeasePool } from "../../../src/shell/adapters/sqlite-image-source.ts";
+import { createSqliteStoryMedia } from "../../../src/shell/adapters/sqlite-story-media.ts";
+import { imageQueryFixture } from "../../fixtures/sqlite-image-query.ts";
+
 afterEach(() => vi.restoreAllMocks());
-function fixture() {
-  const gameplay = installedGameplayFixture();
-  const semantic = storyReleaseFixture().chapters[0]!;
-  const mapImage = {
-    packId: "chapter-01" as const,
-    path: "chapters/chapter-01/map.png",
-  };
-  const document = { ...semantic.document!, mapImage };
-  const wire = {
-    schemaVersion: 1,
-    chapterId: "chapter-01",
-    cards: gameplay.cards,
-    sets: gameplay.sets,
-    decks: gameplay.decks,
-    opponents: gameplay.opponents,
-    defaults: gameplay.defaults,
-    story: {
-      contentId: "prototype-prologue-v1",
-      document: {
-        packId: "chapter-01",
-        path: "chapters/chapter-01/story.json",
-      },
-    },
-  };
-  const manifest: ProgressiveManifest = {
-    schemaVersion: 3,
-    releaseSequence: 7,
-    coreRange: { min: 1, maxExclusive: 2 },
-    runtimeSnapshotId: "a".repeat(64),
-    chapters: [
-      {
-        id: "chapter-01",
-        title: "Chapter One",
-        description: "Prologue",
-        depends: [],
-        gameplayPath: "chapters/chapter-01/gameplay.json",
-        storyPath: "chapters/chapter-01/story.json",
-      },
-    ],
-    files: [
-      {
-        path: mapImage.path,
-        version: "b".repeat(64),
-        bytes: 3,
-        role: "media",
-        required: false,
-        packIds: ["chapter-01"],
-        mediaType: "image/png",
-      },
-    ],
-  };
-  const staged: StagedContent = {
-    receiptId: "receipt",
-    manifestVersion: "c".repeat(64),
-    releaseSequence: 7,
-    chapterIds: ["chapter-01"],
-  };
-  const json = (value: unknown) =>
-    new TextEncoder().encode(JSON.stringify(value));
-  const readFile = vi.fn<ContentReader["readFile"]>(async (_version, path) =>
-    path.endsWith("gameplay.json")
-      ? json(wire)
-      : path.endsWith("story.json")
-        ? json(document)
-        : null,
+it("Shell maps chapter/set media to exact package queries; missing bytes never gate Story", async () => {
+  const { query, content } = imageQueryFixture();
+  const pool = new SqliteImageLeasePool(content),
+    signal = new AbortController().signal;
+  const media = createSqliteStoryMedia(
+    pool,
+    "chapter-01",
+    "map.svg",
+    new Set(["installed-set"]),
   );
-  const reader: ContentReader = {
-    verifyRequired: vi.fn(async () => undefined),
-    readManifest: async () => manifest,
-    readFile,
-  };
-  return { reader, readFile, staged, wire };
-}
-it("Shell maps producer fields/revision verbatim; missing map/set media never gates semantic Story", async () => {
-  const f = fixture();
-  const { release, media } = await readStagedStory(
-    f.reader,
-    f.staged,
-    new AbortController().signal,
-  );
-  expect(release).toEqual({ ...storyReleaseFixture(), revision: 7 });
-  expect(f.readFile).toHaveBeenCalledTimes(2);
-  expect(
-    await media.acquireMap("chapter-01", new AbortController().signal),
-  ).toBeNull();
-  expect(
-    await media.acquireSetImage("installed-set", new AbortController().signal),
-  ).toBeNull();
-  expect(f.reader.verifyRequired).toHaveBeenCalledOnce();
+  expect(await media.acquireMap("chapter-02", signal)).toBeNull();
+  expect(await media.acquireSetImage("unknown", signal)).toBeNull();
+  expect(query).not.toHaveBeenCalled();
+  expect(await media.acquireMap("chapter-01", signal)).toBeNull();
+  expect(await media.acquireSetImage("installed-set", signal)).toBeNull();
+  expect(query.mock.calls.map(([request]) => request)).toEqual([
+    { kind: "asset", packageId: "chapter-01", path: "map.svg" },
+    { kind: "set-image", setId: "installed-set" },
+  ]);
+  pool.close();
 });
-it("Shell media uses cache reader, idempotent URL leases, corruption placeholder, canonical abort", async () => {
-  const f = fixture();
-  const { media } = await readStagedStory(
-    f.reader,
-    f.staged,
-    new AbortController().signal,
-  );
-  vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:map");
-  const revoke = vi
-    .spyOn(URL, "revokeObjectURL")
-    .mockImplementation(() => undefined);
-  f.readFile.mockResolvedValue(new Uint8Array([1, 2, 3]));
+it("Shell media preserves SVG MIME, idempotent leases and canonical abort", async () => {
+  const { query, content } = imageQueryFixture();
+  query.mockResolvedValue({
+    kind: "ok",
+    value: {
+      mime: "image/svg+xml",
+      bytes: new TextEncoder().encode(
+        '<svg xmlns="http://www.w3.org/2000/svg"/>',
+      ),
+    },
+  });
+  const create = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:map"),
+    revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  const pool = new SqliteImageLeasePool(content),
+    media = createSqliteStoryMedia(pool, "chapter-01", "map.svg", new Set());
   const lease = await media.acquireMap(
     "chapter-01",
     new AbortController().signal,
   );
-  expect(lease?.url).toBe("blob:map");
-  lease!.release();
-  lease!.release();
-  expect(revoke).toHaveBeenCalledTimes(1);
-  f.readFile.mockRejectedValue(new Error("CONTENT_INTEGRITY_FAILED"));
-  expect(
-    await media.acquireMap("chapter-01", new AbortController().signal),
-  ).toBeNull();
-  const controller = new AbortController();
-  controller.abort("caller reason");
-  await expect(
-    media.acquireMap("chapter-01", controller.signal),
-  ).rejects.toMatchObject({
-    name: "AbortError",
-    message: "The operation was aborted.",
-  });
-});
-it("required invalid document fails before any optional media read", async () => {
-  const f = fixture();
-  const original = f.readFile.getMockImplementation()!;
-  f.readFile.mockImplementation(async (version, path, signal) =>
-    path.endsWith("story.json")
-      ? new TextEncoder().encode('{"schemaVersion":9}')
-      : original(version, path, signal),
+  expect(create.mock.calls[0]![0]).toHaveProperty("type", "image/svg+xml");
+  const aborted = new AbortController();
+  aborted.abort("caller reason");
+  await expect(media.acquireMap("chapter-01", aborted.signal)).rejects.toEqual(
+    new DOMException("The operation was aborted.", "AbortError"),
   );
-  await expect(
-    readStagedStory(f.reader, f.staged, new AbortController().signal),
-  ).rejects.toThrow("STORY_RELEASE_INVALID");
-  expect(
-    f.readFile.mock.calls.every(([, path]) => path.endsWith(".json")),
-  ).toBe(true);
+  pool.close();
+  lease!.release();
+  lease!.release();
+  expect(revoke).toHaveBeenCalledExactlyOnceWith("blob:map");
 });

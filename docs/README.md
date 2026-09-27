@@ -2,11 +2,25 @@
 
 This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
 
+## Current manual SQLite implementation
+
+[ADR-099](ADR/099_ADR_completed_manual_sqlite_cutover.md) consolidates completed cutover from hosted/progressive/ZIP delivery to manual immutable SQLite packages, isolated user data, one SQLite-owning tab, and app-only builds.
+
+| ID  | Current source                                                                     | Scope                                                                                     |
+| --- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| S1  | [Manual SQLite architecture](architecture/04-data/manual-sqlite-content-import.md) | Package producer/import/update/removal, OPFS registry, user backup, build boundary        |
+| S2  | [Manual setup gates](assets/manual-sqlite-setup.md)                                | Code-ready facts versus pending sources, rights, links, upload, owner Chromium acceptance |
+| S3  | [Asset pipeline](assets/asset-import-pipeline.md)                                  | Retained acquisition/verification feeding package-owned roots; no hosted delivery         |
+| S4  | [Browser storage](architecture/04-data/browser-storage.md)                         | SQLite packages/user DB; app-update/diagnostic IndexedDB retained only                    |
+
+All configured package links are null. Local file selection remains available. Automated gates do not claim manual Chromium/OPFS acceptance or public distribution approval.
+
 ## Current sources of truth
 
 | Document                                                                                                                               | Purpose                                                                                   |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [`architecture/architecture.md`](architecture/architecture.md)                                                                         | Canonical architecture index, invariants, and task-based routing                          |
+| [`ADR/099_ADR_completed_manual_sqlite_cutover.md`](ADR/099_ADR_completed_manual_sqlite_cutover.md)                                     | Current content, persistence, build, update, and legacy-store decision                    |
 | [`story/README.md`](story/README.md)                                                                                                   | Narrative canon: world rules, philosophy, chapters, characters                            |
 | [`DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md)                                                       | Completed TDD ticket ledger for semantic DOM-field migration                              |
 | [`ADR/001_ADR_semantic_dom_duel_field_rendering.md`](ADR/001_ADR_semantic_dom_duel_field_rendering.md)                                 | Accepted renderer ADR                                                                     |
@@ -36,15 +50,15 @@ This directory contains current project documentation and historical context. Ro
 | [`ADR/027_ADR_story_duel_handoff_saga.md`](ADR/027_ADR_story_duel_handoff_saga.md)                                                     | Accepted checkpointed story-to-duel handoff and recovery rules                            |
 | [`ADR/053_ADR_story_canon_ownership.md`](ADR/053_ADR_story_canon_ownership.md)                                                         | Accepted narrative-canon home and canon-over-content precedence                           |
 | [`ADR/054_ADR_free_play_opens_on_the_seats.md`](ADR/054_ADR_free_play_opens_on_the_seats.md)                                           | Accepted free-play entry on the deck seats and early library read                         |
-| [`ADR/057_ADR_hand_activation_drop_zone.md`](ADR/057_ADR_hand_activation_drop_zone.md)                                                 | Accepted (planned) hand activation drop zone and cancellable single-choice activation      |
+| [`ADR/057_ADR_hand_activation_drop_zone.md`](ADR/057_ADR_hand_activation_drop_zone.md)                                                 | Accepted (planned) hand activation drop zone and cancellable single-choice activation     |
 | [`ADR/058_ADR_duel_field_colour_semantics.md`](ADR/058_ADR_duel_field_colour_semantics.md)                                             | Accepted dashed selection colours and orange-as-current-locus (amends ADR-015)            |
-| [`ADR/059_ADR_xyz_materials_as_a_zone.md`](ADR/059_ADR_xyz_materials_as_a_zone.md)                                                     | Accepted (planned) xyz materials as a field zone, overlay marker on `PromptCard`           |
-| [`ADR/069_ADR_default_is_the_only_deck_mark.md`](ADR/069_ADR_default_is_the_only_deck_mark.md)                                       | Accepted (planned) default as sole deck mark; favourite storage removed                    |
-| [`ADR/070_ADR_explicit_sorts_are_undoable.md`](ADR/070_ADR_explicit_sorts_are_undoable.md)                                           | Accepted (planned) explicit deck sorts enter undo history                                  |
-| [`ADR/071_ADR_story_screens_consume_the_shell_stage.md`](ADR/071_ADR_story_screens_consume_the_shell_stage.md)                       | Accepted (planned) story screens consume shell-owned stage dimensions                      |
-| [`ADR/072_ADR_story_navigation_origin_is_saved.md`](ADR/072_ADR_story_navigation_origin_is_saved.md)                                 | Accepted (planned) internal story return origin persists with saves                        |
-| [`ADR/073_ADR_end_turn_returns_to_field_corner.md`](ADR/073_ADR_end_turn_returns_to_field_corner.md)                                 | Accepted (planned) sole End Turn control returns to field bottom-right                     |
-| [`ADR/074_ADR_end_turn_intent_resumes_across_prompts.md`](ADR/074_ADR_end_turn_intent_resumes_across_prompts.md)                     | Accepted (planned) End Turn intent pauses and resumes across engine prompts                 |
+| [`ADR/059_ADR_xyz_materials_as_a_zone.md`](ADR/059_ADR_xyz_materials_as_a_zone.md)                                                     | Accepted (planned) xyz materials as a field zone, overlay marker on `PromptCard`          |
+| [`ADR/069_ADR_default_is_the_only_deck_mark.md`](ADR/069_ADR_default_is_the_only_deck_mark.md)                                         | Accepted (planned) default as sole deck mark; favourite storage removed                   |
+| [`ADR/070_ADR_explicit_sorts_are_undoable.md`](ADR/070_ADR_explicit_sorts_are_undoable.md)                                             | Accepted (planned) explicit deck sorts enter undo history                                 |
+| [`ADR/071_ADR_story_screens_consume_the_shell_stage.md`](ADR/071_ADR_story_screens_consume_the_shell_stage.md)                         | Accepted (planned) story screens consume shell-owned stage dimensions                     |
+| [`ADR/072_ADR_story_navigation_origin_is_saved.md`](ADR/072_ADR_story_navigation_origin_is_saved.md)                                   | Accepted (planned) internal story return origin persists with saves                       |
+| [`ADR/073_ADR_end_turn_returns_to_field_corner.md`](ADR/073_ADR_end_turn_returns_to_field_corner.md)                                   | Accepted (planned) sole End Turn control returns to field bottom-right                    |
+| [`ADR/074_ADR_end_turn_intent_resumes_across_prompts.md`](ADR/074_ADR_end_turn_intent_resumes_across_prompts.md)                       | Accepted (planned) End Turn intent pauses and resumes across engine prompts               |
 | [`three-ui-architecture.html`](three-ui-architecture.html)                                                                             | Target three-domain architecture map                                                      |
 | [`duel-field-architecture.html`](duel-field-architecture.html)                                                                         | Styled full-height field architecture design                                              |
 | [`duel-field-affordance-model.html`](duel-field-affordance-model.html)                                                                 | Affordance surfaces, prompt families, colour/shape semantics, pointer–keyboard parity     |
@@ -57,10 +71,11 @@ This directory contains current project documentation and historical context. Ro
 | [`duel-field-validation-references.html`](duel-field-validation-references.html)                                                       | Styled rule/visual/a11y validation catalog                                                |
 | [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)                                                         | Completed MVP/Phaser baseline audit plan                                                  |
 | [`assets/asset-import-pipeline.md`](assets/asset-import-pipeline.md)                                                                   | Implemented asset acquisition, generation, and verification pipeline                      |
-| [`assets/asset-delivery-setup.md`](assets/asset-delivery-setup.md) | Read-only R2 preflight, owner prerequisites, rights-only scope, explicit empty-index bootstrap |
-| [`assets/asset-root-inventory.md`](assets/asset-root-inventory.md) | Pre-migration asset-root literal inventory and input/cache/vendor classification |
+| [`assets/manual-sqlite-setup.md`](assets/manual-sqlite-setup.md)                                                                       | Current owner setup and release/manual-acceptance gates                                   |
+| [`assets/asset-profiles.md`](assets/asset-profiles.md)                                                                                 | Retained local scan/migrate/promote/restructure tools and package-root boundaries         |
+| [`assets/asset-root-inventory.md`](assets/asset-root-inventory.md)                                                                     | Historical pre-migration inventory; not current path configuration                        |
 
-Implemented root/profile tooling: [`assets/asset-profiles.md`](assets/asset-profiles.md) — canonical map, copy-only migration, profile ownership/promotion, unchanged browser URLs, producer seam.
+Legacy hosted setup/bundle documents remain at stable paths with supersession banners; they are history, not runnable current setup.
 
 ## Architecture navigation
 
@@ -79,49 +94,51 @@ architecture/
 └── 07-governance/           # Security, licensing, future extensions
 ```
 
-## Implemented Content/module rearchitecture
+## Historical Content/module implementation generations
 
-| ID | Decision | Accepted implementation |
-| --- | --- | --- |
-| A1 | [ADR-089](ADR/089_ADR_canonical_cards_and_focused_decks.md): canonical immutable Cards; focused Decks APIs | `e338808ffbe790d8dc9a3210a7467535fb293c58` |
-| A2 | [ADR-090](ADR/090_ADR_pure_shared_svelte_views.md): complete-ViewModel shared presentation | `e338808ffbe790d8dc9a3210a7467535fb293c58` |
-| A3 | [ADR-091](ADR/091_ADR_shell_composes_semantic_content_ports.md): Shell-only Content composition; consumer semantic ports | `5a3ba36f5f165d3a4db24574e1bdaaf46ac551f6`, `c9466f69ef3d4f550ee70d986a2d7f36b4c924b1` |
-| A4 | [ADR-092](ADR/092_ADR_immutable_per_file_content_delivery.md): immutable per-file player releases | `5c2ddff95fe224276d5f72f746c3458fe26a0f30`, `8a0d513b185addec82ff1b103d6a27287768d3bd` |
-| A5 | [ADR-093](ADR/093_ADR_atomic_release_selector_and_save_generations.md): sole application selector; forward save generations | `86631c98f616efc49ecf61e5a3e259c6130bd404`, `344ffe2d5bbf1beafad53ad6d10dc517bbaf1b2a` |
-| A6 | [ADR-094](ADR/094_ADR_explicit_media_updates_and_cleanup.md): explicit media/CORE/content approval, Main Menu coordination, asset-only cleanup | `f3f3c541fd912717bc743d7a6508c3ebda7c5e82` |
+| ID  | Decision                                                                                                                                       | Accepted implementation                                                                |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| A1  | [ADR-089](ADR/089_ADR_canonical_cards_and_focused_decks.md): canonical immutable Cards; focused Decks APIs                                     | `e338808ffbe790d8dc9a3210a7467535fb293c58`                                             |
+| A2  | [ADR-090](ADR/090_ADR_pure_shared_svelte_views.md): complete-ViewModel shared presentation                                                     | `e338808ffbe790d8dc9a3210a7467535fb293c58`                                             |
+| A3  | [ADR-091](ADR/091_ADR_shell_composes_semantic_content_ports.md): Shell-only Content composition; consumer semantic ports                       | `5a3ba36f5f165d3a4db24574e1bdaaf46ac551f6`, `c9466f69ef3d4f550ee70d986a2d7f36b4c924b1` |
+| A4  | [ADR-092](ADR/092_ADR_immutable_per_file_content_delivery.md): immutable per-file player releases                                              | `5c2ddff95fe224276d5f72f746c3458fe26a0f30`, `8a0d513b185addec82ff1b103d6a27287768d3bd` |
+| A5  | [ADR-093](ADR/093_ADR_atomic_release_selector_and_save_generations.md): sole application selector; forward save generations                    | `86631c98f616efc49ecf61e5a3e259c6130bd404`, `344ffe2d5bbf1beafad53ad6d10dc517bbaf1b2a` |
+| A6  | [ADR-094](ADR/094_ADR_explicit_media_updates_and_cleanup.md): explicit media/CORE/content approval, Main Menu coordination, asset-only cleanup | `f3f3c541fd912717bc743d7a6508c3ebda7c5e82`                                             |
 
-These records amend conflicting clauses in earlier installation ADRs. Public publication remains separately gated by rights and host approval.
+ADR-099 supersedes A3–A6 transport/storage/selection/save clauses while preserving ADR-091 semantic composition. Public publication remains separately gated by rights, source completeness, links, and owner upload/host approval.
 
-## Accepted CORE installation decisions — planned, not implemented
+## Historical CORE installation decisions
 
-| ID | Decision | Meaning |
-| --- | --- | --- |
-| ADR-084 | [Asset-free CORE boot](ADR/084_ADR_asset_free_core_boot.md) | Executable shell starts without acquired content; readiness precedes gameplay imports |
-| ADR-085 | [Content lifecycle ownership](ADR/085_ADR_content_lifecycle_ownership.md) | Content owns verified storage/activation; Battle supplies pure runtime receipt validation |
-| ADR-086 | [Installed chapter gameplay catalog](ADR/086_ADR_installed_chapters_own_gameplay_catalog.md) | Verified chapter union grants gameplay; required-media failure reduces affected closure |
-| ADR-087 | [Chapter 1 source corrections](ADR/087_ADR_chapter_one_source_corrections.md) | Exact Barrel Dragon alias, two card exclusions, one collector-set exclusion; raw audit preserved |
-| ADR-088 | [Pinned saves and exact repair](ADR/088_ADR_pinned_saves_and_exact_content_repair.md) | New schema5 refs, no legacy binding, serialized removal, repair without latest substitution |
+| ID      | Decision                                                                                     | Meaning                                                                                          |
+| ------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| ADR-084 | [Asset-free CORE boot](ADR/084_ADR_asset_free_core_boot.md)                                  | Executable shell starts without acquired content; readiness precedes gameplay imports            |
+| ADR-085 | [Content lifecycle ownership](ADR/085_ADR_content_lifecycle_ownership.md)                    | Content owns verified storage/activation; Battle supplies pure runtime receipt validation        |
+| ADR-086 | [Installed chapter gameplay catalog](ADR/086_ADR_installed_chapters_own_gameplay_catalog.md) | Verified chapter union grants gameplay; required-media failure reduces affected closure          |
+| ADR-087 | [Chapter 1 source corrections](ADR/087_ADR_chapter_one_source_corrections.md)                | Exact Barrel Dragon alias, two card exclusions, one collector-set exclusion; raw audit preserved |
+| ADR-088 | [Pinned saves and exact repair](ADR/088_ADR_pinned_saves_and_exact_content_repair.md)        | New schema5 refs, no legacy binding, serialized removal, repair without latest substitution      |
 
-## Accepted asset tooling decisions — planned, not implemented
+## Historical hosted asset-tooling decisions
 
-| ID | Decision | Meaning |
-| --- | --- | --- |
-| A1 | [ADR-081](ADR/081_ADR_asset_roots_and_delivery_profiles.md) | Four asset-only ownership roots; tracked delivery profiles; promotion without moving files |
-| A2 | [ADR-082](ADR/082_ADR_r2_nightly_and_immutable_asset_releases.md) | R2 public delivery; latest nightly with 24-hour grace; immutable releases |
-| A3 | [ADR-083](ADR/083_ADR_verified_conflict_safe_dev_assets.md) | Verified dev download; ownership receipt; conflict-safe install and explicit prune |
+| ID  | Decision                                                          | Historical scope                                                                  |
+| --- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| A1  | [ADR-081](ADR/081_ADR_asset_roots_and_delivery_profiles.md)       | Four-root delivery/profile model; local conflict-safe tooling principles retained |
+| A2  | [ADR-082](ADR/082_ADR_r2_nightly_and_immutable_asset_releases.md) | Retired R2/nightly delivery                                                       |
+| A3  | [ADR-083](ADR/083_ADR_verified_conflict_safe_dev_assets.md)       | Retired hosted dev transport; local non-clobbering source preservation retained   |
 
-These decisions amend asset storage/delivery only. Existing player installer work remains separate; new commands are not implemented yet.
+ADR-099 governs current package roots/delivery. Retained profile/migration commands are local source tools only; no hosted player delivery remains.
 
-## Accepted PWA deployment decisions — planned, not implemented
+## Historical PWA delivery decisions
 
-| ID | Decision |
-| --- | --- |
-| ADR-075 | [Static chapter ZIP delivery](ADR/075_ADR_static_pwa_chapter_zip_delivery.md) |
+| ID      | Decision                                                                                  |
+| ------- | ----------------------------------------------------------------------------------------- |
+| ADR-075 | [Static chapter ZIP delivery](ADR/075_ADR_static_pwa_chapter_zip_delivery.md)             |
 | ADR-076 | [Content storage ownership and saved refs](ADR/076_ADR_content_storage_and_saved_refs.md) |
-| ADR-077 | [Runtime/catalog activation receipts](ADR/077_ADR_runtime_catalog_receipts.md) |
-| ADR-078 | [Installed visible-media leases](ADR/078_ADR_installed_visible_media_leases.md) |
-| ADR-079 | [Cold service-worker updates](ADR/079_ADR_cold_service_worker_updates.md) |
-| ADR-080 | [Retained public release inventory](ADR/080_ADR_retained_public_release_inventory.md) |
+| ADR-077 | [Runtime/catalog activation receipts](ADR/077_ADR_runtime_catalog_receipts.md)            |
+| ADR-078 | [Installed visible-media leases](ADR/078_ADR_installed_visible_media_leases.md)           |
+| ADR-079 | [Cold service-worker updates](ADR/079_ADR_cold_service_worker_updates.md)                 |
+| ADR-080 | [Retained public release inventory](ADR/080_ADR_retained_public_release_inventory.md)     |
+
+ADR-099 supersedes hosted/ZIP/storage clauses in ADR-075–080. ADR-079's separate explicit app-update approval remains implemented.
 
 ## Approved future architecture handoff
 

@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
 import { acquireAssetDeliveryLock } from "./lib/asset-delivery/local-lock.ts";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -14,7 +14,11 @@ const vendorRoot = path.join(projectRoot, "vendor", "ocgcore-wasm", "0.1.2");
 const outputRoot = path.join(projectRoot, ASSET_SOURCES.runtime.source);
 const releaseLock = await acquireAssetDeliveryLock(projectRoot);
 try {
-  const manifest = await buildRuntimeSnapshotManifest(assetRoot, vendorRoot);
+  const manifest = await buildRuntimeSnapshotManifest(
+    assetRoot,
+    vendorRoot,
+    path.join(projectRoot, ASSET_SOURCES.dataManifest.source),
+  );
   await mkdir(outputRoot, { recursive: true });
   await writeFile(
     path.join(outputRoot, "manifest.json"),

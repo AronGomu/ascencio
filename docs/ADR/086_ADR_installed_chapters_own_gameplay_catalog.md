@@ -2,6 +2,8 @@
 
 > Status: accepted; planned
 > Amended by [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D1–D2: D4/D5 required metadata still gates play, missing images/audio/video remain optional with warning/placeholders; no media-driven chapter invalidation.
+> Amended by [ADR-096](096_ADR_package_owned_assets_and_global_card_library.md) D2–D5: global card-library plus independent freeplay replace D1–D3 chapter-owned catalog; chapter limits/refs replace duplicated records; no chapter needed for Free Play.
+> Superseded for current catalog/readiness by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D1/D5/C1. Body retained as historical rationale.
 > Decided: 2026-09-12
 > Owners: content / decks / story / battle / shell
 > Amends: ADR-043 whole-runtime UI availability, ADR-075 D2 runtime-only gameplay, ADR-077 D4 image-independent gameplay readiness, ADR-078 missing-media readiness

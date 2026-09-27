@@ -1,10 +1,14 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
 import { get } from "svelte/store";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
 import {
   catalogByCode,
@@ -12,19 +16,15 @@ import {
 } from "../../../src/decks/catalog/pinned-ruleset.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
-const names: string[] = [];
-afterEach(async () =>
-  Promise.all(names.splice(0).map((name) => deleteDB(name))),
-);
+afterEach(async () => disposeTestDeckRepositories());
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 
 async function controllerFor(name: string): Promise<{
   readonly controller: DeckBuilderController;
-  readonly repo: IndexedDbDeckRepository;
+  readonly repo: TestDeckRepository;
 }> {
-  names.push(name);
-  const repo = await IndexedDbDeckRepository.open(name);
+  const repo = await openTestDeckRepository(name);
   const controller = new DeckBuilderController(
     repo,
     catalog,
@@ -70,7 +70,7 @@ describe("YDK history integration", () => {
     expect(get(controller).current!.deck.main).toEqual(imported.main);
     expect(get(controller).current!.deck.extra).toEqual(imported.extra);
     expect(get(controller).current!.deck.side).toEqual(imported.side);
-    repo.close();
+    await repo.close();
   });
 
   it("undoes an import that only changes card order", async () => {
@@ -91,13 +91,12 @@ describe("YDK history integration", () => {
     );
     await controller.undo();
     expect(get(controller).current!.deck.main).toEqual([1, 2]);
-    repo.close();
+    await repo.close();
   });
 
   it("keeps known unowned and unknown imported codes as validation errors", async () => {
     const name = "ydk-unowned-history";
-    names.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const known = PROTOTYPE_CATALOG.find(
       ({ canonicalZone }) => canonicalZone === "main",
     )!.code;
@@ -124,7 +123,7 @@ describe("YDK history integration", () => {
     expect(
       deck.validation.issues.some(({ code }) => code === "missing-card"),
     ).toBe(true);
-    repo.close();
+    await repo.close();
   });
 
   it("returns false after publishing validation and save failures", async () => {
@@ -151,6 +150,6 @@ describe("YDK history integration", () => {
     ).toBe(false);
     expect(get(controller).saveState).toBe("failed");
     expect(get(controller).message).toBe("simulated import save failure");
-    repo.close();
+    await repo.close();
   });
 });

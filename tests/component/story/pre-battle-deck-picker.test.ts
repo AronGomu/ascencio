@@ -7,7 +7,6 @@ import {
 import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import StoryApp from "../../../src/story/StoryApp.svelte";
 import PreBattleScreen from "../../../src/story/screens/PreBattleScreen.svelte";
@@ -17,7 +16,6 @@ import type {
   StoryHandoffOutcome,
 } from "../../../src/story/handoff/story-handoff.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import {
   TOAST_CONTEXT_KEY,
   type ToastPublisher,
@@ -33,10 +31,9 @@ import {
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
+  await resetStorySessionFixture();
   resetRuntimeCatalog();
-  await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
 
 const LEGAL: PreBattleDeckOption = {
@@ -578,9 +575,13 @@ describe("leaving the briefing for the deck editor", () => {
     };
   }
 
-  async function blockedBriefing(ondecks: () => void) {
+  async function blockedBriefing(
+    ondecks: () => void,
+    saves?: ReturnType<typeof storyAppProps>["saves"],
+  ) {
     render(StoryApp, {
       ...storyAppProps(),
+      ...(saves === undefined ? {} : { saves }),
       resumeState: unsavedProgress(),
       ondecks,
     });
@@ -620,35 +621,50 @@ describe("leaving the briefing for the deck editor", () => {
     /* Reads still answer and only the write is refused, which is the state
        full storage leaves a browser in — and the one that would silently cost
        the player their run if the navigation went ahead anyway. */
-    const originalPut = IDBObjectStore.prototype.put;
-    IDBObjectStore.prototype.put = function put(
-      this: IDBObjectStore,
-      ...args: Parameters<typeof originalPut>
-    ) {
-      const pending = originalPut.apply(this, args);
-      queueMicrotask(() => {
-        this.transaction.abort();
-      });
-      return pending;
-    };
     const ondecks = vi.fn();
-    try {
-      await blockedBriefing(ondecks);
+    await blockedBriefing(ondecks, {
+      read: async (slot) => ({ kind: "empty", slot }),
+      write: async () => ({ kind: "failed", reason: "unknown" }),
+      list: async () => [],
+      clear: async () => undefined,
+    });
 
-      await waitFor(() =>
-        expect(cy("story-storage-error-message")?.textContent).toContain(
-          "Storage write failed",
-        ),
-      );
-      expect(ondecks).not.toHaveBeenCalled();
-      expect(cy("story-briefing-screen")).not.toBeNull();
-      /* And the one way off this screen is a way off it again: a refusal that
-         left the button spent would strand the player on the briefing. */
-      expect(
-        (cy("story-briefing-block-action") as HTMLButtonElement).disabled,
-      ).toBe(false);
-    } finally {
-      IDBObjectStore.prototype.put = originalPut;
-    }
+    await waitFor(() =>
+      expect(cy("story-storage-error-message")?.textContent).toContain(
+        "Storage write failed",
+      ),
+    );
+    expect(ondecks).not.toHaveBeenCalled();
+    expect(cy("story-briefing-screen")).not.toBeNull();
+    /* And the one way off this screen is a way off it again: a refusal that
+       left the button spent would strand the player on the briefing. */
+    expect(
+      (cy("story-briefing-block-action") as HTMLButtonElement).disabled,
+    ).toBe(false);
   });
+});
+
+it("R6 actual chapter limit0 blocks owned prototype-legal deck before handoff", async () => {
+  const { deck, collection } = fieldableStoryDeck();
+  const onencounter = vi.fn();
+  render(StoryApp, {
+    ...storyAppProps(),
+    ruleset: {
+      id: "chapter-01",
+      revision: "current",
+      quantityByCode: new Map([[deck.main[0]!, 0 as const]]),
+    },
+    resumeState: {
+      ...createInitialStoryState(),
+      screen: "pre-battle",
+      encounterId: "old-arena",
+      decks: [deck],
+      defaultDeckId: deck.id,
+      collection,
+    },
+    onencounter,
+  });
+  await waitFor(() => expect(start().disabled).toBe(true));
+  await fireEvent.click(start());
+  expect(onencounter).not.toHaveBeenCalled();
 });

@@ -83,6 +83,10 @@ async function expectInsideStage(
       scrollWidth: target.scrollWidth,
     };
   });
+  await test.info().attach(`stage-bounds-${label.replaceAll(" ", "-")}`, {
+    body: JSON.stringify({ label, ...geometry }),
+    contentType: "application/json",
+  });
   expect(geometry.target.left, `${label} left`).toBeGreaterThanOrEqual(
     geometry.stage.left - 1,
   );
@@ -151,6 +155,13 @@ for (const viewport of VIEWPORTS) {
       '[data-cy="story-load-screen"]',
       "load screen",
     );
+    const info = test.info();
+    const loadScreenPath = info.outputPath("load-screen.png");
+    await page.screenshot({ path: loadScreenPath });
+    await info.attach("load-screen", {
+      path: loadScreenPath,
+      contentType: "image/png",
+    });
 
     await openSavedScreen(
       page,
@@ -221,7 +232,7 @@ for (const viewport of VIEWPORTS) {
       "shop sell grid",
     );
 
-    const openedCards = Array.from({ length: 9 }, () => OPENED_CARD);
+    const openedCards = Array.from({ length: 9 }, () => ({ ...OPENED_CARD }));
     await openSavedScreen(
       page,
       stateAt("shop-opening", {
@@ -321,16 +332,17 @@ for (const viewport of VIEWPORTS) {
     const healthy = await selectedSaveSnapshot(page);
     await corruptSelectedStorySave(page, "manual:1", "not a save");
     await page.locator('[data-cy="main-menu-load"]').click();
-    await expect(
-      page.locator('[data-cy="application-recovery-message"]'),
-    ).toBeVisible();
+    await expect(page.locator('[data-cy="story-storage-error"]')).toBeVisible();
     await expectInsideStage(
       page,
-      '[data-cy="application-recovery-message"]',
+      '[data-cy="story-storage-error"]',
       "storage recovery banner",
     );
     const failed = await selectedSaveSnapshot(page);
     expect(failed.selection).toEqual(healthy.selection);
+    expect(failed.rows.filter(({ slot }) => slot !== "manual:1")).toEqual(
+      healthy.rows.filter(({ slot }) => slot !== "manual:1"),
+    );
     expect(failed.slots.slice(1)).toEqual(healthy.slots.slice(1));
     await repairSelectedStorySlot(page, "manual:1");
     expect(await selectedSaveSnapshot(page)).toEqual(healthy);
@@ -378,7 +390,7 @@ test("T13 card zoom stays stage-local in a letterboxed Chromium stage", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 560 });
-  const openedCards = Array.from({ length: 9 }, () => OPENED_CARD);
+  const openedCards = Array.from({ length: 9 }, () => ({ ...OPENED_CARD }));
   await openSavedScreen(
     page,
     stateAt("shop-opening", {

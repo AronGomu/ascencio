@@ -728,7 +728,8 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
 
   /* Deliberately not awaited: the log records what the player did, and a log
      that is slow, full, or broken must never fail or delay the edit it is
-     about. Deck data is what `#save` is for. */
+     about. Failures are observed here and by SQLite owner flush. Deck data
+     is what `#save` is for. */
   #appendAutosave(deck: DeckRecord): void {
     void this.#repository
       .appendAutosave({
@@ -741,7 +742,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
         side: [...deck.side],
         illustrationCardCode: deck.illustrationCardCode,
       })
-      .catch(() => undefined);
+      .catch((error: unknown) => console.warn("DECK_AUTOSAVE_FAILED", error));
   }
 
   #enqueue<T>(operation: () => Promise<T>): Promise<T> {

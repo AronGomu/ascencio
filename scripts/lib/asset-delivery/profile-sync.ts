@@ -1,8 +1,4 @@
-import {
-  checkAssetProfiles,
-  scanAssetProfiles,
-  EMPTY_RETAINED_METADATA,
-} from "./scan-assets.ts";
+import { checkAssetProfiles, scanAssetProfiles } from "./scan-assets.ts";
 import { loadSelection } from "./profile-set.ts";
 import { replaceMetadata } from "./atomic-metadata.ts";
 import { acquireAssetDeliveryLock } from "./local-lock.ts";
@@ -28,12 +24,7 @@ export async function runProfileSync(
       const selection = await loadSelection(root);
       const report = flags.has("--check")
         ? await checkAssetProfiles(root)
-        : await scanAssetProfiles(
-            root,
-            selection,
-            EMPTY_RETAINED_METADATA,
-            null,
-          );
+        : await scanAssetProfiles(root, selection);
       if (
         !Buffer.from(canonicalBytes(selection)).equals(
           Buffer.from(canonicalBytes(await loadSelection(root))),

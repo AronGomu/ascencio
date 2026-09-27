@@ -1,7 +1,11 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   catalogByCode,
@@ -10,10 +14,7 @@ import {
   validateDeckDraft,
 } from "../../../src/decks/validation/index.ts";
 import { deckId } from "../../../src/decks/contracts/index.ts";
-import {
-  DECK_DATABASE_NAME,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/repository/index.ts";
+
 import {
   emptyDeckHistory,
   createBlankDeck,
@@ -46,45 +47,40 @@ const VALID_MAIN = Array.from(
   (_, index) => mainCodes[index % mainCodes.length]!,
 );
 
+let repository: TestDeckRepository;
+const createRepository = () => repository;
+
 async function seedDeck(id: string, name: string): Promise<void> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    const base = createBlankDeck(name, catalog, PROTOTYPE_RULESET, { id });
-    await repository.create(
-      {
-        ...base,
-        main: Object.freeze([...VALID_MAIN]),
-        validation: validateDeckDraft(
-          { main: [...VALID_MAIN], extra: [], side: [] },
-          catalog,
-          PROTOTYPE_RULESET,
-        ),
-      },
-      emptyDeckHistory(),
-    );
-  } finally {
-    repository.close();
-  }
+  const base = createBlankDeck(name, catalog, PROTOTYPE_RULESET, { id });
+  await repository.create(
+    {
+      ...base,
+      main: Object.freeze([...VALID_MAIN]),
+      validation: validateDeckDraft(
+        { main: [...VALID_MAIN], extra: [], side: [] },
+        catalog,
+        PROTOTYPE_RULESET,
+      ),
+    },
+    emptyDeckHistory(),
+  );
 }
 
 async function withRepository<T>(
-  read: (repository: IndexedDbDeckRepository) => Promise<T>,
+  read: (repository: TestDeckRepository) => Promise<T>,
 ): Promise<T> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    return await read(repository);
-  } finally {
-    repository.close();
-  }
+  return await read(repository);
 }
 
 beforeEach(async () => {
-  await deleteDB(DECK_DATABASE_NAME);
+  await disposeTestDeckRepositories();
+  repository = await openTestDeckRepository();
   await seedDeck("built-deck", "Built Deck");
 });
 
 afterEach(async () => {
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 describe("parseLocalDeckKey", () => {
@@ -108,16 +104,20 @@ describe("parseLocalDeckKey", () => {
 
 describe("free-play deck actions", () => {
   it("sets and re-reads the persisted default deck", async () => {
-    await expect(setDefaultLocalDeck("local:built-deck:1")).resolves.toBe(
-      "built-deck",
-    );
+    await expect(
+      setDefaultLocalDeck(createRepository, "local:built-deck:1"),
+    ).resolves.toBe("built-deck");
     await expect(
       withRepository((repository) => repository.getDefaultDeck()),
     ).resolves.toBe("built-deck");
   });
 
   it("renames a deck and bumps its revision", async () => {
-    await renameLocalDeck("local:built-deck:1", "  New Name  ");
+    await renameLocalDeck(
+      createRepository,
+      "local:built-deck:1",
+      "  New Name  ",
+    );
 
     const stored = await withRepository((repository) =>
       repository.load(deckId("built-deck")),
@@ -128,9 +128,11 @@ describe("free-play deck actions", () => {
 
   it("duplicates a deck into an independent copy", async () => {
     await duplicateLocalDeck(
+      createRepository,
       "local:built-deck:1",
       undefined,
       PROTOTYPE_CATALOG,
+      PROTOTYPE_RULESET,
     );
 
     const records = await withRepository((repository) => repository.list());
@@ -145,12 +147,14 @@ describe("free-play deck actions", () => {
 
   it("duplicates a bundled deck into an independent local copy", async () => {
     await duplicateLocalDeck(
+      createRepository,
       "preset:starter",
       {
         name: "Bundled Starter",
         lists: { main: VALID_MAIN, extra: [], side: [] },
       },
       PROTOTYPE_CATALOG,
+      PROTOTYPE_RULESET,
     );
 
     const records = await withRepository((repository) => repository.list());
@@ -161,7 +165,7 @@ describe("free-play deck actions", () => {
   });
 
   it("deletes a deck at the revision its key names", async () => {
-    await deleteLocalDeck("local:built-deck:1");
+    await deleteLocalDeck(createRepository, "local:built-deck:1");
 
     expect(await withRepository((repository) => repository.list())).toEqual([]);
   });
@@ -170,30 +174,42 @@ describe("free-play deck actions", () => {
      deletable and the key is a preset — so the throw is the guard behind that,
      not a message a player is meant to read. */
   it("refuses every operation on a bundled deck", async () => {
-    await expect(setDefaultLocalDeck("preset:nekroz")).rejects.toThrow(
-      "Read-only decks cannot be modified",
-    );
-    await expect(renameLocalDeck("preset:nekroz", "x")).rejects.toThrow(
-      "Read-only decks cannot be modified",
-    );
     await expect(
-      duplicateLocalDeck("preset:nekroz", undefined, PROTOTYPE_CATALOG),
+      setDefaultLocalDeck(createRepository, "preset:nekroz"),
     ).rejects.toThrow("Read-only decks cannot be modified");
-    await expect(deleteLocalDeck("preset:nekroz")).rejects.toThrow(
-      "Read-only decks cannot be modified",
-    );
+    await expect(
+      renameLocalDeck(createRepository, "preset:nekroz", "x"),
+    ).rejects.toThrow("Read-only decks cannot be modified");
+    await expect(
+      duplicateLocalDeck(
+        createRepository,
+        "preset:nekroz",
+        undefined,
+        PROTOTYPE_CATALOG,
+        PROTOTYPE_RULESET,
+      ),
+    ).rejects.toThrow("Read-only decks cannot be modified");
+    await expect(
+      deleteLocalDeck(createRepository, "preset:nekroz"),
+    ).rejects.toThrow("Read-only decks cannot be modified");
   });
 
   /* A deck another tab deleted between the listing and the press: the listing
      is re-read straight after, and it will not show it. */
   it("leaves a deck that is already gone alone", async () => {
-    await deleteLocalDeck("local:built-deck:1");
+    await deleteLocalDeck(createRepository, "local:built-deck:1");
 
     await expect(
-      renameLocalDeck("local:built-deck:1", "New Name"),
+      renameLocalDeck(createRepository, "local:built-deck:1", "New Name"),
     ).resolves.toBeUndefined();
     await expect(
-      duplicateLocalDeck("local:built-deck:1", undefined, PROTOTYPE_CATALOG),
+      duplicateLocalDeck(
+        createRepository,
+        "local:built-deck:1",
+        undefined,
+        PROTOTYPE_CATALOG,
+        PROTOTYPE_RULESET,
+      ),
     ).resolves.toBeUndefined();
     expect(await withRepository((repository) => repository.list())).toEqual([]);
   });

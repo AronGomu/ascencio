@@ -1,17 +1,13 @@
 <script lang="ts">
-  import { onMount, setContext, tick } from "svelte";
+  import { onMount, setContext, tick, untrack } from "svelte";
   import type {
+    FreeplayInputs,
+    SessionByMode,
     ShellApplication,
-    ShellDomainSession,
   } from "./core/shell-application.ts";
-  import { menuSaves } from "./core/menu-saves.ts";
-  import { sessionSaves } from "./core/session-saves.ts";
+  import type { SqliteApplicationStatus } from "./application/sqlite-application-service.ts";
   import { readonly, writable } from "svelte/store";
-  import type {
-    ShellSession,
-    ShellGameplay,
-    ShellImageLibrary,
-  } from "./core/installed-inputs.ts";
+  import type { ShellGameplay } from "./core/installed-inputs.ts";
   import {
     loadCoreStartup,
     routeForCoreGate,
@@ -63,6 +59,16 @@
     createShellSettingsStore,
     type ShellSettingsStore,
   } from "./settings/shell-settings-store.ts";
+  import type { UserPersistenceOwner } from "./application/user-persistence-owner.ts";
+  import { unavailableUserServicesForTests } from "./core/unavailable-user-services.ts";
+  import { defaultPersistedUiState } from "../battle/ports/index.ts";
+  import { DEFAULT_STORY_PLAYBACK_SETTINGS } from "../story/playback/index.ts";
+  import { DEFAULT_SHELL_SETTINGS } from "./settings/index.ts";
+  import type {
+    AdminResetResult,
+    AdminStorageTarget,
+  } from "./admin/admin-actions.ts";
+  import type { StorageFailure } from "../storage/index.ts";
   import {
     createShellStore,
     writeLocationHash,
@@ -70,44 +76,163 @@
     type StoryEntryIntent,
   } from "./shell-store.ts";
   import { computeStageBox, type StageBox } from "./stage-layout.ts";
-  import type {
-    ContentActionsController,
-    ContentActionsView,
-  } from "./application/content-actions.ts";
+  import type { AppUpdateController } from "./application/app-update-controller.ts";
+  import {
+    createManualContentController,
+    type ManualContentController,
+  } from "./application/manual-content-controller.ts";
 
   export let store: ShellStore = createShellStore(
     globalThis.location.hash,
     writeLocationHash,
   );
   export let loaders: DomainLoaders = DEFAULT_DOMAIN_LOADERS;
-  export let settings: ShellSettingsStore = createShellSettingsStore();
+  export let settings: ShellSettingsStore | null = null;
+  let activeSettings: ShellSettingsStore =
+    settings ?? createShellSettingsStore();
+  let users = unavailableUserServicesForTests();
+  let initialStoryPlayback = DEFAULT_STORY_PLAYBACK_SETTINGS;
+  let initialStoryReadLog: ReadonlySet<string> = new Set();
+  let userPersistence: UserPersistenceOwner | null = null;
+  let manualContent: ManualContentController | null = null;
+  let userPersistenceError: StorageFailure["code"] | null = null;
+  let applicationStatus: SqliteApplicationStatus = { warnings: [] };
+  let unsubscribeApplicationStatus: (() => void) | null = null;
+  let disposeRoot: (() => Promise<void>) | null = null;
+
+  function observeUserFailure(error: StorageFailure): void {
+    userPersistenceError = error.code;
+  }
+
+  function applyUserPersistence(owner: UserPersistenceOwner): void {
+    if (userPersistence === owner) return;
+    userPersistence = owner;
+    users = owner.services;
+    applyHydratedUserState(owner);
+    if (manualContent !== null)
+      void manualContent
+        .dispose()
+        .catch((error: unknown) =>
+          console.warn("MANUAL_CONTENT_DISPOSAL_FAILED", error),
+        );
+    manualContent =
+      owner.storage === null
+        ? null
+        : createManualContentController({
+            storage: owner.storage,
+            backups: owner,
+            isSessionActive: () =>
+              domainSession !== null || opening !== null || closingSession,
+            onRestored: async () => refreshRootAfterRestore(owner),
+            initialMediaWarnings: applicationStatus.warnings,
+          });
+    userPersistenceError = owner.failure?.code ?? null;
+  }
+
+  function applyHydratedUserState(owner: UserPersistenceOwner): void {
+    initialStoryPlayback = owner.hydrated.storyPlayback;
+    initialStoryReadLog = owner.hydrated.storyReadLog;
+    if (settings === null)
+      activeSettings = createShellSettingsStore(
+        owner.hydrated.shell,
+        owner.services.preferences.shell,
+        observeUserFailure,
+      );
+  }
+
+  async function refreshRootAfterRestore(
+    owner: UserPersistenceOwner,
+  ): Promise<void> {
+    applyHydratedUserState(owner);
+    handoff.invalidate();
+    handback = null;
+    sessionRequest = null;
+    sessionHandoffId = null;
+    hostedHandoffId = null;
+    storyAutosaveRevision = 0;
+    storyDeckToken += 1;
+    collectionToken += 1;
+    editorContext = null;
+    collection = null;
+    await import("./screens/free-play-deck-listing.ts").then((listing) =>
+      listing.invalidateFreePlayDeckCache(),
+    );
+    application?.clear();
+    // Installer owns the route here. Invalidate only: mounting consumers would
+    // re-enter adapter admission while the restore barrier is held.
+    boundDeckWorld = null;
+    boundCollectionWorld = null;
+  }
+
+  async function resetUserTarget(
+    target: AdminStorageTarget,
+  ): Promise<AdminResetResult> {
+    if (
+      target.kind !== "user" ||
+      userPersistence === null ||
+      target.namespaces === undefined
+    )
+      throw new Error("USER_DATA_UNAVAILABLE");
+    const result = await userPersistence.reset(target.namespaces);
+    if (result.kind === "failed") {
+      observeUserFailure(result.error);
+      throw new Error(result.error.code);
+    }
+    if (target.namespaces.includes("preferences")) {
+      initialStoryPlayback = DEFAULT_STORY_PLAYBACK_SETTINGS;
+      if (settings === null)
+        activeSettings = createShellSettingsStore(
+          DEFAULT_SHELL_SETTINGS,
+          users.preferences.shell,
+          observeUserFailure,
+        );
+    }
+    if (target.namespaces.includes("story-read-log"))
+      initialStoryReadLog = new Set();
+    return { outcome: "deleted" };
+  }
   export let initialCoreGate: CoreGate | null = null;
   export let application: ShellApplication | null = null;
-  export let contentActions: ContentActionsController | null = null;
-  let contentActionsView: ContentActionsView | null =
-    contentActions?.view ?? null;
-  let boundContentActions: ContentActionsController | null = null;
-  let unsubscribeContentActions: (() => void) | null = null;
-  $: bindContentActions(contentActions);
-  function bindContentActions(next: ContentActionsController | null): void {
-    if (next === boundContentActions) return;
-    unsubscribeContentActions?.();
-    boundContentActions = next;
-    contentActionsView = next?.view ?? null;
-    unsubscribeContentActions =
-      next?.subscribe((view) => (contentActionsView = view)) ?? null;
-  }
-  let domainSession: ShellDomainSession | null = null;
+  export let appUpdates: AppUpdateController | null = null;
+  let domainSession: SessionByMode[keyof SessionByMode] | null = null;
+  let freeplayInputs: FreeplayInputs | null = null;
   let domainReady = false;
   let opening: AbortController | null = null;
+  let openingMode: keyof SessionByMode | null = null;
   let closing: Promise<void> = Promise.resolve();
   let closingSession = false;
   let destroyed = false;
+  let adminSeed: Promise<void> | null = null;
+  let adminSeedAbort: AbortController | null = null;
+  async function seedAdminDeck(signal: AbortSignal): Promise<void> {
+    if (adminSeed !== null) throw new Error("APP_SESSION_ACTIVE");
+    const app = application;
+    if (app === null) throw new Error("APP_STORAGE_UNAVAILABLE");
+    const controller = new AbortController();
+    adminSeedAbort = controller;
+    const linked = AbortSignal.any([signal, controller.signal]);
+    const work = (async () => {
+      await closing;
+      linked.throwIfAborted();
+      if (destroyed || requestedRoute.kind !== "admin")
+        throw new DOMException("The operation was aborted.", "AbortError");
+      const { seedAdminTestDeck } = await import("./admin/admin-actions.ts");
+      await seedAdminTestDeck(app, linked);
+    })();
+    adminSeed = work;
+    try {
+      await work;
+    } finally {
+      adminSeed = null;
+      adminSeedAbort = null;
+    }
+  }
   const disposals: Promise<void>[] = [];
   let recoveryMessage: string | null = null;
   let recovering = false;
   let menuRepository: GenerationSaveRepository | null;
-  $: menuRepository = application === null ? saves : menuSaves(application);
+  $: menuRepository =
+    application === null ? saves : (userPersistence?.saves ?? null);
   let boundApplication: ShellApplication | null = null;
   let unsubscribeApplication: (() => void) | null = null;
   $: bindApplication(application);
@@ -115,109 +240,138 @@
     if (app === boundApplication) return;
     unsubscribeApplication?.();
     boundApplication = app;
-    unsubscribeApplication =
-      app?.subscribe(() => {
-        if (requestedRoute.kind !== "home") return;
-        void app
-          .acquire(new AbortController().signal)
-          .then(async (session) => {
-            try {
-              if (requestedRoute.kind === "home")
-                coreGate = {
-                  kind: "ready",
-                  gameplay: session.gameplay,
-                  reader: null,
-                  generation: session.generation,
-                };
-            } finally {
-              await session.close();
-            }
-          })
-          .catch((error: unknown) => {
-            if (
-              error instanceof Error &&
-              error.message === "APP_CONTENT_REQUIRED"
-            ) {
-              coreGate = { kind: "locked", reason: "content-required" };
-              return;
-            }
-            recover(error);
-          });
-      }) ?? null;
+    unsubscribeApplication = app?.subscribe(() => undefined) ?? null;
   }
 
-  function applySession(session: ShellDomainSession): void {
-    gameplay = session.gameplay;
-    storyRelease = session.storyRelease;
-    storyCards = session.storyCards;
-    storyMedia = session.storyMedia;
-    saves = sessionSaves(session.saves, recover);
-    cardImages = session.images;
+  function applySession(session: SessionByMode[keyof SessionByMode]): void {
+    if (session.kind === "freeplay") {
+      freeplayInputs = session.inputs;
+      users = session.inputs.users;
+      cardImages = session.inputs.images;
+    } else {
+      users = session.inputs.users;
+      gameplay = session.inputs.gameplay;
+      storyRelease = session.inputs.release;
+      storyCards = session.inputs.cards;
+      storyMedia = session.inputs.media;
+      saves = session.inputs.saves;
+      cardImages = session.inputs.gameplay.editor().images;
+    }
+    queueMicrotask(refreshModeConsumers);
   }
   function closeDomain(): void {
     opening?.abort();
-    opening = null;
     domainReady = false;
+    syncDomain(requestedRoute, application, coreGate.kind === "ready");
+  }
+
+  function routeMode(current: AppRoute): keyof SessionByMode | null {
+    if (
+      current.kind === "free-play" ||
+      current.kind === "free-play-decks" ||
+      current.kind === "free-play-deck" ||
+      current.kind === "free-play-collection"
+    )
+      return "freeplay";
+    if (
+      current.kind === "story" ||
+      current.kind === "story-decks" ||
+      current.kind === "story-deck" ||
+      current.kind === "story-collection" ||
+      current.kind === "duel-session"
+    )
+      return "story";
+    return null;
+  }
+
+  function syncDomain(
+    current: AppRoute,
+    app: ShellApplication | null,
+    ready: boolean,
+  ): void {
+    if (app === null) return; // Explicit fixture injection only.
+    const requestedMode = (requested = requestedRoute) =>
+      destroyed ||
+      manualContent?.view.navigationBlocked === true ||
+      appUpdates?.view.phase === "approving" ||
+      appUpdates?.view.phase === "committing" ||
+      recovering ||
+      application !== app ||
+      coreGate.kind !== "ready"
+        ? null
+        : routeMode(requested);
+    const mode = ready ? requestedMode(current) : null;
+    if (opening !== null && (openingMode !== mode || destroyed))
+      opening.abort();
+    if (domainSession?.kind !== mode) domainReady = false;
     if (closingSession) return;
+    if (domainSession?.kind === mode && domainReady) return;
+    if (mode === null && domainSession === null) return;
     closingSession = true;
-    const session = domainSession;
-    closing = closing
-      .then(async () => {
-        let retain = false;
-        try {
-          await tick(); // Teardown may write a checkpoint or return Battle to Story.
-          await Promise.all(disposals.splice(0));
-          retain =
-            session !== null &&
-            !destroyed &&
-            !recovering &&
-            requestedRoute.kind !== "home" &&
-            requestedRoute.kind !== "install-content";
-          if (retain) domainReady = true;
-        } finally {
-          if (!retain) {
-            domainSession = null;
-            await session?.close();
+    closing = (async () => {
+      // One reconciler owns acquire, teardown and release. Route changes only
+      // invalidate its request; every await rechecks the latest target.
+      while (true) {
+        const target = requestedMode();
+        const session = domainSession;
+        if (session !== null) {
+          if (session.kind === target) {
+            domainReady = true;
+            return;
           }
-          closingSession = false;
+          domainReady = false;
+          await tick(); // Battle teardown may return to the same Story session.
+          await Promise.all(disposals.splice(0));
+          if (session.kind === requestedMode()) continue;
+          // Keep the session's save capability alive until admitted checkpoint
+          // writes and revision-bound cleanup have finished.
+          await handoff.reset().catch(domainError);
+          domainSession = null;
+          freeplayInputs = null;
+          gameplay = null;
+          storyRelease = null;
+          storyCards = null;
+          storyMedia = null;
+          saves = null;
+          cardImages = null;
+          handback = null;
+          await session.close();
+          continue;
         }
-      })
+        if (target === null) return;
+        const controller = new AbortController();
+        opening = controller;
+        openingMode = target;
+        let acquired: SessionByMode[keyof SessionByMode];
+        try {
+          acquired = await app.acquire(target, controller.signal);
+        } catch (error) {
+          if (controller.signal.aborted) continue;
+          throw error;
+        } finally {
+          opening = null;
+          openingMode = null;
+        }
+        if (
+          controller.signal.aborted ||
+          application !== app ||
+          requestedMode() !== acquired.kind
+        ) {
+          await acquired.close();
+          continue;
+        }
+        domainSession = acquired;
+        applySession(acquired);
+        domainReady = true;
+      }
+    })()
       .catch((error: unknown) => {
-        closingSession = false;
         if (destroyed) console.warn("APP_DISPOSAL_FAILED");
         else recover(error);
-      });
-  }
-  function syncDomain(current: AppRoute, app: ShellApplication | null): void {
-    if (app === null) return; // Explicit fixture injection; production always uses application service.
-    if (
-      current.kind === "home" ||
-      current.kind === "install-content" ||
-      coreGate.kind !== "ready"
-    ) {
-      if (domainSession !== null || opening !== null) closeDomain();
-      return;
-    }
-    if (domainSession !== null || opening !== null) return;
-    const controller = new AbortController();
-    opening = controller;
-    void closing
-      .then(() => app.acquire(controller.signal))
-      .then(async (session) => {
-        if (controller.signal.aborted || opening !== controller) {
-          await session.close();
-          return;
-        }
-        opening = null;
-        domainSession = session;
-        applySession(session);
-        domainReady = true;
       })
-      .catch((error: unknown) => {
-        if (!controller.signal.aborted) {
-          opening = null;
-          recover(error);
-        }
+      .finally(() => {
+        closingSession = false;
+        syncDomain(requestedRoute, application, coreGate.kind === "ready");
       });
   }
   function recover(error: unknown): void {
@@ -259,13 +413,13 @@
   let duelDomain: ReturnType<DomainLoaders["duel"]> | null = null;
   const loadDuelDomain = (): ReturnType<DomainLoaders["duel"]> =>
     (duelDomain ??= loaders.duel());
-  let gameplay: ShellGameplay | null =
-    coreGate.kind === "ready" ? coreGate.gameplay : null;
-  let contentReader: ShellSession | null =
-    coreGate.kind === "ready" ? coreGate.reader : null;
+  let gameplay: ShellGameplay | null = null;
   let battleRuntimeSource: BattleRuntimeSource | null;
   let battlePresentation: BattlePresentationInput | null;
-  $: if (gameplay !== null) {
+  $: if (freeplayInputs !== null) {
+    battleRuntimeSource = freeplayInputs.battle;
+    battlePresentation = freeplayInputs.presentation;
+  } else if (gameplay !== null) {
     battleRuntimeSource = gameplay.battle;
     battlePresentation = gameplay.presentation;
   } else {
@@ -273,54 +427,6 @@
     battlePresentation = null;
   }
   let cardImages: CardImageSource | null = null;
-  let boundImageReader: ShellSession | null = null;
-  let boundImageGameplay: ShellGameplay | null = null;
-  let imageBindingToken = 0;
-  $: bindCardImages(contentReader, gameplay);
-
-  function bindCardImages(
-    reader: ShellSession | null,
-    installed: ShellGameplay | null,
-  ): void {
-    if (reader === boundImageReader && installed === boundImageGameplay) return;
-    boundImageReader = reader;
-    boundImageGameplay = installed;
-    cardImages = domainSession?.images ?? null;
-    const requested = ++imageBindingToken;
-    if (reader === null || installed === null) return;
-    const observedReasons: string[] = [];
-    void installed
-      .cardImages((status) => {
-        if (
-          requested !== imageBindingToken ||
-          observedReasons.includes(status.reason)
-        )
-          return;
-        observedReasons.push(status.reason);
-        console.warn({
-          event: "shell.card-images.missing-media",
-          reason: status.reason,
-        });
-        if (observedReasons.length === 1)
-          toasts.show({
-            message: "Some card images are unavailable. You can keep playing.",
-            tone: "warning",
-          });
-      })
-      .then(
-        (source) => {
-          if (requested !== imageBindingToken) return;
-          cardImages = source;
-        },
-        () => {
-          if (requested === imageBindingToken)
-            toasts.show({
-              message: "Card images are unavailable. You can keep playing.",
-              tone: "warning",
-            });
-        },
-      );
-  }
   /* Story progress is written by the shell only for the pre-duel checkpoint.
      The default reaches the repository through the visual novel's own lazy
      chunk, so `#/free-play` and its decks never load the story to hold it. */
@@ -358,8 +464,8 @@
       binding: StoryBinding,
     ) => openStorySaves().write(slot, state, expected, binding),
     list: async () => openStorySaves().list(),
-    clear: async (slot: StorySlotKey) => {
-      await openStorySaves().clear(slot);
+    clear: async (slot: StorySlotKey, expected?: number) => {
+      await openStorySaves().clear(slot, expected);
     },
   };
 
@@ -381,6 +487,7 @@
     readonly story: StoryBinding;
     readonly resolution: StoryDuelResolution | null;
   } | null = null;
+  let checkpointReadError: string | null = null;
   let sessionHandoffId: string | null = null;
   let sessionReady = false;
   /* The session the mounted duel belongs to. `syncSession` below runs as a
@@ -391,6 +498,12 @@
 
   const handoff = createHandoffCoordinator({
     saves: lazySaves,
+    onReadError: (result) => {
+      checkpointReadError =
+        result.kind === "corrupt"
+          ? `${result.slot}: ${result.reason}`
+          : `${result.slot}: save schema ${String(result.found)} is incompatible`;
+    },
     navigate: (target, options) => store.navigate(target, options),
     onResolution: (resolution) => {
       /* `onRestore` always ran first: a resolution can only exist for a duel
@@ -452,7 +565,11 @@
       const story = await import("../story/index.ts");
       if (gameplay === null) return null;
       if (storyCards === null) return null;
-      const deck = await story.encounterDeck(state, storyCards);
+      const deck = await story.encounterDeck(
+        state,
+        storyCards,
+        gameplay.editor().ruleset,
+      );
       /* The battle module is asked for second and only when there is a deck to
          seat with it: a checkpoint naming no fieldable deck must not pay for
          the largest chunk in the build to learn that. */
@@ -478,6 +595,17 @@
      can resume never becomes half a duel: `resume` sends it back to the story
      itself, and this region shows only that it is still looking. */
   function syncSession(current: AppRoute): void {
+    if (
+      current.kind === "duel-session" &&
+      application !== null &&
+      untrack(() => domainSession)?.kind !== "story"
+    ) {
+      sessionHandoffId = null;
+      sessionReady = false;
+      sessionRequest = null;
+      hostedHandoffId = null;
+      return;
+    }
     if (current.kind !== "duel-session") {
       sessionHandoffId = null;
       sessionReady = false;
@@ -522,7 +650,34 @@
   let route: AppRoute;
   let previousRoute: AppRoute | null = null;
   let storyEntryIntent: StoryEntryIntent | null = null;
+  let storyAutosaveRevision = 0;
   const unsubscribe = store.subscribe((state) => {
+    // Covers hash/back/keyboard/programmatic routes before Story reset or mode
+    // acquisition; button disabling alone cannot protect a destructive restore.
+    if (
+      (manualContent?.view.navigationBlocked === true ||
+        appUpdates?.view.phase === "committing") &&
+      state.route.kind !== "install-content"
+    ) {
+      store.navigate(INSTALL_CONTENT_ROUTE, { replace: true });
+      return;
+    }
+    if (
+      state.route.kind !== "install-content" &&
+      (appUpdates?.view.phase === "approving" ||
+        appUpdates?.view.phase === "checking")
+    )
+      appUpdates.cancel();
+    if (state.storyEntryIntent === "new" && storyEntryIntent !== "new") {
+      // Invalidate synchronously; observe and track cleanup without delaying
+      // publication of the newest route/entry behind an older async callback.
+      trackDisposal(handoff.reset().catch(domainError));
+      handback = null;
+      storyAutosaveRevision = 0;
+    }
+    if (state.route.kind !== "admin") adminSeedAbort?.abort();
+    if (state.route.kind !== "story" && state.route.kind !== "duel-session")
+      checkpointReadError = null;
     requestedRoute = state.route;
     previousRoute = state.previousRoute;
     storyEntryIntent = state.storyEntryIntent;
@@ -530,12 +685,12 @@
   /* Project the requested route before every reactive binding below. During the
      bootstrap check a direct gameplay hash already renders CORE; once failure is
      known, replace that unsafe history entry with the canonical installer. */
-  $: syncDomain(requestedRoute, application);
+  $: domainGateReady = coreGate.kind === "ready";
+  $: syncDomain(requestedRoute, application, domainGateReady);
   $: route =
     application !== null &&
-    !domainReady &&
-    requestedRoute.kind !== "home" &&
-    requestedRoute.kind !== "install-content" &&
+    routeMode(requestedRoute) !== null &&
+    (!domainReady || domainSession?.kind !== routeMode(requestedRoute)) &&
     coreGate.kind === "ready"
       ? HOME_ROUTE
       : routeForCoreGate(requestedRoute, coreGate);
@@ -577,12 +732,7 @@
   /* The same question for the collection, which is two routes over one screen
      for the same reason the editor is two over one: a save's cards and free
      play's database are the same browsing, over a different pool. */
-  $: collectionContext =
-    route.kind === "story-collection"
-      ? ("story" as const)
-      : route.kind === "free-play-collection"
-        ? ("free-play" as const)
-        : null;
+  $: collectionContext = collectionContextFor(route);
   $: bindCollection(collectionContext);
 
   function leaveMatch(): void {
@@ -605,7 +755,13 @@
         import("./screens/FreePlayMatchSetup.svelte"),
       ]);
       if (gameplay !== null)
-        listing.warmFreePlayDecks(loadDuelDomain, gameplay);
+        listing.warmFreePlayDecks(
+          loadDuelDomain,
+          gameplay.presentation,
+          users.createDeckRepository,
+          gameplay.editor().ruleset,
+          domainError,
+        );
     })().catch(domainError);
   }
 
@@ -624,9 +780,14 @@
   function bindDeckContext(world: RouteContext | null): void {
     if (world === boundDeckWorld) return;
     boundDeckWorld = world;
-    editorContext = world === "free-play" ? { kind: "free-play" } : null;
+    editorContext =
+      world === "free-play"
+        ? { kind: "free-play", createRepository: users.createDeckRepository }
+        : null;
     const requested = ++storyDeckToken;
     if (world !== "story") return;
+    if (application !== null && untrack(() => domainSession)?.kind !== "story")
+      return;
     void openStoryDeckContext().then(
       (bound) => {
         if (requested !== storyDeckToken) return;
@@ -661,7 +822,6 @@
     readonly context: RouteContext;
     readonly ownership: CardOwnership;
     readonly catalog: CollectionCatalog;
-    readonly images: ShellImageLibrary | null;
     readonly Screen: CollectionScreenComponent;
   }
 
@@ -672,16 +832,15 @@
   function bindCollection(world: RouteContext | null): void {
     if (world === boundCollectionWorld) return;
     boundCollectionWorld = world;
-    collection?.images?.dispose();
     collection = null;
     const requested = ++collectionToken;
     if (world === null) return;
+    const mode = world === "story" ? "story" : "freeplay";
+    if (application !== null && untrack(() => domainSession)?.kind !== mode)
+      return;
     void openCollection(world, requested).then(
       (opened) => {
-        if (requested !== collectionToken) {
-          opened?.images?.dispose();
-          return;
-        }
+        if (requested !== collectionToken) return;
         /* No save is loaded, so there is no collection to browse. The main menu
            is where a story route with nothing to show goes (ADR-051), and it is
            replaced rather than pushed because the player asked for their cards
@@ -696,6 +855,21 @@
           else recover(new Error("APP_REQUIRED_INPUT_FAILED"));
       },
     );
+  }
+
+  function collectionContextFor(current: AppRoute): RouteContext | null {
+    return current.kind === "story-collection"
+      ? "story"
+      : current.kind === "free-play-collection"
+        ? "free-play"
+        : null;
+  }
+
+  function refreshModeConsumers(): void {
+    boundDeckWorld = null;
+    bindDeckContext(deckRouteContext(requestedRoute));
+    boundCollectionWorld = null;
+    bindCollection(collectionContextFor(requestedRoute));
   }
 
   /** The pool a collection route browses, or `null` for a story route with no
@@ -719,51 +893,23 @@
       if (bound === null || bound.kind !== "story") return null;
       ownership = bound.ownership;
     }
-    /* The screen's chunk and the database read start together: neither needs
-       the other, and the region shows nothing until both have landed. */
-    if (gameplay === null) return null;
-    const reader = contentReader;
-    const installed = gameplay;
-    const [catalogResult, screenResult, imagesResult] =
-      await Promise.allSettled([
-        story.loadCollectionCatalog(installed.cards, installed.sets),
-        story.loadCollectionScreen(),
-        reader === null
-          ? Promise.resolve(null)
-          : installed.images().then((images) => {
-              if (requested !== collectionToken) {
-                images.dispose();
-                throw new Error("Collection closed");
-              }
-              return images;
-            }),
-      ]);
-    if (
-      catalogResult.status === "rejected" ||
-      screenResult.status === "rejected" ||
-      imagesResult.status === "rejected"
-    ) {
-      if (imagesResult.status === "fulfilled") imagesResult.value?.dispose();
-    }
-    if (catalogResult.status === "rejected") throw catalogResult.reason;
-    if (screenResult.status === "rejected") throw screenResult.reason;
-    if (imagesResult.status === "rejected") throw imagesResult.reason;
-    const catalog = catalogResult.value;
-    const Screen = screenResult.value;
-    const images = imagesResult.value;
-    return {
-      context: world,
-      ownership,
-      catalog: {
-        ...catalog,
-        cards: catalog.cards.map((card) => ({
-          ...card,
-          imageUrl: images?.cardUrls.get(card.code) ?? null,
-        })),
-      },
-      images,
-      Screen,
-    };
+    /* Collection keeps global search metadata in memory but leaves media on
+       injected CardImageSource. CardPreviewHost acquires only selected cards
+       and releases each lease on selection/navigation. */
+    const currentFreeplay = world === "free-play" && application !== null;
+    const definitions = currentFreeplay
+      ? freeplayInputs?.cards
+      : gameplay?.cards;
+    const sets = currentFreeplay
+      ? freeplayInputs?.collectionSets
+      : gameplay?.sets;
+    if (definitions === undefined || sets === undefined) return null;
+    const [catalog, Screen] = await Promise.all([
+      story.loadCollectionCatalog(definitions, sets),
+      story.loadCollectionScreen(),
+    ]);
+    if (requested !== collectionToken) return null;
+    return { context: world, ownership, catalog, Screen };
   }
 
   const readViewportBox = (): StageBox =>
@@ -795,19 +941,28 @@
         appBaseUrl,
         globalThis.indexedDB,
       )
-        .then((startup) => {
+        .then(async (startup) => {
           if (!mounted) {
-            startup.application?.close();
-            if (startup.gate.kind === "ready") startup.gate.reader?.close();
+            if (startup.dispose !== undefined) await startup.dispose();
+            else {
+              startup.application?.close();
+              await startup.userPersistence?.close();
+            }
             return;
           }
           application = startup.application ?? null;
-          contentActions = startup.contentActions ?? null;
+          appUpdates = startup.appUpdates ?? null;
+          disposeRoot = startup.dispose ?? null;
+          applicationStatus = startup.applicationStatus ?? { warnings: [] };
+          unsubscribeApplicationStatus?.();
+          unsubscribeApplicationStatus =
+            startup.subscribeApplicationStatus?.((status) => {
+              applicationStatus = status;
+              manualContent?.updateMediaWarnings(status.warnings);
+            }) ?? null;
+          if (startup.userPersistence !== undefined)
+            applyUserPersistence(startup.userPersistence);
           coreGate = startup.gate;
-          gameplay =
-            startup.gate.kind === "ready" ? startup.gate.gameplay : null;
-          contentReader =
-            startup.gate.kind === "ready" ? startup.gate.reader : null;
         })
         .catch(recover);
     }
@@ -834,6 +989,16 @@
     globalThis.addEventListener("error", syncFailure);
     const syncFromLocation = () => store.syncFromHash(globalThis.location.hash);
     globalThis.addEventListener("hashchange", syncFromLocation);
+    const protectRestore = (event: BeforeUnloadEvent): void => {
+      if (
+        manualContent?.view.navigationBlocked !== true &&
+        appUpdates?.view.phase !== "committing"
+      )
+        return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    globalThis.addEventListener("beforeunload", protectRestore);
     const syncVisibility = () => toasts.setPageHidden(document.hidden);
     document.addEventListener("visibilitychange", syncVisibility);
     syncVisibility();
@@ -853,23 +1018,40 @@
     return () => {
       mounted = false;
       destroyed = true;
+      adminSeedAbort?.abort();
       unsubscribeApplication?.();
-      unsubscribeContentActions?.();
+      unsubscribeApplicationStatus?.();
+      const updateDisposal = appUpdates?.dispose();
+      const manualDisposal = manualContent?.dispose();
       globalThis.removeEventListener("unhandledrejection", asyncFailure);
       globalThis.removeEventListener("error", syncFailure);
       closeDomain();
-      void closing.then(() => application?.close(), domainError);
-      imageBindingToken += 1;
+      void closing.then(async () => {
+        try {
+          // The seed action owns its short-lived session until flush/release.
+          // Its caller reports failure; teardown still must drain its settlement.
+          await Promise.allSettled(adminSeed === null ? [] : [adminSeed]);
+          await updateDisposal;
+          await manualDisposal;
+          await handoff.reset().catch(domainError);
+          if (disposeRoot !== null) await disposeRoot();
+          else {
+            application?.close();
+            await userPersistence?.close();
+          }
+        } catch (error) {
+          console.warn("USER_PERSISTENCE_CLOSE_FAILED", error);
+        }
+      }, domainError);
       observer?.disconnect();
       globalThis.removeEventListener("resize", measure);
       globalThis.removeEventListener("hashchange", syncFromLocation);
+      globalThis.removeEventListener("beforeunload", protectRestore);
       document.removeEventListener("visibilitychange", syncVisibility);
       toasts.destroy();
       unsubscribeStage();
       unsubscribe();
       collectionToken += 1;
-      collection?.images?.dispose();
-      contentReader?.close();
     };
   });
 </script>
@@ -898,10 +1080,18 @@
         {recoveryMessage}
       </p>
     {/if}
-    {#if contentActionsView !== null && contentActionsView.missingMedia > 0 && route.kind !== "install-content"}
-      <aside role="status" data-cy="optional-media-global-warning">
-        Optional media is missing. You can keep playing. {contentActionsView.missingMedia.toLocaleString()}
-        placeholder{contentActionsView.missingMedia === 1 ? "" : "s"} active.
+    {#if userPersistenceError !== null}
+      <p role="alert" data-cy="user-persistence-error">
+        User data is unavailable ({userPersistenceError}). Content navigation
+        remains available; changes will not be reported as saved.
+      </p>
+    {/if}
+    {#if applicationStatus.warnings.length > 0}
+      {@const warning = applicationStatus.warnings.at(-1)!}
+      <aside role="status" data-cy="optional-media-package-warning">
+        Optional media unavailable: {warning.packageId}/{warning.path} ({warning.reason}).
+        You can keep playing. {applicationStatus.warnings.length.toLocaleString()}
+        warning{applicationStatus.warnings.length === 1 ? "" : "s"} recorded.
       </aside>
     {/if}
     {#if route.kind === "home"}
@@ -911,6 +1101,9 @@
             saves={menuRepository}
             {store}
             {coreGate}
+            storyAvailable={coreGate.kind === "ready" &&
+              !(coreGate.missing ?? []).includes("chapter-01")}
+            freeplayAvailable={coreGate.kind === "ready"}
             onfreeplaywarm={warmFreePlay}
           />
         {/key}
@@ -925,7 +1118,11 @@
             <svelte:component
               this={module.default}
               gate={coreGate}
-              actions={contentActions}
+              {appUpdates}
+              manual={manualContent}
+              storageFailure={userPersistenceError === null
+                ? null
+                : { code: userPersistenceError }}
               onback={() => store.navigate(HOME_ROUTE)}
             />
           </svelte:boundary>
@@ -983,11 +1180,11 @@
             <p class="visually-hidden" data-cy="story-decks-pending">
               Opening your story decks
             </p>
-          {:else if gameplay !== null}
+          {:else if freeplayInputs !== null || gameplay !== null}
             {@const bound = editorContext}
             {@const installed = gameplay}
             {@const images = cardImages}
-            {#await Promise.all( [loaders.decks(), Promise.resolve(installed.editor(images ?? undefined))] ) then [module, catalogInput]}
+            {#await Promise.all( [loaders.decks(), Promise.resolve(freeplayInputs?.editor ?? installed!.editor(images ?? undefined))] ) then [module, catalogInput]}
               <svelte:boundary onerror={domainError}>
                 <svelte:component
                   this={module.default}
@@ -1026,8 +1223,8 @@
             <svelte:component
               this={module.default}
               {store}
-              {gameplay}
-              {saves}
+              seedDeck={seedAdminDeck}
+              {resetUserTarget}
             />
           </svelte:boundary>
         {:catch error}
@@ -1054,6 +1251,15 @@
                 {saves}
                 media={storyMedia}
                 imageSource={cardImages}
+                playbackSettingsPort={users.preferences.storyPlayback}
+                initialPlaybackSettings={initialStoryPlayback}
+                readLogPort={users.preferences.storyReadLog}
+                initialReadLog={initialStoryReadLog}
+                ruleset={gameplay!.editor().ruleset}
+                initialStorageError={checkpointReadError}
+                initialAutosaveRevision={storyAutosaveRevision}
+                onautosaverevision={(revision) =>
+                  (storyAutosaveRevision = revision)}
                 onencounter={startEncounter}
                 {storyEntryIntent}
                 ondecks={() => store.navigate(deckRoute("story", null))}
@@ -1074,12 +1280,15 @@
               {error}
             />
           {/await}
+        {:else if application !== null}
+          <p class="visually-hidden" data-cy="story-session-pending">
+            Opening Story
+          </p>
         {:else}
           <DomainLoadError
-            onerror={domainError}
             label="Visual novel"
             cy="story"
-            error={new Error("STORY_MIGRATION_FAILED")}
+            error={new Error("APP_REQUIRED_INPUT_FAILED")}
           />
         {/if}
       </div>
@@ -1100,13 +1309,18 @@
         class="shell-region shell-region--free-play"
         data-cy="shell-region-free-play-setup"
       >
-        {#if gameplay !== null}
+        {#if freeplayInputs !== null || gameplay !== null}
+          {@const freeplayPresentation =
+            freeplayInputs?.presentation ?? gameplay!.presentation}
           {#await import("./screens/FreePlayMatchSetup.svelte") then module}
             <svelte:boundary onerror={domainError}>
               <svelte:component
                 this={module.default}
-                {gameplay}
-                {settings}
+                presentation={freeplayPresentation}
+                ruleset={freeplayInputs?.editor.ruleset ??
+                  gameplay!.editor().ruleset}
+                settings={activeSettings}
+                createRepository={users.createDeckRepository}
                 loadBattle={loadDuelDomain}
                 onerror={domainError}
                 onstart={(request) => (matchRequest = request)}
@@ -1145,15 +1359,24 @@
                 this={module.BattleFacade}
                 runtimeSource={battleRuntimeSource}
                 presentation={battlePresentation}
+                ruleset={freeplayInputs?.editor.ruleset ??
+                  gameplay!.editor().ruleset}
                 imageSource={cardImages}
                 request={duelRequest}
                 hosted={route.kind === "duel-session"}
                 oncomplete={settleSession}
                 onfatal={domainError}
                 ondispose={trackDisposal}
+                createRepository={users.createDeckRepository}
+                persistedUiPort={users.preferences.battle}
+                initialPersistedUi={userPersistence?.hydrated.battle ??
+                  defaultPersistedUiState()}
+                initialPersistedUiPresent={userPersistence?.hydrated
+                  .battlePresent ?? false}
                 rotated={box.rotated}
-                rotationNoticeDismissed={$settings.rotationNoticeDismissed}
-                onrotationnoticedismiss={() => settings.dismissRotationNotice()}
+                rotationNoticeDismissed={$activeSettings.rotationNoticeDismissed}
+                onrotationnoticedismiss={() =>
+                  activeSettings.dismissRotationNotice()}
                 onleavematch={route.kind === "free-play" ? leaveMatch : null}
               />
             </svelte:boundary>

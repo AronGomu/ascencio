@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./asset-roots.ts";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import {
@@ -11,7 +11,6 @@ import {
   type SetupReport,
 } from "./content-setup.ts";
 import { validJpegFileSize } from "./images.ts";
-import { writeJsonAtomic } from "./run-lock.ts";
 import { json, readBounded, record } from "./content-setup-io.ts";
 import { inspectSetupRuntime } from "./content-setup-runtime.ts";
 import { inspectPrototypeDecks } from "./content-setup-decks.ts";
@@ -93,7 +92,7 @@ async function inspectAvailability(
   }
   const shop = await json(
     root,
-    "public/story/shop-sets.v1.json",
+    "assets/content/card-library/authoring/shop-sets.v1.json",
     MAX_SOURCE_BYTES,
   );
   const manifest = await json(
@@ -161,7 +160,7 @@ async function inspectAvailability(
     await Promise.all(
       [
         "src/story/content/prologue.ts",
-        `${ASSET_SOURCES.story.source}/chapter-01/city-map-placeholder.svg`,
+        `${ASSET_SOURCES.story.source}/city-map-placeholder.svg`,
       ].map(async (file) => {
         const bytes = await readBounded(root, file, MAX_SETUP_BYTES);
         return bytes !== null && bytes.length > 0;
@@ -185,17 +184,20 @@ export async function inspectContentSetup(
 ): Promise<SetupReport> {
   const source = await readBounded(
     root,
-    "content/authoring/card-set-source.json",
+    "assets/content/card-library/authoring/card-set-source.json",
     MAX_SOURCE_BYTES,
   );
   const corrections = await json(
     root,
-    "content/authoring/chapter-one-corrections.json",
+    "assets/content/chapter-01/authoring/chapter-one-corrections.json",
   );
-  const selections = await json(root, "content/chapter-selections.json");
+  const selections = await json(
+    root,
+    "assets/content/chapter-01/authoring/chapter-selections.json",
+  );
   const setMedia = await json(
     root,
-    "content/authoring/chapter-one-set-media.json",
+    "assets/content/chapter-01/authoring/chapter-one-set-media.json",
   );
   const setMediaSource = await readBounded(
     root,
@@ -205,10 +207,13 @@ export async function inspectContentSetup(
   return verifyContentSetup({
     source,
     corrections,
-    chapterPolicy: await json(root, "content/authoring/chapter-policy.json"),
+    chapterPolicy: await json(
+      root,
+      "assets/content/chapter-01/authoring/chapter-policy.json",
+    ),
     selections,
     distribution: await json(root, "content/distribution-evidence.json"),
-    setup: await json(root, "content/setup-evidence.json"),
+    setup: null,
     environment,
     availability: await inspectAvailability(
       root,
@@ -219,30 +224,4 @@ export async function inspectContentSetup(
       setMediaSource,
     ),
   });
-}
-
-export async function runContentSetup(
-  root: string,
-  args: readonly string[],
-  environment: Readonly<Record<string, string | undefined>>,
-): Promise<number> {
-  try {
-    if (args.length > 1 || (args.length === 1 && args[0] !== "--public")) {
-      console.error("Usage: npm run content:setup:verify [-- --public]");
-      return 1;
-    }
-    const report = await inspectContentSetup(root, environment);
-    await writeJsonAtomic(
-      path.join(root, "generated/content/setup-report.json"),
-      report,
-    );
-    console.log(JSON.stringify(report, null, 2));
-    return (args.includes("--public") ? report.publishReady : report.codeReady)
-      ? 0
-      : 2;
-  } catch {
-    // Never expose paths, environment values, parsed data, or exception messages.
-    console.error("Content setup verification failed unexpectedly.");
-    return 1;
-  }
 }

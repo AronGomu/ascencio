@@ -1,18 +1,18 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
 import LoadDeckDialog from "../../../src/deck-editor/components/LoadDeckDialog.svelte";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import {
-  IndexedDbDeckRepository,
-  type DeckRepository,
-} from "../../../src/decks/repository/index.ts";
+import { type DeckRepository } from "../../../src/decks/repository/index.ts";
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
@@ -34,10 +34,9 @@ import {
 } from "../../../src/decks/contracts/index.ts";
 import { stateFixture } from "../../fixtures/deck-editor.ts";
 
-const dbNames: string[] = [];
 afterEach(async () => {
   cleanup();
-  await Promise.all(dbNames.splice(0).map((name) => deleteDB(name)));
+  await disposeTestDeckRepositories();
 });
 
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
@@ -166,8 +165,7 @@ describe("load dialog", () => {
 
   it("choosing an autosave restores its card list into the deck", async () => {
     const name = "load-dialog-restore";
-    dbNames.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalog,
@@ -190,7 +188,7 @@ describe("load dialog", () => {
     await controller.undo();
     expect(get(controller).current!.deck.main).not.toEqual(entry.main);
 
-    repo.close();
+    await repo.close();
   });
 
   it("opening the dialog moves focus into it", async () => {
@@ -299,8 +297,7 @@ describe("load dialog", () => {
 
   it("restoring an autosave of a deleted deck recreates it", async () => {
     const name = "load-dialog-deleted";
-    dbNames.push(name);
-    const repo = await IndexedDbDeckRepository.open(name);
+    const repo = await openTestDeckRepository(name);
     const controller = new DeckBuilderController(
       repo,
       catalog,
@@ -325,6 +322,6 @@ describe("load dialog", () => {
     expect(current.deck.main).toEqual(entry.main);
     expect(current.deck.id).not.toBe(deletedId);
 
-    repo.close();
+    await repo.close();
   });
 });

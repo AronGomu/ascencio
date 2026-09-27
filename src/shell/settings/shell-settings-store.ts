@@ -1,8 +1,10 @@
 import { writable, type Readable } from "svelte/store";
+import type {
+  AsyncPreferencePort,
+  StorageFailure,
+} from "../../storage/index.ts";
 import {
   DEFAULT_SHELL_SETTINGS,
-  readShellSettings,
-  writeShellSettings,
   type FreePlayPairing,
   type ShellSettings,
 } from "./shell-settings.ts";
@@ -13,50 +15,23 @@ export interface ShellSettingsStore extends Readable<ShellSettings> {
   rememberFreePlayOpponent(id: string): void;
 }
 
-/* Every setter rebases on persisted state before writing the complete state,
-   and a storage failure never interrupts navigation. */
 export function createShellSettingsStore(
-  storage: Pick<Storage, "getItem" | "setItem"> | null = defaultStorage(),
+  initial: ShellSettings = DEFAULT_SHELL_SETTINGS,
+  persistence: AsyncPreferencePort<ShellSettings> | null = null,
+  onFailure: (error: StorageFailure) => void = (error) =>
+    console.warn("USER_PERSISTENCE_FAILED", error),
 ): ShellSettingsStore {
-  const { subscribe, update } = writable<ShellSettings>(
-    storage === null ? DEFAULT_SHELL_SETTINGS : readShellSettings(storage),
-  );
-
-  // Retain only local mutations until a write succeeds, not a stale snapshot.
-  let pending: Partial<ShellSettings> = {};
+  const { subscribe, update } = writable<ShellSettings>(initial);
 
   function persist(patch: Partial<ShellSettings>): void {
-    pending = { ...pending, ...patch };
-    update((state) => {
-      let current = state;
-      if (storage !== null) {
-        let readFailed = false;
-        const persisted = readShellSettings({
-          getItem(key): string | null {
-            try {
-              return storage.getItem(key);
-            } catch {
-              readFailed = true;
-              return null;
-            }
-          },
-        });
-        if (!readFailed) current = persisted;
-      }
-      const value = Object.freeze({ ...current, ...pending });
-      if (storage !== null) {
-        writeShellSettings(
-          {
-            setItem(key, serialized): void {
-              storage.setItem(key, serialized);
-              pending = {};
-            },
-          },
-          value,
-        );
-      }
-      return value;
-    });
+    update((state) => Object.freeze({ ...state, ...patch }));
+    if (persistence === null) return;
+    void persistence.update(patch).then(
+      (result) => {
+        if (result.kind === "failed") onFailure(result.error);
+      },
+      () => onFailure({ code: "STORAGE_UNAVAILABLE" }),
+    );
   }
 
   return {
@@ -71,12 +46,4 @@ export function createShellSettingsStore(
       persist({ freePlayOpponentId: id });
     },
   };
-}
-
-function defaultStorage(): Storage | null {
-  try {
-    return globalThis.localStorage ?? null;
-  } catch {
-    return null;
-  }
 }

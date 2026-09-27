@@ -1,10 +1,7 @@
 <script lang="ts">
   import { getContext, onMount } from "svelte";
   import type { BattleRequest, SelectableDeck } from "../../battle/index.ts";
-  import type {
-    ShellGameplay,
-    ShellImageLibrary,
-  } from "../core/installed-inputs.ts";
+  import type { BattlePresentationInput } from "../../battle/ports/index.ts";
   import {
     DeckSelectScreen,
     type DecklistRow,
@@ -12,10 +9,13 @@
     type OpponentView,
   } from "../../deck-select/index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
-  import { catalogByCode } from "../../decks/validation/index.ts";
+  import {
+    catalogByCode,
+    type PinnedDeckRuleset,
+  } from "../../decks/validation/index.ts";
   import { CARD_FRAME_COLORS, cardFrameOf } from "../../cards/index.ts";
   import { croppedCardImageUrl } from "../cards/deck-cover.ts";
-  import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
+  import type { DeckRepository } from "../../decks/repository/index.ts";
   import type {
     BattleDeckModule,
     BattleDomainLoader,
@@ -45,8 +45,12 @@
   } from "../toast/toast-context.ts";
   import DomainLoadError from "./DomainLoadError.svelte";
 
-  export let gameplay: ShellGameplay;
+  export let presentation: BattlePresentationInput;
+  export let ruleset: PinnedDeckRuleset;
   export let settings: ShellSettingsStore;
+  export let createRepository: () => DeckRepository = () => {
+    throw new Error("USER_DATA_UNAVAILABLE");
+  };
   /* The battle entry, loaded rather than imported: it also exports the duel,
      and a static import here would make the largest chunk in the build eager.
      Typed to the deck half of that entry, so this screen cannot mount a duel —
@@ -69,7 +73,7 @@
      until the packaged database answers, which is a fetch the seats never wait
      on: a tile with no cover draws its own placeholder. */
   let catalog: ReadonlyMap<number, DeckBuilderCardView> = catalogByCode(
-    gameplay.presentation.cards,
+    presentation.cards,
   );
   let defaultDeckId: string | null = null;
   let playerKey = "";
@@ -88,7 +92,7 @@
   let loadError: unknown = null;
   const toasts = getContext<ToastPublisher | undefined>(TOAST_CONTEXT_KEY);
   const INSTALLED_OPEN_REFUSAL = "Installed chapter deck: cannot be modified";
-  const opponents = installedFreePlayOpponents(gameplay);
+  const opponents = installedFreePlayOpponents(presentation);
 
   /* Only exclusive roster ownership belongs on a tile. Shared decks remain
      read-only without falsely naming one of their personas as owner. */
@@ -105,7 +109,7 @@
   $: ready = battle !== null;
   $: persona = freePlayOpponent(
     opponents,
-    gameplay.defaults.opponentId,
+    presentation.defaults.opponentId,
     $settings.freePlayOpponentId,
   );
   $: tiles = decks.map((deck) =>
@@ -133,33 +137,11 @@
 
   onMount(() => {
     let cancelled = false;
-    const imagesAbort = new AbortController();
-    let images: ShellImageLibrary | null = null;
     const alive = () => !cancelled;
     void loadListing(alive);
     void loadLibraryFlags(alive);
-    void gameplay.images(imagesAbort.signal).then(
-      (loaded) => {
-        if (cancelled) {
-          loaded.dispose();
-          return;
-        }
-        images = loaded;
-        catalog = catalogByCode(
-          gameplay.presentation.cards.map((card) => ({
-            ...card,
-            imageUrl: loaded.cardUrls.get(card.code) ?? null,
-          })),
-        );
-      },
-      (error: unknown) => {
-        if (!cancelled) loadError = error;
-      },
-    );
     return () => {
       cancelled = true;
-      imagesAbort.abort();
-      images?.dispose();
     };
   });
 
@@ -171,8 +153,13 @@
       /* Whatever is already known, so the seats fill on the first paint: the
          listing this page last read, or the bundled decks alone, which are
          compiled into this build and need no read at all. */
-      adoptDecks(loaded, listedFreePlayDecks(gameplay) ?? []);
-      const listed = await refreshFreePlayDecks(loadBattle, gameplay);
+      adoptDecks(loaded, listedFreePlayDecks(presentation, ruleset) ?? []);
+      const listed = await refreshFreePlayDecks(
+        loadBattle,
+        presentation,
+        createRepository,
+        ruleset,
+      );
       if (!alive()) return;
       adoptDecks(loaded, listed);
     } catch (error) {
@@ -183,15 +170,12 @@
   /* Default deck comes from the local library. Failure costs its mark, not the
      match: installed chapter decks remain available from gameplay input. */
   async function loadLibraryFlags(alive: () => boolean): Promise<void> {
-    let repository: IndexedDbDeckRepository | null = null;
     try {
-      repository = await IndexedDbDeckRepository.open();
-      const preferred = await repository.getDefaultDeck();
+      const preferred = await createRepository().getDefaultDeck();
       if (alive()) defaultDeckId = preferred;
-    } catch {
-      // No default; decks themselves remain listed.
-    } finally {
-      repository?.close();
+    } catch (error) {
+      if (alive())
+        manageError = `Default deck could not be read: ${error instanceof Error ? error.message : "Unknown error"}`;
     }
   }
 
@@ -211,7 +195,7 @@
       loaded,
       listed,
       [playerKey, remembered?.player],
-      `chapter:${gameplay.defaults.starterDeckId}`,
+      `chapter:${presentation.defaults.starterDeckId}`,
     );
     /* The opponent's own deck is the persona's, so the seat falls back to
        whichever AI the player last faced rather than to a fixed preset. */
@@ -275,7 +259,12 @@
     manageError = null;
     try {
       await write();
-      return await refreshFreePlayDecks(loadBattle, gameplay);
+      return await refreshFreePlayDecks(
+        loadBattle,
+        presentation,
+        createRepository,
+        ruleset,
+      );
     } catch (error) {
       manageError = `${refusal}: ${error instanceof Error ? error.message : "Unknown error"}`;
       return null;
@@ -286,7 +275,7 @@
     startError = null;
     manageError = null;
     try {
-      defaultDeckId = await setDefaultLocalDeck(key);
+      defaultDeckId = await setDefaultLocalDeck(createRepository, key);
     } catch (error) {
       manageError = `Default deck could not be set: ${error instanceof Error ? error.message : "Unknown error"}`;
     }
@@ -296,7 +285,7 @@
     const loaded = battle;
     if (loaded === null) return;
     const listed = await manage(
-      () => renameLocalDeck(key, name),
+      () => renameLocalDeck(createRepository, key, name),
       "Deck could not be renamed",
     );
     if (listed === null) return;
@@ -318,11 +307,13 @@
     const listed = await manage(
       () =>
         duplicateLocalDeck(
+          createRepository,
           key,
           source.source === "chapter"
             ? { name: source.label, lists: source.lists }
             : undefined,
           [...catalog.values()],
+          ruleset,
         ),
       "Deck could not be duplicated",
     );
@@ -338,7 +329,7 @@
     const loaded = battle;
     if (loaded === null) return;
     const listed = await manage(
-      () => deleteLocalDeck(key),
+      () => deleteLocalDeck(createRepository, key),
       "Deck could not be deleted",
     );
     if (listed === null) return;
@@ -396,7 +387,7 @@
        duel, which is a choice about this match rather than about the roster. */
     opponentKey = freePlayOpponent(
       opponents,
-      gameplay.defaults.opponentId,
+      presentation.defaults.opponentId,
       id,
     ).deckKey;
     seat = "player";

@@ -1,14 +1,10 @@
 export type { DeckRepository } from "../deck-repository.ts";
-export { IndexedDbDeckRepository } from "../indexeddb-deck-repository.ts";
+export { createSqliteDeckRepository } from "../sqlite-deck-repository.ts";
 export {
   DeckStorageError,
   DeckRevisionConflictError,
 } from "../deck-storage-errors.ts";
-export {
-  DeckMigrationError,
-  DECK_DATABASE_NAME,
-  MAXIMUM_DECK_AUTOSAVES,
-} from "../deck-database.ts";
+export { MAXIMUM_DECK_AUTOSAVES } from "../deck-autosave.ts";
 export {
   resolveDeckRepository,
   type DeckContext,

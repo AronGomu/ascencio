@@ -14,22 +14,22 @@ status: implemented
 
 ## Purpose
 
-Create one atomic, versioned browser snapshot containing all data required by the offline duel client while keeping generated third-party data out of Git.
+Acquire and verify producer inputs under package-owned roots while keeping generated third-party data out of Git. This pipeline does not build, publish, serve, or activate browser content.
 
-The complete, resumable command is implemented in `scripts/download-mvp-assets.ts`. It orchestrates the pinned WebAssembly engine package, catalog/script/string importer, card-image downloader, and all integrity verifiers. Windows and Unix launchers are provided at the project root.
+The resumable command remains `scripts/download-mvp-assets.ts`. It orchestrates pinned engine acquisition diagnostics, catalog/script/string import, card-image downloads, and integrity verifiers. Current routing comes from `scripts/lib/asset-roots.ts:PACKAGE_ASSET_SOURCES`; frozen `vendor/ocgcore-wasm/0.1.2/` remains authoritative and is copied only by package producer.
 
-Canonical source map: `scripts/lib/asset-roots.ts`. [Profiles and copy-only migration](asset-profiles.md) preserve browser URLs; vendor remains frozen and authoritative.
+[Manual SQLite setup](manual-sqlite-setup.md) owns package export/verification. [Profiles and copy-only migration](asset-profiles.md) are retained local source tools only. [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md) retires hosted/ZIP/progressive player delivery.
 
 ## Sources
 
-| Asset | Source |
-|---|---|
-| Duel engine and TypeScript adapter | Pinned npm package `ocgcore-wasm@0.1.2`, including `lib/ocgcore.sync.wasm` |
-| Standard-format metadata/text | `ProjectIgnis/BabelCDB` → `cards.cdb`, `release-*.cdb`, and non-Rush `prerelease-*.cdb` |
-| Official and prerelease effects | `ProjectIgnis/CardScripts` → `official/c<ID>.lua` and `pre-release/c<ID>.lua` |
-| Global/procedure scripts | Root Lua files from `ProjectIgnis/CardScripts` |
-| English system strings | `ProjectIgnis/Distribution` → `config/strings.conf` |
-| Card image locations | YGOPRODeck image URL convention, recorded as a provider manifest |
+| Asset                              | Source                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| Duel engine and TypeScript adapter | Pinned npm package `ocgcore-wasm@0.1.2`, including `lib/ocgcore.sync.wasm`              |
+| Standard-format metadata/text      | `ProjectIgnis/BabelCDB` → `cards.cdb`, `release-*.cdb`, and non-Rush `prerelease-*.cdb` |
+| Official and prerelease effects    | `ProjectIgnis/CardScripts` → `official/c<ID>.lua` and `pre-release/c<ID>.lua`           |
+| Global/procedure scripts           | Root Lua files from `ProjectIgnis/CardScripts`                                          |
+| English system strings             | `ProjectIgnis/Distribution` → `config/strings.conf`                                     |
+| Card image locations               | YGOPRODeck image URL convention, recorded as a provider manifest                        |
 
 Each Git source is fetched into `.cache/upstream`, checked out at a concrete commit, and recorded in the generated manifest. Generation happens outside the live output directory, is independently verified, and keeps a recoverable previous directory during publication.
 
@@ -52,7 +52,7 @@ download and integrity-check pinned ocgcore-wasm package
 → hash every generated artifact
 → write manifest.json
 → independently verify the staging snapshot
-→ recoverably replace assets/shared/data/current
+→ write verified package inputs under assets/content/** and generated/content-inputs/**
 ```
 
 ## Card normalization
@@ -94,8 +94,8 @@ https://images.ygoprodeck.com/images/cards_cropped/<ID>.jpg
 `npm run assets:images` downloads full-card JPEGs; `npm run assets:images:cropped` downloads text-free artwork crops into sibling resumable archives:
 
 ```text
-assets/shared/card-images/full/<ID>.jpg
-assets/shared/card-images/cropped/<ID>.jpg
+assets/content/card-library/images/full/<ID>.jpg
+assets/content/card-library/images/cropped/<ID>.jpg
 ```
 
 For browser-build work that only needs bundled preset decks, `npm run assets:images:cropped:active` acquires their cropped art without downloading the complete catalog.
@@ -104,13 +104,13 @@ The downloader respects YGOPRODeck's documented 20-request/second ceiling, valid
 
 The initial completed archive contains 14,579 valid full-card images (about 2.37 GB). YGOPRODeck returned HTTP 404 for 215 IDs, mostly simulator-specific, alternate, legacy or prerelease records. Those IDs are explicitly recorded and require a placeholder or a second approved provider.
 
-The future browser loader will:
+Current package path:
 
-1. resolve all unique IDs in the active decks;
-2. serve locally archived/re-hosted images rather than continually hotlinking YGOPRODeck;
-3. preload those images before enabling duel input;
-4. use card backs for hidden cards;
-5. use a deterministic missing-image placeholder for the 215 unresolved IDs.
+1. I1. Producer includes available media BLOBs in immutable `card-library` package and reports omissions.
+2. I2. Browser imports package locally; no YGOPRODeck or package-host fetch occurs.
+3. I3. SQLite Worker returns requested image bytes on demand through bounded URL leases.
+4. I4. Hidden cards use card back without identity-revealing reads.
+5. I5. Missing optional media renders deterministic placeholder plus visible warning.
 
 The images and generated data remain ignored by Git because committing approximately 2.4 GB of third-party artwork would make the source repository impractical and does not resolve redistribution rights.
 
@@ -179,22 +179,20 @@ node scripts/sync-assets.ts \
 
 ```text
 assets/
-├── battle/engine/current/       # Legacy acquired package, not browser authority
-├── deck-editor/                # Optional domain-specific originals
-├── story/                      # Tracked map SVG/provenance; other originals allowed
-└── shared/
-    ├── data/current/           # manifest, catalog, scripts, strings, image metadata
-    ├── runtime/current/        # Runtime manifest
-    ├── card-images/{full,cropped}/
-    ├── card-back.jpg
-    ├── set-images/             # JPEGs + provenance manifest
-    └── fonts/                  # Tracked core font files
-generated/                      # Reports, receipts, locks, delivery outputs
-.cache/upstream/                # Explicit acquisition caches
-asset-profiles/                 # Tracked delivery rules + nightly selection
+├── app/                        # app icon + optional external download-link metadata
+└── content/
+    ├── duel-core/              # strings/config inputs; frozen vendor remains separate
+    ├── card-library/           # global data/scripts/images/sets inputs
+    ├── freeplay/               # standalone decks/opponents/limits/config
+    └── chapter-01/             # story/decks/opponents/limits/media
+generated/
+├── acquisition/               # acquired non-authoritative engine + reports
+├── content-inputs/             # derived data/runtime manifests
+└── content-packages/           # immutable SQLite release output; never app-served
+.cache/upstream/                # acquisition caches
 ```
 
-Downloaded source families remain ignored by Git. Fonts/story provenance remain tracked. Operational card-image download reports remain under `generated/card-images/archive/`; they are not source bytes or a prerequisite of pure inventory. Publication still requires explicit redistribution approval; no automatic publishing is introduced.
+Downloaded source families remain ignored by Git. Operational reports are diagnostics, not app assets or activation receipts. Public package export/upload still requires complete sources, explicit redistribution approval, immutable identity, owner links, and manual acceptance; no automatic publishing exists.
 
 ## Integrity guarantees
 
@@ -223,9 +221,9 @@ npm run assets:lock
 
 Entries and keys are ordered by content alone, so the resulting diff shows the art whose bytes moved and nothing else.
 
-## Local delivery bundles
+## Retired delivery generations
 
-Deterministic dev/player export is separate from acquisition and semantic verification. See [local asset bundles](asset-delivery-bundles.md) for producer commands, frozen object/history/core handoffs, limits, and owner-run large-file evidence requirements.
+Hosted dev/player ZIP/object bundles are retired. [`asset-delivery-bundles.md`](asset-delivery-bundles.md) remains historical rationale only. Current output is immutable SQLite via `content:export`; app never consumes acquisition roots directly.
 
 ## First successful snapshot
 

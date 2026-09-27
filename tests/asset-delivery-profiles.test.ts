@@ -36,7 +36,6 @@ const selection = {
   schemaVersion: 1 as const,
   profiles: ["core", "runtime", "chapter-01"] as const,
 };
-const history = { schemaVersion: 1 as const, catalogs: [], manifests: [] };
 const digest = (bytes: string | Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 async function put(root: string, file: string, bytes: string | Uint8Array) {
@@ -69,7 +68,7 @@ const rule = (
   kind: "file" | "tree" = "tree",
   logicalPath = "story/media/chapter-01",
 ): AssetRule => ({ root: "story", path, kind, logicalPath });
-const scan = (root: string) => scanAssets(root, selection, history, null);
+const scan = (root: string) => scanAssets(root, selection);
 
 // Defining invariants: all bytes, copy-only migration, rule-only promotion.
 test("New unused file: ignored originals remain dev-only without media decoding", async (t) => {
@@ -198,12 +197,10 @@ test("Broken reference: check fails explicit missing file; pure scan omits; miss
 test("DAG: dependencies selected explicitly, unused profiles excluded, cycles/missing deps invalid", async (t) => {
   const root = await fixture(t);
   await profile(root, "chapter-02", [], ["chapter-01"]);
-  const inventory = await scanAssets(
-    root,
-    { schemaVersion: 1, profiles: ["chapter-02"] },
-    history,
-    null,
-  );
+  const inventory = await scanAssets(root, {
+    schemaVersion: 1,
+    profiles: ["chapter-02"],
+  });
   assert.deepEqual(inventory.selection.profiles, [
     "chapter-01",
     "chapter-02",
@@ -220,14 +217,8 @@ test("DAG: dependencies selected explicitly, unused profiles excluded, cycles/mi
   await profile(root, "chapter-03", [], ["chapter-01"]);
   await profile(root, "chapter-04", [], ["chapter-02", "chapter-03"]);
   assert.deepEqual(
-    (
-      await scanAssets(
-        root,
-        { schemaVersion: 1, profiles: ["chapter-04"] },
-        history,
-        null,
-      )
-    ).selection.profiles,
+    (await scanAssets(root, { schemaVersion: 1, profiles: ["chapter-04"] }))
+      .selection.profiles,
     ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "runtime"],
   );
   await profile(root, "runtime", [], ["chapter-01"]);
@@ -710,79 +701,6 @@ test("Public command runners exercise real fixture sync/migrate/promote outputs,
     const invalid = invoke("promotion-cli", "runPromotion", args);
     assert.equal(invalid.status, 2);
     assert.equal(JSON.parse(invalid.stdout).code, "ASSET_ARGUMENT_INVALID");
-  }
-});
-
-test("Dev Vite serves core font URLs and imported SVG only, never original source trees", async (t) => {
-  const { createServer } = await import("vite");
-  const { sourceAssetsPlugin } =
-    await import("../scripts/lib/vite-source-assets.ts");
-  const root = await fixture(t);
-  await profile(root, "core", [
-    {
-      root: "shared",
-      path: "fonts/test.woff2",
-      kind: "file",
-      logicalPath: "fonts/test.woff2",
-    },
-  ]);
-  await put(root, "assets/shared/fonts/test.woff2", "font-bytes");
-  await put(root, "assets/story/original.psd", "private-original");
-  await put(root, "generated/assets/current/original.psd", "private-original");
-  await put(
-    root,
-    "assets/story/chapter-01/city-map-placeholder.svg",
-    "<svg></svg>",
-  );
-  const server = await createServer({
-    configFile: false,
-    root,
-    logLevel: "silent",
-    server: { host: "127.0.0.1", port: 0 },
-    plugins: [sourceAssetsPlugin(root)],
-  });
-  try {
-    await server.listen();
-    const address = server.httpServer!.address();
-    assert.ok(address && typeof address !== "string");
-    const base = `http://127.0.0.1:${address.port}`;
-    const font = await fetch(`${base}/fonts/test.woff2`);
-    assert.equal(font.status, 200);
-    assert.equal(await font.text(), "font-bytes");
-    assert.equal(
-      (await fetch(`${base}/assets/story/chapter-01/city-map-placeholder.svg`))
-        .status,
-      200,
-    );
-    for (const url of [
-      "//assets/story/original.psd",
-      "/assets%2Fstory%2Foriginal.psd",
-      "/generated/assets/current/original.psd",
-      "/assets/story/original.psd",
-      `/@fs/${root}/assets/story/original.psd`,
-      `/@fs/${root.replace(/^\//, "")}/assets/story/original.psd`,
-      "/assets/shared/fonts/test.woff2",
-      "/fonts/unknown.woff2",
-    ]) {
-      const response = await fetch(base + url);
-      assert.equal(response.status, 404, url);
-      assert.notEqual(await response.text(), "private-original");
-    }
-    await put(root, "private.txt", "private-original");
-    await unlink(
-      path.join(root, "assets/story/chapter-01/city-map-placeholder.svg"),
-    );
-    await symlink(
-      path.join(root, "private.txt"),
-      path.join(root, "assets/story/chapter-01/city-map-placeholder.svg"),
-    );
-    const linked = await fetch(
-      `${base}/assets/story/chapter-01/city-map-placeholder.svg`,
-    );
-    assert.equal(linked.status, 404);
-    assert.notEqual(await linked.text(), "private-original");
-  } finally {
-    await server.close();
   }
 });
 test("Frozen vendor authority: only exact tracked WASM/manifest copied into prepared inventory", async (t) => {

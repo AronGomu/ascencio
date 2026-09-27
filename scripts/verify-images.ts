@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -48,7 +48,10 @@ for (let shard = 0; shard < CATALOG_SHARD_COUNT; shard += 1) {
 }
 for (const code of collectShopCodes(
   await readFile(
-    path.join(projectRoot, "public/story/shop-sets.v1.json"),
+    path.join(
+      projectRoot,
+      "assets/content/card-library/authoring/shop-sets.v1.json",
+    ),
     "utf8",
   ),
 )) {

@@ -17,19 +17,19 @@ and the same `#/story` route.
 ## Boundaries
 
 - Public contract is `index.ts`: the domain root component, `StoryState`,
-  `EncounterId`, and the save store (`createStorySaveRepository` plus its
-  types and the database name). Nothing outside `src/story/` deep-imports past
-  it.
+  `EncounterId`, and the injected `GenerationSaveRepository` contract. The
+  pure `saves/index.ts` entry exposes `createSqliteStoryRepository` and schema-6
+  envelope validation; the shell supplies the shared SQLite user-data owner.
 - The domain imports no production duel domain (`app`, `duel`, `field`,
   `storage`, `worker`); `tests/unit/story/story-boundaries.test.ts` enforces it.
 - `styles.css` is scoped to `.story-app` so it cannot repaint the duel or deck
   editor that the shell mounts in the same document.
-- Progress lives in the `ygo-story-saves` IndexedDB, one record per slot:
-  `manual:1`–`manual:3`, `autosave`, and `checkpoint:pre-duel` for the duel
-  handoff. Each record is a versioned envelope; a record this build cannot
-  parse reads as "no save" instead of failing the mount. The developer console
-  at `#/admin` resets the database. Prototype progress written under the old
-  key is not migrated.
+- Progress lives in the shared SQLite user-data store's `story` namespace,
+  one schema-6 envelope per slot: `manual:1`–`manual:3`, `autosave`, and
+  `checkpoint:pre-duel`. Writes use revision checks; checkpoint cleanup must
+  match its owned revision. Unreadable or incompatible saves report failure,
+  not an empty save. New Game does not depend on reading old saves. Legacy
+  IndexedDB stores are not opened, migrated, or deleted.
 
 ## Known limits
 

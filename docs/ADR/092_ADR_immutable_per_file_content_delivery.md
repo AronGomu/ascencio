@@ -1,6 +1,8 @@
 # ADR-092: Immutable per-file release delivery replaces player ZIPs
 
 > Status: accepted; implemented
+> Amended by [ADR-095](095_ADR_manual_sqlite_package_delivery.md) D1–D5: manual versioned SQLite files replace D1–D4 remote manifests/per-file publication; immutable bytes, corruption checks and public-rights safeguards remain.
+> Superseded for current delivery by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D1–D2/D5. Remote per-file body is historical.
 > Decided: 2026-09-13
 > Owners: content producer / release infrastructure
 > Amends: ADR-075 D1,D3–D4; ADR-080 D1–D2; ADR-082 D2,D5–D7 for player releases only

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "opponent",
+    "name": "Opponent",
+    "line": "Ready",
+    "deckId": "starter",
+    "policyId": "basic"
+  }
+]

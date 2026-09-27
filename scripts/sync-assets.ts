@@ -1,5 +1,13 @@
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
-import { readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -191,7 +199,33 @@ try {
     emitStage("verification", "ok");
 
     emitStage("publish", "start");
-    await replaceDirectoryRecoverably(staging, destination);
+    if (options.splitPackageRoots) {
+      const stringsDestination = path.join(
+        projectRoot,
+        ASSET_SOURCES.strings.source,
+      );
+      const manifestDestination = path.join(
+        projectRoot,
+        path.dirname(ASSET_SOURCES.dataManifest.source),
+      );
+      const stringsStaging = `${stringsDestination}.staging-${process.pid}`;
+      const manifestStaging = `${manifestDestination}.staging-${process.pid}`;
+      await rm(stringsStaging, { recursive: true, force: true });
+      await rm(manifestStaging, { recursive: true, force: true });
+      await rename(path.join(staging, "strings"), stringsStaging);
+      await mkdir(manifestStaging, { recursive: true });
+      await rename(
+        path.join(staging, "manifest.json"),
+        path.join(manifestStaging, "manifest.json"),
+      );
+      await rename(
+        path.join(staging, "manifest.sha256"),
+        path.join(manifestStaging, "manifest.sha256"),
+      );
+      await replaceDirectoryRecoverably(staging, destination);
+      await replaceDirectoryRecoverably(stringsStaging, stringsDestination);
+      await replaceDirectoryRecoverably(manifestStaging, manifestDestination);
+    } else await replaceDirectoryRecoverably(staging, destination);
     emitStage("publish", "ok", { destination });
 
     console.log(
@@ -233,6 +267,7 @@ interface Options {
   babelRef: string;
   scriptsRef: string;
   distributionRef: string;
+  splitPackageRoots: boolean;
 }
 
 function parseOptions(args: string[], lock: AssetSourceLock): Options {
@@ -284,6 +319,7 @@ function parseOptions(args: string[], lock: AssetSourceLock): Options {
     babelRef,
     scriptsRef,
     distributionRef,
+    splitPackageRoots: !values.has("--output"),
   };
 }
 

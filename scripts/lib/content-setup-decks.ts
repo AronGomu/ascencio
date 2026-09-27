@@ -19,12 +19,9 @@ export async function inspectPrototypeDecks(
     DECK_CATALOG.some(({ fileName }) => !/^[a-z0-9-]+\.ydk$/.test(fileName))
   )
     return false;
-  for (const relative of [
-    ...DECK_CATALOG.map(
-      ({ fileName }) => `src/battle/duel/presets/decks/${fileName}`,
-    ),
-    "src/decks/chapter-one-starter.ydk",
-  ]) {
+  for (const relative of DECK_CATALOG.map(
+    ({ fileName }) => `assets/content/chapter-01/decks/${fileName}`,
+  )) {
     const bytes = await readBounded(root, relative, MAX_SETUP_BYTES);
     if (bytes === null) return false;
     try {

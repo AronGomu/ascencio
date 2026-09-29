@@ -1,8 +1,12 @@
+import { preBattleDeckOptions } from "../../../src/story/decks/pre-battle-decks.ts";
 import { afterEach, describe, expect, it } from "vitest";
-import { catalogByCode } from "../../../src/decks/validation/index.ts";
+import {
+  catalogByCode,
+  PROTOTYPE_RULESET,
+} from "../../../src/decks/validation/index.ts";
 import { setRuntimeCatalogForTests } from "../../../src/decks/catalog/runtime-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
-import { legacyCollectionInputs } from "../../../src/shell/adapters/legacy-collection.ts";
+import { fixtureCollectionInputs } from "../../fixtures/installed-gameplay.ts";
 import { encounterDeck } from "../../../src/story/decks/encounter-deck.ts";
 import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 import {
@@ -23,7 +27,11 @@ const FIELDABLE = fieldableStoryDeck();
 const SOLD = catalogByCode(PROTOTYPE_CATALOG).get(FIELDABLE.deck.main[0]!)!;
 const GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG);
 const resolveEncounter = (state: StoryState) =>
-  encounterDeck(state, legacyCollectionInputs(GAMEPLAY).cards);
+  encounterDeck(
+    state,
+    fixtureCollectionInputs(GAMEPLAY).cards,
+    PROTOTYPE_RULESET,
+  );
 
 afterEach(() => setRuntimeCatalogForTests(null));
 
@@ -125,3 +133,47 @@ describe("the deck a story encounter is fought with", () => {
     ).resolves.not.toBeNull();
   });
 });
+
+it("R6 chapter zero limit rejects a prototype-legal owned encounter deck", async () => {
+  const state = save();
+  const ruleset = {
+    id: "chapter-01",
+    revision: "chapter",
+    quantityByCode: new Map([[FIELDABLE.deck.main[0]!, 0 as const]]),
+  };
+  expect(
+    await encounterDeck(
+      state,
+      fixtureCollectionInputs(GAMEPLAY).cards,
+      ruleset,
+    ),
+  ).toBeNull();
+});
+
+it.each([0, 1, 2, 3] as const)(
+  "R6 chapter limit%s stays coherent between prebattle and encounter resolution",
+  async (limit) => {
+    const state = save();
+    const ruleset = {
+      id: "chapter-01",
+      revision: "current",
+      quantityByCode: new Map([[FIELDABLE.deck.main[0]!, limit]]),
+    };
+    const copies = state.decks[0]!.main.filter(
+      (code) => code === FIELDABLE.deck.main[0],
+    ).length;
+    const options = preBattleDeckOptions(
+      state,
+      catalogByCode(PROTOTYPE_CATALOG),
+      ruleset,
+    );
+    expect(options[0]?.legal).toBe(copies <= limit);
+    expect(
+      (await encounterDeck(
+        state,
+        fixtureCollectionInputs(GAMEPLAY).cards,
+        ruleset,
+      )) !== null,
+    ).toBe(copies <= limit);
+  },
+);

@@ -7,15 +7,6 @@ import {
 } from "./selected-content-fixture.ts";
 import { expect, type Page } from "@playwright/test";
 import { createInitialStoryState } from "../src/story/model/story-state.ts";
-/* The two names come from the shell's own copy of them rather than from
-   `src/story/saves/story-save-contracts.ts`: that module now reaches the
-   starter grant, which reads the bundled deck list through a Vite `?raw`
-   import, and Playwright loads these files without Vite — the same reason
-   `story-starter-save.ts` reads that list with `readFileSync`.
-   `tests/unit/story-save-presence.test.ts` is what keeps the shell's two
-   strings and the story's one fact. The envelope type is erased at load, so
-   it still comes from the contract it describes. */
-import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
 
 const STORY_REGION = '[data-cy="shell-region-story"]';
@@ -32,7 +23,7 @@ const STARTER = storyStarterSave();
     standing on the city map. */
 async function putStorySave(
   page: Page,
-  envelope: StorySaveEnvelope,
+  envelope: Parameters<typeof putSelectedStorySave>[1],
 ): Promise<void> {
   await putSelectedStorySave(page, envelope);
 }
@@ -41,10 +32,7 @@ async function seedMapProgress(page: Page): Promise<void> {
   await page.goto("./#/");
   await expect(page.locator('[data-cy="shell-region-home"]')).toBeVisible();
   await putStorySave(page, {
-    schemaVersion: 4,
     slot: "autosave",
-    revision: 1,
-    savedAt: Date.now(),
     state: {
       ...createInitialStoryState(),
       screen: "map",
@@ -67,10 +55,7 @@ async function seedBrokenDefault(page: Page): Promise<void> {
   await expect(page.locator('[data-cy="shell-region-home"]')).toBeVisible();
   const [sold] = STARTER.deck.main;
   await putStorySave(page, {
-    schemaVersion: 4,
     slot: "autosave",
-    revision: 1,
-    savedAt: Date.now(),
     state: {
       ...createInitialStoryState(),
       screen: "map",
@@ -249,10 +234,7 @@ test("a session route whose checkpoint names another handoff lands on the story"
 }) => {
   await seedMapProgress(page);
   await putStorySave(page, {
-    schemaVersion: 4,
     slot: "checkpoint:pre-duel",
-    revision: 1,
-    savedAt: Date.now(),
     state: {
       ...createInitialStoryState(),
       screen: "battle-mock",
@@ -286,29 +268,24 @@ test("a corrupt checkpoint fails closed; explicit fixture repair restores intact
 
   await page.goto("./#/duel/session/55555555-2222-4333-8444-555555555555");
 
-  await expect(
-    page.locator('[data-cy="application-recovery-message"]'),
-  ).toHaveText(
-    "This session stopped because its required data became unavailable. Your saved progress was not replaced.",
-  );
+  await expect(page).toHaveURL(/#\/story$/);
+  await expect(page.locator(STORY_REGION)).toBeVisible();
   await expect(page.locator(DUEL_REGION)).toHaveCount(0);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        async () =>
-          (await navigator.locks.query()).held?.filter(
-            (lock) => lock.name === "ygo-application-lifecycle-v1",
-          ).length ?? 0,
-      ),
-    )
-    .toBe(0);
+  const corruptionVisible = await page
+    .locator('[data-cy="story-storage-error-message"]')
+    .allTextContents();
   const failed = await selectedSaveSnapshot(page);
   expect(failed.selection).toEqual(before.selection);
+  expect(
+    failed.rows.filter(({ slot }) => slot !== "checkpoint:pre-duel"),
+  ).toEqual(before.rows.filter(({ slot }) => slot !== "checkpoint:pre-duel"));
   expect(failed.slots.slice(0, 4)).toEqual(before.slots.slice(0, 4));
   expect(failed.slots[4]).toMatchObject({
     kind: "corrupt",
     slot: "checkpoint:pre-duel",
   });
+  await page.goto("./#/");
+  await expect(page.locator('[data-cy="main-menu-new-game"]')).toBeEnabled();
   await repairSelectedStorySlot(page, "checkpoint:pre-duel");
   expect(await selectedSaveSnapshot(page)).toEqual(before);
   await page.goto("./#/");
@@ -316,7 +293,10 @@ test("a corrupt checkpoint fails closed; explicit fixture repair restores intact
   await page.locator('[data-cy="main-menu-continue"]').click();
   await expect(
     page.getByRole("heading", { name: "City signal map" }),
-  ).toBeVisible();
+  ).toBeVisible(); // Required observability: safe redirect must not silently swallow corrupt checkpoint.
+  expect(corruptionVisible.join("\n")).toContain(
+    "checkpoint:pre-duel: USER_DATA_INVALID",
+  );
 });
 
 /* The refusal, end to end against the shipped card database: a deck the save

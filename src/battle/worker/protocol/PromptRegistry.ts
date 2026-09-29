@@ -148,13 +148,17 @@ export function buildEnginePrompt(
     message.type === EngineMessageType.SELECT_EFFECT_YES_NO
       ? toPromptCard(message)
       : raw.prompt.contextCard;
+  const contextIdentityVisible =
+    contextCard !== undefined &&
+    isPromptCardIdentityVisible(contextCard, raw.prompt.player);
   /* The description is a Project Ignis template, and its `%ls` arguments are
      the card this prompt is about and the place it is used from — both of
      which the message just named. Unfilled the player reads `%ls` where the
      card's name belongs. */
   const effectMessage =
     message.type === EngineMessageType.SELECT_EFFECT_YES_NO &&
-    message.description !== 0n
+    message.description !== 0n &&
+    contextIdentityVisible
       ? formatEffectDescription(
           describeOption(message.description, dependencies, onDiagnostic),
           [

@@ -3,13 +3,14 @@ import path from "node:path";
 import ts from "typescript";
 import { parse as parseSvelte } from "svelte/compiler";
 import { fileURLToPath } from "node:url";
+import { ESLint } from "eslint";
 import { describe, expect, it } from "vitest";
 import * as battle from "../../src/battle/index.ts";
-import * as content from "../../src/content/index.ts";
 import * as deckEditor from "../../src/deck-editor/index.ts";
 import * as deckSelect from "../../src/deck-select/index.ts";
 import * as decks from "../../src/decks/index.ts";
 import * as shell from "../../src/shell/index.ts";
+import * as storage from "../../src/storage/index.ts";
 import * as story from "../../src/story/index.ts";
 
 /* ADR-022 boundaries, checked against resolved paths rather than specifier
@@ -33,6 +34,7 @@ type Domain =
   | "battle"
   | "decks"
   | "content"
+  | "storage"
   | "cards"
   | "shared-svelte-ui";
 
@@ -40,7 +42,8 @@ const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
   main: null,
   cards: "src/cards/index.ts",
   "shared-svelte-ui": null,
-  content: "src/content/index.ts",
+  content: null,
+  storage: "src/storage/index.ts",
   shell: "src/shell/index.ts",
   story: "src/story/index.ts",
   "deck-editor": "src/deck-editor/index.ts",
@@ -59,12 +62,6 @@ const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
    takes the entry chunk from 2.62 kB to 339.73 kB. Each allowance disappears
    when its module gets a legal home. */
 const ALLOWANCES: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  "src/content/storage/content-database.ts": ["idb"],
-  "src/content/storage/content-reader.ts": ["idb"],
-  "src/shell/admin/admin-actions.ts": [
-    /* The duel's snapshot database name, so the console can reset it. */
-    "src/battle/storage/snapshot-store.ts",
-  ],
   /* The duel's v2 UI-state key and shape, which the shell's v3 settings migrate
      from on first load. */
   "src/shell/settings/shell-settings.ts": [
@@ -87,6 +84,7 @@ function domainOf(file: string): Domain {
   if (file.startsWith("src/cards/")) return "cards";
   if (file.startsWith("src/shared-svelte-ui/")) return "shared-svelte-ui";
   if (file.startsWith("src/content/")) return "content";
+  if (file.startsWith("src/storage/")) return "storage";
   if (file.startsWith("src/shell/")) return "shell";
   if (file.startsWith("src/story/")) return "story";
   if (file.startsWith("src/deck-editor/")) return "deck-editor";
@@ -103,23 +101,24 @@ function isLegalImport(from: string, to: string): boolean {
   if (to === "unresolved-dynamic-import") return false;
 
   const source = domainOf(from);
-  if (source === "content") return to.startsWith("src/content/");
-  if (
-    source === "shell" &&
-    domainOf(to) === "content" &&
-    !from.startsWith("src/shell/application/") &&
-    !from.startsWith("src/shell/adapters/")
-  )
-    return false;
+  if (source === "content" || to.startsWith("src/content/")) return false;
+  if (source === "storage") {
+    if (to.startsWith("src/storage/")) return true;
+    return [
+      "src/battle/ports/index.ts",
+      "src/cards/index.ts",
+      "src/decks/contracts/index.ts",
+      "src/shell/settings/index.ts",
+      "src/story/playback/index.ts",
+      "src/story/ports/index.ts",
+      "src/story/saves/index.ts",
+    ].includes(to);
+  }
   if (source === "cards") return to.startsWith("src/cards/");
   if (source === "shared-svelte-ui")
     return to.startsWith("src/shared-svelte-ui/");
   const target = domainOf(to);
-  if (
-    target === "content" &&
-    ["battle", "decks", "deck-editor", "story"].includes(source)
-  )
-    return false;
+  if (target === "storage") return to === "src/storage/index.ts";
   if (source === target) return true;
   if (source === "deck-select") return false;
 
@@ -130,6 +129,7 @@ function isLegalImport(from: string, to: string): boolean {
       "index",
       "contracts/index",
       "repository/index",
+      "repository/sqlite",
       "editing/index",
       "validation/index",
       "catalog/index",
@@ -148,7 +148,11 @@ function isLegalImport(from: string, to: string): boolean {
     return source === "shell";
   if (
     target === "story" &&
-    ["src/story/ports/index.ts", "src/story/saves/index.ts"].includes(to)
+    [
+      "src/story/playback/index.ts",
+      "src/story/ports/index.ts",
+      "src/story/saves/index.ts",
+    ].includes(to)
   )
     return source === "shell";
   /* The visual novel types a battle handoff without mounting one. */
@@ -401,6 +405,8 @@ describe("focused Cards/Decks public entries", () => {
         "StoredDeck",
         "DeckAutosaveRecord",
         "cloneCardLists",
+        "isDeckAutosaveRecord",
+        "isStoredDeck",
       ].sort(),
     );
   });
@@ -409,17 +415,21 @@ describe("focused Cards/Decks public entries", () => {
     expect([...declared.values, ...declared.types].sort()).toEqual(
       [
         "DeckRepository",
-        "IndexedDbDeckRepository",
+        "createSqliteDeckRepository",
         "DeckStorageError",
         "DeckRevisionConflictError",
-        "DeckMigrationError",
-        "DECK_DATABASE_NAME",
         "MAXIMUM_DECK_AUTOSAVES",
         "DeckContext",
         "resolveDeckRepository",
         "resolveDeck",
       ].sort(),
     );
+  });
+  it("src/decks/repository/sqlite.ts is a narrow SQLite factory entry", () => {
+    expect(declaredExports("src/decks/repository/sqlite.ts")).toEqual({
+      values: ["createSqliteDeckRepository"],
+      types: [],
+    });
   });
   it("src/decks/editing/index.ts exact named exports", () => {
     const declared = declaredExports("src/decks/editing/index.ts");
@@ -448,7 +458,6 @@ describe("focused Cards/Decks public entries", () => {
         "importYdk",
         "MAXIMUM_YDK_SOURCE_LENGTH",
         "YdkImportResult",
-        "LEGACY_STARTER_DECK_LIST",
       ].sort(),
     );
   });
@@ -501,6 +510,41 @@ describe("focused Cards/Decks public entries", () => {
       ].sort(),
     );
   });
+  it("T6 semantic ruleset and revision capabilities are explicit port members", () => {
+    const editor = ts.createSourceFile(
+      "editor.ts",
+      readFileSync(
+        path.join(projectRoot, "src/deck-editor/ports/editor-catalog-input.ts"),
+        "utf8",
+      ),
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    const contract = editor.statements.find(ts.isInterfaceDeclaration)!;
+    expect(
+      contract.members.map((member) => member.name?.getText(editor)),
+    ).toEqual(["ruleset", "cards", "images", "starter"]);
+    const saves = ts.createSourceFile(
+      "saves.ts",
+      readFileSync(
+        path.join(projectRoot, "src/story/saves/generation-contracts.ts"),
+        "utf8",
+      ),
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    const repository = saves.statements.find(
+      (statement) =>
+        ts.isInterfaceDeclaration(statement) &&
+        statement.name.text === "GenerationSaveRepository",
+    ) as ts.InterfaceDeclaration;
+    const clear = repository.members.find(
+      (member) => member.name?.getText(saves) === "clear",
+    ) as ts.MethodSignature;
+    expect(
+      clear.parameters.map((parameter) => parameter.getText(saves)),
+    ).toEqual(["slot: StorySlotKey", "expectedRevision?: number"]);
+  });
   it("Editor port exact named exports", () => {
     expect(declaredExports("src/deck-editor/ports/index.ts")).toEqual({
       values: [],
@@ -513,103 +557,62 @@ describe("public domain APIs are frozen", () => {
   /* Widening any list below is a deliberate edit, not a silent change. */
   const expected = [
     {
-      name: "content",
-      entry: "src/content/index.ts",
-      namespace: content,
+      name: "storage",
+      entry: "src/storage/index.ts",
+      namespace: storage,
       values: [
-        "CONTENT_CACHE_NAME",
-        "CONTENT_DATABASE_NAME",
-        "CONTENT_DATABASE_VERSION",
-        "CONTENT_FILE_MAX_BYTES",
-        "CONTENT_INSTALLER_LOCK",
-        "ZIP_PART_MAX_BYTES",
-        "ZIP_PART_MAX_UNPACKED_BYTES",
-        "acquireInstalledAsset",
-        "contentObjectUrl",
-        "createContentInstaller",
-        "loadInstalledGameplay",
-        "loadInstalledImages",
-        "openContentReader",
-        "openProgressiveContentStore",
-        "parseChapterGameplay",
-        "parseChapterSelections",
-        "parseChapterStoryDocument",
-        "parseContentIndex",
-        "parseContentManifest",
-        "parseCoreBootstrap",
-        "parseLatestContentPointer",
-        "parseProgressiveManifest",
+        "openLocalStorage",
+        "orderPackages",
+        "parsePackageManifest",
+        "userWriteLifecycle",
       ],
       types: [
-        "ChapterCard",
-        "ChapterChoiceId",
-        "ChapterContentPolicy",
-        "ChapterDeck",
-        "ChapterFileRef",
-        "ChapterGameplay",
-        "ChapterId",
-        "ChapterOpponent",
-        "ChapterRarity",
-        "ChapterReadiness",
-        "ChapterRelease",
-        "ChapterSelection",
-        "ChapterSelections",
-        "ChapterSet",
-        "ChapterStoryDocument",
-        "ContentError",
-        "ContentErrorCode",
-        "ContentFailure",
-        "ContentFailureCode",
-        "ContentIndex",
-        "ContentInstaller",
-        "ContentManager",
-        "ContentManifest",
-        "ContentMediaType",
-        "ContentReadPort",
-        "ContentReader",
-        "ContentResult",
-        "ContentSessionLease",
-        "ContentSetRef",
-        "CoreBootstrap",
-        "CoreChapterId",
-        "CoreRange",
-        "DownloadJob",
-        "DownloadPhase",
-        "DownloadProgress",
-        "DownloadRequest",
-        "DownloadResult",
-        "DownloadTarget",
-        "FileVersion",
-        "InstallReceipt",
-        "InstalledAssetLease",
-        "InstalledContentSet",
-        "InstalledGameplay",
-        "InstalledImageLibrary",
-        "InstalledRuntimeReceipt",
-        "LatestContentPointer",
-        "LegacyDownloadJob",
-        "LegacyDownloadProgress",
-        "ManifestRef",
-        "OwnedContentReader",
-        "PackId",
-        "PackedFile",
-        "PersistedDownloadJob",
-        "ProgressiveContentStore",
-        "ProgressiveCoreBootstrap",
-        "ProgressiveManifest",
-        "ReleaseFile",
-        "RuntimeActivationPort",
-        "RuntimeReceiptFile",
-        "RuntimeSnapshotRef",
-        "SavedContentRefsPort",
-        "Sha256",
-        "StagedContent",
-        "StoryContentBinding",
-        "VerifiedMetadata",
-        "ZipPart",
+        "ActivePackage",
+        "AsyncPreferencePort",
+        "BackupPreview",
+        "CardLibraryConfig",
+        "CardRow",
+        "ChapterConfig",
+        "ContentQueries",
+        "ContentQuery",
+        "DeckRow",
+        "DownloadLinks",
+        "DuelCoreConfig",
+        "ExportPackages",
+        "ExportReceipt",
+        "FreeplayConfig",
+        "GlobalSet",
+        "ImportProgress",
+        "LocalStorageClient",
+        "MediaWarning",
+        "ModeReadiness",
+        "PackageBuildSpec",
+        "PackageConfig",
+        "PackageDependency",
+        "PackageId",
+        "PackageManifest",
+        "PackageStack",
+        "PackageStore",
+        "PackageType",
+        "QueryMap",
+        "RemovePackageResult",
+        "RestoreOutcomeUnknown",
+        "RestoreUserDataResult",
+        "RpcArgs",
+        "RpcRequest",
+        "RpcResponse",
+        "SetRow",
+        "StorageCode",
+        "StorageFailure",
+        "StorageResult",
+        "StoryDocumentRow",
+        "StoryReadLogPort",
+        "UserDataStore",
+        "UserMutation",
+        "UserNamespace",
+        "UserRecord",
       ],
     },
-
     {
       name: "battle",
       entry: "src/battle/index.ts",
@@ -655,13 +658,7 @@ describe("public domain APIs are frozen", () => {
       name: "decks",
       entry: "src/decks/index.ts",
       namespace: decks,
-      values: [
-        "DECK_DATABASE_NAME",
-        "DeckMigrationError",
-        "deckId",
-        "installedDeckCatalog",
-        "resolveDeck",
-      ],
+      values: ["deckId", "installedDeckCatalog", "resolveDeck"],
       types: [
         "DeckId",
         "DeckRecord",
@@ -783,7 +780,6 @@ describe("public domain APIs are frozen", () => {
          disagree about which decks are legal. */
       values: [
         "ENCOUNTER_LABELS",
-        "STORY_SAVES_DATABASE_NAME",
         "acceptsResult",
         "default",
         "encounterDeck",
@@ -914,6 +910,74 @@ describe("domain imports", () => {
       false,
     );
   });
+  it("resolved storage lint permits domain-local storage and root public entry only", async () => {
+    const lint = new ESLint();
+    const filePath = path.join(projectRoot, "src/battle/app/lint-probe.ts");
+    const boundaryMessages = async (source: string) =>
+      (await lint.lintText(source, { filePath }))[0]!.messages.filter(
+        ({ ruleId }) =>
+          ruleId === "focused-domains/imports" ||
+          ruleId === "no-restricted-imports",
+      );
+
+    await expect(
+      boundaryMessages('import "../storage/snapshot-store.ts";'),
+    ).resolves.toEqual([]);
+    await expect(
+      boundaryMessages('import "../../storage/index.ts";'),
+    ).resolves.toEqual([]);
+    const forms = [
+      (target: string) => `import "${target}";`,
+      (target: string) => `import("${target}");`,
+      (target: string) => `export { probe } from "${target}";`,
+      (target: string) => `export * from "${target}";`,
+      (target: string) => `type Probe = import("${target}").Probe;`,
+      (target: string) => `require("${target}");`,
+    ];
+    for (const form of forms) {
+      for (const target of [
+        "../../storage/runtime/browser-sqlite.ts",
+        "src/storage/runtime/browser-sqlite.ts",
+        "src/storage/../storage/runtime/browser-sqlite.js?raw",
+        "/src/storage/runtime/browser-sqlite.ts",
+        "/src/storage/../storage/runtime/browser-sqlite.ts",
+        "/src/battle/../storage/runtime/browser-sqlite.js?raw",
+        "/src/storage/index.ts/../runtime/browser-sqlite.ts",
+      ])
+        expect
+          .soft(await boundaryMessages(form(target)), form(target))
+          .toEqual([
+            expect.objectContaining({ ruleId: "focused-domains/imports" }),
+          ]);
+      for (const target of [
+        "../storage/snapshot-store.ts",
+        "src/battle/storage/snapshot-store.ts",
+        "../../storage/index.ts",
+        "src/storage/index.ts",
+        "/src/storage/index.ts",
+        "/src/battle/../storage/index.ts",
+        "/src/storage/../battle/storage/snapshot-store.ts",
+      ])
+        expect(await boundaryMessages(form(target)), form(target)).toEqual([]);
+    }
+    for (const target of [
+      "../../storage/runtime/browser-sqlite.ts",
+      "src/storage/runtime/browser-sqlite.ts",
+      "/src/storage/runtime/browser-sqlite.ts",
+    ]) {
+      for (const loader of ["import", "require"]) {
+        for (const source of [
+          `const target = "${target}"; ${loader}(target);`,
+          `${loader}(\`${target}\`);`,
+          `${loader}(\`${target}\${name}\`);`,
+        ])
+          expect(await boundaryMessages(source), source).toEqual([
+            expect.objectContaining({ ruleId: "focused-domains/imports" }),
+          ]);
+      }
+    }
+  });
+
   it("progressive storage rejects incoming deep imports and outgoing semantic domain imports", () => {
     expect(
       isLegalImport(
@@ -932,9 +996,9 @@ describe("domain imports", () => {
     );
     expect(
       isLegalImport("src/shell/application/probe.ts", "src/content/index.ts"),
-    ).toBe(true);
+    ).toBe(false);
   });
-  it("Content has zero outgoing sibling imports and Shell narrows Content composition", () => {
+  it("retired Content namespace permits no Shell composition", () => {
     expect(
       isLegalImport(
         "src/content/install/verify-gameplay.ts",
@@ -955,15 +1019,15 @@ describe("domain imports", () => {
         "src/shell/application/prepared-release.ts",
         "src/content/index.ts",
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isLegalImport(
-        "src/shell/adapters/runtime-activation.ts",
+        "src/shell/adapters/legacy-battle-runtime.ts",
         "src/content/index.ts",
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
-  it("content rejects dynamic Node and scripts imports", () => {
+  it("retired Content rejects all imports", () => {
     for (const specifier of [
       "node:fs",
       "fs",
@@ -979,7 +1043,7 @@ describe("domain imports", () => {
       expect(isLegalImport("src/content/probe.ts", targets[0]!)).toBe(false);
     }
     expect(isLegalImport("src/content/probe.ts", "src/content/index.ts")).toBe(
-      true,
+      false,
     );
   });
   it("no deep cross-domain imports", () => {
@@ -1065,14 +1129,16 @@ it("Story pure ports/saves entries expose exact generation contracts without UI"
   const ports = await import("../../src/story/ports/index.ts");
   const saves = await import("../../src/story/saves/index.ts");
   expect(Object.keys(ports).sort()).toEqual([
+    "parseStoryDocument",
     "parseStoryRelease",
     "validateStoryContinuity",
     "validateStoryRelease",
   ]);
   expect(Object.keys(saves).sort()).toEqual([
-    "STORY_SAVES_DATABASE_NAME",
     "STORY_SLOT_KEYS",
-    "createStoryMigrationPort",
+    "createSqliteStoryRepository",
+    "isPersistableStoryState",
+    "parseStoredStoryEnvelope",
   ]);
   expect(declaredExports("src/story/ports/index.ts").types).toEqual([
     "StoryChoiceId",
@@ -1085,10 +1151,10 @@ it("Story pure ports/saves entries expose exact generation contracts without UI"
   ]);
   expect(declaredExports("src/story/saves/index.ts").types).toEqual([
     "GenerationSaveRepository",
+    "PersistedStoryEnvelope",
+    "PersistedStoryState",
+    "StoredStoryReadResult",
     "StoryBinding",
-    "StoryGenerationId",
-    "StoryGenerationSeal",
-    "StoryMigrationPort",
     "StorySaveEnvelope",
     "StorySaveReadResult",
     "StorySaveSummary",
@@ -1109,6 +1175,8 @@ it("Story pure ports/saves entries expose exact generation contracts without UI"
 it("freezes the semantic Battle ports including InitializeRuntimeCommand", () => {
   expect(declaredExports("src/battle/ports/index.ts")).toEqual({
     values: [
+      "defaultPersistedUiState",
+      "isPersistedUiState",
       "parseBattleRuntimeInput",
       "validateBattleRuntime",
       "validateFrozenBattleExecutable",
@@ -1121,7 +1189,45 @@ it("freezes the semantic Battle ports including InitializeRuntimeCommand", () =>
       "BattleRuntimeInput",
       "BattleRuntimeSource",
       "InitializeRuntimeCommand",
+      "PersistedUiState",
     ],
+  });
+});
+
+it("storage schema and domain validator entries are exact", () => {
+  expect(declaredExports("src/storage/schema/index.ts")).toEqual({
+    values: [
+      "CARD_LIBRARY_SCHEMA_SQL",
+      "CHAPTER_SCHEMA_SQL",
+      "CONTENT_REGISTRY_SCHEMA_SQL",
+      "FREEPLAY_SCHEMA_SQL",
+      "PACKAGE_SCHEMA_SQL",
+      "USER_DATA_MAX_PAYLOAD_BYTES",
+      "USER_DATA_SCHEMA_SQL",
+      "orderPackages",
+      "parsePackageManifest",
+      "validatePackageDatabase",
+      "validateUserRecordPayload",
+    ],
+    types: [
+      "PackageDependency",
+      "PackageId",
+      "PackageManifest",
+      "PackageType",
+      "SqliteValue",
+      "StorageCode",
+      "StorageFailure",
+      "StorageResult",
+      "StorageSqlReader",
+    ],
+  });
+  expect(declaredExports("src/shell/settings/index.ts")).toEqual({
+    values: ["DEFAULT_SHELL_SETTINGS", "isShellSettings"],
+    types: ["FreePlayPairing", "ShellSettings"],
+  });
+  expect(declaredExports("src/story/playback/index.ts")).toEqual({
+    values: ["DEFAULT_STORY_PLAYBACK_SETTINGS", "isStoryPlaybackSettings"],
+    types: ["StoryPlaybackSettings"],
   });
 });
 
@@ -1228,11 +1334,9 @@ it("multi-hop Shell reexport cannot hide Content origin from whole-Shell scan", 
 });
 
 it("Shell view models contain consumer semantics, not raw Content handles", async () => {
-  const { createShellGameplay } =
-    await import("../../src/shell/application/legacy-content.ts");
-  const { installedGameplayFixture } =
-    await import("../fixtures/installed-gameplay.ts");
-  const model = createShellGameplay(installedGameplayFixture(), null);
+  const { shellGameplayFixture } =
+    await import("../fixtures/shell-gameplay.ts");
+  const model = shellGameplayFixture();
   expect(model).not.toHaveProperty("content");
   expect(model).not.toHaveProperty("readFile");
   expect(model.cards.all()[0]).not.toHaveProperty("fullImage");

@@ -19,8 +19,11 @@ describe("CORE shell precache policy", () => {
       { url: "assets/app.js", revision: "two" },
       { url: "assets/forum.woff2", revision: "three" },
       { url: "app-icon.svg", revision: "four" },
+      { url: "assets/sqlite3-Ba5e_Path.wasm", revision: "sqlite" },
     ];
-    expect(assertShellPrecacheEntries(safe)).toBe(safe);
+    expect(
+      assertShellPrecacheEntries(safe, "assets/sqlite3-Ba5e_Path.wasm"),
+    ).toBe(safe);
 
     for (const url of [
       "content/indexes/abc.json",
@@ -28,6 +31,9 @@ describe("CORE shell precache policy", () => {
       "__content/files/abc/card.jpg",
       "assets/core.wasm",
       "chapter-01.zip",
+      "assets/sqlite3-impostor.wasm",
+      "duel-core.sqlite",
+      "cards/1.jpg",
     ])
       expect(() =>
         assertShellPrecacheEntries([{ url, revision: "blocked" }]),

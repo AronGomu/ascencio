@@ -1,0 +1,6 @@
+{
+  "defaultLocale": "en",
+  "locales": ["en"],
+  "revisions": { "babelCdb": "fixture", "cardScripts": "fixture" },
+  "requiredScripts": { "cards": ["c1.lua"], "globals": ["utility.lua"] }
+}

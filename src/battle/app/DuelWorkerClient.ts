@@ -115,6 +115,7 @@ export class DuelWorkerClient implements DuelClient {
   #shutdown: Promise<DuelWorkerDisposalResult> | null = null;
   #replacement: Promise<DuelWorkerDisposalResult> | null = null;
   #watchdog: ReturnType<typeof setTimeout> | null = null;
+  #diagnosticsWatchdog: ReturnType<typeof setTimeout> | null = null;
   #startupFailure: DuelClientEvent | null = null;
   #runtimeLoadAbort: AbortController | null = null;
   #expectedSnapshotId: string | null = null;
@@ -478,7 +479,7 @@ export class DuelWorkerClient implements DuelClient {
     }
     if (event.type === "diagnostics") {
       this.#diagnosticsPending = false;
-      this.#clearWatchdog();
+      this.#clearDiagnosticsWatchdog();
     }
     if (event.type === "restored") {
       this.#restorePending = false;
@@ -504,6 +505,7 @@ export class DuelWorkerClient implements DuelClient {
       this.#diagnosticsPending = false;
       this.#restorePending = false;
       this.#clearWatchdog();
+      this.#clearDiagnosticsWatchdog();
       if (
         (event.error.code === "invalid_response" ||
           event.error.code === "stale_prompt") &&
@@ -524,7 +526,7 @@ export class DuelWorkerClient implements DuelClient {
   #sendDiagnosticsRequest(): boolean {
     this.#diagnosticsPending = true;
     if (this.#post({ type: "requestDiagnostics" })) {
-      this.#startWatchdog(
+      this.#startDiagnosticsWatchdog(
         this.#commandTimeoutMs,
         `Duel Worker did not return diagnostics within ${this.#commandTimeoutMs}ms`,
       );
@@ -556,6 +558,7 @@ export class DuelWorkerClient implements DuelClient {
   #replaceWorkerAfterBoundaryFailure(generation: number): void {
     if (generation !== this.#workerGeneration || this.#worker === null) return;
     this.#clearWatchdog();
+    this.#clearDiagnosticsWatchdog();
     this.#log("error", {
       event: "duel.client.worker.replaced_after_uncertain_cleanup",
       workerGeneration: this.#workerGeneration,
@@ -579,6 +582,7 @@ export class DuelWorkerClient implements DuelClient {
     )
       return;
     this.#clearWatchdog();
+    this.#clearDiagnosticsWatchdog();
     const context = this.#context();
     this.#log("error", {
       event: "duel.client.worker.failed",
@@ -605,6 +609,7 @@ export class DuelWorkerClient implements DuelClient {
     const generation = this.#workerGeneration;
     const context = this.#context();
     this.#clearWatchdog();
+    this.#clearDiagnosticsWatchdog();
 
     this.#shutdown = (async () => {
       let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -675,6 +680,7 @@ export class DuelWorkerClient implements DuelClient {
 
   #terminateCurrentWorker(): void {
     this.#clearWatchdog();
+    this.#clearDiagnosticsWatchdog();
     this.#runtimeLoadAbort?.abort();
     this.#runtimeLoadAbort = null;
     const worker = this.#worker;
@@ -703,6 +709,21 @@ export class DuelWorkerClient implements DuelClient {
     if (this.#watchdog === null) return;
     clearTimeout(this.#watchdog);
     this.#watchdog = null;
+  }
+
+  #startDiagnosticsWatchdog(timeoutMs: number, message: string): void {
+    this.#clearDiagnosticsWatchdog();
+    const generation = this.#workerGeneration;
+    this.#diagnosticsWatchdog = setTimeout(() => {
+      this.#diagnosticsWatchdog = null;
+      this.#failWorker(generation, "process_timeout", message);
+    }, timeoutMs);
+  }
+
+  #clearDiagnosticsWatchdog(): void {
+    if (this.#diagnosticsWatchdog === null) return;
+    clearTimeout(this.#diagnosticsWatchdog);
+    this.#diagnosticsWatchdog = null;
   }
 
   #recordStartupFailure(message: string, error: unknown): void {

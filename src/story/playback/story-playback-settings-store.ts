@@ -1,9 +1,11 @@
 import { writable, type Readable } from "svelte/store";
+import type {
+  AsyncPreferencePort,
+  StorageFailure,
+} from "../../storage/index.ts";
 import {
   clampAutoSpeed,
   DEFAULT_STORY_PLAYBACK_SETTINGS,
-  readStoryPlaybackSettings,
-  writeStoryPlaybackSettings,
   type StoryPlaybackSettings,
 } from "./story-playback-settings.ts";
 
@@ -14,51 +16,38 @@ export interface StoryPlaybackSettingsStore extends Readable<StoryPlaybackSettin
   reset(): void;
 }
 
-/* One live owner of the reader preferences: the settings overlay writes them
-   and the narrative screen's timer reads them, so both see the same value
-   without either persisting on its own. */
 export function createStoryPlaybackSettingsStore(
-  storage: Pick<Storage, "getItem" | "setItem"> | null = defaultStorage(),
+  initial: StoryPlaybackSettings = DEFAULT_STORY_PLAYBACK_SETTINGS,
+  persistence: AsyncPreferencePort<StoryPlaybackSettings> | null = null,
+  onFailure: (error: StorageFailure) => void = (error) =>
+    console.warn("USER_PERSISTENCE_FAILED", error),
 ): StoryPlaybackSettingsStore {
-  const { subscribe, update } = writable<StoryPlaybackSettings>(
-    storage === null
-      ? DEFAULT_STORY_PLAYBACK_SETTINGS
-      : readStoryPlaybackSettings(storage),
-  );
+  const { subscribe, update } = writable<StoryPlaybackSettings>(initial);
 
-  function persist(
-    next: (state: StoryPlaybackSettings) => StoryPlaybackSettings,
-  ): void {
-    update((state) => {
-      const value = next(state);
-      if (storage !== null) writeStoryPlaybackSettings(value, storage);
-      return value;
-    });
+  function persist(patch: Partial<StoryPlaybackSettings>): void {
+    update((state) => Object.freeze({ ...state, ...patch }));
+    if (persistence === null) return;
+    void persistence.update(patch).then(
+      (result) => {
+        if (result.kind === "failed") onFailure(result.error);
+      },
+      () => onFailure({ code: "STORAGE_UNAVAILABLE" }),
+    );
   }
 
   return {
     subscribe,
     setAutoSpeedSeconds(seconds: number): void {
-      persist((state) =>
-        Object.freeze({ ...state, autoSpeedSeconds: clampAutoSpeed(seconds) }),
-      );
+      persist({ autoSpeedSeconds: clampAutoSpeed(seconds) });
     },
     setSkipUnread(skipUnread: boolean): void {
-      persist((state) => Object.freeze({ ...state, skipUnread }));
+      persist({ skipUnread });
     },
     setAutoFlip(autoFlip: boolean): void {
-      persist((state) => Object.freeze({ ...state, autoFlip }));
+      persist({ autoFlip });
     },
     reset(): void {
-      persist(() => DEFAULT_STORY_PLAYBACK_SETTINGS);
+      persist(DEFAULT_STORY_PLAYBACK_SETTINGS);
     },
   };
-}
-
-function defaultStorage(): Storage | null {
-  try {
-    return globalThis.localStorage ?? null;
-  } catch {
-    return null;
-  }
 }

@@ -600,15 +600,26 @@ export class SnapshotStore {
 
   async recordDebugRun(value: DebugRunMetadata): Promise<void> {
     requireSafeKey(value.id, "debug run");
-    const transaction = this.#database.transaction("debugRuns", "readwrite");
-    await transaction.store.put(Object.freeze({ ...value }));
-    const runs = await transaction.store.index("createdAt").getAllKeys();
-    const excess = runs.length - MAXIMUM_DEBUG_RUNS;
-    if (excess > 0)
-      await Promise.all(
-        runs.slice(0, excess).map((id) => transaction.store.delete(id)),
-      );
-    await transaction.done;
+    const transaction = (() => {
+      try {
+        return this.#database.transaction("debugRuns", "readwrite");
+      } catch (error) {
+        throw storageError("Unable to record debug-run metadata", error);
+      }
+    })();
+    try {
+      await transaction.store.put(Object.freeze({ ...value }));
+      const runs = await transaction.store.index("createdAt").getAllKeys();
+      const excess = runs.length - MAXIMUM_DEBUG_RUNS;
+      if (excess > 0)
+        await Promise.all(
+          runs.slice(0, excess).map((id) => transaction.store.delete(id)),
+        );
+      await transaction.done;
+    } catch (error) {
+      await transaction.done.catch(() => undefined);
+      throw storageError("Unable to record debug-run metadata", error);
+    }
   }
 
   close(): void {

@@ -1,12 +1,16 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedGameplayFromCatalog } from "../../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { deleteDB } from "idb";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
@@ -17,10 +21,8 @@ import {
 } from "../../../src/decks/validation/index.ts";
 import { deckId } from "../../../src/decks/contracts/index.ts";
 import {
-  DECK_DATABASE_NAME,
   type DeckContext,
   type DeckRepository,
-  IndexedDbDeckRepository,
 } from "../../../src/decks/repository/index.ts";
 import {
   emptyDeckHistory,
@@ -64,9 +66,16 @@ const FIVE_BY_CODE = catalogByCode(CATALOG_FIVE);
 
 const STORY_DECK_ID = "story-owned-deck";
 
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
+
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 /** A save holding one empty deck and the collection handed in, wired exactly as
@@ -111,18 +120,13 @@ function storyContext(collection: Readonly<Record<number, number>>): {
 }
 
 async function seedFreePlayDeck(id: string): Promise<void> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    await repository.create(
-      createBlankDeck("Free Deck", prototypeCatalogMap, PROTOTYPE_RULESET, {
-        id,
-        now: new Date("2026-01-01T00:00:00.000Z"),
-      }),
-      emptyDeckHistory(),
-    );
-  } finally {
-    repository.close();
-  }
+  await repository.create(
+    createBlankDeck("Free Deck", prototypeCatalogMap, PROTOTYPE_RULESET, {
+      id,
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    }),
+    emptyDeckHistory(),
+  );
 }
 
 function query(value: string): HTMLElement | null {
@@ -143,7 +147,10 @@ async function openCatalog(props: {
       ),
       deckId: deckId(props.deckId),
       onnavigate: vi.fn(),
-      ...(props.context === undefined ? {} : { context: props.context }),
+      context: props.context ?? {
+        kind: "free-play",
+        createRepository: () => repository,
+      },
     },
     ...(props.toasts === undefined
       ? {}

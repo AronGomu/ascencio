@@ -2,6 +2,7 @@
 
 > Status: accepted; planned
 > Amended by [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D3: D2 cold activation additionally requires explicit compatible candidate approval at install; waiting alone is not consent.
+> Implemented for current app-only updates by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D4–D5. Content-download wording in body is historical.
 > Decided: 2026-09-07
 > Owners: shell / PWA lifecycle
 > Relates: ADR-023 (single entry shell)

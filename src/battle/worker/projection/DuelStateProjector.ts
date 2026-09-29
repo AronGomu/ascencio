@@ -1433,6 +1433,14 @@ export class DuelStateProjector {
     card.position = nextPosition;
     card.faceUp = isFaceUp(position);
     if (visible && rawCode > 0) card.code = cardCode(rawCode);
+    else if (
+      playerIndex === 1 &&
+      !isFixedLocation(publicLocation) &&
+      card.code !== undefined
+    ) {
+      this.#rotatePublicIdentity(card);
+      delete card.code;
+    }
   }
 
   #updateCounter(

@@ -182,6 +182,29 @@ describe("DOM feedback controller", () => {
     expect(y).not.toBeCloseTo(sourcePoint.y - targetPoint.y, 0);
   });
 
+  it("clears the target line and highlight after the command duration", () => {
+    vi.useFakeTimers();
+    const root = fieldRoot();
+    const cancel = vi.fn();
+    Element.prototype.animate = vi.fn(() => ({
+      cancel,
+      finished: new Promise<void>(() => undefined),
+    })) as unknown as typeof Element.prototype.animate;
+    const onState = vi.fn();
+    const controller = createDomFeedbackController(root, onState);
+    controller.present(moveCommand());
+
+    vi.advanceTimersByTime(419);
+    expect(root.querySelector(".is-feedback-target")).not.toBeNull();
+    expect(onState).not.toHaveBeenLastCalledWith(EMPTY_DOM_FEEDBACK_STATE);
+    vi.advanceTimersByTime(1);
+
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(controller.activeAnimationCount).toBe(0);
+    expect(onState).toHaveBeenLastCalledWith(EMPTY_DOM_FEEDBACK_STATE);
+    expect(root.querySelector(".is-feedback-target")).toBeNull();
+  });
+
   it("cancels animations, clears final state, and leaves zero timers", () => {
     vi.useFakeTimers();
     const root = fieldRoot();

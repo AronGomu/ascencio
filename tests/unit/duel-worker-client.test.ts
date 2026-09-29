@@ -419,6 +419,48 @@ describe("DuelWorkerClient", () => {
     }
   });
 
+  it("keeps a response timeout armed when concurrent diagnostics completes first", async () => {
+    vi.useFakeTimers();
+    try {
+      const workers: FakeWorkerPort[] = [];
+      const client = new DuelWorkerClient({
+        workerFactory: () => {
+          const worker = new FakeWorkerPort();
+          workers.push(worker);
+          return worker;
+        },
+        commandTimeoutMs: 25,
+        logger: { info: vi.fn(), error: vi.fn() },
+      });
+      const received: DuelWorkerEvent[] = [];
+      client.subscribe(({ event }) => received.push(event));
+      client.initialize(TEST_RUNTIME_SOURCE);
+      workers[0]?.emit({ type: "ready", coreVersion: [11, 0] });
+      client.startDuel(
+        duelId("mvp-preset-v1"),
+        { kind: "preset", deckId: "chapter-one-starter" },
+        { kind: "preset", deckId: "chapter-one-practice" },
+      );
+      workers[0]?.emit(promptEvent);
+
+      expect(client.requestDiagnostics()).toBe(true);
+      expect(client.respond(promptEvent.prompt.id, [choiceId("yes")])).toBe(
+        true,
+      );
+      workers[0]?.emit({ type: "diagnostics", trace: BOUNDARY_TRACE });
+      await vi.advanceTimersByTimeAsync(25);
+
+      expect(workers[0]?.terminated).toBe(true);
+      expect(workers).toHaveLength(2);
+      expect(received.at(-1)).toMatchObject({
+        type: "error",
+        error: { code: "process_timeout" },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   /* The Worker reports an uncertain cleanup by pushing a trace nobody asked
      for and then disposing itself uncleanly. The replacement it forces starts
      at session generation zero, so `requestDiagnostics` is refused from here

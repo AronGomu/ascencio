@@ -13,12 +13,14 @@ const storyRoot = path.resolve("src/story");
    deck editor — is a boundary break, because story loads as its own lazy chunk.
 
    T3 moves card-preview presentation from the shell into pure shared Svelte UI.
-   Story also accepts the public `CardImageSource` port as an injected type-only
-   input; neither entry grants access to a connected provider implementation. */
+   Story also accepts pure public capability contracts from the card-image and
+   storage entries; neither entry grants access to a connected provider
+   implementation or permits deep storage imports. */
 function reachableFromStory(target: string): boolean {
   return (
     target === "src/battle/battle-contracts.ts" ||
     target === "src/shell/index.ts" ||
+    target === "src/storage/index.ts" ||
     target === "src/deck-select/index.ts" ||
     target === "src/content/index.ts" ||
     target === "src/cards/index.ts" ||

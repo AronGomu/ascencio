@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseChapterSelections } from "../../src/content/index.ts";
+import { parseChapterSelections } from "./chapter-authoring/chapter-selections.ts";
 import { parseCardSetSource } from "./content-setup.ts";
 import {
   normalizeChapterSource,
@@ -16,6 +16,7 @@ import {
 } from "./chapter-set-id.ts";
 import {
   CHAPTER_ONE_SET_MEDIA_EVIDENCE_PATH,
+  CHAPTER_ONE_SET_MEDIA_SOURCE_PATH,
   parseChapterSetMediaEvidence,
   verifiedUnavailableSetImageIds,
 } from "./chapter-set-media.ts";
@@ -27,13 +28,19 @@ export async function loadChapterOneContentSource(root: string): Promise<{
   readonly unavailableSetImageIds: ReadonlySet<string>;
 }> {
   const sourceBytes = await readFile(
-    path.join(root, "content/authoring/card-set-source.json"),
+    path.join(
+      root,
+      "assets/content/card-library/authoring/card-set-source.json",
+    ),
   );
   const source = parseCardSetSource(sourceBytes);
   const selections = parseChapterSelections(
     JSON.parse(
       await readFile(
-        path.join(root, "content/chapter-selections.json"),
+        path.join(
+          root,
+          "assets/content/chapter-01/authoring/chapter-selections.json",
+        ),
         "utf8",
       ),
     ) as unknown,
@@ -41,7 +48,10 @@ export async function loadChapterOneContentSource(root: string): Promise<{
   const corrections = parseChapterSourceCorrections(
     JSON.parse(
       await readFile(
-        path.join(root, "content/authoring/chapter-one-corrections.json"),
+        path.join(
+          root,
+          "assets/content/chapter-01/authoring/chapter-one-corrections.json",
+        ),
         "utf8",
       ),
     ) as unknown,
@@ -62,7 +72,13 @@ export async function loadChapterOneContentSource(root: string): Promise<{
     corrections,
   );
   const shop = JSON.parse(
-    await readFile(path.join(root, "public/story/shop-sets.v1.json"), "utf8"),
+    await readFile(
+      path.join(
+        root,
+        "assets/content/card-library/authoring/shop-sets.v1.json",
+      ),
+      "utf8",
+    ),
   ) as { readonly sets?: readonly ExistingSetIdentity[] };
   if (
     !Array.isArray(shop.sets) ||
@@ -84,7 +100,9 @@ export async function loadChapterOneContentSource(root: string): Promise<{
       ),
     ) as unknown,
   );
-  const providerBytes = await readFile(path.join(root, evidence.source.path));
+  const providerBytes = await readFile(
+    path.join(root, CHAPTER_ONE_SET_MEDIA_SOURCE_PATH),
+  );
   return {
     normalized,
     sets,

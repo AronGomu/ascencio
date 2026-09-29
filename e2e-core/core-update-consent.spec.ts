@@ -112,19 +112,14 @@ test("CORE cold consent: unapproved build cannot install after all tabs close", 
     const original = ServiceWorkerRegistration.prototype.update;
     ServiceWorkerRegistration.prototype.update = async function () {
       const row = await new Promise<unknown>((resolve, reject) => {
-        const open = indexedDB.open("ygo-application-state", 1);
+        const open = indexedDB.open("ygo-app-update-approval", 1);
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const db = open.result;
-          const tx = db.transaction(["coreApproval", "selection"]);
-          const approved = tx.objectStore("coreApproval").get("approved");
-          const selected = tx.objectStore("selection").get("active");
+          const tx = db.transaction("approval");
+          const approved = tx.objectStore("approval").get("approved");
           tx.oncomplete = () => {
-            resolve({
-              approval: approved.result,
-              selection: selected.result ?? { generation: 0 },
-              observedAt: Date.now(),
-            });
+            resolve({ approval: approved.result, observedAt: Date.now() });
             db.close();
           };
           tx.onerror = () => reject(tx.error);
@@ -148,8 +143,7 @@ test("CORE cold consent: unapproved build cannot install after all tabs close", 
       (
         window as unknown as {
           approvalBeforeUpdate: {
-            approval: { approvedAt: number; selectionGeneration: number };
-            selection: { generation: number };
+            approval: { approvedAt: number };
             observedAt: number;
           };
         }
@@ -158,7 +152,6 @@ test("CORE cold consent: unapproved build cannot install after all tabs close", 
   expect(persisted.approval).toEqual({
     ...metadataB,
     approvedAt: expect.any(Number),
-    selectionGeneration: persisted.selection.generation,
   });
   expect(persisted.approval.approvedAt).toBeGreaterThan(0);
   expect(persisted.approval.approvedAt).toBeLessThanOrEqual(

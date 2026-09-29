@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./asset-roots.ts";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { AssetDeckCardRecord } from "../../src/decks/catalog/ocg-card-mapper.ts";

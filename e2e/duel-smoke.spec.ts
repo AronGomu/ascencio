@@ -4,7 +4,6 @@ import {
   selectedStorySlots,
   selectedSaveSnapshot,
 } from "./selected-content-fixture.ts";
-import { ASSET_SOURCES } from "../scripts/lib/asset-roots.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import {
   expect,
@@ -13,18 +12,12 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
-import { buildActiveCardDataManifest } from "../scripts/lib/active-card-data-manifest.ts";
-import { buildActiveCardTextManifest } from "../scripts/lib/active-card-text-manifest.ts";
-import { buildActiveImageManifest } from "../scripts/lib/active-image-manifest.ts";
+import { loadNormalizedCatalog } from "../scripts/lib/sqlite-content/normalized-package-source.ts";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
 } from "../src/decks/catalog/pinned-ruleset.ts";
 import { packagedCatalog } from "../src/decks/catalog/packaged-catalog.ts";
-import {
-  DECK_DATABASE_NAME,
-  LEGACY_DECK_DATABASE_NAME,
-} from "../src/decks/deck-database.ts";
 import {
   computeFieldGeometry,
   perspectiveVirtualHeight,
@@ -44,6 +37,11 @@ interface BrowserCapture {
     readonly created: readonly string[];
     readonly revoked: readonly string[];
     readonly active: ReadonlySet<string>;
+    readonly blobs: ReadonlyMap<
+      string,
+      { readonly bytes: number; readonly mime: string }
+    >;
+    readonly loads: string[];
   };
   readonly eventPaints: Array<{
     readonly type: string;
@@ -80,14 +78,12 @@ interface CapturedPromptEvent {
   readonly prompt: { readonly id: string; readonly kind: string };
 }
 
-const CHAPTER_DECKS = JSON.parse(
-  readFileSync("generated/asset-delivery/prepared-player.json", "utf8"),
-).chapters[0].gameplay.decks as readonly {
-  id: string;
-  main: number[];
-  extra: number[];
-  side: number[];
-}[];
+const CHAPTER_DECKS = (
+  JSON.parse(readFileSync("assets/content/chapter-01/decks.json", "utf8")) as {
+    id: string;
+    cards: { main: number[]; extra: number[]; side: number[] };
+  }[]
+).map(({ id, cards }) => ({ id, ...cards }));
 function chapterDeckInput(id: string) {
   const deck = CHAPTER_DECKS.find((deck) => deck.id === id)!;
   return { kind: "cards", main: deck.main, extra: deck.extra, side: deck.side };
@@ -95,21 +91,21 @@ function chapterDeckInput(id: string) {
 
 const LOCAL_DECK_NAME = "E2E Local Deck";
 
-/* The catalog the running build offers, rebuilt here from the same manifests
-   `vite.config.ts` compiles into it. Reading the fixture instead would make
-   this scenario vacuous the moment packaging and the editor disagreed — which
-   is precisely the failure it exists to catch. */
-const PACKAGED_CATALOG = (() => {
-  const codes = new Set(
-    buildActiveImageManifest(process.cwd(), "duel-smoke").files.map(
-      ({ code }) => code,
-    ),
-  );
-  return packagedCatalog(
-    buildActiveCardDataManifest(process.cwd(), codes),
-    buildActiveCardTextManifest(process.cwd(), codes),
-  );
-})();
+// Same normalized data source as semantic query fixture; no hosted manifests.
+const NORMALIZED = await loadNormalizedCatalog("assets/content/card-library", [
+  "en",
+]);
+const PACKAGED_CATALOG = packagedCatalog(
+  NORMALIZED.cards.map(({ scope, ...card }) => ({
+    ...card,
+    setcodes: [...card.setcodes],
+    ot: scope,
+  })),
+  NORMALIZED.texts.map(({ cardCode, ...text }) => ({
+    ...text,
+    code: cardCode,
+  })),
+);
 
 /* Derived from the packaged catalog rather than written out, so a packaging
    change cannot leave this deck quietly illegal and the scenario quietly
@@ -128,18 +124,7 @@ function ydkSource(main: readonly number[]): string {
 }
 
 async function deleteDeckDatabases(page: Page): Promise<void> {
-  await page.evaluate(
-    async (names: readonly string[]) => {
-      for (const name of names)
-        await new Promise<void>((resolve) => {
-          const request = indexedDB.deleteDatabase(name);
-          request.onsuccess = () => resolve();
-          request.onerror = () => resolve();
-          request.onblocked = () => resolve();
-        });
-    },
-    [DECK_DATABASE_NAME, LEGACY_DECK_DATABASE_NAME],
-  );
+  await page.evaluate(() => window.selectedContent.resetDecks());
 }
 
 /* ADR-054: `#/duel` redirects to free play, which opens on the match setup
@@ -176,6 +161,8 @@ test.beforeEach(async ({ page }) => {
         created: [] as string[],
         revoked: [] as string[],
         active: new Set<string>(),
+        blobs: new Map<string, { bytes: number; mime: string }>(),
+        loads: [] as string[],
       },
       eventPaints: [] as Array<{
         type: string;
@@ -194,6 +181,10 @@ test.beforeEach(async ({ page }) => {
       const url = nativeCreateObjectURL(object);
       capture.imageUrls.created.push(url);
       capture.imageUrls.active.add(url);
+      capture.imageUrls.blobs.set(url, {
+        bytes: object instanceof Blob ? object.size : 0,
+        mime: object instanceof Blob ? object.type : "MediaSource",
+      });
       return url;
     };
     URL.revokeObjectURL = (url: string): void => {
@@ -254,6 +245,7 @@ test.beforeEach(async ({ page }) => {
     }
 
     const NativeWorker = window.Worker;
+    const duelWorkers = new WeakSet<Worker>();
     const nativePostMessage = NativeWorker.prototype.postMessage;
     const nativeTerminate = NativeWorker.prototype.terminate;
     Object.defineProperty(NativeWorker.prototype, "postMessage", {
@@ -263,7 +255,8 @@ test.beforeEach(async ({ page }) => {
         message: unknown,
         options?: StructuredSerializeOptions | Transferable[],
       ): void {
-        capture.commands.push(structuredClone(message));
+        if (duelWorkers.has(this))
+          capture.commands.push(structuredClone(message));
         Reflect.apply(
           nativePostMessage,
           this,
@@ -275,6 +268,8 @@ test.beforeEach(async ({ page }) => {
     class InspectableWorker extends NativeWorker {
       constructor(scriptURL: string | URL, options?: WorkerOptions) {
         super(scriptURL, options);
+        if (options?.name === "ascencio-sqlite") return;
+        duelWorkers.add(this);
         capture.workers += 1;
         this.addEventListener("message", (event) => {
           capture.events.push(structuredClone(event.data));
@@ -301,7 +296,7 @@ test.beforeEach(async ({ page }) => {
       }
 
       terminate(): void {
-        capture.terminations += 1;
+        if (duelWorkers.has(this)) capture.terminations += 1;
         Reflect.apply(nativeTerminate, this, []);
       }
     }
@@ -328,11 +323,11 @@ test("the root route shows the main menu without booting the duel", async ({
   await expect(
     page.getByRole("heading", { name: "Choose your deck" }),
   ).toHaveCount(0);
-  expect(requests.some((url) => /\/runtime\/|\.wasm(?:$|\?)/.test(url))).toBe(
-    false,
-  );
+  expect(
+    requests.some((url) => /\/runtime\/|ocgcore.*\.wasm(?:$|\?)/.test(url)),
+  ).toBe(false);
 
-  // Activation prepares an empty generation; probing the menu must create no saves.
+  // Semantic fixture starts without saves; menu probes must not create any.
   expect(await selectedStorySlots(page)).toEqual([]);
 
   await page.locator('[data-cy="main-menu-free-play"]').click();
@@ -563,39 +558,20 @@ test("production bundle initializes the real Worker and sends one opaque choice 
     expect(event.state.players[1].hand).toEqual([]);
     expect(event.state.players[1].handCount).toBeGreaterThan(0);
   }
-  const runtimeManifest = JSON.parse(
-    await readFile(`${ASSET_SOURCES.runtime.source}/manifest.json`, "utf8"),
-  ) as { readonly snapshotId: string };
-  expect(stateEvents.at(-1)?.state.snapshotId).toBe(runtimeManifest.snapshotId);
-
-  expect(
-    contentTransfers.some((url) =>
-      /\/content\/files\/[a-f0-9]{64}\/runtime\/current\/manifest.json$/.test(
-        url,
-      ),
-    ),
-  ).toBe(true);
-  expect(
-    contentTransfers.some((url) =>
-      /\/content\/files\/[a-f0-9]{64}\/runtime\/engine\/ocgcore.sync.wasm$/.test(
-        url,
-      ),
-    ),
-  ).toBe(true);
-  const cached = await page.evaluate(async () =>
-    (await (await caches.open("ygo-content-files-v1")).keys()).map(
-      (key) => key.url,
-    ),
+  expect(stateEvents.at(-1)?.state.snapshotId).toBe(
+    await page.evaluate(() => window.selectedContent.runtimeIdentity()),
   );
-  expect(
-    cached
-      .filter((url) => url.includes("/runtime/"))
-      .every((url) => url.includes("/ygo-story-duel/__content/files/")),
-  ).toBe(true);
-  expect(requests.filter((url) => /\/runtime\/|\.wasm$/.test(url))).toEqual([]);
-  expect(
-    contentTransfers.filter((url) => /\/runtime\/images\/\d+\.jpg$/.test(url)),
-  ).toEqual([]);
+  // Required engine bytes come through semantic query input, never hosted file delivery.
+  const queries = contentTransfers.map((url) =>
+    JSON.parse(new URL(url).searchParams.get("request")!),
+  );
+  expect(queries).toContainEqual({
+    kind: "asset",
+    packageId: "duel-core",
+    path: "engine/ocgcore.sync.wasm",
+  });
+  expect(queries).toContainEqual({ kind: "config", packageId: "duel-core" });
+  expect(requests.filter((url) => /ocgcore.*\.wasm$/.test(url))).toEqual([]);
   await expect(field.getByRole("img").first()).toHaveAttribute(
     "src",
     /^data:image\/svg\+xml/,
@@ -739,20 +715,13 @@ test("the match setup persists a chosen pair and Change decks returns without au
   ]);
   expect(
     await page.evaluate(
-      () =>
-        (
-          JSON.parse(localStorage.getItem("ygo.ui.v3") ?? "null") as {
-            freePlayPairing: unknown;
-          } | null
-        )?.freePlayPairing,
+      async () =>
+        (await window.selectedContent.shellPreferences()).freePlayPairing,
     ),
   ).toEqual({
     player: "chapter:chapter-one-practice",
     opponent: "chapter:chapter-one-starter",
   });
-  expect(
-    await page.evaluate(() => localStorage.getItem("ygo.ui.v1")),
-  ).toBeNull();
 
   await page.reload();
   await expect(setup).toBeVisible({ timeout: 120_000 });
@@ -976,9 +945,7 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   await expect(count).toBeHidden();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
   expect(
-    await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
-    ),
+    await page.evaluate(() => window.selectedContent.battlePreferences()),
   ).toEqual({
     version: 2,
     windows: { zoneList: null, confirm: null },
@@ -1040,9 +1007,7 @@ test("zone visuals persist through reload and Reset settings restores defaults",
   await expect(count).toBeVisible();
   await page.locator('[data-cy="settings-dialog-close-button"]').click();
   expect(
-    await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
-    ),
+    await page.evaluate(() => window.selectedContent.battlePreferences()),
   ).toEqual({
     version: 2,
     windows: { zoneList: null, confirm: null },
@@ -1082,7 +1047,10 @@ test("duel HUD keeps hidden stacks count-only and tray image work mounted on dem
 }, testInfo) => {
   const imageRequests: string[] = [];
   page.on("request", (request) => {
-    if (/\/runtime\/images\/\d+\.jpg$/.test(request.url()))
+    if (
+      request.url().includes("/domain-fixture/query?") &&
+      decodeURIComponent(request.url()).includes("cards/full/")
+    )
       imageRequests.push(request.url());
   });
   await openDuel(page);
@@ -1203,18 +1171,19 @@ test("refresh during loading and after completion starts a clean duel", async ({
   page,
 }, testInfo) => {
   await page.addInitScript(() => {
-    const match = Cache.prototype.match;
-    Cache.prototype.match = async function (request, options) {
+    const fetch = window.fetch.bind(window);
+    window.fetch = async function (request, options) {
       const url = request instanceof Request ? request.url : String(request);
       if (
-        url.endsWith("/runtime/current/manifest.json") &&
+        url.includes("/domain-fixture/query?") &&
+        decodeURIComponent(url).includes('"kind":"config"') &&
         sessionStorage.getItem("required-read-blocked") !== "yes"
       ) {
         sessionStorage.setItem("required-read-blocked", "yes");
         Object.assign(window, { requiredReadBlocked: true });
         await new Promise<void>(() => undefined);
       }
-      return match.call(this, request, options);
+      return fetch(request, options);
     };
   });
   await openDuel(page);
@@ -1266,87 +1235,128 @@ test.describe("installed media", () => {
   test("mounted card image leases return to baseline across tray, restart, and destroy", async ({
     page,
   }, testInfo) => {
+    // Valid JPEGs with trailing padding exercise the real byte cap with few
+    // loads. Pool, leases, adapter, URL APIs and mounted consumers stay real.
+    await page.addInitScript(() => {
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = async (input, init) => {
+        const response = await nativeFetch(input, init);
+        const url = new URL(
+          input instanceof Request ? input.url : String(input),
+          location.href,
+        );
+        if (url.pathname !== "/domain-fixture/query") return response;
+        const request = JSON.parse(url.searchParams.get("request")!);
+        if (request.kind !== "asset" || !request.path.startsWith("cards/"))
+          return response;
+        const result = await response.json();
+        if (result.kind === "ok" && result.value?.mime === "image/jpeg") {
+          const bytes = atob(result.value.bytes);
+          result.value.bytes = btoa(
+            bytes + "\0".repeat(Math.max(0, 8 * 1024 * 1024 - bytes.length)),
+          );
+          window.__duelCapture.imageUrls.loads.push(request.path);
+        }
+        return new Response(JSON.stringify(result), {
+          headers: { "Content-Type": "application/json" },
+        });
+      };
+    });
     await openDuel(page);
     await startPresetDuel(page);
     await enableDuelHud(page);
-    await expect(
-      page.locator('[data-cy="duel-field"][data-prompt-kind]'),
-    ).toBeVisible({
-      timeout: 120_000,
-    });
-    await expect
-      .poll(async () => {
-        const state = await mountedImageLeaseState(page);
-        return state.activeCount > 0 && state.activeMatchesMounted;
-      })
-      .toBe(true);
-    const baseline = await mountedImageLeaseState(page);
-    const revokedBefore = await page.evaluate(
-      () => window.__duelCapture.imageUrls.revoked.length,
-    );
-
-    const ownExtra = page.getByRole("button", {
-      name: /Open Your Extra Deck tray, \d+ cards/,
-    });
-    if ((await ownExtra.count()) > 0) {
-      await ownExtra.click();
+    const samples: Awaited<ReturnType<typeof mountedImageLeaseState>>[] = [];
+    for (let cycle = 0; cycle < 4; cycle += 1) {
       await expect(
-        page.getByRole("region", { name: "Your Extra Deck tray" }),
-      ).toBeVisible();
-      await page
-        .getByRole("button", { name: "Close Your Extra Deck tray" })
-        .click();
+        page.locator('[data-cy="duel-field"][data-prompt-kind]'),
+      ).toBeVisible({ timeout: 120_000 });
       await expect
-        .poll(async () => mountedImageLeaseState(page))
-        .toEqual(baseline);
+        .poll(async () => {
+          const state = await mountedImageLeaseState(page);
+          return state.mountedUrls.length > 0 && state.mountedAreActive;
+        })
+        .toBe(true);
+      await runTrayCycle(page, 1);
+      samples.push(await mountedImageLeaseState(page));
+      if (cycle < 3) {
+        await surrenderThroughMenu(page);
+        await expect(
+          page.getByRole("heading", { name: "Duel surrendered" }),
+        ).toBeVisible();
+        await page.getByRole("button", { name: "Start another duel" }).click();
+      }
     }
-
-    await surrenderThroughMenu(page);
-    await expect(
-      page.getByRole("heading", { name: "Duel surrendered" }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Start another duel" }).click();
-    await expect(
-      page.locator('[data-cy="duel-field"][data-prompt-kind]'),
-    ).toBeVisible({
-      timeout: 120_000,
-    });
+    // Leave the battle but retain the same Freeplay session: no mounted or
+    // preloaded battle consumers remain, so every retained image is unleased.
+    await page.locator('[data-cy="duel-right-rail-options"]').click();
+    await page.locator('[data-cy="menu-dialog-leave-match-button"]').click();
+    await expect(page.locator('[data-cy="deck-select-start"]')).toBeVisible();
     await expect
-      .poll(async () => {
-        const state = await mountedImageLeaseState(page);
-        return state.activeCount > 0 && state.activeMatchesMounted;
-      })
-      .toBe(true);
-    const restarted = await mountedImageLeaseState(page);
-    expect(restarted.activeUrls).not.toEqual(baseline.activeUrls);
-    expect(
-      restarted.activeUrls.filter((url) => baseline.activeUrls.includes(url)),
-    ).toEqual([]);
-    expect(
-      await page.evaluate(() => window.__duelCapture.imageUrls.revoked.length),
-    ).toBeGreaterThan(revokedBefore);
-
-    const evidence = await page.evaluate(() => ({
-      created: window.__duelCapture.imageUrls.created.length,
-      revoked: window.__duelCapture.imageUrls.revoked.length,
-      active: window.__duelCapture.imageUrls.active.size,
+      .poll(async () => (await mountedImageLeaseState(page)).mountedUrls.length)
+      .toBe(0);
+    await expect
+      .poll(async () => (await mountedImageLeaseState(page)).activeBytes)
+      .toBeLessThanOrEqual(64 * 1024 * 1024);
+    const released = await mountedImageLeaseState(page);
+    const loads = await page.evaluate(() => ({
+      unique: new Set(window.__duelCapture.imageUrls.loads).size,
+      total: window.__duelCapture.imageUrls.loads.length,
+      createdBytes: [...window.__duelCapture.imageUrls.blobs.values()]
+        .filter(({ mime }) => mime.startsWith("image/"))
+        .reduce((sum, { bytes }) => sum + bytes, 0),
+      revokedImages: window.__duelCapture.imageUrls.revoked.filter((url) =>
+        window.__duelCapture.imageUrls.blobs
+          .get(url)
+          ?.mime.startsWith("image/"),
+      ).length,
+      otherBlobs: [...window.__duelCapture.imageUrls.blobs.values()].filter(
+        ({ mime }) => !mime.startsWith("image/"),
+      ),
     }));
+    expect(loads.unique).toBeGreaterThan(8);
+    expect(loads.createdBytes).toBeGreaterThan(64 * 1024 * 1024);
+    expect(loads.revokedImages).toBeGreaterThan(0);
+    expect(released.activeBytes).toBeGreaterThan(0);
+    expect(released.activeBytes).toBeLessThanOrEqual(64 * 1024 * 1024);
+    // Changing mode closes the session, not merely the mounted battle.
+    await page.evaluate(() => {
+      location.hash = "#/admin";
+    });
+    await expect(page.locator('[data-cy="admin-console"]')).toBeVisible();
+    await expect
+      .poll(async () => (await mountedImageLeaseState(page)).activeCount)
+      .toBe(0);
+    // Open a fresh mode session before root close, so zero cannot pass vacuously.
+    await page.locator('[data-cy="admin-route-free-play"]').click();
+    await startPresetDuel(page);
+    await expect
+      .poll(async () => (await mountedImageLeaseState(page)).activeCount)
+      .toBeGreaterThan(0);
+    await page.evaluate(() => window.selectedContent.shutdown());
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.__duelCapture.imageUrls.active.size),
+      )
+      .toBe(0);
     const evidencePath = testInfo.outputPath("df-13-object-url-lifecycle.json");
     await writeFile(
       evidencePath,
-      JSON.stringify({ baseline, restarted, ...evidence }, null, 2),
+      JSON.stringify(
+        {
+          samples,
+          released,
+          loads,
+          modeCloseImageUrls: 0,
+          rootCloseAllUrls: 0,
+        },
+        null,
+        2,
+      ),
     );
     await testInfo.attach("df-13-object-url-lifecycle", {
       path: evidencePath,
       contentType: "application/json",
     });
-
-    await page.goto("about:blank");
-    await expect
-      .poll(async () =>
-        page.evaluate(() => window.__duelCapture.imageUrls.active.size),
-      )
-      .toBe(0);
   });
 });
 
@@ -1356,19 +1366,22 @@ test.describe("installed media", () => {
     page,
   }, testInfo) => {
     await page.addInitScript(() => {
-      const match = Cache.prototype.match;
+      const fetch = window.fetch.bind(window);
       let release!: () => void;
       const wait = new Promise<void>((resolve) => {
         release = resolve;
       });
       Object.assign(window, { releaseImageReads: release });
-      Cache.prototype.match = async function (request, options) {
+      window.fetch = async function (request, options) {
         const url = request instanceof Request ? request.url : String(request);
-        if (/\/runtime\/images\/\d+\.jpg$/.test(url)) {
+        if (
+          url.includes("/domain-fixture/query?") &&
+          decodeURIComponent(url).includes("cards/full/")
+        ) {
           Object.assign(window, { imageReadBlocked: true });
           await wait;
         }
-        return match.call(this, request, options);
+        return fetch(request, options);
       };
     });
     await openDuel(page);
@@ -1437,11 +1450,13 @@ test("missing active images use deterministic placeholders without blocking inpu
   const controls = page.locator('[data-cy="duel-field"][data-prompt-kind]');
   await expect(controls).toBeVisible({ timeout: 120_000 });
   await expect(
-    page.locator('[data-cy="optional-media-global-warning"]'),
-  ).toContainText(/Optional media is missing.*placeholders active/s);
+    page.locator('[data-cy="optional-media-package-warning"]'),
+  ).toContainText(/Optional media unavailable:.*You can keep playing/s);
   expect(
-    contentTransfers.filter((url) => /\/runtime\/images\/\d+\.jpg$/.test(url)),
-  ).toEqual([]);
+    contentTransfers.filter((url) =>
+      decodeURIComponent(url).includes("cards/full/"),
+    ).length,
+  ).toBeGreaterThan(0);
   const promptImage = controls.locator("img").first();
   await expect(promptImage).toHaveAttribute("src", /^data:image\/svg\+xml/);
   await expect(controls.getByRole("button").first()).toBeEnabled();
@@ -1482,15 +1497,8 @@ test("forced Worker initialization timeout terminates replacement Workers and fa
     })
     .toBe(0);
   await expect
-    .poll(() =>
-      page.evaluate(
-        async () =>
-          (await navigator.locks.query()).held?.filter(
-            (lock) => lock.name === "ygo-application-lifecycle-v1",
-          ).length ?? 0,
-      ),
-    )
-    .toBe(0);
+    .poll(() => page.evaluate(() => window.selectedContent.sessionActive()))
+    .toBe(false);
   expect(await selectedSaveSnapshot(page)).toEqual(before);
 });
 
@@ -2092,9 +2100,7 @@ test("floating field windows stay inside the field, persist and never lose a dec
   expect(await countResponses(page)).toBe(responsesBefore);
 
   expect(
-    await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
-    ),
+    await page.evaluate(() => window.selectedContent.battlePreferences()),
   ).toEqual({
     version: 2,
     windows: { zoneList: draggedList, confirm: draggedConfirm },
@@ -2162,7 +2168,7 @@ test("floating field windows stay inside the field, persist and never lose a dec
   // Positions survive a reload of the whole app.
   await page.setViewportSize({ width: 1280, height: 800 });
   const restored = (await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("ygo.ui.v2") ?? "null"),
+    window.selectedContent.battlePreferences(),
   )) as { readonly windows: { zoneList: unknown; confirm: unknown } };
   await page.reload();
   await startPresetDuel(page);
@@ -6484,14 +6490,12 @@ async function runRestartCycle(page: Page): Promise<void> {
   });
 }
 
-async function mountedImageLeaseState(page: Page): Promise<{
-  readonly activeCount: number;
-  readonly activeMatchesMounted: boolean;
-  readonly activeUrls: readonly string[];
-  readonly mountedUrls: readonly string[];
-}> {
+async function mountedImageLeaseState(page: Page) {
   return page.evaluate(() => {
-    const activeUrls = [...window.__duelCapture.imageUrls.active].sort();
+    const capture = window.__duelCapture.imageUrls;
+    const activeUrls = [...capture.active]
+      .filter((url) => capture.blobs.get(url)?.mime.startsWith("image/"))
+      .sort();
     const mountedUrls = [
       ...new Set(
         [...document.querySelectorAll<HTMLImageElement>("img")]
@@ -6501,9 +6505,11 @@ async function mountedImageLeaseState(page: Page): Promise<{
     ].sort();
     return {
       activeCount: activeUrls.length,
-      activeMatchesMounted:
-        activeUrls.length === mountedUrls.length &&
-        activeUrls.every((url, index) => url === mountedUrls[index]),
+      activeBytes: activeUrls.reduce(
+        (sum, url) => sum + capture.blobs.get(url)!.bytes,
+        0,
+      ),
+      mountedAreActive: mountedUrls.every((url) => activeUrls.includes(url)),
       activeUrls,
       mountedUrls,
     };

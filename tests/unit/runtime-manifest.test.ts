@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
 import { parseRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-manifest.ts";
 import {
   runtimeAssetContentSha256,
@@ -92,6 +93,67 @@ describe("runtime snapshot manifest", () => {
       /escapes/,
     );
   });
+
+  it.each([false, true])(
+    "resolves strings with explicit root = %s",
+    async (explicit) => {
+      await mkdir(".tmp", { recursive: true });
+      const root = await mkdtemp(path.resolve(".tmp/node-strings-"));
+      const stringsRoot = path.join(root, explicit ? "duel-core" : "strings");
+      const strings = {
+        system: { "1": "package strings" },
+        victory: {},
+        counter: {},
+        setname: {},
+      };
+      const bytes = JSON.stringify(strings);
+      try {
+        await mkdir(stringsRoot);
+        await mkdir(path.join(root, "scripts"));
+        await writeFile(path.join(stringsRoot, "en.json"), bytes);
+        await writeFile(
+          path.join(root, "scripts/index.json"),
+          JSON.stringify({
+            official: [],
+            preRelease: [],
+            globals: [],
+            shardCount: 256,
+          }),
+        );
+        await writeFile(path.join(root, "scripts/globals.json"), "{}");
+        const manifest = validManifest();
+        const withStrings = {
+          ...manifest,
+          assets: {
+            ...manifest.assets,
+            files: [
+              {
+                path: "strings/en.json",
+                bytes: Buffer.byteLength(bytes),
+                sha256: createHash("sha256").update(bytes).digest("hex"),
+              },
+            ],
+          },
+        };
+        await expect(
+          verifyRuntimeSnapshotFiles(
+            withStrings,
+            root,
+            explicit ? stringsRoot : undefined,
+          ),
+        ).resolves.toBeUndefined();
+        const dependencies = await loadActiveDuelDependenciesNode(
+          root,
+          new Set(),
+          undefined,
+          explicit ? stringsRoot : undefined,
+        );
+        expect(dependencies.strings).toEqual(strings);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   it("detects artifact hash mismatches", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "ygo-runtime-manifest-"));

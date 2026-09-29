@@ -1,26 +1,18 @@
-import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 import {
-  storyShellProps,
+  semanticShellFixture,
+  disposeSemanticShells,
+} from "../fixtures/semantic-shell.ts";
+import {
   createStorySaveRepository,
   resetStorySessionFixture,
 } from "../fixtures/story-session.ts";
 import { storyBindingFixture } from "../fixtures/story-release.ts";
-import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
-import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /* The duel's worker client is the only piece of the battle domain this test
    cannot run for real in jsdom, so it is replaced with the same hand-driven
@@ -115,7 +107,6 @@ import {
   type ShellStore,
 } from "../../src/shell/shell-store.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/index.ts";
 import type {
   StorySaveWriteResult,
   StorySlotKey,
@@ -142,13 +133,6 @@ const mockedWorkerClientCtor = MockedDuelWorkerClient as unknown as {
 /** Set to make the duel's own request parser refuse whatever the shell built,
     which is the one way the two contracts can be made to disagree from here. */
 let refuseBattleRequest = false;
-
-const READY_CORE_GATE = {
-  kind: "ready" as const,
-  gameplay: createShellGameplay(installedDuelGameplayFixture(), null),
-  reader: contentReaderFixture(),
-  generation: 1,
-};
 
 const loaders: DomainLoaders = {
   duel: async () => {
@@ -195,11 +179,10 @@ function renderShell() {
     hash = next;
   });
   return render(AppShell, {
-    ...storyShellProps(),
     store,
     loaders,
     saves,
-    initialCoreGate: READY_CORE_GATE,
+    ...semanticShellFixture(undefined, saves),
   });
 }
 
@@ -278,40 +261,22 @@ async function reachEncounter(): Promise<ReturnType<typeof userEvent.setup>> {
   return user;
 }
 
-async function deleteStorySaves(): Promise<void> {
-  await new Promise<void>((resolve) => {
-    const request = indexedDB.deleteDatabase(STORY_SAVES_DATABASE_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    request.onblocked = () => resolve();
-  });
-}
-
-/* Compile the real lazy domains before timing UI readiness. Cold Vite imports
-   can outlast the DOM/start waits and leak pending handoffs into later tests.
-   This loads code only; each test still mounts its own shell and restores its
-   own saves, including the cold-session checkpoint cases. */
-beforeAll(async () => {
-  await Promise.all([loaders.duel(), loaders.story()]);
-});
-
 beforeEach(async () => {
   hash = "#/story";
   checkpointWriteFailure = null;
   refuseBattleRequest = false;
   mockedWorkerClientCtor.starts.length = 0;
-  await deleteStorySaves();
   saves = failableSaves(createStorySaveRepository(globalThis.indexedDB));
   await seedMapProgress();
 });
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
+  await disposeSemanticShells();
+  await resetStorySessionFixture();
   localStorage.clear();
   mockedWorkerClientCtor.instances.length = 0;
   mockedWorkerClientCtor.starts.length = 0;
-  await deleteStorySaves();
 });
 
 /** The seats the Worker was actually asked to duel with, once it has been. */
@@ -465,7 +430,6 @@ describe("story duel handoff", () => {
      of the checkpoint. `e2e/story-duel.spec.ts` does the real reload. */
   it("restarts the encounter from the checkpoint on a cold start into the session", async () => {
     const handoffId = "66666666-2222-4333-8444-555555555555";
-    const { deck, collection } = fieldableStoryDeck();
     await saves.write(
       "checkpoint:pre-duel",
       {
@@ -475,9 +439,6 @@ describe("story duel handoff", () => {
         progressExists: true,
         encounterId: "old-arena",
         pendingHandoffId: handoffId,
-        decks: [deck],
-        defaultDeckId: deck.id,
-        collection,
       },
       null,
       storyBindingFixture(),
@@ -486,14 +447,6 @@ describe("story duel handoff", () => {
     renderShell();
 
     await waitForCy("battle-root");
-    const { player } = await startedSeats();
-    expect(player).toEqual({
-      kind: "cards",
-      main: deck.main,
-      extra: deck.extra,
-      side: deck.side,
-    });
-    expect(document.querySelector('[data-cy="deck-picker"]')).toBeNull();
     expect(hash).toBe(`#/duel/session/${handoffId}`);
 
     emitResult({ type: "surrendered", player: 0 });

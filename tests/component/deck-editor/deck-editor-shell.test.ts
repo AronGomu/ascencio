@@ -1,4 +1,9 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -6,13 +11,12 @@ import "fake-indexeddb/auto";
 import { readFileSync } from "fs";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import DeckEditor from "../../../src/deck-editor/components/DeckEditor.svelte";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/repository/index.ts";
+
 import {
   prototypeCatalogMap,
   stateFixture,
@@ -27,9 +31,16 @@ const EDITOR_SOURCE = readFileSync(
 );
 const APP_SOURCE = readFileSync("src/deck-editor/DeckEditorApp.svelte", "utf8");
 
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
+
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 function renderEditor(mainCount = 0, onreturn = vi.fn()) {
@@ -186,9 +197,12 @@ describe("DeckEditor shell", () => {
 describe("DeckEditorApp boot", () => {
   it("loads isolated storage then falls back to Deck Library", async () => {
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: null,
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: null,
+        onnavigate: vi.fn(),
+      },
     });
     expect(
       screen.getByRole("heading", { name: /Loading local decks/i }),

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import CollectionScreen from "../../../src/story/collection/CollectionScreen.svelte";
@@ -191,6 +191,112 @@ describe("CollectionScreen", () => {
       container.querySelector('[data-cy="collection-preview-card-name"]')!
         .textContent,
     ).toBe("Dark Magician");
+  });
+
+  it("clears an unowned preview when show-all hides that card", async () => {
+    const { container } = mount({ ownership: OWNS_TWO });
+    const user = userEvent.setup();
+    const showAll = container.querySelector('[data-cy="collection-show-all"]')!;
+
+    await user.click(showAll);
+    await user.click(
+      container.querySelector('[data-cy="collection-card-4010"]')!,
+    );
+    expect(
+      container.querySelector('[data-cy="collection-preview-card-name"]')
+        ?.textContent,
+    ).toBe("Zombie Master");
+
+    await user.click(showAll);
+    expect(
+      container.querySelector('[data-cy="collection-card-4010"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-cy="collection-preview-card-name"]'),
+    ).toBeNull();
+    expect(container.textContent).toContain("Hover a card to see its details.");
+  });
+
+  it.each(["mouseEnter", "click", "focus"] as const)(
+    "%s previews a late catalog card without rewalking the catalog",
+    async (event) => {
+      let codeReads = 0;
+      const cards = Array.from({ length: 1_000 }, (_, index) => ({
+        ...card(index + 1, index === 999 ? "A late card" : `Z ${index}`),
+        get code() {
+          codeReads += 1;
+          return index + 1;
+        },
+      }));
+      const { container } = mount({
+        ownership: unlimitedCardOwnership(),
+        cards,
+        rarityByCode: new Map(),
+      });
+      const tile = container.querySelector('[data-cy="collection-card-1000"]')!;
+
+      codeReads = 0;
+      await fireEvent[event](tile);
+
+      expect(
+        container.querySelector('[data-cy="collection-preview-card-name"]')
+          ?.textContent,
+      ).toBe("A late card");
+      /* Preview reads are bounded; a membership scan reads all 1,000 codes. */
+      expect(codeReads).toBeLessThan(20);
+    },
+  );
+
+  it("refreshes preview membership when the catalog changes", async () => {
+    const { container, rerender } = mount({
+      ownership: unlimitedCardOwnership(),
+    });
+    await fireEvent.mouseEnter(
+      container.querySelector('[data-cy="collection-card-4007"]')!,
+    );
+
+    await rerender({ cards: CATALOG.filter(({ code }) => code !== 4010) });
+    expect(
+      container.querySelector('[data-cy="collection-preview-card-name"]')
+        ?.textContent,
+    ).toBe("Dark Magician");
+
+    await rerender({ cards: CATALOG.filter(({ code }) => code !== 4007) });
+    expect(
+      container.querySelector('[data-cy="collection-preview-card-name"]'),
+    ).toBeNull();
+    expect(container.textContent).toContain("Hover a card to see its details.");
+
+    await rerender({ cards: CATALOG });
+    await fireEvent.mouseEnter(
+      container.querySelector('[data-cy="collection-card-4007"]')!,
+    );
+    expect(
+      container.querySelector('[data-cy="collection-preview-card-name"]')
+        ?.textContent,
+    ).toBe("Dark Magician");
+  });
+
+  it("clears the preview when updated ownership removes the selected card", async () => {
+    const { container, rerender } = mount({ ownership: OWNS_TWO });
+    await fireEvent.mouseEnter(
+      container.querySelector('[data-cy="collection-card-4007"]')!,
+    );
+    expect(
+      container.querySelector('[data-cy="collection-preview-card-name"]')
+        ?.textContent,
+    ).toBe("Dark Magician");
+
+    await rerender({
+      ownership: storyCardOwnership({
+        ...createInitialStoryState(),
+        collection: { 4008: 1 },
+      }),
+    });
+    expect(
+      container.querySelector('[data-cy="collection-preview-card-name"]'),
+    ).toBeNull();
+    expect(container.textContent).toContain("Hover a card to see its details.");
   });
 
   it("back hands control to the caller", async () => {

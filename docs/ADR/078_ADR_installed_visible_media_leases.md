@@ -3,6 +3,7 @@
 > Status: accepted; planned
 > Amended by [ADR-091](091_ADR_shell_composes_semantic_content_ports.md) D1–D3 and [ADR-094](094_ADR_explicit_media_updates_and_cleanup.md) D1–D2: Cards owns semantic image port, Shell adapter resolves cache-only optional media; missing media never gates gameplay.
 > Amended by [ADR-086](086_ADR_installed_chapters_own_gameplay_catalog.md) D4–D5: required-media failure invalidates owning chapter/dependants; placeholder is error presentation only, never a readiness bypass.
+> Superseded for current media storage by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D2/D5. Optional-media warnings/placeholders remain; Cache Storage lease details are historical.
 > Decided: 2026-09-07
 > Owners: decks / shell / battle presentation
 > Relates: ADR-039 (direct art), ADR-043 (catalog/art separation)

@@ -311,7 +311,7 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
       throw error;
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Chapter-01 source corrections are missing or invalid. Restore the exact approved alias and exclusions in content/authoring/chapter-one-corrections.json; never infer aliases or exclusions.",
+      "Chapter-01 source corrections are missing or invalid. Restore the exact approved alias and exclusions in assets/content/chapter-01/authoring/chapter-one-corrections.json; never infer aliases or exclusions.",
     );
   }
   if (
@@ -320,7 +320,7 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
   ) {
     add(
       "OWNER_MAPPING_REQUIRED",
-      "Provide exactly one chapter-01 selection with all source sets in the approved interval from content/authoring/chapter-policy.json. Empty lists are incomplete scaffolding. Later chapter rows and additional cards are outside this release scope.",
+      "Provide exactly one chapter-01 selection with all source sets in the approved interval from assets/content/chapter-01/authoring/chapter-policy.json. Empty lists are incomplete scaffolding. Later chapter rows and additional cards are outside this release scope.",
     );
   }
   const sourceSha256 =
@@ -335,12 +335,12 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
   if (!interval)
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Chapter-01 scope interval is missing or invalid. Record approved-chapter-one-scope, inclusive startsOn, exclusive endsBefore, boundaryEvidence and endBoundaryEvidence references, dateConvention and boundaryEvidenceStatus owner-approved-interval-not-exhaustive-history in content/authoring/chapter-policy.json, bound to source SHA-256 and snapshot cutoff. Scope approval is not exhaustive historical verification; do not invent dates or require later chapter boundaries.",
+      "Chapter-01 scope interval is missing or invalid. Record approved-chapter-one-scope, inclusive startsOn, exclusive endsBefore, boundaryEvidence and endBoundaryEvidence references, dateConvention and boundaryEvidenceStatus owner-approved-interval-not-exhaustive-history in assets/content/chapter-01/authoring/chapter-policy.json, bound to source SHA-256 and snapshot cutoff. Scope approval is not exhaustive historical verification; do not invent dates or require later chapter boundaries.",
     );
   if (!source || !selections || selections.sourceSha256 !== sourceSha256) {
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Provide valid bounded source and selections with matching lowercase SHA-256. Preserve the approved source bytes in content/authoring/card-set-source.json.",
+      "Provide valid bounded source and selections with matching lowercase SHA-256. Preserve the approved source bytes in assets/content/card-library/authoring/card-set-source.json.",
     );
   }
   if (source && selections && corrections && normalized) {
@@ -417,7 +417,7 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
   if (!input.availability.prototypeMedia)
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Existing Chapter 1 source/media is missing. Restore src/story/content/prologue.ts and assets/story/chapter-01/city-map-placeholder.svg; review prototype media rights separately.",
+      "Existing Chapter 1 source/media is missing. Restore src/story/content/prologue.ts and assets/content/chapter-01/media/city-map-placeholder.svg; review prototype media rights separately.",
     );
 
   if (!input.availability.prototypeDecksCompatible)
@@ -453,48 +453,14 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
       "Human review required: record approved engine/script source obligations, database terms, artwork and story-media permission references in content/distribution-evidence.json, bound to source SHA-256. Public URLs are not approval; automation validates attestations, not legal truth.",
     );
   }
-  const setup =
-    record(input.setup) &&
-    exact(input.setup, ["schemaVersion", "cloudflare", "github", "devices"]) &&
-    input.setup.schemaVersion === 1
-      ? input.setup
-      : null;
-  const cloudflare = setup?.cloudflare;
-  const github = setup?.github;
-  const project = input.environment.CLOUDFLARE_PAGES_PROJECT;
-  const present = (name: string) =>
-    typeof input.environment[name] === "string" &&
-    input.environment[name]!.trim().length > 0;
-  if (
-    !record(cloudflare) ||
-    !exact(cloudflare, ["plan", "project", "staticOnly"]) ||
-    cloudflare.plan !== "free" ||
-    cloudflare.staticOnly !== true ||
-    typeof project !== "string" ||
-    !/^[a-z0-9][a-z0-9-]{0,57}[a-z0-9]$/.test(project) ||
-    cloudflare.project !== project ||
-    !record(github) ||
-    !exact(github, ["environment", "protectionEvidence"]) ||
-    github.environment !== "production" ||
-    !text(github.protectionEvidence) ||
-    !present("CLOUDFLARE_API_TOKEN") ||
-    !present("CLOUDFLARE_ACCOUNT_ID")
-  ) {
-    add(
-      "HOST_SETUP_REQUIRED",
-      "Human setup required: Cloudflare Pages Free static-only project, protected GitHub production environment, CLOUDFLARE_PAGES_PROJECT variable, CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets. Record nonsecret attestations in content/setup-evidence.json. Presence checks do not verify credentials or remote protection; no account/deploy action is performed.",
-    );
-  }
-  const devices = setup?.devices;
-  if (
-    !record(devices) ||
-    !exact(devices, ["android", "iphone", "ipad"]) ||
-    !["android", "iphone", "ipad"].every((key) => text(devices[key]))
-  )
-    add(
-      "DEVICE_ACCESS_REQUIRED",
-      "Human device access required: record native Android, iPhone and iPad tester/device evidence in content/setup-evidence.json. Emulation is not native install/quota/reopen evidence; T1 records access only.",
-    );
+  add(
+    "HOST_SETUP_REQUIRED",
+    "Public deployment approval remains manual; source checks do not approve hosting or distribution.",
+  );
+  add(
+    "DEVICE_ACCESS_REQUIRED",
+    "Owner Chromium PWA install, quota, and offline reopening acceptance remains unproven.",
+  );
   const codeReady = !blockers.some(
     ({ code }) =>
       code === "OWNER_MAPPING_REQUIRED" || code === "SOURCE_COVERAGE_REQUIRED",

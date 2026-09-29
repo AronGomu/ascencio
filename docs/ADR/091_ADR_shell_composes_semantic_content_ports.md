@@ -1,6 +1,8 @@
 # ADR-091: Shell alone composes Content into semantic ports
 
 > Status: accepted; implemented
+> Amended by [ADR-096](096_ADR_package_owned_assets_and_global_card_library.md), [ADR-097](097_ADR_user_data_isolation_without_save_compatibility.md), [ADR-098](098_ADR_single_owner_sqlite_worker.md): SQLite storage replaces transport; readiness becomes per-mode; save migration/continuity removed; Shell semantic composition and OCG authority remain.
+> Current implementation is consolidated by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D2–D5. Historical transport details do not override current SQLite adapters.
 > Decided: 2026-09-13
 > Owners: shell application / content / cards / story / battle
 > Amends: ADR-085 D1–D2,D4–D5; ADR-077 D3; ADR-078 D2

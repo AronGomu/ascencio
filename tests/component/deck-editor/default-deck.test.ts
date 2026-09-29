@@ -1,21 +1,21 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
-import {
-  DECK_DATABASE_NAME,
-  type DeckContext,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/repository/index.ts";
+import { type DeckContext } from "../../../src/decks/repository/index.ts";
 import { STARTER_DECK_NAME } from "../../../src/decks/editing/index.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
@@ -29,18 +29,20 @@ import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts"
 
 installPrototypeActiveCatalog();
 
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
+
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 async function libraryRowNames(): Promise<readonly string[]> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    return (await repository.list()).map(({ name }) => name);
-  } finally {
-    repository.close();
-  }
+  return (await repository.list()).map(({ name }) => name);
 }
 
 /** A save with no decks and no default — what a player is left with after
@@ -86,9 +88,12 @@ function emptyStoryContext(): {
 describe("starter deck seeding on mount", () => {
   it("a first visit lands on a library holding the default starter deck", async () => {
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: null,
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: null,
+        onnavigate: vi.fn(),
+      },
     });
     await waitFor(() =>
       expect(document.querySelector('[data-cy="deck-library"]')).not.toBeNull(),
@@ -171,9 +176,12 @@ describe("starter deck seeding on mount", () => {
 
   it("a second visit does not add a second starter deck", async () => {
     const first = render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: null,
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: null,
+        onnavigate: vi.fn(),
+      },
     });
     await waitFor(() =>
       expect(
@@ -183,9 +191,12 @@ describe("starter deck seeding on mount", () => {
     first.unmount();
 
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: null,
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: null,
+        onnavigate: vi.fn(),
+      },
     });
     await waitFor(() =>
       expect(
@@ -198,7 +209,7 @@ describe("starter deck seeding on mount", () => {
 
 describe("the default deck through the controller", () => {
   it("set default marks a deck and deleting that deck clears the mark", async () => {
-    const repository = await IndexedDbDeckRepository.open();
+    const repository = await openTestDeckRepository();
     const controller = new DeckBuilderController(
       repository,
       prototypeCatalogMap,
@@ -215,6 +226,6 @@ describe("the default deck through the controller", () => {
     await controller.deleteDeck(id, revision);
     expect(get(controller).defaultDeckId).toBeNull();
     expect(await repository.getDefaultDeck()).toBeNull();
-    repository.close();
+    await repository.close();
   });
 });

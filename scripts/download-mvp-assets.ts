@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -79,7 +79,7 @@ async function main(): Promise<void> {
     ) as { package: string; version: string };
     const manifest = JSON.parse(
       await readFile(
-        path.join(projectRoot, ASSET_SOURCES.data.source, "manifest.json"),
+        path.join(projectRoot, ASSET_SOURCES.dataManifest.source),
         "utf8",
       ),
     ) as { counts: Record<string, number> };

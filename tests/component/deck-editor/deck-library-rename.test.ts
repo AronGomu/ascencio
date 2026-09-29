@@ -1,15 +1,16 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
-import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
-import {
-  DECK_DATABASE_NAME,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/repository/index.ts";
+
 import { deckId, type DeckId } from "../../../src/decks/contracts/index.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
@@ -22,16 +23,16 @@ import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts"
 installPrototypeActiveCatalog();
 
 afterEach(async () => {
-  await deleteDB(DECK_DATABASE_NAME);
+  await disposeTestDeckRepositories();
 });
 
 async function libraryWithTwoDecks(): Promise<{
-  readonly repository: IndexedDbDeckRepository;
+  readonly repository: TestDeckRepository;
   readonly controller: DeckBuilderController;
   readonly first: DeckId;
   readonly second: DeckId;
 }> {
-  const repository = await IndexedDbDeckRepository.open();
+  const repository = await openTestDeckRepository();
   const controller = new DeckBuilderController(
     repository,
     prototypeCatalogMap,
@@ -64,7 +65,7 @@ describe("renaming a deck from the library", () => {
     expect(stored?.deck.name).toBe("Alpha Renamed");
     /* The deck that was open is untouched — the rename named another one. */
     expect((await repository.load(second))?.deck.name).toBe("Bravo");
-    repository.close();
+    await repository.close();
   });
 
   it("trims the name it is given", async () => {
@@ -73,7 +74,7 @@ describe("renaming a deck from the library", () => {
     await controller.renameDeck(first, "   Spaced Out   ");
 
     expect((await repository.load(first))?.deck.name).toBe("Spaced Out");
-    repository.close();
+    await repository.close();
   });
 
   it("an invalid name posts a message and writes nothing", async () => {
@@ -86,7 +87,7 @@ describe("renaming a deck from the library", () => {
     const after = (await repository.load(first))!.deck;
     expect(after.name).toBe(before.name);
     expect(after.revision).toBe(before.revision);
-    repository.close();
+    await repository.close();
   });
 
   it("renaming a deck storage no longer holds changes nothing", async () => {
@@ -96,6 +97,6 @@ describe("renaming a deck from the library", () => {
 
     expect(names(controller)).toEqual(["Alpha", "Bravo"]);
     expect(get(controller).mode).not.toBe("error");
-    repository.close();
+    await repository.close();
   });
 });

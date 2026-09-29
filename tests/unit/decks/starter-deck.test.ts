@@ -1,3 +1,8 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
 import { ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
 // @vitest-environment node
 
@@ -5,14 +10,10 @@ import "fake-indexeddb/auto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
-import {
-  DECK_DATABASE_NAME,
-  LEGACY_DECK_DATABASE_NAME,
-} from "../../../src/decks/deck-database.ts";
+
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { createBlankDeck } from "../../../src/decks/deck-model.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/indexeddb-deck-repository.ts";
+
 import {
   ensureStarterDeck,
   STARTER_DECK_NAME,
@@ -38,7 +39,6 @@ import { validateDeckDraft } from "../../../src/decks/deck-validation.ts";
 import { importYdk } from "../../../src/decks/ydk-adapter.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
-const names: string[] = [];
 const catalog = catalogByCode(PROTOTYPE_CATALOG);
 
 /* The bundled starter list names cards the prototype fixture catalog does not
@@ -57,17 +57,12 @@ const FIXTURE_YDK = [
 ].join("\n");
 
 afterEach(async () => {
-  await Promise.all(names.splice(0).map((name) => deleteDB(name)));
-  await deleteDB(LEGACY_DECK_DATABASE_NAME);
-  await deleteDB(DECK_DATABASE_NAME);
+  await disposeTestDeckRepositories();
+  await disposeTestDeckRepositories();
 });
 
-async function repository(name: string): Promise<IndexedDbDeckRepository> {
-  names.push(name);
-  return IndexedDbDeckRepository.open(
-    name,
-    () => new Date("2026-01-01T00:00:00.000Z"),
-  );
+async function repository(name: string): Promise<TestDeckRepository> {
+  return openTestDeckRepository(name);
 }
 
 describe("ensureStarterDeck", () => {
@@ -81,7 +76,7 @@ describe("ensureStarterDeck", () => {
     expect(decks[0]?.side).toEqual([74677422]);
     expect(decks[0]?.importedNeedsReview).toBe(false);
     expect(await repo.getDefaultDeck()).toBe(decks[0]?.id);
-    repo.close();
+    await repo.close();
   });
 
   /* Seeding runs on every mount, so running it twice is the ordinary case
@@ -96,7 +91,7 @@ describe("ensureStarterDeck", () => {
     expect(await repo.list()).toEqual(before);
     expect(await repo.list()).toHaveLength(1);
     expect(await repo.getDefaultDeck()).toBe(first);
-    repo.close();
+    await repo.close();
   });
 
   it("an existing default short-circuits seeding", async () => {
@@ -113,7 +108,7 @@ describe("ensureStarterDeck", () => {
     ]);
     expect(await repo.getDefaultDeck()).toBe(chosen.id);
     expect(await repo.list()).toEqual(before);
-    repo.close();
+    await repo.close();
   });
 
   it.each(["Custom only", "Starter Deck", STARTER_DECK_NAME])(
@@ -129,7 +124,7 @@ describe("ensureStarterDeck", () => {
       await ensureStarterDeck(repo, catalog, PROTOTYPE_RULESET);
       expect(await repo.list()).toEqual(before);
       expect(await repo.getDefaultDeck()).toBeNull();
-      repo.close();
+      await repo.close();
     },
   );
 
@@ -144,7 +139,7 @@ describe("ensureStarterDeck", () => {
     ).resolves.toBeUndefined();
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
-    repo.close();
+    await repo.close();
   });
 });
 
@@ -207,7 +202,7 @@ describe("the bundled starter list", () => {
       expect(await repo.list()).toEqual(before);
       expect(await repo.getDefaultDeck()).toBe(chosen);
     } finally {
-      repo.close();
+      await repo.close();
     }
   });
 

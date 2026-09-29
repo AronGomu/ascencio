@@ -1,12 +1,7 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
-import { exactInstalledRuntime } from "../fixtures/exact-installed-runtime.ts";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { packageRuntimeFixture } from "../fixtures/package-runtime.ts";
 import { createBrowserDuelWorkerRuntime } from "../../src/battle/worker/create-browser-runtime.ts";
 import { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
-import {
-  loadInstalledGameplay,
-  type InstalledGameplay,
-} from "../../src/content/index.ts";
-import { createLegacyBattleRuntimeSource } from "../../src/shell/adapters/legacy-battle-runtime.ts";
 import { DuelSession } from "../../src/battle/worker/engine/DuelSession.ts";
 import { HeadlessDuelController } from "../../src/battle/worker/HeadlessDuelController.ts";
 import {
@@ -16,21 +11,19 @@ import {
 } from "../../src/battle/duel/contracts/ids.ts";
 import type { BattleRuntimeInput } from "../../src/battle/ports/index.ts";
 
-let fixture: Awaited<ReturnType<typeof exactInstalledRuntime>>;
+let fixture: Awaited<ReturnType<typeof packageRuntimeFixture>>;
 let input: BattleRuntimeInput;
-let gameplay: InstalledGameplay;
+let gameplay: Awaited<ReturnType<typeof packageRuntimeFixture>>["gameplay"];
 
 beforeAll(async () => {
-  fixture = await exactInstalledRuntime();
-  const result = await loadInstalledGameplay(fixture.reader, fixture.content);
-  if (result.kind !== "ok") throw new Error(result.code);
-  gameplay = result.value;
-  input = await createLegacyBattleRuntimeSource(fixture.reader, gameplay).load(
-    new AbortController().signal,
-  );
+  fixture = await packageRuntimeFixture();
+  gameplay = fixture.gameplay;
+  input = await fixture.source.load(new AbortController().signal);
 }, 120_000);
 
-describe("exact installed browser runtime on real WASM", () => {
+afterAll(() => fixture?.close());
+
+describe("SQLite package-query runtime on real WASM", () => {
   it("rejects one-byte-mutated frozen WASM before engine initialization", async () => {
     const runtime = createBrowserDuelWorkerRuntime();
     const initialize = vi.spyOn(OcgCoreAdapter, "initialize");
@@ -88,11 +81,11 @@ describe("exact installed browser runtime on real WASM", () => {
   });
 
   it("loads a fresh WASM buffer for the exact same snapshot", async () => {
-    const source = createLegacyBattleRuntimeSource(fixture.reader, gameplay);
+    const source = fixture.source;
     const first = await source.load(new AbortController().signal);
     const second = await source.load(new AbortController().signal);
 
-    expect(first.snapshotId).toBe(fixture.content.snapshot.runtimeSnapshotId);
+    expect(first.snapshotId).toBe(input.snapshotId);
     expect(second.snapshotId).toBe(first.snapshotId);
     expect(first.wasmBinary).not.toBe(second.wasmBinary);
     expect(first.wasmBinary.byteLength).toBeGreaterThan(0);

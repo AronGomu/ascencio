@@ -82,10 +82,14 @@
   import { installedSelectableDecks } from "../decks/installed-selectable-decks.ts";
   import {
     catalogByCode,
-    PROTOTYPE_RULESET,
+    type PinnedDeckRuleset,
   } from "../../decks/validation/index.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
-  import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
+  import type { DeckRepository } from "../../decks/repository/index.ts";
+  import type {
+    AsyncPreferencePort,
+    StorageFailure,
+  } from "../../storage/index.ts";
   import {
     battleFacadeFailure,
     battleResultForDuelResult,
@@ -100,7 +104,7 @@
   } from "./stores/duel-store.ts";
   import {
     DEFAULT_PERSISTED_UI_STATE,
-    hasPersistedUiState,
+    type PersistedUiState,
     type PersistedWindowPosition,
   } from "./stores/persisted-ui-state.ts";
   import { createPersistedUiStore } from "./stores/persisted-ui-store.ts";
@@ -112,9 +116,17 @@
 
   export let runtimeSource: BattleRuntimeSource;
   export let presentation: BattlePresentationInput;
+  export let ruleset: PinnedDeckRuleset;
   export let imageSource: CardImageSource | null = null;
   export let onfatal: ((error: unknown) => void) | undefined = undefined;
   export let ondispose: ((done: Promise<void>) => void) | undefined = undefined;
+  export let createRepository: () => DeckRepository = () => {
+    throw new Error("USER_DATA_UNAVAILABLE");
+  };
+  export let persistedUiPort: AsyncPreferencePort<PersistedUiState> | null =
+    null;
+  export let initialPersistedUi: PersistedUiState = DEFAULT_PERSISTED_UI_STATE;
+  export let initialPersistedUiPresent = false;
 
   /* Set by the battle facade when a host is waiting for this duel's outcome.
      Left undefined in standalone mode, where the duel reports nothing
@@ -151,7 +163,15 @@
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 104'%3E%3Crect width='72' height='104' rx='5' fill='%2318243b'/%3E%3Cpath d='M8 8h56v88H8z' fill='none' stroke='%23697895' stroke-width='2'/%3E%3Ctext x='36' y='57' fill='%23a9b5ca' font-size='28' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
   const client = new DuelWorkerClient();
   const duel = createDuelStore(client, runtimeSource);
-  const persistedUi = createPersistedUiStore();
+  let persistenceError: string | null = null;
+  const reportPersistenceFailure = (error: StorageFailure): void => {
+    persistenceError = error.code;
+  };
+  const persistedUi = createPersistedUiStore(
+    initialPersistedUi,
+    persistedUiPort,
+    reportPersistenceFailure,
+  );
   const uiSettings = createUiSettingsStore({
     ...DEFAULT_UI_SETTINGS,
     ...$persistedUi.settings,
@@ -711,6 +731,8 @@
      matched against a deck this build can actually play. Null until the local
      library has been read, and null again if that deck no longer qualifies. */
   let defaultDeckKey: string | null = null;
+  // A session choice stays usable after a write failure; it is not durable presence.
+  let sessionDeckChoice = false;
   let pickerFallbackNotice = false;
   let pickerStartError: string | null = null;
   /* Every refresh is racing the one before it — the picker reopens while a
@@ -735,14 +757,13 @@
   }
 
   async function listDecksOrBundledOnly(): Promise<DeckListing> {
-    let repository: IndexedDbDeckRepository | null = null;
     try {
-      repository = await IndexedDbDeckRepository.open();
+      const repository = createRepository();
       const decks = await installedSelectableDecks(
         presentation,
         repository,
         deckBuilderCatalog,
-        PROTOTYPE_RULESET,
+        ruleset,
       );
       const defaultDeckId = await repository.getDefaultDeck();
       const defaultPrefix =
@@ -762,11 +783,9 @@
         presentation,
         { list: async () => [], load: async () => null },
         deckBuilderCatalog,
-        PROTOTYPE_RULESET,
+        ruleset,
       );
       return { decks, defaultDeckKey: null };
-    } finally {
-      repository?.close();
     }
   }
 
@@ -780,7 +799,7 @@
     /* A profile with nothing stored has made no choice to keep, so the stored
        default deck wins there and only there: once a key has been written,
        what the player picked outranks what the editor calls their default. */
-    const chose = hasPersistedUiState();
+    const chose = initialPersistedUiPresent || sessionDeckChoice;
     const chosen = chose
       ? findSelectableDeck(selectableDecks, playerKey)
       : null;
@@ -840,6 +859,7 @@
   }
 
   function selectDecks(playerKey: string, opponentKey: string): void {
+    sessionDeckChoice = true;
     pickerFallbackNotice = false;
     pickerStartError = null;
     persistedUi.setDecks(playerKey, opponentKey);
@@ -1081,6 +1101,12 @@
   >
     {appAnnouncement}
   </p>
+
+  {#if persistenceError !== null}
+    <p role="alert" data-cy="battle-persistence-error">
+      Settings could not be saved ({persistenceError}). Duel remains available.
+    </p>
+  {/if}
 
   {#if imageWarning}
     <section

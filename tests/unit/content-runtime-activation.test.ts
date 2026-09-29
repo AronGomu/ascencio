@@ -1,102 +1,22 @@
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
 import { readFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
-import { FROZEN_VENDOR_MANIFEST_SHA256 } from "../../src/shell/adapters/legacy-frozen-vendor-pin.ts";
 import { deleteDB, openDB } from "idb";
-import { contentInstallFixture } from "../fixtures/content-install-fixture.ts";
-import type { InstalledRuntimeReceipt } from "../../src/content/index.ts";
-import {
-  parseInstalledRuntimeReceipt,
-  readInstalledRuntimeReceipt,
-  writeInstalledRuntimeReceipt,
-} from "../../src/shell/adapters/legacy-installed-runtime-receipt.ts";
-import { createRuntimeActivationPort } from "../../src/shell/adapters/runtime-activation.ts";
+import { validateFrozenBattleExecutable } from "../../src/battle/ports/index.ts";
 import { SnapshotStore } from "../../src/battle/storage/snapshot-store.ts";
 
 afterEach(async () => {
   await deleteDB("ygo-story-duel");
-  await deleteDB("ygo-story-runtime-receipts");
 });
-async function receiptFixture(): Promise<InstalledRuntimeReceipt> {
-  const f = await contentInstallFixture();
-  return {
-    schemaVersion: 1,
-    kind: "installed-runtime-v1",
-    snapshot: f.content.snapshot,
-    runtimePack: f.runtime.ref,
-    runtimeManifestFile: {
-      path: "runtime/current/manifest.json",
-      bytes: 10,
-      sha256: f.content.snapshot.runtimeManifestSha256,
-    },
-    assetManifestFile: {
-      path: "runtime/assets/current/manifest.json",
-      bytes: 10,
-      sha256: "a".repeat(64),
-    },
-    engineManifestFile: {
-      path: "runtime/engine/vendor-manifest.json",
-      bytes: 10,
-      sha256: "b".repeat(64),
-    },
-    verifiedAt: Date.now(),
-  };
-}
-describe("T4 installed runtime receipt", () => {
+
+describe("frozen executable and retained Battle diagnostics", () => {
   it("compiled pin equals untouched frozen vendor bytes", async () => {
-    expect(
-      createHash("sha256")
-        .update(
-          await readFile("vendor/ocgcore-wasm/0.1.2/vendor-manifest.json"),
-        )
-        .digest("hex"),
-    ).toBe(FROZEN_VENDOR_MANIFEST_SHA256);
-  });
-  it("Shell reader accepts exact tagged prepared receipt", async () => {
-    const receipt = await receiptFixture();
-    expect((await writeInstalledRuntimeReceipt(receipt)).kind).toBe("ok");
-    expect(
-      await readInstalledRuntimeReceipt(receipt.snapshot, receipt.runtimePack),
-    ).toEqual({ kind: "ok", value: receipt });
-  });
-  it("missing receipt creates neither receipt nor Battle DB", async () => {
-    const receipt = await receiptFixture();
-    expect(
-      await readInstalledRuntimeReceipt(receipt.snapshot, receipt.runtimePack),
-    ).toMatchObject({ code: "CONTENT_MISSING" });
-    const databases = await indexedDB.databases();
-    expect(databases.some((db) => db.name === "ygo-story-duel")).toBe(false);
-    expect(
-      databases.some((db) => db.name === "ygo-story-runtime-receipts"),
-    ).toBe(false);
-  });
-  it("legacy image receipt, unsafe paths, wrong activation and wrong runtime reject", async () => {
-    const receipt = await receiptFixture();
-    for (const invalid of [
-      { ...receipt, kind: "active-images" },
-      {
-        ...receipt,
-        snapshot: { ...receipt.snapshot, activationId: "0".repeat(64) },
-      },
-      {
-        ...receipt,
-        runtimeManifestFile: {
-          ...receipt.runtimeManifestFile,
-          path: "../manifest.json",
-        },
-      },
-      { ...receipt, verifiedAt: 0.5 },
-      { ...receipt, runtimePack: { ...receipt.runtimePack, bytes: 1 } },
-    ]) {
-      expect(
-        await parseInstalledRuntimeReceipt(
-          invalid,
-          receipt.snapshot,
-          receipt.runtimePack,
-        ),
-      ).toMatchObject({ code: "CONTENT_INTEGRITY_FAILED" });
-    }
+    await expect(
+      validateFrozenBattleExecutable(
+        await readFile("vendor/ocgcore-wasm/0.1.2/vendor-manifest.json"),
+        await readFile("vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm"),
+      ),
+    ).resolves.toBeUndefined();
   });
   it("Battle DB upgrade preserves legacy records without receipt storage", async () => {
     const old = await openDB("ygo-story-duel", 2, {
@@ -125,9 +45,5 @@ describe("T4 installed runtime receipt", () => {
     } finally {
       db.close();
     }
-  });
-  it("activation public sub-entry constructs no Worker", () => {
-    expect(createRuntimeActivationPort()).toHaveProperty("prepare");
-    expect(globalThis.Worker).toBeUndefined();
   });
 });

@@ -13,7 +13,7 @@ import {
   parseJsonBytes,
 } from "./canonical-json.ts";
 import type { FileDigest } from "./file-digest.ts";
-import { MAX_ARCHIVE_BYTES } from "./archive-limits.ts";
+import { MAX_SOURCE_BYTES } from "./source-limits.ts";
 import { fail } from "./failure.ts";
 import { assertNotMigrationTemp } from "./migration-temp.ts";
 
@@ -54,7 +54,7 @@ export async function readSource(
       relative,
     );
   if (!before.isFile()) fail("ASSET_PATH_UNSAFE", relative);
-  const limit = retainBytes ? MAX_METADATA_BYTES : MAX_ARCHIVE_BYTES;
+  const limit = retainBytes ? MAX_METADATA_BYTES : MAX_SOURCE_BYTES;
   if (before.size > BigInt(limit)) fail("ASSET_LIMIT_EXCEEDED", relative);
   const file = await assertSafeParents(root, relative);
   let handle;

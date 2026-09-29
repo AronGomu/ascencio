@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,7 +51,10 @@ const releaseRunLock = await acquireAssetDeliveryLock(projectRoot);
 try {
   await mkdir(selectedImageRoot, { recursive: true });
   const shopJson = await readFile(
-    path.join(projectRoot, "public/story/shop-sets.v1.json"),
+    path.join(
+      projectRoot,
+      "assets/content/card-library/authoring/shop-sets.v1.json",
+    ),
     "utf8",
   );
   const manifestRecords = await readImageManifest(assetRoot);
@@ -177,7 +180,18 @@ function parseOptions(args: string[]): DownloadOptions {
       active = true;
       continue;
     }
-    if (!argument?.startsWith("--")) {
+    if (
+      !argument?.startsWith("--") ||
+      ![
+        "--assets",
+        "--output",
+        "--concurrency",
+        "--requests-per-second",
+        "--limit",
+        "--kind",
+        "--chapter",
+      ].includes(argument)
+    ) {
       throw new Error(`Unknown argument: ${argument ?? "<missing>"}`);
     }
     const value = args[index + 1];

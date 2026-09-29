@@ -13,15 +13,11 @@
    card is the same answer at 19,448 steps. */
 
 import type { Cards } from "../../cards/index.ts";
-import type { StorySet } from "../ports/story-release.ts";
 import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type { ShopRarity } from "../model/story-state.ts";
 import { inferRarity } from "../shop/data/shop-rarity.ts";
-import {
-  installedShopSetData,
-  type ShopSetData,
-} from "../shop/data/shop-set-data.ts";
+import type { ShopSetData } from "../shop/data/shop-set-data.ts";
 import { RARITY_ORDER } from "./group-by-rarity.ts";
 
 export interface CollectionCatalog {
@@ -39,7 +35,9 @@ export interface CollectionCatalog {
     collapsing the whole database into a single "common" heading. */
 export function collectionRarityIndex(
   cards: readonly DeckBuilderCardView[],
-  data: ShopSetData | null,
+  data: {
+    readonly sets: readonly Pick<ShopSetData["sets"][number], "cards">[];
+  } | null,
 ): ReadonlyMap<number, ShopRarity> {
   const printed = new Map<number, ShopRarity>();
   for (const set of data?.sets ?? []) {
@@ -65,13 +63,12 @@ export function collectionRarityIndex(
  */
 export async function loadCollectionCatalog(
   definitions: Cards,
-  sets: readonly StorySet[],
+  sets: readonly Pick<ShopSetData["sets"][number], "cards">[],
 ): Promise<CollectionCatalog> {
   const cards = cardsDeckCatalog(definitions);
-  const data = installedShopSetData(sets);
   return Object.freeze({
     cards,
-    rarityByCode: collectionRarityIndex(cards, data),
+    rarityByCode: collectionRarityIndex(cards, { sets }),
   });
 }
 

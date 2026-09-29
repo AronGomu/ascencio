@@ -14,7 +14,7 @@ import {
 import { mappedLogicalPath } from "./source-mapping.ts";
 import { loadProfiles, loadSelection, compareRules } from "./profile-set.ts";
 import { readSource, sourceStat } from "./source-files.ts";
-import { scanAssetProfiles, EMPTY_RETAINED_METADATA } from "./scan-assets.ts";
+import { scanAssetProfiles } from "./scan-assets.ts";
 import { acquireAssetDeliveryLock } from "./local-lock.ts";
 import { replaceMetadata } from "./atomic-metadata.ts";
 import { fail } from "./failure.ts";
@@ -112,8 +112,6 @@ async function prepare(root: string, options: PromotionOptions) {
   const report = await scanAssetProfiles(
     root,
     previewSelection,
-    EMPTY_RETAINED_METADATA,
-    null,
     candidateProfiles,
   );
   const changes = addedRules(before.rules, after.rules).map((r) => ({

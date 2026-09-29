@@ -1,0 +1,8 @@
+{
+  "title": "Chapter 1",
+  "chapterNumber": 1,
+  "storyContentId": "prototype-prologue-v1",
+  "defaults": { "starterDeckId": "starter", "opponentId": "opponent" },
+  "setIds": ["fixture-set"],
+  "mapAssetPath": null
+}

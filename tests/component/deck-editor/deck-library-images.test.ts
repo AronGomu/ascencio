@@ -1,8 +1,12 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DeckLibrary from "../../../src/deck-editor/components/DeckLibrary.svelte";
 import DeckEditorApp from "../../../src/deck-editor/DeckEditorApp.svelte";
 import type {
@@ -11,12 +15,12 @@ import type {
 } from "../../../src/cards/images/index.ts";
 import type { CardCode, CardImageVariant } from "../../../src/cards/index.ts";
 import { deckId, type DeckRecord } from "../../../src/decks/contracts/index.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/repository/index.ts";
+
 import {
   deckFixture,
   prototypeCatalogMap,
 } from "../../fixtures/deck-editor.ts";
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 
 const A = 89631139;
@@ -63,19 +67,29 @@ function immediateSource(prefix: string) {
   );
   return { source: { acquire } satisfies CardImageSource, acquire, leases };
 }
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
+
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 describe("Deck Library source-backed image ownership", () => {
   it("routes the domain catalogInput.images into the library", async () => {
     const { source, acquire } = immediateSource("host");
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(
-        installedDuelGameplayFixture(),
-        source,
-      ),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(
+          installedDuelGameplayFixture(),
+          source,
+        ),
+      },
     });
     await waitFor(() => expect(acquire).toHaveBeenCalled());
     expect(

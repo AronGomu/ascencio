@@ -1,5 +1,4 @@
-import { shellGameplayFixture as installedGameplayFixture } from "../fixtures/shell-gameplay.ts";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { deckId } from "../../src/decks/index.ts";
 import {
   coreGateMessage,
@@ -15,8 +14,6 @@ import {
 const locked: CoreGate = { kind: "locked", reason: "content-required" };
 const ready: CoreGate = {
   kind: "ready",
-  gameplay: installedGameplayFixture(),
-  reader: null,
   generation: 1,
 };
 
@@ -33,6 +30,9 @@ const gameplayRoutes: readonly AppRoute[] = [
   { kind: "admin" },
 ];
 
+beforeEach(() => vi.stubGlobal("__APP_BUILD_ID__", "core-gate-fixture"));
+afterEach(() => vi.unstubAllGlobals());
+
 describe("CORE startup gate", () => {
   it("missing Web Locks blocks without consulting network or legacy stores", async () => {
     const fetch = vi.fn();
@@ -46,6 +46,7 @@ describe("CORE startup gate", () => {
       reason: "storage-unavailable",
     });
     expect(fetch).not.toHaveBeenCalled();
+    await startup.dispose?.();
   });
   it("missing browser storage blocks before network", async () => {
     const fetch = vi.fn();

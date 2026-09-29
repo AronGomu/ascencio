@@ -1,93 +1,117 @@
-import { openProgressiveContentStore } from "../../content/index.ts";
+import { createApplicationAdmission } from "./application-admission.ts";
 import type { CoreFetch, CoreStartup } from "../core/core-gate.ts";
-import { applicationLocks } from "./application-locks.ts";
-import { createApplicationService } from "./application-service.ts";
-import { requestServiceWorkerUpdate } from "../pwa/register-service-worker.ts";
+import { prepareServiceWorkerUpdate } from "../pwa/register-service-worker.ts";
+import { createAppUpdateController } from "./app-update-controller.ts";
+import { createSqliteApplicationService } from "./sqlite-application-service.ts";
+import { openUserPersistence } from "./user-persistence-owner.ts";
 
 // Executable compatibility epoch, not a remotely chosen setting.
 export const CORE_CONTENT_API_VERSION = 1;
 
 export async function bootstrapApplication(
-  _fetch: CoreFetch,
-  _appBaseUrl: string,
+  fetch: CoreFetch,
+  appBaseUrl: string,
   factory: IDBFactory | undefined,
 ): Promise<CoreStartup> {
-  if (!factory)
+  const admission = createApplicationAdmission();
+  const userPersistence = await openUserPersistence(admission);
+  let service: ReturnType<typeof createSqliteApplicationService> | null = null;
+  const appUpdates =
+    factory === undefined
+      ? undefined
+      : createAppUpdateController({
+          admission,
+          factory,
+          appBaseUrl,
+          currentBuildId: __APP_BUILD_ID__,
+          fetch,
+          prepareServiceWorkerUpdate,
+          isSessionActive: () => service?.sessionActive() ?? false,
+        });
+  const appUpdateStartup = appUpdates === undefined ? {} : { appUpdates };
+  const storage = userPersistence.storage;
+  if (storage === null)
     return {
-      bootstrap: null,
       gate: { kind: "locked", reason: "storage-unavailable" },
+      ...appUpdateStartup,
+      userPersistence,
+      dispose: async () => {
+        admission.close();
+        await appUpdates?.dispose();
+        await userPersistence.close();
+      },
     };
-  let service: ReturnType<typeof createApplicationService> | null = null;
+
+  service = createSqliteApplicationService({
+    admission,
+    storage,
+    users: userPersistence.services,
+    flushUserWrites: () => userPersistence.flush(),
+  });
+  let disposed: Promise<void> | null = null;
+  const disposeRuntime = (): Promise<void> => {
+    if (disposed !== null) return disposed;
+    disposed = (async () => {
+      let failure: unknown = null;
+      try {
+        await service!.dispose();
+      } catch (error) {
+        failure = error;
+      }
+      try {
+        await userPersistence.close();
+      } catch (error) {
+        failure ??= error;
+      }
+      if (failure !== null) throw failure;
+    })();
+    return disposed;
+  };
+  const dispose = async (): Promise<void> => {
+    admission.close();
+    await appUpdates?.dispose();
+    await disposeRuntime();
+  };
+
   try {
-    const locks = applicationLocks();
-    const store = await openProgressiveContentStore(_appBaseUrl);
-    service = createApplicationService({
-      factory,
-      locks,
-      store,
-      coreContentApiVersion: CORE_CONTENT_API_VERSION,
-      currentBuildId: __APP_BUILD_ID__,
-      coreBaseUrl: _appBaseUrl,
-      requestServiceWorkerUpdate,
-      isHome: () =>
-        ["", "#/", "#/install-content"].includes(globalThis.location.hash),
-    });
-    try {
-      // Local selector and semantic pair first. No legacy active pointer or latest prerequisite.
-      const session = await service.application.acquire(
-        new AbortController().signal,
-      );
-      const gate = {
-        kind: "ready" as const,
-        gameplay: session.gameplay,
-        reader: null,
-        generation: session.generation,
-      };
-      await session.close();
-      return {
-        bootstrap: null,
-        gate,
-        application: service.application,
-        contentActions: service.contentActions,
-      };
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        [
-          "APP_STORAGE_UNAVAILABLE",
-          "CONTENT_STORAGE_UNAVAILABLE",
-          "STORY_STORAGE_UNAVAILABLE",
-        ].includes(error.message)
-      )
-        throw error;
-      // Keep explicit repair/cleanup available without replacing selector or saves.
-      return {
-        bootstrap: null,
-        gate: {
-          kind: "locked",
-          reason:
-            error instanceof Error && error.message === "APP_CONTENT_REQUIRED"
-              ? "content-required"
-              : "content-invalid",
-        },
-        application: service.application,
-        contentActions: service.contentActions,
-      };
-    }
+    const readiness = await service.readiness();
+    const firstThreeMissing = readiness.missing.filter((packageId) =>
+      ["duel-core", "card-library", "freeplay"].includes(packageId),
+    );
+    return {
+      gate: readiness.freeplay
+        ? {
+            kind: "ready",
+            generation: readiness.generation,
+            missing: readiness.missing,
+          }
+        : {
+            kind: "locked",
+            reason: "content-required",
+            missing: firstThreeMissing,
+          },
+      application: service.application,
+      ...appUpdateStartup,
+      applicationStatus: service.status,
+      subscribeApplicationStatus: (listener) =>
+        service!.subscribeStatus(listener),
+      userPersistence,
+      dispose,
+    };
   } catch (error) {
-    service?.application.close();
+    await disposeRuntime();
     const unavailable =
       error instanceof Error &&
-      [
-        "APP_STORAGE_UNAVAILABLE",
-        "CONTENT_STORAGE_UNAVAILABLE",
-        "STORY_STORAGE_UNAVAILABLE",
-      ].includes(error.message);
+      ["SQLITE_UNAVAILABLE", "STORAGE_UNAVAILABLE"].includes(error.message);
     return {
-      bootstrap: null,
       gate: {
         kind: "locked",
         reason: unavailable ? "storage-unavailable" : "content-invalid",
+      },
+      ...appUpdateStartup,
+      dispose: async () => {
+        admission.close();
+        await appUpdates?.dispose();
       },
     };
   }

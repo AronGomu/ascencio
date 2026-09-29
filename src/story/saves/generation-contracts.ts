@@ -1,9 +1,5 @@
 // src/story/saves/generation-contracts.ts; public through src/story/saves/index.ts
 import type { StoryState } from "../model/story-state.ts";
-import type { StoryRelease } from "../ports/story-release.ts";
-export type StoryGenerationId = string & {
-  readonly __storyGenerationId: unique symbol;
-};
 export type StorySlotKey =
   `manual:${1 | 2 | 3}` | "autosave" | "checkpoint:pre-duel";
 export interface StoryBinding {
@@ -55,27 +51,6 @@ export interface GenerationSaveRepository {
     story: StoryBinding,
   ): Promise<StorySaveWriteResult>;
   list(): Promise<readonly StorySaveSummary[]>;
-  clear(slot: StorySlotKey): Promise<void>;
-}
-export interface StoryGenerationSeal {
-  readonly generationId: StoryGenerationId;
-  readonly sourceGenerationId: StoryGenerationId | null;
-  readonly revision: number;
-  readonly slots: readonly {
-    readonly slot: StorySlotKey;
-    readonly revision: number;
-    readonly digest: string;
-  }[];
-}
-export interface StoryMigrationPort {
-  prepare(
-    sourceGenerationId: StoryGenerationId | null,
-    target: StoryRelease,
-  ): Promise<StoryGenerationSeal>;
-  verifySeal(seal: StoryGenerationSeal): Promise<void>;
-  verifyActiveGeneration(
-    generationId: StoryGenerationId,
-    target: StoryRelease,
-  ): Promise<void>;
-  repository(generationId: StoryGenerationId): GenerationSaveRepository;
+  /** Checkpoint cleanup passes its owned revision; mismatch rejects without deleting. */
+  clear(slot: StorySlotKey, expectedRevision?: number): Promise<void>;
 }

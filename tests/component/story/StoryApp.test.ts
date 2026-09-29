@@ -1,15 +1,14 @@
 import {
   storyAppProps,
+  withStorySessionDatabase,
   createStorySaveRepository,
   resetStorySessionFixture,
 } from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import type {
   StoryEncounterRequest,
   StoryHandoffOutcome,
@@ -28,11 +27,10 @@ import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts"
 import { fieldableStoryDeck } from "../../fixtures/story-decks.ts";
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
+  await resetStorySessionFixture();
   vi.unstubAllGlobals();
   globalThis.location.hash = "";
-  await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
 
 /* Sells Dark Magician and nothing else, so a Blue-Eyes in the collection has
@@ -208,6 +206,112 @@ describe("StoryApp", () => {
     await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
     expect(screen.queryByRole("button", { name: "New Game" })).toBeNull();
   });
+
+  it("enters New Game without reading any saved slot", async () => {
+    const props = storyAppProps();
+    const read = vi.fn(props.saves.read);
+    render(StoryApp, {
+      ...props,
+      saves: { ...props.saves, read },
+      storyEntryIntent: "new",
+    });
+
+    await waitFor(() => expect(screen.getByText(/Rain turned/)).toBeTruthy());
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it("R7 reads manual-slot revision before overwrite confirmation, then uses captured CAS", async () => {
+    const props = storyAppProps();
+    const existing = {
+      schemaVersion: 6 as const,
+      slot: "manual:1" as const,
+      revision: 7,
+      savedAt: 1,
+      state: createInitialStoryState(),
+      story: {
+        chapterId: props.release.chapters[0]!.id,
+        contentId: "prototype-prologue-v1" as const,
+        revision: props.release.revision,
+        completedChapterIds: [],
+      },
+    };
+    const read = vi.fn(
+      async (
+        slot:
+          | "manual:1"
+          | "manual:2"
+          | "manual:3"
+          | "autosave"
+          | "checkpoint:pre-duel",
+      ) =>
+        slot === "manual:1"
+          ? ({ kind: "ready", envelope: existing } as const)
+          : ({ kind: "empty", slot } as const),
+    );
+    const write = vi.fn(
+      async (...args: Parameters<typeof props.saves.write>) => {
+        void args;
+        return { kind: "written", revision: 8 } as const;
+      },
+    );
+    render(StoryApp, {
+      ...props,
+      saves: { ...props.saves, read, write },
+      storyEntryIntent: "new",
+    });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    await user.click(screen.getByRole("button", { name: /^Save$/ }));
+    expect(read).toHaveBeenCalledWith("manual:1");
+    expect(write).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Confirm overwrite" }));
+    await waitFor(() => expect(write).toHaveBeenCalledOnce());
+    expect(read).toHaveBeenCalledWith("manual:1");
+    expect(write.mock.calls[0]?.[2]).toBe(7);
+  });
+
+  it("contains a rejected Continue read and returns to Main Menu", async () => {
+    const props = storyAppProps();
+    const onmainmenu = vi.fn();
+    render(StoryApp, {
+      ...props,
+      saves: {
+        ...props.saves,
+        read: vi.fn(async () => {
+          throw new Error("STORAGE_UNAVAILABLE");
+        }),
+      },
+      storyEntryIntent: "continue",
+      onmainmenu,
+    });
+
+    await waitFor(() => expect(onmainmenu).toHaveBeenCalledOnce());
+  });
+
+  it.each(["corrupt", "incompatible"] as const)(
+    "contains a %s Continue slot and returns to Main Menu",
+    async (kind) => {
+      const props = storyAppProps();
+      const onmainmenu = vi.fn();
+      render(StoryApp, {
+        ...props,
+        saves: {
+          ...props.saves,
+          read: vi.fn(async (slot) =>
+            kind === "corrupt"
+              ? ({ kind, slot, reason: "invalid old reference" } as const)
+              : ({ kind, slot, found: 5 } as const),
+          ),
+        },
+        storyEntryIntent: "continue",
+        onmainmenu,
+      });
+
+      await waitFor(() => expect(onmainmenu).toHaveBeenCalledOnce());
+    },
+  );
 
   /* The reviewer harness was the prototype's entry point; the production
      domain has to open on the story itself, with no reviewer surface left
@@ -538,47 +642,42 @@ describe("StoryApp", () => {
 
   it("shows a header deck write failure without navigating", async () => {
     globalThis.location.hash = "#/story";
-    const originalPut = IDBObjectStore.prototype.put;
-    IDBObjectStore.prototype.put = function put(
-      this: IDBObjectStore,
-      ...args: Parameters<typeof originalPut>
-    ) {
-      const pending = originalPut.apply(this, args);
-      queueMicrotask(() => {
-        this.transaction.abort();
-      });
-      return pending;
-    };
     const ondecks = vi.fn();
     const mapState = {
       ...createInitialStoryState(),
       screen: "map" as const,
       savedScreen: "map" as const,
     };
-    try {
-      const { container } = render(StoryApp, {
-        ...storyAppProps(),
-        resumeState: mapState,
-        ondecks,
-      });
-      await userEvent
-        .setup()
-        .click(screen.getByRole("button", { name: "Open deck builder" }));
+    const props = storyAppProps();
+    const { container } = render(StoryApp, {
+      ...props,
+      saves: {
+        read: async (slot: Parameters<typeof props.saves.read>[0]) => ({
+          kind: "empty",
+          slot,
+        }),
+        write: async () => ({ kind: "failed", reason: "unknown" }),
+        list: async () => [],
+        clear: async () => undefined,
+      },
+      resumeState: mapState,
+      ondecks,
+    });
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Open deck builder" }));
 
-      await waitFor(() =>
-        expect(
-          container.querySelector('[data-cy="story-storage-error-message"]')
-            ?.textContent,
-        ).toContain("Storage write failed"),
-      );
-      expect(ondecks).not.toHaveBeenCalled();
-      expect(globalThis.location.hash).toBe("#/story");
+    await waitFor(() =>
       expect(
-        container.querySelector('[data-cy="story-map-screen"]'),
-      ).not.toBeNull();
-    } finally {
-      IDBObjectStore.prototype.put = originalPut;
-    }
+        container.querySelector('[data-cy="story-storage-error-message"]')
+          ?.textContent,
+      ).toContain("Storage write failed"),
+    );
+    expect(ondecks).not.toHaveBeenCalled();
+    expect(globalThis.location.hash).toBe("#/story");
+    expect(
+      container.querySelector('[data-cy="story-map-screen"]'),
+    ).not.toBeNull();
   });
 
   /* The card database is fetched rather than compiled in, so the shop opens
@@ -630,7 +729,9 @@ describe("StoryApp", () => {
     // Story starts in narrative; T1 consolidated Save into gear menu — open gear first
     await user.click(screen.getByRole("button", { name: "Open menu" }));
     await user.click(screen.getByRole("button", { name: /^Save$/ }));
-    await user.click(screen.getByRole("button", { name: "Confirm overwrite" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Save to manual slot 1" }),
+    );
     await waitFor(() =>
       expect(show).toHaveBeenCalledWith({
         message: "Game saved.",
@@ -651,16 +752,11 @@ describe("StoryApp", () => {
   /* A slot this build cannot parse must cost the player their progress and
      nothing else — the title screen still has to come up and play. */
   it("degrades a corrupt slot to no save instead of a blank screen", async () => {
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(STORY_SAVES_DATABASE_NAME, 1);
-      request.onupgradeneeded = () => request.result.createObjectStore("saves");
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+    withStorySessionDatabase(globalThis.indexedDB, (database) => {
+      database
+        .prepare("INSERT INTO user_records VALUES ('story', 'manual:1', 1, ?)")
+        .run(JSON.stringify("not a save"));
     });
-    const transaction = database.transaction("saves", "readwrite");
-    transaction.objectStore("saves").put("not a save", "manual:1");
-    await new Promise((resolve) => (transaction.oncomplete = resolve));
-    database.close();
 
     render(StoryApp, { ...storyAppProps() });
     await waitFor(() =>

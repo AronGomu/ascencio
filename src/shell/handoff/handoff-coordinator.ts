@@ -18,6 +18,7 @@ import type { StoryState } from "../../story/index.ts";
 import type {
   GenerationSaveRepository,
   StoryBinding,
+  StorySaveReadResult,
 } from "../../story/saves/index.ts";
 /* The one deep import the shell holds into the visual novel, for the same
    reason `src/shell/settings/shell-settings.ts` holds one into the duel: the
@@ -38,6 +39,9 @@ const CHECKPOINT = "checkpoint:pre-duel" as const;
 const STORY_ROUTE: AppRoute = { kind: "story" };
 
 export interface HandoffCoordinator {
+  /** Forget in-memory ownership after whole user DB replacement; never delete restored rows. */
+  invalidate(): void;
+  reset(): Promise<void>;
   begin(
     intent: StoryEncounterIntent,
     state: StoryState,
@@ -49,6 +53,12 @@ export interface HandoffCoordinator {
 
 export function createHandoffCoordinator(deps: {
   readonly saves: GenerationSaveRepository;
+  readonly onReadError?: (
+    result: Extract<
+      StorySaveReadResult,
+      { readonly kind: "corrupt" | "incompatible" }
+    >,
+  ) => void;
   readonly navigate: (route: AppRoute, options?: NavigateOptions) => void;
   readonly onResolution: (
     resolution: StoryDuelResolution,
@@ -59,93 +69,178 @@ export function createHandoffCoordinator(deps: {
   readonly onRestore: (state: StoryState, story: StoryBinding) => void;
 }): HandoffCoordinator {
   let pending: PendingStoryDuel | null = null;
+  let ownedRevision = 0;
+  let epoch = 0;
+  let work: Promise<void> = Promise.resolve();
+  let beginning: number | null = null;
+  let cleanupFailed = false;
+
+  // One queue covers writes, reads and revision-bound cleanup. Reset invalidates
+  // synchronously, then drains everything admitted before it (including a write
+  // whose successful revision has not been returned yet).
+  function enqueue<T>(operation: () => Promise<T>): Promise<T> {
+    const result = work.then(operation);
+    work = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
+  async function clearOwned(revision: number): Promise<void> {
+    if (revision === 0) return;
+    try {
+      await deps.saves.clear(CHECKPOINT, revision);
+    } catch {
+      cleanupFailed = true;
+      console.warn("CHECKPOINT_CLEAR_FAILED");
+    }
+  }
 
   return {
+    invalidate() {
+      epoch += 1;
+      pending = null;
+      ownedRevision = 0;
+      cleanupFailed = false;
+    },
+    reset() {
+      epoch += 1;
+      pending = null;
+      const revision = ownedRevision;
+      const reset = enqueue(async () => {
+        await clearOwned(revision);
+        if (cleanupFailed) throw new Error("CHECKPOINT_CLEAR_FAILED");
+      });
+      ownedRevision = 0;
+      return reset;
+    },
     async begin(intent, state, story) {
-      /* Before anything is stored: an id the hash cannot carry would strand
+      if (beginning === epoch || pending !== null) return "checkpoint-failed";
+      const run = epoch;
+      beginning = run;
+      return enqueue(async () => {
+        try {
+          if (run !== epoch || cleanupFailed || pending !== null)
+            return "checkpoint-failed";
+          /* Before anything is stored: an id the hash cannot carry would strand
          the player on a route no reload could ever resume. */
-      try {
-        routeHandoffId(intent.handoffId);
-      } catch {
-        return "checkpoint-failed";
-      }
+          try {
+            routeHandoffId(intent.handoffId);
+          } catch {
+            return "checkpoint-failed";
+          }
 
-      const binding = structuredClone(story);
-      const checkpoint: StoryState = {
-        ...structuredClone(state),
-        encounterId: intent.encounterId,
-        pendingHandoffId: intent.handoffId,
-      };
-      const previous = await deps.saves.read(CHECKPOINT);
-      if (previous.kind === "corrupt" || previous.kind === "incompatible")
-        return "checkpoint-failed";
-      const expected =
-        previous.kind === "ready" ? previous.envelope.revision : 0;
-      const written = await deps.saves.write(
-        CHECKPOINT,
-        checkpoint,
-        expected,
-        binding,
-      );
-      if (written.kind !== "written") return "checkpoint-failed";
+          const binding = structuredClone(story);
+          const checkpoint: StoryState = {
+            ...structuredClone(state),
+            encounterId: intent.encounterId,
+            pendingHandoffId: intent.handoffId,
+          };
+          // The admitted write holds the previous revision until its outcome
+          // is known. Reset must not also queue a clear of that superseded row.
+          const revision = ownedRevision;
+          ownedRevision = 0;
+          const written = await deps.saves
+            .write(CHECKPOINT, checkpoint, revision, binding)
+            .catch(() => ({ kind: "failed" as const }));
+          if (written.kind !== "written") {
+            if (run !== epoch) await clearOwned(revision);
+            else ownedRevision = revision;
+            return "checkpoint-failed";
+          }
+          if (run !== epoch) {
+            // Reset could not capture a revision that was still inside write().
+            // Clear it here, inside the admitted operation, before reset drains.
+            await clearOwned(written.revision);
+            return "checkpoint-failed";
+          }
+          ownedRevision = written.revision;
 
-      /* Verified, not assumed. A write that reported success and stored
+          /* Verified, not assumed. A write that reported success and stored
          something else is exactly the case a later reload cannot recover
          from, so it is caught here while the story is still on screen. */
-      const stored = await deps.saves.read(CHECKPOINT);
-      if (
-        stored.kind !== "ready" ||
-        stored.envelope.revision !== written.revision ||
-        stored.envelope.state.pendingHandoffId !== intent.handoffId ||
-        stored.envelope.state.encounterId !== intent.encounterId
-      )
-        return "checkpoint-failed";
+          const stored = await deps.saves.read(CHECKPOINT);
+          if (
+            run !== epoch ||
+            stored.kind !== "ready" ||
+            stored.envelope.revision !== written.revision ||
+            stored.envelope.state.pendingHandoffId !== intent.handoffId ||
+            stored.envelope.state.encounterId !== intent.encounterId
+          )
+            return "checkpoint-failed";
 
-      pending = {
-        handoffId: intent.handoffId,
-        encounterId: intent.encounterId,
-      };
-      deps.onRestore(
-        restoreStoryState(stored.envelope.state),
-        stored.envelope.story,
-      );
-      deps.navigate({
-        kind: "duel-session",
-        handoffId: routeHandoffId(intent.handoffId),
+          pending = {
+            handoffId: intent.handoffId,
+            encounterId: intent.encounterId,
+          };
+          deps.onRestore(
+            restoreStoryState(stored.envelope.state),
+            stored.envelope.story,
+          );
+          deps.navigate({
+            kind: "duel-session",
+            handoffId: routeHandoffId(intent.handoffId),
+          });
+          return "ready";
+        } catch {
+          return "checkpoint-failed";
+        } finally {
+          if (beginning === run) beginning = null;
+        }
       });
-      return "ready";
     },
 
     async resume(handoffId) {
-      /* The duel this session already started: the checkpoint has nothing to
+      const run = epoch;
+      return enqueue(async () => {
+        if (run !== epoch || cleanupFailed) return "not-found";
+        /* The duel this session already started: the checkpoint has nothing to
          add, and re-reading it would only invite a race with its own write. */
-      if (pending !== null && pending.handoffId === handoffId)
-        return "restored";
+        if (pending !== null && pending.handoffId === handoffId)
+          return "restored";
 
-      const stored = await deps.saves.read(CHECKPOINT);
-      const state =
-        stored.kind === "ready"
-          ? restoreStoryState(stored.envelope.state)
-          : null;
-      /* Absent, unreadable, belonging to another handoff, or naming no
+        let stored: StorySaveReadResult;
+        try {
+          stored = await deps.saves.read(CHECKPOINT);
+        } catch (error) {
+          stored = {
+            kind: "corrupt",
+            slot: CHECKPOINT,
+            reason:
+              error instanceof Error ? error.message : "STORAGE_UNAVAILABLE",
+          };
+        }
+        if (run !== epoch) return "not-found";
+        if (stored.kind === "corrupt" || stored.kind === "incompatible")
+          deps.onReadError?.(stored);
+        const state =
+          stored.kind === "ready"
+            ? restoreStoryState(stored.envelope.state)
+            : null;
+        /* Absent, unreadable, belonging to another handoff, or naming no
          encounter to restart are one case: there is no duel to resume, so the
          player goes back to the story rather than into half of one. */
-      if (
-        state === null ||
-        state.pendingHandoffId !== handoffId ||
-        state.encounterId === null
-      ) {
-        pending = null;
-        /* A correction, not a destination: pushing here would put the session
+        if (
+          state === null ||
+          state.pendingHandoffId !== handoffId ||
+          state.encounterId === null
+        ) {
+          pending = null;
+          /* A correction, not a destination: pushing here would put the session
            route the player just left in front of them again, so every Back
            press would walk forward into it instead of out of the duel. */
-        deps.navigate(STORY_ROUTE, { replace: true });
-        return "not-found";
-      }
+          deps.navigate(STORY_ROUTE, { replace: true });
+          return "not-found";
+        }
 
-      pending = { handoffId, encounterId: state.encounterId };
-      if (stored.kind === "ready") deps.onRestore(state, stored.envelope.story);
-      return "restored";
+        pending = { handoffId, encounterId: state.encounterId };
+        if (stored.kind === "ready") {
+          ownedRevision = stored.envelope.revision;
+          deps.onRestore(state, stored.envelope.story);
+        }
+        return "restored";
+      });
     },
 
     settle(handoffId, result) {
@@ -154,16 +249,11 @@ export function createHandoffCoordinator(deps: {
       /* Cleared before anything else runs, so a duplicate or a stale result
          arriving from the same teardown finds nothing to settle. */
       pending = null;
+      // Transfer ownership to the queue before callbacks can reset or begin.
+      const revision = ownedRevision;
+      void enqueue(() => clearOwned(revision));
+      ownedRevision = 0;
       deps.onResolution(toStoryResolution(result), encounterId);
-      /* The checkpoint has done its job; failing to clear it costs nothing,
-         because the next `begin` overwrites the slot and `resume` only ever
-         accepts a checkpoint that names the handoff being resumed. */
-      void deps.saves.clear(CHECKPOINT).catch((error: unknown) => {
-        console.warn({
-          event: "shell.handoff.checkpoint_clear_failed",
-          err: error,
-        });
-      });
       /* The session route is spent, so the return replaces it rather than
          stacking a third entry the player has to press Back past twice. */
       deps.navigate(STORY_ROUTE, { replace: true });

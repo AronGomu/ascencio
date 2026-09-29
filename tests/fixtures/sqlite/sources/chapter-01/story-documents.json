@@ -1,0 +1,32 @@
+[
+  {
+    "schemaVersion": 1,
+    "contentId": "prototype-prologue-v1",
+    "title": "Fixture",
+    "beats": [
+      {
+        "id": "fixture-beat",
+        "speaker": "Rin",
+        "kind": "dialogue",
+        "text": "Welcome.",
+        "background": "station",
+        "characters": ["rin-neutral"]
+      }
+    ],
+    "choices": [
+      { "id": "trust-rin", "label": "Trust" },
+      { "id": "challenge-rin", "label": "Challenge" },
+      { "id": "observe-first", "label": "Observe" }
+    ],
+    "choiceResponses": {
+      "trust-rin": "Trust response.",
+      "challenge-rin": "Challenge response.",
+      "observe-first": "Observe response."
+    },
+    "laterAcknowledgments": {
+      "trust-rin": "Trust acknowledgment.",
+      "challenge-rin": "Challenge acknowledgment.",
+      "observe-first": "Observe acknowledgment."
+    }
+  }
+]

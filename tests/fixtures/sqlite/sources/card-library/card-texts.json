@@ -1,0 +1,16 @@
+[
+  {
+    "cardCode": 1,
+    "locale": "en",
+    "name": "Fixture Card",
+    "description": "Fixture text",
+    "strings": []
+  },
+  {
+    "cardCode": 2,
+    "locale": "en",
+    "name": "Global Only",
+    "description": "Not selected by chapter",
+    "strings": []
+  }
+]

@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,19 +15,23 @@ import {
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
-const outputArgument = readOutputArgument(process.argv.slice(2));
+const commandArgs = process.argv.slice(2);
+const outputArgument = readOutputArgument(commandArgs);
 const root = path.resolve(projectRoot, outputArgument);
-const manifest = await readJson<AssetManifest>(
-  path.join(root, "manifest.json"),
-);
+const packageRoots = commandArgs.length === 0;
+const manifestPath = packageRoots
+  ? path.join(projectRoot, ASSET_SOURCES.dataManifest.source)
+  : path.join(root, "manifest.json");
+const digestPath = packageRoots
+  ? path.join(projectRoot, ASSET_SOURCES.dataManifestSha256.source)
+  : path.join(root, "manifest.sha256");
+const manifest = await readJson<AssetManifest>(manifestPath);
 const failures: string[] = [];
-
-const digestPath = path.join(root, "manifest.sha256");
 try {
   const declaredDigest = (await readFile(digestPath, "utf8"))
     .trim()
     .split(/\s+/)[0];
-  const actualDigest = await sha256File(path.join(root, "manifest.json"));
+  const actualDigest = await sha256File(manifestPath);
   if (declaredDigest !== actualDigest) {
     failures.push("manifest.json SHA-256 mismatch");
   }
@@ -47,9 +51,24 @@ if (manifest.sharding.scripts !== SCRIPT_SHARD_COUNT) {
 
 const expectedFiles = new Set(manifest.files.map((file) => file.path));
 const actualFiles = new Set(
-  (await listFiles(root))
-    .map((file) => path.relative(root, file).replaceAll(path.sep, "/"))
-    .filter((file) => file !== "manifest.json" && file !== "manifest.sha256"),
+  [
+    ...(await listFiles(root)).map((file) =>
+      path.relative(root, file).replaceAll(path.sep, "/"),
+    ),
+    ...(packageRoots
+      ? (
+          await listFiles(path.join(projectRoot, ASSET_SOURCES.strings.source))
+        ).map(
+          (file) =>
+            `strings/${path
+              .relative(
+                path.join(projectRoot, ASSET_SOURCES.strings.source),
+                file,
+              )
+              .replaceAll(path.sep, "/")}`,
+        )
+      : []),
+  ].filter((file) => file !== "manifest.json" && file !== "manifest.sha256"),
 );
 for (const extra of [...actualFiles].filter(
   (file) => !expectedFiles.has(file),
@@ -63,7 +82,7 @@ for (const missing of [...expectedFiles].filter(
 }
 
 for (const file of manifest.files) {
-  const absolute = path.join(root, file.path);
+  const absolute = assetFilePath(file.path);
   try {
     const fileStat = await stat(absolute);
     if (fileStat.size !== file.bytes) {
@@ -85,20 +104,21 @@ const cards = await readShards<EngineCardRecord>(
   root,
   "catalog/cards",
   CATALOG_SHARD_COUNT,
+  "Card",
 );
 const texts = await readShards<CardTextRecord>(
   root,
   "catalog/texts/en",
   CATALOG_SHARD_COUNT,
+  "Text",
 );
 const images = await readShards<ImageRecord>(
   root,
   "images",
   CATALOG_SHARD_COUNT,
+  "Image",
 );
-const strings = await readJson<SystemStrings>(
-  path.join(root, "strings", "en.json"),
-);
+const strings = await readJson<SystemStrings>(assetFilePath("strings/en.json"));
 const scriptIndex = await readJson<{
   official: string[];
   preRelease: string[];
@@ -267,6 +287,16 @@ if (failures.length) {
   );
 }
 
+function assetFilePath(relative: string): string {
+  return packageRoots && relative.startsWith("strings/")
+    ? path.join(
+        projectRoot,
+        ASSET_SOURCES.strings.source,
+        relative.slice("strings/".length),
+      )
+    : path.join(root, relative);
+}
+
 function readOutputArgument(args: string[]): string {
   if (!args.length) {
     return ASSET_SOURCES.data.source;
@@ -283,19 +313,29 @@ async function readJson<T>(filePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
 }
 
-async function readShards<T>(
+async function readShards<T extends { code: number }>(
   rootDirectory: string,
   relativeDirectory: string,
   shardCount: number,
+  label: string,
 ): Promise<T[]> {
   const records: T[] = [];
   for (let shard = 0; shard < shardCount; shard += 1) {
     const name = shard.toString(16).padStart(2, "0");
-    records.push(
-      ...(await readJson<T[]>(
-        path.join(rootDirectory, relativeDirectory, `${name}.json`),
-      )),
+    const shardRecords = await readJson<T[]>(
+      path.join(rootDirectory, relativeDirectory, `${name}.json`),
     );
+    for (const record of shardRecords) {
+      const expectedShard = (record.code % shardCount)
+        .toString(16)
+        .padStart(2, "0");
+      if (expectedShard !== name) {
+        failures.push(
+          `${label} ${record.code} is in shard ${name}; expected shard ${expectedShard}`,
+        );
+      }
+    }
+    records.push(...shardRecords);
   }
   return records;
 }

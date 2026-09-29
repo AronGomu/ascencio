@@ -1,0 +1,14 @@
+[
+  {
+    "path": "cards/full/1.jpg",
+    "source": "media/cards/full/1.jpg",
+    "mime": "image/jpeg",
+    "optional": true
+  },
+  {
+    "path": "cards/full/2.jpg",
+    "source": "media/cards/full/2.jpg",
+    "mime": "image/jpeg",
+    "optional": true
+  }
+]

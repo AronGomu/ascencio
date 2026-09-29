@@ -132,9 +132,11 @@ describe("canonical cross-era sort matrix retained from browser acceptance", () 
           after: sorted,
           reason: "sort",
         });
-        const undone = undoDeckUpdate(history)!;
+        const undone = undoDeckUpdate(history, sorted)!;
         expect(undone.cards).toEqual(input);
-        expect(redoDeckUpdate(undone.history)!.cards).toEqual(entry[direction]);
+        expect(redoDeckUpdate(undone.history, undone.cards)!.cards).toEqual(
+          entry[direction],
+        );
       });
     }
   }

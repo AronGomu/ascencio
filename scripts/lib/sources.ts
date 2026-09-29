@@ -1,4 +1,4 @@
-import { lstat, mkdir, realpath } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import type { SourceRevision } from "./model.ts";
@@ -59,75 +59,29 @@ export async function syncRepository(
   await mkdir(cacheRoot, { recursive: true });
   const directory = path.join(cacheRoot, definition.name);
 
-  const existing = await lstat(directory).catch(
-    (error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT") throw error;
-      return undefined;
-    },
-  );
-
-  if (existing) {
-    try {
-      const worktree = runGit(["rev-parse", "--show-toplevel"], directory);
-      if ((await realpath(worktree)) !== (await realpath(directory))) {
-        throw new Error(
-          `Source cache does not own its Git worktree: ${directory}`,
-        );
-      }
-      const origin = runGit(
-        ["config", "--get", "remote.origin.url"],
-        directory,
-      );
-      if (origin !== definition.repository) {
-        throw new Error(
-          `Source cache origin does not match ${definition.repository}`,
-        );
-      }
-      const changes = runGit(
-        [
-          "--no-optional-locks",
-          "status",
-          "--porcelain",
-          "--untracked-files=all",
-          "--ignored",
-        ],
-        directory,
-      );
-      if (changes) {
-        throw new Error(
-          `Source cache has local changes or untracked files: ${directory}`,
-        );
-      }
-      if (offline) {
-        validatePinnedRevision(
-          definition.ref,
-          runGit(["rev-parse", "HEAD"], directory),
-        );
-      }
-    } catch (error) {
-      emit({
-        operation: "validateSourceCache",
-        status: "invalid",
-        repository: definition.repository,
-        directory,
-        detail: (error as Error).message,
-      });
-      throw new Error(`Source cache is invalid: ${directory}`, {
-        cause: error,
-      });
+  try {
+    runGit(["rev-parse", "--git-dir"], directory);
+    const repository = runGit(["remote", "get-url", "origin"], directory);
+    if (repository !== definition.repository) {
+      throw new Error("Cached source repository mismatch");
     }
-  } else {
+  } catch (error) {
     emit({
       operation: "validateSourceCache",
       status: "miss",
       repository: definition.repository,
       directory,
+      detail: (error as Error).message,
     });
     if (offline) {
       throw new Error(
         `Offline source cache is missing or invalid: ${directory}`,
+        {
+          cause: error,
+        },
       );
     }
+    await rm(directory, { recursive: true, force: true });
     const cloneArguments = definition.sparsePaths?.length
       ? [
           "clone",

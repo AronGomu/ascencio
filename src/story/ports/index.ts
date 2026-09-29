@@ -12,3 +12,4 @@ export {
   validateStoryRelease,
 } from "./parse-story-release.ts";
 export { validateStoryContinuity } from "./story-continuity.ts";
+export { parseStoryDocument } from "./story-document.ts";

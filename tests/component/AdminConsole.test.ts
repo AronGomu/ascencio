@@ -1,3 +1,4 @@
+import type { ShellApplication } from "../../src/shell/core/shell-application.ts";
 import { shellGameplayFixture as installedGameplayFixture } from "../fixtures/shell-gameplay.ts";
 // @vitest-environment jsdom
 
@@ -8,6 +9,7 @@ import type { DeckRecord, DeckRepository } from "../../src/decks/index.ts";
 import AdminConsole from "../../src/shell/admin/AdminConsole.svelte";
 import {
   ADMIN_STORAGE_TARGETS,
+  seedAdminTestDeck,
   type AdminResetResult,
   type AdminStorageTarget,
 } from "../../src/shell/admin/admin-actions.ts";
@@ -65,17 +67,34 @@ function mount(
     hashes?: string[];
     created?: DeckRecord[];
     resetTarget?: (target: AdminStorageTarget) => Promise<AdminResetResult>;
+    seedDeck?: (signal: AbortSignal) => Promise<void>;
   } = {},
 ) {
   const created = options.created ?? [];
   const repository = fakeRepository(created);
+  const gameplay = installedGameplayFixture();
+  const application = {
+    acquire: async () => ({
+      inputs: {
+        presentation: gameplay.presentation,
+        editor: gameplay.editor(),
+        users: { createDeckRepository: () => repository },
+      },
+      close: async () => repository.close(),
+    }),
+  } as unknown as ShellApplication;
   return render(AdminConsole, {
-    gameplay: installedGameplayFixture(),
     store: createShellStore("#/admin", (hash) => options.hashes?.push(hash)),
-    openRepository: async () => repository,
+    seedDeck:
+      options.seedDeck ??
+      ((signal: AbortSignal) =>
+        seedAdminTestDeck(
+          application,
+          signal,
+          () => new Date("2026-08-14T00:00:00.000Z"),
+        )),
     resetTarget:
       options.resetTarget ?? (async () => ({ outcome: "deleted" }) as const),
-    now: () => new Date("2026-08-14T00:00:00.000Z"),
   });
 }
 
@@ -120,6 +139,62 @@ describe("AdminConsole", () => {
     expect(created).toHaveLength(1);
     expect(created[0]!.id).toBe("admin-test-deck");
     expect(created[0]!.main).toHaveLength(40);
+  });
+
+  it("suppresses double clicks; navigation aborts pending seed without late redirect", async () => {
+    const hashes: string[] = [];
+    const pending = Promise.withResolvers<void>();
+    let signal: AbortSignal | undefined;
+    const seedDeck = vi.fn(async (value: AbortSignal) => {
+      signal = value;
+      await pending.promise;
+    });
+    mount({ hashes, seedDeck });
+    await fireEvent.click(query("admin-jump-seed-deck")!);
+    await fireEvent.click(query("admin-jump-seed-deck")!);
+    expect(seedDeck).toHaveBeenCalledTimes(1);
+    await fireEvent.click(query("admin-route-home")!);
+    expect(signal?.aborted).toBe(true);
+    pending.resolve();
+    await vi.waitFor(() =>
+      expect(
+        (query("admin-jump-seed-deck") as HTMLButtonElement).disabled,
+      ).toBe(false),
+    );
+    expect(hashes).toEqual(["#/"]);
+  });
+
+  it("aborts pending seed on root unmount", async () => {
+    const pending = Promise.withResolvers<void>();
+    let signal: AbortSignal | undefined;
+    const hashes: string[] = [];
+    const view = mount({
+      hashes,
+      seedDeck: async (value) => {
+        signal = value;
+        await pending.promise;
+      },
+    });
+    await fireEvent.click(query("admin-jump-seed-deck")!);
+    view.unmount();
+    expect(signal?.aborted).toBe(true);
+    pending.resolve();
+    await Promise.resolve();
+    expect(hashes).toEqual([]);
+  });
+
+  it("reports precise readiness failures in existing status", async () => {
+    mount({
+      seedDeck: async () => {
+        throw new Error("APP_CONTENT_REQUIRED:freeplay");
+      },
+    });
+    await fireEvent.click(query("admin-jump-seed-deck")!);
+    await vi.waitFor(() =>
+      expect(query("admin-status")?.textContent).toBe(
+        "Could not seed the test deck: APP_CONTENT_REQUIRED:freeplay",
+      ),
+    );
   });
 
   it("opens the installed duel without writing a deck", async () => {
@@ -204,9 +279,9 @@ describe("AdminConsole", () => {
   it("arms only one reset at a time", async () => {
     mount();
     await fireEvent.click(query("admin-reset-decks")!);
-    await fireEvent.click(query("admin-reset-shell-settings")!);
+    await fireEvent.click(query("admin-reset-preferences")!);
     expect(query("admin-reset-decks-confirm")).toBeNull();
-    expect(query("admin-reset-shell-settings-confirm")).not.toBeNull();
+    expect(query("admin-reset-preferences-confirm")).not.toBeNull();
   });
 });
 
@@ -216,8 +291,6 @@ describe("admin reachability", () => {
       store: createShellStore("#/", () => {}),
       coreGate: {
         kind: "ready",
-        gameplay: installedGameplayFixture(),
-        reader: null,
         generation: 1,
       },
     });

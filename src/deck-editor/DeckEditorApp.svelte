@@ -13,7 +13,6 @@
     DeckId,
     DeckRecord,
   } from "../decks/contracts/index.ts";
-  import { DeckMigrationError } from "../decks/index.ts";
   import {
     resolveDeckRepository,
     type DeckContext,
@@ -22,7 +21,6 @@
     unlimitedCardOwnership,
     type CardOwnership,
     catalogByCode,
-    PROTOTYPE_RULESET,
   } from "../decks/validation/index.ts";
   import { ownedCatalog } from "./catalog-availability.ts";
   import { ensureStarterDeck, exportYdk } from "../decks/editing/index.ts";
@@ -50,7 +48,12 @@
 
       Defaulted rather than required so a harness that mounts the domain alone
       still opens the library a player would see; the shell always says. */
-  export let context: DeckContext = { kind: "free-play" };
+  export let context: DeckContext = {
+    kind: "free-play",
+    createRepository: () => {
+      throw new Error("USER_DATA_UNAVAILABLE");
+    },
+  };
   /* The route is a controlled prop: the domain never writes the URL itself, it
      reports where it wants to go and waits for the shell to echo the new
      `deckId` back. A host that swallows the callback keeps the library. */
@@ -106,14 +109,8 @@
   let requestedDeckId: DeckId | null = null;
   let notFound: DeckId | null = null;
   let routing = false;
-  /* A failed migration is not a failed load: the decks still exist, in the
-     database the migration refused to delete. Nothing may be edited until the
-     copy completes, or a second editor session would write into the database
-     the next attempt is about to overwrite. */
-  let migrationError: DeckMigrationError | null = null;
-  /* Applying the route reads IndexedDB, so it is watched here rather than
-     from a reactive statement: `routing` keeps one application in flight and
-     the tail re-checks a `deckId` that moved while storage was answering. */
+  /* Route reads are asynchronous: keep one application in flight and recheck
+     a deckId that moved while storage was answering. */
   afterUpdate(() => void watchRoute());
 
   async function watchRoute(): Promise<void> {
@@ -168,7 +165,7 @@
           await ensureStarterDeck(
             repository,
             catalog,
-            PROTOTYPE_RULESET,
+            catalogInput.ruleset,
             exportYdk(catalogInput.starter.cards),
             catalogInput.starter.name,
           );
@@ -177,7 +174,7 @@
         controller = new DeckBuilderController(
           repository,
           catalog,
-          PROTOTYPE_RULESET,
+          catalogInput.ruleset,
           ownership,
         );
         unsubscribe = controller.subscribe((value) => (state = value));
@@ -185,10 +182,6 @@
       })
       .catch((error: unknown) => {
         if (disposed) return;
-        if (error instanceof DeckMigrationError) {
-          migrationError = error;
-          return;
-        }
         state = {
           ...state,
           mode: "error",
@@ -291,23 +284,7 @@
     </p>
   {/if}
 
-  {#if migrationError !== null}
-    <main class="loading error" role="alert" data-cy="deck-migration-error">
-      <p data-cy="deck-migration-error-eyebrow">Deck Editor stopped</p>
-      <h1 data-cy="deck-migration-error-heading">Your decks were not moved</h1>
-      <p data-cy="deck-migration-error-message">
-        {migrationError.message}
-      </p>
-      <p data-cy="deck-migration-error-reassurance">
-        Nothing was deleted. Close any other tab running this app and try again.
-      </p>
-      <button
-        type="button"
-        data-cy="deck-migration-retry"
-        onclick={() => location.reload()}>Retry</button
-      >
-    </main>
-  {:else if state.mode === "error"}
+  {#if state.mode === "error"}
     <main class="loading error" role="alert" data-cy="deck-editor-error">
       <p data-cy="deck-editor-error-eyebrow">Deck Editor stopped</p>
       <h1 data-cy="deck-editor-error-message">{state.message}</h1>
@@ -363,7 +340,7 @@
       {state}
       {cards}
       {catalog}
-      ruleset={PROTOTYPE_RULESET}
+      ruleset={catalogInput.ruleset}
       images={catalogInput.images}
       {ownership}
       {layoutMode}

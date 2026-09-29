@@ -55,8 +55,8 @@ async function startNarrative(page: Page): Promise<void> {
 
     The save carries the granted deck and the cards behind it, because Retry on
     these scenes starts a real encounter and an encounter is fought with this
-    save's own deck. A save holding none cannot start one at all. The supported selected-generation repository binds this state to installed
-    Content. Legacy migration has separate compatibility tests. */
+    save's own deck. A save holding none cannot start one at all. The current SQLite repository binds this state to installed
+    Content. No legacy save generation or migration participates. */
 async function resumeAtOutcome(
   page: Page,
   outcome: BattleResult,
@@ -152,12 +152,10 @@ test("auto advances the scene, and skip stops at unread text until the reader al
 }) => {
   /* Seeded rather than dragged on the slider: the setting is proven by the
      overlay tests, and one second per beat keeps this run honest and short. */
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      "ygo.story.playback.v1",
-      JSON.stringify({ autoSpeedSeconds: 1, skipUnread: false }),
-    ),
+  await page.evaluate(() =>
+    window.selectedContent.playback({ autoSpeedSeconds: 1, skipUnread: false }),
   );
+  await page.reload();
   await startNarrative(page);
 
   const auto = page.getByRole("button", { name: "Auto", exact: true });
@@ -244,6 +242,10 @@ test("saved progress survives a reload and reaches the end of the prologue", asy
   await page.getByRole("button", { name: "Continue story" }).click();
   await expect(page.getByText(/Autosave complete/)).toBeVisible();
   await page.getByRole("button", { name: "Continue to updated map" }).click();
+  await putSelectedStorySave(page, {
+    slot: "manual:1",
+    state: createInitialStoryState(),
+  });
   await page.getByRole("button", { name: "Save progress" }).click();
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
   await dismissToast(page, "Game saved.");
@@ -259,10 +261,13 @@ test("saved progress survives a reload and reaches the end of the prologue", asy
 
 test("manual save and delete only touch the manual slot", async ({ page }) => {
   await startNarrative(page);
+  await putSelectedStorySave(page, {
+    slot: "manual:1",
+    state: createInitialStoryState(),
+  });
   await page.getByRole("button", { name: "Open menu" }).first().click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  /* Story entry already marks progress as existing, so the save overlay opens
-     on the overwrite confirmation rather than the empty-slot action. */
+  // Explicit current-slot setup preserves overwrite confirmation coverage.
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
   await dismissToast(page, "Game saved.");
   await page.getByRole("button", { name: "Open menu" }).first().click();
@@ -300,13 +305,17 @@ async function storySaveSlots(page: Page): Promise<readonly string[]> {
 }
 
 /* The reload is the whole point: the manual slot has to come back out of
-   IndexedDB through the Load screen, not out of the component's memory. */
+   SQLite through the Load screen, not out of the component's memory. */
 test("a manual save is reloadable from the Load screen after a reload", async ({
   page,
 }) => {
   await resumeAtOutcome(page, "win");
   await page.getByRole("button", { name: "Continue story" }).click();
   await page.getByRole("button", { name: "Continue to updated map" }).click();
+  await putSelectedStorySave(page, {
+    slot: "manual:1",
+    state: createInitialStoryState(),
+  });
   await page.getByRole("button", { name: "Save progress" }).click();
   await page.getByRole("button", { name: "Confirm overwrite" }).click();
   await dismissToast(page, "Game saved.");
@@ -343,25 +352,18 @@ test("a corrupt slot fails closed without replacing healthy progress", async ({
   await corruptSelectedStorySave(page, "manual:1", "not a save");
   await page.goto("./#/story");
   await expect(
-    page.locator('[data-cy="application-recovery-message"]'),
-  ).toHaveText(
-    "This session stopped because its required data became unavailable. Your saved progress was not replaced.",
-  );
+    page.locator('[data-cy="story-storage-error-message"]'),
+  ).toHaveText("manual:1: USER_DATA_INVALID");
   await expect(page.locator('[data-cy="shell-region-duel"]')).toHaveCount(0);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        async () =>
-          (await navigator.locks.query()).held?.filter(
-            (lock) => lock.name === "ygo-application-lifecycle-v1",
-          ).length ?? 0,
-      ),
-    )
-    .toBe(0);
   const failed = await selectedSaveSnapshot(page);
   expect(failed.selection).toEqual(before.selection);
+  expect(failed.rows.filter(({ slot }) => slot !== "manual:1")).toEqual(
+    before.rows.filter(({ slot }) => slot !== "manual:1"),
+  );
   expect(failed.slots.slice(1)).toEqual(before.slots.slice(1));
   expect(failed.slots[0]).toMatchObject({ kind: "corrupt", slot: "manual:1" });
+  await page.goto("./#/");
+  await expect(page.locator('[data-cy="main-menu-new-game"]')).toBeEnabled();
   await repairSelectedStorySlot(page, "manual:1");
   expect(await selectedSaveSnapshot(page)).toEqual(before);
   await page.goto("./#/");
@@ -719,7 +721,7 @@ test("the story route ships from index.html without booting the duel runtime", a
     class CountingWorker extends NativeWorker {
       constructor(scriptURL: string | URL, options?: WorkerOptions) {
         super(scriptURL, options);
-        count += 1;
+        if (options?.name !== "ascencio-sqlite") count += 1;
       }
     }
     Object.defineProperty(window, "Worker", { value: CountingWorker });
@@ -736,9 +738,9 @@ test("the story route ships from index.html without booting the duel runtime", a
           .__storyWorkerCount,
     ),
   ).toBe(0);
-  expect(requests.some((url) => /\/runtime\/|\.wasm(?:$|\?)/.test(url))).toBe(
-    false,
-  );
+  expect(
+    requests.some((url) => /\/runtime\/|ocgcore.*\.wasm(?:$|\?)/.test(url)),
+  ).toBe(false);
   expect(requests.some((url) => /prototype\.html(?:$|[?#])/.test(url))).toBe(
     false,
   );

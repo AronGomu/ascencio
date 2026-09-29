@@ -1,22 +1,29 @@
-# Atomic Asset Snapshots
+# Immutable Content Packages and Active Stack
 
-> Status: accepted
+> Status: implemented
+> Decision: [ADR-099](../../ADR/099_ADR_completed_manual_sqlite_cutover.md)
 
-## Snapshot unit
+## Immutable unit
 
-Treat engine/core revision, BabelCDB catalog, CardScripts, Project Ignis strings, and image manifest as one immutable compatibility unit. Never silently update or activate only one part.
+Each released SQLite file is immutable under `(package_id, version, sha256)`. Package manifest declares schema, type, version, dependencies, and creation time. Same ID/version with different bytes is identity conflict, not update.
 
-## Manifest
+Package roles remain separate:
 
-A versioned generated `manifest.json` records schema version, upstream commits/package integrity, artifact paths, byte lengths, SHA-256 hashes, generation time, and a runtime snapshot ID. Browser persistence uses a separate activation ID derived from the runtime snapshot ID plus the active-image manifest digest, so an image-only release cannot collide with an existing stored revision.
+- P1. `duel-core`: frozen engine bytes/config/strings.
+- P2. `card-library`: global cards/text/scripts/sets/search/media.
+- P3. `freeplay`: standalone decks/opponents/limits/config.
+- P4. `chapter-NN`: chapter data/media with sequential dependencies.
 
 ## Generation and activation
 
-- Upstream inputs are pinned build-time sources, not runtime packages.
-- Generate into staging, verify every artifact receipt, then publish/activate with an IndexedDB compare-and-swap transaction.
-- Reject unsupported schema, missing/extra files, hash/length mismatches, and mixed revisions.
-- The static browser package includes the trusted full root manifest but only the recursively resolved active-deck runtime closure; production verification rejects missing, extra, or modified packaged files.
-- Keep the previous known-good snapshot and verified runtime cache for rollback, and safely clean abandoned staging/cache data.
-- A failed or mixed-revision update cannot replace the active snapshot; startup may use the last verified cached runtime without activating the failed candidate.
+Developer export writes `generated/content-packages/<package-id>/<version>.sqlite`; outputs never enter app build. Browser stages selected files privately, validates full candidate closure, then changes `content-registry.sqlite` mappings in one generation compare-and-swap transaction. Registry mapping—not filename rename or cross-DB transaction—defines visibility.
 
-The implemented acquisition/verification details live in [`../../assets/asset-import-pipeline.md`](../../assets/asset-import-pipeline.md).
+App boot performs bounded stack checks. Import and explicit Verify perform full integrity/hash/reference validation. Active mode session pins generation and blocks lifecycle mutation until release.
+
+## Separation from app and user data
+
+App build identity derives app source/config and explicit `assets/app/` bytes, never package DBs or acquired media. Service Worker update approval remains separate from content import.
+
+`user-data.sqlite` has no package generation binding. Content replacement may make saved semantic refs obsolete; no compatibility selector, historical rollback, or save rewrite occurs. Backup preserves user bytes independently.
+
+Acquisition details remain in [`../../assets/asset-import-pipeline.md`](../../assets/asset-import-pipeline.md); package setup/release gates remain in [`../../assets/manual-sqlite-setup.md`](../../assets/manual-sqlite-setup.md).

@@ -1,8 +1,10 @@
 import { writable, type Readable } from "svelte/store";
+import type {
+  AsyncPreferencePort,
+  StorageFailure,
+} from "../../storage/index.ts";
 import {
   DEFAULT_SHELL_SETTINGS,
-  readShellSettings,
-  writeShellSettings,
   type FreePlayPairing,
   type ShellSettings,
 } from "./shell-settings.ts";
@@ -13,45 +15,35 @@ export interface ShellSettingsStore extends Readable<ShellSettings> {
   rememberFreePlayOpponent(id: string): void;
 }
 
-/* One live owner for shell settings: every setter writes the complete state,
-   and a storage failure never interrupts navigation. */
 export function createShellSettingsStore(
-  storage: Pick<Storage, "getItem" | "setItem"> | null = defaultStorage(),
+  initial: ShellSettings = DEFAULT_SHELL_SETTINGS,
+  persistence: AsyncPreferencePort<ShellSettings> | null = null,
+  onFailure: (error: StorageFailure) => void = (error) =>
+    console.warn("USER_PERSISTENCE_FAILED", error),
 ): ShellSettingsStore {
-  const { subscribe, update } = writable<ShellSettings>(
-    storage === null ? DEFAULT_SHELL_SETTINGS : readShellSettings(storage),
-  );
+  const { subscribe, update } = writable<ShellSettings>(initial);
 
-  function persist(next: (state: ShellSettings) => ShellSettings): void {
-    update((state) => {
-      const value = next(state);
-      if (storage !== null) writeShellSettings(storage, value);
-      return value;
-    });
+  function persist(patch: Partial<ShellSettings>): void {
+    update((state) => Object.freeze({ ...state, ...patch }));
+    if (persistence === null) return;
+    void persistence.update(patch).then(
+      (result) => {
+        if (result.kind === "failed") onFailure(result.error);
+      },
+      () => onFailure({ code: "STORAGE_UNAVAILABLE" }),
+    );
   }
 
   return {
     subscribe,
     dismissRotationNotice(): void {
-      persist((state) =>
-        Object.freeze({ ...state, rotationNoticeDismissed: true }),
-      );
+      persist({ rotationNoticeDismissed: true });
     },
     rememberFreePlayPairing(pairing: FreePlayPairing): void {
-      persist((state) =>
-        Object.freeze({ ...state, freePlayPairing: Object.freeze(pairing) }),
-      );
+      persist({ freePlayPairing: Object.freeze(pairing) });
     },
     rememberFreePlayOpponent(id: string): void {
-      persist((state) => Object.freeze({ ...state, freePlayOpponentId: id }));
+      persist({ freePlayOpponentId: id });
     },
   };
-}
-
-function defaultStorage(): Storage | null {
-  try {
-    return globalThis.localStorage ?? null;
-  } catch {
-    return null;
-  }
 }

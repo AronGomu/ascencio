@@ -1,19 +1,20 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import {
-  DECK_DATABASE_NAME,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/repository/index.ts";
+
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import { deckId, type DeckId } from "../../../src/decks/contracts/index.ts";
 import {
@@ -25,29 +26,31 @@ import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts"
 
 installPrototypeActiveCatalog();
 
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
+
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 async function seedDeck(id: string, name: string): Promise<DeckId> {
-  const repository = await IndexedDbDeckRepository.open();
-  try {
-    const deck = createBlankDeck(name, prototypeCatalogMap, PROTOTYPE_RULESET, {
-      id,
-      now: new Date("2026-01-01T00:00:00.000Z"),
-    });
-    await repository.create(deck, emptyDeckHistory());
-    return deck.id;
-  } finally {
-    repository.close();
-  }
+  const deck = createBlankDeck(name, prototypeCatalogMap, PROTOTYPE_RULESET, {
+    id,
+    now: new Date("2026-01-01T00:00:00.000Z"),
+  });
+  await repository.create(deck, emptyDeckHistory());
+  return deck.id;
 }
 
 /* Another tab saved the deck since this page opened it, so the revision the
    delete carries is stale and storage refuses it. */
 async function bumpRevisionElsewhere(id: DeckId): Promise<void> {
-  const repository = await IndexedDbDeckRepository.open();
+  const repository = await openTestDeckRepository();
   try {
     const stored = await repository.load(id);
     await repository.save(
@@ -56,14 +59,14 @@ async function bumpRevisionElsewhere(id: DeckId): Promise<void> {
       stored!.history,
     );
   } finally {
-    repository.close();
+    await repository.close();
   }
 }
 
 describe("a delete that storage refused", () => {
   it("reports failure rather than resolving like a success", async () => {
     const id = await seedDeck("d-fail", "Doomed");
-    const repository = await IndexedDbDeckRepository.open();
+    const repository = await openTestDeckRepository();
     try {
       const controller = new DeckBuilderController(
         repository,
@@ -78,13 +81,13 @@ describe("a delete that storage refused", () => {
       expect(get(controller).mode).toBe("error");
       expect(await repository.load(id)).not.toBeNull();
     } finally {
-      repository.close();
+      await repository.close();
     }
   });
 
   it("reports success when storage really dropped the deck", async () => {
     const id = await seedDeck("d-ok", "Doomed");
-    const repository = await IndexedDbDeckRepository.open();
+    const repository = await openTestDeckRepository();
     try {
       const controller = new DeckBuilderController(
         repository,
@@ -97,7 +100,7 @@ describe("a delete that storage refused", () => {
       expect(await controller.deleteDeck(id, revision)).toBe(true);
       expect(await repository.load(id)).toBeNull();
     } finally {
-      repository.close();
+      await repository.close();
     }
   });
 
@@ -105,9 +108,12 @@ describe("a delete that storage refused", () => {
     const id = await seedDeck("d-route", "Doomed");
     const onnavigate = vi.fn();
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: deckId("d-route"),
-      onnavigate,
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: deckId("d-route"),
+        onnavigate,
+      },
     });
     await waitFor(() =>
       expect(

@@ -61,6 +61,10 @@
     unlimited || showAll
       ? cards
       : cards.filter(({ code }) => ownership.ownedCount(code) > 0);
+  /* Cache membership per list change, never per hover. */
+  $: listedCodes = new Set(listed.map(({ code }) => code));
+  /* A filter that removes the selected card also removes its preview. */
+  $: if (selected !== null && !listedCodes.has(selected.code)) selected = null;
   /* Deliberately reads neither the selection nor the window: a hover, a click
      or a scroll must not re-walk the database. */
   $: entries = listed.map((card): CollectionEntry => ({

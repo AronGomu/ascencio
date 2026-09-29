@@ -10,7 +10,6 @@ const subpath = "/ygo-story-duel/";
 
 export default defineConfig({
   testDir: "./e2e-core",
-  testIgnore: "chapter-content-delivery.spec.ts",
   globalTeardown: "./scripts/core-source-only-teardown.ts",
   outputDir: process.env.T10_REPAIR_EVIDENCE
     ? `${process.env.T10_REPAIR_EVIDENCE}/test-results`

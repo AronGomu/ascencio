@@ -1,0 +1,10 @@
+[
+  {
+    "setId": "fixture-set",
+    "cardCode": 1,
+    "printingCode": "FIX-001",
+    "rarity": "common",
+    "sourceRarity": "Common",
+    "sourceRarityCode": "C"
+  }
+]

@@ -1,5 +1,10 @@
 # Deterministic local asset bundles
 
+> Status: historical; ZIP/object bundle commands and implementation retired by [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md). Commands below are not present in current `package.json` and must not be run as current setup.
+> Current producer: [`manual-sqlite-setup.md`](manual-sqlite-setup.md).
+
+Historical body preserved unchanged for provenance.
+
 Producer implementation: `scripts/lib/asset-delivery/bundle.ts` (`bundleAssets`). No publisher, installer, network acquisition, engine update, image decoder, gameplay/source-readiness gate runs here. Existing private Vite build stays separate.
 
 ## Commands

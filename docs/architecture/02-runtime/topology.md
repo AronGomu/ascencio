@@ -2,35 +2,41 @@
 
 > Status: implemented
 
-Svelte owns the public field, prompt controls, and application lifecycle. Worker engine authority remains unchanged.
+Svelte owns public UI and lifecycle. Two dedicated Workers have separate authority.
 
 ## Main thread owns
 
-- Svelte application lifecycle, semantic field controls, card details, logs, loading/errors, and results.
-- Latest immutable public duel snapshot, one current human prompt, and prompt-keyed interaction session.
-- DOM/CSS/SVG presentation lifecycle and active-duel image lease/cache coordination.
-- Typed Worker client only; it never imports the engine.
+- M1. Shell routing, lifecycle UI, app-update consent, mode readiness, semantic adapter composition.
+- M2. Svelte field/editor/story presentation and latest immutable public duel state.
+- M3. Typed SQLite and Duel Worker clients; main thread imports neither engine nor SQLite DB handles.
+- M4. Media URL leases and visible warning state; presentation never determines legality.
 
-## Dedicated Worker owns
+## SQLite Worker owns
 
-- Vendored synchronous WASM module and duel handles.
-- Raw core messages, response indexes, and process loop.
-- Card/script in-memory maps and synchronous callbacks.
-- Prompt conversion, response encoding, state projection, and opponent policy.
-- Seed, ordered responses, and diagnostic trace.
+- S1. Lifetime exclusive Web Lock, OPFS SAH pool, package registry, immutable package handles, mutable `user-data.sqlite`.
+- S2. Fixed validated RPC for import/verify/remove/cleanup, content queries, user writes, backup export/inspect/restore.
+- S3. Package generation/session leases, chunked hashing/import, typed media warnings, atomic registry/user transactions.
+- S4. No arbitrary SQL or package executable JS crosses RPC boundary.
 
-## Isolation evidence
+## Duel Worker owns
 
-- `src/battle/worker/duel.worker-node.ts` is the Node-only production entry and derives its trusted project root from `import.meta.url`.
-- `tests/integration/node-worker-thread.test.ts` loads the real vendored WASM in `node:worker_threads` and drives initialize, start, prompt, surrender, graceful disposal, and forced termination solely through `postMessage`.
-- `src/battle/worker/duel.worker-browser.ts` is a dedicated production Worker entry. Vite packages only the reviewed synchronous core path and verified active runtime closure; browser modules cannot import `*-node.ts` files.
-- Production build verification rejects Node markers, disabled engine fallbacks, unmanifested runtime/image files, digest drift, missing licenses, and bundle-budget regressions.
+- D1. Vendored synchronous OCG WASM module and duel handles.
+- D2. Raw core messages, response indexes, processing loop, card/script in-memory maps, synchronous callbacks.
+- D3. Prompt conversion, response encoding, state projection, opponent policy, seed/responses/diagnostic trace.
+- D4. Rules authority remains Project Ignis core; SQLite Worker supplies validated semantic inputs before duel starts.
+
+## Build and isolation evidence
+
+- B1. `src/storage/sqlite-worker.ts` and `src/battle/worker/duel.worker-browser.ts` are distinct module Worker entries.
+- B2. `vite.config.ts` includes exact SQLite executable in app/precache while OCG WASM arrives only through imported `duel-core`.
+- B3. `scripts/verify-browser-build.ts` rejects content/media/package/extra-WASM leakage and Node-only engine resolution.
+- B4. `scripts/lib/vite-content-deny.ts` rejects private content roots through direct, aliased, encoded, and Vite `@fs` paths.
+- B5. Node/unit/build evidence is code-ready only; owner manual Chromium checklist covers OPFS/offline/second-tab behavior.
 
 ## Boundaries
 
-- Communication uses structured-clone-safe domain commands and events.
-- Raw protocol values never cross to Svelte/presentation components.
-- Offline snapshots may retain opponent hidden identities with explicit visibility metadata; presentation, accessibility, image loading, screenshots, and routine diagnostics must conceal them.
-- DOM field communicates through typed store callbacks, never directly with the Worker.
-- Logical field geometry and interaction specs are pure main-thread mappings from immutable domain data.
-- A runaway or unresponsive engine is bounded by terminating/replacing the Worker.
+- R1. Structured-clone domain data only; raw OCG protocol never reaches UI.
+- R2. Imported SQLite is untrusted data opened through exact schemas and fixed read-only queries.
+- R3. One active app tab owns SQLite; one live duel owns Duel Worker session.
+- R4. Hidden opponent identities remain concealed from UI, accessibility, art requests, screenshots, and routine diagnostics.
+- R5. Worker failures surface typed errors; no silent fallback to legacy content/storage exists.

@@ -14,3 +14,8 @@ export type {
   BattlePresentationOpponent,
 } from "./battle-presentation-input.ts";
 export { validateFrozenBattleExecutable } from "./frozen-battle-executable.ts";
+export {
+  defaultPersistedUiState,
+  isPersistedUiState,
+} from "./persisted-ui-state-contracts.ts";
+export type { PersistedUiState } from "../app/stores/persisted-ui-state.ts";

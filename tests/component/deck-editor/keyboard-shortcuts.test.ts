@@ -32,7 +32,10 @@ function stateWithUndoHistory(): DeckBuilderState {
 
 function stateWithRedoHistory(): DeckBuilderState {
   const withUndo = stateWithUndoHistory();
-  const result = undoDeckUpdate(withUndo.current!.history)!;
+  const result = undoDeckUpdate(
+    withUndo.current!.history,
+    withUndo.current!.deck,
+  )!;
   return {
     ...withUndo,
     current: { ...withUndo.current!, history: result.history },

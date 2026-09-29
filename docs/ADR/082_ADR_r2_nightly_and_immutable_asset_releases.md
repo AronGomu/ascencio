@@ -2,6 +2,8 @@
 
 > Status: accepted; planned
 > Amended by [ADR-092](092_ADR_immutable_per_file_content_delivery.md) D1–D5: player D2/D5/D6 use full remote manifest and per-file immutable objects; D7 player publication also enforces semantic continuity. Developer archive policy remains separate.
+> Amended by [ADR-095](095_ADR_manual_sqlite_package_delivery.md) D1–D5: manual external downloads/SQLite export replace D1–D6 managed R2/player/dev delivery; rights/authorization safeguards remain; no remote deletion authorized.
+> Superseded for current delivery by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D1/B2–B3. R2/nightly body is historical; no remote deletion is authorized.
 > Decided: 2026-09-09
 > Owners: release / asset tooling / shell
 > Baseline: `3fa800c` — source baseline, not implementation evidence.

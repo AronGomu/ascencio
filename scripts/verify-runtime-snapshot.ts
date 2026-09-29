@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
@@ -15,7 +15,11 @@ const projectRoot = path.resolve(
 );
 const assetRoot = path.join(projectRoot, ASSET_SOURCES.data.source);
 const vendorRoot = path.join(projectRoot, "vendor", "ocgcore-wasm", "0.1.2");
-const manifest = await buildRuntimeSnapshotManifest(assetRoot, vendorRoot);
+const manifest = await buildRuntimeSnapshotManifest(
+  assetRoot,
+  vendorRoot,
+  path.join(projectRoot, ASSET_SOURCES.dataManifest.source),
+);
 const publishedManifest = parseRuntimeSnapshotManifest(
   JSON.parse(
     await readFile(
@@ -29,7 +33,11 @@ if (!isDeepStrictEqual(publishedManifest, manifest)) {
     "Published runtime manifest does not match the independently derived snapshot",
   );
 }
-await verifyRuntimeSnapshotFiles(manifest, assetRoot);
+await verifyRuntimeSnapshotFiles(
+  manifest,
+  assetRoot,
+  path.join(projectRoot, ASSET_SOURCES.strings.source),
+);
 console.log(
   JSON.stringify({ status: "ok", snapshotId: manifest.snapshotId }, null, 2),
 );

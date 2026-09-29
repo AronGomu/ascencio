@@ -1,9 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { STARTER_DECK_NAME } from "../../../src/decks/editing/index.ts";
 import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
-import { migrateStorySaveState } from "../../../src/story/saves/story-save-contracts.ts";
+import { createSqliteStoryRepository } from "../../../src/story/saves/index.ts";
+import {
+  storyUserRuntime,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
+import { storyBindingFixture } from "../../fixtures/story-release.ts";
+
+afterEach(resetStorySessionFixture);
 
 function newGame(): ReturnType<typeof reduceStory> {
   return reduceStory(createInitialStoryState(), {
@@ -51,28 +58,28 @@ describe("the new-save starter grant", () => {
     expect(second.collection).toEqual(first.collection);
   });
 
-  /* The reducer is a pure sync function and the runtime catalog is an async
-     128-shard fetch, so the grant is built without one. The stored verdict is
-     a cache the editor and `resolveDeck` both recompute; what has to survive
-     is the save layer's own predicate, because a record it rejects makes the
-     whole save read back corrupt — progress, wallet and collection with it. */
-  it("the granted deck is a record the save layer can read back", () => {
+  it("the granted deck round-trips through current SQLite saves", async () => {
     const state = newGame();
-    const migrated = migrateStorySaveState(state, 3);
-    expect(migrated).not.toBeNull();
-    expect(migrated?.decks).toEqual(state.decks);
-    expect(migrated?.defaultDeckId).toBe(state.defaultDeckId);
+    const saves = createSqliteStoryRepository(storyUserRuntime({}));
+    expect(
+      await saves.write("manual:1", state, 0, storyBindingFixture()),
+    ).toEqual({ kind: "written", revision: 1 });
+    expect(await saves.read("manual:1")).toMatchObject({
+      kind: "ready",
+      envelope: { schemaVersion: 6, state },
+    });
   });
 
-  /* The migration retains its historical grant for saves written before decks
-     existed. A record that already carries a deck list is not such a save: an
-     empty library it chose to hold stays empty, and no cards come with it. */
-  it("a record that already carries a deck list is granted nothing", () => {
+  it("reading a current empty library grants nothing", async () => {
     const existing = { ...createInitialStoryState(), dp: 40 };
-    const migrated = migrateStorySaveState(existing, 2);
-    expect(migrated?.decks).toEqual([]);
-    expect(migrated?.defaultDeckId).toBeNull();
-    expect(migrated?.collection).toEqual({});
+    const saves = createSqliteStoryRepository(storyUserRuntime({}));
+    expect(
+      await saves.write("manual:1", existing, 0, storyBindingFixture()),
+    ).toEqual({ kind: "written", revision: 1 });
+    expect(await saves.read("manual:1")).toMatchObject({
+      kind: "ready",
+      envelope: { state: existing },
+    });
   });
 });
 

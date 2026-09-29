@@ -12,8 +12,10 @@ import {
 import { compareCodePoints } from "./asset-delivery/canonical-json.ts";
 
 export const CHAPTER_ONE_SET_MEDIA_EVIDENCE_PATH =
-  "content/authoring/chapter-one-set-media.json";
+  "assets/content/chapter-01/authoring/chapter-one-set-media.json";
 export const CHAPTER_ONE_SET_MEDIA_SOURCE_PATH =
+  "assets/content/card-library/authoring/ygoprodeck-cardsets-2026-09-12.json";
+const CHAPTER_ONE_SET_MEDIA_PROVENANCE_PATH =
   "content/authoring/ygoprodeck-cardsets-2026-09-12.json";
 export const CHAPTER_SET_INDEX_MAX_BYTES = 1024 * 1024;
 
@@ -37,7 +39,7 @@ export function parseChapterSetMediaEvidence(value: unknown) {
     source: (input) =>
       object(input, {
         bytes: integer,
-        path: literal(CHAPTER_ONE_SET_MEDIA_SOURCE_PATH),
+        path: literal(CHAPTER_ONE_SET_MEDIA_PROVENANCE_PATH),
         sha256: hash,
       }),
   });

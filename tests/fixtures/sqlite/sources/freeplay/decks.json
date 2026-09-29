@@ -1,0 +1,7 @@
+[
+  {
+    "id": "starter",
+    "name": "Starter",
+    "cards": { "main": [1], "extra": [], "side": [] }
+  }
+]

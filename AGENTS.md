@@ -26,7 +26,9 @@ Applies to Claude Code, Codex, and pi; each has the `graphify` skill installed g
 
 ## Purpose and status
 
-YGO Story Duel Simulator is a browser-first, offline Yu-Gi-Oh! duel client. The MVP launches directly into one human-versus-computer duel using bundled preset decks. Project Ignis `ygopro-core` is the sole authority for rules, legal actions, effects, and results.
+YGO Story Duel Simulator is a browser-first, offline Yu-Gi-Oh! duel client. One shell exposes Duel Simulator, Deck Editor, Visual Novel, and manual content lifecycle. Project Ignis `ygopro-core` is sole authority for rules, legal actions, effects, and results.
+
+Current content uses user-selected immutable SQLite packages in OPFS. App bundle is content-free except SQLite executable; package sources/output never enter `dist/` or precache. New mutable data uses isolated `user-data.sqlite`; app never migrates or deletes legacy stores.
 
 The three-UI restructure (plan `PLAN_2026_08_14_three_ui_restructure`) is complete as of 2026-08-15 (commit tagged `restructure-complete`). All three domains — Duel Simulator, Deck Editor, Visual Novel — are live under one shell, reachable through `index.html`. Development runs on a single trunk; the per-domain branch and worktree topology is retired, see [`docs/ADR/045_ADR_single_branch_trunk_development.md`](docs/ADR/045_ADR_single_branch_trunk_development.md). Build budgets are machine-enforced per domain via `npm run build:verify`.
 
@@ -45,7 +47,8 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 - Use [`docs/story/README.md`](docs/story/README.md) as the narrative canon router for any story, character, or chapter question; runtime content under `src/story/content/` derives from it and never contradicts it (ADR-053).
 - Use [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) as completed semantic DOM-field migration history.
 - Use [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) as completed MVP/Phaser baseline history.
-- Use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for the implemented asset pipeline.
+- R1. Use [`docs/ADR/099_ADR_completed_manual_sqlite_cutover.md`](docs/ADR/099_ADR_completed_manual_sqlite_cutover.md) plus [`docs/architecture/04-data/manual-sqlite-content-import.md`](docs/architecture/04-data/manual-sqlite-content-import.md) for current manual package/runtime/user-data architecture.
+- R2. Use [`docs/assets/manual-sqlite-setup.md`](docs/assets/manual-sqlite-setup.md) for current owner setup/release gates; use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for retained source acquisition/verification.
 - `docs/archive/` is historical only and must not override current decisions.
 
 ## Document rules
@@ -70,18 +73,18 @@ Commit a plan before retiring it and that SHA stays a real address: `git show <s
 
 ## Technical stack
 
-| Area | Technology | Role |
-|---|---|---|
-| Language | TypeScript (strict), Node.js 24+ | Application, contracts, tooling, tests, and opponent policy |
-| Build | Vite | Dev server, Worker/WASM handling, and static build |
-| UI | Svelte | Application layout, semantic DOM field, prompts, logs, errors, and results |
-| Duel field | Svelte DOM + CSS/SVG | Native controls, typed physical layout, highlights, and non-authoritative feedback |
-| Rules | Vendored `ocgcore-wasm@0.1.2` / Project Ignis `ygopro-core` | Authoritative duel engine |
-| Isolation | Dedicated Web Worker | Sole owner of WASM, protocol, scripts, handles, and state projection |
-| Data | BabelCDB, CardScripts, Project Ignis strings | Versioned card/effect/protocol snapshot |
-| Persistence | IndexedDB via `idb`; Cache Storage | Metadata/preferences/debug runs; image cache |
-| Tests | Node test runner, Vitest, Testing Library, Playwright | Unit, component, integration, and browser coverage |
-| Quality | TypeScript, ESLint, Prettier, CI | Types, lint, format, compatibility, assets, and build gates |
+| Area        | Technology                                                     | Role                                                                                                                     |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Language    | TypeScript (strict), Node.js 24+                               | Application, contracts, tooling, tests, and opponent policy                                                              |
+| Build       | Vite                                                           | Dev server, Worker/WASM handling, and static build                                                                       |
+| UI          | Svelte                                                         | Application layout, semantic DOM field, prompts, logs, errors, and results                                               |
+| Duel field  | Svelte DOM + CSS/SVG                                           | Native controls, typed physical layout, highlights, and non-authoritative feedback                                       |
+| Rules       | Vendored `ocgcore-wasm@0.1.2` / Project Ignis `ygopro-core`    | Authoritative duel engine                                                                                                |
+| Isolation   | Dedicated Web Worker                                           | Sole owner of WASM, protocol, scripts, handles, and state projection                                                     |
+| Data        | BabelCDB, CardScripts, Project Ignis strings                   | Versioned card/effect/protocol snapshot                                                                                  |
+| Persistence | SQLite WASM + OPFS; retained `idb`/Cache Storage operationally | Immutable content registry/packages, isolated `user-data.sqlite`; app-update approval/diagnostics + app shell cache only |
+| Tests       | Node test runner, Vitest, Testing Library, Playwright          | Unit, component, integration, and browser coverage                                                                       |
+| Quality     | TypeScript, ESLint, Prettier, CI                               | Types, lint, format, compatibility, assets, and build gates                                                              |
 
 ## Three-domain application direction
 
@@ -116,7 +119,9 @@ What the rules encode:
 - Svelte owns all interactive application/field UI; presentation state never determines legality.
 - Canvas may be future pointer-transparent decoration only after separate measured ADR.
 - Synchronous core callbacks use preloaded memory and perform no async I/O.
-- Engine and Project Ignis assets are pinned and activated as one verified snapshot.
+- C1. Frozen engine compatibility and Project Ignis content are validated as immutable SQLite package stack; registry generation commit owns activation.
+- C2. App build/cache contains exact SQLite executable, never OCG WASM, package DBs, card/chapter media, raw content, ZIP/progressive/R2 metadata.
+- C3. Package lifecycle never reads/writes saves. New user data lives in isolated `user-data.sqlite`; legacy stores remain untouched/unread; no migration or save-continuity guarantee.
 - Production duels shuffle normally; deterministic inputs are test/diagnostic-only.
 
 ## File design policy
@@ -133,7 +138,7 @@ Prefer small, cohesive, independently navigable files.
 
 ## HTML element contract
 
-Every HTML element rendered by a Svelte component under `src/battle/`, `src/shell/`, `src/deck-editor/`, `src/deck-select/` or `src/story/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example `` data-cy={`field-card-${card.id}`} ``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
+Every HTML element rendered by a Svelte component under `src/battle/`, `src/shell/`, `src/deck-editor/`, `src/deck-select/` or `src/story/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example ``data-cy={`field-card-${card.id}`}``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
 
 ## Project tree
 
@@ -165,19 +170,20 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 │   │   ├── decks/                     # Battle-internal deck selection/loading
 │   │   ├── duel/                      # Atomic contracts, presentation types, presets
 │   │   ├── field/                     # Typed DOM-field layout/model mapping
-│   │   ├── storage/                   # IndexedDB and Cache Storage adapters
+│   │   ├── storage/                   # Battle operational diagnostics/update adapters
 │   │   └── worker/                    # Worker entry, engine, protocol, projection, opponent, assets
 │   ├── decks/                         # Shared deck-data library
 │   ├── deck-editor/                   # Deck Editor domain
 │   ├── story/                         # Visual Novel domain
+│   ├── storage/                       # SQLite contracts/schema/client/Worker/runtime
 │   └── styles/
 ├── scripts/                           # Asset acquisition/verification tools
 │   └── lib/                           # Focused pipeline modules
 ├── tests/                             # Unit/component/integration fixtures/tests
 ├── e2e/                               # Playwright production-browser tests
 ├── vendor/ocgcore-wasm/0.1.2/         # Checked-in verified engine
-├── public/                            # Browser-served runtime assets
-├── generated/                         # Ignored generated snapshot/images
+├── public/                            # Retained source/history; Vite publicDir is disabled
+├── generated/                         # Ignored acquisition inputs/package outputs/reports
 └── .cache/                            # Ignored upstream downloads/temp data
 ```
 

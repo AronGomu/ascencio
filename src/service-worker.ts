@@ -1,10 +1,11 @@
 /// <reference lib="webworker" />
 
+import sqliteWasmUrl from "@sqlite.org/sqlite-wasm/sqlite3.wasm?url";
 import { PrecacheController } from "workbox-precaching";
 import { readCoreApproval } from "./shell/application/core-update-approval.ts";
 import {
   assertShellPrecacheEntries,
-  CORE_INSTALL_STATE_CACHE,
+  installShellPrecache,
   isAppNavigationRequest,
   isFirstCoreInstall,
   SHELL_CACHE_PREFIX,
@@ -16,16 +17,16 @@ const cacheName = shellCacheName(__APP_BUILD_ID__);
 const precache = new PrecacheController({ cacheName });
 const manifest = assertShellPrecacheEntries(
   (self as unknown as ServiceWorkerGlobalScope).__WB_MANIFEST,
+  sqliteWasmUrl,
 );
 precache.addToCacheList([...manifest]);
 
 worker.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
-      const installState = await worker.caches.open(CORE_INSTALL_STATE_CACHE);
       const firstInstall = isFirstCoreInstall(
         worker.registration.active !== null,
-        (await installState.match(worker.registration.scope)) !== undefined,
+        await worker.caches.keys(),
       );
       if (!firstInstall) {
         const approval = await readCoreApproval(worker.indexedDB);
@@ -36,7 +37,11 @@ worker.addEventListener("install", (event) => {
         )
           throw new Error("CORE_UPDATE_NOT_APPROVED");
       }
-      await precache.install(event);
+      await installShellPrecache(
+        firstInstall,
+        async () => await precache.install(event),
+        async () => await worker.caches.delete(cacheName),
+      );
     })(),
   );
 });
@@ -74,12 +79,6 @@ worker.addEventListener("fetch", (event) => {
 worker.addEventListener("activate", (event) => {
   event.waitUntil(
     worker.caches.keys().then(async (names) => {
-      // Activation proves installation completed; partial candidate caches do not.
-      const installState = await worker.caches.open(CORE_INSTALL_STATE_CACHE);
-      await installState.put(
-        worker.registration.scope,
-        new Response(__APP_BUILD_ID__),
-      );
       await Promise.all(
         names
           .filter(

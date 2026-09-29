@@ -1,42 +1,33 @@
 <script lang="ts">
-  import type { ShellGameplay } from "../core/installed-inputs.ts";
-  import { PROTOTYPE_RULESET } from "../../decks/validation/index.ts";
-  import { emptyDeckHistory } from "../../decks/editing/index.ts";
-  import type { DeckRepository } from "../../decks/index.ts";
-  import { IndexedDbDeckRepository } from "../../decks/repository/index.ts";
+  import { onDestroy } from "svelte";
   import { formatAppRoute, type AppRoute } from "../routes.ts";
   import type { ShellStore } from "../shell-store.ts";
   import {
     ADMIN_ROUTES,
     ADMIN_STORAGE_TARGETS,
     ADMIN_TEST_DECK_ID,
-    ADMIN_TEST_DECK_NAME,
-    buildAdminTestDeck,
-    resetStorageTarget,
+    resetOperationalStorageTarget,
     type AdminResetResult,
     type AdminStorageTarget,
   } from "./admin-actions.ts";
 
-  /** The console holds a connection only for the length of one seed, so a
-      reset that follows is not blocked by an open database. */
-  type ClosableRepository = DeckRepository & { close: () => void };
-
-  import type { GenerationSaveRepository } from "../../story/saves/index.ts";
-  export let saves: GenerationSaveRepository | null = null;
   export let store: ShellStore;
-  export let gameplay: ShellGameplay | null = null;
-  export let openRepository: () => Promise<ClosableRepository> = async () =>
-    await IndexedDbDeckRepository.open();
+  export let seedDeck: (signal: AbortSignal) => Promise<void> = async () => {
+    throw new Error("USER_DATA_UNAVAILABLE");
+  };
+  export let resetUserTarget: (
+    target: AdminStorageTarget,
+  ) => Promise<AdminResetResult> = async () => {
+    throw new Error("USER_DATA_UNAVAILABLE");
+  };
   export let resetTarget: (
     target: AdminStorageTarget,
   ) => Promise<AdminResetResult> = async (target) =>
-    await resetStorageTarget(
-      target,
-      globalThis.indexedDB,
-      globalThis.localStorage,
-      saves,
-    );
-  export let now: () => Date = () => new Date();
+    target.kind === "user"
+      ? await resetUserTarget(target)
+      : await resetOperationalStorageTarget(target, globalThis.indexedDB);
+  const lifetime = new AbortController();
+  onDestroy(() => lifetime.abort());
 
   /* Deleting a store is irreversible, so a reset needs a second, separate
      click on a button that only exists once the first one has armed it. Only
@@ -50,39 +41,19 @@
   }
 
   async function seedTestDeck(): Promise<void> {
+    if (busy || lifetime.signal.aborted) return;
     busy = true;
     status = "Seeding the test deck…";
-    let repository: ClosableRepository | null = null;
     try {
-      if (gameplay === null) throw new Error("Installed content is required");
-      repository = await openRepository();
-      const timestamp = now().toISOString();
-      await repository.create(
-        {
-          schemaVersion: 1,
-          id: ADMIN_TEST_DECK_ID,
-          revision: 0,
-          name: ADMIN_TEST_DECK_NAME,
-          ...buildAdminTestDeck(gameplay),
-          createdAt: timestamp,
-          updatedAt: timestamp,
-          validation: {
-            status: "valid",
-            issues: [],
-            rulesetRevision: PROTOTYPE_RULESET.revision,
-          },
-          importedNeedsReview: false,
-          illustrationCardCode: null,
-        },
-        emptyDeckHistory(),
-      );
+      await seedDeck(lifetime.signal);
+      if (lifetime.signal.aborted) return;
     } catch (error) {
       status = `Could not seed the test deck: ${reason(error)}`;
       return;
     } finally {
-      repository?.close();
       busy = false;
     }
+    if (lifetime.signal.aborted) return;
     status = "Seeded the test deck.";
     store.navigate({ kind: "free-play-deck", deckId: ADMIN_TEST_DECK_ID });
   }
@@ -106,6 +77,7 @@
   }
 
   function go(route: AppRoute): void {
+    lifetime.abort();
     store.navigate(route);
   }
 </script>
@@ -137,7 +109,7 @@
       <button
         type="button"
         data-cy="admin-jump-seed-deck"
-        disabled={gameplay === null || busy}
+        disabled={busy}
         onclick={seedTestDeck}>Seed test deck &amp; open it</button
       >
       <button

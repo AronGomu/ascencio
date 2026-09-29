@@ -1,3 +1,4 @@
+import type { PinnedDeckRuleset } from "../../decks/validation/index.ts";
 /* The deck a new story save opens with, and the cards behind it.
 
    `StoryApp` selects installed starter deck before dispatching synchronous
@@ -6,7 +7,6 @@
    same installed gameplay union before use. Save layer checks record shape. */
 
 import {
-  LEGACY_STARTER_DECK_LIST as legacyStarterYdk,
   applyDeckCommand,
   createBlankDeck,
   STARTER_DECK_LIST,
@@ -43,18 +43,14 @@ export function buildStarterGrant(): StarterGrant {
 
 export function buildInstalledStarterGrant(
   chapter: StoryRelease["chapters"][number],
+  ruleset: PinnedDeckRuleset,
 ): StarterGrant {
   const installed = chapter.decks.find(
     ({ id }) => id === chapter.defaults.starterDeckId,
   );
   if (installed === undefined)
     throw new Error("Installed starter deck is unavailable");
-  return grantFromCards(installed, installed.name);
-}
-
-/** Old-schema reads must not grant a different historical deck after an update. */
-export function buildLegacyStarterGrant(): StarterGrant {
-  return grantFromList(legacyStarterYdk, "Starter Deck");
+  return grantFromCards(installed, installed.name, ruleset);
 }
 
 function grantFromList(source: string, name: string): StarterGrant {
@@ -67,8 +63,12 @@ function grantFromList(source: string, name: string): StarterGrant {
   return grantFromCards(imported.cards, name);
 }
 
-function grantFromCards(lists: DeckCardLists, name: string): StarterGrant {
-  const draft = createBlankDeck(name, EMPTY_CATALOG, PROTOTYPE_RULESET, {
+function grantFromCards(
+  lists: DeckCardLists,
+  name: string,
+  ruleset: PinnedDeckRuleset = PROTOTYPE_RULESET,
+): StarterGrant {
+  const draft = createBlankDeck(name, EMPTY_CATALOG, ruleset, {
     id: STARTER_DECK_ID,
     now: new Date(STARTER_DECK_STAMP),
   });
@@ -76,7 +76,7 @@ function grantFromCards(lists: DeckCardLists, name: string): StarterGrant {
     draft,
     { type: "import", cards: lists },
     EMPTY_CATALOG,
-    PROTOTYPE_RULESET,
+    ruleset,
   );
   if (result.type === "rejected") throw new Error(result.reason);
   /* Not flagged for import review: the player did not import this list, the
@@ -86,7 +86,7 @@ function grantFromCards(lists: DeckCardLists, name: string): StarterGrant {
     deck: Object.freeze({
       ...draft,
       ...cards,
-      validation: validateDeckDraft(cards, EMPTY_CATALOG, PROTOTYPE_RULESET),
+      validation: validateDeckDraft(cards, EMPTY_CATALOG, ruleset),
     }),
     collection: Object.freeze(copiesByCode(result.cards)),
   });

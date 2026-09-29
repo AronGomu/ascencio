@@ -29,4 +29,3 @@ export {
   MAXIMUM_YDK_SOURCE_LENGTH,
   type YdkImportResult,
 } from "../ydk-adapter.ts";
-export { default as LEGACY_STARTER_DECK_LIST } from "../starter-deck.ydk?raw";

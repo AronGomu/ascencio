@@ -1,28 +1,27 @@
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
-import { deleteDB } from "idb";
 import { get } from "svelte/store";
 import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
-import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
+
 import {
   catalogByCode,
   PROTOTYPE_RULESET,
 } from "../../../src/decks/validation/index.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 
-const names: string[] = [];
-afterEach(async () =>
-  Promise.all(names.splice(0).map((name) => deleteDB(name))),
-);
+afterEach(async () => disposeTestDeckRepositories());
 
 describe("deck revision conflict recovery", () => {
   it("detects stale writes and can reload the newer revision", async () => {
     const name = "controller-conflict";
-    names.push(name);
-    const repoA = await IndexedDbDeckRepository.open(name);
-    const repoB = await IndexedDbDeckRepository.open(name);
+    const repoA = await openTestDeckRepository(name);
+    const repoB = await openTestDeckRepository(name);
     const catalog = catalogByCode(PROTOTYPE_CATALOG);
     const first = new DeckBuilderController(repoA, catalog, PROTOTYPE_RULESET);
     await first.initialize();
@@ -43,15 +42,14 @@ describe("deck revision conflict recovery", () => {
     await second.reloadCurrent();
     expect(get(second).saveState).toBe("saved");
     expect(get(second).current?.deck.main).toEqual([89631139]);
-    repoA.close();
-    repoB.close();
+    await repoA.close();
+    await repoB.close();
   });
 
   it("preserves conflicted local edits as an independent persisted copy", async () => {
     const name = "controller-conflict-copy";
-    names.push(name);
-    const repoA = await IndexedDbDeckRepository.open(name);
-    const repoB = await IndexedDbDeckRepository.open(name);
+    const repoA = await openTestDeckRepository(name);
+    const repoB = await openTestDeckRepository(name);
     const catalog = catalogByCode(PROTOTYPE_CATALOG);
     const first = new DeckBuilderController(repoA, catalog, PROTOTYPE_RULESET);
     await first.initialize();
@@ -72,7 +70,7 @@ describe("deck revision conflict recovery", () => {
     expect((await repoB.load(recovered.deck.id))?.deck.main).toEqual([
       46986414,
     ]);
-    repoA.close();
-    repoB.close();
+    await repoA.close();
+    await repoB.close();
   });
 });

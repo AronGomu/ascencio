@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import path from "node:path";
 import type { CardCode } from "../../duel/contracts/ids.ts";
 import {
   loadActiveDuelDependencies,
@@ -12,11 +13,14 @@ export async function loadActiveDuelDependenciesNode(
   assetRoot: string,
   requestedCodes: ReadonlySet<CardCode>,
   onProgress?: ActiveDependencyProgress,
+  stringsRoot: string = path.join(assetRoot, "strings"),
 ): Promise<ActiveDuelDependencies> {
   const reader: ActiveDuelAssetReader = {
     async readJson<T>(relativePath: string): Promise<T> {
       const source = await readFile(
-        safeArtifactPath(assetRoot, relativePath),
+        relativePath.startsWith("strings/")
+          ? safeArtifactPath(stringsRoot, relativePath.slice("strings/".length))
+          : safeArtifactPath(assetRoot, relativePath),
         "utf8",
       );
       return JSON.parse(source) as T;

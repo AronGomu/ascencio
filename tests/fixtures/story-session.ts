@@ -1,25 +1,40 @@
-import type { InstalledGameplay } from "../../src/content/index.ts";
+import type { DatabaseSync } from "node:sqlite";
+import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
+import type { FixtureGameplay } from "./installed-gameplay.ts";
 import { cardCode } from "../../src/cards/index.ts";
-import { legacyCollectionInputs } from "../../src/shell/adapters/legacy-collection.ts";
+import { fixtureCollectionInputs } from "./installed-gameplay.ts";
 import {
-  createStoryMigrationPort,
-  type GenerationSaveRepository,
+  createSqliteStoryRepository,
   type StoryBinding,
 } from "../../src/story/saves/index.ts";
 import { storyBindingFixture, storyReleaseFixture } from "./story-release.ts";
 import { installedDuelGameplayFixture } from "./installed-duel-gameplay.ts";
 import type { StoryState } from "../../src/story/model/story-state.ts";
 import type { StorySlotKey } from "../../src/story/saves/index.ts";
-let clocks = new WeakMap<IDBFactory, () => number>();
-let generations = new WeakMap<IDBFactory, Promise<GenerationSaveRepository>>();
-export function resetStorySessionFixture(): void {
-  generations = new WeakMap();
-  clocks = new WeakMap();
+import { unlinkSync, rmdirSync } from "node:fs";
+import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { createUserDataFixture } from "../unit/storage/sqlite-fixtures.ts";
+import {
+  createNodeFileStore,
+  databaseAdapter,
+} from "../unit/storage/runtime-fixtures.ts";
+
+let databases = new WeakMap<object, DatabaseSync>();
+let runtimes = new WeakMap<object, UserDataRuntime>();
+const owned: { runtime: UserDataRuntime; file: string; root: string }[] = [];
+export async function resetStorySessionFixture(): Promise<void> {
+  runtimes = new WeakMap();
+  databases = new WeakMap();
+  for (const { runtime, file, root } of owned.splice(0)) {
+    await runtime.close();
+    unlinkSync(file);
+    rmdirSync(root);
+  }
 }
 export function storyInputs(
-  gameplay: InstalledGameplay = installedDuelGameplayFixture(),
+  gameplay: FixtureGameplay = installedDuelGameplayFixture(),
 ) {
-  const input = legacyCollectionInputs(gameplay);
+  const input = fixtureCollectionInputs(gameplay);
   const release = {
     revision: 1,
     chapters: [
@@ -45,52 +60,43 @@ export function storyInputs(
   };
   return { release, cards: input.cards };
 }
-/** Explicit schema6 fixture generation; legacy repository tests remain independent. */
-export function createStorySaveRepository(
-  factory: IDBFactory,
-  now: () => number = Date.now,
-) {
-  clocks.set(factory, now);
-  let own: Promise<GenerationSaveRepository> | null = null;
-  const open = (): Promise<GenerationSaveRepository> => {
-    if (own !== null) return own;
-    let existing = generations.get(factory);
-    if (!existing) {
-      const port = createStoryMigrationPort(factory, () =>
-        clocks.get(factory)!(),
-      );
-      existing = port
-        .prepare(null, storyInputs().release)
-        .then((seal) => port.repository(seal.generationId));
-      generations.set(factory, existing);
-    }
-    own = existing;
-    return existing;
-  };
+/** Key names isolate test-owned SQLite repositories; never open legacy IDB. */
+export function storyUserRuntime(
+  key: object = globalThis.indexedDB,
+): UserDataRuntime {
+  let runtime = runtimes.get(key);
+  if (runtime === undefined) {
+    const database = createUserDataFixture();
+    const files = createNodeFileStore();
+    runtime = new UserDataRuntime({
+      database: databaseAdapter(database.database),
+      files,
+      randomId: () => crypto.randomUUID(),
+    });
+    runtimes.set(key, runtime);
+    databases.set(key, database.database);
+    owned.push({ runtime, file: database.file, root: files.root });
+  }
+  return runtime;
+}
+export function createStorySaveRepository(key: object = globalThis.indexedDB) {
+  const target = createSqliteStoryRepository(storyUserRuntime(key));
   return {
-    read: (slot: StorySlotKey) => open().then((repo) => repo.read(slot)),
+    ...target,
     write: (
       slot: StorySlotKey,
       state: StoryState,
       expected: number | null,
       story: StoryBinding = storyBindingFixture(),
-    ) => {
-      const snapshot = structuredClone(state),
-        binding = structuredClone(story);
-      clocks.set(factory, now);
-      return open().then((repo) =>
-        repo.write(slot, snapshot, expected, binding),
-      );
-    },
-    list: () => open().then((repo) => repo.list()),
-    clear: (slot: StorySlotKey) => open().then((repo) => repo.clear(slot)),
+    ) => target.write(slot, state, expected, story),
   };
 }
 export function storyAppProps(
-  gameplay: InstalledGameplay = installedDuelGameplayFixture(),
+  gameplay: FixtureGameplay = installedDuelGameplayFixture(),
 ) {
   return {
     ...storyInputs(gameplay),
+    ruleset: PROTOTYPE_RULESET,
     saves: createStorySaveRepository(globalThis.indexedDB),
   };
 }
@@ -98,4 +104,12 @@ export function storyAppProps(
 export function storyShellProps() {
   const { release, cards, saves } = storyAppProps();
   return { storyRelease: release, storyCards: cards, saves };
+}
+
+export function withStorySessionDatabase(
+  key: object,
+  write: (database: DatabaseSync) => void,
+): void {
+  storyUserRuntime(key);
+  write(databases.get(key)!);
 }

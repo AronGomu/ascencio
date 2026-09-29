@@ -15,7 +15,7 @@
 
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import {
-  PROTOTYPE_RULESET,
+  type PinnedDeckRuleset,
   validateDeckDraft,
 } from "../../decks/validation/index.ts";
 import type { StoryState } from "../model/story-state.ts";
@@ -47,13 +47,14 @@ export interface PreBattleBlock {
 export function preBattleDeckOptions(
   state: StoryState,
   catalog: ReadonlyMap<number, DeckBuilderCardView>,
+  ruleset: PinnedDeckRuleset,
 ): readonly PreBattleDeckOption[] {
   const ownership = storyCardOwnership(state);
   return state.decks.map((deck) => {
     const { issues } = validateDeckDraft(
       { ...deck, storedRulesetRevision: deck.validation.rulesetRevision },
       catalog,
-      PROTOTYPE_RULESET,
+      ruleset,
       ownership,
     );
     const error = issues.find(({ severity }) => severity === "error");

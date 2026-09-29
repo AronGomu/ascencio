@@ -5,6 +5,7 @@ export function handleModalKeydown(
   event: KeyboardEvent,
   close: () => void,
 ): void {
+  event.stopPropagation();
   if (event.key === "Escape") {
     event.preventDefault();
     close();

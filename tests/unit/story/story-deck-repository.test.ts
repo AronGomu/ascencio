@@ -1,7 +1,5 @@
 // @vitest-environment node
 
-import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   MAXIMUM_DECK_AUTOSAVES,
@@ -20,8 +18,12 @@ import {
   createInitialStoryState,
   type StoryState,
 } from "../../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
-import { createStorySaveRepository } from "../../../src/story/saves/story-save-repository.ts";
+import { createSqliteStoryRepository } from "../../../src/story/saves/index.ts";
+import {
+  storyUserRuntime,
+  resetStorySessionFixture,
+} from "../../fixtures/story-session.ts";
+import { storyBindingFixture } from "../../fixtures/story-release.ts";
 import { storyDeckFixture as storyDeck } from "../../fixtures/story-decks.ts";
 
 /* The adapter is the only thing standing between the deck editor and a
@@ -606,15 +608,15 @@ describe("a persist the save layer refused", () => {
    real store, because the requirement is not that `persist` was called: it is
    that the record which lands is one this build can still read back. A deck the
    save layer rejects costs the player the whole save, progress and wallet
-   included, and nothing validates on the way in. */
+   included, so both the write and the read must accept the edited state. */
 
 describe("a deck edit is part of the save", () => {
   afterEach(async () => {
-    await deleteDB(STORY_SAVES_DATABASE_NAME);
+    await resetStorySessionFixture();
   });
 
   it("round-trips deck edits through the real story save path", async () => {
-    const saves = createStorySaveRepository(indexedDB, () => 1_700_000_000_000);
+    const saves = createSqliteStoryRepository(storyUserRuntime({}));
     let state: StoryState = {
       ...createInitialStoryState(),
       progressExists: true,
@@ -628,13 +630,18 @@ describe("a deck edit is part of the save", () => {
         state = previous;
       },
       persist: async () => {
-        const result = await saves.write("manual:1", state, null);
+        const result = await saves.write(
+          "manual:1",
+          state,
+          null,
+          storyBindingFixture(),
+        );
         if (result.kind !== "written") throw new Error(result.kind);
       },
     });
 
-    await repository.create(storyDeck("alpha"), history);
-    await repository.create(storyDeck("beta"), history);
+    await repository.create(structuredClone(storyDeck("alpha")), history);
+    await repository.create(structuredClone(storyDeck("beta")), history);
     await repository.setDefaultDeck(deckId("beta"));
 
     const saved = await saves.read("manual:1");

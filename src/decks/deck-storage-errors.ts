@@ -1,11 +1,5 @@
-/* What a deck store refuses a write with, in a module of its own so that
-   naming the failure never costs the storage engine that raised it.
-
-   Both repositories throw these: the free-play one over IndexedDB, and the
-   story one over a save. The story repository is reached from the visual
-   novel's lazy chunk, and importing them from `indexeddb-deck-repository.ts`
-   pulled that whole 19 kB module — `idb`, the schema, the migration — into the
-   story closure, for two `Error` subclasses that touch none of it. */
+/* Shared typed failures for the SQLite free-play repository and the save-owned
+   Story adapter. Importing an error never loads either persistence backend. */
 
 export class DeckStorageError extends Error {
   constructor(message: string, options?: ErrorOptions) {

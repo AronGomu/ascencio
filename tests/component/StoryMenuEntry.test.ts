@@ -1,12 +1,12 @@
-import { createShellGameplay } from "../../src/shell/application/legacy-content.ts";
 import {
-  storyShellProps,
+  semanticShellFixture,
+  disposeSemanticShells,
+} from "../fixtures/semantic-shell.ts";
+import {
   storyAppProps,
   createStorySaveRepository,
   resetStorySessionFixture,
 } from "../fixtures/story-session.ts";
-import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
-import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
@@ -18,7 +18,6 @@ import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
 import StoryApp from "../../src/story/StoryApp.svelte";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../src/story/saves/index.ts";
 import { installPrototypeActiveCatalog } from "../fixtures/active-catalog.ts";
 import { fieldableStoryDeck } from "../fixtures/story-decks.ts";
 
@@ -41,12 +40,6 @@ const loaders: DomainLoaders = {
 /* Loading the story domain root is a Vite transform of the module graph behind
    it, which the default one-second budget knows nothing about. */
 const REAL_IMPORT = { timeout: 15_000 };
-const READY_CORE_GATE = {
-  kind: "ready" as const,
-  gameplay: createShellGameplay(installedDuelGameplayFixture(), null),
-  reader: contentReaderFixture(),
-  generation: 1,
-};
 
 let hash = "#/";
 
@@ -55,10 +48,9 @@ function renderShell() {
     hash = next;
   });
   return render(AppShell, {
-    ...storyShellProps(),
     store,
     loaders,
-    initialCoreGate: READY_CORE_GATE,
+    ...semanticShellFixture(),
   });
 }
 
@@ -67,14 +59,11 @@ function cy(value: string): HTMLElement | null {
 }
 
 async function waitForCy(value: string): Promise<HTMLElement> {
-  await vi.waitFor(
-    () =>
-      expect(
-        document.querySelector(`[data-cy="${value}"]`),
-        `waiting for data-cy="${value}"`,
-      ).not.toBeNull(),
-    REAL_IMPORT,
-  );
+  await vi.waitFor(() => {
+    const found = cy(value);
+    expect(found, `waiting for data-cy="${value}"`).not.toBeNull();
+    if (found instanceof HTMLButtonElement) expect(found.disabled).toBe(false);
+  }, REAL_IMPORT);
   return cy(value)!;
 }
 
@@ -97,24 +86,14 @@ async function seedMapSave(): Promise<void> {
   expect(result.kind).toBe("written");
 }
 
-async function deleteStorySaves(): Promise<void> {
-  await new Promise<void>((resolve) => {
-    const request = indexedDB.deleteDatabase(STORY_SAVES_DATABASE_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    request.onblocked = () => resolve();
-  });
-}
-
 beforeEach(async () => {
   hash = "#/";
-  await deleteStorySaves();
 });
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
-  await deleteStorySaves();
+  await disposeSemanticShells();
+  await resetStorySessionFixture();
 });
 
 describe("the main menu's story entries", () => {
@@ -294,8 +273,9 @@ describe("the main menu's story entries", () => {
     const user = userEvent.setup();
     renderShell();
 
-    await vi.waitFor(() =>
-      expect(cy("main-menu-continue")).toHaveProperty("disabled", false),
+    await vi.waitFor(
+      () => expect(cy("main-menu-continue")).toHaveProperty("disabled", false),
+      REAL_IMPORT,
     );
     await user.click(await waitForCy("main-menu-continue"));
 

@@ -13,6 +13,7 @@
   export let cardHeight: number;
   export let active = false;
   export let actionable = false;
+  export let disabled = false;
   export let onpreview: () => void = () => undefined;
   export let onactivate: () => void = () => undefined;
   export let imageLibrary: Pick<CardImageLibrary, "lease"> | null = null;
@@ -93,6 +94,7 @@
   data-stack-zone={stack.zone}
   data-actionable={actionable ? "true" : undefined}
   style={positionStyle}
+  disabled={clickable ? disabled : undefined}
   onpointerdown={clickable
     ? (event: PointerEvent) => {
         pointerOrigin = { x: event.clientX, y: event.clientY };

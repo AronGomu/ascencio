@@ -35,18 +35,38 @@ export function isFirstCoreInstall(
   return !hasActiveWorker && !hasCompletedInstall;
 }
 
+export async function installShellPrecache(
+  firstInstall: boolean,
+  install: () => Promise<unknown>,
+  removeIncompleteCache: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    await install();
+  } catch (error) {
+    if (firstInstall) await removeIncompleteCache();
+    throw error;
+  }
+}
+
 export function assertShellPrecacheEntries<
   T extends ShellPrecacheEntry | string,
->(entries: readonly T[]): readonly T[] {
+>(entries: readonly T[], sqliteWasmUrl?: string): readonly T[] {
   for (const entry of entries) {
     const entryUrl = typeof entry === "string" ? entry : entry.url;
     const url = new URL(entryUrl, "https://core.invalid/");
     const pathname = url.pathname;
+    const sqliteRuntime =
+      sqliteWasmUrl !== undefined &&
+      url.href === new URL(sqliteWasmUrl, "https://core.invalid/").href;
     if (
       /%|\\/.test(entryUrl) ||
       /(?:^|\/)(?:content|runtime|__content)(?:\/|$)/.test(pathname) ||
       /(?:^|\/)assets\/story(?:\/|$)/.test(pathname) ||
-      /\.(?:wasm|zip)$/i.test(pathname)
+      (/\.wasm$/i.test(pathname) && !sqliteRuntime) ||
+      (/\.svg$/i.test(pathname) && !pathname.endsWith("/app-icon.svg")) ||
+      /\.(?:zip|sqlite|db|jpg|jpeg|png|webp|mp3|mp4|ogg|webm|lua|cdb)$/i.test(
+        pathname,
+      )
     )
       throw new Error(
         `CORE shell precache contains forbidden payload: ${entryUrl}`,

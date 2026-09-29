@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "./lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "./lib/asset-roots.ts";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";

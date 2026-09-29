@@ -2,14 +2,11 @@ import { createHash } from "node:crypto";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseCoreBootstrap } from "../src/content/index.ts";
 import {
   DOMAIN_BUDGET_BYTES,
   measureDomainChunks,
   staticHtmlScriptClosure,
 } from "./lib/domain-chunk-closure.ts";
-import { verifyBundle } from "./lib/asset-delivery/verify-bundle.ts";
-import { verifyPackagedContent } from "./lib/browser-content-verification.ts";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -22,18 +19,48 @@ await verifySingleHtmlEntry();
 await verifyNoRemovedPhaserResidue();
 await verifyNoAcceptanceHarnessResidue();
 
-const bootstrapBytes = await readFile(
-  path.join(outputRoot, "core-bootstrap.json"),
-);
-if (bootstrapBytes.byteLength > 1048576)
-  throw new Error("CORE bootstrap exceeds its byte limit");
-const bootstrap = parseCoreBootstrap(
-  JSON.parse(bootstrapBytes.toString("utf8")) as unknown,
-  "https://core.invalid/",
-);
-await verifyContentSelection(bootstrap);
-await assertMissing("runtime");
-await assertMissing("story/shop-sets.v1.json");
+for (const forbidden of [
+  "core-bootstrap.json",
+  "content",
+  "runtime",
+  "generated",
+  "story",
+])
+  await assertMissing(forbidden);
+const inventory = await findFiles(outputRoot);
+const wasmFiles = inventory.filter((file) => file.endsWith(".wasm"));
+if (
+  wasmFiles.length !== 1 ||
+  !/^sqlite3-[A-Za-z0-9_-]+\.wasm$/.test(path.basename(wasmFiles[0]!))
+)
+  throw new Error("App build must contain exactly the SQLite executable WASM");
+const sqliteWasm = wasmFiles[0]!;
+if (
+  sha256(await readFile(sqliteWasm)) !==
+  sha256(
+    await readFile(
+      path.join(
+        projectRoot,
+        "node_modules/@sqlite.org/sqlite-wasm/dist/sqlite3.wasm",
+      ),
+    ),
+  )
+)
+  throw new Error("App WASM differs from pinned SQLite executable");
+for (const file of inventory)
+  if (
+    /\.(?:sqlite|db|zip|jpg|jpeg|png|webp|mp3|mp4|ogg|webm|lua|cdb)$/i.test(
+      file,
+    ) ||
+    (/\.svg$/i.test(file) && path.relative(outputRoot, file) !== "app-icon.svg")
+  )
+    throw new Error(
+      `App build contains forbidden content: ${path.relative(outputRoot, file)}`,
+    );
+const sw = await readFile(path.join(outputRoot, "service-worker.js"), "utf8");
+const sqliteUrl = `${process.env.BASE_PATH ?? "/"}${path.relative(outputRoot, sqliteWasm).replaceAll("\\", "/")}`;
+if (!sw.includes(`"url":"${sqliteUrl}"`))
+  throw new Error("SQLite executable absent from shell precache");
 
 const privateDeploymentMarker = await readFile(
   path.join(outputRoot, "PRIVATE_DEPLOYMENT_ONLY.txt"),
@@ -97,9 +124,9 @@ console.log(
   JSON.stringify(
     {
       status: "ok",
-      mode: "core",
-      delivery: bootstrap.delivery === null ? "unavailable" : "pinned",
-      bootstrapSha256: sha256(bootstrapBytes),
+      mode: "app-only",
+      sqliteUrl,
+      sqliteWasmBytes: (await stat(sqliteWasm)).size,
       worker: path.basename(workerFile),
       chunkBytes: sizeSummary,
     },
@@ -107,26 +134,6 @@ console.log(
     2,
   ),
 );
-
-async function verifyContentSelection(
-  bootstrap: ReturnType<typeof parseCoreBootstrap>,
-): Promise<void> {
-  const run = process.env.CONTENT_RUN;
-  if (run === undefined || run === "") {
-    if (bootstrap.delivery !== null)
-      throw new Error("CORE build invented a content delivery pin");
-    await assertMissing("content");
-    return;
-  }
-  const snapshot = await verifyBundle(projectRoot, run);
-  if (snapshot.prod === null) throw new Error("CONTENT_INVALID_MANIFEST");
-  if (
-    bootstrap.delivery?.index.sha256 !== snapshot.prod.index.sha256 ||
-    bootstrap.delivery.index.bytes !== snapshot.prod.index.bytes
-  )
-    throw new Error("CORE bootstrap does not name the selected content index");
-  await verifyPackagedContent(outputRoot, snapshot.objects);
-}
 
 async function verifySingleHtmlEntry(): Promise<void> {
   const documents = (await findFiles(outputRoot))
@@ -219,7 +226,22 @@ async function verifySizeBudgets(
       sizes.set(file, (await stat(file)).size);
     }),
   );
-  const routableFiles = javaScriptFiles.filter((file) => file !== workerFile);
+  const sqliteWorkers = javaScriptFiles.filter((file) =>
+    path.basename(file).startsWith("sqlite-worker-"),
+  );
+  if (sqliteWorkers.length !== 1)
+    throw new Error("App build must emit one SQLite Worker");
+  const sqliteBytes = sizes.get(sqliteWorkers[0]!) ?? 0;
+  const sqliteExecutableFiles = javaScriptFiles.filter((file) =>
+    /^sqlite(?:3)?-/.test(path.basename(file)),
+  );
+  const sqliteExecutableBytes = sqliteExecutableFiles.reduce(
+    (total, file) => total + (sizes.get(file) ?? 0),
+    0,
+  );
+  const routableFiles = javaScriptFiles.filter(
+    (file) => file !== workerFile && !sqliteExecutableFiles.includes(file),
+  );
   const shellFiles = await staticHtmlScriptClosure(
     outputRoot,
     "index.html",
@@ -238,6 +260,12 @@ async function verifySizeBudgets(
   const budgets: ReadonlyArray<readonly [string, number, number]> = [
     ["shell initial JavaScript", shellBytes, 115_000],
     ["Duel Worker JavaScript", sizes.get(workerFile) ?? 0, 200_000],
+    // SQLite executable is separate from unchanged shell/domain ceilings.
+    // 297,367 measured -> ceil(bytes / 25,000) * 25,000 * 1.15.
+    ["SQLite Worker JavaScript", sqliteBytes, 345_000],
+    // Include SQLite package auxiliary Workers too: 541,826 measured, same rounding.
+    ["SQLite executable JavaScript", sqliteExecutableBytes, 632_500],
+    ["SQLite executable WASM", (await stat(sqliteWasm)).size, 1_000_000],
     ...domainReports.map(
       ({ domain, bytes }) =>
         [
@@ -259,6 +287,8 @@ async function verifySizeBudgets(
   }
   return {
     shell: shellBytes,
+    sqliteWorker: sqliteBytes,
+    sqliteExecutableJs: sqliteExecutableBytes,
     worker: sizes.get(workerFile) ?? 0,
     ...Object.fromEntries(
       domainReports.map(({ domain, bytes }) => [domain, bytes]),

@@ -1,6 +1,8 @@
 # ADR-094: User-controlled media, updates, asset cleanup
 
 > Status: accepted; implemented
+> Amended by [ADR-095](095_ADR_manual_sqlite_package_delivery.md) and [ADR-098](098_ADR_single_owner_sqlite_worker.md): manual package imports replace required/media downloads and per-file cleanup; single-tab coordination replaces multi-tab leases; optional-media warnings and separate D3 app-update consent remain.
+> Superseded for current content lifecycle by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D2/D5. Separate app-update consent remains current.
 > Decided: 2026-09-13
 > Owners: shell lifecycle / content / PWA
 > Amends: ADR-086 D4–D5; ADR-078 D1–D4; ADR-079 D2; ADR-088 D3–D5; ADR-039 §§1–3

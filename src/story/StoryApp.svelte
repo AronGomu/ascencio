@@ -33,11 +33,16 @@
     type PlaybackMode,
   } from "./playback/story-playback.ts";
   import { createStoryPlaybackSettingsStore } from "./playback/story-playback-settings-store.ts";
+  import { withBeatRead } from "./playback/story-read-log.ts";
+  import type {
+    AsyncPreferencePort,
+    StorageFailure,
+    StoryReadLogPort,
+  } from "../storage/index.ts";
   import {
-    readStoryReadLog,
-    withBeatRead,
-    writeStoryReadLog,
-  } from "./playback/story-read-log.ts";
+    DEFAULT_STORY_PLAYBACK_SETTINGS,
+    type StoryPlaybackSettings,
+  } from "./playback/index.ts";
   import {
     ENCOUNTER_LABELS,
     restoreStoryState,
@@ -102,9 +107,18 @@
   )!.document!;
   let manualBinding: StoryBinding | null = null;
   let autosaveBinding: StoryBinding | null = null;
-  let manualRevision = 0;
-  let autosaveRevision = 0;
+  export let initialStorageError: string | null = null;
+  export let initialAutosaveRevision = 0;
+  export let onautosaverevision: (revision: number) => void = () => undefined;
+  let autosaveRevision = initialAutosaveRevision;
+  export let ruleset: import("../decks/validation/index.ts").PinnedDeckRuleset;
   export let imageSource: CardImageSource | null = null;
+  export let playbackSettingsPort: AsyncPreferencePort<StoryPlaybackSettings> | null =
+    null;
+  export let initialPlaybackSettings: StoryPlaybackSettings =
+    DEFAULT_STORY_PLAYBACK_SETTINGS;
+  export let readLogPort: StoryReadLogPort | null = null;
+  export let initialReadLog: ReadonlySet<string> = new Set();
 
   /* The duel handoff, in three props. The story asks for an encounter and is
      told whether it started; it is unmounted while the duel runs, so what
@@ -203,16 +217,24 @@
   const AUTOSAVE_SLOT: StorySlotKey = "autosave";
   /* Auto and Skip read their pacing from here; the settings overlay writes
      it. Reader preferences, so they live outside the save slots. */
-  const playbackSettings = createStoryPlaybackSettingsStore();
+  const reportPreferenceFailure = (error: StorageFailure): void => {
+    storageOperationError = `Settings could not be saved: ${error.code}`;
+  };
+  const playbackSettings = createStoryPlaybackSettingsStore(
+    initialPlaybackSettings,
+    playbackSettingsPort,
+    reportPreferenceFailure,
+  );
 
   const entryIntent = storyEntryIntent;
+  const freshEntry = entryIntent === "new" && resumeState === null;
   let state =
     resumeState !== null
       ? restoreStoryState(resumeState)
       : entryIntent === null || entryIntent === "new"
         ? reduceStory(createInitialStoryState(), {
             type: "new-game",
-            starterGrant: buildInstalledStarterGrant(chapter),
+            starterGrant: buildInstalledStarterGrant(chapter, ruleset),
           })
         : createInitialStoryState();
   /* A restored checkpoint with no result to apply is a handoff that never
@@ -232,11 +254,19 @@
      screen they came in by. */
   let manualState: StoryState | null = null;
   let autosaveState: StoryState | null = null;
+  let saveRequest = 0;
+  let intendedSave: {
+    state: StoryState;
+    story: StoryBinding;
+    revision: number;
+  } | null = null;
   let latestSaveSlot: "manual" | "autosave" | null = null;
+  let entryStorageError = initialStorageError;
   let storageOperationError: string | null = null;
   let overlay: Overlay = null;
   let overlayTrigger: HTMLElement | null = null;
-  let saveMode: "idle" | "saving" | "success" | "overwrite" | "failure" =
+  let saveMode:
+    "idle" | "loading" | "saving" | "success" | "overwrite" | "failure" =
     "idle";
   let autosaveStatus: "idle" | "pending" | "success" | "failure" = "idle";
   let dirty = false;
@@ -271,7 +301,7 @@
   let playbackKey = "";
   /* Profile-wide rather than per save: skip fast-forwards what this player has
      read, including beats read in a run that was later loaded over. */
-  let readBeats: ReadonlySet<string> = readStoryReadLog();
+  let readBeats: ReadonlySet<string> = new Set(initialReadLog);
 
   onDestroy(() => {
     destroyed = true;
@@ -282,17 +312,18 @@
 
   onMount(() => {
     if (resumeState !== null || resolution !== null) onhandled();
-    /* Safe to call on every mount: reading never writes, and a slot this build
-       cannot parse resolves to "no save" rather than a thrown mount.
-
-       The entry is applied after it, never beside it: Continue resumes the
-       newer of the two player slots, and which one that is only exists once
-       storage has answered. */
-    void hydrate()
-      .then(() => applyEntryIntent())
-      .catch((error: unknown) => {
-        storageOperationError = errorMessage(error);
-      });
+    /* Fresh entry already holds current package defaults and starter grant.
+       Reading old slots here would couple New Game to Continue before player
+       has chosen any save action. Continue/load still hydrate before applying
+       their intent. */
+    if (!freshEntry && resumeState === null)
+      void hydrate()
+        .then(() => applyEntryIntent())
+        .catch((error: unknown) => {
+          if (destroyed) return;
+          storageOperationError = errorMessage(error);
+          if (entryIntent === "continue") onmainmenu();
+        });
     void loadImages().catch(() => {
       imageError = "Installed card images could not be read.";
     });
@@ -300,10 +331,13 @@
 
   /** Applies shell menu intent after save hydration. */
   function applyEntryIntent(): void {
+    if (destroyed) return;
     if (state.screen !== "title") return;
     if (entryIntent === "load") go("load");
-    else if (entryIntent === "continue" && state.progressExists) continueGame();
-    else if (entryIntent === "new") newGame();
+    else if (entryIntent === "continue") {
+      if (state.progressExists) continueGame();
+      else onmainmenu();
+    } else if (entryIntent === "new") newGame();
   }
 
   /** Re-reads both player-visible slots and rebuilds what the title screen
@@ -313,12 +347,13 @@
       saves.read(MANUAL_SLOT),
       saves.read(AUTOSAVE_SLOT),
     ]);
+    if (destroyed) return false;
     manualBinding = manual.kind === "ready" ? manual.envelope.story : null;
     autosaveBinding =
       autosave.kind === "ready" ? autosave.envelope.story : null;
-    manualRevision = manual.kind === "ready" ? manual.envelope.revision : 0;
     autosaveRevision =
       autosave.kind === "ready" ? autosave.envelope.revision : 0;
+    onautosaverevision(autosaveRevision);
     manualState = manual.kind === "ready" ? manual.envelope.state : null;
     autosaveState = autosave.kind === "ready" ? autosave.envelope.state : null;
     latestSaveSlot = newerSlot(manual, autosave);
@@ -468,7 +503,7 @@
      deck in the save on every flush. */
   $: preBattleDeckChoices =
     state.screen === "pre-battle" && catalogReady
-      ? preBattleDeckOptions(state, cardViewByCode)
+      ? preBattleDeckOptions(state, cardViewByCode, ruleset)
       : null;
   $: header = storyHeaderConfig(state, shopSetName, openedCardViews.length);
   $: mapReturnTarget = mapReturnScreen(state);
@@ -513,7 +548,13 @@
     const next = withBeatRead(readBeats, id);
     if (next === readBeats) return;
     readBeats = next;
-    writeStoryReadLog(next);
+    if (readLogPort !== null)
+      void readLogPort.markRead(id).then(
+        (result) => {
+          if (result.kind === "failed") reportPreferenceFailure(result.error);
+        },
+        () => reportPreferenceFailure({ code: "STORAGE_UNAVAILABLE" }),
+      );
   }
 
   function stopPlaybackTimer(): void {
@@ -654,10 +695,12 @@
     state = next;
   }
   function newGame(): void {
+    autosaveRevision = 0;
+    onautosaverevision(0);
     binding = initialBinding;
     dispatch({
       type: "new-game",
-      starterGrant: buildInstalledStarterGrant(chapter),
+      starterGrant: buildInstalledStarterGrant(chapter, ruleset),
     });
   }
   /** Takes the one result this encounter is allowed to produce. A resolution
@@ -697,7 +740,7 @@
          null here is the same save answering differently — a card database
          that changed under it, or a retry reached from the outcome screen
          without ever passing the briefing. */
-      const deck = await encounterDeck(current, cards);
+      const deck = await encounterDeck(current, cards, ruleset);
       if (deck === null) {
         handoffError = DECK_UNPLAYABLE;
         return;
@@ -786,7 +829,6 @@
       storageOperationError = `Delete failed: ${errorMessage(error)}`;
       return false;
     }
-    manualRevision = 0;
     manualState = null;
     if (latestSaveSlot === "manual")
       latestSaveSlot = autosaveState === null ? null : "autosave";
@@ -828,62 +870,79 @@
           : globalThis.document.activeElement instanceof HTMLElement
             ? globalThis.document.activeElement
             : null;
-    saveMode =
-      value === "save"
-        ? state.progressExists
-          ? "overwrite"
-          : "idle"
-        : saveMode;
+    saveRequest += 1;
+    intendedSave = null;
     overlay = value;
+    if (value === "save") void openSave();
   }
   function closeOverlay(): void {
+    saveRequest += 1;
+    intendedSave = null;
     overlay = null;
   }
-  async function retryStorageAccess(): Promise<boolean> {
-    return await hydrate();
-  }
-  /* CAS preserves newer tab writes even after local overwrite confirmation. */
-  async function manualSave(): Promise<void> {
-    if (storageOperationError !== null) {
-      saveMode = "failure";
-      return;
-    }
+  async function openSave(): Promise<void> {
+    const request = ++saveRequest;
     const snapshot = structuredClone({ ...state, savedScreen: state.screen });
     const savedBinding = structuredClone(binding);
-    saveMode = "saving";
-    const result = await saves.write(
-      MANUAL_SLOT,
-      snapshot,
-      manualRevision,
-      savedBinding,
-    );
-    saveMode =
-      result.kind === "written"
-        ? toasts === undefined
-          ? "success"
-          : "idle"
-        : "failure";
-    if (result.kind === "written") {
-      manualRevision = result.revision;
-      manualBinding = savedBinding;
-      manualState = snapshot;
-      latestSaveSlot = "manual";
-      dirty = false;
-      if (toasts !== undefined) {
-        overlay = null;
-        toasts.show({ message: "Game saved.", tone: "success" });
+    intendedSave = null;
+    saveMode = "loading";
+    try {
+      const manual = await saves.read(MANUAL_SLOT);
+      if (destroyed || request !== saveRequest || overlay !== "save") return;
+      storageOperationError = readProblem(manual);
+      if (storageOperationError !== null) {
+        saveMode = "failure";
+        return;
       }
-    } else storageOperationError = writeProblem(result);
+      intendedSave = {
+        state: snapshot,
+        story: savedBinding,
+        revision: manual.kind === "ready" ? manual.envelope.revision : 0,
+      };
+      saveMode = manual.kind === "ready" ? "overwrite" : "idle";
+    } catch (error) {
+      if (destroyed || request !== saveRequest || overlay !== "save") return;
+      storageOperationError = errorMessage(error);
+      saveMode = "failure";
+    }
+  }
+  // Confirmation authorizes only the snapshot/revision shown by openSave.
+  async function manualSave(): Promise<void> {
+    const intended = intendedSave;
+    if (intended === null || saveMode === "saving") return;
+    const request = saveRequest;
+    saveMode = "saving";
+    try {
+      const result = await saves.write(
+        MANUAL_SLOT,
+        intended.state,
+        intended.revision,
+        intended.story,
+      );
+      if (destroyed || request !== saveRequest || overlay !== "save") return;
+      intendedSave = null;
+      saveMode = result.kind === "written" ? "success" : "failure";
+      if (result.kind === "written") {
+        manualBinding = intended.story;
+        manualState = intended.state;
+        latestSaveSlot = "manual";
+        dirty = false;
+        if (toasts !== undefined) {
+          closeOverlay();
+          toasts.show({ message: "Game saved.", tone: "success" });
+        }
+      } else storageOperationError = writeProblem(result);
+    } catch (error) {
+      if (destroyed || request !== saveRequest || overlay !== "save") return;
+      intendedSave = null;
+      storageOperationError = errorMessage(error);
+      saveMode = "failure";
+    }
   }
   async function retryManualSave(): Promise<void> {
-    if (storageOperationError !== null && !(await retryStorageAccess())) return;
-    await manualSave();
+    await openSave(); // Re-read, then require a new confirmation; never silently rebase.
   }
   async function autosaveReward(): Promise<void> {
-    if (storageOperationError !== null) {
-      autosaveStatus = "failure";
-      return;
-    }
     autosaveStatus = "pending";
     const snapshot = structuredClone({
       ...state,
@@ -904,6 +963,7 @@
         : "failure";
     if (result.kind === "written") {
       autosaveRevision = result.revision;
+      onautosaverevision(autosaveRevision);
       autosaveBinding = savedBinding;
       autosaveState = snapshot;
       latestSaveSlot = "autosave";
@@ -939,6 +999,7 @@
       return;
     }
     autosaveRevision = result.revision;
+    onautosaverevision(autosaveRevision);
     autosaveBinding = savedBinding;
     autosaveState = snapshot;
     latestSaveSlot = "autosave";
@@ -947,7 +1008,6 @@
   }
 
   async function retryAutosave(): Promise<void> {
-    if (storageOperationError !== null && !(await retryStorageAccess())) return;
     await autosaveReward();
   }
   function continueOutcome(): void {
@@ -971,12 +1031,12 @@
       return;
     }
     state = createInitialStoryState();
-    manualRevision = 0;
     manualState = null;
     autosaveRevision = 0;
     autosaveState = null;
     latestSaveSlot = null;
     storageOperationError = null;
+    entryStorageError = null;
     dirty = false;
     autosaveStatus = "idle";
     saveMode = "idle";
@@ -1011,7 +1071,7 @@
   {#if imageError !== null}
     <p role="alert" data-cy="story-installed-image-error">{imageError}</p>
   {/if}
-  {#if storageOperationError}
+  {#if storageOperationError || entryStorageError}
     <section
       class="storage-error"
       role="alert"
@@ -1022,13 +1082,18 @@
         <h2 id="storage-error-heading" data-cy="story-storage-error-heading">
           Prototype storage needs attention
         </h2>
-        <p data-cy="story-storage-error-message">{storageOperationError}</p>
+        <p data-cy="story-storage-error-message">
+          {storageOperationError ?? entryStorageError}
+        </p>
       </div>
       <button
         type="button"
         class="secondary"
         data-cy="story-storage-error-retry"
-        onclick={() => void retryStorageAccess()}>Retry storage</button
+        onclick={() => {
+          storageOperationError = null;
+          entryStorageError = null;
+        }}>Dismiss error</button
       >
       <button
         type="button"

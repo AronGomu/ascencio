@@ -500,8 +500,12 @@ function createStacks(
       const collection = stackCollection(player, zone);
       const count = stackCount(player, zone, collection);
       const publicCards = collection.filter(isProjectedCardIdentityKnown);
+      const topCandidate =
+        zone === "deck" || zone === "extra" ? undefined : collection.at(-1);
       const top =
-        zone === "deck" || zone === "extra" ? undefined : publicCards.at(-1);
+        topCandidate !== undefined && isProjectedCardIdentityKnown(topCandidate)
+          ? topCandidate
+          : undefined;
       const topCardLabel =
         top === undefined ? undefined : cardName(top.code, cardTexts);
       const detail = `${count} ${count === 1 ? "card" : "cards"}${topCardLabel === undefined ? "" : `, top card ${topCardLabel}`}`;

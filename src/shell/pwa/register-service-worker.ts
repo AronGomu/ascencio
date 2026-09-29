@@ -27,10 +27,19 @@ async function openRegistration(): Promise<ServiceWorkerRegistration | null> {
   );
 }
 
-export async function requestServiceWorkerUpdate(): Promise<void> {
+export async function prepareServiceWorkerUpdate(): Promise<
+  () => Promise<void>
+> {
   const registration = await (registrationPromise ??= openRegistration());
   if (registration === null) throw new Error("CORE_UPDATE_UNAVAILABLE");
-  await registration.update();
+  return async () => {
+    await registration.update();
+  };
+}
+
+export async function requestServiceWorkerUpdate(): Promise<void> {
+  const update = await prepareServiceWorkerUpdate();
+  await update();
 }
 
 export async function registerServiceWorker(): Promise<void> {

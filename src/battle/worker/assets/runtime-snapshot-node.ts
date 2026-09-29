@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import {
   isSafeManifestPath,
@@ -34,9 +34,10 @@ interface VendorManifest {
 export async function buildRuntimeSnapshotManifest(
   assetRoot: string,
   vendorRoot: string,
+  assetManifestPath: string = path.join(assetRoot, "manifest.json"),
 ): Promise<RuntimeSnapshotManifest> {
   const [assetBytes, vendorBytes] = await Promise.all([
-    readFile(path.join(assetRoot, "manifest.json")),
+    readFile(assetManifestPath),
     readFile(path.join(vendorRoot, "vendor-manifest.json")),
   ]);
   const assets = JSON.parse(assetBytes.toString("utf8")) as AssetManifest;
@@ -103,19 +104,39 @@ export function deriveRuntimeSnapshotId(
 export async function verifyRuntimeSnapshotFiles(
   manifest: RuntimeSnapshotManifest,
   assetRoot: string,
+  stringsRoot: string = path.join(assetRoot, "strings"),
 ): Promise<void> {
   const failures: string[] = [];
+  const canonicalRoots = new Map<string, string>();
   for (const file of manifest.assets.files) {
-    const absolutePath = safeArtifactPath(assetRoot, file.path);
+    const isStrings = file.path.startsWith("strings/");
+    const selectedRoot = isStrings ? stringsRoot : assetRoot;
+    const selectedPath = isStrings
+      ? file.path.slice("strings/".length)
+      : file.path;
+    const absolutePath = safeArtifactPath(selectedRoot, selectedPath);
     try {
-      const metadata = await stat(absolutePath);
+      let canonicalRoot = canonicalRoots.get(selectedRoot);
+      if (canonicalRoot === undefined) {
+        canonicalRoot = await realpath(selectedRoot);
+        canonicalRoots.set(selectedRoot, canonicalRoot);
+      }
+      const canonicalPath = await realpath(absolutePath);
+      const relative = path.relative(canonicalRoot, canonicalPath);
+      if (
+        relative === ".." ||
+        relative.startsWith(`..${path.sep}`) ||
+        path.isAbsolute(relative)
+      )
+        throw new Error(`Artifact path escapes snapshot root: ${file.path}`);
+      const metadata = await stat(canonicalPath);
       if (metadata.size !== file.bytes) {
         failures.push(
           `${file.path}: expected ${file.bytes} bytes, found ${metadata.size}`,
         );
         continue;
       }
-      const digest = sha256(await readFile(absolutePath));
+      const digest = sha256(await readFile(canonicalPath));
       if (digest !== file.sha256)
         failures.push(`${file.path}: SHA-256 mismatch`);
     } catch (error) {

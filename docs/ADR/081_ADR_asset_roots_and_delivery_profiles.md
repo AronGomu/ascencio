@@ -1,6 +1,8 @@
 # ADR-081: Asset ownership roots and delivery profiles
 
 > Status: accepted; planned
+> Amended by [ADR-096](096_ADR_package_owned_assets_and_global_card_library.md) D1–D5: assets/app and package-owned assets/content roots replace D1–D6 delivery profile/root layout; frozen vendor and source-preservation rules remain.
+> Superseded for current ownership/delivery by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D1/D4/D6. Profile/migration tooling remains local-only; hosted/profile delivery body is historical.
 > Decided: 2026-09-09
 > Owners: asset tooling / shell / battle / deck-editor / story
 > Baseline: `3fa800c` — source baseline, not implementation evidence.

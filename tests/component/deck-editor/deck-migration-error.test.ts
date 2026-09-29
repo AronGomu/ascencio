@@ -1,76 +1,122 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
-import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
-import { cleanup, render, waitFor } from "@testing-library/svelte";
+import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteDB } from "idb";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
+import * as legacyDatabase from "../../fixtures/deck-database.ts";
+import { DeckStorageError } from "../../../src/decks/repository/index.ts";
 import {
-  DECK_DATABASE_NAME,
-  LEGACY_DECK_DATABASE_NAME,
-} from "../../../src/decks/deck-database.ts";
-import { createBlankDeck } from "../../../src/decks/editing/index.ts";
+  createBlankDeck,
+  emptyDeckHistory,
+} from "../../../src/decks/editing/index.ts";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
 import {
   openDeckDatabase,
   seedDeckDatabase,
+  transactionSettled,
 } from "../../fixtures/deck-database.ts";
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
-import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
+import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 
-installPrototypeActiveCatalog();
-
-/* The repository caches its migration for the lifetime of the module, and
-   vitest gives each test file its own module registry. So this file owns the
-   single mount that must see a failing migration: putting it beside the other
-   deck-editor mounts would let their cached success answer for it. */
-
+const TEST_DATABASE_NAME = "editor-injected-read-failure";
+let repository: TestDeckRepository | null = null;
 let openLegacy: IDBDatabase | null = null;
 
 afterEach(async () => {
   cleanup();
+  await repository?.close();
+  repository = null;
   openLegacy?.close();
   openLegacy = null;
-  await deleteDB(LEGACY_DECK_DATABASE_NAME);
-  await deleteDB(DECK_DATABASE_NAME);
+  vi.restoreAllMocks();
+  await disposeTestDeckRepositories();
+  await deleteDB(legacyDatabase.LEGACY_DECK_DATABASE_NAME);
 });
 
 function query(name: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-cy="${name}"]`);
 }
 
-describe("deck editor migration failure", () => {
-  it("blocks the editor and offers a retry when the prototype database survives", async () => {
+/* Replaces automatic prototype copy/delete failure: injected persistence may
+   fail, but even a surviving prototype database is never opened or migrated
+   by the editor. The injected deck backend uses real Node SQLite. */
+describe("deck editor injected persistence failure", () => {
+  it("blocks editing with a retry while leaving the prototype database untouched", async () => {
     const draft = createBlankDeck(
       "Prototype Deck",
       prototypeCatalogMap,
       PROTOTYPE_RULESET,
       { id: "prototype-deck", now: new Date("2026-01-01T00:00:00.000Z") },
     );
-    await seedDeckDatabase(LEGACY_DECK_DATABASE_NAME, {
-      decks: [{ ...draft, revision: 1 }],
+    const legacyDeck = { ...draft, revision: 1 };
+    await seedDeckDatabase(legacyDatabase.LEGACY_DECK_DATABASE_NAME, {
+      decks: [legacyDeck],
     });
-
-    /* A second tab still holding the prototype database open is what blocks the
-       delete in a browser; the copy has already succeeded by then. */
-    openLegacy = await openDeckDatabase(LEGACY_DECK_DATABASE_NAME);
+    openLegacy = await openDeckDatabase(
+      legacyDatabase.LEGACY_DECK_DATABASE_NAME,
+    );
+    // SQLite is independent of the surviving historical sentinel database.
+    repository = await openTestDeckRepository(TEST_DATABASE_NAME);
+    const current = await repository.create(
+      { ...draft, name: "Injected Deck" },
+      emptyDeckHistory(),
+    );
+    await repository.setDefaultDeck(current.deck.id);
+    const injected = repository;
+    const failure = new DeckStorageError("Injected deck read failed");
+    const list = vi.spyOn(injected, "list").mockRejectedValue(failure);
+    const createRepository = vi.fn(() => injected);
+    const open = vi.spyOn(indexedDB, "open");
+    const remove = vi.spyOn(indexedDB, "deleteDatabase");
+    const put = vi.spyOn(IDBObjectStore.prototype, "put");
+    const add = vi.spyOn(IDBObjectStore.prototype, "add");
 
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: null,
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: null,
+        onnavigate: vi.fn(),
+      },
     });
 
-    await waitFor(() => expect(query("deck-migration-error")).not.toBeNull());
-    expect(query("deck-migration-error")?.getAttribute("role")).toBe("alert");
-    expect(query("deck-migration-error-message")?.textContent).toContain(
-      "could not be deleted",
+    await waitFor(() => expect(query("deck-editor-error")).not.toBeNull());
+    expect(query("deck-editor-error")?.getAttribute("role")).toBe("alert");
+    expect(query("deck-editor-error-message")?.textContent).toContain(
+      "Injected deck read failed",
     );
-    expect(query("deck-migration-retry")).not.toBeNull();
-    /* The library must not render underneath the blocking state. */
+    expect(createRepository).toHaveBeenCalledOnce();
+    expect(list).toHaveBeenCalled();
+    await expect(list.mock.results[0]!.value).rejects.toBe(failure);
+    expect(
+      (screen.getByRole("button", { name: "Retry" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false);
+    expect(query("deck-editor-loading-skeleton")).toBeNull();
     expect(query("deck-library")).toBeNull();
-    expect(query("deck-editor-error")).toBeNull();
+    expect(query("deck-migration-error")).toBeNull();
+    expect(open).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+    expect(put).not.toHaveBeenCalled();
+    expect(add).not.toHaveBeenCalled();
+
+    // Read through the already-owned handle: no reopen can hide an attempt.
+    const transaction = openLegacy.transaction("decks", "readonly");
+    const request = transaction.objectStore("decks").getAll();
+    await transactionSettled(transaction);
+    expect(request.result).toEqual([legacyDeck]);
+    cleanup();
+    // Context release is a no-op: the fixture still owns the usable repository.
+    expect((await injected.load(current.deck.id))?.deck.name).toBe(
+      "Injected Deck",
+    );
   });
 });

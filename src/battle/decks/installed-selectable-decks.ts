@@ -43,23 +43,24 @@ export async function installedSelectableDecks(
   for (const record of await repository.list()) {
     const resolved = await resolveDeck(record.id, repository, catalog, ruleset);
     if (resolved.type === "missing") continue;
+    const ready = resolved.type === "ready" ? resolved.deck : null;
     localDecks.push(
       Object.freeze({
-        key: `local:${record.id}:${record.revision}`,
-        label: record.name,
+        key: `local:${ready?.ref.deckId ?? record.id}:${ready?.ref.revision ?? record.revision}`,
+        label: ready?.name ?? record.name,
         source: "local" as const,
         selection:
-          resolved.type === "ready"
-            ? Object.freeze({ kind: "local" as const, deck: resolved.deck })
-            : null,
+          ready === null
+            ? null
+            : Object.freeze({ kind: "local" as const, deck: ready }),
         blockReason:
           resolved.type === "ready"
             ? null
             : (resolved.issues[0]?.message ?? "Deck is not legal."),
         lists: Object.freeze({
-          main: Object.freeze([...record.main]),
-          extra: Object.freeze([...record.extra]),
-          side: Object.freeze([...record.side]),
+          main: ready?.main ?? Object.freeze([...record.main]),
+          extra: ready?.extra ?? Object.freeze([...record.extra]),
+          side: ready?.side ?? Object.freeze([...record.side]),
         }),
         updatedAt: record.updatedAt,
       }),

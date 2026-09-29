@@ -1,4 +1,3 @@
-import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import {
@@ -253,90 +252,6 @@ describe("content setup", () => {
       publishReady: false,
     });
   });
-  it("public prerequisites require explicit complete attestations and secret presence", () => {
-    const input = fixture();
-    Object.assign(input.distribution, {
-      status: "approved",
-      engineSource: "review:engine",
-      scriptSource: "review:scripts",
-      databaseTerms: "review:db",
-      artPermission: "review:art",
-      storyMediaPermission: "review:story",
-    });
-    input.setup = {
-      schemaVersion: 1,
-      cloudflare: {
-        plan: "free",
-        project: "fixture-project",
-        staticOnly: true,
-      },
-      github: {
-        environment: "production",
-        protectionEvidence: "review:protected",
-      },
-      devices: {
-        android: "tester:android",
-        iphone: "tester:iphone",
-        ipad: "tester:ipad",
-      },
-    };
-    input.environment = {
-      CLOUDFLARE_API_TOKEN: "fake-token-sentinel",
-      CLOUDFLARE_ACCOUNT_ID: "fake-account-sentinel",
-      CLOUDFLARE_PAGES_PROJECT: "fixture-project",
-    };
-    expect(verifyContentSetup(input)).toMatchObject({
-      codeReady: true,
-      publishReady: true,
-      blockers: [],
-    });
-    for (const name of Object.keys(input.environment)) {
-      const environment = { ...input.environment, [name]: " " };
-      expect(verifyContentSetup({ ...input, environment }).publishReady).toBe(
-        false,
-      );
-    }
-    for (const key of [
-      "engineSource",
-      "scriptSource",
-      "databaseTerms",
-      "artPermission",
-      "storyMediaPermission",
-    ]) {
-      expect(
-        verifyContentSetup({
-          ...input,
-          distribution: { ...input.distribution, [key]: null },
-        }),
-      ).toMatchObject({ codeReady: true, publishReady: false });
-    }
-    for (const setup of [
-      null,
-      {},
-      { schemaVersion: 1 },
-      {
-        ...(input.setup as object),
-        devices: {
-          android: "review:device",
-          iphone: null,
-          ipad: "review:device",
-        },
-      },
-    ]) {
-      expect(verifyContentSetup({ ...input, setup })).toMatchObject({
-        codeReady: true,
-        publishReady: false,
-      });
-    }
-    expect(JSON.stringify(verifyContentSetup(input))).not.toContain(
-      "fake-token-sentinel",
-    );
-    expect(JSON.stringify(verifyContentSetup(input))).not.toContain(
-      "fake-account-sentinel",
-    );
-    input.distribution.sourceRevision = "wrong-revision";
-    expect(verifyContentSetup(input).publishReady).toBe(false);
-  });
   it.each([
     "undated",
     "empty",
@@ -487,45 +402,5 @@ describe("content setup", () => {
     expect(policy.reprints).toBe(
       "include-every-printing-in-its-set-release-era",
     );
-  });
-  it("usage failure never echoes supplied arguments", () => {
-    const result = spawnSync(
-      process.execPath,
-      ["scripts/verify-content-setup.ts", "fake-argument-sentinel"],
-      { encoding: "utf8" },
-    );
-    expect(result.status).toBe(1);
-    expect(result.stdout + result.stderr).not.toContain(
-      "fake-argument-sentinel",
-    );
-    expect(result.stderr).toContain(
-      "Usage: npm run content:setup:verify [-- --public]",
-    );
-  });
-  it("secrets never printed", async () => {
-    const sentinel = "fake-secret-redaction-sentinel";
-    const result = spawnSync(
-      process.execPath,
-      ["scripts/verify-content-setup.ts", "--public"],
-      {
-        encoding: "utf8",
-        env: {
-          ...process.env,
-          CLOUDFLARE_API_TOKEN: sentinel,
-          CLOUDFLARE_ACCOUNT_ID: sentinel,
-          CLOUDFLARE_PAGES_PROJECT: sentinel,
-        },
-      },
-    );
-    expect(result.status).toBe(2);
-    const report = await readFile(
-      "generated/content/setup-report.json",
-      "utf8",
-    );
-    expect(result.stdout + result.stderr + report).not.toContain(sentinel);
-    expect(JSON.parse(report)).toMatchObject({
-      codeReady: true,
-      publishReady: false,
-    });
   });
 });

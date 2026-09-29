@@ -1,16 +1,14 @@
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { deckId, type DeckRecord } from "../../../src/decks/deck-contracts.ts";
-import { DECK_DATABASE_NAME } from "../../../src/decks/deck-database.ts";
 import { emptyDeckHistory } from "../../../src/decks/deck-history.ts";
 import { resolveDeckRepository } from "../../../src/decks/deck-repository-context.ts";
 import {
-  DeckStorageError,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/indexeddb-deck-repository.ts";
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+} from "../../fixtures/sqlite-deck-repository.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import { createStoryDeckRepository } from "../../../src/story/decks/story-deck-repository.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
@@ -20,21 +18,12 @@ import {
 } from "../../../src/story/model/story-state.ts";
 
 type StoryCollection = StoryState["collection"];
-import {
-  deckDatabaseNames,
-  deckDatabaseRows,
-} from "../../fixtures/deck-database.ts";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
 
-/* The split between the two deck worlds is a choice of repository and nothing
-   else: no row moves, and the free-play database keeps the name and the schema
-   it already has on every player's disk. So these tests assert against the real
-   `ygo-story-decks` database rather than a repository opened under a test name
-   — the mistake worth catching here is a resolver that quietly reads somewhere
-   the player's decks are not. */
-
+/* Contexts resolve only the caller's injected library; no implicit legacy DB. */
 afterEach(async () => {
-  await deleteDB(DECK_DATABASE_NAME);
+  vi.restoreAllMocks();
+  await disposeTestDeckRepositories();
 });
 
 function deckRecord(id: string): DeckRecord {
@@ -84,39 +73,61 @@ function storySave(decks: readonly string[], collection: StoryCollection = {}) {
 }
 
 describe("resolveDeckRepository", () => {
-  it("free play resolves to the IndexedDB library", async () => {
-    const handle = await resolveDeckRepository({ kind: "free-play" });
+  it("free play resolves the injected library", async () => {
+    const repository = await openTestDeckRepository();
+    const handle = await resolveDeckRepository({
+      kind: "free-play",
+      createRepository: () => repository,
+    });
     await handle.repository.create(deckRecord("written"), emptyDeckHistory());
     handle.close();
+    await repository.close();
 
-    const rows = (await deckDatabaseRows(
-      DECK_DATABASE_NAME,
-      "decks",
-    )) as readonly DeckRecord[];
-    expect(rows.map(({ id }) => id)).toStrictEqual(["written"]);
+    const reopened = await openTestDeckRepository();
+    expect((await reopened.list()).map(({ id }) => id)).toStrictEqual([
+      "written",
+    ]);
+    await reopened.close();
   });
 
-  it("the free-play database name is unchanged", () => {
-    expect(DECK_DATABASE_NAME).toBe("ygo-story-decks");
+  it("never opens or deletes legacy storage", async () => {
+    const open = vi.spyOn(indexedDB, "open");
+    const remove = vi.spyOn(indexedDB, "deleteDatabase");
+    const repository = await openTestDeckRepository();
+    const factory = vi.fn(() => repository);
+    const handle = await resolveDeckRepository({
+      kind: "free-play",
+      createRepository: factory,
+    });
+    expect(handle.repository).toBe(repository);
+    expect(factory).toHaveBeenCalledOnce();
+    expect(open).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+    handle.close();
+    await repository.close();
   });
 
   it("existing decks remain listed in free play", async () => {
-    /* Seeded through the repository the shipped build writes with, so this is
-       a database as a real player already has it rather than a fixture shaped
-       to match the reader. */
-    const previousBuild = await IndexedDbDeckRepository.open();
+    // Close and reopen the real SQLite database, preserving both deck IDs.
+    const previousBuild = await openTestDeckRepository();
     await previousBuild.create(deckRecord("alpha"), emptyDeckHistory());
     await previousBuild.create(deckRecord("beta"), emptyDeckHistory());
-    previousBuild.close();
+    await previousBuild.close();
 
-    const handle = await resolveDeckRepository({ kind: "free-play" });
+    const repository = await openTestDeckRepository();
+    const handle = await resolveDeckRepository({
+      kind: "free-play",
+      createRepository: () => repository,
+    });
     const listed = await handle.repository.list();
     handle.close();
+    await repository.close();
 
     expect(listed.map(({ id }) => id).sort()).toStrictEqual(["alpha", "beta"]);
   });
 
   it("a story context resolves to the save adapter", async () => {
+    const open = vi.spyOn(indexedDB, "open");
     const handle = await resolveDeckRepository({
       kind: "story",
       ...storySave(["saved-one", "saved-two"]),
@@ -129,7 +140,7 @@ describe("resolveDeckRepository", () => {
     /* The save adapter holds no connection, and a story context must not so
        much as create the free-play library. */
     handle.close();
-    expect(await deckDatabaseNames()).not.toContain(DECK_DATABASE_NAME);
+    expect(open).not.toHaveBeenCalled();
   });
 
   /* The pairing T22 asked for: a resolved handle answers "which decks" and
@@ -137,8 +148,13 @@ describe("resolveDeckRepository", () => {
      never arrive next to free play's unlimited ownership. Free play's half is
      derived here rather than supplied, so no caller can get it wrong at all. */
   it("free play resolves to unlimited ownership", async () => {
-    const handle = await resolveDeckRepository({ kind: "free-play" });
+    const repository = await openTestDeckRepository();
+    const handle = await resolveDeckRepository({
+      kind: "free-play",
+      createRepository: () => repository,
+    });
     handle.close();
+    await repository.close();
 
     expect(handle.ownership.isUnlimited).toBe(true);
     expect(handle.ownership.ownedCount(89631139)).toBe(
@@ -158,14 +174,15 @@ describe("resolveDeckRepository", () => {
     expect(handle.ownership.ownedCount(46986414)).toBe(0);
   });
 
-  it("closing a free-play handle releases the database connection", async () => {
-    const handle = await resolveDeckRepository({ kind: "free-play" });
-    /* Detached from the handle, because that is how the editor holds it: it
-       keeps one `close` variable for a teardown that may run before the
-       repository ever arrives. */
-    const { close } = handle;
-    close();
+  it("closing a free-play handle leaves the injected shared repository open", async () => {
+    const repository = await openTestDeckRepository();
+    const handle = await resolveDeckRepository({
+      kind: "free-play",
+      createRepository: () => repository,
+    });
+    handle.close();
 
-    await expect(handle.repository.list()).rejects.toThrow(DeckStorageError);
+    await expect(handle.repository.list()).resolves.toEqual([]);
+    await repository.close();
   });
 });

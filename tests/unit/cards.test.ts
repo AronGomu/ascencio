@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   cardCode,
   createCards,
@@ -15,8 +15,12 @@ import {
 } from "../../src/decks/validation/index.ts";
 import { mapDeckBuilderCard } from "../../src/decks/catalog/ocg-card-mapper.ts";
 import { PROTOTYPE_CATALOG_RECORDS } from "../fixtures/catalog.ts";
-import { installedEditorCatalog } from "../../src/shell/adapters/installed-editor-catalog.ts";
-import { installedDuelGameplayFixture } from "../fixtures/installed-duel-gameplay.ts";
+import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
+import {
+  semanticShellStartup,
+  disposeSemanticShells,
+} from "../fixtures/semantic-shell.ts";
+import { resetStorySessionFixture } from "../fixtures/story-session.ts";
 import { storyCardOwnership } from "../../src/story/decks/card-ownership.ts";
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 
@@ -160,8 +164,13 @@ it("Ownership preserved: Story collection has 1 copy; deck asks 2", () => {
 });
 
 it("Shell adapter preserves wire scope/text and offers abortable null optional media", async () => {
-  const gameplay = installedDuelGameplayFixture();
-  const input = installedEditorCatalog(gameplay);
+  const gameplay = installedGameplayFixture();
+  const startup = await semanticShellStartup(gameplay);
+  const session = await startup.application!.acquire(
+    "freeplay",
+    new AbortController().signal,
+  );
+  const input = session.inputs.editor;
   for (const { record, text } of gameplay.cards) {
     expect(input.cards.get(cardCode(record.code))).toMatchObject({
       scope: record.ot,
@@ -184,6 +193,7 @@ it("Shell adapter preserves wire scope/text and offers abortable null optional m
     message: "The operation was aborted.",
   });
   expect(Object.isFrozen(input.starter.cards.main)).toBe(true);
+  await session.close();
 });
 
 it("published decks preserve missing/token/zone/quantity rules without minimum size", () => {
@@ -220,4 +230,9 @@ it("published decks preserve missing/token/zone/quantity rules without minimum s
       PROTOTYPE_RULESET,
     ),
   ).toThrow("DECK_RELEASE_INVALID");
+});
+
+afterEach(async () => {
+  await disposeSemanticShells();
+  await resetStorySessionFixture();
 });

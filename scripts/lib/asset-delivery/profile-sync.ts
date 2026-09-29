@@ -1,12 +1,10 @@
-import {
-  checkAssetProfiles,
-  scanAssetProfiles,
-  EMPTY_RETAINED_METADATA,
-} from "./scan-assets.ts";
+import { checkAssetProfiles, scanAssetProfiles } from "./scan-assets.ts";
 import { loadSelection } from "./profile-set.ts";
 import { replaceMetadata } from "./atomic-metadata.ts";
 import { acquireAssetDeliveryLock } from "./local-lock.ts";
 import { assetCli, parseFlags } from "./cli.ts";
+import { canonicalBytes } from "./canonical-json.ts";
+import { fail } from "./failure.ts";
 
 export async function runProfileSync(
   root: string,
@@ -23,14 +21,16 @@ export async function runProfileSync(
       ? null
       : await acquireAssetDeliveryLock(root);
     try {
+      const selection = await loadSelection(root);
       const report = flags.has("--check")
         ? await checkAssetProfiles(root)
-        : await scanAssetProfiles(
-            root,
-            await loadSelection(root),
-            EMPTY_RETAINED_METADATA,
-            null,
-          );
+        : await scanAssetProfiles(root, selection);
+      if (
+        !Buffer.from(canonicalBytes(selection)).equals(
+          Buffer.from(canonicalBytes(await loadSelection(root))),
+        )
+      )
+        fail("ASSET_SOURCE_CHANGED", "asset-profiles/nightly.json");
       for (const diagnostic of report.diagnostics)
         progress(diagnostic.phase, diagnostic.path, diagnostic.bytes);
       if (!flags.has("--check"))

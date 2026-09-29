@@ -1,12 +1,8 @@
 import { test, putSelectedStorySave } from "./selected-content-fixture.ts";
 import { expect, type Locator, type Page } from "@playwright/test";
-import {
-  DECK_DATABASE_NAME,
-  LEGACY_DECK_DATABASE_NAME,
-} from "../src/decks/deck-database.ts";
 import { RESULT_WINDOW_CEILING } from "../src/deck-editor/layout/result-window.ts";
 import { createInitialStoryState } from "../src/story/model/story-state.ts";
-import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
+
 import { storyStarterSave } from "./story-starter-save.ts";
 
 const libraryUrl = "./#/decks";
@@ -22,30 +18,14 @@ const STORY_STARTER = storyStarterSave();
 const SUMMONED_SKULL = 70781052;
 const CELTIC_GUARDIAN = 91152256;
 
-/* Both names, so a scenario that seeds the prototype database cannot leave one
-   behind for the next scenario to migrate. */
 async function deleteDeckDatabase(page: Page) {
-  await page.evaluate(
-    async (names: readonly string[]) => {
-      for (const name of names)
-        await new Promise<void>((resolve, reject) => {
-          const request = indexedDB.deleteDatabase(name);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-          request.onblocked = () => resolve();
-        });
-    },
-    [DECK_DATABASE_NAME, LEGACY_DECK_DATABASE_NAME],
-  );
+  await page.evaluate(() => window.selectedContent.resetDecks());
 }
 
 async function openStoryEditor(page: Page): Promise<void> {
   await page.goto("./#/");
-  const envelope: StorySaveEnvelope = {
-    schemaVersion: 4,
+  const envelope: Parameters<typeof putSelectedStorySave>[1] = {
     slot: "autosave",
-    revision: 1,
-    savedAt: Date.now(),
     state: {
       ...createInitialStoryState(),
       screen: "map",
@@ -124,47 +104,16 @@ async function persistedDeckCounts(
   page: Page,
   deckId: string,
 ): Promise<DeckCounts | null> {
-  return page.evaluate(
-    async ([name, id]) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(name);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      try {
-        if (!database.objectStoreNames.contains("decks")) return null;
-        const record = await new Promise<{
-          main: readonly number[];
-          extra: readonly number[];
-          side: readonly number[];
-        } | null>((resolve, reject) => {
-          const request = database
-            .transaction("decks", "readonly")
-            .objectStore("decks")
-            .get(id);
-          request.onsuccess = () =>
-            resolve(
-              (request.result as {
-                main: readonly number[];
-                extra: readonly number[];
-                side: readonly number[];
-              } | null) ?? null,
-            );
-          request.onerror = () => reject(request.error);
-        });
-        return record === null
-          ? null
-          : {
-              main: record.main.length,
-              extra: record.extra.length,
-              side: record.side.length,
-            };
-      } finally {
-        database.close();
-      }
-    },
-    [DECK_DATABASE_NAME, deckId] as const,
-  );
+  return page.evaluate(async (id) => {
+    const stored = await window.selectedContent.deck(id);
+    return stored === null
+      ? null
+      : {
+          main: stored.deck.main.length,
+          extra: stored.deck.extra.length,
+          side: stored.deck.side.length,
+        };
+  }, deckId);
 }
 
 /* `aria-busy` on the editor layout is `saveState === "saving"` and nothing
@@ -205,34 +154,22 @@ async function replaceOpenDeckCards(
   page: Page,
   cards: DeckCardOrder,
 ): Promise<void> {
-  await page.evaluate(
-    async ({ databaseName, cards }) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(databaseName);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const transaction = database.transaction("decks", "readwrite");
-      const store = transaction.objectStore("decks");
-      const decks = await new Promise<readonly Record<string, unknown>[]>(
-        (resolve, reject) => {
-          const request = store.getAll();
-          request.onsuccess = () =>
-            resolve(request.result as readonly Record<string, unknown>[]);
-          request.onerror = () => reject(request.error);
-        },
-      );
-      const deck = decks.find(({ name }) => name === "Sort Matrix");
-      if (deck === undefined) throw new Error("Sort Matrix deck is missing");
-      store.put({ ...deck, ...cards });
-      await new Promise<void>((resolve, reject) => {
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-      });
-      database.close();
-    },
-    { databaseName: DECK_DATABASE_NAME, cards },
-  );
+  await expect
+    .poll(() =>
+      page.evaluate(async () =>
+        (await window.selectedContent.decks()).some(
+          ({ name }) => name === "Sort Matrix",
+        ),
+      ),
+    )
+    .toBe(true);
+  await page.evaluate(async (cards) => {
+    const deck = (await window.selectedContent.decks()).find(
+      ({ name }) => name === "Sort Matrix",
+    );
+    if (!deck) throw new Error("Sort Matrix deck is missing");
+    await window.selectedContent.replaceDeck(deck.id, cards);
+  }, cards);
 }
 
 async function renderedDeckOrder(page: Page): Promise<DeckCardOrder> {
@@ -667,23 +604,8 @@ test("open deck imports YDK with atomic Undo/Redo and keeps failures open", asyn
   await expect(zoneCount(page, "extra")).toHaveText("1/15");
   await expect(zoneCount(page, "side")).toHaveText("1/15");
 
-  await page.evaluate(() => {
-    const original = IDBDatabase.prototype.transaction;
-    Object.defineProperty(IDBDatabase.prototype, "transaction", {
-      configurable: true,
-      value: function (this: IDBDatabase, ...args: unknown[]) {
-        const stores = Array.isArray(args[0]) ? args[0] : [args[0]];
-        if (args[1] === "readwrite" && stores.includes("decks")) {
-          Object.defineProperty(IDBDatabase.prototype, "transaction", {
-            configurable: true,
-            value: original,
-          });
-          throw new Error("simulated import transaction failure");
-        }
-        return Reflect.apply(original, this, args);
-      },
-    });
-  });
+  await expect(page.getByRole("searchbox", { name: "Name" })).toBeVisible();
+  await page.evaluate(() => window.selectedContent.failDeckWrite());
   await importButton.click();
   await page
     .getByLabel("Or paste YDK text")
@@ -698,7 +620,7 @@ test("open deck imports YDK with atomic Undo/Redo and keeps failures open", asyn
   ).toContainText("Import could not be saved. Try again.");
   await expect(
     page.locator('[data-cy="deck-editor-save-failed"]'),
-  ).toContainText("simulated import transaction failure");
+  ).toContainText("Unable to save deck");
   await expect(commit).toBeFocused();
   await page.locator('[data-cy="deck-ydk-import-cancel"]').click();
   await expect(importButton).toBeFocused();
@@ -708,7 +630,6 @@ test("open deck imports YDK with atomic Undo/Redo and keeps failures open", asyn
 
 test("the deck editor recovers real save failures and revision conflicts", async ({
   page,
-  context,
 }) => {
   await page.goto(libraryUrl);
   await deleteDeckDatabase(page);
@@ -717,28 +638,11 @@ test("the deck editor recovers real save failures and revision conflicts", async
   await page.getByLabel("Deck name").fill("Recovery E2E");
   await page.locator('[data-cy="deck-library-create-submit"]').click();
 
-  await page.evaluate(() => {
-    const original = IDBDatabase.prototype.transaction;
-    Object.defineProperty(IDBDatabase.prototype, "transaction", {
-      configurable: true,
-      value: function (this: IDBDatabase, ...args: unknown[]) {
-        const stores = Array.isArray(args[0]) ? args[0] : [args[0]];
-        if (args[1] === "readwrite" && stores.includes("decks")) {
-          Object.defineProperty(IDBDatabase.prototype, "transaction", {
-            configurable: true,
-            value: original,
-          });
-          throw new Error("simulated transaction failure");
-        }
-        return Reflect.apply(original, this, args);
-      },
-    });
-  });
+  await expect(page.getByRole("searchbox", { name: "Name" })).toBeVisible();
+  await page.evaluate(() => window.selectedContent.failDeckWrite());
   await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
   await catalogTile(page, BLUE_EYES).dblclick();
-  await expect(page.getByRole("alert")).toContainText(
-    "simulated transaction failure",
-  );
+  await expect(page.getByRole("alert")).toContainText("Unable to save deck");
   await page.getByRole("button", { name: "Retry autosave" }).click();
   /* The banner is the failure; its absence is the recovery. */
   await expect(page.locator('[data-cy="deck-editor-save-failed"]')).toHaveCount(
@@ -746,118 +650,62 @@ test("the deck editor recovers real save failures and revision conflicts", async
   );
   await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
 
-  /* `#/decks` is the library now, so the second context has to deep-link at
-     the deck under test rather than rely on a last-opened pointer. */
-  const second = await context.newPage();
-  await second.goto(`./${new URL(page.url()).hash}`);
-  await expect(zoneCount(second, "main")).toHaveText("1/40");
-
-  await page.getByRole("searchbox", { name: "Name" }).fill("Summoned Skull");
-  await catalogTile(page, SUMMONED_SKULL).dblclick();
-  await expect(zoneCount(page, "main")).toHaveText("2/40");
-  /* The second context loses the revision race only if this save has actually
-     landed before it tries its own; that is exactly what the old barrier could
-     not promise. */
+  // Same-store external writer advances SQLite revision while editor remains stale.
+  // A second app tab is intentionally rejected by the production owner lock.
+  await page.evaluate(async (id) => {
+    const stored = await window.selectedContent.deck(id);
+    if (!stored) throw new Error("Recovery deck missing");
+    await window.selectedContent.replaceDeck(id, {
+      ...stored.deck,
+      main: [...stored.deck.main, 70781052],
+    });
+  }, new URL(page.url()).hash.split("/").at(-1)!);
   await expectSaveSettled(page, { main: 2, extra: 0, side: 0 });
-
-  await second.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
-  await catalogTile(second, CELTIC_GUARDIAN).dblclick();
-  await expect(second.getByRole("alert")).toContainText(
+  await page.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
+  await catalogTile(page, CELTIC_GUARDIAN).dblclick();
+  await expect(page.getByRole("alert")).toContainText(
     "changed by another browser context",
   );
-  await second
+  await page
     .getByRole("button", { name: "Preserve local edits as copy" })
     .click();
-  await expect(second.getByLabel("Deck name")).toHaveValue(
+  await expect(page.getByLabel("Deck name")).toHaveValue(
     "Recovery E2E Recovered Copy",
   );
-  await expect(zoneCount(second, "main")).toHaveText("2/40");
-  await second.reload();
-  await expect(second.getByLabel("Deck name")).toHaveValue(
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await page.reload();
+  await expect(page.getByLabel("Deck name")).toHaveValue(
     "Recovery E2E Recovered Copy",
   );
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
 });
 
-test("a prototype deck database is migrated on first load", async ({
-  page,
-}) => {
+// Legacy migration is retired. Current counterpart: persisted SQLite deck/history
+// survives reload; invalid one-card deck remains repairable through its tile menu.
+test("a current SQLite deck and history survive reload", async ({ page }) => {
   await page.goto("./#/");
   await deleteDeckDatabase(page);
-
-  /* The schema is spelled out rather than imported because this fixture has to
-     be what the *previous* build wrote: a page cannot import project modules,
-     and pinning the old shape here is the point of the scenario. */
-  await page.evaluate(async (name: string) => {
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(name, 1);
-      request.onupgradeneeded = () => {
-        const decks = request.result.createObjectStore("decks", {
-          keyPath: "id",
-        });
-        decks.createIndex("updatedAt", "updatedAt");
-        decks.createIndex("name", "name");
-        request.result.createObjectStore("histories", { keyPath: "deckId" });
-        request.result.createObjectStore("preferences", { keyPath: "key" });
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    const transaction = database.transaction(
-      ["decks", "histories", "preferences"],
-      "readwrite",
-    );
-    transaction.objectStore("decks").put({
-      schemaVersion: 1,
-      id: "prototype-deck",
-      revision: 1,
-      name: "Prototype Survivor",
+  await page.evaluate(() =>
+    window.selectedContent.seedDeck("sqlite-deck", "SQLite Survivor", {
       main: [89631139],
       extra: [],
       side: [],
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-      validation: {
-        status: "errors",
-        issues: [],
-        rulesetRevision: "prototype-2026-01",
-      },
-      importedNeedsReview: false,
-    });
-    transaction.objectStore("histories").put({
-      deckId: "prototype-deck",
-      history: { undo: [], redo: [], nextSequence: 1 },
-    });
-    transaction
-      .objectStore("preferences")
-      .put({ key: "last-opened-deck", value: "prototype-deck" });
-    await new Promise<void>((resolve, reject) => {
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
-    database.close();
-  }, LEGACY_DECK_DATABASE_NAME);
-
-  await page.goto(libraryUrl);
-  /* Deck-name controls now identify their action before the stored name. */
-  const migrated = page.getByRole("button", {
-    name: /^Select Prototype Survivor,/,
-  });
-  await expect(migrated).toBeVisible();
-
-  const names = await page.evaluate(async () =>
-    (await indexedDB.databases()).map(({ name }) => name ?? ""),
+    }),
   );
-  expect(names).toContain(DECK_DATABASE_NAME);
-  expect(names).not.toContain(LEGACY_DECK_DATABASE_NAME);
-
-  /* Opening the deck reads its history record too, so this also proves the
-     migration copied more than the deck row. One card is not a legal deck, so
-     its tile cannot be picked and the kebab is the way in — which is the point:
-     a deck is opened to be repaired. */
-  await page.locator('[data-cy="deck-tile-menu-prototype-deck"]').click();
-  await page.locator('[data-cy="deck-tile-menu-open-prototype-deck"]').click();
-  await expect(page.getByLabel("Deck name")).toHaveValue("Prototype Survivor");
+  await page.reload();
+  await page.goto(libraryUrl);
+  await expect(
+    page.getByRole("button", { name: /^Select SQLite Survivor,/ }),
+  ).toBeVisible();
+  await page.locator('[data-cy="deck-tile-menu-sqlite-deck"]').click();
+  await page.locator('[data-cy="deck-tile-menu-open-sqlite-deck"]').click();
+  await expect(page.getByLabel("Deck name")).toHaveValue("SQLite Survivor");
   await expect(zoneCount(page, "main")).toHaveText("1/40");
+  expect(
+    await page.evaluate(
+      async () => (await window.selectedContent.deck("sqlite-deck"))?.history,
+    ),
+  ).toEqual({ undo: [], redo: [], nextSequence: 1 });
 });
 
 test("the deck editor builds a deck by tap on a small screen", async ({

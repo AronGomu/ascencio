@@ -4,30 +4,28 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig, type UserConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { appBuildIdentity } from "./scripts/lib/app-build-identity.ts";
+import { assertShellPrecacheEntries } from "./src/shell/pwa/shell-cache-policy.ts";
 import {
-  coreContentPlugin,
-  prepareCoreDelivery,
-} from "./scripts/lib/vite-core-content.ts";
+  appAssetsPlugin,
+  type AppBuildBoundary,
+} from "./scripts/lib/vite-app-assets.ts";
+import { contentSourceDenyPlugin } from "./scripts/lib/vite-content-deny.ts";
 import { syncOnlyVendoredCorePlugin } from "./scripts/lib/vite-sync-core.ts";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig(async (): Promise<UserConfig> => {
+export default defineConfig((): UserConfig => {
   const developmentPort = Number(process.env.DEV_PORT ?? "4202");
   if (!Number.isSafeInteger(developmentPort) || developmentPort <= 0)
     throw new Error("DEV_PORT must be a positive integer");
-  const delivery = await prepareCoreDelivery(
-    projectRoot,
-    process.env.CONTENT_RUN,
-  );
   const appBuildDate = new Date().toISOString().slice(0, 10);
   const coreContentApiVersion = 1;
-  const appBuildId = appBuildIdentity(projectRoot, delivery.bootstrapBytes);
+  const appBuildId = appBuildIdentity(projectRoot);
+  const boundary: AppBuildBoundary = { base: "/", sqliteWasm: null };
 
   return {
     base: process.env.BASE_PATH ?? "/",
-    /* Public currently contains acquired/story gameplay data. CORE serves only
-       explicit source assets plus the verified delivery plugin below. */
+    /* Acquired content is CLI-only; app assets enter through explicit imports. */
     publicDir: false,
     server: {
       port: developmentPort,
@@ -43,12 +41,8 @@ export default defineConfig(async (): Promise<UserConfig> => {
     plugins: [
       syncOnlyVendoredCorePlugin(projectRoot),
       svelte(),
-      coreContentPlugin(
-        projectRoot,
-        delivery,
-        appBuildId,
-        coreContentApiVersion,
-      ),
+      contentSourceDenyPlugin(projectRoot),
+      appAssetsPlugin(projectRoot, appBuildId, coreContentApiVersion, boundary),
       VitePWA({
         strategies: "injectManifest",
         srcDir: "src",
@@ -75,16 +69,31 @@ export default defineConfig(async (): Promise<UserConfig> => {
           ],
         },
         injectManifest: {
+          manifestTransforms: [
+            async (entries) => {
+              if (boundary.sqliteWasm === null)
+                throw new Error("SQLite executable missing from app build");
+              const sqliteUrl = `${boundary.base}${boundary.sqliteWasm}`;
+              const prefixed = entries.map((entry) => ({
+                ...entry,
+                url: `${boundary.base}${entry.url}`,
+              }));
+              assertShellPrecacheEntries(prefixed, sqliteUrl);
+              if (!prefixed.some((entry) => entry.url === sqliteUrl))
+                throw new Error("SQLite executable missing from precache");
+              return { manifest: prefixed, warnings: [] };
+            },
+          ],
           globPatterns: [
             "**/*.{html,js,css,woff2}",
-            "core-bootstrap.json",
+            "assets/*.wasm",
             "app-icon.svg",
           ],
           globIgnores: [
             "content/**",
             "runtime/**",
             "__content/**",
-            "**/*.wasm",
+            "**/ocgcore*.wasm",
             "**/*.zip",
             "assets/story/**",
           ],
@@ -104,8 +113,10 @@ export default defineConfig(async (): Promise<UserConfig> => {
     },
     build: {
       target: "es2023",
+      manifest: true,
       chunkSizeWarningLimit: 500,
       rollupOptions: {
+        preserveEntrySignatures: "exports-only",
         /* Product ships one document. Acceptance harness stays opt-in. */
         input:
           process.env.ACCEPTANCE_SCENARIOS === "1"
@@ -113,7 +124,13 @@ export default defineConfig(async (): Promise<UserConfig> => {
                 index: path.join(projectRoot, "index.html"),
                 acceptance: path.join(projectRoot, "acceptance.html"),
               }
-            : { app: path.join(projectRoot, "index.html") },
+            : {
+                app: path.join(projectRoot, "index.html"),
+                storage: path.join(
+                  projectRoot,
+                  "src/storage/create-storage-client.ts",
+                ),
+              },
       },
     },
     worker: {

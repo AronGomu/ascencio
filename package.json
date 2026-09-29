@@ -7,11 +7,10 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "assets:setup": "node scripts/asset-delivery-setup.ts",
     "assets:profiles:sync": "node scripts/sync-asset-profiles.ts",
     "assets:promote": "node scripts/promote-assets.ts",
     "assets:migrate": "node scripts/migrate-assets.ts",
-    "assets:bundle": "node scripts/bundle-assets.ts",
+    "assets:restructure": "node scripts/restructure-assets.ts",
     "assets:mvp": "node scripts/download-mvp-assets.ts",
     "assets:engine": "node scripts/sync-engine.ts",
     "assets:engine:verify": "node scripts/verify-engine.ts",
@@ -36,8 +35,8 @@
     "build:verify": "node scripts/verify-browser-build.ts",
     "build:reproducible": "node scripts/verify-reproducible-build.ts",
     "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{ts,svelte,css}\" \"tests/**/*.{ts,svelte}\" \"scripts/**/*.ts\" \"e2e/**/*.ts\" \"e2e-acceptance/**/*.ts\" \"e2e-core/**/*.ts\" \"e2e-content/**/*.{ts,svelte}\" \"*.html\" \"*.{js,json,ts}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,svelte,css}\" \"tests/**/*.{ts,svelte}\" \"scripts/**/*.ts\" \"e2e/**/*.ts\" \"e2e-acceptance/**/*.ts\" \"e2e-core/**/*.ts\" \"e2e-content/**/*.{ts,svelte}\" \"*.html\" \"*.{js,json,ts}\"",
+    "format": "prettier --write \"src/**/*.{ts,svelte,css}\" \"tests/**/*.{ts,svelte}\" \"scripts/**/*.ts\" \"e2e/**/*.ts\" \"e2e-acceptance/**/*.ts\" \"e2e-core/**/*.ts\" \"*.html\" \"*.{js,json,ts}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,svelte,css}\" \"tests/**/*.{ts,svelte}\" \"scripts/**/*.ts\" \"e2e/**/*.ts\" \"e2e-acceptance/**/*.ts\" \"e2e-core/**/*.ts\" \"*.html\" \"*.{js,json,ts}\"",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
     "test:legacy": "node --test tests/*.test.ts",
@@ -53,15 +52,10 @@
     "check:headless": "npm run format:check && npm run lint && npm run typecheck && npm run test:legacy && npm run test:unit && npm run test:integration && npm run vendor:verify && npm run assets:verify && npm run snapshot:verify",
     "check:browser": "npm run test:component && npm run build && npm run build:reproducible && npm run test:e2e && npm run test:acceptance && npm run test:core && npm run test:content:fixtures",
     "check": "npm run check:headless && npm run check:browser",
-    "content:setup:verify": "node scripts/verify-content-setup.ts",
-    "content:catalog": "node scripts/content-catalog.ts",
-    "content:pack": "node scripts/content-pack.ts",
-    "content:verify": "node scripts/content-verify.ts",
-    "content:publish": "node scripts/content-publish.ts"
+    "content:export": "node scripts/export-content-packages.ts",
+    "content:verify": "node scripts/verify-content-package.ts"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "3.1128.0",
-    "@aws-sdk/lib-storage": "3.1128.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
@@ -82,11 +76,11 @@
     "vite": "^8.1.4",
     "vite-plugin-pwa": "1.3.0",
     "vitest": "^4.1.10",
-    "workbox-precaching": "7.4.1",
-    "wrangler": "4.130.0"
+    "workbox-precaching": "7.4.1"
   },
   "dependencies": {
-    "@zip.js/zip.js": "2.13.1",
+    "@noble/hashes": "2.4.0",
+    "@sqlite.org/sqlite-wasm": "3.53.4-build1",
     "idb": "^8.0.3",
     "svelte": "^5.56.4"
   }

@@ -1,6 +1,6 @@
 # ADR-087: Explicit Chapter 1 source corrections
 
-> Status: accepted; planned
+> Status: accepted; implemented in current package authoring; retained by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md)
 > Decided: 2026-09-12
 > Owners: content authoring / asset pipeline
 > Relates: ADR-086 (chapter-owned gameplay), ADR-081 (source/profile ownership)

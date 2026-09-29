@@ -17,51 +17,8 @@ export interface StoryPlaybackSettings {
   readonly autoFlip: boolean;
 }
 
-export const STORY_PLAYBACK_SETTINGS_KEY = "ygo.story.playback.v1";
-
 export const DEFAULT_STORY_PLAYBACK_SETTINGS: StoryPlaybackSettings =
   Object.freeze({ autoSpeedSeconds: 3, skipUnread: false, autoFlip: false });
-
-export function readStoryPlaybackSettings(
-  storage: Pick<Storage, "getItem"> | null = defaultStorage(),
-): StoryPlaybackSettings {
-  if (storage === null) return DEFAULT_STORY_PLAYBACK_SETTINGS;
-  try {
-    const serialized = storage.getItem(STORY_PLAYBACK_SETTINGS_KEY);
-    if (serialized === null) return DEFAULT_STORY_PLAYBACK_SETTINGS;
-    const parsed: unknown = JSON.parse(serialized);
-    if (typeof parsed !== "object" || parsed === null)
-      return DEFAULT_STORY_PLAYBACK_SETTINGS;
-    const record = parsed as Record<string, unknown>;
-    return Object.freeze({
-      autoSpeedSeconds: clampAutoSpeed(record.autoSpeedSeconds),
-      skipUnread:
-        typeof record.skipUnread === "boolean"
-          ? record.skipUnread
-          : DEFAULT_STORY_PLAYBACK_SETTINGS.skipUnread,
-      /* A payload written before the reveal screen existed carries no flag at
-         all, which reads as the default rather than as a corrupt file. */
-      autoFlip:
-        typeof record.autoFlip === "boolean"
-          ? record.autoFlip
-          : DEFAULT_STORY_PLAYBACK_SETTINGS.autoFlip,
-    });
-  } catch {
-    return DEFAULT_STORY_PLAYBACK_SETTINGS;
-  }
-}
-
-export function writeStoryPlaybackSettings(
-  settings: StoryPlaybackSettings,
-  storage: Pick<Storage, "setItem"> | null = defaultStorage(),
-): void {
-  if (storage === null) return;
-  try {
-    storage.setItem(STORY_PLAYBACK_SETTINGS_KEY, JSON.stringify(settings));
-  } catch {
-    // Best-effort: a rejected write costs the preference, never the session.
-  }
-}
 
 /** Keeps the slider's range authoritative over whatever is on disk: a value
     from a tampered or older payload resolves to a speed the UI can show. */
@@ -72,12 +29,4 @@ export function clampAutoSpeed(value: unknown): number {
     Math.max(Math.round(value), AUTO_SPEED_MIN_SECONDS),
     AUTO_SPEED_MAX_SECONDS,
   );
-}
-
-function defaultStorage(): Storage | null {
-  try {
-    return globalThis.localStorage ?? null;
-  } catch {
-    return null;
-  }
 }

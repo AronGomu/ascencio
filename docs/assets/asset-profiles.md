@@ -2,14 +2,16 @@
 
 ## Ownership
 
-`assets/{battle,deck-editor,story,shared}` own asset bytes. `scripts/lib/asset-roots.ts:ASSET_SOURCES` is the sole build-tool source/browser/legacy mapping. Acquisition, validators, Node Worker inputs, Vite, migration, promotion consume it. Application code boundaries remain unchanged; the Node-only Worker factory imports the pure path map, not delivery I/O.
+Package sources live under `assets/content/<package-id>/`; app-only bytes live under `assets/app/`. `scripts/lib/asset-roots.ts:PACKAGE_ASSET_SOURCES` routes acquisition, validators, and runtime snapshots to package inputs. `ASSET_SOURCES` is retained only as legacy local copy/profile mapping for `assets:migrate`, `assets:promote`, and `assets:profiles:sync`; it has no build, serving, hosted-delivery, or browser-activation role. Frozen vendor bytes remain at `vendor/ocgcore-wasm/0.1.2/`; acquired engine output is tooling-only under `generated/acquisition/engine/current/`.
 
-| Profile | Initial ownership |
-| --- | --- |
-| `core` | Core CSS-imported font files under `src/assets/fonts/`; excluded from asset-delivery inventory |
-| `runtime` | Runtime manifest, data manifest, catalog/image-metadata/script/string trees, card back |
+Sections describing `core`/`runtime`/`chapter-01` delivery profiles document retained local source tooling, not player package composition. Current package producer/lifecycle lives in [manual SQLite setup](manual-sqlite-setup.md) and [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md).
+
+| Profile      | Initial ownership                                                                                                                |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `core`       | Core CSS-imported font files under `src/assets/fonts/`; excluded from asset-delivery inventory                                   |
+| `runtime`    | Runtime manifest, data manifest, catalog/image-metadata/script/string trees, card back                                           |
 | `chapter-01` | Extant matching card/crop IDs from tracked chapter-one authoring, existing shop-set art, Chapter 1 map SVG; depends on `runtime` |
-| `dev-only` | Everything else, including originals, acquired non-authoritative engine, set-image manifest, data checksum sidecar |
+| `dev-only`   | Everything else, including originals, acquired non-authoritative engine, set-image manifest, data checksum sidecar               |
 
 `asset-profiles/nightly.json` is a `PlayerSelection`, not a profile. Only core/runtime/chapter-01 initially selected. Additional profiles require explicit authoring/selection. Shared media has one owner; later chapters depend on that owner instead of claiming bytes twice. Declared dependencies are selected transitively; all declarations are checked for cycles/source/logical collisions, including unselected profiles.
 
@@ -51,13 +53,21 @@ npm run assets:migrate -- --apply generated/asset-delivery/migration-plan.json
 
 ## Browser and acquisition boundaries
 
-Vite bundles core fonts through CSS imports, serves the Chapter 1 map through its story chunk, declared runtime snapshot files, existing constrained runtime image/set URLs, frozen vendor engine URLs. Four roots are not mounted as recursive public directories; direct source paths and legacy paths are rejected, including Vite `@fs` spellings. Core font CSS URLs retain non-root deployment bases. Vite may report unresolved `/fonts/` URLs during its earlier CSS pass; the source plugin rewrites these before final CSS emission, verified by Chromium font loading and exact URL/hash checks.
+Vite sets `publicDir:false`, emits only explicit app assets and exact SQLite executable, and denies direct/aliased/encoded/`@fs` access to `assets/content/**` plus `generated/content-packages/**`. Package roots are never recursive public directories. OCG WASM, package DBs, card/chapter media, ZIPs, and raw source bytes must not enter `dist/` or shell precache.
 
-Explicit legacy acquisition commands remain available, targeting canonical roots under the common delivery lock. They are never invoked by scan, migration, promotion, or private build. Download reports/status/cache remain operational `generated/` inputs for legacy acquisition diagnostics, not managed delivery assets. Strict upstream coverage/decoded-media checks remain separate; a hosted dev bundle is not proof that those legacy acquisition reports exist or that every selected asset is available.
+Explicit acquisition commands remain available, targeting package-owned roots under common local lock. They are never invoked by scan, migration, promotion, restructure, package verification, or app build. Download reports/status/cache remain operational `generated/` diagnostics, not browser delivery assets. Upstream completeness and decoded-media checks remain separate from package fixture/code readiness.
 
 ## Producer seam
 
 - T1. `scripts/lib/asset-delivery/scan-assets.ts:scanAssets(root, selection, retainedMetadata, playerMetadata): Promise<FrozenInventory>` — read-only, no lock acquisition. Producer holds the common lock across scan/freeze. Missing explicit bytes are omitted; structural conflicts fail.
 - T2. `scanAssetProfiles(...)` returns `{ inventory, diagnostics }` for omission reporting; optional profile declarations are used by promotion to validate proposed ownership. `loadSelection(root)` reads tracked nightly selection. `EMPTY_RETAINED_METADATA` supplies explicit empty development history.
 - T3. Null prepared metadata produces null runtime snapshot ID and empty vendor list, allowing dev-only scans without playable runtime. Prepared metadata enables exact frozen WASM/manifest inventory, checked against the tracked vendor manifest. The producer must pass prepared metadata for player targets and preserve diagnostics separately.
-- T4. `ASSET_SOURCES` supplies canonical source/browser mappings. `acquireAssetDeliveryLock(root)` remains the sole public local writer lock, rejecting pending migration ownership. Only migration apply supplies its optional recovery-plan SHA to reconcile an exact matching intent under that same lock. Producers keep the one-argument call. No bundle/archive/publish/download/prune implementation is supplied here.
+- T4. `ASSET_SOURCES` supplies legacy local copy/profile mappings only. `acquireAssetDeliveryLock(root)` remains sole local writer lock, rejecting pending migration ownership. Only migration apply supplies optional recovery-plan SHA for exact matching intent. No browser serving, activation, archive, publish, download, or prune authority comes from this map.
+
+## Manual SQLite producer boundary
+
+- Q1. `content:export -- --spec <recipe>` validates the explicitly selected dependency closure and card, script, set, deck, opponent, limit, default, and story references before writing releases. Duplicate input identities reject before output. Normalized generated required-card-script declarations are intersected with catalog definitions; all script rows and globals remain available. `ExportReceipt.inventoryOnlyScripts` reports omitted required-card declarations by exact name/reason `missing-catalog-definition`; absent declared scripts still reject. Flat authored required-script config remains strict. Releases use `generated/content-packages/<package-id>/<version>.sqlite`; existing differing bytes are never replaced.
+- Q2. `content:verify -- --file <file>` verifies only that file's exact schema, rows, SQLite integrity/local foreign keys, script-source SHA-256, asset BLOB SHA-256, and full-file identity. It does not select sibling releases or certify an installed stack. Cross-package validation currently belongs to full-recipe export; selected/active-stack import and verification belong to the SQLite Worker lifecycle implementation. A directory of immutable releases is not an active stack.
+- Q3. `assets:restructure` is separate from the hosted migration above. Pending schema2 binds the exact plan digest/mapping to an exclusively created temp inode/device/uid. Retry verifies source hashes, temp-prefix bytes, sibling paths, regular-file ownership, and absence of symlinks before appending to a partial copy. A linked destination must share that owned temp inode; identical bytes alone never establish ownership. Completion records the reverse mapping before removing the verified temp/pending marker. Fully matching legacy completed receipts remain byte-identical; legacy pending records without inode evidence fail closed, preserved for inspection.
+- Q4. Recovery assumes one cooperative local writer and a trusted filesystem root. Same-user malicious mutation can forge local metadata; receipts are not cryptographic authentication. Synced file writes and unit interruption probes do not attest power-loss durability. A crash before pending publication can leave an unreceipted UUID temp; it is never adopted or deleted automatically. Originals are always retained. Do not remove a rejected pending file to bypass ownership checks.
+- Q5. Hosted `content:publish`, bundle/ZIP, R2, player-download, and selector consumers are retired. Package acquisition uses `PACKAGE_ASSET_SOURCES`; `ASSET_SOURCES` survives only for pure local scanner/copy/profile compatibility. No original-root cleanup is authorized by these commands.

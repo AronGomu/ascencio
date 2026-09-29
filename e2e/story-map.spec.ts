@@ -4,7 +4,6 @@ import {
   createInitialStoryState,
   type StoryState,
 } from "../src/story/model/story-state.ts";
-import type { StorySaveEnvelope } from "../src/story/saves/story-save-contracts.ts";
 
 test.use({ installedMedia: true });
 
@@ -65,11 +64,8 @@ function mapState(): StoryState {
 }
 
 async function putAutosave(page: Page, state: StoryState): Promise<void> {
-  const envelope: StorySaveEnvelope = {
-    schemaVersion: 4,
+  const envelope: Parameters<typeof putSelectedStorySave>[1] = {
     slot: "autosave",
-    revision: 1,
-    savedAt: Date.now(),
     state,
   };
   await putSelectedStorySave(page, envelope);

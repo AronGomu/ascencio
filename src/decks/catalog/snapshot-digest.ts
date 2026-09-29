@@ -3,8 +3,8 @@
  *
  * The Worker verified snapshot bodies long before the editor read any, so this
  * is that implementation rather than a second one: `src/decks` is the only
- * space ADR-022 lets both the duel and the editor import, so it moved here and
- * `src/battle/worker/assets/browser-runtime-assets.ts` now reads it from here.
+ * space ADR-022 lets both the duel and the editor import. The remaining
+ * hosted catalog reader uses this until its separate retirement.
  */
 
 /** Throws naming `label` unless `bytes` digests to `expected`. */

@@ -48,13 +48,6 @@ export function installedShopSetData(sets: readonly StorySet[]): ShopSetData {
   });
 }
 
-/* Built from the deployed base path rather than the site root: the PWA and
-   the Playwright preview both serve the bundle under a base, where a
-   leading-slash literal fetches a document that is not there. `BASE_URL`
-   always ends with a slash. */
-export const SHOP_SET_DATA_URL = `${import.meta.env.BASE_URL}story/shop-sets.v1.json`;
-export const SHOP_SET_DATA_CACHE = "story-shop-data";
-
 const SHOP_RARITIES = new Set<string>([
   "common",
   "rare",
@@ -134,89 +127,40 @@ export function isSetReleased(
   return data?.sets.find((s) => s.id === setId)?.released === true;
 }
 
+const rarityIndexByData = new WeakMap<
+  ShopSetData,
+  ReadonlyMap<number, ShopRarity>
+>();
+
+function rarityIndex(data: ShopSetData): ReadonlyMap<number, ShopRarity> {
+  const cached = rarityIndexByData.get(data);
+  if (cached !== undefined) return cached;
+
+  const indexed = new Map<number, ShopRarity>();
+  for (const set of data.sets) {
+    for (const card of set.cards) {
+      const best = indexed.get(card.code);
+      if (
+        best === undefined ||
+        RARITY_ORDER.indexOf(card.rarity) > RARITY_ORDER.indexOf(best)
+      ) {
+        indexed.set(card.code, card.rarity);
+      }
+    }
+  }
+  rarityIndexByData.set(data, indexed);
+  return indexed;
+}
+
 export function resolveCardRarity(
   code: number,
   data: ShopSetData | null,
   view: DeckBuilderCardView | undefined,
 ): ShopRarity {
   if (data !== null) {
-    let best: ShopRarity | null = null;
-    for (const set of data.sets) {
-      for (const card of set.cards) {
-        if (card.code === code) {
-          if (
-            best === null ||
-            RARITY_ORDER.indexOf(card.rarity) > RARITY_ORDER.indexOf(best)
-          ) {
-            best = card.rarity;
-          }
-        }
-      }
-    }
-    if (best !== null) return best;
+    const rarity = rarityIndex(data).get(code);
+    if (rarity !== undefined) return rarity;
   }
   if (view !== undefined) return inferRarity(view);
   return "common";
-}
-
-/* Network-first with cache fallback: every online visit revalidates the
-   shipped JSON so content edits reach returning profiles, while a failed,
-   stalled or invalid fetch serves the last good cached payload — the ADR-035
-   offline guarantee. The cached entry is read before the fetch because it is
-   what decides the deadline: with a good copy in hand, a 3 s abort stops a
-   stalled revalidation from holding the shop shut, and the fallback covers
-   it. On a cold cache that half-megabyte download is the only copy there is,
-   so it runs unbounded — aborting it would turn a slow-but-working link into
-   a permanent "Shop data unavailable" that no retry can clear. `cache:
-   "no-cache"` keeps freshness independent of host HTTP-cache headers on both
-   paths. The cache entry is only replaced by a payload that parsed, so a bad
-   deploy can never clobber a good cache. */
-export async function fetchShopSetData(
-  fetchFn: typeof fetch = fetch,
-  cachesRef: CacheStorage = caches,
-): Promise<ShopSetData> {
-  const cache = await cachesRef.open(SHOP_SET_DATA_CACHE);
-  const cached = await cache.match(SHOP_SET_DATA_URL);
-
-  let fresh: unknown;
-  try {
-    const response = await fetchFn(SHOP_SET_DATA_URL, {
-      cache: "no-cache",
-      ...(cached !== undefined ? { signal: AbortSignal.timeout(3000) } : {}),
-    });
-    if (response.ok) fresh = await response.json();
-  } catch {
-    fresh = undefined;
-  }
-
-  if (fresh !== undefined) {
-    const parsed = parseShopSetData(fresh);
-    if (parsed !== null) {
-      /* A refused write — quota, private mode — costs the next offline visit
-         its update, not this visit its data: the parsed payload is already in
-         hand, so the storage error stays out of the UI. */
-      try {
-        await cache.put(
-          SHOP_SET_DATA_URL,
-          new Response(JSON.stringify(fresh), {
-            headers: { "Content-Type": "application/json" },
-          }),
-        );
-      } catch {
-        /* previous cache entry stands */
-      }
-      return parsed;
-    }
-  }
-
-  if (cached === undefined) throw new Error("Shop data unavailable");
-  let raw: unknown;
-  try {
-    raw = await cached.json();
-  } catch {
-    throw new Error("Shop data unavailable");
-  }
-  const parsed = parseShopSetData(raw);
-  if (parsed === null) throw new Error("Shop data unavailable");
-  return parsed;
 }

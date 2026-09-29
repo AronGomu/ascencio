@@ -331,6 +331,35 @@ describe("BasicOpponentPolicy", () => {
     });
   });
 
+  it("finishes a valid select-unselect selection instead of toggling it", () => {
+    const finish = choiceId("select-unselect-finish");
+    expect(
+      policy.choose(
+        {
+          ...prompt("selectUnselectCard", [
+            {
+              id: choiceId("select-unselect-another"),
+              label: "Another card",
+              action: "select",
+            },
+            {
+              id: choiceId("select-unselect-selected"),
+              label: "Selected card",
+              action: "select",
+              selected: true,
+            },
+            { id: finish, label: "Finish", action: "finish" },
+          ]),
+          maximum: 2,
+        },
+        opponentState,
+      ),
+    ).toEqual({
+      choiceIds: [finish],
+      reason: "select_first_legal",
+    });
+  });
+
   it("keeps the normal choice for the first two identical prompts", () => {
     const policy = new BasicOpponentPolicy(dependencies);
     const repeated = loopPrompt();

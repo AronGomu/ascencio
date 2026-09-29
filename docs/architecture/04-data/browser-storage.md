@@ -1,26 +1,30 @@
 # Browser Storage
 
-> Status: accepted
+> Status: implemented
+> Decision: [ADR-099](../../ADR/099_ADR_completed_manual_sqlite_cutover.md)
 
-## IndexedDB (`idb`)
+## SQLite/OPFS authority
 
-Store snapshot metadata, active/previous snapshot pointers, preferences, and bounded debug-run metadata. Stage immutable composite activation IDs and switch pointers only after mandatory runtime/image receipts match. Pointer updates use both expected ID and generation, with a database migration preserving legacy runtime-ID records.
+Dedicated `src/storage/sqlite-worker.ts` owns OPFS SQLite runtime for one active tab under Web Lock `ascencio-sqlite-owner-v1`.
 
-## Cache Storage
+- S1. Immutable package DBs open read-only. `content-registry.sqlite` records active package mappings/generation/import receipts.
+- S2. `user-data.sqlite` stores mutable decks, deck metadata/autosaves, Story records, preferences, and Story read log.
+- S3. Package registry and user DB are isolated. Package lifecycle never scans, migrates, repairs, or rewrites saves.
+- S4. Legacy browser stores remain untouched and unread. No startup migration or deletion exists.
+- S5. Backup export/inspect/confirmed restore affects user DB only; installed packages remain unchanged.
 
-Store card images and verified runtime artifacts in snapshot/revision-aware namespaces. Bytes enter a cache only after manifest, length, digest, image-dimension, and decode checks as applicable. Cache state is an optimization and cannot determine whether a snapshot is active.
+## IndexedDB retained operational scope
 
-## Local UI preferences
+`idb` remains for explicit service-worker app-update approval and bounded Battle diagnostics. Those records are operational state, not imported-content authority or hidden gameplay user-data. They are excluded from `user-data.sqlite` backups.
 
-Tiny browser UI prefs use `localStorage`, not IndexedDB. Current accepted successor is [`ADR-020`](../../ADR/020_ADR_browser_persisted_ui_state_v2.md): key `ygo.ui.v2`, deck pair, 2 field-window positions, zone-outline/count flags. Reads/writes are best-effort + never duel authority. Old v1 state resets to complete v2 defaults.
+## Cache Storage retained app scope
+
+Service Worker Cache Storage owns versioned app-shell/precache bytes, including exact emitted SQLite executable WASM. It does not own game-content packages, card/chapter media, OCG WASM, or package activation.
 
 ## Reliability rules
 
-- Startup validates schema and revision compatibility.
-- Interrupted staging leaves the previous snapshot active.
-- Keep one previous known-good snapshot for rollback; a failed current load may reopen the active/previous runtime entirely from its verified cache.
-- Coordinate activation/cleanup with a cross-tab Web Lock and compare both pointer ID and generation so stale tabs cannot reactivate old revisions.
-- Handle upgrades, abandoned staging, quota errors, interrupted writes, and cleanup explicitly.
-- After successful activation, retain cache namespaces only for the active and fallback snapshots.
-- Do not perform storage access from synchronous core callbacks.
-- Diagnostics expose active/fallback snapshot IDs without leaking unnecessary hidden duel information.
+- R1. Worker serializes mutations; active domain sessions block package mutation/restore where required.
+- R2. Package activation changes only after complete selected batch validates and registry generation compare-and-swap commits.
+- R3. Precommit failure/cancel/quota preserves prior stack; cleanup never deletes active mapped files.
+- R4. User-data writes use revisions; backup restore requires validated preview, explicit confirmation, and unchanged current revision.
+- R5. Storage/browser durability, quota, crash recovery, and second-tab ownership remain owner-run Chromium acceptance gates.

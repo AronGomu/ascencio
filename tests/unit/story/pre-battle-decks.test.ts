@@ -22,7 +22,7 @@ import type {
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import {
   preBattleBlock,
-  preBattleDeckOptions,
+  preBattleDeckOptions as chapterDeckOptions,
   preBattleSelection,
 } from "../../../src/story/decks/pre-battle-decks.ts";
 import { reduceStory } from "../../../src/story/model/story-reducer.ts";
@@ -42,6 +42,11 @@ import {
    instead. A gate that refuses everything is worse than one that offers too
    much: the decks live in the save, so a save with no way past this screen is
    a story that cannot continue. */
+
+const preBattleDeckOptions = (
+  state: StoryState,
+  catalog: ReadonlyMap<number, DeckBuilderCardView>,
+) => chapterDeckOptions(state, catalog, PROTOTYPE_RULESET);
 
 const FIXTURE_CATALOG = catalogByCode(PROTOTYPE_CATALOG);
 

@@ -1,4 +1,4 @@
-/** Sole build-tool source map. Vendor and tracked gameplay policy never move. */
+/** Legacy source relocation map: local copy/promotion only, never build or serving. */
 export const ASSET_SOURCES = {
   data: {
     legacy: "generated/assets/current",
@@ -48,4 +48,21 @@ export const ASSET_SOURCES = {
     logical: "story/media",
     kind: "tree",
   },
+} as const;
+
+/** Package-owned acquisition/snapshot roots. Frozen vendor stays separate. */
+export const PACKAGE_ASSET_SOURCES = {
+  data: { source: "assets/content/card-library/data" },
+  dataManifest: { source: "generated/content-inputs/data/manifest.json" },
+  dataManifestSha256: {
+    source: "generated/content-inputs/data/manifest.sha256",
+  },
+  strings: { source: "assets/content/duel-core/strings" },
+  runtime: { source: "generated/content-inputs/runtime" },
+  fullImages: { source: "assets/content/card-library/images/full" },
+  croppedImages: { source: "assets/content/card-library/images/cropped" },
+  cardBack: { source: "assets/content/card-library/images/card-back.jpg" },
+  setImages: { source: "assets/content/card-library/images/sets" },
+  acquiredEngine: { source: "generated/acquisition/engine/current" },
+  story: { source: "assets/content/chapter-01/media" },
 } as const;

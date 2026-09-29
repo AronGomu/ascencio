@@ -1,12 +1,16 @@
-import { installedEditorCatalog } from "../../../src/shell/adapters/installed-editor-catalog.ts";
+import {
+  openTestDeckRepository,
+  disposeTestDeckRepositories,
+  type TestDeckRepository,
+} from "../../fixtures/sqlite-deck-repository.ts";
+import { installedEditorCatalog } from "../../fixtures/installed-gameplay.ts";
 import { installedDuelGameplayFixture } from "../../fixtures/installed-duel-gameplay.ts";
 // @vitest-environment jsdom
 
 import "fake-indexeddb/auto";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import DeckLibrary from "../../../src/deck-editor/components/DeckLibrary.svelte";
 import { PROTOTYPE_RULESET } from "../../../src/decks/validation/index.ts";
@@ -15,18 +19,22 @@ import {
   createBlankDeck,
   emptyDeckHistory,
 } from "../../../src/decks/editing/index.ts";
-import {
-  DECK_DATABASE_NAME,
-  IndexedDbDeckRepository,
-} from "../../../src/decks/repository/index.ts";
+
 import { prototypeCatalogMap } from "../../fixtures/deck-editor.ts";
 import { installPrototypeActiveCatalog } from "../../fixtures/active-catalog.ts";
 
 installPrototypeActiveCatalog();
 
+// Real SQLite test backend; the fixture owns this injected connection.
+let repository: TestDeckRepository;
+beforeEach(async () => {
+  repository = await openTestDeckRepository();
+});
+
 afterEach(async () => {
   cleanup();
-  await deleteDB(DECK_DATABASE_NAME);
+  await repository.close();
+  await disposeTestDeckRepositories();
 });
 
 function deck(id: string, name: string, updatedAt: string): DeckRecord {
@@ -110,14 +118,15 @@ describe("set default from the deck page", () => {
      `controller.setDefaultDeck`, so the proof is the stored default. */
   it("the button stores the open deck as the default", async () => {
     const chosen = deck("d-chosen", "Chosen Deck", "2026-01-01T00:00:00.000Z");
-    const repository = await IndexedDbDeckRepository.open();
     await repository.create(chosen, emptyDeckHistory());
-    repository.close();
 
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: chosen.id as DeckId,
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: chosen.id as DeckId,
+        onnavigate: vi.fn(),
+      },
     });
     await waitFor(() =>
       expect(
@@ -160,9 +169,12 @@ describe("set default from the deck page", () => {
     /* Stored, not held: fresh mount reads filled disabled star back. */
     cleanup();
     render(DeckEditorApp, {
-      catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
-      deckId: null,
-      onnavigate: vi.fn(),
+      props: {
+        context: { kind: "free-play", createRepository: () => repository },
+        catalogInput: installedEditorCatalog(installedDuelGameplayFixture()),
+        deckId: null,
+        onnavigate: vi.fn(),
+      },
     });
     await waitFor(() =>
       expect(

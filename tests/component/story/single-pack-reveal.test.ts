@@ -4,7 +4,6 @@ import {
 } from "../../fixtures/story-session.ts";
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
-import { deleteDB } from "idb";
 import { cleanup, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -13,7 +12,6 @@ import BoosterOpeningScreen from "../../../src/story/shop/BoosterOpeningScreen.s
 import ShopSellScreen from "../../../src/story/shop/ShopSellScreen.svelte";
 import { PACK_SIZE } from "../../../src/story/shop/data/shop-pricing.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
-import { STORY_SAVES_DATABASE_NAME } from "../../../src/story/saves/story-save-contracts.ts";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 
 /* One pack. `feedback-vn.md`, Card Reveal item 4: "Remove the button 'See
@@ -54,10 +52,9 @@ async function flipWholePack(container: HTMLElement): Promise<void> {
 }
 
 afterEach(async () => {
-  resetStorySessionFixture();
   cleanup();
+  await resetStorySessionFixture();
   localStorage.clear();
-  await deleteDB(STORY_SAVES_DATABASE_NAME);
 });
 
 describe("opening a single pack", () => {

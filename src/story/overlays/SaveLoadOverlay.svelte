@@ -1,6 +1,7 @@
 <script lang="ts">
   import OverlayShell from "./OverlayShell.svelte";
-  export let mode: "idle" | "saving" | "success" | "overwrite" | "failure" =
+  export let mode:
+    "idle" | "loading" | "saving" | "success" | "overwrite" | "failure" =
     "idle";
   export let onsave: () => void = () => undefined;
   export let onretry: () => void = () => undefined;
@@ -19,7 +20,14 @@
     Prototype-local state only. Auto and Skip are reader settings and are not
     part of a save.
   </p>
-  {#if mode === "saving"}<p
+  {#if mode === "loading"}<p
+      role="status"
+      aria-busy="true"
+      data-cy="story-save-load-loading"
+    >
+      Reading manual slot…
+    </p>
+  {:else if mode === "saving"}<p
       role="status"
       aria-busy="true"
       data-cy="story-save-load-saving"

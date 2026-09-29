@@ -1,8 +1,23 @@
 import type {
-  OwnedContentReader,
-  ContentSetRef,
-  InstalledGameplay,
-} from "../../src/content/index.ts";
+  ChapterCard,
+  ChapterSet,
+  ChapterDeck,
+  ChapterOpponent,
+} from "./gameplay-rows.ts";
+import type { CardImageSource } from "../../src/cards/images/index.ts";
+import { createCards } from "../../src/cards/index.ts";
+import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
+import { cloneCardLists } from "../../src/decks/contracts/index.ts";
+
+/** Authored rows for small domain cases; no reader, selector or storage identity. */
+export interface FixtureGameplay {
+  readonly chapterIds: readonly string[];
+  readonly cards: readonly ChapterCard[];
+  readonly sets: readonly ChapterSet[];
+  readonly decks: readonly ChapterDeck[];
+  readonly opponents: readonly ChapterOpponent[];
+  readonly defaults: BattlePresentationInput["defaults"];
+}
 import { cardCode } from "../../src/cards/index.ts";
 import type { DeckBuilderCardView } from "../../src/decks/catalog/index.ts";
 import { installedDeckCatalog } from "../../src/decks/index.ts";
@@ -14,7 +29,7 @@ import type {
 
 const hash = (character: string) => character.repeat(64);
 
-export const TEST_CONTENT_SET_REF: ContentSetRef = Object.freeze({
+export const TEST_CONTENT_SET_REF = Object.freeze({
   catalogSha256: hash("a"),
   snapshot: Object.freeze({
     activationId: hash("b"),
@@ -100,30 +115,10 @@ export const TEST_RUNTIME_SOURCE: BattleRuntimeSource = Object.freeze({
   },
 });
 
-export function contentReaderFixture(): OwnedContentReader {
-  return {
-    close: () => undefined,
-    acquireSession: async () => ({
-      kind: "ok" as const,
-      value: { content: TEST_CONTENT_SET_REF, release: () => undefined },
-    }),
-    readFile: async () => ({
-      kind: "failed" as const,
-      code: "CONTENT_MISSING" as const,
-      packId: null,
-      path: null,
-    }),
-  } as unknown as OwnedContentReader;
-}
-
-export async function openContentReaderFixture() {
-  return { kind: "ok" as const, value: contentReaderFixture() };
-}
-
 export function installedGameplayFromCatalog(
   catalog: readonly DeckBuilderCardView[],
-  overrides: Partial<InstalledGameplay> = {},
-): InstalledGameplay {
+  overrides: Partial<FixtureGameplay> = {},
+): FixtureGameplay {
   const cards = catalog.map((card) =>
     Object.freeze({
       code: card.code,
@@ -165,11 +160,11 @@ export function installedGameplayFromCatalog(
 }
 
 export function battlePresentationFixture(
-  gameplay: InstalledGameplay = installedGameplayFixture(),
+  gameplay: FixtureGameplay = installedGameplayFixture(),
 ): BattlePresentationInput {
   return Object.freeze({
-    snapshotId: gameplay.content.snapshot.runtimeSnapshotId,
-    catalogRevision: gameplay.content.catalogSha256,
+    snapshotId: TEST_RUNTIME_INPUT.snapshotId,
+    catalogRevision: "fixture-1",
     cards: installedDeckCatalog(gameplay).cards,
     decks: gameplay.decks,
     opponents: gameplay.opponents,
@@ -178,8 +173,8 @@ export function battlePresentationFixture(
 }
 
 export function installedGameplayFixture(
-  overrides: Partial<InstalledGameplay> = {},
-): InstalledGameplay {
+  overrides: Partial<FixtureGameplay> = {},
+): FixtureGameplay {
   const cards = Array.from({ length: 14 }, (_, index) => {
     const code = index + 1;
     return Object.freeze({
@@ -219,7 +214,6 @@ export function installedGameplayFixture(
     Array.from({ length: 40 }, (_, index) => (index % 14) + 1),
   );
   return Object.freeze({
-    content: TEST_CONTENT_SET_REF,
     chapterIds: Object.freeze(["chapter-01" as const]),
     cards: Object.freeze(cards),
     sets: Object.freeze([
@@ -266,4 +260,48 @@ export function installedGameplayFixture(
     }),
     ...overrides,
   });
+}
+
+export function fixtureCollectionInputs(gameplay: FixtureGameplay) {
+  return {
+    cards: createCards(
+      gameplay.cards.map(({ code, record, text }) => ({
+        ...record,
+        ...text,
+        code: cardCode(code),
+        scope: record.ot,
+        images: {
+          full: { code: cardCode(code), variant: "full" as const },
+          cropped: { code: cardCode(code), variant: "cropped" as const },
+        },
+      })),
+    ),
+    sets: gameplay.sets.map(({ id, name, releaseYear, cards }) => ({
+      id,
+      name,
+      releaseYear,
+      cards: cards.map((card) => ({ ...card, code: cardCode(card.code) })),
+    })),
+  };
+}
+
+export function installedEditorCatalog(
+  gameplay: FixtureGameplay,
+  images: CardImageSource = {
+    acquire: async (_code, _variant, signal) => {
+      if (signal.aborted)
+        throw new DOMException("The operation was aborted.", "AbortError");
+      return null;
+    },
+  },
+) {
+  const starter = gameplay.decks.find(
+    ({ id }) => id === gameplay.defaults.starterDeckId,
+  )!;
+  return {
+    ruleset: PROTOTYPE_RULESET,
+    cards: fixtureCollectionInputs(gameplay).cards,
+    images,
+    starter: { name: starter.name, cards: cloneCardLists(starter) },
+  };
 }

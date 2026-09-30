@@ -1,0 +1,330 @@
+{
+  "head": "456551dc1cf8fc4e9fdb754095f3a8279f5b2c37",
+  "dirty": [
+    {
+      "status": " M",
+      "path": ".github/workflows/ci.yml",
+      "sha256": "03d01bd614c9801e9f95be7ed6d4738d486cf54f1a715dc5390849ba30e31a2b"
+    },
+    {
+      "status": " M",
+      "path": ".pi/artifacts/ygo-story-duel-simulator-developer-architecture-guide.html",
+      "sha256": "c9544d06a9098045be13c965b58ebc57efd2922834def140b226aeca58f14692"
+    },
+    {
+      "status": " M",
+      "path": "AGENTS.md",
+      "sha256": "be9d51751bd3d974bd4d202c31d4770b76e6bf46927be9d358d12da95ef59530"
+    },
+    {
+      "status": " M",
+      "path": "docs/architecture/01-product/technology-selection.md",
+      "sha256": "9dd0c6eef02183910f2dad54fde8173280f8a250925b2dbd1bca4fd47423fe6e"
+    },
+    {
+      "status": " M",
+      "path": "docs/assets/asset-delivery-setup.md",
+      "sha256": "6ed85b0507327fb9b5de226732f9a32829829c4b49e9fb6692261493b3e1785a"
+    },
+    {
+      "status": " M",
+      "path": "docs/assets/asset-import-pipeline.md",
+      "sha256": "683539ae0cf6490c10c6a4d37a34f6b7576d8f614289c66e8ae3e3d0737fef24"
+    },
+    {
+      "status": " M",
+      "path": "docs/assets/core-installation.md",
+      "sha256": "a6f86b008660cee27a16e8a7cd6ddc64930c5ebfa93a0b8fa521d120cdc41aea"
+    },
+    {
+      "status": " M",
+      "path": "docs/developer-guide/data-quality.html",
+      "sha256": "1144941f6c2df25895297e18a253a07732fe78f5a6146e68e587eae134b79df9"
+    },
+    {
+      "status": " M",
+      "path": "docs/developer-guide/guide.html",
+      "sha256": "17c59a5ca65d80b4caaf314ea60dc61a85e841fac836344ecd0398ffb5404264"
+    },
+    {
+      "status": " M",
+      "path": "docs/developer-guide/index.html",
+      "sha256": "835adffa7ec22e62f7f9e07d7a29687785765c9ec757cad34dce2f0bf523988b"
+    },
+    {
+      "status": " M",
+      "path": "docs/developer-guide/onboarding.html",
+      "sha256": "fcbbcd32e4e7de543e03b57cc957467df15b81040d17c20dde03bdde2ad65dac"
+    },
+    {
+      "status": " M",
+      "path": "download-mvp-assets.cmd",
+      "sha256": "b7f7d72e98a95a2bcf6935396da4896a1d79e436a002ca3cebc10f21769c7f8c"
+    },
+    {
+      "status": " M",
+      "path": "download-mvp-assets.sh",
+      "sha256": "01cb9e3418e067a57a9a67326656e1c18f706ab3ccc7fe83aab7315d4b26a45c"
+    },
+    {
+      "status": " M",
+      "path": "package-lock.json",
+      "sha256": "cbcfb803e544e033affa9757c7bd57335010b205678a521d79bf5bc299f0b8fa"
+    },
+    {
+      "status": " M",
+      "path": "package.json",
+      "sha256": "3ae17bdfcb8e6b6c768a4554b4e6c5220570d97319f3874714b5374e7609ccd9"
+    },
+    {
+      "status": " M",
+      "path": "scripts/download-mvp-assets.ts",
+      "sha256": "663150f80adc02c381eb73a8ab261a0d563d0490a4c3e471dcef9e5c24b523d6"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/node-duel-worker-harness.ts",
+      "sha256": "23150a25a09ec5cc34165787544851a886971d406dad0a9559b84cb2effc5c79"
+    },
+    {
+      "status": " M",
+      "path": "tests/integration/duel-session.test.ts",
+      "sha256": "68d2d4bc82043d9442a5d03e09f08f3f8af0904b142f3ef72df6a2b95ad5991c"
+    },
+    {
+      "status": " M",
+      "path": "tests/integration/node-worker-thread.test.ts",
+      "sha256": "694ac9116729577cbcad9b8f7690701aebba0d4cbd69379359971aca2f7f66e4"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-full-local-installation-plan.html",
+      "sha256": "69a2393463e87c009549a668eaf8fe06e3a57c4d26fe1e21efcac43cb99eb5b2"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-26-review.html",
+      "sha256": "bde73a98afaeb1048697d7b66271d8d85fcf11c0425bd3e76075d3a048f872ad"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-27-review.html",
+      "sha256": "16f52d54efe92db07fefcf6f3a7b5e95406c9bad68e5898cf27259ad2922cb6f"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-28-review.html",
+      "sha256": "afadc15f06cdf90317978ae66a8ae56320bde216c6db1c909a68f69c942e03d3"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-29-review.html",
+      "sha256": "6d9cbd536dbbc15cb29510e303414d7a4674fe63e142f3a6f88a130877e43a13"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-30-review.html",
+      "sha256": "b1a8040a8c33fffa470d4ddce925e744811aba1d6ad8a08abf804c08a5c9d0fc"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-31-review.html",
+      "sha256": "4ef0dd6a6e2feea521c92979d5bf38fbdb123c126a0c507930c5fee6d9afb6dc"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-32-review.html",
+      "sha256": "e97c37619c9cb3fd325b7d2a918a7ab6e7e9dc318252bd2b25b157dcd6d630cb"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-33-review.html",
+      "sha256": "bd0609282044b2371d92b148733d0036b2060d815c66aca62454a9ea67d6d6f2"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-34-review.html",
+      "sha256": "1e987880788abb1200c59d2b3efc9c56b196383ae0bec4d82693943494c23de5"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-35-review.html",
+      "sha256": "e4add182311c82092cbd92235a729e761d777ab4da31b6c14fed4f3cb5536eef"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-36-review.html",
+      "sha256": "aa485bc661cc378584c4475d30831f4127f92c305fc9c2eddaf1017cf039a582"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-37-review.html",
+      "sha256": "e8eab23e59a3c9f3e656f4f2c57dfc180c0c9a825e0287314c11a0454a94f266"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-38-review.html",
+      "sha256": "a5ec548d12d7075b77ad7b7e045d83c5f0e7e6945006a8f319b238d6658a7624"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-39-review.html",
+      "sha256": "431c72a74bb1c55e218e18e2595d95a258ed1d6c1fdd1fa4b2c32ba127e65318"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-40-review.html",
+      "sha256": "0bff4333558af798b22676397bb10e05d6037f018e25fb0924ea82ef33c0f1a0"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-41-review.html",
+      "sha256": "c246147fb57dc7b8aeaf8a47cb45ce774c7a53a230109f2524fce024a4f05ebd"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-42-review.html",
+      "sha256": "195de65b6ec0aba506389990103cbb7fed88c21a508b1662d5ee78f47dc14972"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-43-review.html",
+      "sha256": "537f797db38deef0f0974981b5c19d2299e523e11decd223adae61a9f0b05df7"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-44-review.html",
+      "sha256": "87527120c8b682da39008c7df2fcb3a92fbb09b17e1c99a8b889891464af4f25"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-45-review.html",
+      "sha256": "ef7564b8773e17b95e7441323aeca0d415203e81e25c5372f66cc230e29ae087"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-46-review.html",
+      "sha256": "02bc0ff98ae012ccc7fd9357dfa21bbb6ccec6c255b441a353e164093a6f6a10"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-47-review.html",
+      "sha256": "03dbe8f90051deb5f5510c80e41d9af8edc4c491a593206385c4f315e9f07fa5"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-48-review.html",
+      "sha256": "98edde2d9ee4f38d7874f64685adb86c6903eb795f5d39181af167e2f83f1d25"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-49-review.html",
+      "sha256": "c4a7ce074b51644c9b1e0abe3a7456532da4529319b5fc13245bd01e84ef7afb"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-50-review.html",
+      "sha256": "f21d87832572ba2bf5a9acda97b40bee020c79130d5bf635887f30cf7250b86f"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-51-review.html",
+      "sha256": "412b8dcbc17591d88496d7ca63d8f4dfeba07b79664e67062d2a91b3d8b79390"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-52-review.html",
+      "sha256": "1d1d87642c6bd7def552c0629c48a315e59bef83f954de32e608684844319664"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-53-review.html",
+      "sha256": "1942d46b549ed02e6fe3e9b6df22c1cf77eb803f722f5d543fd2338bde622a12"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-54-review.html",
+      "sha256": "5f324c0dceb4327fa2ac16faf7b96733da1bae17d9269943f5289ab8352aeea6"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-55-review.html",
+      "sha256": "4ac232ba8c3452f9ed8967355136d302f393b9bfdfe293adc356add67ca426cd"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-56-review.html",
+      "sha256": "01c5be1d98bab1f47d135d1070efd443da0cb041c81c89cde02ecaff940babf0"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-57-review.html",
+      "sha256": "1ebb7cda6abff3b5c26346c93a28b84f0ffe1b029bb18d13caa34305e098171f"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-58-review.html",
+      "sha256": "c9622e4a886373cb943907a4109e00b4dbd2873dc7293c39f2d957e0e46a0a40"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-59-review.html",
+      "sha256": "f2f0aedaccd5f13322616961ec7e032982938d4f8482a7f3936fbad3f95f54c3"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-60-review.html",
+      "sha256": "da9a070c6ff01057599428fb7ff4039afb878d926a903f7642184d0082c553e7"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-61-review.html",
+      "sha256": "64c6b9cd9f3b6f5cc56995a3009d85d3c02070c4cd6f23404416869cbd9c0f64"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-62-review.html",
+      "sha256": "0c29af075710aa1731fadecd78e1775d493cdbdcaae2b92df6047d9604f506a3"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-63-review.html",
+      "sha256": "c216f1bc60815182c77d12a8c13d1dd23b939eb87bc1720d3c99313a216ee03c"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-64-review.html",
+      "sha256": "0844b49b5e1727abf8e6048760785746d607b504b76cf37aa42f5e56d3a3f860"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-65-review.html",
+      "sha256": "b83e4f78ba0387d782748667ae1d9f2435a885e1610663d639528a5fbb610e4f"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-66-review.html",
+      "sha256": "597990f25b847a82b73bf08b73a4b312e65909dc7740bdeaa5b7684fdf1b9be8"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-67-review.html",
+      "sha256": "5781079c396bac148a6e87fa2824e0c43b891a5d588739248256f375d95ba189"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-merge-results.html",
+      "sha256": "f96f7a525cd2733e5a4dc0f85d0e66118b7890f4f47e762b00e3ccf40c38e79a"
+    },
+    {
+      "status": "??",
+      "path": ".pi/artifacts/ascencio-pr-review-decisions.html",
+      "sha256": "f2c7d73f083e4cd5a95a2d182660da61e0af935c660e1b0fd55731ff4e3d6719"
+    },
+    {
+      "status": "??",
+      "path": "artifacts/pr-review-20260921/",
+      "sha256": null
+    }
+  ]
+}

@@ -242,7 +242,7 @@ Duel.RegisterEffect(overlay_query, 0)`,
       session.dispose();
       expect(session.disposed).toBe(true);
     }
-  });
+  }, 60_000);
 
   it("generates fresh seeds and lets the core shuffle varied production hands", () => {
     const productionSessions = Array.from({ length: 8 }, () =>

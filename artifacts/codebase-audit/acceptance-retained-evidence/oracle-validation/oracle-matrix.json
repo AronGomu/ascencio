@@ -1,0 +1,744 @@
+{
+  "config": {
+    "argv": [
+      "/home/aron/.local/share/mise/installs/node/26.7.0/bin/node",
+      "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config",
+      ".tmp/oracle-validation/playwright.config.ts",
+      "--project=chromium",
+      "e2e/duel-smoke.spec.ts",
+      "e2e/oracle-slow-leak.spec.ts",
+      "e2e/oracle-missing-update.spec.ts",
+      "e2e/zz-oracle-restored.spec.ts",
+      "--grep",
+      "DF-16 Chromium|mounted card image leases",
+      "--reporter=list,json"
+    ],
+    "configFile": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/.tmp/oracle-validation/playwright.config.ts",
+    "rootDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      },
+      {
+        "outputDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox-smoke",
+        "name": "firefox-smoke",
+        "testDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      },
+      {
+        "outputDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit-smoke",
+        "name": "webkit-smoke",
+        "testDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "node node_modules/vite/bin/vite.js preview --config .tmp/oracle-validation/vite.config.ts --host 127.0.0.1 --port 4518 --strictPort --base=/ygo-story-duel/",
+      "url": "http://127.0.0.1:4518/ygo-story-duel/",
+      "reuseExistingServer": false,
+      "timeout": 180000,
+      "cwd": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance"
+    }
+  },
+  "suites": [
+    {
+      "title": "duel-smoke.spec.ts",
+      "file": "duel-smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "DF-16 Chromium pinned parity/perf/resource gate records automated evidence",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 174563,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m50\u001b[39m\nReceived:   \u001b[31m127.5\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m50\u001b[39m\nReceived:   \u001b[31m127.5\u001b[39m\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/duel-smoke.spec.ts:5117:27",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/duel-smoke.spec.ts",
+                      "column": 27,
+                      "line": 5117
+                    },
+                    "snippet": "  5115 |   });\n  5116 |\n> 5117 |   expect(updatePaint.p95).toBeLessThan(50);\n       |                           ^\n  5118 |   expect(actionLatency.p95).toBeLessThan(100);\n  5119 |   expect(normalLongTasks).toHaveLength(0);\n  5120 |   expect(objectUrlLeak).toBe(false);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/duel-smoke.spec.ts",
+                        "column": 27,
+                        "line": 5117
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m50\u001b[39m\nReceived:   \u001b[31m127.5\u001b[39m\n\n  5115 |   });\n  5116 |\n> 5117 |   expect(updatePaint.p95).toBeLessThan(50);\n       |                           ^\n  5118 |   expect(actionLatency.p95).toBeLessThan(100);\n  5119 |   expect(normalLongTasks).toHaveLength(0);\n  5120 |   expect(objectUrlLeak).toBe(false);\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/duel-smoke.spec.ts:5117:27"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T13:13:25.545Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "df-16-results",
+                      "contentType": "application/json",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/duel-smoke-DF-16-Chromium--8986b--records-automated-evidence-chromium/attachments/df-16-results-260e16298872936be2625f9976707e77d17c68c9.json"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/duel-smoke-DF-16-Chromium--8986b--records-automated-evidence-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "domain-errors",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/duel-smoke-DF-16-Chromium--8986b--records-automated-evidence-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/duel-smoke.spec.ts",
+                    "column": 27,
+                    "line": 5117
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "84590e4aa7ef842113c4-2d5f0ea4299136e9de87",
+          "file": "duel-smoke.spec.ts",
+          "line": 4965,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "installed media",
+          "file": "duel-smoke.spec.ts",
+          "line": 1242,
+          "column": 6,
+          "specs": [
+            {
+              "title": "mounted card image leases return to baseline across tray, restart, and destroy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 27029,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Verified media profile: 3311 files, 296002ms\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "\n\u001b[43m\u001b[30m WARN \u001b[39m\u001b[49m \u001b[36minlineDynamicImports\u001b[39m option is deprecated, please use \u001b[36mcodeSplitting: false\u001b[39m instead.\n\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-23T13:01:18.386Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "df-13-object-url-lifecycle",
+                          "contentType": "application/json",
+                          "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/duel-smoke-installed-media-179a3-ss-tray-restart-and-destroy-chromium/attachments/df-13-object-url-lifecycle-126a65728a5e6d91e4705cd9e090bce347896926.json"
+                        },
+                        {
+                          "name": "domain-errors",
+                          "contentType": "application/json",
+                          "body": "W10="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "84590e4aa7ef842113c4-bf4117dd56783b0bfce9",
+              "file": "duel-smoke.spec.ts",
+              "line": 1244,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "oracle-missing-update.spec.ts",
+      "file": "oracle-missing-update.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "DF-16 Chromium pinned parity/perf/resource gate records automated evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "location": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-missing-update.spec.ts",
+                    "line": 4980,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 117315,
+                  "error": {
+                    "message": "Error: page.evaluate: Error: DF-16 revision 11 did not render\n    at eval (eval at evaluate (:303:30), <anonymous>:31:16)",
+                    "stack": "Error: page.evaluate: Error: DF-16 revision 11 did not render\n    at eval (eval at evaluate (:303:30), <anonymous>:31:16)\n    at eval (eval at evaluate (:303:30), <anonymous>:31:16)\n    at measureAcceptedUpdatePaint (/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-missing-update.spec.ts:6290:15)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-missing-update.spec.ts:4982:11",
+                    "location": {
+                      "file": "eval at evaluate (:303:30), <anonymous>",
+                      "column": 16,
+                      "line": 31
+                    }
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "eval at evaluate (:303:30), <anonymous>",
+                        "column": 16,
+                        "line": 31
+                      },
+                      "message": "Error: page.evaluate: Error: DF-16 revision 11 did not render\n    at eval (eval at evaluate (:303:30), <anonymous>:31:16)\n    at eval (eval at evaluate (:303:30), <anonymous>:31:16)\n    at measureAcceptedUpdatePaint (/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-missing-update.spec.ts:6290:15)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-missing-update.spec.ts:4982:11"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T13:26:31.877Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-missing-update.spec.ts",
+                        "line": 4980,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "domain-errors",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/oracle-missing-update-DF-1-126c2--records-automated-evidence-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "eval at evaluate (:303:30), <anonymous>",
+                    "column": 16,
+                    "line": 31
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e7b651769ce8e3738915-8bd7066acb7bc6a5f3c4",
+          "file": "oracle-missing-update.spec.ts",
+          "line": 4965,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "installed media",
+          "file": "oracle-missing-update.spec.ts",
+          "line": 1242,
+          "column": 6,
+          "specs": [
+            {
+              "title": "mounted card image leases return to baseline across tray, restart, and destroy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 36139,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Verified media profile: 3311 files, 262063ms\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "\n\u001b[43m\u001b[30m WARN \u001b[39m\u001b[49m \u001b[36minlineDynamicImports\u001b[39m option is deprecated, please use \u001b[36mcodeSplitting: false\u001b[39m instead.\n\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-23T13:16:59.531Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "df-13-object-url-lifecycle",
+                          "contentType": "application/json",
+                          "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/oracle-missing-update-inst-5eec8-ss-tray-restart-and-destroy-chromium/attachments/df-13-object-url-lifecycle-9e74eac69c5055bc29ca02037f10d96cfa0cb875.json"
+                        },
+                        {
+                          "name": "domain-errors",
+                          "contentType": "application/json",
+                          "body": "W10="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e7b651769ce8e3738915-bf1ae0a5d23cccb888e7",
+              "file": "oracle-missing-update.spec.ts",
+              "line": 1244,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "oracle-slow-leak.spec.ts",
+      "file": "oracle-slow-leak.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "DF-16 Chromium pinned parity/perf/resource gate records automated evidence",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 192555,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 180000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 180000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 180000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts",
+                        "column": 61,
+                        "line": 6534
+                      },
+                      "message": "Error: locator.click: Test timeout of 180000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-cy=\"duel-right-rail-options\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" aria-label=\"Options\" data-cy=\"duel-right-rail-options\" class=\"secondary duel-right-rail__options\">⚙</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n\n  6532 |\n  6533 | async function surrenderThroughMenu(page: Page): Promise<void> {\n> 6534 |   await page.locator('[data-cy=\"duel-right-rail-options\"]').click();\n       |                                                             ^\n  6535 |   await page.locator('[data-cy=\"menu-dialog-surrender-button\"]').click();\n  6536 |   await page\n  6537 |     .locator('[data-cy=\"menu-dialog-surrender-confirm-button\"]')\n    at surrenderThroughMenu (/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts:6534:61)\n    at runRestartCycle (/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts:6558:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts:5019:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T13:34:36.703Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "domain-errors",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/oracle-slow-leak-DF-16-Chr-41652--records-automated-evidence-chromium/error-context.md"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "96c03df6f8b945827f5e-72b42b69ff58c904f071",
+          "file": "oracle-slow-leak.spec.ts",
+          "line": 4971,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "installed media",
+          "file": "oracle-slow-leak.spec.ts",
+          "line": 1246,
+          "column": 6,
+          "specs": [
+            {
+              "title": "mounted card image leases return to baseline across tray, restart, and destroy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts",
+                        "line": 1318,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "failed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 56223,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  2\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"notRevoked\": Array [],\u001b[39m\n\u001b[32m-   \"stillActive\": Array [],\u001b[39m\n\u001b[31m+   \"notRevoked\": Array [\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/1898c6b1-2ce5-4f0f-9c54-4dcec2313d7d\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/5f0eb76a-66ec-43a7-87fe-09da67b9e0bd\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/7a71bd9d-347b-4546-972f-1b6488d47257\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/3d099b31-9f97-4a77-bb5f-73127bf18871\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/63a4db0d-1f9f-4468-b9fb-77dd200b090c\",\u001b[39m\n\u001b[31m+   ],\u001b[39m\n\u001b[31m+   \"stillActive\": Array [\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/1898c6b1-2ce5-4f0f-9c54-4dcec2313d7d\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/5f0eb76a-66ec-43a7-87fe-09da67b9e0bd\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/7a71bd9d-347b-4546-972f-1b6488d47257\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/3d099b31-9f97-4a77-bb5f-73127bf18871\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/63a4db0d-1f9f-4468-b9fb-77dd200b090c\",\u001b[39m\n\u001b[31m+   ],\u001b[39m\n\u001b[2m  }\u001b[22m\n\nCall Log:\n- Timeout 30000ms exceeded while waiting on the predicate",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  2\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"notRevoked\": Array [],\u001b[39m\n\u001b[32m-   \"stillActive\": Array [],\u001b[39m\n\u001b[31m+   \"notRevoked\": Array [\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/1898c6b1-2ce5-4f0f-9c54-4dcec2313d7d\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/5f0eb76a-66ec-43a7-87fe-09da67b9e0bd\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/7a71bd9d-347b-4546-972f-1b6488d47257\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/3d099b31-9f97-4a77-bb5f-73127bf18871\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/63a4db0d-1f9f-4468-b9fb-77dd200b090c\",\u001b[39m\n\u001b[31m+   ],\u001b[39m\n\u001b[31m+   \"stillActive\": Array [\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/1898c6b1-2ce5-4f0f-9c54-4dcec2313d7d\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/5f0eb76a-66ec-43a7-87fe-09da67b9e0bd\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/7a71bd9d-347b-4546-972f-1b6488d47257\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/3d099b31-9f97-4a77-bb5f-73127bf18871\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/63a4db0d-1f9f-4468-b9fb-77dd200b090c\",\u001b[39m\n\u001b[31m+   ],\u001b[39m\n\u001b[2m  }\u001b[22m\n\nCall Log:\n- Timeout 30000ms exceeded while waiting on the predicate\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts:1345:8",
+                        "location": {
+                          "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts",
+                          "column": 8,
+                          "line": 1345
+                        },
+                        "snippet": "  1343 |         ),\n  1344 |       )\n> 1345 |       .toEqual({ stillActive: [], notRevoked: [] });\n       |        ^\n  1346 |     const evidence = await page.evaluate(\n  1347 |       (urls) => ({\n  1348 |         created: window.__duelCapture.imageUrls.created.length,"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts",
+                            "column": 8,
+                            "line": 1345
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  2\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"notRevoked\": Array [],\u001b[39m\n\u001b[32m-   \"stillActive\": Array [],\u001b[39m\n\u001b[31m+   \"notRevoked\": Array [\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/1898c6b1-2ce5-4f0f-9c54-4dcec2313d7d\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/5f0eb76a-66ec-43a7-87fe-09da67b9e0bd\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/7a71bd9d-347b-4546-972f-1b6488d47257\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/3d099b31-9f97-4a77-bb5f-73127bf18871\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/63a4db0d-1f9f-4468-b9fb-77dd200b090c\",\u001b[39m\n\u001b[31m+   ],\u001b[39m\n\u001b[31m+   \"stillActive\": Array [\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/1898c6b1-2ce5-4f0f-9c54-4dcec2313d7d\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/5f0eb76a-66ec-43a7-87fe-09da67b9e0bd\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/7a71bd9d-347b-4546-972f-1b6488d47257\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/3d099b31-9f97-4a77-bb5f-73127bf18871\",\u001b[39m\n\u001b[31m+     \"blob:http://127.0.0.1:4518/63a4db0d-1f9f-4468-b9fb-77dd200b090c\",\u001b[39m\n\u001b[31m+   ],\u001b[39m\n\u001b[2m  }\u001b[22m\n\nCall Log:\n- Timeout 30000ms exceeded while waiting on the predicate\n\n  1343 |         ),\n  1344 |       )\n> 1345 |       .toEqual({ stillActive: [], notRevoked: [] });\n       |        ^\n  1346 |     const evidence = await page.evaluate(\n  1347 |       (urls) => ({\n  1348 |         created: window.__duelCapture.imageUrls.created.length,\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts:1345:8"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T13:29:15.964Z",
+                      "annotations": [
+                        {
+                          "type": "fail",
+                          "location": {
+                            "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts",
+                            "line": 1318,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "domain-errors",
+                          "contentType": "application/json",
+                          "body": "W10="
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/oracle-slow-leak-installed-7d8d4-ss-tray-restart-and-destroy-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/oracle-slow-leak.spec.ts",
+                        "column": 8,
+                        "line": 1345
+                      }
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "96c03df6f8b945827f5e-f3f4ca2544f0613a095d",
+              "file": "oracle-slow-leak.spec.ts",
+              "line": 1248,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "zz-oracle-restored.spec.ts",
+      "file": "zz-oracle-restored.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "DF-16 Chromium pinned parity/perf/resource gate records automated evidence",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 157421,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m50\u001b[39m\nReceived:   \u001b[31m122.89999999850988\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m50\u001b[39m\nReceived:   \u001b[31m122.89999999850988\u001b[39m\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/zz-oracle-restored.spec.ts:5119:27",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/zz-oracle-restored.spec.ts",
+                      "column": 27,
+                      "line": 5119
+                    },
+                    "snippet": "  5117 |   });\n  5118 |\n> 5119 |   expect(updatePaint.p95).toBeLessThan(50);\n       |                           ^\n  5120 |   expect(actionLatency.p95).toBeLessThan(100);\n  5121 |   expect(normalLongTasks).toHaveLength(0);\n  5122 |   expect(objectUrlLeak).toBe(false);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/zz-oracle-restored.spec.ts",
+                        "column": 27,
+                        "line": 5119
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m50\u001b[39m\nReceived:   \u001b[31m122.89999999850988\u001b[39m\n\n  5117 |   });\n  5118 |\n> 5119 |   expect(updatePaint.p95).toBeLessThan(50);\n       |                           ^\n  5120 |   expect(actionLatency.p95).toBeLessThan(100);\n  5121 |   expect(normalLongTasks).toHaveLength(0);\n  5122 |   expect(objectUrlLeak).toBe(false);\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/zz-oracle-restored.spec.ts:5119:27"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T13:49:55.504Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "df-16-results",
+                      "contentType": "application/json",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/zz-oracle-restored-DF-16-C-28a65--records-automated-evidence-chromium/attachments/df-16-results-3470da96e366b2ee2fbcb721bacabf92b84e0815.json"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/zz-oracle-restored-DF-16-C-28a65--records-automated-evidence-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "domain-errors",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/zz-oracle-restored-DF-16-C-28a65--records-automated-evidence-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/e2e/zz-oracle-restored.spec.ts",
+                    "column": 27,
+                    "line": 5119
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "b2e05fe907c587afb43a-a232a72d3f200fa4d425",
+          "file": "zz-oracle-restored.spec.ts",
+          "line": 4967,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "installed media",
+          "file": "zz-oracle-restored.spec.ts",
+          "line": 1242,
+          "column": 6,
+          "specs": [
+            {
+              "title": "mounted card image leases return to baseline across tray, restart, and destroy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 32117,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Verified media profile: 3311 files, 356397ms\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "\n\u001b[43m\u001b[30m WARN \u001b[39m\u001b[49m \u001b[36minlineDynamicImports\u001b[39m option is deprecated, please use \u001b[36mcodeSplitting: false\u001b[39m instead.\n\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-09-23T13:38:28.435Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "df-13-object-url-lifecycle",
+                          "contentType": "application/json",
+                          "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-acceptance/artifacts/oracle-validation/oracle-matrix/zz-oracle-restored-install-1c00a-ss-tray-restart-and-destroy-chromium/attachments/df-13-object-url-lifecycle-fa0eaf9fe0a9048cf5ded2811ebdfb74f3d577d1.json"
+                        },
+                        {
+                          "name": "domain-errors",
+                          "contentType": "application/json",
+                          "body": "W10="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b2e05fe907c587afb43a-ddc089fd258b59df5b69",
+              "file": "zz-oracle-restored.spec.ts",
+              "line": 1244,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T13:00:49.976Z",
+    "duration": 3145616.5530000003,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

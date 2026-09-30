@@ -119,20 +119,22 @@ export function presetSelectableDecks(
   presets: readonly DeckMetadata[],
 ): readonly SelectableDeck[] {
   return Object.freeze(
-    presets.map((preset) =>
-      Object.freeze({
-        key: `preset:${preset.id}`,
-        label: preset.name,
-        source: "preset" as const,
-        selection: Object.freeze({
-          kind: "preset" as const,
-          deckId: preset.id,
+    presets
+      .filter((preset) => DECK_SOURCES.has(preset.id))
+      .map((preset) =>
+        Object.freeze({
+          key: `preset:${preset.id}`,
+          label: preset.name,
+          source: "preset" as const,
+          selection: Object.freeze({
+            kind: "preset" as const,
+            deckId: preset.id,
+          }),
+          blockReason: null,
+          lists: listsOfPreset(preset.id),
+          updatedAt: null,
         }),
-        blockReason: null,
-        lists: listsOfPreset(preset.id),
-        updatedAt: null,
-      }),
-    ),
+      ),
   );
 }
 

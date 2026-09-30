@@ -9,7 +9,7 @@ T1 provides read-only setup, strict Node-only schemas, path guards, common local
 
 ## Developer setup — no publisher credentials
 
-- D1. Install Node.js 24+, Git and npm. Run `node --version`, `git --version`, `npm --version`, then `npm ci` from this checkout. No S3 CLI or publisher credentials are needed for developer downloads.
+- D1. Install Node.js 26+, Git and npm. Run `node --version`, `git --version`, `npm --version`, then `npm ci` from this checkout. No S3 CLI or publisher credentials are needed for developer downloads.
 - D2. Continue using the existing README acquisition workflow until `assets:download` lands. The planned anonymous download restores all extant bytes under four managed roots, including originals and unused files. It does not guarantee all possible upstream assets exist or that gameplay readiness passes.
 - D3. Run `npm run assets:setup -- --help`. Local `--check` validates `asset-delivery.config.json` and credential presence only; missing publisher credentials do not fail developer usage. Missing config fails explicitly with `ASSET_REFERENCE_MISSING`. No config or evidence files are created automatically.
 - D4. Local syntax success is not publication approval, credential verification, hosted availability, or native-player acceptance. Progress is JSON on stderr; final stdout is `AssetResult`. Exit 0 = check complete, 2 = expected invalid/missing/conflicting/resource state, 1 = unexpected internal failure. Errors never contain credential values, signed URLs, provider bodies, or unsafe input paths.
@@ -20,7 +20,7 @@ Automation cannot supply these owner facts. Record completion versus pending in 
 
 | ID | Prerequisite | Current T1 evidence / owner action |
 | --- | --- | --- |
-| O1 | Node24/Git/npm | Fixture-tested on Node24; each developer verifies local tools and runs `npm ci` |
+| O1 | Node26/Git/npm | Fixture-tested on Node26; each developer verifies local tools and runs `npm ci` |
 | O2 | Cloudflare R2 account | Pending; owner creates/enables account, activates R2 and payment method if Cloudflare requires it |
 | O3 | Standard bucket | Pending; owner creates a Standard-storage bucket; no Infrequent Access substitution |
 | O4 | Custom public DNS domain | Pending; owner chooses, acquires if needed, connects HTTPS custom domain to bucket; `r2.dev` is not production delivery |

@@ -1,0 +1,34 @@
+{
+  "number": 45,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "c33cc15143ef1318d779e74e8a7d6f3cddf51b22",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 c33cc15143ef1318d779e74e8a7d6f3cddf51b22",
+    "exit": 0,
+    "output": "94918367a1fe1e000ba2f4ca5343ea44a6e5f58f\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/component/prompt-selection-limit.test.ts",
+      "exit": 1,
+      "output": "8:22:04 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-45 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-45\n\n \u276f tests/component/prompt-selection-limit.test.ts (0 test)\n\n\u23af\u23af\u23af\u23af\u23af\u23af Failed Suites 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af\n\n FAIL  tests/component/prompt-selection-limit.test.ts [ tests/component/prompt-selection-limit.test.ts ]\nError: Cannot find module '/@fs/home/aron/Projects/ascencio/node_modules/@testing-library/svelte/src/vitest.js'\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af[1/1]\u23af\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  08:22:05\n   Duration  2.93s (transform 64ms, setup 0ms, import 0ms, tests 0ms, environment 2.35s)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/battle/app/prompts/PromptControls.svelte tests/component/prompt-selection-limit.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/battle/app/prompts/PromptControls.svelte tests/component/prompt-selection-limit.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "94918367a1fe1e000ba2f4ca5343ea44a6e5f58f",
+  "retry": {
+    "command": "node /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-45/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/component/prompt-selection-limit.test.ts",
+    "exit": 0,
+    "log": "artifacts/pr-review-20260921/retry-45.log",
+    "reason": "Vite /@fs dependency resolution failed with symlinked node_modules; copied installed deps into isolated snapshot. PR43 also copies required local catalog data."
+  }
+}

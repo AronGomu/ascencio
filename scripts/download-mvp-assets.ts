@@ -45,9 +45,9 @@ The command is resumable. Existing valid JPEGs are verified and skipped.`);
 
 async function main(): Promise<void> {
   const nodeMajor = Number(process.versions.node.split(".")[0]);
-  if (!Number.isSafeInteger(nodeMajor) || nodeMajor < 24) {
+  if (!Number.isSafeInteger(nodeMajor) || nodeMajor < 26) {
     throw new Error(
-      `Node.js 24 or newer is required; found ${process.versions.node}`,
+      `Node.js 26 or newer is required; found ${process.versions.node}`,
     );
   }
 

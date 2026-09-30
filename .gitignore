@@ -37,6 +37,9 @@ test-results/
 
 # Generated knowledge graph (rebuild with `graphify .`)
 graphify-out/
+src-tauri/resources/
+src-tauri/target/
+src-tauri/gen/
 
 # Agent scratch and subagent transcripts. Machine-local, large, and churns
 # every run; the transcripts also carry opaque session tokens.

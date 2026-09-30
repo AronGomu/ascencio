@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=26.0.0"
   },
   "scripts": {
     "assets:profiles:sync": "node scripts/sync-asset-profiles.ts",
@@ -32,6 +32,7 @@
     "dev": "vite",
     "build": "npm run vendor:verify && npm run build:app && npm run build:verify",
     "build:app": "vite build --mode private",
+    "build:native": "vite build --mode native",
     "build:verify": "node scripts/verify-browser-build.ts",
     "build:reproducible": "node scripts/verify-reproducible-build.ts",
     "preview": "vite preview",
@@ -53,15 +54,26 @@
     "check:browser": "npm run test:component && npm run build && npm run build:reproducible && npm run test:e2e && npm run test:acceptance && npm run test:core && npm run test:content:fixtures",
     "check": "npm run check:headless && npm run check:browser",
     "content:export": "node scripts/export-content-packages.ts",
-    "content:verify": "node scripts/verify-content-package.ts"
+    "content:verify": "node scripts/verify-content-package.ts",
+    "native:manifest": "node scripts/native-content-release.ts manifest",
+    "native:prepare": "node scripts/native-content-release.ts prepare",
+    "native:verify-staged": "node scripts/native-content-release.ts verify-staged",
+    "native:clean-content": "node scripts/clean-native-content.ts",
+    "native:dev": "tauri dev",
+    "native:build": "tauri build",
+    "native:android:dev": "tauri android dev",
+    "native:android:build": "tauri android build",
+    "native:ios:dev": "tauri ios dev",
+    "native:ios:build": "tauri ios build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@tauri-apps/cli": "^2.12.0",
     "@testing-library/svelte": "^5.4.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.7.0",
     "eslint-plugin-svelte": "^3.20.0",
@@ -81,6 +93,7 @@
   "dependencies": {
     "@noble/hashes": "2.4.0",
     "@sqlite.org/sqlite-wasm": "3.53.4-build1",
+    "@tauri-apps/api": "^2.12.0",
     "idb": "^8.0.3",
     "svelte": "^5.56.4"
   }

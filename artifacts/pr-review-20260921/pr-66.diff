@@ -1,0 +1,82 @@
+diff --git a/src/battle/app/presentation/dom-feedback-controller.ts b/src/battle/app/presentation/dom-feedback-controller.ts
+index d6af7a92..db5774cf 100644
+--- a/src/battle/app/presentation/dom-feedback-controller.ts
++++ b/src/battle/app/presentation/dom-feedback-controller.ts
+@@ -45,15 +45,27 @@ export function createDomFeedbackController(
+   const animations = new Set<Animation>();
+   let generation = 0;
+   let highlighted: Element | null = null;
++  let clearTimer: ReturnType<typeof setTimeout> | null = null;
+ 
+   const clearTransient = (): void => {
+     generation += 1;
++    if (clearTimer !== null) clearTimeout(clearTimer);
++    clearTimer = null;
+     for (const animation of animations) animation.cancel();
+     animations.clear();
+     highlighted?.classList.remove("is-feedback-target");
+     highlighted = null;
+   };
+ 
++  const clearAfter = (durationMs: number): void => {
++    if (durationMs === 0) return;
++    clearTimer = setTimeout(() => {
++      clearTimer = null;
++      clearTransient();
++      onState(EMPTY_DOM_FEEDBACK_STATE);
++    }, durationMs);
++  };
++
+   const notice = (command: DomPresentationCommand): void => {
+     onState({
+       kind: "notice",
+@@ -124,6 +136,7 @@ export function createDomFeedbackController(
+         } else {
+           animate(to, [{ opacity: 0.65 }, { opacity: 1 }], durationMs);
+         }
++        clearAfter(durationMs);
+         return;
+       }
+       case "summon":
+@@ -143,6 +156,7 @@ export function createDomFeedbackController(
+           targetId: command.targetId,
+         });
+         animate(target, [{ opacity: 0.68 }, { opacity: 1 }], durationMs);
++        clearAfter(durationMs);
+         return;
+       }
+       case "life-points":
+diff --git a/tests/unit/dom-feedback-controller.test.ts b/tests/unit/dom-feedback-controller.test.ts
+index 88d7aae3..02db8323 100644
+--- a/tests/unit/dom-feedback-controller.test.ts
++++ b/tests/unit/dom-feedback-controller.test.ts
+@@ -182,6 +182,29 @@ describe("DOM feedback controller", () => {
+     expect(y).not.toBeCloseTo(sourcePoint.y - targetPoint.y, 0);
+   });
+ 
++  it("clears the target line and highlight after the command duration", () => {
++    vi.useFakeTimers();
++    const root = fieldRoot();
++    const cancel = vi.fn();
++    Element.prototype.animate = vi.fn(() => ({
++      cancel,
++      finished: new Promise<void>(() => undefined),
++    })) as unknown as typeof Element.prototype.animate;
++    const onState = vi.fn();
++    const controller = createDomFeedbackController(root, onState);
++    controller.present(moveCommand());
++
++    vi.advanceTimersByTime(419);
++    expect(root.querySelector(".is-feedback-target")).not.toBeNull();
++    expect(onState).not.toHaveBeenLastCalledWith(EMPTY_DOM_FEEDBACK_STATE);
++    vi.advanceTimersByTime(1);
++
++    expect(cancel).toHaveBeenCalledOnce();
++    expect(controller.activeAnimationCount).toBe(0);
++    expect(onState).toHaveBeenLastCalledWith(EMPTY_DOM_FEEDBACK_STATE);
++    expect(root.querySelector(".is-feedback-target")).toBeNull();
++  });
++
+   it("cancels animations, clears final state, and leaves zero timers", () => {
+     vi.useFakeTimers();
+     const root = fieldRoot();

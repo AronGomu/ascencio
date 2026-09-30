@@ -1,0 +1,55 @@
+diff --git a/src/story/playback/story-read-log.ts b/src/story/playback/story-read-log.ts
+index 8bae14ea..effa48c6 100644
+--- a/src/story/playback/story-read-log.ts
++++ b/src/story/playback/story-read-log.ts
+@@ -52,11 +52,13 @@ export function withBeatRead(
+ 
+ export function writeStoryReadLog(
+   beats: ReadonlySet<string>,
+-  storage: Pick<Storage, "setItem"> | null = defaultStorage(),
++  storage: Pick<Storage, "getItem" | "setItem"> | null = defaultStorage(),
+ ): void {
+   if (storage === null) return;
+   try {
+-    const payload: StoredReadLog = { version: 1, beats: [...beats] };
++    const merged = new Set(readStoryReadLog(storage));
++    beats.forEach((id) => merged.add(id));
++    const payload: StoredReadLog = { version: 1, beats: [...merged] };
+     storage.setItem(STORY_READ_LOG_KEY, JSON.stringify(payload));
+   } catch {
+     // Best-effort: storage that refuses the log never interrupts reading.
+diff --git a/tests/unit/story/story-read-log-concurrency.test.ts b/tests/unit/story/story-read-log-concurrency.test.ts
+new file mode 100644
+index 00000000..0e5e79cb
+--- /dev/null
++++ b/tests/unit/story/story-read-log-concurrency.test.ts
+@@ -0,0 +1,29 @@
++import { describe, expect, it } from "vitest";
++import {
++  readStoryReadLog,
++  withBeatRead,
++  writeStoryReadLog,
++} from "../../../src/story/playback/story-read-log.ts";
++
++function memoryStorage() {
++  const values = new Map<string, string>();
++  return {
++    getItem: (key: string) => values.get(key) ?? null,
++    setItem: (key: string, value: string) => {
++      values.set(key, value);
++    },
++  };
++}
++
++describe("story read log concurrency", () => {
++  it("preserves dialogue progress written by another open session", () => {
++    const storage = memoryStorage();
++    const firstSession = readStoryReadLog(storage);
++    const staleSecondSession = readStoryReadLog(storage);
++
++    writeStoryReadLog(withBeatRead(firstSession, "arrival"), storage);
++    writeStoryReadLog(withBeatRead(staleSecondSession, "reply"), storage);
++
++    expect([...readStoryReadLog(storage)]).toEqual(["arrival", "reply"]);
++  });
++});

@@ -8,7 +8,7 @@ T1 establishes Chapter 1 source-policy readiness. It does not install or publish
 
 ## Private loopback prerequisites
 
-1. **P1.** Use Node.js 24 or newer with npm.
+1. **P1.** Use Node.js 26 or newer with npm.
 2. **P2.** Keep project dependencies installed from the pinned lockfile.
 3. **P3.** Provide Chromium through the existing Playwright installation.
 4. **P4.** Keep `content/authoring/card-set-source.json` byte-identical at SHA-256 `b3ac778e5f1b9927554ef8e66185a596c0c35d71ab642b448c952c6c9050496d`.

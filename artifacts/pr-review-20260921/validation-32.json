@@ -1,0 +1,28 @@
+{
+  "number": 32,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "7da053c66a9c742e659f2ea49daf257e9bc4ba63",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 7da053c66a9c742e659f2ea49daf257e9bc4ba63",
+    "exit": 0,
+    "output": "f19a0d52f4cbe983a39f71a2177af5ee02e4c958\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/core-content-transport.test.ts",
+      "exit": 0,
+      "output": "8:19:27 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-32 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-32\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  08:19:31\n   Duration  49.75s (transform 13.64s, setup 12.33s, import 5.89s, tests 30.38s, environment 2ms)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check scripts/lib/vite-core-content.ts tests/unit/core-content-transport.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js scripts/lib/vite-core-content.ts tests/unit/core-content-transport.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "f19a0d52f4cbe983a39f71a2177af5ee02e4c958"
+}

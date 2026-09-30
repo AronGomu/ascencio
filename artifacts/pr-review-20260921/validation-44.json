@@ -1,0 +1,28 @@
+{
+  "number": 44,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "45b41d6509b9278eaeb1da0e3aa01ce263913a81",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 45b41d6509b9278eaeb1da0e3aa01ce263913a81",
+    "exit": 0,
+    "output": "9f65f0af5d4748114a0a74d361e7cd2e0bfe4b0f\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/pwa-install-retry.test.ts",
+      "exit": 0,
+      "output": "8:21:51 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-44 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-44\n\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  08:21:53\n   Duration  3.68s (transform 2.39s, setup 2.99s, import 42ms, tests 177ms, environment 0ms)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check e2e-core/pwa-install-retry.spec.ts src/service-worker.ts src/shell/pwa/shell-cache-policy.ts tests/unit/pwa-install-retry.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js e2e-core/pwa-install-retry.spec.ts src/service-worker.ts src/shell/pwa/shell-cache-policy.ts tests/unit/pwa-install-retry.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "9f65f0af5d4748114a0a74d361e7cd2e0bfe4b0f"
+}

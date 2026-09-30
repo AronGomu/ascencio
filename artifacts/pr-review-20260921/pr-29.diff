@@ -1,0 +1,51 @@
+diff --git a/scripts/download-images.ts b/scripts/download-images.ts
+index 5406b427..843b1dfb 100644
+--- a/scripts/download-images.ts
++++ b/scripts/download-images.ts
+@@ -177,7 +177,18 @@ function parseOptions(args: string[]): DownloadOptions {
+       active = true;
+       continue;
+     }
+-    if (!argument?.startsWith("--")) {
++    if (
++      !argument?.startsWith("--") ||
++      ![
++        "--assets",
++        "--output",
++        "--concurrency",
++        "--requests-per-second",
++        "--limit",
++        "--kind",
++        "--chapter",
++      ].includes(argument)
++    ) {
+       throw new Error(`Unknown argument: ${argument ?? "<missing>"}`);
+     }
+     const value = args[index + 1];
+diff --git a/tests/unit/image-download-cli.test.ts b/tests/unit/image-download-cli.test.ts
+new file mode 100644
+index 00000000..b5fa9090
+--- /dev/null
++++ b/tests/unit/image-download-cli.test.ts
+@@ -0,0 +1,21 @@
++import { spawnSync } from "node:child_process";
++import { describe, expect, it } from "vitest";
++
++describe("image download CLI", () => {
++  it("rejects unknown options before validating known option values", () => {
++    const result = spawnSync(
++      process.execPath,
++      [
++        "scripts/download-images.ts",
++        "--typo",
++        "value",
++        "--requests-per-second",
++        "21",
++      ],
++      { cwd: process.cwd(), encoding: "utf8", timeout: 10_000 },
++    );
++
++    expect(result.status).not.toBe(0);
++    expect(result.stderr).toContain("Unknown argument: --typo");
++  });
++});

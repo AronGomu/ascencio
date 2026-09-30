@@ -1,0 +1,43 @@
+{
+  "baseline": {
+    "activeCount": 4,
+    "activeMatchesMounted": true,
+    "activeUrls": [
+      "blob:http://127.0.0.1:4518/23ae206d-67f7-41a5-9770-5f24d8197027",
+      "blob:http://127.0.0.1:4518/40d65ecf-e8fc-4bb3-b776-fdb19dff4697",
+      "blob:http://127.0.0.1:4518/93203fd9-a017-4f8f-af83-5477a202daa7",
+      "blob:http://127.0.0.1:4518/cc28358d-4ac7-4bd8-b216-9036f344b410"
+    ],
+    "mountedUrls": [
+      "blob:http://127.0.0.1:4518/23ae206d-67f7-41a5-9770-5f24d8197027",
+      "blob:http://127.0.0.1:4518/40d65ecf-e8fc-4bb3-b776-fdb19dff4697",
+      "blob:http://127.0.0.1:4518/93203fd9-a017-4f8f-af83-5477a202daa7",
+      "blob:http://127.0.0.1:4518/cc28358d-4ac7-4bd8-b216-9036f344b410"
+    ]
+  },
+  "restarted": {
+    "activeCount": 5,
+    "activeMatchesMounted": true,
+    "activeUrls": [
+      "blob:http://127.0.0.1:4518/5ac290e5-a0c8-4493-81f7-d71fc7ae8778",
+      "blob:http://127.0.0.1:4518/8c4fd389-f885-4dab-aae0-5eb70fc2acf0",
+      "blob:http://127.0.0.1:4518/d6d8a8d2-55ff-425d-b8fc-685fc60d1764",
+      "blob:http://127.0.0.1:4518/dbb46dad-4434-40df-832a-4772b4ffbc3e",
+      "blob:http://127.0.0.1:4518/f3292cc2-13fe-4700-b5b0-fced942828d1"
+    ],
+    "mountedUrls": [
+      "blob:http://127.0.0.1:4518/5ac290e5-a0c8-4493-81f7-d71fc7ae8778",
+      "blob:http://127.0.0.1:4518/8c4fd389-f885-4dab-aae0-5eb70fc2acf0",
+      "blob:http://127.0.0.1:4518/d6d8a8d2-55ff-425d-b8fc-685fc60d1764",
+      "blob:http://127.0.0.1:4518/dbb46dad-4434-40df-832a-4772b4ffbc3e",
+      "blob:http://127.0.0.1:4518/f3292cc2-13fe-4700-b5b0-fced942828d1"
+    ]
+  },
+  "created": 38,
+  "revoked": 37,
+  "active": 1,
+  "formerDuelLeaseCount": 5,
+  "formerDuelLeasesRevoked": true,
+  "sameDocumentCapture": true,
+  "destinationActiveLeases": 1
+}

@@ -1,0 +1,178 @@
+{
+  "config": {
+    "argv": [
+      "/home/aron/.local/share/mise/installs/node/26.7.0/bin/node",
+      "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/node_modules/.bin/playwright",
+      "test",
+      "-c",
+      "playwright.content.config.ts",
+      "--project=chromium",
+      "e2e-content/installer.spec.ts",
+      "--grep",
+      "prepared receipt orphan",
+      "--timeout=45000"
+    ],
+    "configFile": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/playwright.content.config.ts",
+    "rootDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/e2e-content",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/artifacts/CORE_ACCEPTANCE/T6/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/e2e-content",
+        "testIgnore": [
+          "built-installer.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/CORE_ACCEPTANCE/T6/playwright-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npx vite --host 127.0.0.1 --port 4402 --strictPort",
+      "url": "http://127.0.0.1:4402",
+      "reuseExistingServer": false,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "installer.spec.ts",
+      "file": "installer.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "installer prepared receipt orphan never grants readiness after page crash",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 9493,
+                  "error": {
+                    "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/battle/storage/installed-runtime-receipt.ts",
+                    "stack": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/battle/storage/installed-runtime-receipt.ts\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-content/e2e-content/installer.spec.ts:348:14",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/e2e-content/installer.spec.ts",
+                      "column": 14,
+                      "line": 348
+                    },
+                    "snippet": "  346 | }) => {\n  347 |   const fixture = await boot(page);\n> 348 |   await page.evaluate(async (bootstrap) => {\n      |              ^\n  349 |     window.contentInstaller.close();\n  350 |     const api = await import(\n  351 |       /* @vite-ignore */ String(\"/src/content/index.ts\")"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/e2e-content/installer.spec.ts",
+                        "column": 14,
+                        "line": 348
+                      },
+                      "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/battle/storage/installed-runtime-receipt.ts\n\n  346 | }) => {\n  347 |   const fixture = await boot(page);\n> 348 |   await page.evaluate(async (bootstrap) => {\n      |              ^\n  349 |     window.contentInstaller.close();\n  350 |     const api = await import(\n  351 |       /* @vite-ignore */ String(\"/src/content/index.ts\")\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-content/e2e-content/installer.spec.ts:348:14"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:29:40.501Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-content/e2e-content/installer.spec.ts",
+                    "column": 14,
+                    "line": 348
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-bd24308a2afc2f7e83c7",
+          "file": "installer.spec.ts",
+          "line": 343,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T08:29:23.694Z",
+    "duration": 28928.002999999997,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

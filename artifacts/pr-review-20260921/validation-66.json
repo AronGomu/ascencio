@@ -1,0 +1,34 @@
+{
+  "number": 66,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "7d8c76223633af8d2a3e556b44e05ec20cbaa3e5",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 7d8c76223633af8d2a3e556b44e05ec20cbaa3e5",
+    "exit": 0,
+    "output": "e8d82fa68c48b4b8ead3a298a001571d41072d15\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/dom-feedback-controller.test.ts",
+      "exit": 1,
+      "output": "8:25:01 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-66 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-66\n\n \u276f tests/unit/dom-feedback-controller.test.ts (0 test)\n\n\u23af\u23af\u23af\u23af\u23af\u23af Failed Suites 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af\n\n FAIL  tests/unit/dom-feedback-controller.test.ts [ tests/unit/dom-feedback-controller.test.ts ]\nError: Cannot find module '/@fs/home/aron/Projects/ascencio/node_modules/@testing-library/svelte/src/vitest.js'\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af[1/1]\u23af\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  08:25:03\n   Duration  3.01s (transform 73ms, setup 0ms, import 0ms, tests 0ms, environment 2.34s)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/battle/app/presentation/dom-feedback-controller.ts tests/unit/dom-feedback-controller.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/battle/app/presentation/dom-feedback-controller.ts tests/unit/dom-feedback-controller.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "e8d82fa68c48b4b8ead3a298a001571d41072d15",
+  "retry": {
+    "command": "node /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-66/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/dom-feedback-controller.test.ts",
+    "exit": 0,
+    "log": "artifacts/pr-review-20260921/retry-66.log",
+    "reason": "Vite /@fs dependency resolution failed with symlinked node_modules; copied installed deps into isolated snapshot. PR43 also copies required local catalog data."
+  }
+}

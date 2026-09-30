@@ -1,0 +1,136 @@
+{
+  "config": {
+    "argv": [
+      "/home/aron/.local/share/mise/installs/node/26.7.0/bin/node",
+      "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/node_modules/@playwright/test/cli.js",
+      "test",
+      "-c",
+      "playwright.core.config.ts",
+      "--project=chromium",
+      "e2e-core/pwa-install-retry.spec.ts"
+    ],
+    "configFile": "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/playwright.core.config.ts",
+    "rootDir": "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/e2e-core",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/scripts/core-source-only-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/artifacts/T10-EVIDENCE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/e2e-core",
+        "testIgnore": [
+          "chapter-content-delivery.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/T10-EVIDENCE/playwright-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "pwa-install-retry.spec.ts",
+      "file": "pwa-install-retry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "failed first precache can retry without CORE update approval",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3229,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T06:42:09.617Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/artifacts/T10-EVIDENCE/test-results/pwa-install-retry-failed-f-4cadb-ithout-CORE-update-approval-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/pr-review-20260921/combined/artifacts/T10-EVIDENCE/test-results/pwa-install-retry-failed-f-4cadb-ithout-CORE-update-approval-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0d0bd5749a2d9423fa2b-ad5128f5d9caf690409c",
+          "file": "pwa-install-retry.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T06:41:27.141Z",
+    "duration": 47816.074,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

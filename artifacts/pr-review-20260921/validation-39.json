@@ -1,0 +1,28 @@
+{
+  "number": 39,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "3ab646c30f39b9d1f588170aae0f0237d9194946",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 3ab646c30f39b9d1f588170aae0f0237d9194946",
+    "exit": 0,
+    "output": "eaf400f7bdd0fb47e59597c548e52851c7662ecd\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/progressive-release.test.ts",
+      "exit": 0,
+      "output": "8:21:07 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-39 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-39\n\n\n Test Files  1 passed (1)\n      Tests  72 passed (72)\n   Start at  08:21:09\n   Duration  12.01s (transform 2.98s, setup 2.99s, import 808ms, tests 7.52s, environment 0ms)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/content/parsers/progressive-file.ts tests/unit/progressive-release.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/content/parsers/progressive-file.ts tests/unit/progressive-release.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "eaf400f7bdd0fb47e59597c548e52851c7662ecd"
+}

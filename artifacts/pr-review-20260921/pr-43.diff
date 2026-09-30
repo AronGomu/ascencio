@@ -1,0 +1,411 @@
+diff --git a/src/deck-editor/deck-editor-store.ts b/src/deck-editor/deck-editor-store.ts
+index 98b29bc0..642a838e 100644
+--- a/src/deck-editor/deck-editor-store.ts
++++ b/src/deck-editor/deck-editor-store.ts
+@@ -430,7 +430,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
+         !this.#isCurrentContext(contextGeneration)
+       )
+         return;
+-      const result = undoDeckUpdate(current.history);
++      const result = undoDeckUpdate(current.history, current.deck);
+       if (result === null) return;
+       const restored = this.#withCards(
+         current.deck,
+@@ -454,7 +454,7 @@ export class DeckBuilderController implements Readable<DeckBuilderState> {
+         !this.#isCurrentContext(contextGeneration)
+       )
+         return;
+-      const result = redoDeckUpdate(current.history);
++      const result = redoDeckUpdate(current.history, current.deck);
+       if (result === null) return;
+       const restored = this.#withCards(
+         current.deck,
+diff --git a/src/decks/deck-history.ts b/src/decks/deck-history.ts
+index 1e04fab1..57c370d8 100644
+--- a/src/decks/deck-history.ts
++++ b/src/decks/deck-history.ts
+@@ -61,7 +61,10 @@ export function pushDeckUpdate(
+   });
+ }
+ 
+-export function undoDeckUpdate(history: DeckHistory): Readonly<{
++export function undoDeckUpdate(
++  history: DeckHistory,
++  currentCards: DeckCardLists,
++): Readonly<{
+   history: DeckHistory;
+   cards: DeckCardLists;
+   importedNeedsReview: boolean;
+@@ -69,19 +72,26 @@ export function undoDeckUpdate(history: DeckHistory): Readonly<{
+ }> | null {
+   const update = history.undo.at(-1);
+   if (update === undefined) return null;
++  const cards = restoreCards(currentCards, update.before, update.reason);
+   return Object.freeze({
+-    cards: cloneCardLists(update.before),
++    cards,
+     importedNeedsReview: update.beforeImportedNeedsReview,
+     illustrationCardCode: update.beforeIllustrationCardCode,
+     history: Object.freeze({
+       undo: Object.freeze(history.undo.slice(0, -1)),
+-      redo: Object.freeze([update, ...history.redo]),
++      redo: Object.freeze([
++        withCardSnapshots(update, cards, currentCards),
++        ...history.redo,
++      ]),
+       nextSequence: history.nextSequence,
+     }),
+   });
+ }
+ 
+-export function redoDeckUpdate(history: DeckHistory): Readonly<{
++export function redoDeckUpdate(
++  history: DeckHistory,
++  currentCards: DeckCardLists,
++): Readonly<{
+   history: DeckHistory;
+   cards: DeckCardLists;
+   importedNeedsReview: boolean;
+@@ -89,13 +99,16 @@ export function redoDeckUpdate(history: DeckHistory): Readonly<{
+ }> | null {
+   const update = history.redo[0];
+   if (update === undefined) return null;
++  const cards = restoreCards(currentCards, update.after, update.reason);
+   return Object.freeze({
+-    cards: cloneCardLists(update.after),
++    cards,
+     importedNeedsReview: update.afterImportedNeedsReview,
+     illustrationCardCode: update.afterIllustrationCardCode,
+     history: Object.freeze({
+       undo: Object.freeze(
+-        [...history.undo, update].slice(-MAXIMUM_DECK_UPDATES),
++        [...history.undo, withCardSnapshots(update, currentCards, cards)].slice(
++          -MAXIMUM_DECK_UPDATES,
++        ),
+       ),
+       redo: Object.freeze(history.redo.slice(1)),
+       nextSequence: history.nextSequence,
+@@ -103,6 +116,66 @@ export function redoDeckUpdate(history: DeckHistory): Readonly<{
+   });
+ }
+ 
++function restoreCards(
++  current: DeckCardLists,
++  target: DeckCardLists,
++  reason: DeckCardUpdate["reason"],
++): DeckCardLists {
++  if (reason === "import" || reason === "restore" || reason === "sort")
++    return cloneCardLists(target);
++  return cloneCardLists({
++    main: restoreZoneMembership(current.main, target.main),
++    extra: restoreZoneMembership(current.extra, target.extra),
++    side: restoreZoneMembership(current.side, target.side),
++  });
++}
++
++function restoreZoneMembership(
++  current: readonly number[],
++  target: readonly number[],
++): readonly number[] {
++  const targetCounts = counts(target);
++  const retainedCounts = new Map<number, number>();
++  const restored = current.filter((code) => {
++    const retained = retainedCounts.get(code) ?? 0;
++    if (retained >= (targetCounts.get(code) ?? 0)) return false;
++    retainedCounts.set(code, retained + 1);
++    return true;
++  });
++  const representedCounts = new Map<number, number>();
++  target.forEach((code, index) => {
++    const represented = representedCounts.get(code) ?? 0;
++    representedCounts.set(code, represented + 1);
++    if (represented < (retainedCounts.get(code) ?? 0)) return;
++    restored.splice(Math.min(index, restored.length), 0, code);
++  });
++  return restored;
++}
++
++function counts(values: readonly number[]): ReadonlyMap<number, number> {
++  const result = new Map<number, number>();
++  values.forEach((value) => result.set(value, (result.get(value) ?? 0) + 1));
++  return result;
++}
++
++function withCardSnapshots(
++  update: DeckCardUpdate,
++  before: DeckCardLists,
++  after: DeckCardLists,
++): DeckCardUpdate {
++  if (
++    update.reason === "import" ||
++    update.reason === "restore" ||
++    update.reason === "sort"
++  )
++    return update;
++  return Object.freeze({
++    ...update,
++    before: cloneCardLists(before),
++    after: cloneCardLists(after),
++  });
++}
++
+ function sameCards(
+   left: DeckCardLists,
+   right: DeckCardLists,
+diff --git a/tests/component/deck-editor/deck-history-order.test.ts b/tests/component/deck-editor/deck-history-order.test.ts
+new file mode 100644
+index 00000000..d0d21f4e
+--- /dev/null
++++ b/tests/component/deck-editor/deck-history-order.test.ts
+@@ -0,0 +1,139 @@
++// @vitest-environment node
++
++import "fake-indexeddb/auto";
++import { afterEach, describe, expect, it } from "vitest";
++import { deleteDB } from "idb";
++import { get } from "svelte/store";
++import { DeckBuilderController } from "../../../src/deck-editor/deck-editor-store.ts";
++import { IndexedDbDeckRepository } from "../../../src/decks/repository/index.ts";
++import {
++  catalogByCode,
++  PROTOTYPE_RULESET,
++} from "../../../src/decks/validation/index.ts";
++import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
++
++const names: string[] = [];
++afterEach(async () =>
++  Promise.all(names.splice(0).map((name) => deleteDB(name))),
++);
++
++const catalog = catalogByCode(PROTOTYPE_CATALOG);
++const BLUE_EYES = 89631139;
++const DARK_MAGICIAN = 46986414;
++const SUMMONED_SKULL = 74677422;
++const CELTIC_GUARDIAN = 91152256;
++const MIRROR_FORCE = 44095762;
++
++async function controllerFor(name: string): Promise<{
++  readonly controller: DeckBuilderController;
++  readonly close: () => void;
++}> {
++  names.push(name);
++  const repository = await IndexedDbDeckRepository.open(name);
++  const controller = new DeckBuilderController(
++    repository,
++    catalog,
++    PROTOTYPE_RULESET,
++  );
++  await controller.initialize();
++  await controller.createDeck("Ordered history");
++  return { controller, close: () => repository.close() };
++}
++
++function cards(controller: DeckBuilderController): {
++  readonly main: readonly number[];
++  readonly side: readonly number[];
++} {
++  const deck = get(controller).current!.deck;
++  return { main: deck.main, side: deck.side };
++}
++
++describe("position-blind membership history", () => {
++  it("keeps manual order through undo and redo of an add", async () => {
++    const { controller, close } = await controllerFor("history-order-add");
++    await controller.mutate({ type: "add", cardCode: BLUE_EYES });
++    await controller.mutate({ type: "add", cardCode: DARK_MAGICIAN });
++    await controller.mutate({ type: "add", cardCode: SUMMONED_SKULL });
++    await controller.mutate({ type: "reorder", zone: "main", from: 0, to: 2 });
++    expect(cards(controller).main).toEqual([
++      SUMMONED_SKULL,
++      DARK_MAGICIAN,
++      BLUE_EYES,
++    ]);
++
++    await controller.undo();
++    expect(cards(controller).main).toEqual([DARK_MAGICIAN, BLUE_EYES]);
++    await controller.redo();
++    expect(cards(controller).main).toEqual([
++      SUMMONED_SKULL,
++      DARK_MAGICIAN,
++      BLUE_EYES,
++    ]);
++    close();
++  });
++
++  it("keeps survivor order through undo and redo of a remove", async () => {
++    const { controller, close } = await controllerFor("history-order-remove");
++    await controller.mutate({ type: "add", cardCode: BLUE_EYES });
++    await controller.mutate({ type: "add", cardCode: DARK_MAGICIAN });
++    await controller.mutate({ type: "add", cardCode: SUMMONED_SKULL });
++    await controller.mutate({
++      type: "remove",
++      cardCode: DARK_MAGICIAN,
++      zone: "main",
++    });
++    await controller.mutate({ type: "reorder", zone: "main", from: 0, to: 1 });
++    expect(cards(controller).main).toEqual([SUMMONED_SKULL, BLUE_EYES]);
++
++    await controller.undo();
++    expect(cards(controller).main).toEqual([
++      SUMMONED_SKULL,
++      DARK_MAGICIAN,
++      BLUE_EYES,
++    ]);
++    await controller.redo();
++    expect(cards(controller).main).toEqual([SUMMONED_SKULL, BLUE_EYES]);
++    close();
++  });
++
++  it("keeps both zone orders through undo and redo of a move", async () => {
++    const { controller, close } = await controllerFor("history-order-move");
++    await controller.mutate({ type: "add", cardCode: BLUE_EYES });
++    await controller.mutate({ type: "add", cardCode: DARK_MAGICIAN });
++    await controller.mutate({ type: "add", cardCode: SUMMONED_SKULL });
++    await controller.mutate({
++      type: "add",
++      cardCode: CELTIC_GUARDIAN,
++      zone: "side",
++    });
++    await controller.mutate({
++      type: "add",
++      cardCode: MIRROR_FORCE,
++      zone: "side",
++    });
++    await controller.mutate({
++      type: "move",
++      cardCode: DARK_MAGICIAN,
++      from: "main",
++      to: "side",
++    });
++    await controller.mutate({ type: "reorder", zone: "main", from: 0, to: 1 });
++    await controller.mutate({ type: "reorder", zone: "side", from: 0, to: 2 });
++    expect(cards(controller)).toEqual({
++      main: [SUMMONED_SKULL, BLUE_EYES],
++      side: [DARK_MAGICIAN, MIRROR_FORCE, CELTIC_GUARDIAN],
++    });
++
++    await controller.undo();
++    expect(cards(controller)).toEqual({
++      main: [SUMMONED_SKULL, DARK_MAGICIAN, BLUE_EYES],
++      side: [MIRROR_FORCE, CELTIC_GUARDIAN],
++    });
++    await controller.redo();
++    expect(cards(controller)).toEqual({
++      main: [SUMMONED_SKULL, BLUE_EYES],
++      side: [DARK_MAGICIAN, MIRROR_FORCE, CELTIC_GUARDIAN],
++    });
++    close();
++  });
++});
+diff --git a/tests/component/deck-editor/keyboard-shortcuts.test.ts b/tests/component/deck-editor/keyboard-shortcuts.test.ts
+index 965637a3..de52e492 100644
+--- a/tests/component/deck-editor/keyboard-shortcuts.test.ts
++++ b/tests/component/deck-editor/keyboard-shortcuts.test.ts
+@@ -32,7 +32,10 @@ function stateWithUndoHistory(): DeckBuilderState {
+ 
+ function stateWithRedoHistory(): DeckBuilderState {
+   const withUndo = stateWithUndoHistory();
+-  const result = undoDeckUpdate(withUndo.current!.history)!;
++  const result = undoDeckUpdate(
++    withUndo.current!.history,
++    withUndo.current!.deck,
++  )!;
+   return {
+     ...withUndo,
+     current: { ...withUndo.current!, history: result.history },
+diff --git a/tests/unit/decks/canonical-sort-matrix.test.ts b/tests/unit/decks/canonical-sort-matrix.test.ts
+index 2548566d..d61fb3ce 100644
+--- a/tests/unit/decks/canonical-sort-matrix.test.ts
++++ b/tests/unit/decks/canonical-sort-matrix.test.ts
+@@ -132,9 +132,11 @@ describe("canonical cross-era sort matrix retained from browser acceptance", ()
+           after: sorted,
+           reason: "sort",
+         });
+-        const undone = undoDeckUpdate(history)!;
++        const undone = undoDeckUpdate(history, sorted)!;
+         expect(undone.cards).toEqual(input);
+-        expect(redoDeckUpdate(undone.history)!.cards).toEqual(entry[direction]);
++        expect(redoDeckUpdate(undone.history, undone.cards)!.cards).toEqual(
++          entry[direction],
++        );
+       });
+     }
+   }
+diff --git a/tests/unit/decks/deck-history.test.ts b/tests/unit/decks/deck-history.test.ts
+index 4136beb2..a859657e 100644
+--- a/tests/unit/decks/deck-history.test.ts
++++ b/tests/unit/decks/deck-history.test.ts
+@@ -36,10 +36,14 @@ describe("bounded deck history", () => {
+       after: { main: [1], extra: [], side: [] },
+       reason: "add",
+     });
+-    const undone = undoDeckUpdate(first)!;
++    const undone = undoDeckUpdate(first, {
++      main: [1],
++      extra: [],
++      side: [],
++    })!;
+     expect(undone.cards.main).toEqual([]);
+     expect(undone.history.redo).toHaveLength(1);
+-    const redone = redoDeckUpdate(undone.history)!;
++    const redone = redoDeckUpdate(undone.history, undone.cards)!;
+     expect(redone.cards.main).toEqual([1]);
+     const branch = pushDeckUpdate(undone.history, {
+       id: "branch",
+@@ -62,7 +66,10 @@ describe("bounded deck history", () => {
+       reason: "import",
+     });
+     expect(history.undo).toHaveLength(1);
+-    expect(undoDeckUpdate(history)?.importedNeedsReview).toBe(false);
++    expect(
++      undoDeckUpdate(history, { main: [1], extra: [], side: [] })
++        ?.importedNeedsReview,
++    ).toBe(false);
+   });
+ 
+   it("restores import review state with import cards", () => {
+@@ -75,9 +82,15 @@ describe("bounded deck history", () => {
+       afterImportedNeedsReview: true,
+       reason: "import",
+     });
+-    const undone = undoDeckUpdate(history)!;
++    const undone = undoDeckUpdate(history, {
++      main: [2],
++      extra: [],
++      side: [],
++    })!;
+     expect(undone.importedNeedsReview).toBe(false);
+-    expect(redoDeckUpdate(undone.history)?.importedNeedsReview).toBe(true);
++    expect(
++      redoDeckUpdate(undone.history, undone.cards)?.importedNeedsReview,
++    ).toBe(true);
+   });
+ 
+   it("forces a sort snapshot when before and after order already match", () => {
+@@ -110,6 +123,26 @@ describe("bounded deck history", () => {
+     expect(history.undo).toHaveLength(1);
+   });
+ 
++  it("preserves duplicate survivor order while restoring membership", () => {
++    const history = pushDeckUpdate(emptyDeckHistory(), {
++      id: "remove-duplicate",
++      deckId: deckId("deck-a"),
++      before: { main: [1, 2, 1, 3], extra: [], side: [] },
++      after: { main: [1, 2, 3], extra: [], side: [] },
++      reason: "remove",
++    });
++    const undone = undoDeckUpdate(history, {
++      main: [3, 2, 1],
++      extra: [],
++      side: [],
++    })!;
++
++    expect(undone.cards.main).toEqual([3, 2, 1, 1]);
++    expect(redoDeckUpdate(undone.history, undone.cards)?.cards.main).toEqual([
++      3, 2, 1,
++    ]);
++  });
++
+   it("a pure reorder pushes no history entry", () => {
+     const history = pushDeckUpdate(emptyDeckHistory(), {
+       id: "first",

@@ -136,7 +136,7 @@ Executable launchers are also included and set their own working directory, so t
 ./download-mvp-assets.sh
 ```
 
-No npm package installation is required for acquisition itself; the launchers use Node.js 24's native TypeScript execution and Node built-ins. Requirements are Node.js 24+, Git, network access, and roughly 2.5 GB of free disk space.
+No npm package installation is required for acquisition itself; the launchers use Node.js 26's native TypeScript execution and Node built-ins. Requirements are Node.js 26+, Git, network access, and roughly 2.5 GB of free disk space.
 
 To regenerate and verify entirely from already-downloaded Git and image caches without network access:
 

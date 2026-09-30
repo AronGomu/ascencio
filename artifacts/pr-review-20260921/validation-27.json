@@ -1,0 +1,28 @@
+{
+  "number": 27,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "7dfac2aa5b192da92c04442f75901d439a49c4a3",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 7dfac2aa5b192da92c04442f75901d439a49c4a3",
+    "exit": 0,
+    "output": "804553a8d81845211d1325cee4f6c909bc1786db\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/decks/indexeddb-deck-repository.test.ts",
+      "exit": 0,
+      "output": "8:18:43 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-27 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-27\n\n\n Test Files  1 passed (1)\n      Tests  21 passed (21)\n   Start at  08:18:45\n   Duration  5.63s (transform 3.40s, setup 3.69s, import 847ms, tests 474ms, environment 0ms)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/decks/indexeddb-deck-repository.ts tests/unit/decks/indexeddb-deck-repository.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/decks/indexeddb-deck-repository.ts tests/unit/decks/indexeddb-deck-repository.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "804553a8d81845211d1325cee4f6c909bc1786db"
+}

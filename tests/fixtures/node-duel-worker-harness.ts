@@ -3,6 +3,7 @@ import { Worker } from "node:worker_threads";
 import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
 
 const DEFAULT_WAIT_TIMEOUT_MS = 15_000;
+const FORCED_TERMINATION_TIMEOUT_MS = 5_000;
 const MAX_RETAINED_MESSAGES = 256;
 const MAX_OUTPUT_TAIL_LENGTH = 16_384;
 const PRODUCTION_WORKER_ENTRY_URL = new URL(
@@ -93,7 +94,9 @@ export class NodeDuelWorkerHarness {
       );
     });
     this.worker.once("error", (error) => {
-      this.#recordWorkerFailure(error);
+      this.#recordWorkerFailure(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     });
     this.worker.once("exit", (code) => {
       this.#exitCode = code;
@@ -156,7 +159,8 @@ export class NodeDuelWorkerHarness {
       return message;
     } catch (error) {
       try {
-        if (this.#exitCode === undefined) await this.#forceTerminate(timeoutMs);
+        if (this.#exitCode === undefined)
+          await this.#forceTerminate(FORCED_TERMINATION_TIMEOUT_MS);
       } catch (terminationError) {
         throw new AggregateError(
           [error, terminationError],
@@ -228,7 +232,7 @@ export class NodeDuelWorkerHarness {
     timeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
   ): Promise<number> {
     if (this.#workerError !== null) {
-      return this.#terminateAfterFailure(this.#workerError, timeoutMs);
+      return this.#terminateAfterFailure(this.#workerError);
     }
     if (this.#exitCode !== undefined) return this.#exitCode;
     this.#gracefulExitRequested = true;
@@ -238,7 +242,7 @@ export class NodeDuelWorkerHarness {
       this.post({ type: "dispose" });
       code = await exited;
     } catch (error) {
-      return this.#terminateAfterFailure(error, timeoutMs);
+      return this.#terminateAfterFailure(error);
     }
     if (this.#workerError !== null) throw this.#workerError;
     if (code !== 0) {
@@ -281,12 +285,10 @@ export class NodeDuelWorkerHarness {
     );
   }
 
-  async #terminateAfterFailure(
-    failure: unknown,
-    timeoutMs: number,
-  ): Promise<never> {
+  async #terminateAfterFailure(failure: unknown): Promise<never> {
     try {
-      if (this.#exitCode === undefined) await this.#forceTerminate(timeoutMs);
+      if (this.#exitCode === undefined)
+        await this.#forceTerminate(FORCED_TERMINATION_TIMEOUT_MS);
     } catch (terminationError) {
       throw new AggregateError(
         [failure, terminationError],

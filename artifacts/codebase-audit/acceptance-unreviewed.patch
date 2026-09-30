@@ -1,0 +1,537 @@
+diff --git i/e2e/duel-smoke.spec.ts w/e2e/duel-smoke.spec.ts
+index 4111941..a17e2b4 100644
+--- i/e2e/duel-smoke.spec.ts
++++ w/e2e/duel-smoke.spec.ts
+@@ -34,6 +34,7 @@ import {
+   FIELD_TILT_DEG,
+ } from "../src/battle/field/perspective.ts";
+ import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
++import type { DuelWorkerEvent } from "../src/battle/duel/contracts/duel-worker-event.ts";
+ 
+ interface BrowserCapture {
+   readonly commands: readonly Readonly<Record<string, unknown>>[];
+@@ -45,14 +46,9 @@ interface BrowserCapture {
+     readonly revoked: readonly string[];
+     readonly active: ReadonlySet<string>;
+   };
+-  readonly eventPaints: Array<{
+-    readonly type: string;
+-    readonly receivedAt: number;
+-    readonly paintedAt: number;
+-    readonly duration: number;
+-  }>;
+   readonly longTasks: Array<{
+     readonly name: string;
++    readonly startTime: number;
+     readonly duration: number;
+   }>;
+   readonly listeners: { readonly added: number; readonly removed: number };
+@@ -61,6 +57,7 @@ interface BrowserCapture {
+ declare global {
+   interface Window {
+     readonly __duelCapture: BrowserCapture;
++    readonly __duelWorker: Worker;
+   }
+ }
+ 
+@@ -177,13 +174,11 @@ test.beforeEach(async ({ page }) => {
+         revoked: [] as string[],
+         active: new Set<string>(),
+       },
+-      eventPaints: [] as Array<{
+-        type: string;
+-        receivedAt: number;
+-        paintedAt: number;
++      longTasks: [] as Array<{
++        name: string;
++        startTime: number;
+         duration: number;
+       }>,
+-      longTasks: [] as Array<{ name: string; duration: number }>,
+       listeners: { added: 0, removed: 0 },
+     };
+     Object.defineProperty(window, "__duelCapture", { value: capture });
+@@ -246,6 +241,7 @@ test.beforeEach(async ({ page }) => {
+         for (const entry of list.getEntries())
+           capture.longTasks.push({
+             name: entry.name,
++            startTime: entry.startTime,
+             duration: entry.duration,
+           });
+       }).observe({ entryTypes: ["longtask"] });
+@@ -276,27 +272,9 @@ test.beforeEach(async ({ page }) => {
+       constructor(scriptURL: string | URL, options?: WorkerOptions) {
+         super(scriptURL, options);
+         capture.workers += 1;
++        Object.assign(window, { __duelWorker: this });
+         this.addEventListener("message", (event) => {
+           capture.events.push(structuredClone(event.data));
+-          const receivedAt = performance.now();
+-          const eventType =
+-            typeof event.data === "object" &&
+-            event.data !== null &&
+-            "type" in event.data &&
+-            typeof event.data.type === "string"
+-              ? event.data.type
+-              : "unknown";
+-          requestAnimationFrame(() => {
+-            requestAnimationFrame(() => {
+-              const paintedAt = performance.now();
+-              capture.eventPaints.push({
+-                type: eventType,
+-                receivedAt,
+-                paintedAt,
+-                duration: paintedAt - receivedAt,
+-              });
+-            });
+-          });
+         });
+       }
+ 
+@@ -1326,11 +1304,56 @@ test.describe("installed media", () => {
+       await page.evaluate(() => window.__duelCapture.imageUrls.revoked.length),
+     ).toBeGreaterThan(revokedBefore);
+ 
+-    const evidence = await page.evaluate(() => ({
+-      created: window.__duelCapture.imageUrls.created.length,
+-      revoked: window.__duelCapture.imageUrls.revoked.length,
+-      active: window.__duelCapture.imageUrls.active.size,
+-    }));
++    const captureIdentity = await page.evaluateHandle(
++      () => window.__duelCapture,
++    );
++    const formerDuelUrls = await page.evaluate(() => [
++      ...window.__duelCapture.imageUrls.active,
++    ]);
++    expect(formerDuelUrls.length).toBeGreaterThan(0);
++    // Hash navigation unmounts the duel without replacing its instrumented document.
++    await page.evaluate(() => {
++      window.location.hash = "/";
++    });
++    await expect(page.locator('[data-cy="main-menu-title"]')).toBeVisible();
++    await expect(page.locator('[data-cy="duel-field"]')).toHaveCount(0);
++    expect(
++      await captureIdentity.evaluate(
++        (capture) => capture === window.__duelCapture,
++      ),
++    ).toBe(true);
++    await expect
++      .poll(() =>
++        page.evaluate(
++          (urls) => ({
++            stillActive: urls.filter((url) =>
++              window.__duelCapture.imageUrls.active.has(url),
++            ),
++            notRevoked: urls.filter(
++              (url) => !window.__duelCapture.imageUrls.revoked.includes(url),
++            ),
++          }),
++          formerDuelUrls,
++        ),
++      )
++      .toEqual({ stillActive: [], notRevoked: [] });
++    const evidence = await page.evaluate(
++      (urls) => ({
++        created: window.__duelCapture.imageUrls.created.length,
++        revoked: window.__duelCapture.imageUrls.revoked.length,
++        active: window.__duelCapture.imageUrls.active.size,
++        formerDuelLeaseCount: urls.length,
++        formerDuelLeasesRevoked: urls.every((url) =>
++          window.__duelCapture.imageUrls.revoked.includes(url),
++        ),
++        sameDocumentCapture: true,
++        destinationActiveLeases: [
++          ...window.__duelCapture.imageUrls.active,
++        ].filter((url) => !urls.includes(url)).length,
++      }),
++      formerDuelUrls,
++    );
++    await captureIdentity.dispose();
+     const evidencePath = testInfo.outputPath("df-13-object-url-lifecycle.json");
+     await writeFile(
+       evidencePath,
+@@ -1340,13 +1363,6 @@ test.describe("installed media", () => {
+       path: evidencePath,
+       contentType: "application/json",
+     });
+-
+-    await page.goto("about:blank");
+-    await expect
+-      .poll(async () =>
+-        page.evaluate(() => window.__duelCapture.imageUrls.active.size),
+-      )
+-      .toBe(0);
+   });
+ });
+ 
+@@ -4961,27 +4977,38 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
+     timeout: 120_000,
+   });
+   await expect(page.getByRole("region", { name: "Duel field" })).toBeVisible();
+-  await page.waitForFunction(
+-    () =>
+-      window.__duelCapture.eventPaints.some((entry) => entry.type === "state"),
+-    undefined,
+-    { timeout: 30_000 },
+-  );
+-
+-  await page.evaluate(() => {
+-    window.__duelCapture.longTasks.length = 0;
+-  });
+-  for (let run = 0; run < 5; run += 1) await measureTwoFrameLatency(page);
+-  const updatePaintSamples: number[] = [];
+-  const actionLatencySamples: number[] = [];
+-  for (let run = 0; run < 30; run += 1) {
+-    updatePaintSamples.push(await measureTwoFrameLatency(page));
+-    actionLatencySamples.push(await measureFocusFeedbackLatency(page));
++  for (let run = 0; run < 5; run += 1) {
++    await measureAcceptedUpdatePaint(page);
++    await measureFocusFeedbackLatency(page, run);
+   }
+-
++  expect(
++    await page.evaluate(() =>
++      PerformanceObserver.supportedEntryTypes.includes("longtask"),
++    ),
++  ).toBe(true);
++  const workloadStartedAt = await page.evaluate(() => performance.now());
++  const acceptedUpdates = [];
++  const focusFeedback = [];
++  for (let run = 0; run < 30; run += 1) {
++    acceptedUpdates.push(await measureAcceptedUpdatePaint(page));
++    focusFeedback.push(await measureFocusFeedbackLatency(page, run + 5));
++  }
++  const workloadEndedAt = await page.evaluate(() => performance.now());
++  // Let the observer deliver the final workload task; exclude setup/resource work.
++  await page.waitForTimeout(100);
+   const normalLongTasks = (await readCapture(page)).longTasks.filter(
+-    (entry) => entry.duration > 50,
++    (entry) =>
++      entry.startTime >= workloadStartedAt &&
++      entry.startTime < workloadEndedAt &&
++      entry.duration > 50,
+   );
++  expect(acceptedUpdates).toHaveLength(30);
++  expect(new Set(acceptedUpdates.map(({ revision }) => revision)).size).toBe(
++    30,
++  );
++  expect(new Set(focusFeedback.map(({ target }) => target)).size).toBe(2);
++  const updatePaintSamples = acceptedUpdates.map(({ duration }) => duration);
++  const actionLatencySamples = focusFeedback.map(({ duration }) => duration);
+   await runTrayCycle(page, 1);
+   await runRestartCycle(page);
+   await runTrayCycle(page, 1);
+@@ -5031,8 +5058,9 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
+       percentileMethod: "nearest-rank",
+       markBoundaries: {
+         updateToPaint:
+-          "accepted public browser event/two requestAnimationFrame callbacks",
+-        inputFeedback: "focus request/two requestAnimationFrame callbacks",
++          "Worker message ingress → validated public state/store → unique revision's visible turn marker → two requestAnimationFrame callbacks",
++        inputFeedback:
++          "alternating field-target focus → activeElement confirmed → two requestAnimationFrame callbacks",
+       },
+     },
+     thresholds: {
+@@ -5042,6 +5070,12 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
+     },
+     workloads: {
+       normalPrompt: {
++        fixture:
++          "live public state clones with distinct revision/turn pairs; original prompt replayed through Worker message boundary",
++        acceptedUpdates,
++        focusFeedback,
++        workloadStartedAt,
++        workloadEndedAt,
+         updateToPaintMs: updatePaint,
+         inputFeedbackMs: actionLatency,
+         longTasks: normalLongTasks,
+@@ -6251,32 +6285,88 @@ async function assertRectInsideViewport(
+   );
+ }
+ 
+-async function measureTwoFrameLatency(page: Page): Promise<number> {
+-  return page.evaluate(
+-    () =>
+-      new Promise<number>((resolve) => {
+-        const startedAt = performance.now();
+-        requestAnimationFrame(() => {
+-          requestAnimationFrame(() => resolve(performance.now() - startedAt));
+-        });
+-      }),
+-  );
++async function measureAcceptedUpdatePaint(page: Page) {
++  return page.evaluate(async () => {
++    const events = window.__duelCapture.events as unknown as DuelWorkerEvent[];
++    const previous = events.findLast((event) => event.type === "state");
++    const prompt = events.findLast((event) => event.type === "prompt");
++    if (previous?.type !== "state" || prompt?.type !== "prompt")
++      throw new Error("DF-16 requires a live public state and prompt");
++    const update = structuredClone(previous);
++    // No production telemetry: a unique visible turn identifies this revision.
++    const revision = previous.state.revision + 1;
++    const turn = previous.state.turn + 1;
++    const state = { ...update.state, revision, turn };
++    const marker = document.querySelector('[data-cy="duel-hud-turn-eyebrow"]');
++    if (!marker || marker.textContent?.trim() !== `Turn ${previous.state.turn}`)
++      throw new Error("DF-16 previous revision is not rendered");
++    const receivedAt = performance.now();
++    let renderedAt = 0;
++    await new Promise<void>((resolve, reject) => {
++      const observer = new MutationObserver(() => {
++        if (marker.textContent?.trim() !== `Turn ${turn}`) return;
++        renderedAt = performance.now();
++        observer.disconnect();
++        clearTimeout(timeout);
++        resolve();
++      });
++      const timeout = setTimeout(() => {
++        observer.disconnect();
++        reject(new Error(`DF-16 revision ${revision} did not render`));
++      }, 5_000);
++      observer.observe(marker, {
++        childList: true,
++        characterData: true,
++        subtree: true,
++      });
++      // The actual DuelWorkerClient parser/reducer/Svelte path must accept it.
++      window.__duelWorker.dispatchEvent(
++        new MessageEvent("message", {
++          data: { type: "state", state },
++        }),
++      );
++      window.__duelWorker.dispatchEvent(
++        new MessageEvent("message", { data: prompt }),
++      );
++    });
++    await new Promise<void>((resolve) => {
++      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
++    });
++    const paintedAt = performance.now();
++    if (marker.textContent?.trim() !== `Turn ${turn}`)
++      throw new Error(`DF-16 revision ${revision} changed before paint`);
++    return {
++      revision,
++      turn,
++      receivedAt,
++      renderedAt,
++      paintedAt,
++      duration: paintedAt - receivedAt,
++    };
++  });
+ }
+ 
+-async function measureFocusFeedbackLatency(page: Page): Promise<number> {
++async function measureFocusFeedbackLatency(page: Page, run: number) {
+   const field = page.getByRole("region", { name: "Duel field" });
+-  const target = field.locator("[data-field-target]").first();
++  const target = field.locator("[data-field-target]").nth(run % 2);
+   await target.waitFor({ state: "visible" });
+-  return target.evaluate(
+-    (element) =>
+-      new Promise<number>((resolve) => {
+-        const startedAt = performance.now();
+-        (element as HTMLElement).focus();
+-        requestAnimationFrame(() => {
+-          requestAnimationFrame(() => resolve(performance.now() - startedAt));
+-        });
+-      }),
+-  );
++  return target.evaluate(async (element) => {
++    if (document.activeElement === element)
++      throw new Error("DF-16 focus sample must change targets");
++    const startedAt = performance.now();
++    (element as HTMLElement).focus();
++    if (document.activeElement !== element)
++      throw new Error("DF-16 focus target did not accept focus");
++    await new Promise<void>((resolve) => {
++      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
++    });
++    if (document.activeElement !== element)
++      throw new Error("DF-16 focus feedback changed before paint");
++    return {
++      target: element.getAttribute("data-field-target"),
++      duration: performance.now() - startedAt,
++    };
++  });
+ }
+ 
+ function summarizeSamples(samples: readonly number[]): {
+diff --git i/tests/unit/core-update-approval.test.ts w/tests/unit/core-update-approval.test.ts
+index 7cb3c7e..9363873 100644
+--- i/tests/unit/core-update-approval.test.ts
++++ w/tests/unit/core-update-approval.test.ts
+@@ -1,6 +1,9 @@
+ // @vitest-environment node
+ import { IDBFactory } from "fake-indexeddb";
+ import { readFile } from "node:fs/promises";
++import { runInNewContext } from "node:vm";
++import { ModuleKind, transpileModule } from "typescript";
++import * as shellCachePolicy from "../../src/shell/pwa/shell-cache-policy.ts";
+ import { describe, expect, it, vi } from "vitest";
+ import type { ProgressiveContentStore } from "../../src/content/index.ts";
+ import { createApplicationSelector } from "../../src/shell/application/application-selector.ts";
+@@ -85,11 +88,92 @@ describe("CORE update approval", () => {
+     expect(source).toContain("precache.addToCacheList");
+     expect(source).toContain("readCoreApproval");
+     expect(source).toContain('throw new Error("CORE_UPDATE_NOT_APPROVED")');
+-    expect(source.indexOf("readCoreApproval")).toBeLessThan(
+-      source.indexOf("await precache.install(event)"),
+-    );
++    await assertApprovalBeforePrecache(source);
+     expect(source).not.toContain("precache.precache(");
+     expect(source).not.toContain("skipWaiting");
+     expect(source).not.toContain("clients.claim");
+   });
++
++  it("rejects a source-copy mutation that installs before approval", async () => {
++    const source = await readFile(
++      new URL("../../src/service-worker.ts", import.meta.url),
++      "utf8",
++    );
++    const mutated = source
++      .replace("      await precache.install(event);", "")
++      .replace(
++        "      if (!firstInstall) {",
++        "      await precache.install(event);\n      if (!firstInstall) {",
++      );
++    expect(mutated).not.toBe(source);
++    await expect(assertApprovalBeforePrecache(mutated)).rejects.toThrow(
++      "precache must wait for approval",
++    );
++    await assertApprovalBeforePrecache(source);
++  });
+ });
++
++/** Execute the real install handler; imports and browser services are sandbox ports. */
++async function assertApprovalBeforePrecache(source: string): Promise<void> {
++  const code = transpileModule(source, {
++    compilerOptions: { module: ModuleKind.CommonJS },
++  }).outputText;
++  for (const approval of [
++    null,
++    candidate("other-build"),
++    candidate("build-b", 1),
++    candidate("build-b"),
++  ]) {
++    const install = vi.fn(async () => undefined);
++    let approve!: (value: typeof approval) => void;
++    const pending = new Promise<typeof approval>((resolve) => {
++      approve = resolve;
++    });
++    const readApproval = vi.fn(() => pending);
++    let handler!: (event: { waitUntil(value: Promise<void>): void }) => void;
++    runInNewContext(code, {
++      exports: {},
++      URL,
++      __APP_BUILD_ID__: "build-b",
++      __CORE_CONTENT_API_VERSION__: 2,
++      self: {
++        __WB_MANIFEST: ["index.html"],
++        registration: { active: {}, scope: "https://core.invalid/" },
++        indexedDB: {},
++        caches: { open: async () => ({ match: async () => undefined }) },
++        addEventListener: (type: string, callback: typeof handler) => {
++          if (type === "install") handler = callback;
++        },
++      },
++      require: (id: string) => {
++        if (id === "workbox-precaching")
++          return {
++            PrecacheController: class {
++              addToCacheList() {}
++              install = install;
++            },
++          };
++        if (id.endsWith("/core-update-approval.ts"))
++          return { readCoreApproval: readApproval };
++        if (id.endsWith("/shell-cache-policy.ts")) return shellCachePolicy;
++        throw new Error(`Unexpected SW import: ${id}`);
++      },
++    });
++    let completion!: Promise<void>;
++    handler({ waitUntil: (value) => (completion = value) });
++    await vi.waitFor(() => expect(readApproval).toHaveBeenCalledOnce());
++    // Pending approval must block all executable precache work, not just imports.
++    expect(install, "precache must wait for approval").not.toHaveBeenCalled();
++    approve(approval);
++    if (
++      approval?.buildId === "build-b" &&
++      approval.coreContentApiVersion === 2
++    ) {
++      await completion;
++      expect(install).toHaveBeenCalledOnce();
++    } else {
++      await expect(completion).rejects.toThrow("CORE_UPDATE_NOT_APPROVED");
++      expect(install).not.toHaveBeenCalled();
++    }
++  }
++}
+diff --git i/tests/unit/domain-boundaries.test.ts w/tests/unit/domain-boundaries.test.ts
+index e81bc46..81b1684 100644
+--- i/tests/unit/domain-boundaries.test.ts
++++ w/tests/unit/domain-boundaries.test.ts
+@@ -192,11 +192,12 @@ function syntaxTree(file: string, text: string): ts.SourceFile {
+ function importsOf(
+   file: string,
+   text = readFileSync(path.join(projectRoot, file), "utf8"),
++  includeExternal = false,
+ ): readonly string[] {
+   const targets: string[] = [];
+   const add = (specifier: string) => {
+     if (!specifier.startsWith(".")) {
+-      if (["content", "cards"].includes(domainOf(file)))
++      if (includeExternal || ["content", "cards"].includes(domainOf(file)))
+         targets.push(specifier);
+       return;
+     }
+@@ -1045,20 +1046,40 @@ describe("Story Content isolation", () => {
+   });
+ });
+ 
++function shellPurityViolations(
++  text = readFileSync(
++    path.join(projectRoot, "src/shell/release-validation.ts"),
++    "utf8",
++  ),
++): readonly string[] {
++  return importsOf("src/shell/release-validation.ts", text, true).filter(
++    (target) =>
++      target.endsWith(".svelte") ||
++      target.includes("src/content/") ||
++      target === "idb" ||
++      target.startsWith("node:"),
++  );
++}
++
++it.each(["idb", "node:fs"])(
++  "Shell purity rejects synthetic %s imports",
++  (target) => {
++    const entry = "src/shell/release-validation.ts";
++    const source = readFileSync(path.join(projectRoot, entry), "utf8");
++    const mutated = `${source}\nimport "${target}";\n`;
++    expect(shellPurityViolations(mutated)).toEqual([target]);
++    expect(shellPurityViolations(source)).toEqual([]);
++    // External collection is purity-specific; general domain semantics stay unchanged.
++    expect(importsOf(entry, mutated)).not.toContain(target);
++  },
++);
++
+ it("Shell producer validation entry is pure and exact", async () => {
+   expect(declaredExports("src/shell/release-validation.ts")).toEqual({
+     values: ["validateReleaseData"],
+     types: ["ReleaseValidationInput", "VerifiedPublishCandidate"],
+   });
+-  expect(
+-    importsOf("src/shell/release-validation.ts").some(
+-      (target) =>
+-        target.endsWith(".svelte") ||
+-        target.includes("src/content/") ||
+-        target === "idb" ||
+-        target.startsWith("node:"),
+-    ),
+-  ).toBe(false);
++  expect(shellPurityViolations()).toEqual([]);
+ });
+ 
+ it("Story pure ports/saves entries expose exact generation contracts without UI", async () => {

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "The game shell may call the native content commands.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

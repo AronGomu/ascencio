@@ -1,0 +1,88 @@
+diff --git a/src/battle/decks/installed-selectable-decks.ts b/src/battle/decks/installed-selectable-decks.ts
+index 3f5996b4..d5b56abd 100644
+--- a/src/battle/decks/installed-selectable-decks.ts
++++ b/src/battle/decks/installed-selectable-decks.ts
+@@ -43,23 +43,24 @@ export async function installedSelectableDecks(
+   for (const record of await repository.list()) {
+     const resolved = await resolveDeck(record.id, repository, catalog, ruleset);
+     if (resolved.type === "missing") continue;
++    const ready = resolved.type === "ready" ? resolved.deck : null;
+     localDecks.push(
+       Object.freeze({
+-        key: `local:${record.id}:${record.revision}`,
+-        label: record.name,
++        key: `local:${ready?.ref.deckId ?? record.id}:${ready?.ref.revision ?? record.revision}`,
++        label: ready?.name ?? record.name,
+         source: "local" as const,
+         selection:
+-          resolved.type === "ready"
+-            ? Object.freeze({ kind: "local" as const, deck: resolved.deck })
+-            : null,
++          ready === null
++            ? null
++            : Object.freeze({ kind: "local" as const, deck: ready }),
+         blockReason:
+           resolved.type === "ready"
+             ? null
+             : (resolved.issues[0]?.message ?? "Deck is not legal."),
+         lists: Object.freeze({
+-          main: Object.freeze([...record.main]),
+-          extra: Object.freeze([...record.extra]),
+-          side: Object.freeze([...record.side]),
++          main: ready?.main ?? Object.freeze([...record.main]),
++          extra: ready?.extra ?? Object.freeze([...record.extra]),
++          side: ready?.side ?? Object.freeze([...record.side]),
+         }),
+         updatedAt: record.updatedAt,
+       }),
+diff --git a/tests/unit/installed-free-play.test.ts b/tests/unit/installed-free-play.test.ts
+index 38306af9..39088dba 100644
+--- a/tests/unit/installed-free-play.test.ts
++++ b/tests/unit/installed-free-play.test.ts
+@@ -101,4 +101,46 @@ describe("installed Free Play projection", () => {
+     });
+     expect(invalid?.blockReason).toContain("999");
+   });
++
++  it("renders the same saved revision that a local seat will start", async () => {
++    const gameplay = installedGameplayFixture();
++    const cards = installedDeckCatalog(gameplay).cards;
++    const staleRepository = repositoryWithMissingCard();
++    const listed = (await staleRepository.list())[0]!;
++    const stored = (await staleRepository.load(listed.id))!;
++    const currentMain = Object.freeze(
++      Array.from({ length: 40 }, (_, index) => (index % 14) + 1),
++    );
++    const current = Object.freeze({
++      ...stored.deck,
++      revision: 4,
++      name: "Saved Current",
++      updatedAt: "2026-09-13T00:00:00.000Z",
++      main: currentMain,
++    });
++    const decks = await installedSelectableDecks(
++      battlePresentationFixture(gameplay),
++      {
++        list: async () => [listed],
++        load: async () => ({ ...stored, deck: current }),
++      },
++      new Map(cards.map((card) => [card.code, card])),
++      PROTOTYPE_RULESET,
++    );
++    const local = decks.find(({ source }) => source === "local");
++
++    expect(local).toMatchObject({
++      key: "local:saved-invalid:4",
++      label: "Saved Current",
++      lists: { main: currentMain },
++      selection: {
++        kind: "local",
++        deck: {
++          ref: { type: "local", deckId: "saved-invalid", revision: 4 },
++          name: "Saved Current",
++          main: currentMain,
++        },
++      },
++    });
++  });
+ });

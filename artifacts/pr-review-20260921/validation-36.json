@@ -1,0 +1,28 @@
+{
+  "number": 36,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "ab1b7de84b5af2ab0f198b94eea0a698875e1039",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 ab1b7de84b5af2ab0f198b94eea0a698875e1039",
+    "exit": 0,
+    "output": "3b697772e57d9061ee9629a918dbac8f6f49f256\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/prompt-registry-visibility.test.ts",
+      "exit": 0,
+      "output": "8:20:35 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-36 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-36\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  08:20:36\n   Duration  4.66s (transform 2.97s, setup 3.39s, import 447ms, tests 146ms, environment 1ms)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/battle/worker/protocol/PromptRegistry.ts tests/unit/prompt-registry-visibility.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/battle/worker/protocol/PromptRegistry.ts tests/unit/prompt-registry-visibility.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "3b697772e57d9061ee9629a918dbac8f6f49f256"
+}

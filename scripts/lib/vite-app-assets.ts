@@ -23,9 +23,9 @@ export function appAssetsPlugin(
     name: "ygo-app-assets",
     configResolved(config) {
       boundary.base = config.base;
-      if (config.command === "build" && config.mode !== "private")
+      if (config.command === "build" && !["private", "native"].includes(config.mode))
         throw new Error(
-          "Public deployment is not approved; use the explicit private build mode",
+          "Public deployment is not approved; use an explicit private or native build mode",
         );
     },
     configureServer(server) {

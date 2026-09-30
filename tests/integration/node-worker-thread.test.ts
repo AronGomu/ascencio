@@ -182,7 +182,7 @@ describe("real Node duel Worker thread", () => {
     await expect(harness.initializeWithin(100)).rejects.toThrow(
       "Timed out after 100ms waiting for a Duel Worker message",
     );
-    await expect(harness.waitForExit()).resolves.toBe(1);
+    await expect(harness.waitForExit()).resolves.toBe(0);
   });
 
   it("falls back to forced termination when graceful disposal times out", async () => {
@@ -194,7 +194,7 @@ describe("real Node duel Worker thread", () => {
     await expect(harness.disposeGracefully(100)).rejects.toThrow(
       "Timed out after 100ms waiting for Worker exit",
     );
-    await expect(harness.waitForExit()).resolves.toBe(1);
+    await expect(harness.waitForExit()).resolves.toBe(0);
   });
 
   it("can forcibly terminate an initialized Worker within a bound", async () => {

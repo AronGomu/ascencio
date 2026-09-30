@@ -1,0 +1,60 @@
+diff --git a/src/content/install/verified-fetch.ts b/src/content/install/verified-fetch.ts
+index eea6d98e..034323dd 100644
+--- a/src/content/install/verified-fetch.ts
++++ b/src/content/install/verified-fetch.ts
+@@ -26,8 +26,15 @@ export async function fetchVerified(
+     signal.throwIfAborted();
+     throw failure("CONTENT_NETWORK_FAILED");
+   }
+-  if (!response.ok || response.redirected || !response.body)
++  if (!response.ok || response.redirected || !response.body) {
++    if (response.body)
++      try {
++        await response.body.cancel();
++      } catch {
++        console.warn("CONTENT_RESPONSE_CANCEL_FAILED");
++      }
+     throw failure("CONTENT_NETWORK_FAILED");
++  }
+   const body = response.body.getReader();
+   const bytes = new Uint8Array(ref.bytes);
+   let size = 0;
+diff --git a/tests/unit/verified-fetch-cancellation.test.ts b/tests/unit/verified-fetch-cancellation.test.ts
+new file mode 100644
+index 00000000..c67352bc
+--- /dev/null
++++ b/tests/unit/verified-fetch-cancellation.test.ts
+@@ -0,0 +1,33 @@
++import { afterEach, expect, it, vi } from "vitest";
++import { fetchVerified } from "../../src/content/install/verified-fetch.ts";
++
++afterEach(() => vi.unstubAllGlobals());
++
++it("cancels a rejected response body before reporting the network failure", async () => {
++  const cancel = vi.fn();
++  const body = new ReadableStream<Uint8Array>({
++    start(controller) {
++      controller.enqueue(new Uint8Array([1]));
++    },
++    cancel,
++  });
++  vi.stubGlobal("location", { origin: "http://localhost" });
++  vi.stubGlobal(
++    "fetch",
++    vi.fn(async () => new Response(body, { status: 503 })),
++  );
++
++  await expect(
++    fetchVerified(
++      "http://localhost/",
++      "parts",
++      { sha256: "a".repeat(64), bytes: 1 },
++      new AbortController().signal,
++      () => undefined,
++    ),
++  ).rejects.toMatchObject({
++    kind: "failed",
++    code: "CONTENT_NETWORK_FAILED",
++  });
++  expect(cancel).toHaveBeenCalledOnce();
++});

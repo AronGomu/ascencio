@@ -14,7 +14,8 @@ import { syncOnlyVendoredCorePlugin } from "./scripts/lib/vite-sync-core.ts";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig((): UserConfig => {
+export default defineConfig(({ mode }): UserConfig => {
+  const nativeBuild = mode === "native";
   const developmentPort = Number(process.env.DEV_PORT ?? "4202");
   if (!Number.isSafeInteger(developmentPort) || developmentPort <= 0)
     throw new Error("DEV_PORT must be a positive integer");
@@ -28,8 +29,12 @@ export default defineConfig((): UserConfig => {
     /* Acquired content is CLI-only; app assets enter through explicit imports. */
     publicDir: false,
     server: {
+      host: process.env.TAURI_DEV_HOST || false,
       port: developmentPort,
       strictPort: true,
+      ...(process.env.TAURI_DEV_HOST
+        ? { hmr: { protocol: "ws", host: process.env.TAURI_DEV_HOST } }
+        : {}),
       watch: {
         ignored: ["**/.tmp/**"],
       },
@@ -43,62 +48,70 @@ export default defineConfig((): UserConfig => {
       svelte(),
       contentSourceDenyPlugin(projectRoot),
       appAssetsPlugin(projectRoot, appBuildId, coreContentApiVersion, boundary),
-      VitePWA({
-        strategies: "injectManifest",
-        srcDir: "src",
-        filename: "service-worker.ts",
-        injectRegister: false,
-        registerType: "prompt",
-        includeManifestIcons: false,
-        manifest: {
-          name: "YGO Story Duel Simulator",
-          short_name: "YGO Story",
-          description: "Offline Yu-Gi-Oh! story duel simulator",
-          start_url: ".",
-          scope: ".",
-          display: "standalone",
-          background_color: "#151126",
-          theme_color: "#151126",
-          icons: [
-            {
-              src: "app-icon.svg",
-              sizes: "any",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-          ],
-        },
-        injectManifest: {
-          manifestTransforms: [
-            async (entries) => {
-              if (boundary.sqliteWasm === null)
-                throw new Error("SQLite executable missing from app build");
-              const sqliteUrl = `${boundary.base}${boundary.sqliteWasm}`;
-              const prefixed = entries.map((entry) => ({
-                ...entry,
-                url: `${boundary.base}${entry.url}`,
-              }));
-              assertShellPrecacheEntries(prefixed, sqliteUrl);
-              if (!prefixed.some((entry) => entry.url === sqliteUrl))
-                throw new Error("SQLite executable missing from precache");
-              return { manifest: prefixed, warnings: [] };
-            },
-          ],
-          globPatterns: [
-            "**/*.{html,js,css,woff2}",
-            "assets/*.wasm",
-            "app-icon.svg",
-          ],
-          globIgnores: [
-            "content/**",
-            "runtime/**",
-            "__content/**",
-            "**/ocgcore*.wasm",
-            "**/*.zip",
-            "assets/story/**",
-          ],
-        },
-      }),
+      ...(!nativeBuild
+        ? [
+            VitePWA({
+              strategies: "injectManifest",
+              srcDir: "src",
+              filename: "service-worker.ts",
+              injectRegister: false,
+              registerType: "prompt",
+              includeManifestIcons: false,
+              manifest: {
+                name: "YGO Story Duel Simulator",
+                short_name: "YGO Story",
+                description: "Offline Yu-Gi-Oh! story duel simulator",
+                start_url: ".",
+                scope: ".",
+                display: "standalone",
+                background_color: "#151126",
+                theme_color: "#151126",
+                icons: [
+                  {
+                    src: "app-icon.svg",
+                    sizes: "any",
+                    type: "image/svg+xml",
+                    purpose: "any",
+                  },
+                ],
+              },
+              injectManifest: {
+                manifestTransforms: [
+                  async (entries) => {
+                    if (boundary.sqliteWasm === null)
+                      throw new Error(
+                        "SQLite executable missing from app build",
+                      );
+                    const sqliteUrl = `${boundary.base}${boundary.sqliteWasm}`;
+                    const prefixed = entries.map((entry) => ({
+                      ...entry,
+                      url: `${boundary.base}${entry.url}`,
+                    }));
+                    assertShellPrecacheEntries(prefixed, sqliteUrl);
+                    if (!prefixed.some((entry) => entry.url === sqliteUrl))
+                      throw new Error(
+                        "SQLite executable missing from precache",
+                      );
+                    return { manifest: prefixed, warnings: [] };
+                  },
+                ],
+                globPatterns: [
+                  "**/*.{html,js,css,woff2}",
+                  "assets/*.wasm",
+                  "app-icon.svg",
+                ],
+                globIgnores: [
+                  "content/**",
+                  "runtime/**",
+                  "__content/**",
+                  "**/ocgcore*.wasm",
+                  "**/*.zip",
+                  "assets/story/**",
+                ],
+              },
+            }),
+          ]
+        : []),
     ],
     define: {
       __RUNTIME_MANIFEST_SHA256__: "null",

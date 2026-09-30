@@ -12,6 +12,12 @@
   } from "../application/manual-content-controller.ts";
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
   import type { StorageFailure } from "../../storage/index.ts";
+  import {
+    isNativeApp,
+    isNativeDesktop,
+    openNativeContentFolder,
+    seedNativeContent,
+  } from "../native/content.ts";
 
   export let gate: CoreGate;
   export let manual: ManualContentController | null = null;
@@ -25,6 +31,10 @@
   let updateView: AppUpdateView | null = appUpdates?.view ?? null;
   let boundUpdates: AppUpdateController | null = null;
   let unsubscribeUpdates: (() => void) | null = null;
+  const nativeDesktop = isNativeDesktop();
+  const nativeApp = isNativeApp();
+  let nativeContentPath = "";
+  let nativeFolderError = "";
   $: removeCandidate = view?.removal ?? null;
   $: actionsBlocked =
     updateView?.phase === "approving" ||
@@ -100,7 +110,21 @@
     await appUpdates.approve(updateView.candidate);
   }
 
+  async function openContentFolder(): Promise<void> {
+    try {
+      await openNativeContentFolder();
+      nativeFolderError = "";
+    } catch (error) {
+      nativeFolderError =
+        error instanceof Error ? error.message : String(error);
+    }
+  }
+
   onMount(() => {
+    if (nativeDesktop)
+      void seedNativeContent().then((status) => {
+        nativeContentPath = status?.contentFolder ?? "";
+      });
     return () => {
       unsubscribeManual?.();
       unsubscribeUpdates?.();
@@ -113,6 +137,22 @@
   <p role="status" data-cy="install-content-readiness">
     {coreGateMessage(gate)}
   </p>
+  {#if nativeDesktop}
+    <p data-cy="native-content-location">
+      Installed content: {nativeContentPath}
+    </p>
+    <button
+      type="button"
+      class="secondary"
+      data-cy="native-open-content-folder"
+      onclick={openContentFolder}>Open content folder</button
+    >
+    {#if nativeFolderError}
+      <p role="alert" data-cy="native-content-folder-error">
+        {nativeFolderError}
+      </p>
+    {/if}
+  {/if}
 
   {#if storageFailure?.code === "APP_ALREADY_OPEN" || view?.state.kind === "already-open"}
     <p role="alert" data-cy="content-already-open">
@@ -153,28 +193,31 @@
         Only import packages from sources you trust. Corruption checks do not
         authenticate the publisher.
       </p>
-      <div class="download-list" data-cy="content-download-list">
-        {#each PACKAGE_DOWNLOAD_LINKS as link (link.packageId)}
-          <p data-cy={`content-download-row-${link.packageId}`}>
-            <span data-cy={`content-download-title-${link.packageId}`}
-              >{link.title}</span
-            >
-            {#if link.url === null}
-              <span data-cy={`content-download-${link.packageId}`}>
-                Download unavailable
-              </span>
-            {:else}
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-cy={`content-download-${link.packageId}`}
-                >Open download location</a
+      {#if !nativeApp}<div
+          class="download-list"
+          data-cy="content-download-list"
+        >
+          {#each PACKAGE_DOWNLOAD_LINKS as link (link.packageId)}
+            <p data-cy={`content-download-row-${link.packageId}`}>
+              <span data-cy={`content-download-title-${link.packageId}`}
+                >{link.title}</span
               >
-            {/if}
-          </p>
-        {/each}
-      </div>
+              {#if link.url === null}
+                <span data-cy={`content-download-${link.packageId}`}>
+                  Download unavailable
+                </span>
+              {:else}
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-cy={`content-download-${link.packageId}`}
+                  >Open download location</a
+                >
+              {/if}
+            </p>
+          {/each}
+        </div>{/if}
       <label data-cy="content-import-label">
         Import SQLite packages
         <input
@@ -233,14 +276,14 @@
               <p data-cy={`content-package-details-${active.packageId}`}>
                 Version {active.version} · {bytes(active.bytes)}
               </p>
-              <button
-                type="button"
-                class="secondary"
-                data-cy={`content-remove-${active.packageId}`}
-                disabled={actionsBlocked}
-                onclick={() => manual!.requestRemoval(active.packageId)}
-                >Remove</button
-              >
+              {#if !nativeApp}<button
+                  type="button"
+                  class="secondary"
+                  data-cy={`content-remove-${active.packageId}`}
+                  disabled={actionsBlocked}
+                  onclick={() => manual!.requestRemoval(active.packageId)}
+                  >Remove</button
+                >{/if}
             </article>
           {/each}
         {/if}

@@ -1,0 +1,28 @@
+{
+  "number": 37,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "a2a9f70ed5bd14d0d81285d9df672410e2af13c5",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 a2a9f70ed5bd14d0d81285d9df672410e2af13c5",
+    "exit": 0,
+    "output": "bd25f360eb093d9999ddc15ac39c444b664868e6\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/duel-state-projector.test.ts tests/unit/opponent-position-concealment.test.ts",
+      "exit": 0,
+      "output": "8:20:48 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-37 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-37\n\n\n Test Files  2 passed (2)\n      Tests  81 passed (81)\n   Start at  08:20:50\n   Duration  4.35s (transform 4.40s, setup 4.97s, import 1.11s, tests 719ms, environment 1ms)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/battle/worker/projection/DuelStateProjector.ts tests/unit/duel-state-projector.test.ts tests/unit/opponent-position-concealment.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/battle/worker/projection/DuelStateProjector.ts tests/unit/duel-state-projector.test.ts tests/unit/opponent-position-concealment.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "bd25f360eb093d9999ddc15ac39c444b664868e6"
+}

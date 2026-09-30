@@ -1,0 +1,123 @@
+diff --git a/src/story/shop/data/shop-set-data.ts b/src/story/shop/data/shop-set-data.ts
+index d203b587..4f116c60 100644
+--- a/src/story/shop/data/shop-set-data.ts
++++ b/src/story/shop/data/shop-set-data.ts
+@@ -134,26 +134,39 @@ export function isSetReleased(
+   return data?.sets.find((s) => s.id === setId)?.released === true;
+ }
+ 
++const rarityIndexByData = new WeakMap<
++  ShopSetData,
++  ReadonlyMap<number, ShopRarity>
++>();
++
++function rarityIndex(data: ShopSetData): ReadonlyMap<number, ShopRarity> {
++  const cached = rarityIndexByData.get(data);
++  if (cached !== undefined) return cached;
++
++  const indexed = new Map<number, ShopRarity>();
++  for (const set of data.sets) {
++    for (const card of set.cards) {
++      const best = indexed.get(card.code);
++      if (
++        best === undefined ||
++        RARITY_ORDER.indexOf(card.rarity) > RARITY_ORDER.indexOf(best)
++      ) {
++        indexed.set(card.code, card.rarity);
++      }
++    }
++  }
++  rarityIndexByData.set(data, indexed);
++  return indexed;
++}
++
+ export function resolveCardRarity(
+   code: number,
+   data: ShopSetData | null,
+   view: DeckBuilderCardView | undefined,
+ ): ShopRarity {
+   if (data !== null) {
+-    let best: ShopRarity | null = null;
+-    for (const set of data.sets) {
+-      for (const card of set.cards) {
+-        if (card.code === code) {
+-          if (
+-            best === null ||
+-            RARITY_ORDER.indexOf(card.rarity) > RARITY_ORDER.indexOf(best)
+-          ) {
+-            best = card.rarity;
+-          }
+-        }
+-      }
+-    }
+-    if (best !== null) return best;
++    const rarity = rarityIndex(data).get(code);
++    if (rarity !== undefined) return rarity;
+   }
+   if (view !== undefined) return inferRarity(view);
+   return "common";
+diff --git a/tests/unit/story/shop-rarity-index.test.ts b/tests/unit/story/shop-rarity-index.test.ts
+new file mode 100644
+index 00000000..f9e6d0d1
+--- /dev/null
++++ b/tests/unit/story/shop-rarity-index.test.ts
+@@ -0,0 +1,59 @@
++import { describe, expect, it } from "vitest";
++import type { ShopRarity } from "../../../src/story/model/story-state.ts";
++import {
++  resolveCardRarity,
++  type ShopSetCard,
++  type ShopSetData,
++} from "../../../src/story/shop/data/shop-set-data.ts";
++
++function countedData(): {
++  readonly data: ShopSetData;
++  readonly reads: () => number;
++} {
++  let cardListReads = 0;
++  const entry = (
++    id: string,
++    cards: readonly ShopSetCard[],
++  ): ShopSetData["sets"][number] => ({
++    id,
++    name: id,
++    releaseYear: 2002,
++    released: true,
++    get cards() {
++      cardListReads += 1;
++      return cards;
++    },
++  });
++  return {
++    data: {
++      version: 1,
++      sets: [
++        entry("one", [
++          { code: 1, name: "One", rarity: "common" },
++          { code: 2, name: "Two", rarity: "rare" },
++        ]),
++        entry("two", [
++          { code: 1, name: "One", rarity: "ultra-rare" },
++          { code: 3, name: "Three", rarity: "secret-rare" },
++        ]),
++      ],
++    },
++    reads: () => cardListReads,
++  };
++}
++
++describe("resolveCardRarity shop-data index", () => {
++  it("indexes one shop-data snapshot once across collection lookups", () => {
++    const { data, reads } = countedData();
++
++    expect(resolveCardRarity(1, data, undefined)).toBe<ShopRarity>(
++      "ultra-rare",
++    );
++    expect(resolveCardRarity(2, data, undefined)).toBe<ShopRarity>("rare");
++    expect(resolveCardRarity(3, data, undefined)).toBe<ShopRarity>(
++      "secret-rare",
++    );
++
++    expect(reads()).toBe(data.sets.length);
++  });
++});

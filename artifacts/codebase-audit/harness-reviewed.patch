@@ -1,0 +1,449 @@
+diff --git i/tests/asset-delivery-bundle.test.ts w/tests/asset-delivery-bundle.test.ts
+index f0579fc..9f3d9db 100644
+--- i/tests/asset-delivery-bundle.test.ts
++++ w/tests/asset-delivery-bundle.test.ts
+@@ -608,6 +608,7 @@ test("ZIP verifier rejects ZIP64 player fixtures, encryption, dirs, extras, unde
+     msDosCompatible: true,
+     externalFileAttributes: 0,
+     useUnicodeFileNames: true,
++    dataDescriptor: false,
+   });
+   await writer.add(
+     file.path,
+@@ -620,16 +621,43 @@ test("ZIP verifier rejects ZIP64 player fixtures, encryption, dirs, extras, unde
+     bytes: valid.length,
+     sha256: sha(valid),
+   };
++  await verifyArchive(root, "valid.zip", ref, [file], true);
+   await assert.rejects(
+     verifyArchive(root, "valid.zip", ref, [], true),
+     /ASSET_ARCHIVE_REJECTED/,
+   );
+-  const bad = Uint8Array.from(valid);
+-  bad[30 + file.path.length] = bad[30 + file.path.length]! ^ 0xff;
++  await assert.rejects(
++    verifyArchive(
++      root,
++      "valid.zip",
++      ref,
++      [{ ...file, sha256: sha(new TextEncoder().encode("else")) }],
++      true,
++    ),
++    { message: "ASSET_INTEGRITY_FAILED" },
++  );
++  const bad = Buffer.from(valid);
++  const central = bad.readUInt32LE(bad.length - 22 + 16);
++  assert.equal(bad.readUInt32LE(central), 0x02014b50);
++  assert.equal(bad.readUInt16LE(6) & 8, 0);
++  // Keep payload/SHA intact and CRC fields consistent: only CRC validation can reject.
++  const badCrc = (bad.readUInt32LE(14) ^ 0xffffffff) >>> 0;
++  bad.writeUInt32LE(badCrc, 14);
++  bad.writeUInt32LE(badCrc, central + 16);
+   await put(root, "crc.zip", bad);
+   await assert.rejects(
+-    verifyArchive(root, "crc.zip", { ...ref, bytes: bad.length }, [file], true),
+-    /ASSET_ARCHIVE_REJECTED|ASSET_INTEGRITY_FAILED/,
++    verifyArchive(
++      root,
++      "crc.zip",
++      {
++        key: `content/parts/${sha(bad)}.zip`,
++        bytes: bad.length,
++        sha256: sha(bad),
++      },
++      [file],
++      true,
++    ),
++    { message: "ASSET_ARCHIVE_REJECTED" },
+   );
+ });
+ 
+diff --git i/tests/component/StoryDuelHandoff.test.ts w/tests/component/StoryDuelHandoff.test.ts
+index d977cc2..c0466a6 100644
+--- i/tests/component/StoryDuelHandoff.test.ts
++++ w/tests/component/StoryDuelHandoff.test.ts
+@@ -12,7 +12,15 @@ import { contentReaderFixture } from "../fixtures/installed-gameplay.ts";
+ import "fake-indexeddb/auto";
+ import { cleanup, render } from "@testing-library/svelte";
+ import { userEvent } from "@testing-library/user-event";
+-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import {
++  afterEach,
++  beforeAll,
++  beforeEach,
++  describe,
++  expect,
++  it,
++  vi,
++} from "vitest";
+ 
+ /* The duel's worker client is the only piece of the battle domain this test
+    cannot run for real in jsdom, so it is replaced with the same hand-driven
+@@ -279,6 +287,14 @@ async function deleteStorySaves(): Promise<void> {
+   });
+ }
+ 
++/* Compile the real lazy domains before timing UI readiness. Cold Vite imports
++   can outlast the DOM/start waits and leak pending handoffs into later tests.
++   This loads code only; each test still mounts its own shell and restores its
++   own saves, including the cold-session checkpoint cases. */
++beforeAll(async () => {
++  await Promise.all([loaders.duel(), loaders.story()]);
++});
++
+ beforeEach(async () => {
+   hash = "#/story";
+   checkpointWriteFailure = null;
+@@ -449,6 +465,7 @@ describe("story duel handoff", () => {
+      of the checkpoint. `e2e/story-duel.spec.ts` does the real reload. */
+   it("restarts the encounter from the checkpoint on a cold start into the session", async () => {
+     const handoffId = "66666666-2222-4333-8444-555555555555";
++    const { deck, collection } = fieldableStoryDeck();
+     await saves.write(
+       "checkpoint:pre-duel",
+       {
+@@ -458,6 +475,9 @@ describe("story duel handoff", () => {
+         progressExists: true,
+         encounterId: "old-arena",
+         pendingHandoffId: handoffId,
++        decks: [deck],
++        defaultDeckId: deck.id,
++        collection,
+       },
+       null,
+       storyBindingFixture(),
+@@ -466,6 +486,14 @@ describe("story duel handoff", () => {
+     renderShell();
+ 
+     await waitForCy("battle-root");
++    const { player } = await startedSeats();
++    expect(player).toEqual({
++      kind: "cards",
++      main: deck.main,
++      extra: deck.extra,
++      side: deck.side,
++    });
++    expect(document.querySelector('[data-cy="deck-picker"]')).toBeNull();
+     expect(hash).toBe(`#/duel/session/${handoffId}`);
+ 
+     emitResult({ type: "surrendered", player: 0 });
+diff --git i/tests/component/deck-editor/editor-import.test.ts w/tests/component/deck-editor/editor-import.test.ts
+index 2b5edb5..b3efeaf 100644
+--- i/tests/component/deck-editor/editor-import.test.ts
++++ w/tests/component/deck-editor/editor-import.test.ts
+@@ -165,7 +165,9 @@ describe("open-deck YDK import", () => {
+     );
+   });
+ 
+-  it("greys and disables known deck cards unavailable in story ownership", () => {
++  it("greys unavailable story cards but allows inspection and removal, not adding", async () => {
++    const user = userEvent.setup();
++    const onmutate = vi.fn().mockResolvedValue(true);
+     const code = PROTOTYPE_CATALOG.find(
+       ({ canonicalZone }) => canonicalZone === "main",
+     )!.code;
+@@ -183,6 +185,7 @@ describe("open-deck YDK import", () => {
+     });
+     renderEditor({
+       state,
++      onmutate,
+       ownership: {
+         isUnlimited: false,
+         ownedCount: () => 0,
+@@ -192,7 +195,24 @@ describe("open-deck YDK import", () => {
+     const tile = document.querySelector<HTMLButtonElement>(
+       '[data-cy="main-tile-0"]',
+     );
+-    expect(tile?.disabled).toBe(true);
++    expect(tile?.disabled).toBe(false);
+     expect(tile?.classList.contains("unavailable")).toBe(true);
++    expect(
++      document.querySelector(`[data-cy="catalog-tile-${code}"]`),
++    ).toBeNull();
++
++    await user.click(tile!);
++    expect(
++      document.querySelector('[data-cy="card-preview-name"]')?.textContent,
++    ).toBe(prototypeCatalogMap.get(code)!.name);
++    expect(onmutate).not.toHaveBeenCalled();
++
++    await user.dblClick(tile!);
++    expect(onmutate).toHaveBeenCalledExactlyOnceWith({
++      type: "remove",
++      cardCode: code,
++      zone: "main",
++      index: 0,
++    });
+   });
+ });
+diff --git i/tests/component/story/cancel-controls.test.ts w/tests/component/story/cancel-controls.test.ts
+index 8cd41c7..674d2d2 100644
+--- i/tests/component/story/cancel-controls.test.ts
++++ w/tests/component/story/cancel-controls.test.ts
+@@ -181,7 +181,10 @@ describe("every control that returns the player to where they came from is red",
+    the danger colour is spent on the deletion. */
+ describe("a destructive confirmation keeps the red on the destructive button", () => {
+   it("delete is red and its cancel is not", () => {
+-    const { container } = render(LoadScreen, { showCorrupt: false });
++    const { container } = render(LoadScreen, {
++      showCorrupt: false,
++      manualSummary: "Chapter 1 · Old Arena",
++    });
+     const trigger = container.querySelector(
+       '[data-cy="story-load-slot-manual-delete"]',
+     ) as HTMLButtonElement;
+diff --git i/tests/component/story/pre-battle-deck-picker.test.ts w/tests/component/story/pre-battle-deck-picker.test.ts
+index 187f857..398bca3 100644
+--- i/tests/component/story/pre-battle-deck-picker.test.ts
++++ w/tests/component/story/pre-battle-deck-picker.test.ts
+@@ -153,13 +153,15 @@ describe("the pre-battle deck picker", () => {
+ 
+     await fireEvent.pointerEnter(cy(`deck-tile-${LEGAL.id}`)!);
+     await waitFor(() =>
+-      expect(cy("deck-select-seat-list-player-row-1322368")).not.toBeNull(),
++      expect(
++        cy("deck-select-seat-list-player-main-row-1322368"),
++      ).not.toBeNull(),
+     );
+ 
+     expect(
+-      cy("deck-select-seat-list-player-row-1322368")?.style.getPropertyValue(
+-        "--fc",
+-      ),
++      cy(
++        "deck-select-seat-list-player-main-row-1322368",
++      )?.style.getPropertyValue("--fc"),
+     ).toBe("#1d6ea8");
+   });
+ 
+diff --git i/tests/progressive-producer.test.ts w/tests/progressive-producer.test.ts
+index d6c39ad..deb561e 100644
+--- i/tests/progressive-producer.test.ts
++++ w/tests/progressive-producer.test.ts
+@@ -1,8 +1,7 @@
+ import assert from "node:assert/strict";
+-import { mkdtemp, readFile, writeFile, mkdir } from "node:fs/promises";
+-import os from "node:os";
++import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
+ import path from "node:path";
+-import test from "node:test";
++import test, { after } from "node:test";
+ import { createHash } from "node:crypto";
+ import {
+   parseFrozenInventory,
+@@ -33,7 +32,9 @@ async function fixture(reverseCreation = false): Promise<{
+   root: string;
+   inventory: FrozenInventory;
+ }> {
+-  const root = await mkdtemp(path.join(os.tmpdir(), "ascencio-progressive-"));
++  await mkdir(".tmp", { recursive: true });
++  const root = await mkdtemp(path.resolve(".tmp/ascencio-progressive-"));
++  after(() => rm(root, { recursive: true, force: true }));
+   const runtime = await contentRuntimeFixture(
+     prepared.chapters[0]!.gameplay.cards,
+     {},
+@@ -455,6 +456,8 @@ async function rewriteManifest(
+   });
+   const candidatePath = path.join(root, run, "progressive/candidate.json");
+   const candidate = JSON.parse(await readFile(candidatePath, "utf8"));
++  const validationPath = path.join(root, run, "progressive/validation.json");
++  const validation = JSON.parse(await readFile(validationPath, "utf8"));
+   const objectPath = path.join(
+     root,
+     run,
+@@ -478,8 +481,35 @@ async function rewriteManifest(
+       pointer: { version: sha(pointerBytes), bytes: pointerBytes.length },
+     }),
+   );
++  await writeFile(
++    validationPath,
++    canonicalBytes({ ...validation, manifestVersion: ref.version }),
++  );
++  assert.deepEqual(JSON.parse(await readFile(validationPath, "utf8")), {
++    schemaVersion: 1,
++    manifestVersion: ref.version,
++    previousManifestVersion: candidate.previousManifestVersion,
++    validation: "passed",
++  });
+ }
+ 
++test("rewriteManifest preserves a valid release and its predecessor identity", async () => {
++  const { root, inventory } = await fixture();
++  const options = { releaseSequence: 1, coreMin: 1, coreMaxExclusive: 2 };
++  const first = await packProgressiveRelease(root, inventory, options);
++  const second = await packProgressiveRelease(root, inventory, {
++    ...options,
++    releaseSequence: 2,
++    previousRun: first.run,
++  });
++  await rewriteManifest(root, second.run, second.manifest);
++  const verified = await verifyProgressiveRelease(root, second.run, true);
++  assert.equal(
++    verified.candidate.previousManifestVersion,
++    first.manifestVersion,
++  );
++});
++
+ const manifestCorruptions: readonly {
+   name: string;
+   tamper(manifest: ProgressiveManifest): ProgressiveManifest;
+diff --git i/tests/progressive-publisher.test.ts w/tests/progressive-publisher.test.ts
+index fa24ef9..bf36b16 100644
+--- i/tests/progressive-publisher.test.ts
++++ w/tests/progressive-publisher.test.ts
+@@ -1,9 +1,8 @@
+ import assert from "node:assert/strict";
+ import { createHash } from "node:crypto";
+-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+-import os from "node:os";
++import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
+ import path from "node:path";
+-import test from "node:test";
++import test, { after } from "node:test";
+ import {
+   parseFrozenInventory,
+   type FrozenInventory,
+@@ -24,7 +23,9 @@ async function fixture(): Promise<{
+   root: string;
+   inventory: FrozenInventory;
+ }> {
+-  const root = await mkdtemp(path.join(os.tmpdir(), "ascencio-publish-"));
++  await mkdir(".tmp", { recursive: true });
++  const root = await mkdtemp(path.resolve(".tmp/ascencio-publish-"));
++  after(() => rm(root, { recursive: true, force: true }));
+   const runtime = await contentRuntimeFixture(
+     prepared.chapters[0]!.gameplay.cards,
+     {},
+diff --git i/tests/unit/duel-worker-runtime.test.ts w/tests/unit/duel-worker-runtime.test.ts
+index ff53a67..3f17e40 100644
+--- i/tests/unit/duel-worker-runtime.test.ts
++++ w/tests/unit/duel-worker-runtime.test.ts
+@@ -1,7 +1,8 @@
+ import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
+ import { inspect } from "node:util";
+-import { describe, expect, it, vi } from "vitest";
++import { describe, expect, it, onTestFinished, vi } from "vitest";
+ import type { DuelCommand } from "../../src/battle/duel/contracts/duel-command.ts";
++import type { DuelWorkerEvent } from "../../src/battle/duel/contracts/duel-worker-event.ts";
+ import {
+   DuelOperationError,
+   duelOperationError,
+@@ -952,6 +953,15 @@ describe("duels started from an explicit card list", () => {
+   });
+ 
+   it("keeps the opponent card list out of every event it sends back", async () => {
++    const seed = [12200034567890123456n, 2n, 3n, 4n];
++    const randomWords = vi
++      .spyOn(crypto, "getRandomValues")
++      .mockImplementationOnce((array) => {
++        expect(array).toBeInstanceOf(BigUint64Array);
++        (array as BigUint64Array).set(seed);
++        return array;
++      });
++    onTestFinished(() => randomWords.mockRestore());
+     const harness = await createFakeOcgCoreAdapter(winImmediately);
+     const runtime = new DuelWorkerRuntime(async () =>
+       createCardListResources(harness.adapter),
+@@ -966,13 +976,53 @@ describe("duels started from an explicit card list", () => {
+     });
+     const diagnostics = await runtime.handle({ type: "requestDiagnostics" });
+ 
+-    /* The opponent's codes are disjoint from the player's, so any appearance
+-       in the Worker's outbound traffic is the Worker disclosing a deck the
+-       main thread is not meant to read. */
+-    const outbound = JSON.stringify([...started, ...diagnostics]);
+-    for (const code of OPPONENT_MAIN) {
+-      expect(outbound).not.toContain(String(code));
++    const diagnostic = diagnostics[0];
++    if (diagnostic?.type !== "diagnostics")
++      throw new Error("Expected diagnostics event");
++    expect(diagnostic.trace.sensitivity).toBe("contains-production-seed");
++    expect(diagnostic.trace.seed).toEqual(seed.map(String));
++
++    /* Only the documented seed words may coincidentally contain card codes.
++       Scan every other event field, trace entry and metadata field unchanged. */
++    function assertConcealed(events: readonly DuelWorkerEvent[]): void {
++      const outbound = JSON.stringify(
++        events.map((event) =>
++          event.type === "diagnostics"
++            ? { ...event, trace: { ...event.trace, seed: undefined } }
++            : event,
++        ),
++      );
++      for (const code of OPPONENT_MAIN)
++        expect(outbound).not.toContain(String(code));
+     }
++    assertConcealed([...started, ...diagnostics]);
++
++    const hiddenCode = String(OPPONENT_MAIN[0]);
++    expect(() =>
++      assertConcealed([{ type: "loading", stage: hiddenCode }]),
++    ).toThrow(hiddenCode);
++    expect(() =>
++      assertConcealed([
++        {
++          ...diagnostic,
++          trace: { ...diagnostic.trace, presetId: hiddenCode },
++        },
++      ]),
++    ).toThrow(hiddenCode);
++    expect(() =>
++      assertConcealed([
++        {
++          ...diagnostic,
++          trace: {
++            ...diagnostic.trace,
++            entries: [
++              ...diagnostic.trace.entries,
++              { sequence: 99, kind: "engineDiagnostic", detail: hiddenCode },
++            ],
++          },
++        },
++      ]),
++    ).toThrow(hiddenCode);
+     runtime.dispose();
+   });
+ 
+diff --git i/vitest.config.ts w/vitest.config.ts
+index 1343b6c..ca19868 100644
+--- i/vitest.config.ts
++++ w/vitest.config.ts
+@@ -6,6 +6,8 @@ export default defineConfig({
+   plugins: [svelte(), svelteTesting()],
+   test: {
+     environment: "node",
++    // Node 26 globals shadow JSDOM storage before environment setup.
++    execArgv: ["--no-experimental-webstorage"],
+     include: ["tests/{unit,integration,component}/**/*.test.ts"],
+     setupFiles: ["tests/fixtures/runtime-build-constants.ts"],
+     testTimeout: 30_000,
+diff --git 1/tests/component/jsdom-storage.test.ts 2/tests/component/jsdom-storage.test.ts
+new file mode 100644
+index 0000000..4693615
+--- /dev/null
++++ 2/tests/component/jsdom-storage.test.ts
+@@ -0,0 +1,24 @@
++// @vitest-environment jsdom
++
++import { expect, it } from "vitest";
++
++it("provides JSDOM storage globals without Node webstorage or manual flags", () => {
++  expect(localStorage).toBeInstanceOf(Storage);
++  expect(sessionStorage).toBeInstanceOf(Storage);
++  expect(localStorage).not.toBe(sessionStorage);
++  expect(localStorage.length).toBe(0);
++  expect(sessionStorage.length).toBe(0);
++
++  try {
++    localStorage.setItem("storage-probe", "local");
++    sessionStorage.setItem("storage-probe", "session");
++    expect(localStorage.getItem("storage-probe")).toBe("local");
++    expect(sessionStorage.getItem("storage-probe")).toBe("session");
++    localStorage.clear();
++    expect(localStorage.length).toBe(0);
++    expect(sessionStorage.getItem("storage-probe")).toBe("session");
++  } finally {
++    localStorage.clear();
++    sessionStorage.clear();
++  }
++});

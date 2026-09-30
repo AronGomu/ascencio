@@ -1,0 +1,71 @@
+diff --git a/src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte b/src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte
+index a20d59e1..94b644d9 100644
+--- a/src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte
++++ b/src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte
+@@ -8,10 +8,18 @@
+ 
+   let failedImageUrl: string | null = null;
+   let textScroller: HTMLElement | null = null;
++  let scrolledPreviewKey: string | null = null;
+ 
+   $: resolvedImageUrl = preview?.imageUrl ?? null;
+   $: if (failedImageUrl !== null && failedImageUrl !== resolvedImageUrl)
+     failedImageUrl = null;
++  $: resetTextScroll(preview?.key ?? null);
++
++  function resetTextScroll(previewKey: string | null): void {
++    if (previewKey === scrolledPreviewKey) return;
++    scrolledPreviewKey = previewKey;
++    if (textScroller !== null) textScroller.scrollTop = 0;
++  }
+ 
+   function markImageFailed(event: Event): void {
+     const failedUrl = (event.currentTarget as HTMLImageElement).dataset
+diff --git a/tests/component/card-preview-scroll-reset.test.ts b/tests/component/card-preview-scroll-reset.test.ts
+new file mode 100644
+index 00000000..4b4100b3
+--- /dev/null
++++ b/tests/component/card-preview-scroll-reset.test.ts
+@@ -0,0 +1,42 @@
++// @vitest-environment jsdom
++
++import { cleanup, render } from "@testing-library/svelte";
++import { afterEach, describe, expect, it } from "vitest";
++import CardPreviewPanel from "../../src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte";
++import type { CardPreviewView } from "../../src/shared-svelte-ui/card-preview/index.ts";
++
++afterEach(() => cleanup());
++
++function preview(key: string, name: string): CardPreviewView {
++  return {
++    key,
++    name,
++    description: `${name} effect text`,
++    statsLine: null,
++    imageUrl: null,
++    imageAlt: name,
++    placeholderLabel: "Image unavailable",
++  };
++}
++
++describe("CardPreviewPanel card changes", () => {
++  it("starts each card's effect text at the top", async () => {
++    const rendered = render(CardPreviewPanel, {
++      preview: preview("first", "First card"),
++      dataCyPrefix: "test-preview",
++      emptyLabel: "Hover a card to see its details.",
++    });
++    const text = rendered.container.querySelector<HTMLElement>(
++      '[data-cy="test-preview-text"]',
++    )!;
++    text.scrollTop = 200;
++
++    await rendered.rerender({
++      preview: preview("second", "Second card"),
++      dataCyPrefix: "test-preview",
++      emptyLabel: "Hover a card to see its details.",
++    });
++
++    expect(text.scrollTop).toBe(0);
++  });
++});

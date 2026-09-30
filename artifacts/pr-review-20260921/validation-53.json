@@ -1,0 +1,34 @@
+{
+  "number": 53,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "86a0e799f8b0b61a22935628401646386d23d5fd",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 86a0e799f8b0b61a22935628401646386d23d5fd",
+    "exit": 0,
+    "output": "9cd4785b4a14cae50c8c70bcb9b4cfeb29662a98\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/component/card-preview-scroll-reset.test.ts",
+      "exit": 1,
+      "output": "8:23:19 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-53 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-53\n\n \u276f tests/component/card-preview-scroll-reset.test.ts (0 test)\n\n\u23af\u23af\u23af\u23af\u23af\u23af Failed Suites 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af\n\n FAIL  tests/component/card-preview-scroll-reset.test.ts [ tests/component/card-preview-scroll-reset.test.ts ]\nError: Cannot find module '/@fs/home/aron/Projects/ascencio/node_modules/@testing-library/svelte/src/vitest.js'\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af[1/1]\u23af\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  08:23:20\n   Duration  4.08s (transform 69ms, setup 0ms, import 0ms, tests 0ms, environment 3.26s)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte tests/component/card-preview-scroll-reset.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/shared-svelte-ui/card-preview/CardPreviewPanel.svelte tests/component/card-preview-scroll-reset.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "9cd4785b4a14cae50c8c70bcb9b4cfeb29662a98",
+  "retry": {
+    "command": "node /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-53/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/component/card-preview-scroll-reset.test.ts",
+    "exit": 0,
+    "log": "artifacts/pr-review-20260921/retry-53.log",
+    "reason": "Vite /@fs dependency resolution failed with symlinked node_modules; copied installed deps into isolated snapshot. PR43 also copies required local catalog data."
+  }
+}

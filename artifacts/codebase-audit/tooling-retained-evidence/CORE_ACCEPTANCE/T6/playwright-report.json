@@ -1,0 +1,774 @@
+{
+  "config": {
+    "argv": [
+      "/home/aron/.local/share/mise/installs/node/26.7.0/bin/node",
+      "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/node_modules/.bin/playwright",
+      "test",
+      "-c",
+      "playwright.content-fixture.config.ts"
+    ],
+    "configFile": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/playwright.content-fixture.config.ts",
+    "rootDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content",
+        "testIgnore": [
+          "built-installer.spec.ts"
+        ],
+        "testMatch": [
+          "**/installer.spec.ts"
+        ],
+        "timeout": 300000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/CORE_ACCEPTANCE/T6/playwright-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npx vite --host 127.0.0.1 --port 4402 --strictPort",
+      "url": "http://127.0.0.1:4402",
+      "reuseExistingServer": false,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "installer.spec.ts",
+      "file": "installer.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "installer commits whole closure only in real Cache/IDB",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15354,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:58:25.908Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-commit-85023-sure-only-in-real-Cache-IDB-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-commit-85023-sure-only-in-real-Cache-IDB-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-83572639c8397470b60a",
+          "file": "installer.spec.ts",
+          "line": 91,
+          "column": 1
+        },
+        {
+          "title": "quota Cache.put failure leaves real current unchanged",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4318,
+                  "error": {
+                    "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts",
+                    "stack": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:116:3",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                      "column": 15,
+                      "line": 59
+                    },
+                    "snippet": "  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                        "column": 15,
+                        "line": 59
+                      },
+                      "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n\n  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:116:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:58:43.420Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-quota-Cache-put--6efeb-aves-real-current-unchanged-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-quota-Cache-put--6efeb-aves-real-current-unchanged-chromium/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-quota-Cache-put--6efeb-aves-real-current-unchanged-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-quota-Cache-put--6efeb-aves-real-current-unchanged-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                    "column": 15,
+                    "line": 59
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-57b90bcc59a8c0d08c76",
+          "file": "installer.spec.ts",
+          "line": 113,
+          "column": 1
+        },
+        {
+          "title": "quota IDB receipt write aborts whole install transaction",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7842,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:58:55.861Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-quota-IDB-receip-d8cab-s-whole-install-transaction-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-quota-IDB-receip-d8cab-s-whole-install-transaction-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-ae7343b05c335d7e0dab",
+          "file": "installer.spec.ts",
+          "line": 150,
+          "column": 1
+        },
+        {
+          "title": "atomic IDB abort during CAS preserves old current plus receipts/job",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12103,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:59:05.258Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-IDB-abort-42cc3-d-current-plus-receipts-job-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-IDB-abort-42cc3-d-current-plus-receipts-job-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-232305ff47b485bb44fd",
+          "file": "installer.spec.ts",
+          "line": 181,
+          "column": 1
+        },
+        {
+          "title": "installer page interruption retains verified parts after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7099,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:59:17.901Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-page-i-721a8-verified-parts-after-reload-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-page-i-721a8-verified-parts-after-reload-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-793a9c821fea49692e1d",
+          "file": "installer.spec.ts",
+          "line": 220,
+          "column": 1
+        },
+        {
+          "title": "archive digest corruption rejects before public bytes become readable",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 3401,
+                  "error": {
+                    "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts",
+                    "stack": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:284:19",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                      "column": 15,
+                      "line": 59
+                    },
+                    "snippet": "  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                        "column": 15,
+                        "line": 59
+                      },
+                      "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n\n  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:284:19"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:59:25.616Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-archive-digest-c-1a3d8-ublic-bytes-become-readable-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-archive-digest-c-1a3d8-ublic-bytes-become-readable-chromium/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-archive-digest-c-1a3d8-ublic-bytes-become-readable-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-archive-digest-c-1a3d8-ublic-bytes-become-readable-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                    "column": 15,
+                    "line": 59
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-4f916f680f30e5833706",
+          "file": "installer.spec.ts",
+          "line": 281,
+          "column": 1
+        },
+        {
+          "title": "installer exact shared leases protect refs without blocking unrelated mutations",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7107,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:59:34.933Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-exact--84d57-locking-unrelated-mutations-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-exact--84d57-locking-unrelated-mutations-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-d6ab300cc329eccabe63",
+          "file": "installer.spec.ts",
+          "line": 302,
+          "column": 1
+        },
+        {
+          "title": "installer prepared receipt orphan never grants readiness after page crash",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2986,
+                  "error": {
+                    "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts",
+                    "stack": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:357:19",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                      "column": 15,
+                      "line": 59
+                    },
+                    "snippet": "  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                        "column": 15,
+                        "line": 59
+                      },
+                      "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n\n  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:357:19"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:59:43.438Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-prepar-20bfc--readiness-after-page-crash-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                    "column": 15,
+                    "line": 59
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-bd24308a2afc2f7e83c7",
+          "file": "installer.spec.ts",
+          "line": 353,
+          "column": 1
+        },
+        {
+          "title": "atomic Battle v3 blocked legacy tab fails bounded without late upgrade",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 7210,
+                  "error": {
+                    "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts",
+                    "stack": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:487:21",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                      "column": 15,
+                      "line": 59
+                    },
+                    "snippet": "  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                        "column": 15,
+                        "line": 59
+                      },
+                      "message": "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4402/src/content/index.ts\n\n  57 |   realActivation = false,\n  58 | ) {\n> 59 |   return page.evaluate(\n     |               ^\n  60 |     async ({ bootstrap, realActivation }) => {\n  61 |       const api = await import(\n  62 |         /* @vite-ignore */ String(\"/src/content/index.ts\")\n    at initialize (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:59:15)\n    at boot (/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:51:9)\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:487:21"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T08:59:52.919Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-7b6b1-ounded-without-late-upgrade-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-7b6b1-ounded-without-late-upgrade-chromium/test-failed-2.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-7b6b1-ounded-without-late-upgrade-chromium/video.webm"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-7b6b1-ounded-without-late-upgrade-chromium/video-1.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-7b6b1-ounded-without-late-upgrade-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-7b6b1-ounded-without-late-upgrade-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                    "column": 15,
+                    "line": 59
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-b4e18e6a06f96cea54f4",
+          "file": "installer.spec.ts",
+          "line": 452,
+          "column": 3
+        },
+        {
+          "title": "atomic Battle v3 blocked legacy tab abort settles without late upgrade",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 67165,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 30000ms exceeded while waiting on the predicate",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 30000ms exceeded while waiting on the predicate\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:513:10",
+                    "location": {
+                      "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                      "column": 10,
+                      "line": 513
+                    },
+                    "snippet": "  511 |       await expect\n  512 |         .poll(() => legacy.evaluate(() => window.battleBlocked))\n> 513 |         .toBe(true);\n      |          ^\n  514 |       const result = await Promise.race([\n  515 |         pending,\n  516 |         new Promise((resolve) => setTimeout(() => resolve(null), 1500)),"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                        "column": 10,
+                        "line": 513
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 30000ms exceeded while waiting on the predicate\n\n  511 |       await expect\n  512 |         .poll(() => legacy.evaluate(() => window.battleBlocked))\n> 513 |         .toBe(true);\n      |          ^\n  514 |       const result = await Promise.race([\n  515 |         pending,\n  516 |         new Promise((resolve) => setTimeout(() => resolve(null), 1500)),\n    at /home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts:513:10"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T09:00:06.778Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-fe407-ettles-without-late-upgrade-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-fe407-ettles-without-late-upgrade-chromium/video.webm"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-fe407-ettles-without-late-upgrade-chromium/video-1.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-fe407-ettles-without-late-upgrade-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-atomic-Battle-v3-fe407-ettles-without-late-upgrade-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/e2e-content/installer.spec.ts",
+                    "column": 10,
+                    "line": 513
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-387b2db5fd00bbe50354",
+          "file": "installer.spec.ts",
+          "line": 452,
+          "column": 3
+        },
+        {
+          "title": "installer rejects present undefined invalid marker in real IndexedDB",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3255,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-23T09:01:18.185Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-reject-c8369-id-marker-in-real-IndexedDB-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/aron/Projects/ascencio/.tmp/codebase-audit-tooling/artifacts/CORE_ACCEPTANCE/T6/test-results/installer-installer-reject-c8369-id-marker-in-real-IndexedDB-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6160a0eab4e43b4eb173-3faebab519311a0d2845",
+          "file": "installer.spec.ts",
+          "line": 595,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T08:58:01.890Z",
+    "duration": 200242.12800000003,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 5,
+    "flaky": 0
+  }
+}

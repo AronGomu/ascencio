@@ -9,10 +9,15 @@ import type { RpcArgs } from "./contracts/rpc.ts";
 import type { StorageResult } from "./contracts/package.ts";
 import type { RestoreUserDataResult } from "./contracts/user-data.ts";
 import { StorageRpcClient } from "./runtime/rpc-client.ts";
+import { isTauri } from "@tauri-apps/api/core";
 
 export async function openLocalStorage(): Promise<
   StorageResult<LocalStorageClient>
 > {
+  if (isTauri()) {
+    const { openNativeStorage } = await import("./native/storage-client.ts");
+    return await openNativeStorage();
+  }
   if (
     typeof Worker === "undefined" ||
     typeof navigator === "undefined" ||

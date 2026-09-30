@@ -1,0 +1,11 @@
+{
+  "number": 56,
+  "run": "35312810363",
+  "failedSteps": [
+    "Regenerate and verify the pinned snapshot"
+  ],
+  "errors": [
+    "full-gate\tUNKNOWN STEP\t2026-09-18T06:59:03.3740091Z {\"timestamp\":\"2026-09-18T06:59:03.358Z\",\"operation\":\"run\",\"status\":\"failed\",\"error\":\"downloadCroppedCardImages failed with exit code 1; rerun to resume safely\",\"resumable\":true}",
+    "full-gate\tUNKNOWN STEP\t2026-09-18T06:59:03.3750949Z ##[error]Process completed with exit code 1."
+  ]
+}

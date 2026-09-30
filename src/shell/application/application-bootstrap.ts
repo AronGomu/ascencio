@@ -4,6 +4,7 @@ import { prepareServiceWorkerUpdate } from "../pwa/register-service-worker.ts";
 import { createAppUpdateController } from "./app-update-controller.ts";
 import { createSqliteApplicationService } from "./sqlite-application-service.ts";
 import { openUserPersistence } from "./user-persistence-owner.ts";
+import { isNativeApp } from "../native/content.ts";
 
 // Executable compatibility epoch, not a remotely chosen setting.
 export const CORE_CONTENT_API_VERSION = 1;
@@ -17,7 +18,7 @@ export async function bootstrapApplication(
   const userPersistence = await openUserPersistence(admission);
   let service: ReturnType<typeof createSqliteApplicationService> | null = null;
   const appUpdates =
-    factory === undefined
+    factory === undefined || isNativeApp()
       ? undefined
       : createAppUpdateController({
           admission,

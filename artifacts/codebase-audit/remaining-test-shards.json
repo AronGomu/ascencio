@@ -1,0 +1,1822 @@
+{
+  "inventoryCommit": "26da126",
+  "readWorkingBytes": true,
+  "shards": [
+    {
+      "id": 1,
+      "lines": 16224,
+      "files": [
+        {
+          "path": "tests/component/AdminConsole.test.ts",
+          "start": 1,
+          "end": 226
+        },
+        {
+          "path": "tests/component/CardControl.test.ts",
+          "start": 1,
+          "end": 281
+        },
+        {
+          "path": "tests/component/DuelField.test.ts",
+          "start": 1,
+          "end": 5620
+        },
+        {
+          "path": "tests/component/PhaseBar.test.ts",
+          "start": 1,
+          "end": 208
+        },
+        {
+          "path": "tests/component/PromptContextMessage.test.ts",
+          "start": 1,
+          "end": 82
+        },
+        {
+          "path": "tests/component/PromptControls.test.ts",
+          "start": 1,
+          "end": 524
+        },
+        {
+          "path": "tests/component/PromptDialog.test.ts",
+          "start": 1,
+          "end": 109
+        },
+        {
+          "path": "tests/component/StackControl.test.ts",
+          "start": 1,
+          "end": 130
+        },
+        {
+          "path": "tests/component/deck-editor/card-catalog.test.ts",
+          "start": 1,
+          "end": 103
+        },
+        {
+          "path": "tests/component/deck-editor/catalog-index-wiring.test.ts",
+          "start": 1,
+          "end": 146
+        },
+        {
+          "path": "tests/component/deck-editor/deck-library-toolbar.test.ts",
+          "start": 1,
+          "end": 85
+        },
+        {
+          "path": "tests/component/deck-editor/deck-migration-error.test.ts",
+          "start": 1,
+          "end": 76
+        },
+        {
+          "path": "tests/component/deck-editor/deck-route.test.ts",
+          "start": 1,
+          "end": 243
+        },
+        {
+          "path": "tests/component/deck-editor/installed-catalog-boot.test.ts",
+          "start": 1,
+          "end": 154
+        },
+        {
+          "path": "tests/component/deck-editor/owned-only-catalog.test.ts",
+          "start": 1,
+          "end": 277
+        },
+        {
+          "path": "tests/component/deck-select/deck-tile-menu.test.ts",
+          "start": 1,
+          "end": 211
+        },
+        {
+          "path": "tests/component/deck-select/mobile-layout.test.ts",
+          "start": 1,
+          "end": 159
+        },
+        {
+          "path": "tests/component/story/NarrativeScreen.test.ts",
+          "start": 1,
+          "end": 264
+        },
+        {
+          "path": "tests/component/story/StoryApp.test.ts",
+          "start": 1,
+          "end": 672
+        },
+        {
+          "path": "tests/component/story/StoryOverlays.test.ts",
+          "start": 1,
+          "end": 235
+        },
+        {
+          "path": "tests/component/story/booster-reveal.test.ts",
+          "start": 1,
+          "end": 294
+        },
+        {
+          "path": "tests/component/story/shop-set-tiles.test.ts",
+          "start": 1,
+          "end": 165
+        },
+        {
+          "path": "tests/unit/admin-actions.test.ts",
+          "start": 1,
+          "end": 183
+        },
+        {
+          "path": "tests/unit/browser-runtime-assets.test.ts",
+          "start": 1,
+          "end": 317
+        },
+        {
+          "path": "tests/unit/card-image-cache.test.ts",
+          "start": 1,
+          "end": 459
+        },
+        {
+          "path": "tests/unit/chapter-gameplay.test.ts",
+          "start": 1,
+          "end": 331
+        },
+        {
+          "path": "tests/unit/chapter-one-decks.test.ts",
+          "start": 1,
+          "end": 227
+        },
+        {
+          "path": "tests/unit/content-recovery.test.ts",
+          "start": 1,
+          "end": 193
+        },
+        {
+          "path": "tests/unit/content-setup-files.test.ts",
+          "start": 1,
+          "end": 419
+        },
+        {
+          "path": "tests/unit/core-content-transport.test.ts",
+          "start": 1,
+          "end": 121
+        },
+        {
+          "path": "tests/unit/core-precache.test.ts",
+          "start": 1,
+          "end": 124
+        },
+        {
+          "path": "tests/unit/core-update-approval.test.ts",
+          "start": 1,
+          "end": 95
+        },
+        {
+          "path": "tests/unit/deck-catalog.test.ts",
+          "start": 1,
+          "end": 46
+        },
+        {
+          "path": "tests/unit/deck-select/order-deck-tiles.test.ts",
+          "start": 1,
+          "end": 116
+        },
+        {
+          "path": "tests/unit/decks/card-ownership.test.ts",
+          "start": 1,
+          "end": 60
+        },
+        {
+          "path": "tests/unit/decks/catalog-fixture.test.ts",
+          "start": 1,
+          "end": 32
+        },
+        {
+          "path": "tests/unit/decks/deck-buildable-cards.test.ts",
+          "start": 1,
+          "end": 23
+        },
+        {
+          "path": "tests/unit/decks/deck-resolver-integration.test.ts",
+          "start": 1,
+          "end": 39
+        },
+        {
+          "path": "tests/unit/decks/deck-validation.test.ts",
+          "start": 1,
+          "end": 142
+        },
+        {
+          "path": "tests/unit/decks/packaged-catalog.test.ts",
+          "start": 1,
+          "end": 97
+        },
+        {
+          "path": "tests/unit/drop-target.test.ts",
+          "start": 1,
+          "end": 139
+        },
+        {
+          "path": "tests/unit/duel-rail-status.test.ts",
+          "start": 1,
+          "end": 102
+        },
+        {
+          "path": "tests/unit/duel-seed.test.ts",
+          "start": 1,
+          "end": 22
+        },
+        {
+          "path": "tests/unit/installed-battle-images.test.ts",
+          "start": 1,
+          "end": 256
+        },
+        {
+          "path": "tests/unit/interaction-session.test.ts",
+          "start": 1,
+          "end": 383
+        },
+        {
+          "path": "tests/unit/message-classification.test.ts",
+          "start": 1,
+          "end": 49
+        },
+        {
+          "path": "tests/unit/ocgcore-adapter.test.ts",
+          "start": 1,
+          "end": 206
+        },
+        {
+          "path": "tests/unit/off-field-target-list.test.ts",
+          "start": 1,
+          "end": 355
+        },
+        {
+          "path": "tests/unit/perspective.test.ts",
+          "start": 1,
+          "end": 12
+        },
+        {
+          "path": "tests/unit/placement-candidates.test.ts",
+          "start": 1,
+          "end": 175
+        },
+        {
+          "path": "tests/unit/presentation-command.test.ts",
+          "start": 1,
+          "end": 195
+        },
+        {
+          "path": "tests/unit/progressive-storage.test.ts",
+          "start": 1,
+          "end": 611
+        },
+        {
+          "path": "tests/unit/shell/session-saves.test.ts",
+          "start": 1,
+          "end": 71
+        },
+        {
+          "path": "tests/unit/snapshot-copy-plan.test.ts",
+          "start": 1,
+          "end": 35
+        },
+        {
+          "path": "tests/unit/story-save-presence.test.ts",
+          "start": 1,
+          "end": 108
+        },
+        {
+          "path": "tests/unit/story/story-playback-settings.test.ts",
+          "start": 1,
+          "end": 90
+        },
+        {
+          "path": "tests/unit/story/story-playback.test.ts",
+          "start": 1,
+          "end": 60
+        },
+        {
+          "path": "tests/unit/story/story-read-log.test.ts",
+          "start": 1,
+          "end": 67
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "lines": 16213,
+      "files": [
+        {
+          "path": "e2e/duel-smoke.spec.ts",
+          "start": 1201,
+          "end": 6538
+        },
+        {
+          "path": "tests/component/DuelRail.test.ts",
+          "start": 1,
+          "end": 281
+        },
+        {
+          "path": "tests/component/FreePlayMatchSetup.test.ts",
+          "start": 1,
+          "end": 643
+        },
+        {
+          "path": "tests/component/FreePlayUniqueOwner.test.ts",
+          "start": 1,
+          "end": 28
+        },
+        {
+          "path": "tests/component/FullControlToggle.test.ts",
+          "start": 1,
+          "end": 91
+        },
+        {
+          "path": "tests/component/deck-editor/catalog-scrollbar.test.ts",
+          "start": 1,
+          "end": 80
+        },
+        {
+          "path": "tests/component/deck-editor/deck-crud.test.ts",
+          "start": 1,
+          "end": 31
+        },
+        {
+          "path": "tests/component/deck-editor/deck-editor-blocked.test.ts",
+          "start": 1,
+          "end": 67
+        },
+        {
+          "path": "tests/component/deck-editor/deck-library-order.test.ts",
+          "start": 1,
+          "end": 180
+        },
+        {
+          "path": "tests/component/deck-editor/deck-library-rename.test.ts",
+          "start": 1,
+          "end": 101
+        },
+        {
+          "path": "tests/component/deck-editor/deck-page-actions.test.ts",
+          "start": 1,
+          "end": 112
+        },
+        {
+          "path": "tests/component/deck-editor/deck-reorder.test.ts",
+          "start": 1,
+          "end": 152
+        },
+        {
+          "path": "tests/component/deck-editor/deck-save-conflict.test.ts",
+          "start": 1,
+          "end": 78
+        },
+        {
+          "path": "tests/component/deck-editor/editor-import.test.ts",
+          "start": 1,
+          "end": 198
+        },
+        {
+          "path": "tests/component/story/OutcomeProgression.test.ts",
+          "start": 1,
+          "end": 87
+        },
+        {
+          "path": "tests/component/story/collection-screen.test.ts",
+          "start": 1,
+          "end": 207
+        },
+        {
+          "path": "tests/component/story/set-list-rarity-sort.test.ts",
+          "start": 1,
+          "end": 246
+        },
+        {
+          "path": "tests/unit/active-image-manifest.test.ts",
+          "start": 1,
+          "end": 36
+        },
+        {
+          "path": "tests/unit/app-build-identity.test.ts",
+          "start": 1,
+          "end": 52
+        },
+        {
+          "path": "tests/unit/application-readiness.test.ts",
+          "start": 1,
+          "end": 214
+        },
+        {
+          "path": "tests/unit/card-action-label.test.ts",
+          "start": 1,
+          "end": 65
+        },
+        {
+          "path": "tests/unit/card-list-dialog-model.test.ts",
+          "start": 1,
+          "end": 164
+        },
+        {
+          "path": "tests/unit/chapter-one-image-lock.test.ts",
+          "start": 1,
+          "end": 67
+        },
+        {
+          "path": "tests/unit/content-actions.test.ts",
+          "start": 1,
+          "end": 767
+        },
+        {
+          "path": "tests/unit/content-runtime-activation.test.ts",
+          "start": 1,
+          "end": 133
+        },
+        {
+          "path": "tests/unit/content-setup.test.ts",
+          "start": 1,
+          "end": 531
+        },
+        {
+          "path": "tests/unit/deck-order-projection.test.ts",
+          "start": 1,
+          "end": 282
+        },
+        {
+          "path": "tests/unit/deck-parser.test.ts",
+          "start": 1,
+          "end": 136
+        },
+        {
+          "path": "tests/unit/decks/deck-catalog-performance.test.ts",
+          "start": 1,
+          "end": 257
+        },
+        {
+          "path": "tests/unit/decks/deck-catalog.test.ts",
+          "start": 1,
+          "end": 406
+        },
+        {
+          "path": "tests/unit/decks/installed-gameplay-cards.test.ts",
+          "start": 1,
+          "end": 124
+        },
+        {
+          "path": "tests/unit/decks/runtime-catalog.test.ts",
+          "start": 1,
+          "end": 364
+        },
+        {
+          "path": "tests/unit/dom-feedback-controller.test.ts",
+          "start": 1,
+          "end": 243
+        },
+        {
+          "path": "tests/unit/duel-restore-plan.test.ts",
+          "start": 1,
+          "end": 106
+        },
+        {
+          "path": "tests/unit/duel-worker-attachment.test.ts",
+          "start": 1,
+          "end": 426
+        },
+        {
+          "path": "tests/unit/format-selection-status.test.ts",
+          "start": 1,
+          "end": 224
+        },
+        {
+          "path": "tests/unit/installed-duel-command.test.ts",
+          "start": 1,
+          "end": 44
+        },
+        {
+          "path": "tests/unit/installed-free-play.test.ts",
+          "start": 1,
+          "end": 104
+        },
+        {
+          "path": "tests/unit/installed-runtime-receipt-validation.test.ts",
+          "start": 1,
+          "end": 19
+        },
+        {
+          "path": "tests/unit/pending-placement.test.ts",
+          "start": 1,
+          "end": 161
+        },
+        {
+          "path": "tests/unit/programmed-transcript.test.ts",
+          "start": 1,
+          "end": 142
+        },
+        {
+          "path": "tests/unit/progressive-fixture.test.ts",
+          "start": 1,
+          "end": 338
+        },
+        {
+          "path": "tests/unit/progressive-response.test.ts",
+          "start": 1,
+          "end": 114
+        },
+        {
+          "path": "tests/unit/prompt-selection.test.ts",
+          "start": 1,
+          "end": 230
+        },
+        {
+          "path": "tests/unit/resolve-duel-decks.test.ts",
+          "start": 1,
+          "end": 273
+        },
+        {
+          "path": "tests/unit/reviewed-card-pool.test.ts",
+          "start": 1,
+          "end": 40
+        },
+        {
+          "path": "tests/unit/selected-content-fixture.test.ts",
+          "start": 1,
+          "end": 55
+        },
+        {
+          "path": "tests/unit/selected-hand-zoom.test.ts",
+          "start": 1,
+          "end": 121
+        },
+        {
+          "path": "tests/unit/shared-svelte-ui.test.ts",
+          "start": 1,
+          "end": 91
+        },
+        {
+          "path": "tests/unit/shell-store.test.ts",
+          "start": 1,
+          "end": 205
+        },
+        {
+          "path": "tests/unit/shell/free-play-deck-tiles.test.ts",
+          "start": 1,
+          "end": 147
+        },
+        {
+          "path": "tests/unit/stage-frame.test.ts",
+          "start": 1,
+          "end": 192
+        },
+        {
+          "path": "tests/unit/story/pre-battle-decks.test.ts",
+          "start": 1,
+          "end": 307
+        },
+        {
+          "path": "tests/unit/story/shop-set-data.test.ts",
+          "start": 1,
+          "end": 516
+        },
+        {
+          "path": "tests/unit/story/story-decks.test.ts",
+          "start": 1,
+          "end": 177
+        },
+        {
+          "path": "tests/unit/story/story-release.test.ts",
+          "start": 1,
+          "end": 100
+        },
+        {
+          "path": "tests/unit/zone-list.test.ts",
+          "start": 1,
+          "end": 320
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "lines": 16212,
+      "files": [
+        {
+          "path": "tests/component/BattleFacade.test.ts",
+          "start": 1,
+          "end": 667
+        },
+        {
+          "path": "tests/component/DuelHud.test.ts",
+          "start": 1,
+          "end": 200
+        },
+        {
+          "path": "tests/component/MaterialSelectDialog.test.ts",
+          "start": 1,
+          "end": 176
+        },
+        {
+          "path": "tests/component/ProjectedChoiceMenu.test.ts",
+          "start": 1,
+          "end": 140
+        },
+        {
+          "path": "tests/component/deck-editor/advanced-search-load-error.test.ts",
+          "start": 1,
+          "end": 38
+        },
+        {
+          "path": "tests/component/deck-editor/advanced-search-loader-generation.test.ts",
+          "start": 1,
+          "end": 40
+        },
+        {
+          "path": "tests/component/deck-editor/catalog-infinite-scroll.test.ts",
+          "start": 1,
+          "end": 316
+        },
+        {
+          "path": "tests/component/deck-editor/deck-editor-a11y.test.ts",
+          "start": 1,
+          "end": 119
+        },
+        {
+          "path": "tests/component/deck-editor/load-deck-dialog.test.ts",
+          "start": 1,
+          "end": 330
+        },
+        {
+          "path": "tests/component/deck-editor/quantity-badge.test.ts",
+          "start": 1,
+          "end": 53
+        },
+        {
+          "path": "tests/component/deck-select/compact-layout.test.ts",
+          "start": 1,
+          "end": 183
+        },
+        {
+          "path": "tests/component/deck-select/deck-select-screen.test.ts",
+          "start": 1,
+          "end": 576
+        },
+        {
+          "path": "tests/component/deck-select/deck-tile.test.ts",
+          "start": 1,
+          "end": 265
+        },
+        {
+          "path": "tests/component/semantic-image-readiness.test.ts",
+          "start": 1,
+          "end": 377
+        },
+        {
+          "path": "tests/component/shell/toast-host.test.ts",
+          "start": 1,
+          "end": 42
+        },
+        {
+          "path": "tests/component/story/BattleHandoff.test.ts",
+          "start": 1,
+          "end": 86
+        },
+        {
+          "path": "tests/component/story/ShopBrowse.test.ts",
+          "start": 1,
+          "end": 212
+        },
+        {
+          "path": "tests/component/story/cancel-controls.test.ts",
+          "start": 1,
+          "end": 202
+        },
+        {
+          "path": "tests/component/story/card-zoom-inspector.test.ts",
+          "start": 1,
+          "end": 240
+        },
+        {
+          "path": "tests/component/story/installed-story.test.ts",
+          "start": 1,
+          "end": 107
+        },
+        {
+          "path": "tests/component/story/single-pack-reveal.test.ts",
+          "start": 1,
+          "end": 189
+        },
+        {
+          "path": "tests/unit/acceptance-scenario.test.ts",
+          "start": 1,
+          "end": 18
+        },
+        {
+          "path": "tests/unit/active-duel-dependencies.test.ts",
+          "start": 1,
+          "end": 150
+        },
+        {
+          "path": "tests/unit/auto-response.test.ts",
+          "start": 1,
+          "end": 278
+        },
+        {
+          "path": "tests/unit/capped-response-body.test.ts",
+          "start": 1,
+          "end": 101
+        },
+        {
+          "path": "tests/unit/card-frame.test.ts",
+          "start": 1,
+          "end": 68
+        },
+        {
+          "path": "tests/unit/card-mapping.test.ts",
+          "start": 1,
+          "end": 118
+        },
+        {
+          "path": "tests/unit/cards.test.ts",
+          "start": 1,
+          "end": 223
+        },
+        {
+          "path": "tests/unit/content-storage.test.ts",
+          "start": 1,
+          "end": 76
+        },
+        {
+          "path": "tests/unit/content-tooling-gates.test.ts",
+          "start": 1,
+          "end": 54
+        },
+        {
+          "path": "tests/unit/core-gate.test.ts",
+          "start": 1,
+          "end": 82
+        },
+        {
+          "path": "tests/unit/deck-editor/tap-targets.test.ts",
+          "start": 1,
+          "end": 92
+        },
+        {
+          "path": "tests/unit/deck-sources-node.test.ts",
+          "start": 1,
+          "end": 109
+        },
+        {
+          "path": "tests/unit/decks/deck-grid-plan.test.ts",
+          "start": 1,
+          "end": 67
+        },
+        {
+          "path": "tests/unit/decks/deck-model.test.ts",
+          "start": 1,
+          "end": 523
+        },
+        {
+          "path": "tests/unit/decks/deck-repository-context.test.ts",
+          "start": 1,
+          "end": 171
+        },
+        {
+          "path": "tests/unit/decks/ownership-validation.test.ts",
+          "start": 1,
+          "end": 282
+        },
+        {
+          "path": "tests/unit/decks/starter-deck.test.ts",
+          "start": 1,
+          "end": 246
+        },
+        {
+          "path": "tests/unit/decks/ydk-history.test.ts",
+          "start": 1,
+          "end": 156
+        },
+        {
+          "path": "tests/unit/drag-ghost-physics.test.ts",
+          "start": 1,
+          "end": 234
+        },
+        {
+          "path": "tests/unit/duel-field-geometry.test.ts",
+          "start": 1,
+          "end": 210
+        },
+        {
+          "path": "tests/unit/duel-field.test.ts",
+          "start": 1,
+          "end": 893
+        },
+        {
+          "path": "tests/unit/duel-priority.test.ts",
+          "start": 1,
+          "end": 30
+        },
+        {
+          "path": "tests/unit/duel-state-projector.test.ts",
+          "start": 1,
+          "end": 4280
+        },
+        {
+          "path": "tests/unit/installed-assets.test.ts",
+          "start": 1,
+          "end": 354
+        },
+        {
+          "path": "tests/unit/programmed-scenarios.test.ts",
+          "start": 1,
+          "end": 99
+        },
+        {
+          "path": "tests/unit/prompt-context-message.test.ts",
+          "start": 1,
+          "end": 415
+        },
+        {
+          "path": "tests/unit/semantic-release-preparation.test.ts",
+          "start": 1,
+          "end": 789
+        },
+        {
+          "path": "tests/unit/shell/free-play-opponents.test.ts",
+          "start": 1,
+          "end": 29
+        },
+        {
+          "path": "tests/unit/shell/handoff-coordinator.test.ts",
+          "start": 1,
+          "end": 443
+        },
+        {
+          "path": "tests/unit/snapshot-store.test.ts",
+          "start": 1,
+          "end": 261
+        },
+        {
+          "path": "tests/unit/story/card-ownership.test.ts",
+          "start": 1,
+          "end": 65
+        },
+        {
+          "path": "tests/unit/story/collection-grouping.test.ts",
+          "start": 1,
+          "end": 91
+        },
+        {
+          "path": "tests/unit/story/encounter-deck.test.ts",
+          "start": 1,
+          "end": 127
+        },
+        {
+          "path": "tests/unit/story/new-game-grant.test.ts",
+          "start": 1,
+          "end": 104
+        },
+        {
+          "path": "tests/unit/story/story-boundaries.test.ts",
+          "start": 1,
+          "end": 127
+        },
+        {
+          "path": "tests/unit/story/story-release-adapter.test.ts",
+          "start": 1,
+          "end": 149
+        },
+        {
+          "path": "tests/unit/sum-selection.test.ts",
+          "start": 1,
+          "end": 140
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "lines": 16213,
+      "files": [
+        {
+          "path": "tests/component/AppChrome.test.ts",
+          "start": 1,
+          "end": 1422
+        },
+        {
+          "path": "tests/component/AppLocalDecks.test.ts",
+          "start": 1,
+          "end": 366
+        },
+        {
+          "path": "tests/component/CardPreviewPanel.test.ts",
+          "start": 1,
+          "end": 118
+        },
+        {
+          "path": "tests/component/FieldActionBar.test.ts",
+          "start": 1,
+          "end": 384
+        },
+        {
+          "path": "tests/component/MainMenuScreen.test.ts",
+          "start": 1,
+          "end": 206
+        },
+        {
+          "path": "tests/component/OverlayScrollbar.test.ts",
+          "start": 1,
+          "end": 167
+        },
+        {
+          "path": "tests/component/SettingsDialog.test.ts",
+          "start": 1,
+          "end": 143
+        },
+        {
+          "path": "tests/component/StoryDuelHandoff.test.ts",
+          "start": 1,
+          "end": 531
+        },
+        {
+          "path": "tests/component/deck-editor/advanced-card-search.test.ts",
+          "start": 1,
+          "end": 232
+        },
+        {
+          "path": "tests/component/deck-editor/card-tile-art.test.ts",
+          "start": 1,
+          "end": 176
+        },
+        {
+          "path": "tests/component/deck-editor/click-semantics.test.ts",
+          "start": 1,
+          "end": 90
+        },
+        {
+          "path": "tests/component/deck-editor/deck-autosave.test.ts",
+          "start": 1,
+          "end": 699
+        },
+        {
+          "path": "tests/component/deck-editor/deck-entry.test.ts",
+          "start": 1,
+          "end": 72
+        },
+        {
+          "path": "tests/component/deck-editor/deck-favourites.test.ts",
+          "start": 1,
+          "end": 57
+        },
+        {
+          "path": "tests/component/deck-editor/deck-library-images.test.ts",
+          "start": 1,
+          "end": 350
+        },
+        {
+          "path": "tests/component/deck-editor/deck-ownership-legality.test.ts",
+          "start": 1,
+          "end": 157
+        },
+        {
+          "path": "tests/component/deck-editor/default-deck.test.ts",
+          "start": 1,
+          "end": 220
+        },
+        {
+          "path": "tests/component/deck-editor/variant-b-panels.test.ts",
+          "start": 1,
+          "end": 198
+        },
+        {
+          "path": "tests/component/deck-editor/ydk-export.test.ts",
+          "start": 1,
+          "end": 75
+        },
+        {
+          "path": "tests/component/deck-select/seat-panel.test.ts",
+          "start": 1,
+          "end": 326
+        },
+        {
+          "path": "tests/component/deck-select/tile-builder.ts",
+          "start": 1,
+          "end": 21
+        },
+        {
+          "path": "tests/component/installed-free-play.test.ts",
+          "start": 1,
+          "end": 61
+        },
+        {
+          "path": "tests/component/story/ShopCardList.test.ts",
+          "start": 1,
+          "end": 298
+        },
+        {
+          "path": "tests/component/story/ShopGreeting.test.ts",
+          "start": 1,
+          "end": 134
+        },
+        {
+          "path": "tests/component/story/ShopSell.test.ts",
+          "start": 1,
+          "end": 187
+        },
+        {
+          "path": "tests/component/story/TitleAndLoad.test.ts",
+          "start": 1,
+          "end": 80
+        },
+        {
+          "path": "tests/component/story/pre-battle-deck-picker.test.ts",
+          "start": 1,
+          "end": 654
+        },
+        {
+          "path": "tests/unit/active-card-text-manifest.test.ts",
+          "start": 1,
+          "end": 26
+        },
+        {
+          "path": "tests/unit/agents-doc-trunk.test.ts",
+          "start": 1,
+          "end": 32
+        },
+        {
+          "path": "tests/unit/application-selector.test.ts",
+          "start": 1,
+          "end": 294
+        },
+        {
+          "path": "tests/unit/battle-contracts.test.ts",
+          "start": 1,
+          "end": 255
+        },
+        {
+          "path": "tests/unit/chapter-source-policy.test.ts",
+          "start": 1,
+          "end": 218
+        },
+        {
+          "path": "tests/unit/deck-editor/click-intent.test.ts",
+          "start": 1,
+          "end": 42
+        },
+        {
+          "path": "tests/unit/deck-editor/deck-library-tiles.test.ts",
+          "start": 1,
+          "end": 258
+        },
+        {
+          "path": "tests/unit/decks/deck-database-migration.test.ts",
+          "start": 1,
+          "end": 442
+        },
+        {
+          "path": "tests/unit/decks/deck-resolver.test.ts",
+          "start": 1,
+          "end": 105
+        },
+        {
+          "path": "tests/unit/decks/ydk-adapter.test.ts",
+          "start": 1,
+          "end": 52
+        },
+        {
+          "path": "tests/unit/download-diagnostics.test.ts",
+          "start": 1,
+          "end": 92
+        },
+        {
+          "path": "tests/unit/duel-phase-label.test.ts",
+          "start": 1,
+          "end": 37
+        },
+        {
+          "path": "tests/unit/duel-rules-profile.test.ts",
+          "start": 1,
+          "end": 144
+        },
+        {
+          "path": "tests/unit/duel-session.test.ts",
+          "start": 1,
+          "end": 66
+        },
+        {
+          "path": "tests/unit/end-turn-automation.test.ts",
+          "start": 1,
+          "end": 185
+        },
+        {
+          "path": "tests/unit/global-styles.test.ts",
+          "start": 1,
+          "end": 1002
+        },
+        {
+          "path": "tests/unit/immutable-choice-id-set.test.ts",
+          "start": 1,
+          "end": 40
+        },
+        {
+          "path": "tests/unit/installed-card-image-source.test.ts",
+          "start": 1,
+          "end": 279
+        },
+        {
+          "path": "tests/unit/interaction-spec.test.ts",
+          "start": 1,
+          "end": 1031
+        },
+        {
+          "path": "tests/unit/opponent-policy.test.ts",
+          "start": 1,
+          "end": 518
+        },
+        {
+          "path": "tests/unit/progressive-manifest-memo.test.ts",
+          "start": 1,
+          "end": 267
+        },
+        {
+          "path": "tests/unit/prompt-registry.test.ts",
+          "start": 1,
+          "end": 1114
+        },
+        {
+          "path": "tests/unit/replay-opponent-policy.test.ts",
+          "start": 1,
+          "end": 134
+        },
+        {
+          "path": "tests/unit/service-worker-install.test.ts",
+          "start": 1,
+          "end": 89
+        },
+        {
+          "path": "tests/unit/set-image-acquisition.test.ts",
+          "start": 1,
+          "end": 101
+        },
+        {
+          "path": "tests/unit/story/contrast.test.ts",
+          "start": 1,
+          "end": 118
+        },
+        {
+          "path": "tests/unit/story/credit-at-open.test.ts",
+          "start": 1,
+          "end": 156
+        },
+        {
+          "path": "tests/unit/story/opened-card-quantities.test.ts",
+          "start": 1,
+          "end": 99
+        },
+        {
+          "path": "tests/unit/story/shop-data.test.ts",
+          "start": 1,
+          "end": 236
+        },
+        {
+          "path": "tests/unit/story/shop-set-fold.test.ts",
+          "start": 1,
+          "end": 105
+        },
+        {
+          "path": "tests/unit/story/story-deck-context.test.ts",
+          "start": 1,
+          "end": 205
+        },
+        {
+          "path": "tests/unit/story/story-handoff.test.ts",
+          "start": 1,
+          "end": 109
+        },
+        {
+          "path": "tests/unit/story/story-state.test.ts",
+          "start": 1,
+          "end": 811
+        },
+        {
+          "path": "tests/unit/ui-settings-store.test.ts",
+          "start": 1,
+          "end": 127
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "lines": 16212,
+      "files": [
+        {
+          "path": "tests/component/AppBoardMapping.test.ts",
+          "start": 1,
+          "end": 283
+        },
+        {
+          "path": "tests/component/CardActionChips.test.ts",
+          "start": 1,
+          "end": 236
+        },
+        {
+          "path": "tests/component/DeckPicker.test.ts",
+          "start": 1,
+          "end": 219
+        },
+        {
+          "path": "tests/component/DuelResultDialog.test.ts",
+          "start": 1,
+          "end": 131
+        },
+        {
+          "path": "tests/component/FieldBoard.test.ts",
+          "start": 1,
+          "end": 149
+        },
+        {
+          "path": "tests/component/FloatingFieldWindow.test.ts",
+          "start": 1,
+          "end": 507
+        },
+        {
+          "path": "tests/component/HandZoomOverlay.test.ts",
+          "start": 1,
+          "end": 419
+        },
+        {
+          "path": "tests/component/LoadingOverlay.test.ts",
+          "start": 1,
+          "end": 36
+        },
+        {
+          "path": "tests/component/MenuDialog.test.ts",
+          "start": 1,
+          "end": 24
+        },
+        {
+          "path": "tests/component/ZoneListDialog.test.ts",
+          "start": 1,
+          "end": 1156
+        },
+        {
+          "path": "tests/component/collection-image-teardown.test.ts",
+          "start": 1,
+          "end": 104
+        },
+        {
+          "path": "tests/component/core-menu.test.ts",
+          "start": 1,
+          "end": 149
+        },
+        {
+          "path": "tests/component/deck-editor/advanced-search-load-lifecycle.test.ts",
+          "start": 1,
+          "end": 85
+        },
+        {
+          "path": "tests/component/deck-editor/card-preview-pane.test.ts",
+          "start": 1,
+          "end": 175
+        },
+        {
+          "path": "tests/component/deck-editor/deck-editor-shell.test.ts",
+          "start": 1,
+          "end": 204
+        },
+        {
+          "path": "tests/component/deck-editor/deck-history-ui.test.ts",
+          "start": 1,
+          "end": 84
+        },
+        {
+          "path": "tests/component/deck-editor/deck-library.test.ts",
+          "start": 1,
+          "end": 400
+        },
+        {
+          "path": "tests/component/deck-editor/editor-context.test.ts",
+          "start": 1,
+          "end": 575
+        },
+        {
+          "path": "tests/component/deck-editor/installed-catalog.test.ts",
+          "start": 1,
+          "end": 65
+        },
+        {
+          "path": "tests/component/deck-editor/missing-card-placeholder.test.ts",
+          "start": 1,
+          "end": 122
+        },
+        {
+          "path": "tests/component/deck-editor/portrait-layout.test.ts",
+          "start": 1,
+          "end": 319
+        },
+        {
+          "path": "tests/component/deck-select/deck-dialogs.test.ts",
+          "start": 1,
+          "end": 171
+        },
+        {
+          "path": "tests/component/deck-select/hover-previews.test.ts",
+          "start": 1,
+          "end": 815
+        },
+        {
+          "path": "tests/component/installed-card-media.test.ts",
+          "start": 1,
+          "end": 250
+        },
+        {
+          "path": "tests/component/shell-card-image-status.test.ts",
+          "start": 1,
+          "end": 139
+        },
+        {
+          "path": "tests/component/story/IllustratedMap.test.ts",
+          "start": 1,
+          "end": 218
+        },
+        {
+          "path": "tests/component/story/StoryPlayback.test.ts",
+          "start": 1,
+          "end": 123
+        },
+        {
+          "path": "tests/component/story/StoryTopBar.test.ts",
+          "start": 1,
+          "end": 98
+        },
+        {
+          "path": "tests/component/story/card-preview-host.test.ts",
+          "start": 1,
+          "end": 73
+        },
+        {
+          "path": "tests/component/story/sell-confirmation.test.ts",
+          "start": 1,
+          "end": 207
+        },
+        {
+          "path": "tests/unit/auto-placement.test.ts",
+          "start": 1,
+          "end": 112
+        },
+        {
+          "path": "tests/unit/battle/selectable-decks.test.ts",
+          "start": 1,
+          "end": 280
+        },
+        {
+          "path": "tests/unit/card-preview.test.ts",
+          "start": 1,
+          "end": 256
+        },
+        {
+          "path": "tests/unit/content-installer.test.ts",
+          "start": 1,
+          "end": 659
+        },
+        {
+          "path": "tests/unit/core-bootstrap.test.ts",
+          "start": 1,
+          "end": 102
+        },
+        {
+          "path": "tests/unit/deck-editor/result-window.test.ts",
+          "start": 1,
+          "end": 41
+        },
+        {
+          "path": "tests/unit/decks/canonical-sort-matrix.test.ts",
+          "start": 1,
+          "end": 141
+        },
+        {
+          "path": "tests/unit/decks/deck-catalog-index.test.ts",
+          "start": 1,
+          "end": 364
+        },
+        {
+          "path": "tests/unit/decks/deck-library-order.test.ts",
+          "start": 1,
+          "end": 41
+        },
+        {
+          "path": "tests/unit/decks/ocg-mask-parity.test.ts",
+          "start": 1,
+          "end": 33
+        },
+        {
+          "path": "tests/unit/dialog-chrome.test.ts",
+          "start": 1,
+          "end": 55
+        },
+        {
+          "path": "tests/unit/duel-store.test.ts",
+          "start": 1,
+          "end": 1030
+        },
+        {
+          "path": "tests/unit/duel-worker-runtime.test.ts",
+          "start": 1,
+          "end": 1269
+        },
+        {
+          "path": "tests/unit/field-navigation.test.ts",
+          "start": 1,
+          "end": 343
+        },
+        {
+          "path": "tests/unit/floating-window-position.test.ts",
+          "start": 1,
+          "end": 73
+        },
+        {
+          "path": "tests/unit/format-duel-presentation-event.test.ts",
+          "start": 1,
+          "end": 94
+        },
+        {
+          "path": "tests/unit/headless-lifecycle.test.ts",
+          "start": 1,
+          "end": 235
+        },
+        {
+          "path": "tests/unit/headless-reconciliation.test.ts",
+          "start": 1,
+          "end": 1068
+        },
+        {
+          "path": "tests/unit/installed-gameplay.test.ts",
+          "start": 1,
+          "end": 307
+        },
+        {
+          "path": "tests/unit/installed-worker-deck-validation.test.ts",
+          "start": 1,
+          "end": 105
+        },
+        {
+          "path": "tests/unit/persisted-ui-store.test.ts",
+          "start": 1,
+          "end": 185
+        },
+        {
+          "path": "tests/unit/progressive-download.test.ts",
+          "start": 1,
+          "end": 724
+        },
+        {
+          "path": "tests/unit/progressive-manifest.test.ts",
+          "start": 1,
+          "end": 90
+        },
+        {
+          "path": "tests/unit/revision-cache-cleanup.test.ts",
+          "start": 1,
+          "end": 53
+        },
+        {
+          "path": "tests/unit/runtime-source-path.test.ts",
+          "start": 1,
+          "end": 22
+        },
+        {
+          "path": "tests/unit/set-image-manifest.test.ts",
+          "start": 1,
+          "end": 186
+        },
+        {
+          "path": "tests/unit/shell-settings.test.ts",
+          "start": 1,
+          "end": 274
+        },
+        {
+          "path": "tests/unit/shell/free-play-deck-actions.test.ts",
+          "start": 1,
+          "end": 200
+        },
+        {
+          "path": "tests/unit/shell/story-battle-request.test.ts",
+          "start": 1,
+          "end": 63
+        },
+        {
+          "path": "tests/unit/stage-layout.test.ts",
+          "start": 1,
+          "end": 114
+        },
+        {
+          "path": "tests/unit/story/sell-impact.test.ts",
+          "start": 1,
+          "end": 157
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "lines": 16214,
+      "files": [
+        {
+          "path": "tests/component/AppShell.test.ts",
+          "start": 1,
+          "end": 1043
+        },
+        {
+          "path": "tests/component/DuelErrorDialog.test.ts",
+          "start": 1,
+          "end": 28
+        },
+        {
+          "path": "tests/component/HandBand.test.ts",
+          "start": 1,
+          "end": 361
+        },
+        {
+          "path": "tests/component/InstallContentScreen.test.ts",
+          "start": 1,
+          "end": 142
+        },
+        {
+          "path": "tests/component/StoryMenuEntry.test.ts",
+          "start": 1,
+          "end": 339
+        },
+        {
+          "path": "tests/component/deck-editor/catalog-type-input.test.ts",
+          "start": 1,
+          "end": 155
+        },
+        {
+          "path": "tests/component/deck-editor/deck-click-move.test.ts",
+          "start": 1,
+          "end": 184
+        },
+        {
+          "path": "tests/component/deck-editor/deck-context-menu.test.ts",
+          "start": 1,
+          "end": 199
+        },
+        {
+          "path": "tests/component/deck-editor/deck-create-failure.test.ts",
+          "start": 1,
+          "end": 52
+        },
+        {
+          "path": "tests/component/deck-editor/deck-delete-failure.test.ts",
+          "start": 1,
+          "end": 131
+        },
+        {
+          "path": "tests/component/deck-editor/deck-validation-ui.test.ts",
+          "start": 1,
+          "end": 233
+        },
+        {
+          "path": "tests/component/deck-editor/deck-workspace-selectors.test.ts",
+          "start": 1,
+          "end": 56
+        },
+        {
+          "path": "tests/component/deck-editor/deck-zone-grid.test.ts",
+          "start": 1,
+          "end": 223
+        },
+        {
+          "path": "tests/component/deck-editor/installed-image-teardown.test.ts",
+          "start": 1,
+          "end": 46
+        },
+        {
+          "path": "tests/component/deck-editor/keyboard-shortcuts.test.ts",
+          "start": 1,
+          "end": 100
+        },
+        {
+          "path": "tests/component/deck-editor/pointer-drag.test.ts",
+          "start": 1,
+          "end": 257
+        },
+        {
+          "path": "tests/component/deck-editor/token-cards.test.ts",
+          "start": 1,
+          "end": 71
+        },
+        {
+          "path": "tests/component/deck-editor/ydk-import.test.ts",
+          "start": 1,
+          "end": 177
+        },
+        {
+          "path": "tests/component/story/BoosterOpening.test.ts",
+          "start": 1,
+          "end": 139
+        },
+        {
+          "path": "tests/component/story/BoosterOpeningScreen.test.ts",
+          "start": 1,
+          "end": 100
+        },
+        {
+          "path": "tests/component/story/booster-open-all.test.ts",
+          "start": 1,
+          "end": 410
+        },
+        {
+          "path": "tests/component/story/choice-list.test.ts",
+          "start": 1,
+          "end": 253
+        },
+        {
+          "path": "tests/component/story/story-card-tile.test.ts",
+          "start": 1,
+          "end": 215
+        },
+        {
+          "path": "tests/unit/battle-runtime-input.test.ts",
+          "start": 1,
+          "end": 187
+        },
+        {
+          "path": "tests/unit/card-visibility.test.ts",
+          "start": 1,
+          "end": 21
+        },
+        {
+          "path": "tests/unit/chapter-set-media.test.ts",
+          "start": 1,
+          "end": 123
+        },
+        {
+          "path": "tests/unit/content-setup-authoring.test.ts",
+          "start": 1,
+          "end": 236
+        },
+        {
+          "path": "tests/unit/content-setup-runtime.test.ts",
+          "start": 1,
+          "end": 326
+        },
+        {
+          "path": "tests/unit/contracts.test.ts",
+          "start": 1,
+          "end": 1235
+        },
+        {
+          "path": "tests/unit/data-cy-coverage.test.ts",
+          "start": 1,
+          "end": 704
+        },
+        {
+          "path": "tests/unit/deck-editor/editor-layout.test.ts",
+          "start": 1,
+          "end": 39
+        },
+        {
+          "path": "tests/unit/decks/deck-history.test.ts",
+          "start": 1,
+          "end": 157
+        },
+        {
+          "path": "tests/unit/decks/indexeddb-deck-repository.test.ts",
+          "start": 1,
+          "end": 569
+        },
+        {
+          "path": "tests/unit/decks/ocg-card-mapper.test.ts",
+          "start": 1,
+          "end": 67
+        },
+        {
+          "path": "tests/unit/domain-boundaries.test.ts",
+          "start": 1,
+          "end": 1250
+        },
+        {
+          "path": "tests/unit/domain-chunk-closure.test.ts",
+          "start": 1,
+          "end": 279
+        },
+        {
+          "path": "tests/unit/duel-deck-selection.test.ts",
+          "start": 1,
+          "end": 204
+        },
+        {
+          "path": "tests/unit/duel-worker-client.test.ts",
+          "start": 1,
+          "end": 813
+        },
+        {
+          "path": "tests/unit/hand-activation-choices.test.ts",
+          "start": 1,
+          "end": 36
+        },
+        {
+          "path": "tests/unit/image-content-lock.test.ts",
+          "start": 1,
+          "end": 167
+        },
+        {
+          "path": "tests/unit/installed-images.test.ts",
+          "start": 1,
+          "end": 103
+        },
+        {
+          "path": "tests/unit/manifest-closure-reduction.test.ts",
+          "start": 1,
+          "end": 90
+        },
+        {
+          "path": "tests/unit/material-list.test.ts",
+          "start": 1,
+          "end": 92
+        },
+        {
+          "path": "tests/unit/persisted-ui-state.test.ts",
+          "start": 1,
+          "end": 207
+        },
+        {
+          "path": "tests/unit/phase-transitions.test.ts",
+          "start": 1,
+          "end": 75
+        },
+        {
+          "path": "tests/unit/progressive-release.test.ts",
+          "start": 1,
+          "end": 431
+        },
+        {
+          "path": "tests/unit/prompt-control-family.test.ts",
+          "start": 1,
+          "end": 61
+        },
+        {
+          "path": "tests/unit/prompt-surface.test.ts",
+          "start": 1,
+          "end": 297
+        },
+        {
+          "path": "tests/unit/runtime-manifest.test.ts",
+          "start": 1,
+          "end": 122
+        },
+        {
+          "path": "tests/unit/settle-once.test.ts",
+          "start": 1,
+          "end": 30
+        },
+        {
+          "path": "tests/unit/shell-routes.test.ts",
+          "start": 1,
+          "end": 270
+        },
+        {
+          "path": "tests/unit/story/auto-flip.test.ts",
+          "start": 1,
+          "end": 80
+        },
+        {
+          "path": "tests/unit/story/collection-cards.test.ts",
+          "start": 1,
+          "end": 114
+        },
+        {
+          "path": "tests/unit/story/pre-battle-tiles.test.ts",
+          "start": 1,
+          "end": 145
+        },
+        {
+          "path": "tests/unit/story/save-generations.test.ts",
+          "start": 1,
+          "end": 486
+        },
+        {
+          "path": "tests/unit/story/shop-pack-value.test.ts",
+          "start": 1,
+          "end": 110
+        },
+        {
+          "path": "tests/unit/story/story-deck-repository.test.ts",
+          "start": 1,
+          "end": 659
+        },
+        {
+          "path": "tests/unit/story/story-save-repository.test.ts",
+          "start": 1,
+          "end": 1027
+        },
+        {
+          "path": "tests/unit/story/zoom-window-position.test.ts",
+          "start": 1,
+          "end": 109
+        },
+        {
+          "path": "tests/unit/toast-store.test.ts",
+          "start": 1,
+          "end": 89
+        },
+        {
+          "path": "tests/unit/verify-gameplay-parity.test.ts",
+          "start": 1,
+          "end": 290
+        }
+      ]
+    }
+  ]
+}

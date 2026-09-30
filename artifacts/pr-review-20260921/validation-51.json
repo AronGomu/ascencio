@@ -1,0 +1,28 @@
+{
+  "number": 51,
+  "base": "2d721a50177994fb5003cf90b012e67a19842623",
+  "head": "f4ff999c3cfdb71c2e75fe5d8054c3cc70fa7829",
+  "merge": {
+    "command": "git merge-tree --write-tree 2d721a50177994fb5003cf90b012e67a19842623 f4ff999c3cfdb71c2e75fe5d8054c3cc70fa7829",
+    "exit": 0,
+    "output": "caa9a133d32165136a5c9e1d2db3e1f1602501d7\n"
+  },
+  "checks": [
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/vitest/vitest.mjs run --maxWorkers=2 tests/unit/shell-settings-concurrency.test.ts",
+      "exit": 0,
+      "output": "8:23:05 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-51 - using default configuration.\n\n RUN  v4.1.10 /home/aron/Projects/ascencio/.tmp/pr-review-20260921/pr-51\n\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  08:23:07\n   Duration  6.30s (transform 4.18s, setup 5.08s, import 216ms, tests 283ms, environment 1ms)\n\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/prettier/bin/prettier.cjs --check src/shell/settings/shell-settings-store.ts tests/unit/shell-settings-concurrency.test.ts",
+      "exit": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": "node /home/aron/Projects/ascencio/node_modules/eslint/bin/eslint.js src/shell/settings/shell-settings-store.ts tests/unit/shell-settings-concurrency.test.ts",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "tree": "caa9a133d32165136a5c9e1d2db3e1f1602501d7"
+}

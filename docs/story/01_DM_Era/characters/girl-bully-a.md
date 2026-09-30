@@ -1,10 +1,10 @@
-# Girl Arc Bully A
+# Alexis Arc Bully A
 
 > Status: needs definition
 
 ## Role
 
-One of two girls who bully the Girl through jealousy, rumors, appearance-based cruelty and her family connection to the disappeared student. Fynn later duels both to learn what they know.
+One of two students who bully Alexis through jealousy, rumors, appearance-based cruelty and her family connection to the disappeared student. Finn later duels both to learn what they know.
 
 ## Open details
 

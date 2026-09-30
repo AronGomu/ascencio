@@ -53,7 +53,7 @@ npm run assets:migrate -- --apply generated/asset-delivery/migration-plan.json
 
 ## Browser and acquisition boundaries
 
-Vite sets `publicDir:false`, emits only explicit app assets and exact SQLite executable, and denies direct/aliased/encoded/`@fs` access to `assets/content/**` plus `generated/content-packages/**`. Package roots are never recursive public directories. OCG WASM, package DBs, card/chapter media, ZIPs, and raw source bytes must not enter `dist/` or shell precache.
+Vite sets `publicDir:false`, emits only explicit app assets and exact SQLite executable, and denies direct/aliased/encoded/`@fs` access to `assets/content/**` plus `generated/content-packages/**`. Package roots are never recursive public directories. OCG WASM, package DBs, card/chapter media, ZIPs, and raw source bytes must not enter `generated/build/app/` or shell precache.
 
 Explicit acquisition commands remain available, targeting package-owned roots under common local lock. They are never invoked by scan, migration, promotion, restructure, package verification, or app build. Download reports/status/cache remain operational `generated/` diagnostics, not browser delivery assets. Upstream completeness and decoded-media checks remain separate from package fixture/code readiness.
 

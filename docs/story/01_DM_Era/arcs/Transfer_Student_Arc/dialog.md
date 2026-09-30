@@ -1,12 +1,12 @@
-# Transfer Student Arc — dialogue
+# Blaise Arc — dialogue
 
 > Status: dialogue not written
 
 ## Required scenes
 
-- Transfer arrival.
-- Fynn and childhood friend reunion.
-- Public explanation for transfer.
+- Blaise's arrival at Violet Academy.
+- Finn and childhood friend reunion.
+- Public explanation for changing her education.
 - Private hints of hidden motivation.
-- Relationship scenes with Girl and Nerd.
+- Relationship scenes with Alexis and Sirius.
 - Player-facing reveal timing.

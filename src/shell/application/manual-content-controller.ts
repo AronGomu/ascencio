@@ -543,7 +543,7 @@ export function failureCopy(error: StorageFailure): string {
     case "PACKAGE_INVALID":
     case "PACKAGE_SCHEMA_UNSUPPORTED":
     case "PACKAGE_SOURCE_INCOMPLETE":
-      return "Selected file is not a supported complete content package.";
+      return "Selection must be one valid package ZIP or up to four complete SQLite packages.";
     case "USER_DATA_INVALID":
       return "Selected backup is invalid. Current user data is unchanged.";
     case "USER_DATA_TOO_LARGE":

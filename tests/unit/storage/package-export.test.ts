@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -16,6 +17,7 @@ import {
   exportPackages,
   verifyPackageFile,
 } from "../../../scripts/lib/sqlite-content/index.ts";
+import { resolvePackageImportSources } from "../../../src/storage/runtime/package-import-selection.ts";
 
 vi.mock("node:fs", async (original) => ({
   ...(await original<typeof fsSync>()),
@@ -66,8 +68,42 @@ describe("immutable SQLite package export", () => {
       "freeplay",
       "chapter-01",
     ]);
+    expect(
+      (await readdir(path.join(root, "generated/content-packages"))).sort(),
+    ).toEqual([
+      "card-library-1.0.0.sqlite",
+      "chapter-01-1.0.0.sqlite",
+      "content-packages.zip",
+      "duel-core-1.0.0.sqlite",
+      "freeplay-1.0.0.sqlite",
+    ]);
+    const archive = await resolvePackageImportSources([
+      new File(
+        [
+          await readFile(
+            path.join(root, "generated/content-packages/content-packages.zip"),
+          ),
+        ],
+        "content-packages.zip",
+        { type: "application/zip" },
+      ),
+    ]);
+    expect(archive.kind).toBe("ok");
+    if (archive.kind === "ok") {
+      expect(archive.value.map(({ name }) => name)).toEqual(
+        result.value.map(({ path: packagePath }) => path.basename(packagePath)),
+      );
+      for (const [index, source] of archive.value.entries()) {
+        const bytes = new Uint8Array(
+          await new Response(await source.open()).arrayBuffer(),
+        );
+        expect(createHash("sha256").update(bytes).digest("hex")).toBe(
+          result.value[index]!.sha256,
+        );
+      }
+    }
     const library = new DatabaseSync(
-      path.join(root, "generated/content-packages/card-library/1.0.0.sqlite"),
+      path.join(root, "generated/content-packages/card-library-1.0.0.sqlite"),
       { readOnly: true },
     );
     expect(
@@ -75,7 +111,7 @@ describe("immutable SQLite package export", () => {
     ).toEqual([{ code: 1 }, { code: 2 }]);
     library.close();
     const chapter = new DatabaseSync(
-      path.join(root, "generated/content-packages/chapter-01/1.0.0.sqlite"),
+      path.join(root, "generated/content-packages/chapter-01-1.0.0.sqlite"),
       { readOnly: true },
     );
     expect(
@@ -141,8 +177,24 @@ describe("immutable SQLite package export", () => {
       ),
     );
     const first = await exportPackages(root, spec);
+    const firstArchive = createHash("sha256")
+      .update(
+        await readFile(
+          path.join(root, "generated/content-packages/content-packages.zip"),
+        ),
+      )
+      .digest("hex");
     const second = await exportPackages(root, spec);
     expect(second).toEqual(first);
+    expect(
+      createHash("sha256")
+        .update(
+          await readFile(
+            path.join(root, "generated/content-packages/content-packages.zip"),
+          ),
+        )
+        .digest("hex"),
+    ).toBe(firstArchive);
     expect(first.kind).toBe("ok");
     if (first.kind !== "ok") return;
     const duel = first.value[0]!;
@@ -166,7 +218,7 @@ describe("immutable SQLite package export", () => {
       error: {
         code: "PACKAGE_IDENTITY_CONFLICT",
         packageId: "duel-core",
-        path: "generated/content-packages/duel-core/1.0.0.sqlite",
+        path: "generated/content-packages/duel-core-1.0.0.sqlite",
       },
     });
     expect(await verifyPackageFile(root, duel.path)).toMatchObject({
@@ -257,7 +309,7 @@ describe("immutable SQLite package export", () => {
       ),
     );
     expect((await exportPackages(root, spec)).kind).toBe("ok");
-    const relative = "generated/content-packages/card-library/1.0.0.sqlite";
+    const relative = "generated/content-packages/card-library-1.0.0.sqlite";
     const database = new DatabaseSync(path.join(root, relative));
     database
       .prepare("UPDATE scripts SET source=? WHERE name=?")
@@ -355,7 +407,7 @@ describe("immutable SQLite package export", () => {
       });
       await expect(
         readFile(
-          path.join(root, "generated/content-packages/duel-core/1.0.0.sqlite"),
+          path.join(root, "generated/content-packages/duel-core-1.0.0.sqlite"),
         ),
       ).rejects.toMatchObject({ code: "ENOENT" });
     },
@@ -387,7 +439,7 @@ describe("immutable SQLite package export", () => {
       });
       await expect(
         readFile(
-          path.join(root, "generated/content-packages/duel-core/1.0.0.sqlite"),
+          path.join(root, "generated/content-packages/duel-core-1.0.0.sqlite"),
         ),
       ).rejects.toMatchObject({ code: "ENOENT" });
     },
@@ -443,7 +495,7 @@ describe("immutable SQLite package export", () => {
       });
       await expect(
         readFile(
-          path.join(root, "generated/content-packages/duel-core/1.0.0.sqlite"),
+          path.join(root, "generated/content-packages/duel-core-1.0.0.sqlite"),
         ),
       ).rejects.toMatchObject({ code: "ENOENT" });
     },
@@ -480,7 +532,7 @@ describe("immutable SQLite package export", () => {
     });
     await expect(
       readFile(
-        path.join(root, "generated/content-packages/duel-core/1.0.0.sqlite"),
+        path.join(root, "generated/content-packages/duel-core-1.0.0.sqlite"),
       ),
     ).rejects.toMatchObject({ code: "ENOENT" });
   });

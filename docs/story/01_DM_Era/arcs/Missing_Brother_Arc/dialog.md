@@ -1,13 +1,14 @@
-# Missing Brother Arc — dialogue
+# Second Alexis Arc — dialogue
 
 > Status: dialogue not written
 
 ## Required scenes
 
-- Investigation continuation.
-- New evidence.
-- Trio disagreement or risk.
-- Brother reveal or recovery.
-- Consequences for Girl, Fynn and Nerd.
+- Alexis brings new evidence to Finn and Sirius.
+- The trio follows the lead together.
+- A second Darkness contact is confronted and defeated.
+- The contact explains why Atticus is supposedly irrecoverable.
+- Alexis accepts the apparent final loss of her brother.
+- The aftermath begins her period of grief.
 
-No dialogue is canon until the arc scenario is defined.
+No final dialogue is approved yet.

@@ -1,12 +1,12 @@
-# Rival Returns Arc — dialogue
+# Chaz Returns Arc — dialogue
 
 > Status: dialogue not written
 
 ## Required scenes
 
-- Rival seeks Fynn.
+- Chaz seeks Finn.
 - Public rematch challenge.
-- Rival's second defeat.
+- Chaz's second defeat.
 - Goons' quiet withdrawal.
-- Rival recognizes the difference between followers and friends.
-- Rival begins reconstruction.
+- Chaz recognizes the difference between followers and friends.
+- Chaz begins reconstruction.

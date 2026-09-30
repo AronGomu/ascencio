@@ -4,15 +4,24 @@ import {
   ENGINE_BLOB_CAP,
   MEDIA_BLOB_CAP,
 } from "../../../src/storage/runtime/package-validation.ts";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, statSync, writeFileSync } from "node:fs";
+import { deflateRawSync } from "node:zlib";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { describe, expect, it, vi } from "vitest";
 import { AtomicPackageRuntime } from "../../../src/storage/runtime/atomic-package-runtime.ts";
+import { writePackageArchive } from "../../../scripts/lib/sqlite-content/package-archive.ts";
+import type { ExportReceipt } from "../../../src/storage/contracts/package-build.ts";
+import {
+  CRC32_INITIAL,
+  finishCrc32,
+  updateCrc32,
+} from "../../../src/storage/runtime/crc32.ts";
 import {
   createImportablePackageFixture,
   createPackageFixture,
   createUserDataFixture,
+  FIXTURE_ROOT,
   insertAsset,
 } from "./sqlite-fixtures.ts";
 import {
@@ -57,6 +66,83 @@ function filesForStack(multiChunk = false): readonly File[] {
       }
       fixture.database.close();
       return fixtureFile(fixture.file, `../../attacker-${index}.sqlite`);
+    },
+  );
+}
+
+async function archiveForStack(): Promise<File> {
+  const receipts: ExportReceipt[] = [];
+  for (const id of [
+    "chapter-01",
+    "freeplay",
+    "card-library",
+    "duel-core",
+  ] as const) {
+    const fixture = createImportablePackageFixture(id);
+    fixture.database.close();
+    const relative = path.relative(FIXTURE_ROOT, fixture.file);
+    receipts.push({
+      packageId: id,
+      version: "1.0.0",
+      path: relative,
+      bytes: statSync(fixture.file).size,
+      sha256: "unused-by-archive-writer",
+      missingOptionalMedia: [],
+      excludedSetMemberships: [],
+      rarityWarnings: [],
+      inventoryOnlyScripts: [],
+    });
+  }
+  const receipt = await writePackageArchive(FIXTURE_ROOT, receipts);
+  return new File(
+    [readFileSync(path.join(FIXTURE_ROOT, receipt.path))],
+    "packages.zip",
+    {
+      type: "application/zip",
+    },
+  );
+}
+
+function deflatedArchive(source: string): File {
+  const payload = new Uint8Array(readFileSync(source));
+  const compressed = new Uint8Array(deflateRawSync(payload));
+  const name = new TextEncoder().encode("renamed-package.sqlite");
+  const crc32 = finishCrc32(updateCrc32(CRC32_INITIAL, payload));
+  const local = new Uint8Array(30);
+  const localView = new DataView(local.buffer);
+  localView.setUint32(0, 0x04034b50, true);
+  localView.setUint16(4, 20, true);
+  localView.setUint16(6, 0x0800, true);
+  localView.setUint16(8, 8, true);
+  localView.setUint32(14, crc32, true);
+  localView.setUint32(18, compressed.byteLength, true);
+  localView.setUint32(22, payload.byteLength, true);
+  localView.setUint16(26, name.byteLength, true);
+  const centralOffset =
+    local.byteLength + name.byteLength + compressed.byteLength;
+  const central = new Uint8Array(46);
+  const centralView = new DataView(central.buffer);
+  centralView.setUint32(0, 0x02014b50, true);
+  centralView.setUint16(4, 0x0314, true);
+  centralView.setUint16(6, 20, true);
+  centralView.setUint16(8, 0x0800, true);
+  centralView.setUint16(10, 8, true);
+  centralView.setUint32(16, crc32, true);
+  centralView.setUint32(20, compressed.byteLength, true);
+  centralView.setUint32(24, payload.byteLength, true);
+  centralView.setUint16(28, name.byteLength, true);
+  const end = new Uint8Array(22);
+  const endView = new DataView(end.buffer);
+  endView.setUint32(0, 0x06054b50, true);
+  endView.setUint16(8, 1, true);
+  endView.setUint16(10, 1, true);
+  endView.setUint32(12, central.byteLength + name.byteLength, true);
+  endView.setUint32(16, centralOffset, true);
+  return new File(
+    [local, name, compressed, central, name, end],
+    "deflated.zip",
+    {
+      type: "application/zip",
     },
   );
 }
@@ -125,6 +211,78 @@ describe("atomic package import", () => {
       false,
     );
     expect(progress).toContain("complete");
+  });
+
+  it("extracts one package ZIP, validates its entries, and activates the stack", async () => {
+    const { runtime, files } = runtimeWith();
+    const result = await runtime.importPackages(
+      [await archiveForStack()],
+      0,
+      new AbortController().signal,
+      () => {},
+    );
+
+    expect(result).toMatchObject({
+      kind: "ok",
+      value: {
+        generation: 1,
+        packages: [
+          { packageId: "duel-core" },
+          { packageId: "card-library" },
+          { packageId: "freeplay" },
+          { packageId: "chapter-01" },
+        ],
+      },
+    });
+    expect(files.maxChunkBytes).toBeLessThanOrEqual(1024 * 1024);
+  });
+
+  it("imports a standard deflated ZIP entry without trusting its filename", async () => {
+    const core = createImportablePackageFixture("duel-core");
+    core.database.close();
+    const { runtime } = runtimeWith();
+
+    expect(
+      await runtime.importPackages(
+        [deflatedArchive(core.file)],
+        0,
+        new AbortController().signal,
+        () => {},
+      ),
+    ).toMatchObject({
+      kind: "ok",
+      value: { packages: [{ packageId: "duel-core" }] },
+    });
+  });
+
+  it("rejects mixed ZIP/raw selection and corrupt ZIP entry bytes atomically", async () => {
+    const mixed = runtimeWith();
+    expect(
+      await mixed.runtime.importPackages(
+        [await archiveForStack(), filesForStack()[0]!],
+        0,
+        new AbortController().signal,
+        () => {},
+      ),
+    ).toEqual({ kind: "failed", error: { code: "PACKAGE_INVALID" } });
+    expect(mixed.files.list()).toEqual([]);
+
+    const archive = await archiveForStack();
+    const bytes = new Uint8Array(await archive.arrayBuffer());
+    const header = new DataView(bytes.buffer);
+    const dataOffset =
+      30 + header.getUint16(26, true) + header.getUint16(28, true);
+    bytes[dataOffset + 200] = bytes[dataOffset + 200]! ^ 1;
+    const corrupt = runtimeWith();
+    expect(
+      await corrupt.runtime.importPackages(
+        [new File([bytes], "corrupt.zip", { type: "application/zip" })],
+        0,
+        new AbortController().signal,
+        () => {},
+      ),
+    ).toEqual({ kind: "failed", error: { code: "PACKAGE_INVALID" } });
+    expect(corrupt.files.list()).toEqual([]);
   });
 
   it("rolls back prior registry when a later selected database is malformed", async () => {

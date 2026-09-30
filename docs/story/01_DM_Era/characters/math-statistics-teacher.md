@@ -4,7 +4,7 @@
 
 ## Role
 
-Mathematics or statistics teacher in the Chapter 1 academy staff. The subject may connect to duel analysis and the Nerd's strengths.
+Mathematics or statistics teacher on the Chapter 1 university staff. The subject may connect to duel analysis and Sirius's strengths.
 
 ## Open details
 

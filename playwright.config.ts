@@ -8,7 +8,12 @@ if (!Number.isSafeInteger(playwrightPort) || playwrightPort <= 0) {
 const baseURL = `http://127.0.0.1:${playwrightPort}${basePath}`;
 
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: "./e2e/e2e-global",
+  outputDir: "generated/tests/e2e-global/results",
+  reporter: [
+    ["line"],
+    ["html", { outputFolder: "generated/tests/e2e-global/report" }],
+  ],
   fullyParallel: false,
   workers: 1,
   timeout: 180_000,

@@ -1,22 +1,22 @@
-# Nerd Arc — scenario
+# Sirius Arc — scenario
 
 > Status: largely defined
 
 ## Purpose
 
-Establish school routine, Fynn and Nerd's friendship, minor duels, the Free Duel tutorial and the Nerd's first step toward action.
+Establish campus routine, Finn and Sirius's friendship, minor duels, the Free Duel tutorial and Sirius's first step toward action.
 
 ## Beats
 
-- First day: classes, exposition, classmates and slice-of-life.
-- Second day: Fynn finds Nerd being bullied by three classmates.
-- Nerd previously lost a duel and a meaningful card.
-- Fynn stakes his favorite card and duels all three opponents.
+- First day: university classes, exposition, classmates and slice-of-life.
+- Second day: Finn finds Sirius being bullied by three classmates.
+- Sirius previously lost a duel and a meaningful card.
+- Finn stakes his favorite card and duels all three opponents.
 - The gauntlet introduces repeatable Free Duel opponents.
-- After several school days, Nerd stops attending and hides in his room.
-- Fynn challenges Nerd to a mandatory Best of 3.
-- Nerd's deck construction, reads and theory contrast with hesitation and execution mistakes.
-- Fynn wins; Nerd returns to class without becoming instantly confident.
+- After several class days, Sirius stops attending and hides in his room.
+- Finn challenges Sirius to a mandatory Best of 3.
+- Sirius's deck construction, reads and theory contrast with hesitation and execution mistakes.
+- Finn wins; Sirius returns to class without becoming instantly confident.
 - Friendship becomes official.
 
 ## System outcome

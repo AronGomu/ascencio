@@ -8,7 +8,10 @@ const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const outputs = ["dist-repro-a", "dist-repro-b"] as const;
+const outputs = [
+  "generated/build/reproducible-a",
+  "generated/build/reproducible-b",
+] as const;
 
 try {
   for (const output of outputs) {

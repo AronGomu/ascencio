@@ -4,11 +4,11 @@
 
 ## Role
 
-The Shopkeeper runs a card shop or similar vendor location. The role may connect the academy map to card access and may become the character who gives Fynn his iconic spirit card.
+The Shopkeeper runs a card shop or similar vendor location. The role may connect the academy map to card access and may become the character who gives Finn his iconic spirit card.
 
 ## Open details
 
 - [ ] Name and personality.
-- [ ] Whether he gives Fynn the spirit card.
+- [ ] Whether he gives Finn the spirit card.
 - [ ] Shop location and story role.
 - [ ] Relationship to academy students.

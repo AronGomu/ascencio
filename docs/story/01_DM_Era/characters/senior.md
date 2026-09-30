@@ -1,30 +1,33 @@
-# Senior — academy benchmark
+# Zen — Violet Academy benchmark
 
-> Status: needs full definition
+> Status: provisional name; narrative function established
 
 ## Identity
 
-- Role: Nerd's older brother and likely Chapter 1 finale opponent.
-- Age: two years older than Nerd.
-- Position: best duelist in Duel Academy.
+- Role: Sirius's older brother and likely Chapter 1 finale opponent.
+- Age relationship: two years older than Sirius.
+- Position: best duelist at Violet Academy.
 - First appearance: Qualification Arc observer.
 
-## Backstory
+## Backstory and personality
 
-The Senior has always been confident, assured, decisive, capable and reliable under pressure. His ability creates the comparison standard that damages the Nerd's confidence.
+Zen has always been confident, assured, decisive, capable and reliable under pressure. His ability creates the comparison standard that damages Sirius's confidence. He also becomes the limit Atticus cannot accept, indirectly contributing to Atticus's search for occult power.
 
-## Personality and duel identity
+His exact philosophy remains undefined. The contrast with Sirius is fixed: Sirius has exceptional format understanding but weaker execution; Zen has exceptional execution and confidence.
 
-TBD. The contrast with Nerd is fixed: the Nerd has exceptional format understanding but weaker execution; the Senior has exceptional execution and confidence.
+## Appearance
+
+Zen's exact design is open. It must express confidence, technical mastery, reliability under pressure and his status as Violet Academy's absolute benchmark while creating a clear physical and psychological contrast with Sirius.
 
 ## Chapter development
 
-The Senior appears subtly during Qualification Arc so his later importance is established early. Senior Finale Arc occurs around June and demonstrates how far Fynn has progressed. The duel is the chapter finale, not necessarily the main mystery's resolution.
+Zen appears subtly during Qualification so his later importance is established early. The June finale demonstrates how far Finn has progressed. It does not have to resolve the supernatural mystery.
 
 ## Open details
 
-- [ ] Name and philosophy.
-- [ ] Deck identity.
-- [ ] Relationship with Nerd beyond capability and comparison.
-- [ ] Reason he is the academy's best.
+- [ ] Definitive name, adult age and rank.
+- [ ] Complete visual design.
+- [ ] Philosophy and deck identity.
+- [ ] Relationship with Sirius beyond capability and comparison.
+- [ ] Relationship with Atticus before the disappearance.
 - [ ] Final duel stakes and outcome.

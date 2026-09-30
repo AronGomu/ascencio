@@ -35,7 +35,7 @@
 
 ## Relationships
 
-- Fynn:
+- Finn:
 - Main allies:
 - Main conflicts:
 - Family:

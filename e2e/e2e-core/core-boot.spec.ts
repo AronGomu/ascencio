@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectEmittedFonts } from "../tests/fixtures/emitted-font-contract.ts";
+import { expectEmittedFonts } from "../../tests/fixtures/emitted-font-contract.ts";
 
 const apps = [
   { name: "root", url: "http://127.0.0.1:4400/" },

@@ -23,9 +23,16 @@ export function inspectSqliteHeader(file: File): Promise<StorageResult<void>> {
 }
 
 async function inspectHeader(file: File): Promise<StorageResult<void>> {
-  if (file.size < 512 || file.size % 512 !== 0)
-    return failed("PACKAGE_INVALID");
   const header = new Uint8Array(await file.slice(0, 100).arrayBuffer());
+  return inspectSqliteHeaderBytes(file.size, header);
+}
+
+export function inspectSqliteHeaderBytes(
+  fileSize: number,
+  header: Uint8Array,
+): StorageResult<void> {
+  if (fileSize < 512 || fileSize % 512 !== 0 || header.byteLength < 100)
+    return failed("PACKAGE_INVALID");
   const magic = "SQLite format 3\0";
   for (let index = 0; index < magic.length; index += 1)
     if (header[index] !== magic.charCodeAt(index))
@@ -60,6 +67,12 @@ export function validateRuntimePackage(
           typeof row.path !== "string" ||
           !validAssetLengths(row.byte_length, row.actual_length, cap)
         ) {
+          console.error("Package asset metadata validation failed", {
+            path: row.path,
+            byteLength: row.byte_length,
+            actualLength: row.actual_length,
+            cap,
+          });
           assetFailure = true;
           return false;
         }
@@ -76,6 +89,15 @@ export function validateRuntimePackage(
           !(row.data instanceof Uint8Array) ||
           typeof row.sha256 !== "string"
         ) {
+          console.error("Package asset row validation failed", {
+            path: row.path,
+            byteLengthType: typeof row.byte_length,
+            dataConstructor:
+              typeof row.data === "object" && row.data !== null
+                ? row.data.constructor?.name
+                : typeof row.data,
+            sha256Type: typeof row.sha256,
+          });
           assetFailure = true;
           return false;
         }
@@ -84,6 +106,13 @@ export function validateRuntimePackage(
           row.data.byteLength !== row.byte_length ||
           bytesToHex(sha256(row.data)) !== row.sha256
         ) {
+          console.error("Package asset content validation failed", {
+            path: row.path,
+            declaredBytes: row.byte_length,
+            actualBytes: row.data.byteLength,
+            exceedsCap: row.byte_length > cap,
+            hashMatches: bytesToHex(sha256(row.data)) === row.sha256,
+          });
           assetFailure = true;
           return false;
         }
@@ -183,6 +212,7 @@ export function validateRuntimePackage(
       value: { manifest: base.value.manifest, config: base.value.config },
     };
   } catch (error) {
+    console.error("Runtime package validation threw", error);
     return packageDatabaseFailure(error, packageId);
   }
 }

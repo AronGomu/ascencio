@@ -5,7 +5,7 @@ const read = (path: string) => readFileSync(path, "utf8");
 describe("domain fixture retirement contract", () => {
   it("does not prepare hosted releases or migrate legacy saves", () => {
     for (const path of [
-      "e2e/selected-content-fixture.ts",
+      "e2e/e2e-global/selected-content-fixture.ts",
       "tests/fixtures/selected-content-browser.ts",
     ]) {
       expect(read(path)).not.toMatch(

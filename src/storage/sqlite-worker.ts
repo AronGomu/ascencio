@@ -160,12 +160,23 @@ function requestId(value: unknown): string {
 async function workerCapacityAvailable(
   requiredBytes: number,
 ): Promise<boolean> {
-  const estimate = await navigator.storage.estimate();
-  if (estimate.quota === undefined || estimate.usage === undefined) {
+  try {
+    const estimate = await navigator.storage.estimate();
+    if (estimate.quota === undefined || estimate.usage === undefined) {
+      console.warn(
+        "SQLite import capacity unavailable; OPFS write result will determine capacity.",
+      );
+      return true;
+    }
+    const available = estimate.quota - estimate.usage;
+    if (available < requiredBytes)
+      console.warn(
+        `Worker storage estimate is below the import size (${available} available; ${requiredBytes} required). Attempting the OPFS write because privacy protections may mask the real quota.`,
+      );
+  } catch {
     console.warn(
-      "SQLite import capacity unavailable; continuing without fictitious quota estimate.",
+      "SQLite import capacity estimate failed; OPFS write result will determine capacity.",
     );
-    return true;
   }
-  return estimate.quota - estimate.usage >= requiredBytes;
+  return true;
 }

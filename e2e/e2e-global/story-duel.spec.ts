@@ -6,7 +6,7 @@ import {
   repairSelectedStorySlot,
 } from "./selected-content-fixture.ts";
 import { expect, type Page } from "@playwright/test";
-import { createInitialStoryState } from "../src/story/model/story-state.ts";
+import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
 
 const STORY_REGION = '[data-cy="shell-region-story"]';
@@ -19,7 +19,7 @@ const STARTER = storyStarterSave();
 
 /** Writes one story record straight into the database the story reads on
     mount. Playing 30 narrative beats per test would prove the prologue, which
-    `e2e/story.spec.ts` already does; what these tests need is a player who is
+    `e2e/e2e-global/story.spec.ts` already does; what these tests need is a player who is
     standing on the city map. */
 async function putStorySave(
   page: Page,

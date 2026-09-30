@@ -15,11 +15,11 @@ const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
-const outputRoot = path.join(projectRoot, "dist");
+const outputRoot = path.join(projectRoot, "generated/build/app");
 /* The built tree is the product of `npm run build`, which `check:headless` does
    not run. The two cases that read it are skipped rather than failed when it is
    absent; `build:verify` gates the same numbers on every real build. The
-   acceptance harness builds a second entry document over the same `dist/`, and
+   acceptance harness builds a second entry document in its own output tree, and
    its chunk split is not the shipped one, so that tree is skipped too. */
 const builtTreeExists =
   existsSync(path.join(outputRoot, "index.html")) &&
@@ -190,7 +190,8 @@ describe("staticHtmlScriptClosure", () => {
 });
 
 /* The built-tree cases below are the airtight check, and they are skipped
-   whenever `dist/` is absent — which is every `npm run check:headless`. This
+   whenever `generated/build/app/` is absent — which is every clean
+   `npm run check:headless`. This
    one reads the sources instead, so the mistake it guards is caught before a
    build: the main menu is eager, and a static *value* import of
    `src/story/index.ts` from anything eager makes the whole visual novel eager.

@@ -20,7 +20,7 @@ D2. Minimal bootstrap contains app/content schema compatibility, SHA-256 policy,
 
 D3. Readiness precedes all gameplay route effects/imports, including direct hashes, restored sessions, admin duel actions and hover/focus warmup. Continue/New Story/Free Play explain missing verified content. Settings and Install Content remain usable. Existing private-mode build restriction and private deployment marker remain; absent evidence never means redistribution approval.
 
-D4. Vite `dist/` is executable CORE distribution. Asset tooling's `core.zip` is an asset-only byproduct, not proof of runnable application. Content objects are built/verified before their immutable index pin enters app bootstrap; content hash excludes final app bytes, preventing circular identity. Public publication remains a separate concern.
+D4. Vite `generated/build/app/` is the executable CORE distribution. Asset tooling's `core.zip` is an asset-only byproduct, not proof of runnable application. Content objects are built/verified before their immutable index pin enters app bootstrap; content hash excludes final app bytes, preventing circular identity. Public publication remains a separate concern.
 
 ## Consequences
 

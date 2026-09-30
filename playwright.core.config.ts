@@ -9,7 +9,7 @@ const subpathPort = 4401;
 const subpath = "/ygo-story-duel/";
 
 export default defineConfig({
-  testDir: "./e2e-core",
+  testDir: "./e2e/e2e-core",
   globalTeardown: "./scripts/core-source-only-teardown.ts",
   outputDir: process.env.T10_REPAIR_EVIDENCE
     ? `${process.env.T10_REPAIR_EVIDENCE}/test-results`

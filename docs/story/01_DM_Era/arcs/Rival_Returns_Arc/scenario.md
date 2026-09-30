@@ -1,20 +1,20 @@
-# Rival Returns Arc — scenario
+# Chaz Returns Arc — scenario
 
 > Status: planned; placement undecided
 
 ## Purpose
 
-Force Rival to face a second public defeat and expose the weakness of an identity built only on status.
+Force Chaz to face a second public defeat and expose the weakness of an identity built only on status.
 
 ## Beats
 
-- Rival deliberately seeks Fynn for a rematch.
-- Rival wants to erase the first defeat and restore his image.
-- Rival loses another mandatory Best of 3.
+- Chaz deliberately seeks Finn for a rematch.
+- Chaz wants to erase the first defeat and restore his image.
+- Chaz loses another mandatory Best of 3.
 - Public reputation damage removes his ability to blame a single accident.
 - Goons stop following him through ordinary distancing, excuses and avoidance.
-- Rival realizes he had followers, not friends.
-- Rival withdraws and begins asking why he lost.
+- Chaz realizes he had followers, not friends.
+- Chaz withdraws and begins asking why he lost.
 
 ## Open plan
 

@@ -18,12 +18,12 @@ Do not run export/acquisition solely to inspect syntax. Export writes immutable 
 
 ```sh
 npm run content:export -- --spec content/packages.json
-npm run content:verify -- --file generated/content-packages/duel-core/1.0.0.sqlite
+npm run content:verify -- --file generated/content-packages/duel-core-1.0.0.sqlite
 npm run assets:restructure -- --plan
 npm run assets:restructure -- --apply generated/content-packages/asset-move-plan.json
 ```
 
-`content:export` validates full selected recipe/dependency/reference closure. `content:verify` validates one file only; it does not infer active stack validity. Existing differing output under same package ID/version fails immutable identity conflict and must not be overwritten or described as upgrade.
+`content:export` validates full selected recipe/dependency/reference closure and emits directly named raw SQLite files plus `generated/content-packages/content-packages.zip`. The app accepts that single ZIP or one to four raw files. `content:verify` validates one raw file only; it does not infer active stack validity. Existing differing output under same package ID/version fails immutable identity conflict and must not be overwritten or described as upgrade.
 
 Retained `assets:migrate`, `assets:promote`, and `assets:profiles:sync` are pure local source scanners/copy/profile tools. They do not publish, host, upload, download player packages, or determine browser activation.
 

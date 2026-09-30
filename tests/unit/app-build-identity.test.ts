@@ -20,7 +20,7 @@ const FILES = [
   "scripts/lib/asset-delivery/verify-bundle.ts",
   "assets/content/chapter-01/media/city-map-placeholder.svg",
   "content/core-bootstrap.json",
-  "generated/content-packages/card-library/1.0.0.sqlite",
+  "generated/content-packages/card-library-1.0.0.sqlite",
   "index.html",
   "package-lock.json",
   "package.json",
@@ -86,7 +86,7 @@ describe("app build identity", () => {
         "changed bootstrap\n",
       );
       await writeFile(
-        path.join(root, "generated/content-packages/card-library/1.0.0.sqlite"),
+        path.join(root, "generated/content-packages/card-library-1.0.0.sqlite"),
         "changed package database\n",
       );
       await writeFile(

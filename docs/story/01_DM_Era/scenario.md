@@ -1,66 +1,79 @@
 # Duel Monsters Era — Chapter 1
 
-> Status: working draft — arc order partly undecided
+> Status: working draft — current arc order remains provisional
 
 ## Initial situation
 
-Chapter 1 covers one complete school year at Duel Academy, approximately September through June. Fynn enters as a first-year student. He loves Duel Monsters and wants to become the best duelist in the world. He is not a self-insert: he has his own personality, motivations, relationships and arc.
+Chapter 1 covers one university year at Violet Academy, approximately September through June. Every student is an adult. Finn begins his first year, loves Duel Monsters and wants to become the best duelist in the world. He is a defined character rather than a self-insert.
 
-The Qualification Arc introduces Fynn, the academy, basic duel mechanics and the map. The academy map becomes fully accessible after qualification, while events, opponents, shops and other activities unlock progressively.
+The Qualification Arc introduces Finn, the university, basic duel mechanics and the map. The campus map becomes fully accessible after qualification, while events, opponents, shops and other activities unlock progressively.
 
-## Overall perspective and vibe
+## Overall perspective and tone
 
-Chapter 1 begins as a gentle academy and slice-of-life story. School routines, rivalries, friendships and ordinary injustice create credible reasons for regular playable duels. The tone expands gradually into investigation and supernatural danger during the Girl Arc.
+Chapter 1 begins as a gentle university and slice-of-life story. Classes, campus routines, rivalries, friendships and ordinary injustice create credible reasons for regular playable duels. The tone expands gradually into investigation and supernatural danger during Alexis's first arc.
 
-The chapter should feel like one school year actually passes. Late-summer arrival becomes autumn, winter, spring and early summer. Fynn builds a circle of friends, faces status-based conflict, and ends the year against the academy's best visible standard.
+The year moves through late summer, autumn, winter, spring and early summer. Finn builds a circle of friends, faces status-based conflict and ends the year against Violet Academy's best visible standard. The supernatural layer is seeded before it becomes explicit.
 
-The supernatural layer is seeded before it becomes explicit. The exact hard-magic explanation remains a global open question.
+## Current provisional flow
+
+1. **Qualification** — Finn arrives and completes his entrance duel.
+2. **Sirius Arc** — a lost card, three opponents, Finn's duel with Sirius and the beginning of their friendship.
+3. **First Chaz Arc** — his followers, a public injustice and Chaz's first defeat by Finn.
+4. **First Alexis Arc** — the mysterious man, Alexis's defeat, Finn and Sirius's intervention, and formation of the central trio.
+5. **Blaise Arc** — Finn's childhood friend joins Violet Academy around December.
+6. **Second Chaz Arc** — a public rematch, another defeat, lost status and abandonment by his followers.
+7. **Second Alexis Arc** — the trio follows a new lead and receives the false conclusion that Atticus is irretrievably lost.
+8. **Third Chaz Arc** — Chaz returns after rebuilding himself and honestly accepts the result of his duel with Finn.
+9. **Third Alexis Arc** — the trio discovers Atticus alive under the Ténèbres' control and duels to free him.
+10. **Finale against Zen** — the end-of-year duel measures Finn's progress.
+
+The sequence is the current working order, not a final lock. The three Alexis arcs form one emotional progression: solitary hope, acceptance of help, apparent final loss, grief, discovery of Atticus alive but controlled, and genuine rescue.
 
 ## Arc inventory
 
 ### Qualification Arc
 
-Defined. Fynn plays a fully playable single-game entrance duel. Win and loss are both valid; loss does not cause game over or block admission. Spectators introduce future characters. Full academy map opens afterward. Free Duel remains locked.
+Finn plays a fully playable single-game entrance duel. Win and loss are both valid; loss does not cause game over or block admission. Spectators introduce future characters. The full campus map opens afterward, while Free Duel remains locked.
 
-### Nerd Arc
+### Sirius Arc
 
-Largely defined. Fynn intervenes when three classmates or bullies take the Nerd's meaningful card after a duel. The three-duel sequence introduces Free Duel. The Nerd later withdraws from class, hides in his room and faces Fynn in a mandatory Best of 3. He returns to class and becomes Fynn's official friend.
+Finn intervenes after three students defeat Sirius and take a meaningful card as their stake. The three-duel sequence introduces Free Duel. Sirius later withdraws from class, hides in his room and faces Finn in a mandatory Best of 3. He returns and becomes Finn's friend without instantly overcoming his insecurity.
 
-### Girl Arc
+### First Chaz Arc
 
-Largely defined. Fynn discovers the Girl's isolation, bullying and investigation into her missing older brother. He and the Nerd follow her to a meeting with a mysterious man. The Girl loses a narrative duel, supernatural events begin, and Fynn wins a mandatory Best of 3 to stop the immediate danger. The Girl joins Fynn and the Nerd in investigating her brother.
+Two follower duels accept either outcome. A public incident then forces Finn to confront Chaz over his treatment of a Red student. Finn must win a Best of 3. Chaz's status-based worldview is wounded but unchanged.
 
-### Rival Introduction Arc
+### First Alexis Arc
 
-Defined at high level. Two goon duels accept either outcome. A public incident then forces Fynn to confront the Rival over his treatment of a Red student. Fynn must win a Best of 3. The Rival's status-based worldview is damaged but not replaced.
+Alexis entered Violet Academy against her parents' wishes to investigate Atticus's disappearance. She is not initially driven by love of dueling. Her research leads to a mysterious man connected to Darkness. He defeats her; Finn and Sirius intervene; Finn defeats him. Before he can be questioned, the Ténèbres absorb him. Alexis then tells Finn and Sirius the truth and accepts their help, formally creating the central trio.
 
-### Transfer Student Arc
+### Blaise Arc
 
-Planned for around December. Fynn's childhood friend transfers permanently to Duel Academy after being separated from him and forcing her parents to accept the decision. She is secretly in love with Fynn, who does not know this.
+Blaise joins Violet Academy around December after her parents initially prevented her from pursuing this path. She is secretly in love with Finn and hides that motive behind plausible explanations for joining him, training with him and involving herself in the group's plans.
 
-### Missing Brother Arc
+### Second Chaz Arc
 
-Planned. The investigation continues and leads toward recovering or retrieving the Girl's brother. This arc resolves major parts of the disappearance mystery.
+Chaz seeks a public rematch and suffers a second mandatory defeat. His rationalizations fail, his reputation collapses and his two followers abandon him.
 
-### Rival Returns Arc
+### Second Alexis Arc
 
-Planned. The Rival seeks a public rematch and loses another mandatory Best of 3. His rationalizations fail, his reputation collapses, and his goons stop following him.
+Alexis shares new evidence with Finn and Sirius, and the trio follows the lead together. A second agent or associate of Darkness tells them that Atticus embraced occult practices, was swallowed by the Ténèbres and can never return. The speaker may sincerely believe this incomplete account. Alexis accepts that her brother is dead or irrecoverable and enters a period of grief.
 
-### Rival Reconstruction Arc
+### Third Chaz Arc
 
-Planned. The Rival returns after rebuilding his dueling competence and identity. His third duel can be won or lost. He accepts either outcome without excuses and keeps his proud, abrasive personality.
+Chaz returns after rebuilding his competence and identity. His third duel may be won or lost. He accepts either outcome without excuses while remaining proud, competitive and abrasive.
 
-### Senior Finale Arc
+### Third Alexis Arc
 
-Planned for June. The Senior is the Nerd's older brother, the academy's best duelist and the end-of-year benchmark. The finale demonstrates Fynn's progress and need not resolve the main mystery.
+The trio discovers Atticus alive but absorbed, conditioned or controlled by the Ténèbres. His state can look voluntary, although he is now their prisoner. Finn, Sirius and Alexis duel him to break the control rather than punish or destroy him. Their victory truly rescues him.
 
-## Provisional flow
+### Zen Finale Arc
 
-The Qualification Arc leads into the Nerd Arc. Girl Arc and Rival Introduction Arc are both early Chapter 1 arcs, but their order is undecided. Transfer Student Arc occurs around December. Missing Brother Arc, Rival Returns Arc and Rival Reconstruction Arc occur later. Senior Finale Arc closes the school year.
+Zen is Sirius's older brother and Violet Academy's best duelist. The June finale uses him as the highest visible benchmark for Finn's progress. It need not resolve the supernatural system.
 
 ## Chapter cast function
 
-Fynn, the Nerd and the Girl form the central trio by the end of the Girl Arc. The Senior and the missing brother create contrasting sibling relationships: one brother is constantly present and creates comparison pressure; the other is absent and creates an investigative vacuum. The Rival supplies status conflict. Minor duelists become recurring Free Duel opponents when the story introduces them.
+Finn, Sirius and Alexis form the central trio after the first Alexis arc. Blaise later joins their social orbit with energy and a concealed romantic motive. Zen and Atticus create contrasting older-brother relationships: one is constantly present and creates comparison pressure; the other is absent and creates an investigative vacuum. Chaz supplies status conflict and a parallel arc about responding honestly to defeat.
 
 ## Story principles
 
@@ -69,4 +82,4 @@ Fynn, the Nerd and the Girl form the central trio by the end of the Girl Arc. Th
 - No player-controlled duel requires a canonical loss.
 - Character dueling style expresses character.
 - World systems appear through behavior rather than exposition.
-- Free Duel opponents have personality and story reason to exist.
+- Free Duel opponents have personality and a story reason to exist.

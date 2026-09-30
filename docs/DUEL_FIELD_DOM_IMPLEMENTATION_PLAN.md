@@ -212,13 +212,13 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 ### DF-10 territory
 
 - Source/docs: `src/battle/app/App.svelte`, `src/battle/app/components/DuelField.svelte`, `src/battle/app/components/duel-field/FieldBoard.svelte`, `src/battle/app/components/duel-field/ZoneControl.svelte`, `src/battle/app/components/duel-field/CardControl.svelte`, `src/battle/app/components/duel-field/StackControl.svelte`, `src/battle/app/components/duel-field/FieldActionMenu.svelte`, `src/battle/app/components/duel-field/SelectionDock.svelte`, `src/battle/app/components/duel-field/DuelFieldErrorBoundary.svelte`, `src/battle/app/prompts/PromptControls.svelte`, `src/battle/app/prompts/interaction-spec.ts`, `src/battle/app/prompts/interaction-session.ts`, `src/battle/app/stores/duel-store.ts`, `src/styles/app.css`.
-- Tests/evidence: `tests/component/DuelField.test.ts`, `tests/component/PromptControls.test.ts`, `tests/fixtures/duel-field-component-failure.ts`, `e2e/duel-smoke.spec.ts`.
+- Tests/evidence: `tests/component/DuelField.test.ts`, `tests/component/PromptControls.test.ts`, `tests/fixtures/duel-field-component-failure.ts`, `e2e/e2e-global/duel-smoke.spec.ts`.
 - Generated/lock: `test-results/df-10-pointer-workflows.zip`.
 
 ### DF-11 territory
 
 - Source/docs: `src/battle/app/App.svelte`, `src/battle/app/components/duel-field/DuelHud.svelte`, `src/battle/app/components/duel-field/CardInspector.svelte`, `src/battle/app/components/duel-field/CardTray.svelte`, `src/battle/app/components/duel-field/ChainStatus.svelte`, `src/battle/app/components/duel-field/DuelLog.svelte`, `src/styles/app.css`.
-- Tests/evidence: `tests/component/DuelHud.test.ts`, `tests/fixtures/board-public-states.ts`, `e2e/duel-smoke.spec.ts`.
+- Tests/evidence: `tests/component/DuelHud.test.ts`, `tests/fixtures/board-public-states.ts`, `e2e/e2e-global/duel-smoke.spec.ts`.
 - Generated/lock: `test-results/df-11-hud-privacy.zip`.
 
 ### DF-12 territory
@@ -230,31 +230,31 @@ Territory is exclusive during each serial checkpoint. Every current or proposed 
 ### DF-13 territory
 
 - Source/docs: `src/battle/app/images/card-image-cache.ts`, `src/battle/app/App.svelte`, `src/battle/app/prompts/PromptControls.svelte`, `src/battle/app/components/DuelField.svelte`, `src/battle/app/components/duel-field/CardControl.svelte`, `src/battle/app/components/duel-field/CardInspector.svelte`, `src/battle/app/components/duel-field/CardTray.svelte`, `docs/architecture/04-data/card-images.md`.
-- Tests/evidence: `tests/unit/card-image-cache.test.ts`, `tests/component/DuelField.test.ts`, `tests/component/PromptControls.test.ts`, `e2e/duel-smoke.spec.ts`.
+- Tests/evidence: `tests/unit/card-image-cache.test.ts`, `tests/component/DuelField.test.ts`, `tests/component/PromptControls.test.ts`, `e2e/e2e-global/duel-smoke.spec.ts`.
 - Generated/lock: `test-results/df-13-image-lifecycle.zip`.
 
 ### DF-14 territory
 
 - Source/docs: `src/battle/app/prompts/field-navigation.ts`, `src/battle/app/components/DuelField.svelte`, `src/battle/app/components/duel-field/FieldBoard.svelte`, `src/battle/app/components/duel-field/ZoneControl.svelte`, `src/battle/app/components/duel-field/CardControl.svelte`, `src/battle/app/components/duel-field/StackControl.svelte`, `src/battle/app/components/duel-field/FieldActionMenu.svelte`, `src/battle/app/components/duel-field/SelectionDock.svelte`, `src/battle/app/components/duel-field/CardTray.svelte`, `src/styles/app.css`, `docs/architecture/05-presentation/duel-field-screen-reader-review.md`.
-- Tests/evidence: `tests/unit/field-navigation.test.ts`, `tests/component/DuelField.test.ts`, `e2e/duel-smoke.spec.ts`.
+- Tests/evidence: `tests/unit/field-navigation.test.ts`, `tests/component/DuelField.test.ts`, `e2e/e2e-global/duel-smoke.spec.ts`.
 - Generated/lock: `test-results/df-14-keyboard-screen-reader.zip`.
 
 ### DF-15 territory
 
 - Source/docs: `src/battle/app/components/DuelField.svelte`, `src/battle/app/components/duel-field/FieldBoard.svelte`, `src/battle/app/components/duel-field/DuelHud.svelte`, `src/battle/app/components/duel-field/CardInspector.svelte`, `src/battle/app/components/duel-field/CardTray.svelte`, `src/battle/app/components/duel-field/FieldActionMenu.svelte`, `src/battle/app/components/duel-field/SelectionDock.svelte`, `src/styles/app.css`.
-- Tests/evidence: `tests/unit/field-navigation.test.ts`, `tests/component/DuelField.test.ts`, `e2e/duel-smoke.spec.ts`.
+- Tests/evidence: `tests/unit/field-navigation.test.ts`, `tests/component/DuelField.test.ts`, `e2e/e2e-global/duel-smoke.spec.ts`.
 - Generated/lock: `test-results/df-15-responsive-captures.zip`.
 
 ### DF-16 territory
 
 - Source/docs: `playwright.config.ts`, `docs/architecture/02-runtime/browser-platform.md`, `docs/architecture/06-quality/testing.md`, `docs/architecture/05-presentation/duel-field-performance-baseline.md`.
-- Tests/evidence: `e2e/duel-smoke.spec.ts`, `tests/component/DuelField.test.ts`, `tests/fixtures/duel-field-public-events.ts`.
+- Tests/evidence: `e2e/e2e-global/duel-smoke.spec.ts`, `tests/component/DuelField.test.ts`, `tests/fixtures/duel-field-public-events.ts`.
 - Generated/lock: `playwright-report/index.html`, `test-results/df-16-private-browser-artifacts.zip`, `test-results/df-16-results.json`.
 
 ### DF-17 territory
 
 - Source/docs: `package.json`, `scripts/verify-browser-build.ts`, `scripts/lib/vite-runtime-assets.ts`, `vite.config.ts`, `src/battle/app/App.svelte`, `src/battle/app/components/DuelField.svelte`, `src/styles/app.css`, `src/battle/field/DuelScene.ts`, `src/battle/field/create-phaser-presentation-bridge.ts`, `src/battle/app/presentation/duel-presentation-bridge.ts`, `README.md`, `context.md`, `docs/README.md`, `docs/ADR/001_ADR_semantic_dom_duel_field_rendering.md`, `docs/architecture/architecture.md`, `docs/architecture/01-product/technology-selection.md`, `docs/architecture/02-runtime/browser-platform.md`, `docs/architecture/02-runtime/topology.md`, `docs/architecture/03-engine/protocol-and-state.md`, `docs/architecture/04-data/card-images.md`, `docs/architecture/05-presentation/duel-field-architecture.md`, `docs/architecture/05-presentation/duel-field-rendering.md`, `docs/architecture/06-quality/testing.md`.
-- Tests/evidence: `tests/unit/duel-field.test.ts`, `tests/unit/presentation-command.test.ts`, `tests/component/DuelField.test.ts`, `e2e/duel-smoke.spec.ts`.
+- Tests/evidence: `tests/unit/duel-field.test.ts`, `tests/unit/presentation-command.test.ts`, `tests/component/DuelField.test.ts`, `e2e/e2e-global/duel-smoke.spec.ts`.
 - Generated/lock: `package-lock.json`, `dist/index.html`, `dist/assets/create-phaser-presentation-bridge-CzVRJDSU.js`, `dist/licenses/phaser-MIT.txt`, `dist/licenses/idb-ISC.txt`, `dist/licenses/ocgcore-wasm-MIT.txt`, `dist/licenses/svelte-MIT.txt`, `dist/PRIVATE_DEPLOYMENT_ONLY.txt`, `dist/runtime/current/manifest.json`, `dist/runtime/engine/ocgcore.sync.wasm`, `dist/runtime/engine/vendor-manifest.json`, `dist/runtime/images/active-manifest.json`.
 
 ---

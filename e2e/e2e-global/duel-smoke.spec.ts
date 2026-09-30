@@ -12,21 +12,21 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
-import { loadNormalizedCatalog } from "../scripts/lib/sqlite-content/normalized-package-source.ts";
+import { loadNormalizedCatalog } from "../../scripts/lib/sqlite-content/normalized-package-source.ts";
 import {
   PROTOTYPE_RULESET,
   quantityLimit,
-} from "../src/decks/catalog/pinned-ruleset.ts";
-import { packagedCatalog } from "../src/decks/catalog/packaged-catalog.ts";
+} from "../../src/decks/catalog/pinned-ruleset.ts";
+import { packagedCatalog } from "../../src/decks/catalog/packaged-catalog.ts";
 import {
   computeFieldGeometry,
   perspectiveVirtualHeight,
-} from "../src/battle/field/duel-field-geometry.ts";
+} from "../../src/battle/field/duel-field-geometry.ts";
 import {
   FIELD_CAMERA_PX,
   FIELD_TILT_DEG,
-} from "../src/battle/field/perspective.ts";
-import { duelFieldRenderFailureUrl } from "../tests/fixtures/duel-field-component-failure.ts";
+} from "../../src/battle/field/perspective.ts";
+import { duelFieldRenderFailureUrl } from "../../tests/fixtures/duel-field-component-failure.ts";
 
 interface BrowserCapture {
   readonly commands: readonly Readonly<Record<string, unknown>>[];
@@ -3978,7 +3978,7 @@ test("item 5: field cards stay outside the hand band and hand action chips remai
      at 1.6x and therefore covers the card it was opened from — so a resting
      pointer has the browser hand the hover back and forth between card and
      overlay, and the overlay's chips mount and unmount every other frame. The
-     overlay's own geometry is covered by `e2e-acceptance/hand-zoom.spec.ts`;
+     overlay's own geometry is covered by `e2e/e2e-acceptance/hand-zoom.spec.ts`;
      what this test still owns is that the chips win the hit test above every
      card and that firing one crosses the production response boundary. */
   const chips = field.locator(
@@ -5090,9 +5090,9 @@ test("DF-16 Chromium pinned parity/perf/resource gate records automated evidence
     },
   };
 
-  await mkdir("test-results", { recursive: true });
+  await mkdir("generated/tests/e2e-global/results", { recursive: true });
   await writeFile(
-    "test-results/df-16-results.json",
+    "generated/tests/e2e-global/results/df-16-results.json",
     JSON.stringify(evidence, null, 2),
   );
   const artifactPath = testInfo.outputPath("df-16-results.json");

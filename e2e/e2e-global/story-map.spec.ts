@@ -3,7 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import {
   createInitialStoryState,
   type StoryState,
-} from "../src/story/model/story-state.ts";
+} from "../../src/story/model/story-state.ts";
 
 test.use({ installedMedia: true });
 

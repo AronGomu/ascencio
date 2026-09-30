@@ -3,7 +3,12 @@ import { defineConfig, devices } from "@playwright/test";
 const baseURL = "http://127.0.0.1:4203/ygo-story-duel/acceptance.html";
 
 export default defineConfig({
-  testDir: "./e2e-acceptance",
+  testDir: "./e2e/e2e-acceptance",
+  outputDir: "generated/tests/e2e-acceptance/results",
+  reporter: [
+    ["line"],
+    ["html", { outputFolder: "generated/tests/e2e-acceptance/report" }],
+  ],
   fullyParallel: false,
   workers: 1,
   timeout: 180_000,
@@ -22,7 +27,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "npm run vendor:verify && npm run snapshot:verify && ACCEPTANCE_SCENARIOS=1 npm run build:app -- --base=/ygo-story-duel/ --outDir dist-acceptance && npm run preview -- --host 127.0.0.1 --port 4203 --strictPort --base=/ygo-story-duel/ --outDir dist-acceptance",
+      "npm run vendor:verify && npm run snapshot:verify && ACCEPTANCE_SCENARIOS=1 npm run build:app -- --base=/ygo-story-duel/ --outDir generated/build/acceptance && npm run preview -- --host 127.0.0.1 --port 4203 --strictPort --base=/ygo-story-duel/ --outDir generated/build/acceptance",
     url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,

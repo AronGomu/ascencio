@@ -18,6 +18,6 @@ Render face-up images where applicable. Hidden cards use card back without ident
 
 ## Build boundary
 
-Card/set/chapter images remain outside JavaScript bundle, `dist/`, and shell precache. `scripts/verify-browser-build.ts` rejects media leakage. Source archives remain outside Git unless explicitly tracked app/source policy says otherwise.
+Card/set/chapter images remain outside JavaScript bundle, `generated/build/app/`, and shell precache. `scripts/verify-browser-build.ts` rejects media leakage. Source archives remain outside Git unless explicitly tracked app/source policy says otherwise.
 
 Technical availability is not permission to redistribute; see [`../07-governance/licensing-and-distribution.md`](../07-governance/licensing-and-distribution.md) and [`../../assets/manual-sqlite-setup.md`](../../assets/manual-sqlite-setup.md).

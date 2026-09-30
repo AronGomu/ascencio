@@ -45,12 +45,7 @@ function createFacade(rpc: StorageRpcClient): LocalStorageClient {
       current: async () => cast(await rpc.request("current", [])),
       importPackages: async (files, generation, signal, progress) => {
         if (closed) return unavailable();
-        const capacity = await clientCapacityAvailable(files);
-        if (!capacity)
-          return {
-            kind: "failed",
-            error: { code: "STORAGE_QUOTA_EXCEEDED" },
-          };
+        await reportClientCapacity(files);
         return await cancellableRequest<PackageStack>(
           rpc,
           "importPackages",
@@ -176,9 +171,7 @@ async function cancellableRequest<
   return cast(await pending);
 }
 
-async function clientCapacityAvailable(
-  files: readonly File[],
-): Promise<boolean> {
+async function reportClientCapacity(files: readonly File[]): Promise<void> {
   const required =
     files.reduce((total, file) => total + file.size, 0) + 8 * 1024 * 1024;
   try {
@@ -196,16 +189,19 @@ async function clientCapacityAvailable(
     const estimate = await navigator.storage.estimate();
     if (estimate.quota === undefined || estimate.usage === undefined) {
       console.warn(
-        "Storage capacity estimate unavailable; Worker will retry before staging.",
+        "Storage capacity estimate unavailable; import will rely on the OPFS write result.",
       );
-      return true;
+      return;
     }
-    return estimate.quota - estimate.usage >= required;
+    const available = estimate.quota - estimate.usage;
+    if (available < required)
+      console.warn(
+        `Browser-reported storage estimate is below the import size (${available} available; ${required} required). Attempting the OPFS write because privacy protections may mask the real quota.`,
+      );
   } catch {
     console.warn(
-      "Storage capacity estimate failed; Worker will retry before staging.",
+      "Storage capacity estimate failed; import will rely on the OPFS write result.",
     );
-    return true;
   }
 }
 

@@ -1,36 +1,36 @@
-# Rival — status-based competitor
+# Chaz — status-based competitor
 
-> Status: high-level arc defined for Chapter 1
+> Status: provisional name; Chapter 1 trajectory defined
 
 ## Identity
 
 - Role: main competitive rival and status antagonist.
-- Class: Blue.
-- Followers: two goons.
+- Rank: Blue.
+- Followers: two students who abandon him after his second defeat.
 
 ## Personality
 
-The Rival is narcissistic, arrogant, competitive, status-conscious and socially dominant. He is strong enough that some arrogance is justified. He must feel like a person whose identity and social world depend on being seen as superior, not like a generic bully.
+Chaz is high-handed, narcissistic, competitive and intensely conscious of rank and recognition. He carries himself with near-aristocratic certainty and assumes he belongs at the top. He respects status symbols while believing he is important enough to personalize their rules.
+
+His confidence is supported by real ability. He must feel like someone whose identity and social world depend on being seen as superior, rather than a generic bully.
+
+## Appearance
+
+Chaz is an adult man with black hair, pale coloring and a long, narrow, angular face. His pointed chin, high cheekbones, narrow half-lidded eyes, thin eyebrows, straight nose and slight asymmetry of the mouth create calm aristocratic disdain.
+
+He wears the Blue uniform with controlled informality: loosened collar, open blazer, relaxed tie, asymmetrical posture and one hand in a pocket. His clothes remain clean, coordinated and expensive-looking. He never appears dirty or like a street-gang member.
 
 ## Chapter development
 
-Rival Introduction Arc begins with two outcome-flexible goon duels. A later public incident has the Rival humiliate or unfairly dismiss a Red student. Fynn intervenes because he hates obvious injustice. Fynn wins the mandatory Best of 3, damaging the Rival's status but not changing his personality.
+1. Finn defeats Chaz after a public injustice, wounding his ego.
+2. A second public defeat destroys his rationalizations, status and follower relationships.
+3. Chaz withdraws, trains and returns for a result-flexible duel that he finally judges honestly.
 
-Rival Returns Arc brings a public rematch. After a second mandatory defeat, the Rival can no longer blame luck or matchup. His reputation collapses and his goons abandon him. He realizes they were followers, not friends.
-
-Rival Reconstruction Arc follows his withdrawal and rebuilding. He asks why he lost and trains to improve his dueling and identity. His third duel may be won or lost. He accepts either result without excuses while remaining proud, competitive, abrasive and ambitious.
-
-## Duel identity
-
-- Deck: TBD.
-- Strategy and tempo: TBD.
-- Stakes: status, reputation and proof of superiority.
-- Early belief: Blue uniform means superior duelist and superior status.
-- Later belief: losing means he must become better.
+His transformation is from “I am superior, so I should not lose” to “I lost, so I must become better.” He remains proud, abrasive and ambitious.
 
 ## Open details
 
-- [ ] Name and family background.
+- [ ] Definitive name and family background.
 - [ ] Deck identity.
-- [ ] Goon personalities.
+- [ ] Followers' personalities.
 - [ ] Reconstruction training.

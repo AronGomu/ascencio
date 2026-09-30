@@ -49,6 +49,7 @@ import {
   normalizedMedia,
   NormalizedSourceFailure,
 } from "./normalized-package-source.ts";
+import { writePackageArchive } from "./package-archive.ts";
 
 interface CardRow {
   readonly code: number;
@@ -183,6 +184,7 @@ export async function exportPackages(
     const receipts: ExportReceipt[] = [];
     for (const source of sources)
       receipts.push(await writePackage(root, source));
+    await writePackageArchive(root, receipts);
     return { kind: "ok", value: Object.freeze(receipts) };
   } catch (error) {
     if (error instanceof ExpectedFailure) return error.result;
@@ -634,7 +636,7 @@ async function writePackage(
   root: string,
   source: PackageSource,
 ): Promise<ExportReceipt> {
-  const relative = `generated/content-packages/${source.manifest.packageId}/${source.manifest.version}.sqlite`;
+  const relative = `generated/content-packages/${packageFileName(source.manifest)}`;
   const output = safe(root, relative);
   await assertNoSymlinkParents(root, relative);
   await mkdir(path.dirname(output), { recursive: true });
@@ -709,6 +711,10 @@ async function writePackage(
     rarityWarnings: Object.freeze([...source.rarityWarnings]),
     inventoryOnlyScripts: Object.freeze([...source.inventoryOnlyScripts]),
   });
+}
+
+function packageFileName(manifest: PackageManifest): string {
+  return `${manifest.packageId}-${manifest.version}.sqlite`;
 }
 
 function insertCommon(database: DatabaseSync, source: PackageSource): void {

@@ -177,6 +177,7 @@ export function validatePackageDatabaseHeader(
       }),
     };
   } catch (error) {
+    console.error("SQLite package header validation threw", error);
     return packageDatabaseFailure(error);
   }
 }
@@ -188,11 +189,15 @@ export function validatePackageDatabase(
   if (header.kind === "failed") return header;
   try {
     const integrity = database.all("PRAGMA integrity_check");
-    if (integrity.length !== 1 || integrity[0]?.integrity_check !== "ok")
+    if (integrity.length !== 1 || integrity[0]?.integrity_check !== "ok") {
+      console.error("SQLite package integrity_check failed", integrity);
       return { kind: "failed", error: { code: "PACKAGE_INTEGRITY_FAILED" } };
+    }
     const foreignKeys = database.all("PRAGMA foreign_key_check");
-    if (foreignKeys.length !== 0)
+    if (foreignKeys.length !== 0) {
+      console.error("SQLite package foreign_key_check failed", foreignKeys);
       return { kind: "failed", error: { code: "PACKAGE_INTEGRITY_FAILED" } };
+    }
     if (
       !validateAssets(database, header.value.manifest) ||
       !validateOwnedRows(database, header.value.manifest)

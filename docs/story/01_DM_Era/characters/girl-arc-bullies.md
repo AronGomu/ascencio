@@ -1,12 +1,12 @@
-# Girl Arc Bullies — information holders
+# Alexis Arc Bullies — information holders
 
 > Status: needs definition
 
 ## Role
 
-Two girls bully the Girl because of jealousy, rumors, her solitary behavior, her appearance and her family connection to the disappeared student. Fynn later challenges both to learn why they target her and what they know. They may become repeatable Free Duel opponents.
+Two students bully Alexis because of jealousy, rumors, her solitary behavior, her appearance and her family connection to the disappeared student. Finn later challenges both to learn why they target her and what they know. They may become repeatable Free Duel opponents.
 
-The bullying is framed as adolescent cruelty, embarrassment, jealousy and rumor without sexualizing an underage character.
+The bullying is framed as peer cruelty, embarrassment, jealousy and rumor without sexualizing Alexis.
 
 ## Open details
 

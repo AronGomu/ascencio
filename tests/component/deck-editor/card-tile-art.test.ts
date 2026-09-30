@@ -20,7 +20,7 @@ const TILE_SOURCE = readFileSync(
    100%/)` passes for any file that declares that anywhere, which is why it
    went on passing over the build where the art rendered as a top-left crop.
    The Chromium half of this, where the boxes are real, is
-   "the tile art fills the tile" in `e2e/deck-editor.spec.ts`. */
+   "the tile art fills the tile" in `e2e/e2e-global/deck-editor.spec.ts`. */
 function rules(source: string): ReadonlyMap<string, string> {
   const style = /<style>([\s\S]*)<\/style>/.exec(source)?.[1] ?? "";
   const found = new Map<string, string>();

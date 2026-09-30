@@ -17,6 +17,7 @@ import { build, createServer, preview } from "vite";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
+const APP_BUILD_OUTPUT = "generated/build/app";
 async function fixture(): Promise<string> {
   await mkdir(path.join(root, ".tmp"), { recursive: true });
   const target = await mkdtemp(path.join(root, ".tmp/t8c-boundary-"));
@@ -174,7 +175,7 @@ describe("app/content build boundary", () => {
           base,
           logLevel: "silent",
         });
-        const inventory = await files(path.join(target, "dist"));
+        const inventory = await files(path.join(target, APP_BUILD_OUTPUT));
         const wasm = inventory.filter((file) => file.endsWith(".wasm"));
         expect(wasm).toHaveLength(1);
         expect(wasm[0]).toMatch(/^assets\/sqlite3-[\w-]+\.wasm$/);
@@ -192,7 +193,7 @@ describe("app/content build boundary", () => {
           inventory.filter((file) => file.endsWith(".woff2")),
         ).toHaveLength(3);
         const sw = await readFile(
-          path.join(target, "dist/service-worker.js"),
+          path.join(target, APP_BUILD_OUTPUT, "service-worker.js"),
           "utf8",
         );
         const precacheUrls = [...sw.matchAll(/"url":"([^"]+)"/g)].map(
@@ -210,7 +211,10 @@ describe("app/content build boundary", () => {
           `${base}${wasm[0]}`,
         ]);
         const manifest = JSON.parse(
-          await readFile(path.join(target, "dist/.vite/manifest.json"), "utf8"),
+          await readFile(
+            path.join(target, APP_BUILD_OUTPUT, ".vite/manifest.json"),
+            "utf8",
+          ),
         );
         for (const entry of Object.values(manifest) as {
           file: string;
@@ -230,13 +234,19 @@ describe("app/content build boundary", () => {
           /^assets\/sqlite-worker-.*\.js$/.test(file),
         )!;
         expect(
-          await readFile(path.join(target, "dist", sqliteWorker), "utf8"),
+          await readFile(
+            path.join(target, APP_BUILD_OUTPUT, sqliteWorker),
+            "utf8",
+          ),
         ).toContain(`${base}${wasm[0]}`);
         expect(sw).toContain("index.html");
         expect(sw).not.toContain("skipWaiting");
         expect(sw).not.toContain("clients.claim");
         const release = JSON.parse(
-          await readFile(path.join(target, "dist/core-release.json"), "utf8"),
+          await readFile(
+            path.join(target, APP_BUILD_OUTPUT, "core-release.json"),
+            "utf8",
+          ),
         );
         expect(release).toMatchObject({
           schemaVersion: 1,
@@ -244,7 +254,7 @@ describe("app/content build boundary", () => {
         });
         for (const entry of [
           "assets/content",
-          "generated",
+          "generated/content-packages",
           "content",
           "public",
           ".cache",
@@ -283,7 +293,7 @@ describe("app/content build boundary", () => {
       try {
         for (const file of [
           "assets/content/chapter-01/secret.txt",
-          "generated/content-packages/duel-core/1.0.0.sqlite",
+          "generated/content-packages/duel-core-1.0.0.sqlite",
         ]) {
           await mkdir(path.dirname(path.join(target, file)), {
             recursive: true,
@@ -387,14 +397,14 @@ describe("app/content build boundary", () => {
             path.join(target, privateJson[0]!),
             path.join(target, alias),
           );
-        await mkdir(path.join(target, "dist"));
+        await mkdir(path.join(target, APP_BUILD_OUTPUT), { recursive: true });
         await writeFile(
-          path.join(target, "dist/index.html"),
+          path.join(target, APP_BUILD_OUTPUT, "index.html"),
           "app-only preview",
         );
         await symlink(
           path.join(target, "assets/content"),
-          path.join(target, "dist/preview-alias"),
+          path.join(target, APP_BUILD_OUTPUT, "preview-alias"),
         );
         // These are containment classes, not claims that every spelling resolves.
         const fileUrlRoutes = (file: string) => {
@@ -513,12 +523,12 @@ describe("app/content build boundary", () => {
           "assets/%2563ontent/chapter-01/secret.txt",
           "assets/content/chapter-01/secret.txt?raw",
           "assets/content/chapter-01/secret.txt",
-          "generated/content-packages/duel-core/1.0.0.sqlite",
+          "generated/content-packages/duel-core-1.0.0.sqlite",
           "assets/%63ontent/chapter-01/secret.txt",
           "assets/app/%2e%2e/content/chapter-01/secret.txt",
           "source-alias/chapter-01/secret.txt",
           `@fs/${target}/assets/content/chapter-01/secret.txt`,
-          `@fs/${target}/generated/content-packages/duel-core/1.0.0.sqlite`,
+          `@fs/${target}/generated/content-packages/duel-core-1.0.0.sqlite`,
           `@fs/${target}/source-alias/chapter-01/secret.txt`,
         ];
         for (const kind of ["dev", "preview"] as const) {
@@ -561,7 +571,7 @@ describe("app/content build boundary", () => {
                   : [
                       "preview-alias/chapter-01/secret.txt",
                       "preview-alias/private?import",
-                      `@id/${target}/dist/preview-alias/private?import`,
+                      `@id/${target}/${APP_BUILD_OUTPUT}/preview-alias/private?import`,
                     ]),
               ].map(async (route) => {
                 const response = await request(address.port, `${base}${route}`);

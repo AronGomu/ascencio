@@ -427,7 +427,7 @@ describe("story duel handoff", () => {
 
   /* The crash-safety property, without a browser: a session route reached
      with nothing in memory has to come back as the same encounter, read out
-     of the checkpoint. `e2e/story-duel.spec.ts` does the real reload. */
+     of the checkpoint. `e2e/e2e-global/story-duel.spec.ts` does the real reload. */
   it("restarts the encounter from the checkpoint on a cold start into the session", async () => {
     const handoffId = "66666666-2222-4333-8444-555555555555";
     await saves.write(

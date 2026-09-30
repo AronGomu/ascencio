@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 /** Isolated domain harness; no PWA/core package lifecycle scenarios. */
 export default defineConfig({
-  testDir: "../../e2e",
+  testDir: "../../e2e/e2e-global",
   testMatch: [
     "admin-console",
     "deck-editor",
@@ -17,7 +17,7 @@ export default defineConfig({
     "story-shop",
     "story-stage-sizing",
   ].map((name) => `${name}.spec.ts`),
-  outputDir: "../../.tmp/t8b4-playwright",
+  outputDir: "../../generated/tests/domain-fixture/results",
   workers: 1,
   timeout: 180_000,
   expect: { timeout: 30_000 },

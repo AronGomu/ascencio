@@ -10,10 +10,7 @@ assets/shared/card-images/
 assets/shared/card-back.jpg
 assets/shared/set-images/
 assets/content/
-dist*/
 coverage/
-playwright-report/
-test-results/
 *.log
 
 # impeccable-ignore-start

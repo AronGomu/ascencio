@@ -209,7 +209,7 @@ it("exports normalized global catalog/scripts/media; derives independent chapter
   expect(result.kind).toBe("ok");
   if (result.kind !== "ok") return;
   const library = new DatabaseSync(
-    path.join(root, "generated/content-packages/card-library/1.0.0.sqlite"),
+    path.join(root, "generated/content-packages/card-library-1.0.0.sqlite"),
     { readOnly: true },
   );
   try {
@@ -269,7 +269,7 @@ it("exports normalized global catalog/scripts/media; derives independent chapter
     library.close();
   }
   const chapter = new DatabaseSync(
-    path.join(root, "generated/content-packages/chapter-01/1.0.0.sqlite"),
+    path.join(root, "generated/content-packages/chapter-01-1.0.0.sqlite"),
     { readOnly: true },
   );
   try {
@@ -300,7 +300,7 @@ it("keeps included authored chapter limits independent from Freeplay", async () 
   expect(result.kind).toBe("ok");
   if (result.kind !== "ok") return;
   const db = new DatabaseSync(
-    path.join(root, "generated/content-packages/chapter-01/1.0.0.sqlite"),
+    path.join(root, "generated/content-packages/chapter-01-1.0.0.sqlite"),
     { readOnly: true },
   );
   try {
@@ -625,7 +625,7 @@ it("projects validated authoring mapImage into chapter config without rewriting 
   expect(result.kind).toBe("ok");
   if (result.kind !== "ok") return;
   const db = new DatabaseSync(
-    path.join(root, "generated/content-packages/chapter-01/1.0.0.sqlite"),
+    path.join(root, "generated/content-packages/chapter-01-1.0.0.sqlite"),
     { readOnly: true },
   );
   try {
@@ -733,7 +733,7 @@ it("keeps inventory-only scripts, projects required cards, reports exact omissio
   ))
     expect(receipt).toHaveProperty("inventoryOnlyScripts", []);
   const db = new DatabaseSync(
-    path.join(root, "generated/content-packages/card-library/1.0.0.sqlite"),
+    path.join(root, "generated/content-packages/card-library-1.0.0.sqlite"),
     { readOnly: true },
   );
   try {

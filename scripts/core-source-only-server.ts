@@ -85,9 +85,11 @@ async function run(args: readonly string[]): Promise<void> {
 
 try {
   await run(["run", "build"]);
-  await cp(path.join(scratch, "dist"), path.join(scratch, "dist-a"), {
-    recursive: true,
-  });
+  await cp(
+    path.join(scratch, "generated/build/app"),
+    path.join(scratch, "dist-a"),
+    { recursive: true },
+  );
   await appendFile(
     path.join(scratch, "index.html"),
     "\n<!-- cold-update-fixture-b -->\n",

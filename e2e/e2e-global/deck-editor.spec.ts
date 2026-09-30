@@ -1,7 +1,7 @@
 import { test, putSelectedStorySave } from "./selected-content-fixture.ts";
 import { expect, type Locator, type Page } from "@playwright/test";
-import { RESULT_WINDOW_CEILING } from "../src/deck-editor/layout/result-window.ts";
-import { createInitialStoryState } from "../src/story/model/story-state.ts";
+import { RESULT_WINDOW_CEILING } from "../../src/deck-editor/layout/result-window.ts";
+import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 
 import { storyStarterSave } from "./story-starter-save.ts";
 

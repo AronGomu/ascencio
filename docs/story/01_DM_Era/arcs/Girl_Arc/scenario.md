@@ -1,26 +1,26 @@
-# Girl Arc — scenario
+# First Alexis Arc — contact and trio formation
 
 > Status: largely defined
 
 ## Purpose
 
-Introduce the Girl, reveal her missing-brother investigation, form the central trio and expose the supernatural layer without resolving the mystery.
+Reveal Alexis's private investigation, form the central trio and demonstrate the first undeniable material action of the Ténèbres without resolving Atticus's disappearance.
 
 ## Beats
 
-- School conversation mentions a student who disappeared from the academy.
-- Fynn sees two girls bully the Girl over appearance, jealousy, isolation and family rumors.
-- Fynn confronts both bullies through outcome-flexible duels and learns the missing student is the Girl's older brother.
-- The Girl later breaks down in tears; location and trigger remain TBD.
-- She stops attending classes.
-- Fynn meets her at a mall during an unrelated errand.
-- Fynn calls Nerd; they follow her despite Fynn's doubts.
-- The Girl enters isolated streets and meets the Mysterious Man.
-- The Mysterious Man defeats her in a narrative duel. She collapses and supernatural phenomena begin.
-- Fynn challenges him in a mandatory Best of 3 and stops the immediate danger.
-- The Girl explains her investigation after recovering.
-- Fynn and Nerd offer help. The main trio forms.
+- Campus conversation mentions a Violet Academy student who disappeared.
+- Finn sees two students bully Alexis over appearance, jealousy, isolation and family rumors.
+- Finn confronts both through outcome-flexible duels and learns that the missing student is Alexis's older brother.
+- Alexis later breaks down, stops attending classes and continues investigating alone.
+- Finn encounters her during an unrelated errand and calls Sirius.
+- Finn and Sirius follow her to an isolated meeting with a mysterious man.
+- The man, an agent or associate of Darkness, defeats Alexis in a narrative duel.
+- Finn and Sirius intervene before he can complete his objective.
+- Finn defeats him in a mandatory Best of 3.
+- The Ténèbres absorb the defeated man before he can be questioned.
+- Alexis explains that she enrolled against her parents' wishes to investigate Atticus.
+- She accepts Finn and Sirius's help, formally creating the central trio.
 
 ## Boundaries
 
-The Missing Brother mystery remains unresolved. The hard-magic explanation belongs to global scenario canon and remains TBD.
+Atticus's mystery remains unresolved. The arc establishes a tangible supernatural threat but does not explain the complete cosmology. Alexis's breakdown location and the agent's exact objective remain open.

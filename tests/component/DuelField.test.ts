@@ -553,7 +553,9 @@ describe("DuelField", () => {
 
     const field = screen.getByRole("region", { name: "Duel field" });
     expect(field.querySelectorAll("[data-zone-id]")).toHaveLength(32);
-    expect(value.artifactPath).toBe("test-results/df-16-ST-01.json");
+    expect(value.artifactPath).toBe(
+      "generated/tests/e2e-global/results/df-16-ST-01.json",
+    );
     expect(document.body.textContent).not.toContain("Dark Magician");
     expect(document.body.innerHTML).not.toContain("46986414");
   });

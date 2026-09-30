@@ -7,8 +7,8 @@ import {
   repairSelectedStorySlot,
 } from "./selected-content-fixture.ts";
 import { expect, type Locator, type Page } from "@playwright/test";
-import { createInitialStoryState } from "../src/story/model/story-state.ts";
-import type { BattleResult } from "../src/story/model/story-state.ts";
+import { createInitialStoryState } from "../../src/story/model/story-state.ts";
+import type { BattleResult } from "../../src/story/model/story-state.ts";
 import { storyStarterSave } from "./story-starter-save.ts";
 
 /* The prologue advances one beat per confirm. These two counts are the beats
@@ -49,7 +49,7 @@ async function startNarrative(page: Page): Promise<void> {
 
 /** Resumes the story on the outcome screen for `outcome`.
 
-    The duel that produces an outcome is a real duel now: `e2e/story-duel.spec`
+    The duel that produces an outcome is a real duel now: `e2e/e2e-global/story-duel.spec.ts`
     plays one, and these tests are about the authored scenes that come after
     one, so they start from a save rather than from an engine.
 

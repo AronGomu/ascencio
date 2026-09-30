@@ -12,7 +12,7 @@ const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const outputRoot = path.join(projectRoot, "dist");
+const outputRoot = path.join(projectRoot, "generated/build/app");
 
 await stat(path.join(outputRoot, "index.html"));
 await verifySingleHtmlEntry();

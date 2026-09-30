@@ -219,16 +219,20 @@
           {/each}
         </div>{/if}
       <label data-cy="content-import-label">
-        Import SQLite packages
+        Import content packages
         <input
           type="file"
           multiple
-          accept=".sqlite,application/vnd.sqlite3"
+          accept=".zip,application/zip,.sqlite,application/vnd.sqlite3"
           data-cy="content-import-files"
+          aria-describedby="content-import-help"
           disabled={actionsBlocked}
           onchange={importFiles}
         />
       </label>
+      <p id="content-import-help" data-cy="content-import-help">
+        Choose one package ZIP, or up to four SQLite package files.
+      </p>
       {#if view.state.kind === "importing"}
         <p role="status" data-cy="content-import-progress">
           {#if view.state.progress === null}

@@ -1,19 +1,21 @@
 # Duel Monsters Era — open questions
 
-- [ ] Exact order of Girl Arc and Rival Introduction Arc.
-- [ ] Exact placement of Missing Brother Arc, Rival Returns Arc and Rival Reconstruction Arc.
-- [ ] Additional arcs needed between September and June.
-- [ ] Exact end-of-year structure before Senior Finale Arc.
-- [ ] Identities, personalities and decks of the Nerd Arc opponents.
-- [ ] Wager handling when Fynn loses part of the three-opponent sequence.
-- [ ] Nerd's meaningful card and Fynn's iconic card.
-- [ ] Names, personalities, decks and stakes of the Girl Arc bullies.
-- [ ] Girl's breakdown location and trigger.
-- [ ] Mysterious man's identity, purpose and stake.
-- [ ] Supernatural event after the Girl's loss and how Fynn stops it.
-- [ ] Missing brother's cause of disappearance and connection to Duel Academy.
-- [ ] Rival's background, goons and reconstruction training.
-- [ ] Childhood friend's name, public transfer reason, deck and romance foregrounding.
-- [ ] Senior's philosophy, deck, relationships and final arc details.
-- [ ] Academy staff identities, curriculum and map locations.
-- [ ] Qualification arena, academy map, classroom, dorms, mall and dark-street settings.
+- [ ] Final confirmation of the current ten-arc order.
+- [ ] Additional connective events needed between September and June.
+- [ ] Identities, personalities and decks of Sirius's three opponents.
+- [ ] Wager handling when Finn loses part of the three-opponent sequence.
+- [ ] Sirius's meaningful card and Finn's iconic card.
+- [ ] Names, personalities, decks and stakes of Alexis's bullies.
+- [ ] Alexis's breakdown location and trigger.
+- [ ] First mysterious man's identity, stake and immediate objective.
+- [ ] Second Darkness contact's identity and exact knowledge of Atticus.
+- [ ] Exact manifestation that follows Alexis's loss.
+- [ ] Atticus's definitive name, conditioning, mask, black outfit and liberation mechanism.
+- [ ] Chaz's definitive name, background, followers and reconstruction training.
+- [ ] Blaise's definitive name, public reason for joining, deck and place in the group.
+- [ ] Sirius's definitive name, meaningful card and deck.
+- [ ] Alexis's definitive name and deck.
+- [ ] Zen's definitive name, design, rank, philosophy, deck and final-arc details.
+- [ ] Exact adult ages and ranks of the main cast.
+- [ ] University staff identities, curriculum and campus locations.
+- [ ] Qualification arena, campus map, classrooms, residences, mall and dark-street settings.

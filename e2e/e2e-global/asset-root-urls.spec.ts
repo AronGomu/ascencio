@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { expectEmittedFonts } from "../tests/fixtures/emitted-font-contract.ts";
+import { expectEmittedFonts } from "../../tests/fixtures/emitted-font-contract.ts";
 
 test("canonical source relocation retains emitted font URLs and exact bytes", async ({
   page,

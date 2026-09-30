@@ -1,11 +1,11 @@
 import { build } from "vite";
 import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { domainFixtureConfig } from "../tests/fixtures/domain-vite.ts";
-import { domainContentFixture } from "../tests/fixtures/domain-content-server.ts";
-import type { StorySlotKey } from "../src/story/saves/index.ts";
-import type { StoryState } from "../src/story/model/story-state.ts";
-import type { selectedContent } from "../tests/fixtures/selected-content-browser.ts";
+import { domainFixtureConfig } from "../../tests/fixtures/domain-vite.ts";
+import { domainContentFixture } from "../../tests/fixtures/domain-content-server.ts";
+import type { StorySlotKey } from "../../src/story/saves/index.ts";
+import type { StoryState } from "../../src/story/model/story-state.ts";
+import type { selectedContent } from "../../tests/fixtures/selected-content-browser.ts";
 
 declare global {
   interface Window {

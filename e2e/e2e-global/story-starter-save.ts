@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import { deckId } from "../src/decks/deck-contracts.ts";
-import { importYdk } from "../src/decks/ydk-adapter.ts";
-import type { StoryDeck } from "../src/story/model/story-state.ts";
+import { deckId } from "../../src/decks/deck-contracts.ts";
+import { importYdk } from "../../src/decks/ydk-adapter.ts";
+import type { StoryDeck } from "../../src/story/model/story-state.ts";
 
 /* The deck and cards a new game is granted, as a browser test can build them.
 

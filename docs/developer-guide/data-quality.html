@@ -110,7 +110,7 @@
       <tr><td>Component</td><td>Every prompt family maps to accessible controls and valid submission behavior</td><td class="path">tests/component/PromptControls.test.ts</td></tr>
       <tr><td>Integration</td><td>Real WASM startup/processing, active deps, controller lifecycle, actual Node Worker structured clone</td><td class="path">tests/integration/real-wasm-smoke.test.ts<br>programmed-duel.test.ts<br>node-worker-thread.test.ts</td></tr>
       <tr><td>Legacy pipeline</td><td>Asset import helpers and acquisition behavior</td><td class="path">tests/*.test.ts</td></tr>
-      <tr><td>Browser E2E</td><td>Production static package at subpath, real browser Worker/WASM/images, hidden privacy, full keyboard duel, restart, timeouts, fallbacks</td><td class="path">e2e/duel-smoke.spec.ts</td></tr>
+      <tr><td>Browser E2E</td><td>Production static package at subpath, real browser Worker/WASM/images, hidden privacy, full keyboard duel, restart, timeouts, fallbacks</td><td class="path">e2e/e2e-global/duel-smoke.spec.ts</td></tr>
     </tbody></table>
     <h3>E2E browser matrix</h3><ul><li><strong>Product target:</strong> Chromium PWA family (Chrome/Edge/Chromium).</li><li><strong>Chromium:</strong> complete flow suite, including full duel; sole field-migration acceptance engine.</li><li><strong>Firefox/WebKit:</strong> optional CI hygiene smoke only; not product acceptance for DOM-field migration.</li><li><strong>Base path:</strong> <code>/ygo-story-duel/</code> catches root-relative Worker/WASM/image bugs.</li><li><strong>Artifacts on failure:</strong> trace, screenshot, video retained.</li></ul>
   </section>
@@ -136,7 +136,7 @@
   <section id="governance">
     <h2>Security and licensing boundaries</h2>
     <div class="grid-2"><div class="panel"><span class="tag accent">Security</span><h3>Trusted local inputs only</h3><ul><li>Pinned project-provided Lua, decks, manifests.</li><li>Path containment + realpath checks in dev/build asset serving.</li><li>Strict manifest/payload bounds.</li><li>Dedicated Worker termination boundary.</li><li>Hidden identities removed before IPC.</li><li>No user scripts/decks or multiplayer authority in MVP.</li></ul></div><div class="panel warning"><span class="tag gold">Distribution</span><h3>Public deployment blocked</h3><ul><li>Embedded core + CardScripts carry AGPL obligations.</li><li>BabelCDB redistribution terms need separate review.</li><li>Artwork/content/trademarks need permission.</li><li>Image provider access does not grant redistribution.</li><li>Current active manifest explicitly says <code>redistributionApproved: false</code>.</li><li>Build marker says keep artifact private.</li></ul></div></div>
-    <div class="notice danger"><strong>Do not publish <code>dist/</code> publicly.</strong> Existing build is intentionally private-only until source availability, DB terms, artwork/content permissions receive authorized review.</div>
+    <div class="notice danger"><strong>Do not publish <code>generated/build/app/</code> publicly.</strong> Existing build is intentionally private-only until source availability, DB terms, artwork/content permissions receive authorized review.</div>
   </section>
 </main>
 <footer><p>Next: <a href="onboarding.html">setup and safe change recipes</a> · <a href="runtime-flows.html">runtime sequence details</a>.</p></footer>

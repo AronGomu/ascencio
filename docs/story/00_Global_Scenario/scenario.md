@@ -31,17 +31,23 @@ Anyone may challenge another person if both sides place a meaningful stake. Stak
 
 Physical violence cannot normally acquire things or force outcomes. Duel training therefore supports practical careers comparable to police, security, military-style conflict specialists, investigators, enforcement and protection roles. Other duelists pursue tournaments, spectacle, entertainment and showmanship.
 
-## Academy status
+## Violet Academy
 
-Duel Academy uses three student classes:
+Violet Academy is a university. Every enrolled student is an adult, and Chapter 1 follows Finn through his first university year from approximately September to June. Earlier descriptions of the institution as a secondary school are superseded.
 
-| Class | Uniform | Meaning |
+The university keeps three ranks based mainly on demonstrated dueling level and institutional status rather than academic year:
+
+| Rank | Uniform | Meaning |
 |---|---|---|
 | Red | Red | Lowest-ranked duelists |
 | Yellow | Yellow | Intermediate duelists |
 | Blue | Blue | Highest-ranked duelists |
 
-Class depends mainly on demonstrated dueling level and academy status, not school year. Students in one year can belong to different classes.
+Students in the same academic year can belong to different ranks. Promotion, demotion, curriculum and the institutional reason for mandatory uniforms remain open.
+
+## Supernatural threat
+
+[The Ténèbres and Darkness](darkness.md) are the current provisional foundation for Chapter 1's occult threat. Their exact rules remain open and must become precise before runtime story content depends on them.
 
 ## Duel rules
 
@@ -61,7 +67,7 @@ Magic is hard magic: coherent, knowable laws with explicit costs and limits. Sup
 
 The first three chapters form a moral progression:
 
-| Chapter | Fynn's position | Error |
+| Chapter | Finn's position | Error |
 |---|---|---|
 | 1 | He treats impulse as self-interest | Whim-worship and lack of discipline |
 | 2 | He rejects impulse through self-sacrifice | Destructive altruism |

@@ -125,6 +125,7 @@ export default defineConfig(({ mode }): UserConfig => {
       __RUNTIME_REVISIONS__: "null",
     },
     build: {
+      outDir: "generated/build/app",
       target: "es2023",
       manifest: true,
       chunkSizeWarningLimit: 500,

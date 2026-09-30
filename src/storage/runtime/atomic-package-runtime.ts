@@ -28,10 +28,14 @@ import type { RuntimeDatabase, RuntimeFileStore } from "./runtime-ports.ts";
 import { queryContent, validQuery } from "./content-query-runtime.ts";
 import {
   FILE_CHUNK_BYTES,
-  inspectSqliteHeader,
   validateRuntimePackage,
   type ValidatedRuntimePackage,
 } from "./package-validation.ts";
+import {
+  inspectPackageImportSourceHeader,
+  isPackageArchiveError,
+  resolvePackageImportSources,
+} from "./package-import-selection.ts";
 
 export interface AtomicPackageRuntimeOptions {
   readonly registry: RuntimeDatabase;
@@ -104,23 +108,26 @@ export class AtomicPackageRuntime {
         if (stackResult.kind === "failed") return stackResult;
         if (stackResult.value.generation !== expectedGeneration)
           return failed("STORAGE_CONFLICT");
+        const resolved = await resolvePackageImportSources(files);
+        if (resolved.kind === "failed") return resolved;
+        const sources = resolved.value;
         let selectedBytes = 0;
-        for (const file of files) {
-          const header = await inspectSqliteHeader(file);
+        for (const source of sources) {
+          const header = await inspectPackageImportSourceHeader(source);
           if (header.kind === "failed") return header;
-          selectedBytes += file.size;
+          selectedBytes += source.size;
           if (!Number.isSafeInteger(selectedBytes))
             return failed("STORAGE_QUOTA_EXCEEDED");
         }
         if (!(await this.#estimate(selectedBytes + 8 * 1024 * 1024)))
           return failed("STORAGE_QUOTA_EXCEEDED");
         await this.#files.reserveMinimumCapacity(
-          (stackResult.value.packages.length + files.length + 1) * 3 + 1,
+          (stackResult.value.packages.length + sources.length + 1) * 3 + 1,
         );
         this.#fault("before-copy");
         const staged: StagedPackage[] = [];
-        for (let index = 0; index < files.length; index += 1) {
-          const file = files[index]!;
+        for (let index = 0; index < sources.length; index += 1) {
+          const source = sources[index]!;
           const key = `/imports/${operationId}/${index}.partial`;
           stagedKeys.push(key);
           const hasher = sha256.create();
@@ -129,40 +136,64 @@ export class AtomicPackageRuntime {
             progress,
             operationId,
             "copying",
-            file.name,
+            source.name,
             0,
-            file.size,
+            source.size,
           );
-          const bytes = await this.#files.importDatabase(key, async () => {
-            if (signal.aborted) throw cancelledError();
-            if (offset >= file.size) return undefined;
-            const end = Math.min(file.size, offset + FILE_CHUNK_BYTES);
-            const chunk = new Uint8Array(
-              await file.slice(offset, end).arrayBuffer(),
-            );
-            if (chunk.byteLength > FILE_CHUNK_BYTES)
-              throw new Error("oversized chunk");
-            hasher.update(chunk);
-            offset = end;
-            progressEvent(
-              progress,
-              operationId,
-              "copying",
-              file.name,
-              offset,
-              file.size,
-            );
-            return chunk;
-          });
-          if (bytes !== file.size || offset !== file.size)
+          const reader = (await source.open()).getReader();
+          let remainder: Uint8Array | null = null;
+          let bytes: number;
+          try {
+            bytes = await this.#files.importDatabase(key, async () => {
+              if (signal.aborted) throw cancelledError();
+              let chunk: Uint8Array;
+              if (remainder !== null) {
+                chunk = remainder.subarray(0, FILE_CHUNK_BYTES);
+                remainder =
+                  chunk.byteLength === remainder.byteLength
+                    ? null
+                    : remainder.subarray(chunk.byteLength);
+              } else {
+                const result = await reader.read();
+                if (result.done) return undefined;
+                chunk = result.value.subarray(0, FILE_CHUNK_BYTES);
+                if (chunk.byteLength < result.value.byteLength)
+                  remainder = result.value.subarray(chunk.byteLength);
+              }
+              hasher.update(chunk);
+              offset += chunk.byteLength;
+              progressEvent(
+                progress,
+                operationId,
+                "copying",
+                source.name,
+                offset,
+                source.size,
+              );
+              return chunk;
+            });
+          } catch (error) {
+            await reader.cancel().catch(() => undefined);
+            throw error;
+          } finally {
+            reader.releaseLock();
+          }
+          if (bytes !== source.size || offset !== source.size) {
+            console.error("Package copy byte count mismatch", {
+              name: source.name,
+              sourceSize: source.size,
+              importedBytes: bytes,
+              streamedBytes: offset,
+            });
             return failed("PACKAGE_INTEGRITY_FAILED");
+          }
           progressEvent(
             progress,
             operationId,
             "validating",
-            file.name,
+            source.name,
             bytes,
-            file.size,
+            source.size,
           );
           let database: RuntimeDatabase | null = null;
           let validated: StorageResult<ValidatedRuntimePackage>;
@@ -170,11 +201,18 @@ export class AtomicPackageRuntime {
             database = this.#files.openDatabase(key);
             validated = validateRuntimePackage(database);
           } catch (error) {
+            console.error("Package database open or validation failed", error);
             return packageDatabaseFailure(error);
           } finally {
             database?.close();
           }
-          if (validated.kind === "failed") return validated;
+          if (validated.kind === "failed") {
+            console.error("Package database validation rejected the import", {
+              name: source.name,
+              error: validated.error,
+            });
+            return validated;
+          }
           staged.push({
             ...validated.value.manifest,
             config: validated.value.config,
@@ -227,7 +265,7 @@ export class AtomicPackageRuntime {
           progress,
           operationId,
           "committing",
-          files[0]?.name ?? "",
+          sources[0]?.name ?? "",
           selectedBytes,
           selectedBytes,
         );
@@ -259,13 +297,14 @@ export class AtomicPackageRuntime {
           progress,
           operationId,
           "complete",
-          files[0]?.name ?? "",
+          sources[0]?.name ?? "",
           selectedBytes,
           selectedBytes,
         );
         return commit;
       } catch (error) {
         if (committed) return this.#readStack();
+        if (isPackageArchiveError(error)) return failed("PACKAGE_INVALID");
         if (isCancellation(error) || signal.aborted)
           return failed("OPERATION_CANCELLED");
         if (isQuota(error)) return failed("STORAGE_QUOTA_EXCEEDED");

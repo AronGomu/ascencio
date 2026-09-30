@@ -11,6 +11,7 @@ Narrative canon lives here. It describes the world, eras, chapters, arcs and cha
 | [`00_Global_Scenario/`](00_Global_Scenario/) | Shared universe, chapter model, philosophy, world rules and sheet method |
 | [`01_DM_Era/`](01_DM_Era/) | Duel Monsters Era: Chapter 1 scenario, cast and arcs |
 | [`02_GX_Era/`](02_GX_Era/) | GX Era: Chapter 2 scenario scaffold |
+| [`themes/`](themes/) | Non-canonical visual prototypes grouped by character and design theme |
 | [`archive/`](archive/) | Superseded story decisions; historical only |
 
 Gameplay structures and asset rules are not story canon. They live in [`../game/`](../game/).

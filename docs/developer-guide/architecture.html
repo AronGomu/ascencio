@@ -120,7 +120,7 @@
     <h2>Privacy path</h2>
     <div class="notice danger"><strong>Critical invariant.</strong> Opponent hidden card identity must never cross Worker boundary. Rendering a card back is insufficient if code/name remains in JS object.</div>
     <ol class="flow-list"><li>Raw core message may contain card code and field location inside Worker.</li><li><code>DuelStateProjector</code> applies visibility policy. Opponent hand gets <code>handCount</code>, but public <code>hand</code> array is empty.</li><li>When visible card becomes hidden, projector rotates public instance ID and deletes code.</li><li><code>PromptRegistry</code> redacts prompt card code/name/description when viewer cannot see identity.</li><li>Outbound event parser rechecks public state: opponent hand identity array must remain empty.</li><li>Svelte/Phaser receive hidden cards without identity; Phaser selects card-back texture from <code>hidden</code>.</li><li>E2E captures real Worker events and asserts opponent hand objects remain empty.</li></ol>
-    <p class="source-ref">Key files: src/battle/duel/card-visibility.ts · src/battle/worker/projection/DuelStateProjector.ts · src/battle/worker/protocol/PromptRegistry.ts · src/battle/duel/contracts/duel-worker-event.ts · e2e/duel-smoke.spec.ts</p>
+    <p class="source-ref">Key files: src/battle/duel/card-visibility.ts · src/battle/worker/projection/DuelStateProjector.ts · src/battle/worker/protocol/PromptRegistry.ts · src/battle/duel/contracts/duel-worker-event.ts · e2e/e2e-global/duel-smoke.spec.ts</p>
   </section>
 
   <section id="direction">
@@ -149,7 +149,7 @@
       <tr><td>How does visual field update?</td><td class="path">src/battle/app/components/DuelField.svelte</td><td class="path">create-phaser-presentation-bridge.ts → DuelScene.ts</td></tr>
       <tr><td>How are runtime assets trusted?</td><td class="path">src/battle/worker/assets/browser-runtime-assets.ts</td><td class="path">runtime-manifest.ts · vite-runtime-assets.ts · verify-browser-build.ts</td></tr>
       <tr><td>How does rollback work?</td><td class="path">src/battle/storage/snapshot-store.ts</td><td class="path">revision-cache-cleanup.ts · browser-snapshot-pointer.ts</td></tr>
-      <tr><td>What proves production behavior?</td><td class="path">e2e/duel-smoke.spec.ts</td><td class="path">tests/integration/node-worker-thread.test.ts · programmed-duel.test.ts</td></tr>
+      <tr><td>What proves production behavior?</td><td class="path">e2e/e2e-global/duel-smoke.spec.ts</td><td class="path">tests/integration/node-worker-thread.test.ts · programmed-duel.test.ts</td></tr>
     </tbody></table>
   </section>
 </main>

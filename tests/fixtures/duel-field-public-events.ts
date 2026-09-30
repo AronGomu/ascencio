@@ -31,7 +31,7 @@ export interface DuelFieldPublicStateFixture {
   readonly id: DuelFieldStateId;
   readonly event: Extract<DuelWorkerEvent, { readonly type: "state" }>;
   readonly board: BoardViewModel;
-  readonly artifactPath: `test-results/df-16-${DuelFieldStateId}.json`;
+  readonly artifactPath: `generated/tests/e2e-global/results/df-16-${DuelFieldStateId}.json`;
   readonly assertions: readonly string[];
 }
 
@@ -98,7 +98,7 @@ function createFixture(
     id,
     event,
     board: boardResult.value,
-    artifactPath: `test-results/df-16-${id}.json`,
+    artifactPath: `generated/tests/e2e-global/results/df-16-${id}.json`,
     assertions: ASSERTIONS_BY_ID[id],
   });
 }

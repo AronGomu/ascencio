@@ -4,7 +4,7 @@
 
 ## Role
 
-The Dean is a possible Qualification Arc observer or academy authority. The role represents Duel Academy leadership.
+The Dean is a possible Qualification Arc observer or academy authority. The role represents Violet Academy leadership.
 
 ## Open details
 

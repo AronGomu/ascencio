@@ -29,6 +29,8 @@ jobs:
           path: |
             .cache/upstream
             generated
+            !generated/build
+            !generated/tests
           key: mvp-assets-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/sync-*.ts', 'scripts/download-images.ts', 'src/battle/duel/presets/decks/*.ydk') }}
           restore-keys: |
             mvp-assets-${{ runner.os }}-
@@ -46,8 +48,8 @@ jobs:
             --exclude .agentsystem \
             --exclude .pi \
             --exclude node_modules \
-            --exclude dist \
-            --exclude test-results \
+            --exclude generated/build \
+            --exclude generated/tests \
             ./ "$isolated/"
           cd "$isolated"
           npm ci --offline
@@ -65,7 +67,7 @@ jobs:
           retention-days: 30
           if-no-files-found: error
           path: |
-            dist/
+            generated/build/app/
             generated/content-inputs/runtime/manifest.json
             vendor/ocgcore-wasm/0.1.2/vendor-manifest.json
             vendor/ocgcore-wasm/0.1.2/VENDORING.md
@@ -78,8 +80,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
           path: |
-            test-results/
-            playwright-report/
+            generated/tests/
             generated/**/*report*.json
             generated/mvp-assets-status.json
             generated/content-inputs/runtime/manifest.json

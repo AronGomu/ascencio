@@ -20,4 +20,4 @@ The programmed real-WASM headless integration suite remains prerequisite for vis
 - Any engine/data update creates a new snapshot and runs all layers.
 - Typecheck, lint, format, unit/component/real-WASM tests, asset verification, independently verified production packaging, reproducible-build comparison, and the browser matrix are release gates.
 - CI regenerates the pinned asset snapshot and uploads traces/reports when a compatibility or browser gate fails.
-- DF-16 records machine-readable Chromium parity/perf/resource evidence in `test-results/df-16-results.json` and the acceptance baseline in `docs/architecture/05-presentation/duel-field-performance-baseline.md`.
+- DF-16 records machine-readable Chromium parity/perf/resource evidence in `generated/tests/e2e-global/results/df-16-results.json` and the acceptance baseline in `docs/architecture/05-presentation/duel-field-performance-baseline.md`.

@@ -6,7 +6,7 @@
 
 ## Current model
 
-App ships no game-content package. User obtains immutable `.sqlite` files outside app, opens **Content & updates**, then selects files locally. App never fetches package bytes from configured links. Null links in `assets/app/download-links.json` show download unavailable without disabling file picker.
+App ships no game-content package. User obtains either one ZIP containing one to four immutable `.sqlite` packages or one to four raw `.sqlite` files outside app, opens **Content & updates**, then selects them locally. App never fetches package bytes from configured links. Null links in `assets/app/download-links.json` show download unavailable without disabling file picker.
 
 Package chain:
 
@@ -28,12 +28,12 @@ Current commands:
 
 ```sh
 npm run content:export -- --spec content/packages.json
-npm run content:verify -- --file generated/content-packages/duel-core/1.0.0.sqlite
+npm run content:verify -- --file generated/content-packages/duel-core-1.0.0.sqlite
 npm run assets:restructure -- --plan
 npm run assets:restructure -- --apply generated/content-packages/asset-move-plan.json
 ```
 
-Every command supports `--help`. `content:export` reads package-owned `assets/content/<package-id>/` roots plus frozen vendor input and writes immutable releases under `generated/content-packages/<package-id>/<version>.sqlite`. Full-recipe export validates dependency/reference closure. `content:verify` validates one file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
+Every command supports `--help`. `content:export` reads package-owned `assets/content/<package-id>/` roots plus frozen vendor input and writes directly named immutable releases such as `generated/content-packages/duel-core-1.0.0.sqlite`, plus `generated/content-packages/content-packages.zip` containing the selected releases. Full-recipe export validates dependency/reference closure. `content:verify` validates one raw file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
 
 Re-export with identical inputs is a no-op. Existing same package ID/version with different identity fails. Source completeness, rights, external links, and upload remain owner gates; fixture success does not prove public-release readiness.
 
@@ -44,10 +44,11 @@ Re-export with identical inputs is a no-op. Existing same package ID/version wit
 Import flow:
 
 1. I1. Main thread requests persistence/capacity estimate; unavailable estimate warns rather than inventing capacity.
-2. I2. Worker streams selected files to operation-owned staging names, hashes bytes, parses manifests, validates exact schemas/rows/assets and dependency closure.
-3. I3. Entire multi-file selection validates before one registry generation compare-and-swap exposes new mappings.
-4. I4. Failure, quota exhaustion, or precommit cancellation preserves prior active stack and user DB. Postcommit cancellation reports committed result.
-5. I5. Startup reconciles owned temporary files without deleting any registry-referenced file, even when its private key ends in `.partial`.
+2. I2. Worker accepts exactly one ZIP containing one to four top-level SQLite files, or one to four raw SQLite files. ZIP entries are streamed directly to OPFS with declared-size and CRC-32 checks; package bytes are never expanded together in memory.
+3. I3. Worker streams selected packages to operation-owned staging names, hashes bytes, parses manifests, validates exact schemas/rows/assets and dependency closure. Package identity comes from the database manifest, never the filename or ZIP entry name.
+4. I4. Entire selection validates before one registry generation compare-and-swap exposes new mappings.
+5. I5. Failure, quota exhaustion, archive corruption, or precommit cancellation preserves prior active stack and user DB. Postcommit cancellation reports committed result.
+6. I6. Startup reconciles owned temporary files without deleting any registry-referenced file, even when its private key ends in `.partial`.
 
 Active package files open read-only. Queries are fixed, parameterized RPC operations; UI sends no SQL. Startup checks registry/manifests/dependencies/file presence. Explicit verification performs full package/hash checks. Optional absent media returns placeholder plus typed warning; corrupt present bytes fail verification.
 
@@ -71,7 +72,7 @@ Operational app-update approval and Battle diagnostics may retain IndexedDB. The
 
 `vite.config.ts` uses `publicDir:false`. Explicit `assets/app/` imports provide icon/link metadata. Build emits app code/fonts/licenses plus exact pinned SQLite executable JS/WASM. Service Worker precaches shell and SQLite runtime only.
 
-`scripts/lib/vite-content-deny.ts` blocks direct and aliased Vite/`@fs` access to `assets/content/**` and `generated/content-packages/**`. `scripts/verify-browser-build.ts` rejects package DBs, ZIPs, OCG WASM, card/chapter media, raw content, and extra WASM in `dist/` or precache. App build requires no acquired roots and triggers no source acquisition.
+`scripts/lib/vite-content-deny.ts` blocks direct and aliased Vite/`@fs` access to `assets/content/**` and `generated/content-packages/**`. `scripts/verify-browser-build.ts` rejects package DBs, ZIPs, OCG WASM, card/chapter media, raw content, and extra WASM in `generated/build/app/` or precache. App build requires no acquired roots and triggers no source acquisition.
 
 ## Acceptance boundary
 

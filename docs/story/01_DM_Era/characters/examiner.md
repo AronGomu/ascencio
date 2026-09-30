@@ -4,7 +4,7 @@
 
 ## Role
 
-The Examiner conducts Fynn's entrance qualification duel during Qualification Arc. The duel is a fully playable single game. Either result is valid; losing does not cause game over or block admission.
+The Examiner conducts Finn's entrance qualification duel during Qualification Arc. The duel is a fully playable single game. Either result is valid; losing does not cause game over or block admission.
 
 ## Open details
 

@@ -12,7 +12,7 @@ This is the canonical architecture entry point. Detailed decisions are intention
 
 | ID  | Current invariant                                                                                 | Implementation anchor                                                                                                        |
 | --- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| S1  | App-only build; content package bytes never enter `dist/`, precache, or Vite source serving       | `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, `scripts/lib/vite-content-deny.ts`, `scripts/verify-browser-build.ts`    |
+| S1  | App-only build; content package bytes never enter `generated/build/app/`, precache, or Vite source serving       | `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, `scripts/lib/vite-content-deny.ts`, `scripts/verify-browser-build.ts`    |
 | S2  | Manual immutable SQLite import; no live progressive/ZIP/R2/download/selector path                 | `src/storage/create-storage-client.ts`, `src/storage/sqlite-worker.ts`, `src/shell/application/manual-content-controller.ts` |
 | S3  | Package-owned assets/global cards/standalone Free Play; optional media warns without hidden fetch | `scripts/lib/asset-roots.ts`, `src/shell/adapters/sqlite-freeplay-inputs.ts`                                                 |
 | S4  | Isolated `user-data.sqlite`; backup replacement only; no legacy migration or save-continuity gate | `src/storage/runtime/user-data-runtime.ts`, `src/shell/application/user-persistence-owner.ts`                                |

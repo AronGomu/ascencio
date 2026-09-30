@@ -235,7 +235,7 @@ describe("findSelectableDeck", () => {
    from the browser globals, which is the earliest place the claim can be
    checked — and it goes red the day packaging shrinks back below a legal deck.
    `a local deck built from the packaged catalog duels` in
-   `e2e/duel-smoke.spec.ts` walks the same claim end to end. */
+   `e2e/e2e-global/duel-smoke.spec.ts` walks the same claim end to end. */
 describe("packaged local deck coverage", () => {
   it("packages enough legal cards to assemble a deck the duel can draw", () => {
     const packagedCodes = buildActiveImageManifest(

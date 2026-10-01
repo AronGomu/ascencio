@@ -56,11 +56,7 @@ pub(crate) fn manifest_is_valid(manifest: &ReleaseManifest) -> bool {
     let mut ids = std::collections::HashSet::new();
     for package in &manifest.packages {
         let valid_id = native_package_manager::valid_id(&package.package_id);
-        let valid_version = package.version.split('.').count() == 3
-            && package
-                .version
-                .split('.')
-                .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
+        let valid_version = native_package_manager::valid_version(&package.version);
         if !valid_id {
             return false;
         }

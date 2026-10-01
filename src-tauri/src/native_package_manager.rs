@@ -431,30 +431,40 @@ fn owned_asset_path(package_type: &str, path: &str) -> bool {
         _ => false,
     }
 }
+const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+
 pub(crate) fn valid_id(id: &str) -> bool {
+    if id.len() > 128 {
+        return false;
+    }
     matches!(id, "duel-core" | "card-library" | "freeplay")
-        || (id.len() <= 128
-            && id.strip_prefix("card-pack-").is_some_and(|suffix| {
-                !suffix.is_empty()
-                    && suffix.split('-').all(|part| {
-                        !part.is_empty()
-                            && part
-                                .bytes()
-                                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
-                    })
-            }))
+        || id.strip_prefix("card-pack-").is_some_and(|suffix| {
+            !suffix.is_empty()
+                && suffix.split('-').all(|part| {
+                    !part.is_empty()
+                        && part
+                            .bytes()
+                            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
+                })
+        })
         || id.strip_prefix("chapter-").is_some_and(|suffix| {
             suffix.len() >= 2
                 && suffix.bytes().all(|b| b.is_ascii_digit())
-                && !suffix.starts_with("00")
+                && (suffix.len() == 2 || !suffix.starts_with('0'))
+                && suffix
+                    .parse::<u64>()
+                    .is_ok_and(|number| (1..=MAX_SAFE_INTEGER).contains(&number))
         })
 }
-fn valid_version(version: &str) -> bool {
+pub(crate) fn valid_version(version: &str) -> bool {
     version.split('.').count() == 3
         && version.split('.').all(|part| {
             !part.is_empty()
                 && part.bytes().all(|b| b.is_ascii_digit())
                 && (part.len() == 1 || !part.starts_with('0'))
+                && part
+                    .parse::<u64>()
+                    .is_ok_and(|number| number <= MAX_SAFE_INTEGER)
         })
 }
 fn valid_header_dependencies(header: &Value) -> bool {
@@ -569,6 +579,9 @@ fn dependencies_valid(headers: &HashMap<String, Value>) -> bool {
             let Some(actual_version) = actual["version"].as_str() else {
                 return false;
             };
+            if !valid_version(actual_version) || !valid_version(required_version) {
+                return false;
+            }
             match dependency["requirement"].as_str() {
                 Some("exact") if actual_version == required_version => {}
                 Some("minimum")
@@ -585,7 +598,7 @@ fn dependencies_valid(headers: &HashMap<String, Value>) -> bool {
 fn version_parts(value: &str) -> Vec<u64> {
     value
         .split('.')
-        .map(|part| part.parse().unwrap_or(0))
+        .map(|part| part.parse().expect("validated package version"))
         .collect()
 }
 fn write_active(root: &PathBuf, manifest: &ReleaseManifest) -> Result<(), String> {
@@ -886,6 +899,153 @@ mod tests {
 
     fn header(id: &str, kind: &str, dependencies: &[&str]) -> Value {
         json!({"packageId":id,"packageType":kind,"version":"1.0.0","schemaVersion":1,"createdAt":"2026-09-24T00:00:00.000Z","dependencies":dependencies.iter().map(|id|json!({"packageId":id,"requirement":"minimum","version":"1.0.0"})).collect::<Vec<_>>()})
+    }
+    fn registry(id: &str, version: &str) -> ReleaseManifest {
+        ReleaseManifest {
+            schema_version: 1,
+            generation: Some(1),
+            packages: vec![ReleasePackage {
+                package_id: id.into(),
+                version: version.into(),
+                bytes: 1024,
+                sha256: "a".repeat(64),
+            }],
+        }
+    }
+    const INVALID_VERSIONS: &[&str] = &[
+        "9007199254740992.0.0",
+        "0.9007199254740992.0",
+        "0.0.9007199254740992",
+        "18446744073709551616.0.0",
+        "01.0.0",
+        "1.00.0",
+        "1.0.00",
+        "1.0",
+        "1.0.0.0",
+        "1.0.0-beta",
+        "+1.0.0",
+        "1.0.0\n",
+    ];
+    #[test]
+    fn candidate_versions_reject_noncanonical_or_unsafe_integers() {
+        let path = fixture();
+        let mut results = Vec::new();
+        for version in [
+            "0.0.0",
+            "9007199254740991.9007199254740991.9007199254740991",
+        ]
+        .into_iter()
+        .chain(INVALID_VERSIONS.iter().copied())
+        {
+            let db = Connection::open(&path).unwrap();
+            db.execute("UPDATE package_manifest SET version=?", [version])
+                .unwrap();
+            drop(db);
+            results.push((version, examine(&path).map(|_| ())));
+        }
+        fs::remove_file(path).unwrap();
+        for (version, result) in results {
+            if INVALID_VERSIONS.contains(&version) {
+                assert_eq!(result, Err("Invalid package header".into()), "{version}");
+            } else {
+                assert_eq!(result, Ok(()), "{version}");
+            }
+        }
+    }
+    #[test]
+    fn registry_versions_use_the_same_canonical_safe_integer_contract() {
+        for version in [
+            "0.0.0",
+            "9007199254740991.9007199254740991.9007199254740991",
+        ] {
+            assert!(
+                manifest_is_valid(&registry("duel-core", version)),
+                "{version}"
+            );
+        }
+        for version in INVALID_VERSIONS {
+            assert!(
+                !manifest_is_valid(&registry("duel-core", version)),
+                "{version}"
+            );
+        }
+    }
+    #[test]
+    fn chapter_ids_are_canonical_safe_integers_in_registries_and_dependencies() {
+        for id in [
+            "chapter-01",
+            "chapter-09",
+            "chapter-10",
+            "chapter-9007199254740991",
+        ] {
+            assert!(valid_id(id), "{id}");
+            assert!(manifest_is_valid(&registry(id, "1.0.0")), "{id}");
+            assert!(
+                valid_header_dependencies(&header("chapter-02", "chapter", &[id])),
+                "{id}"
+            );
+        }
+        for id in [
+            "chapter-010".to_owned(),
+            "chapter-00".to_owned(),
+            "chapter-1".to_owned(),
+            "chapter-9007199254740992".to_owned(),
+            "chapter-18446744073709551616".to_owned(),
+            format!("chapter-{}", "1".repeat(121)),
+        ] {
+            assert!(!valid_id(&id), "{id}");
+            assert!(!manifest_is_valid(&registry(&id, "1.0.0")), "{id}");
+            assert!(
+                !valid_header_dependencies(&header("chapter-02", "chapter", &[&id])),
+                "{id}"
+            );
+        }
+    }
+    #[test]
+    fn dependency_versions_reject_unsafe_headers_before_comparison() {
+        for version in INVALID_VERSIONS {
+            let mut library = header("card-library", "card-library", &["duel-core"]);
+            library["dependencies"][0]["version"] = json!(version);
+            assert!(!valid_header_dependencies(&library), "{version}");
+            let headers = HashMap::from([
+                ("duel-core".into(), header("duel-core", "duel-core", &[])),
+                ("card-library".into(), library),
+            ]);
+            assert!(!dependencies_valid(&headers), "{version}");
+        }
+    }
+    #[test]
+    fn dependency_comparison_handles_safe_bounds_and_rejects_invalid_installed_versions() {
+        for (actual, minimum, expected) in [
+            ("9007199254740991.0.0", "9007199254740990.0.0", true),
+            ("1.9007199254740991.0", "2.0.0", false),
+            ("1.0.9007199254740991", "1.0.9007199254740991", true),
+            ("1.0.9007199254740990", "1.0.9007199254740991", false),
+            ("18446744073709551616.0.0", "0.0.0", false),
+            ("9007199254740992.0.0", "1.0.0", false),
+            ("9007199254740992.0.0", "9007199254740992.0.0", false),
+            ("01.0.0", "1.0.0", false),
+            ("01.0.0", "01.0.0", false),
+        ] {
+            let mut core = header("duel-core", "duel-core", &[]);
+            core["version"] = json!(actual);
+            let mut library = header("card-library", "card-library", &["duel-core"]);
+            library["dependencies"][0]["version"] = json!(minimum);
+            let mut headers =
+                HashMap::from([("duel-core".into(), core), ("card-library".into(), library)]);
+            assert_eq!(
+                dependencies_valid(&headers),
+                expected,
+                "{actual} >= {minimum}"
+            );
+            headers.get_mut("card-library").unwrap()["dependencies"][0]["requirement"] =
+                json!("exact");
+            assert_eq!(
+                dependencies_valid(&headers),
+                expected && actual == minimum,
+                "{actual} == {minimum}"
+            );
+        }
     }
     #[test]
     fn module_graph_allows_absent_previous_chapters_and_rejects_cycles() {

@@ -1,3 +1,11 @@
+import {
+  validateCommerceStack,
+  type CommerceContent,
+} from "../../../src/modules/index.ts";
+import {
+  loadCommerceSource,
+  type CompiledShopSource,
+} from "./commerce-source.ts";
 import { randomUUID } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import {
@@ -47,6 +55,7 @@ import {
   loadNormalizedCatalog,
   normalizedChapterLimits,
   normalizedMedia,
+  normalizedJson,
   NormalizedSourceFailure,
 } from "./normalized-package-source.ts";
 import { writePackageArchive } from "./package-archive.ts";
@@ -149,11 +158,29 @@ export async function exportPackages(
       !Array.isArray(input.packages)
     )
       return failed("PACKAGE_INVALID");
-    const entries: { manifest: PackageManifest; sourceRoot: string }[] = [];
+    const entries: {
+      manifest: PackageManifest;
+      sourceRoot: string;
+      sourceManifest?: string;
+      sourceVersion?: string;
+    }[] = [];
     for (const entry of input.packages) {
       if (
         !isRecord(entry) ||
-        Object.keys(entry).sort().join() !== "manifest,sourceRoot" ||
+        Object.keys(entry).some(
+          (key) =>
+            ![
+              "manifest",
+              "sourceRoot",
+              "sourceManifest",
+              "sourceVersion",
+            ].includes(key),
+        ) ||
+        (entry.sourceManifest === undefined) !==
+          (entry.sourceVersion === undefined) ||
+        (entry.sourceManifest !== undefined &&
+          (typeof entry.sourceManifest !== "string" ||
+            typeof entry.sourceVersion !== "string")) ||
         typeof entry.sourceRoot !== "string"
       )
         return failed("PACKAGE_INVALID");
@@ -165,7 +192,16 @@ export async function exportPackages(
           parsed.value.packageId,
           entry.sourceRoot,
         );
-      entries.push({ manifest: parsed.value, sourceRoot: entry.sourceRoot });
+      entries.push({
+        manifest: parsed.value,
+        sourceRoot: entry.sourceRoot,
+        ...(entry.sourceManifest === undefined
+          ? {}
+          : {
+              sourceManifest: entry.sourceManifest,
+              sourceVersion: entry.sourceVersion as string,
+            }),
+      });
     }
     const ordered = orderPackages(
       entries.map(({ manifest }) => manifest),
@@ -176,11 +212,61 @@ export async function exportPackages(
       entries.map((entry) => [entry.manifest.packageId, entry]),
     );
     const sources: PackageSource[] = [];
-    for (const manifest of ordered.value)
-      sources.push(
-        await loadSource(root, byId.get(manifest.packageId)!, sources),
-      );
+    for (const manifest of ordered.value) {
+      const entry = byId.get(manifest.packageId)!;
+      let compiled: CompiledShopSource | undefined;
+      if (entry.sourceManifest !== undefined) {
+        if (manifest.packageType !== "card-library")
+          return failed(
+            "PACKAGE_INVALID",
+            manifest.packageId,
+            entry.sourceManifest,
+          );
+        const ids = new Set<PackageId>();
+        function include(id: PackageId): void {
+          if (ids.has(id)) return;
+          ids.add(id);
+          for (const dependency of byId.get(id)!.manifest.dependencies)
+            include(dependency.packageId);
+        }
+        for (const dependency of manifest.dependencies)
+          include(dependency.packageId);
+        const parents = sources.filter((source) =>
+          ids.has(source.manifest.packageId),
+        );
+        const commerce = parents.flatMap(
+          (source) =>
+            (source.config as { commerce?: CommerceContent }).commerce ?? [],
+        );
+        compiled = await loadCommerceSource(
+          root,
+          entry.sourceManifest,
+          entry.sourceVersion,
+          {
+            setIds: parents.flatMap((source) =>
+              source.sets.map((set) => set.id),
+            ),
+            commerce: {
+              schemaVersion: 1,
+              economies: commerce.flatMap((c) => c.economies),
+              boosters: commerce.flatMap((c) => c.boosters),
+              shops: commerce.flatMap((c) => c.shops),
+            },
+          },
+        );
+      }
+      sources.push(await loadSource(root, entry, sources, compiled));
+    }
     validateCrossPackageSources(sources);
+    validateCommerceStack(
+      sources.map((source) => ({
+        id: source.manifest.packageId,
+        dependencies: source.manifest.dependencies.map((d) => d.packageId),
+        sets: source.sets.map((s) => s.id),
+        ...(source.config as { commerce?: CommerceContent; shopId?: string }),
+        selectedSetIds: (source.config as { setIds?: string[] }).setIds,
+      })),
+    );
     const receipts: ExportReceipt[] = [];
     for (const source of sources)
       receipts.push(await writePackage(root, source));
@@ -202,15 +288,20 @@ async function loadSource(
   root: string,
   entry: { manifest: PackageManifest; sourceRoot: string },
   prior: readonly PackageSource[],
+  compiled?: CompiledShopSource,
 ): Promise<PackageSource> {
   const sourceRoot = safe(root, entry.sourceRoot);
   await assertNoSymlinkParents(root, entry.sourceRoot);
   await requiredFile(sourceRoot, "config.json", entry.manifest.packageId);
-  const config = await json(
-    sourceRoot,
-    "config.json",
-    entry.manifest.packageId,
-  );
+  let config = await json(sourceRoot, "config.json", entry.manifest.packageId);
+  if (entry.sourceRoot === "assets/content/chapter-01") {
+    const policy = (await normalizedJson(
+      root,
+      "content/commerce/chapters/chapter-01.json",
+      "chapter-01",
+    )) as { shopId: string };
+    config = { ...(config as object), shopId: policy.shopId };
+  }
   const normalized =
     entry.manifest.packageType === "card-library" &&
     (await hasNormalizedCatalog(sourceRoot));
@@ -232,13 +323,22 @@ async function loadSource(
     : entry.sourceRoot === "assets/content/chapter-01"
       ? await normalizedMedia(sourceRoot, entry.manifest.packageId)
       : [];
-  const globalSets = catalog
-    ? await loadGlobalSets(
-        sourceRoot,
-        catalog.cards.map(({ code }) => code),
-        derivedAssets,
-      )
-    : null;
+  const globalSets =
+    catalog || compiled
+      ? await loadGlobalSets(
+          sourceRoot,
+          (
+            catalog?.cards ??
+            (await requiredArray<CardRow>(
+              sourceRoot,
+              "cards.json",
+              entry.manifest.packageId,
+            ))
+          ).map(({ code }) => code),
+          derivedAssets,
+          compiled?.sets,
+        )
+      : null;
   if (globalSets) {
     const paths = new Set(derivedAssets.map((asset) => asset.path));
     for (const asset of globalSets.assets)
@@ -370,7 +470,18 @@ async function loadSource(
     return {
       manifest: entry.manifest,
       root: sourceRoot,
-      config: projectedConfig?.config ?? config,
+      config:
+        compiled === undefined
+          ? (projectedConfig?.config ?? config)
+          : {
+              ...((projectedConfig?.config ?? config) as object),
+              commerce: {
+                schemaVersion: 1,
+                economies: compiled.economies,
+                boosters: compiled.boosters,
+                shops: compiled.shops,
+              },
+            },
       cards,
       texts,
       scripts,

@@ -179,6 +179,12 @@ async function optionalFixture(file: string) {
       packageId: "card-library",
       target: path.join(value.source("card-library"), file),
     };
+  const policy = path.join(
+    value.root,
+    "content/commerce/chapters/chapter-01.json",
+  );
+  await fs.mkdir(path.dirname(policy), { recursive: true });
+  await json(policy, { shopId: "shop", allowedCardCodes: [1] });
   const destination = path.join(value.root, "assets/content/chapter-01");
   await fs.cp(value.source("chapter-01"), destination, { recursive: true });
   value.spec.packages.find(

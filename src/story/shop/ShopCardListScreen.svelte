@@ -32,6 +32,7 @@
 
   export let setName = "";
   export let dp = 0;
+  export let singlesEnabled = true;
   export let cards: readonly SetCard[] = [];
   export let imageSource: CardImageSource | null = null;
   export let onbuysingle: (code: number, rarity: ShopRarity) => void = () =>
@@ -154,7 +155,7 @@
               type="button"
               class="buy-btn"
               data-cy={`story-shop-card-buy-${encodeURIComponent(card.key)}`}
-              disabled={dp < card.priceDp}
+              disabled={!singlesEnabled || dp < card.priceDp}
               onclick={() => onbuysingle(card.code, card.rarity)}
               >{card.priceDp} DP</button
             >

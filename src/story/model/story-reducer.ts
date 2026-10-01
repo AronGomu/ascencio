@@ -1,3 +1,17 @@
+import type { CampaignProgress } from "../../modules/index.ts";
+import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
+import {
+  isSetReleased,
+  contentsOf,
+  resolveCardRarity,
+  type ShopSetData,
+} from "../shop/data/shop-set-data.ts";
+import { boosterSize } from "../shop/data/pack-generator.ts";
+export interface StoryShopContext {
+  readonly data: ShopSetData;
+  readonly progress: CampaignProgress;
+  readonly catalog?: ReadonlyMap<number, DeckBuilderCardView>;
+}
 import {
   CHOICE_RESPONSES,
   LATER_ACKNOWLEDGMENTS,
@@ -91,10 +105,11 @@ export function reduceStory(
   state: StoryState,
   command: StoryCommand,
   document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments">,
+  shop?: StoryShopContext,
 ): StoryState {
   return rememberStoryStateTransition(
     state,
-    reduceStoryCommand(state, command, document),
+    reduceStoryCommand(state, command, document, shop),
   );
 }
 
@@ -102,6 +117,7 @@ function reduceStoryCommand(
   state: StoryState,
   command: StoryCommand,
   document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments">,
+  shop?: StoryShopContext,
 ): StoryState {
   switch (command.type) {
     case "new-game": {
@@ -254,7 +270,24 @@ function reduceStoryCommand(
     case "buy-single": {
       if (state.screen !== "shop-cards") return state;
       if (!isShopRarity(command.rarity)) return state;
-      const price = singlePriceDp(command.rarity);
+      const offer = shop?.data.sets
+        .find((set) => set.id === state.shopSetId)
+        ?.cards.find((card) => card.code === command.code);
+      if (
+        shop !== undefined &&
+        (shop.data.singles === false || offer === undefined)
+      )
+        return state;
+      const price =
+        shop?.data.economy === undefined
+          ? singlePriceDp(offer?.rarity ?? command.rarity)
+          : shop.data.economy.sellPrices[offer!.rarity] *
+            shop.data.economy.singlesMultiplier;
+      if (
+        !Number.isSafeInteger(price) ||
+        !Number.isSafeInteger((state.collection[command.code] ?? 0) + 1)
+      )
+        return state;
       if (state.dp < price) return state;
       return {
         ...state,
@@ -273,9 +306,23 @@ function reduceStoryCommand(
          bought, whatever screen a tampered save arrives on. The browse screen
          also refuses it, but a presentation early-return is not an authority.
          Audit F4, issue #4. */
-      if (command.released !== true) return state;
+      if (
+        shop === undefined
+          ? command.released !== true
+          : !isSetReleased(shop.data, setId, shop.progress)
+      )
+        return state;
       if (!Number.isInteger(count) || count < 1) return state;
-      const cost = count * PACK_PRICE_DP;
+      const cost =
+        count *
+        (shop?.data.sets.find((set) => set.id === setId)?.priceDp ??
+          PACK_PRICE_DP);
+      if (
+        !Number.isSafeInteger(count) ||
+        !Number.isSafeInteger(cost) ||
+        !Number.isSafeInteger((state.boosters[setId] ?? 0) + count)
+      )
+        return state;
       if (state.dp < cost) return state;
       return {
         ...state,
@@ -289,13 +336,52 @@ function reduceStoryCommand(
     case "open-boosters": {
       if (!state.screen.startsWith("shop-")) return state;
       const { picks, cards, mode } = command;
+      if (picks.length > 1000 || cards.length > 100000) return state;
+      const packSizes: number[] = [];
+      if (shop !== undefined) {
+        let cursor = 0;
+        for (const pick of picks) {
+          const contents = contentsOf(shop.data, pick.setId);
+          const product = shop.data.products?.find(
+            (product) => product.id === pick.setId,
+          );
+          if (
+            !contents.length ||
+            !Number.isSafeInteger(pick.count) ||
+            pick.count < 1 ||
+            pick.count > 1000
+          )
+            return state;
+          const size = boosterSize(product);
+          for (let index = 0; index < pick.count; index++) {
+            if (packSizes.length >= 1000) return state;
+            packSizes.push(size);
+            const pack = cards.slice(cursor, cursor + size);
+            if (
+              pack.length !== size ||
+              pack.some(
+                (card) =>
+                  !contents.some(
+                    (offer) =>
+                      offer.code === card.code && offer.rarity === card.rarity,
+                  ),
+              )
+            )
+              return state;
+            cursor += size;
+          }
+        }
+        if (cursor !== cards.length) return state;
+      }
       /* Totalled per set before anything is checked: two picks naming one set
          each pass a per-pick check the pair cannot pass together, and the
          shelf would go negative. */
       const wanted = new Map<string, number>();
       for (const { setId, count } of picks) {
         if (!Number.isInteger(count) || count < 1) return state;
-        wanted.set(setId, (wanted.get(setId) ?? 0) + count);
+        const total = (wanted.get(setId) ?? 0) + count;
+        if (!Number.isSafeInteger(total)) return state;
+        wanted.set(setId, total);
       }
       for (const [setId, count] of wanted)
         if ((state.boosters[setId] ?? 0) < count) return state;
@@ -319,12 +405,14 @@ function reduceStoryCommand(
       const collection: Record<number, number> = { ...state.collection };
       for (const { code } of cards) {
         collection[code] = (collection[code] ?? 0) + 1;
+        if (!Number.isSafeInteger(collection[code])) return state;
       }
       return {
         ...state,
         boosters,
         collection,
         openedCards: cards,
+        ...(shop === undefined ? {} : { openedPackSizes: packSizes }),
         openingMode: mode,
         screen: mode === "sequential" ? "shop-opening" : "shop-results",
       };
@@ -341,6 +429,9 @@ function reduceStoryCommand(
         ...state,
         screen: "shop-browse",
         openedCards: null,
+        ...(state.openedPackSizes === undefined
+          ? {}
+          : { openedPackSizes: null }),
         openingMode: null,
       };
     case "finish-opening":
@@ -360,14 +451,24 @@ function reduceStoryCommand(
           !isShopRarity(rarity)
         )
           return state;
-        wanted.set(code, (wanted.get(code) ?? 0) + quantity);
+        const total = (wanted.get(code) ?? 0) + quantity;
+        if (!Number.isSafeInteger(total)) return state;
+        wanted.set(code, total);
       }
       for (const [code, quantity] of wanted)
         if ((state.collection[code] ?? 0) < quantity) return state;
       const collection: Record<number, number> = { ...state.collection };
       let dp = state.dp;
-      for (const { quantity, rarity } of command.items)
-        dp += quantity * SELL_PRICE_DP[rarity];
+      for (const { code, quantity, rarity } of command.items) {
+        const resolved =
+          shop === undefined
+            ? rarity
+            : resolveCardRarity(code, shop.data, shop.catalog?.get(code));
+        dp +=
+          quantity *
+          (shop?.data.economy?.sellPrices ?? SELL_PRICE_DP)[resolved];
+        if (!Number.isSafeInteger(dp)) return state;
+      }
       for (const [code, quantity] of wanted) {
         const remaining = (collection[code] ?? 0) - quantity;
         if (remaining === 0) delete collection[code];

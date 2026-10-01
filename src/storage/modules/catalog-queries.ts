@@ -1,3 +1,4 @@
+import { mergeCommerce } from "../../modules/index.ts";
 import { validQuery } from "../runtime/content-query-runtime.ts";
 import type { CardDefinition } from "../../cards/index.ts";
 import type {
@@ -273,6 +274,17 @@ export function createModuleCatalogQueries(
                 const base = configs[0]!;
                 return {
                   ...base,
+                  ...(configs.some((config) => config.commerce !== undefined)
+                    ? {
+                        commerce: mergeCommerce(
+                          configs.flatMap((config) =>
+                            config.commerce === undefined
+                              ? []
+                              : [config.commerce],
+                          ),
+                        ),
+                      }
+                    : {}),
                   locales: [
                     ...new Set(configs.flatMap((config) => config.locales)),
                   ],

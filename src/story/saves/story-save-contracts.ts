@@ -1,3 +1,4 @@
+import { validOpenedPackSizes } from "../model/opened-pack-sizes.ts";
 /* Current slot vocabulary, save labels and strict Story/deck predicates.
    Structural user-envelope validation lives in stored-story-envelope.ts. */
 
@@ -73,6 +74,7 @@ function isEconomy(state: Record<string, unknown>): boolean {
   ]);
   return (
     isCount(state.dp) &&
+    validOpenedPackSizes(state.openedPackSizes, state.openedCards) &&
     isCountRecord(state.boosters, isSetIdKey) &&
     isCountRecord(state.collection, isCardCodeKey) &&
     (state.shopReturnScreen === null ||

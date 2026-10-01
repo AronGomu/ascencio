@@ -1,0 +1,71 @@
+{
+  "id": "example-small-packs",
+  "apiVersion": 1,
+  "baseVersion": "1.0.0",
+  "dependencies": [],
+  "additions": [
+    {
+      "kind": "boosters",
+      "value": {
+        "id": "example-five-card-pack",
+        "name": "Five-card example",
+        "setId": "legend-of-blue-eyes-white-dragon",
+        "replacement": "with",
+        "slots": [
+          {
+            "count": 5,
+            "rarities": [
+              {
+                "rarity": "common",
+                "weight": 1
+              }
+            ],
+            "fallback": "all"
+          }
+        ]
+      }
+    }
+  ],
+  "overrides": [
+    {
+      "kind": "boosters",
+      "targetId": "legend-of-blue-eyes-white-dragon",
+      "replace": {
+        "slots": [
+          {
+            "count": 3,
+            "rarities": [
+              {
+                "rarity": "common",
+                "weight": 1
+              }
+            ],
+            "fallback": "all"
+          }
+        ]
+      },
+      "overrides": []
+    },
+    {
+      "kind": "shops",
+      "targetId": "chapter-01",
+      "replace": {
+        "offers": [
+          {
+            "boosterId": "legend-of-blue-eyes-white-dragon",
+            "priceDp": 12,
+            "enabled": true,
+            "requiresProgress": []
+          },
+          {
+            "boosterId": "example-five-card-pack",
+            "priceDp": 25,
+            "enabled": true,
+            "requiresProgress": []
+          }
+        ]
+      },
+      "overrides": []
+    }
+  ]
+}

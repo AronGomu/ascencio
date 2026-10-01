@@ -11,6 +11,7 @@ import {
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, expect, it } from "vitest";
+import { commerceFixture } from "../../fixtures/commerce.ts";
 import { exportPackages } from "../../../scripts/lib/sqlite-content/export-packages.ts";
 
 const roots: string[] = [];
@@ -99,80 +100,47 @@ async function fixture() {
     await rm(path.join(root, library, file), { recursive: true });
   }
   await rm(path.join(root, chapter, "limits.json"));
-  const source = {
+  for (const [id, name, year, code, rarity, sourceRarity, sourceRarityCode] of [
+    ["fixture-set", "Fixture Set", 2002, 1, "common", "Common", "C"],
+    ["future-set", "Future Set", 2026, 2, "rare", "Rare", "R"],
+  ] as const) {
+    await json(`${library}/sets/${id}.json`, {
+      id,
+      name,
+      releaseYear: year,
+      imageAssetPath: `sets/${id}.jpg`,
+      cards: [
+        {
+          cardCode: code,
+          printingCode: code === 1 ? "FIX-001" : "FUT-001",
+          rarity,
+          sourceRarity,
+          sourceRarityCode,
+        },
+      ],
+    });
+  }
+  const commerce = commerceFixture();
+  commerce.boosters[0]!.setId = "fixture-set";
+  for (const kind of ["economies", "boosters", "shops"] as const)
+    for (const entity of commerce[kind])
+      await json(`content/commerce/${kind}/${entity.id}.json`, entity);
+  await json("content/commerce/sources.json", {
     schemaVersion: 1,
-    generatedAt: "2026-09-24T00:00:00.000Z",
-    sets: [
-      {
-        name: "Fixture Set",
-        code: "FIX",
-        tcgReleaseDate: "2002-01-01",
-        cards: [
-          {
-            id: 1,
-            name: "First",
-            printings: [{ code: "FIX-001", rarity: "Common", rarityCode: "C" }],
-          },
-        ],
-      },
-      {
-        name: "Future Set",
-        code: "FUT",
-        tcgReleaseDate: "2026-01-01",
-        cards: [
-          {
-            id: 2,
-            name: "Second",
-            printings: [{ code: "FUT-001", rarity: "Rare", rarityCode: "R" }],
-          },
-        ],
-      },
-    ],
-    cardsWithoutSetMembership: [],
-  };
-  await json(`${library}/authoring/card-set-source.json`, source);
-  await json(`${library}/authoring/shop-sets.v1.json`, {
-    sets: [
-      { id: "fixture-set", name: "Fixture Set" },
-      { id: "future-set", name: "Future Set" },
-    ],
+    baseVersion: "1.0.0",
+    sets: [`${library}/sets`],
+    economies: ["content/commerce/economies"],
+    boosters: ["content/commerce/boosters"],
+    shops: ["content/commerce/shops"],
+    mods: [],
   });
-  await json(`${chapter}/authoring/chapter-selections.json`, {
-    schemaVersion: 1,
-    sourceSha256: digest(JSON.stringify(source)),
-    chapters: [
-      {
-        id: "chapter-01",
-        title: "Chapter 1",
-        published: true,
-        setNames: ["Fixture Set"],
-        additionalCardCodes: [],
-        opponentIds: ["opponent"],
-        storyContentId: "prototype-prologue-v1",
-      },
-    ],
+  Object.assign(spec.packages[1], {
+    sourceManifest: "content/commerce/sources.json",
+    sourceVersion: "1.0.0",
   });
-  await cp(
-    "assets/content/chapter-01/authoring/chapter-one-corrections.json",
-    path.join(root, chapter, "authoring/chapter-one-corrections.json"),
-  );
-  const provider = [
-    { set_name: "Fixture Set", set_image: "https://example.invalid/FIX.jpg" },
-  ];
-  await json(
-    `${library}/authoring/ygoprodeck-cardsets-2026-09-12.json`,
-    provider,
-  );
-  await json(`${chapter}/authoring/chapter-one-set-media.json`, {
-    schemaVersion: 1,
-    provider: "YGOPRODeck",
-    query: "https://db.ygoprodeck.com/api/v7/cardsets.php",
-    setsWithoutImage: [],
-    source: {
-      path: "content/authoring/ygoprodeck-cardsets-2026-09-12.json",
-      bytes: Buffer.byteLength(JSON.stringify(provider)),
-      sha256: digest(JSON.stringify(provider)),
-    },
+  await json("content/commerce/chapters/chapter-01.json", {
+    shopId: "shop",
+    allowedCardCodes: [1],
   });
   await rm(path.join(root, library, "sets.json"));
   await rm(path.join(root, library, "set-cards.json"));
@@ -319,23 +287,15 @@ it("keeps included authored chapter limits independent from Freeplay", async () 
   }
 });
 
-it("rejects malformed raw global printings before any output", async () => {
+it("rejects malformed canonical printings before any output", async () => {
   const { root, spec, library, json } = await fixture();
-  const source = JSON.parse(
-    await readFile(
-      path.join(root, library, "authoring/card-set-source.json"),
-      "utf8",
-    ),
-  );
-  source.sets[0].cards[0].printings[0].rarityCode = null;
-  await json(`${library}/authoring/card-set-source.json`, source);
-  expect(await exportPackages(root, spec)).toEqual({
-    kind: "failed",
-    error: {
-      code: "PACKAGE_SOURCE_INCOMPLETE",
-      packageId: "card-library",
-      path: "authoring/card-set-source.json",
-    },
+  const file = `${library}/sets/fixture-set.json`;
+  const source = JSON.parse(await readFile(path.join(root, file), "utf8"));
+  source.cards[0].sourceRarityCode = null;
+  await json(file, source);
+  await expect(exportPackages(root, spec)).rejects.toMatchObject({
+    code: "SOURCE_ENTITY_INVALID",
+    source: file,
   });
   await expect(
     readdir(path.join(root, "generated/content-packages")),
@@ -357,130 +317,39 @@ it("rejects incomplete indexed scripts instead of silently dropping sourced inpu
   });
 });
 
-it("retains undated sets, every variant and global card; reports every missing-card membership", async () => {
-  const { root, spec, library, chapter, json } = await fixture();
-  const file = path.join(root, library, "authoring/card-set-source.json");
-  const source = JSON.parse(await readFile(file, "utf8"));
-  source.sets[1].tcgReleaseDate = null;
-  source.sets[1].cards[0].printings.push(
-    { code: "FUT-001", rarity: "Short Print", rarityCode: "SP" },
-    { code: "FUT-001", rarity: "Rare", rarityCode: "" },
+it("retains undated sets and every printing variant without rewriting canonical input", async () => {
+  const { root, spec, library, json } = await fixture();
+  const file = `${library}/sets/future-set.json`;
+  const source = JSON.parse(await readFile(path.join(root, file), "utf8"));
+  source.releaseYear = null;
+  source.cards.push(
+    {
+      ...source.cards[0],
+      rarity: "common",
+      sourceRarity: "Short Print",
+      sourceRarityCode: "SP",
+    },
+    { ...source.cards[0], sourceRarityCode: "" },
   );
-  source.sets[1].cards.push({
-    id: 999,
-    name: "Missing",
-    printings: [
-      { code: "FUT-002", rarity: "Common", rarityCode: "C" },
-      { code: "FUT-002", rarity: "Short Print", rarityCode: "SP" },
-    ],
-  });
-  source.sets.push({
-    name: "Orphan Set",
-    code: null,
-    tcgReleaseDate: null,
-    cards: [
-      {
-        id: 999,
-        name: "Missing",
-        printings: [{ code: "ORP-001", rarity: "Common", rarityCode: "" }],
-      },
-    ],
-  });
-  const selections = JSON.parse(
-    await readFile(
-      path.join(root, chapter, "authoring/chapter-selections.json"),
-      "utf8",
-    ),
-  );
-  const saveSource = async () => {
-    await json(`${library}/authoring/card-set-source.json`, source);
-    selections.sourceSha256 = digest(JSON.stringify(source));
-    await json(`${chapter}/authoring/chapter-selections.json`, selections);
-  };
-  await saveSource();
-  const before = await readFile(file, "utf8");
+  await json(file, source);
+  const before = await readFile(path.join(root, file));
   const result = await exportPackages(root, spec);
   expect(result.kind).toBe("ok");
-  if (result.kind !== "ok") return;
+  if (result.kind !== "ok") throw new Error(JSON.stringify(result));
   const receipt = result.value.find((row) => row.packageId === "card-library")!;
-  const orphanId = `set-${digest("Orphan Set").slice(0, 16)}`;
-  expect(receipt.excludedSetMemberships).toEqual([
-    {
-      setId: "future-set",
-      setName: "Future Set",
-      sourceSetCode: "FUT",
-      cardCode: 999,
-      sourceCardName: "Missing",
-      reason: "missing-catalog-card",
-      printings: [
-        {
-          printingCode: "FUT-002",
-          sourceRarity: "Common",
-          sourceRarityCode: "C",
-        },
-        {
-          printingCode: "FUT-002",
-          sourceRarity: "Short Print",
-          sourceRarityCode: "SP",
-        },
-      ],
-    },
-    {
-      setId: orphanId,
-      setName: "Orphan Set",
-      sourceSetCode: null,
-      cardCode: 999,
-      sourceCardName: "Missing",
-      reason: "missing-catalog-card",
-      printings: [
-        {
-          printingCode: "ORP-001",
-          sourceRarity: "Common",
-          sourceRarityCode: "",
-        },
-      ],
-    },
-  ]);
-  expect(receipt.rarityWarnings).toEqual([
-    {
-      sourceRarity: "Short Print",
-      rarity: "common",
-      reason: "lossy-presentation-tier",
-    },
-  ]);
-  expect(receipt.missingOptionalMedia).toContain(`sets/${orphanId}.jpg`);
   const db = new DatabaseSync(path.join(root, receipt.path), {
     readOnly: true,
   });
   try {
-    expect(db.prepare("SELECT code FROM cards ORDER BY code").all()).toEqual([
-      { code: 1 },
-      { code: 2 },
-    ]);
-    const sets = db
-      .prepare("SELECT metadata_json FROM sets ORDER BY id")
-      .all()
-      .map((row) => JSON.parse(String(row.metadata_json)));
-    expect(sets).toEqual([
-      {
-        id: "fixture-set",
-        name: "Fixture Set",
-        releaseYear: 2002,
-        imageAssetPath: "sets/fixture-set.jpg",
-      },
-      {
-        id: "future-set",
-        name: "Future Set",
-        releaseYear: null,
-        imageAssetPath: "sets/future-set.jpg",
-      },
-      {
-        id: orphanId,
-        name: "Orphan Set",
-        releaseYear: null,
-        imageAssetPath: `sets/${orphanId}.jpg`,
-      },
-    ]);
+    expect(
+      JSON.parse(
+        String(
+          db
+            .prepare("SELECT metadata_json FROM sets WHERE id='future-set'")
+            .get()!.metadata_json,
+        ),
+      ),
+    ).toMatchObject({ id: "future-set", releaseYear: null });
     expect(
       db
         .prepare(
@@ -508,48 +377,42 @@ it("retains undated sets, every variant and global card; reports every missing-c
   } finally {
     db.close();
   }
-  expect(await readFile(file, "utf8")).toBe(before);
-  source.sets.reverse();
-  for (const set of source.sets) {
-    set.cards.reverse();
-    for (const card of set.cards) card.printings.reverse();
-  }
-  await saveSource();
+  expect(await readFile(path.join(root, file))).toEqual(before);
+  source.cards.reverse();
+  await json(file, source);
   expect(await exportPackages(root, spec)).toEqual(result);
   const preserved = await readFile(path.join(root, receipt.path));
-  source.sets
-    .find((set: { name: string }) => set.name === "Future Set")
-    .cards.find((card: { id: number }) => card.id === 2).printings[0].rarity =
-    "Ultra Rare";
-  await saveSource();
-  expect(await exportPackages(root, spec)).toEqual({
+  source.cards[0].rarity = "ultra-rare";
+  await json(file, source);
+  expect(await exportPackages(root, spec)).toMatchObject({
     kind: "failed",
-    error: {
-      code: "PACKAGE_IDENTITY_CONFLICT",
-      packageId: "card-library",
-      path: receipt.path,
-    },
+    error: { code: "PACKAGE_IDENTITY_CONFLICT" },
   });
   expect(await readFile(path.join(root, receipt.path))).toEqual(preserved);
 });
-
-it("rejects duplicate source printing identities without folding or silent loss", async () => {
+it("rejects canonical references to missing catalog cards instead of silently excluding them", async () => {
   const { root, spec, library, json } = await fixture();
-  const source = JSON.parse(
-    await readFile(
-      path.join(root, library, "authoring/card-set-source.json"),
-      "utf8",
-    ),
-  );
-  source.sets[0].cards[0].printings.push(source.sets[0].cards[0].printings[0]);
-  await json(`${library}/authoring/card-set-source.json`, source);
-  expect(await exportPackages(root, spec)).toEqual({
+  const file = `${library}/sets/future-set.json`;
+  const source = JSON.parse(await readFile(path.join(root, file), "utf8"));
+  source.cards[0].cardCode = 999;
+  await json(file, source);
+  expect(await exportPackages(root, spec)).toMatchObject({
     kind: "failed",
-    error: {
-      code: "PACKAGE_SOURCE_INCOMPLETE",
-      packageId: "card-library",
-      path: "authoring/card-set-source.json",
-    },
+    error: { code: "PACKAGE_SOURCE_INCOMPLETE", path: "sets/future-set.json" },
+  });
+  await expect(
+    readdir(path.join(root, "generated/content-packages")),
+  ).rejects.toMatchObject({ code: "ENOENT" });
+});
+it("rejects duplicate canonical printing identities without folding or silent loss", async () => {
+  const { root, spec, library, json } = await fixture();
+  const file = `${library}/sets/fixture-set.json`;
+  const source = JSON.parse(await readFile(path.join(root, file), "utf8"));
+  source.cards.push(source.cards[0]);
+  await json(file, source);
+  await expect(exportPackages(root, spec)).rejects.toMatchObject({
+    code: "SOURCE_ENTITY_INVALID",
+    source: file,
   });
   await expect(
     readdir(path.join(root, "generated/content-packages")),
@@ -561,6 +424,11 @@ it("uses explicit source image extension and does not let flat rows truncate nor
   await json(`${library}/sets.json`, []);
   await json(`${library}/set-cards.json`, []);
   await json(`${library}/assets.json`, []);
+  const set = JSON.parse(
+    await readFile(path.join(root, library, "sets/future-set.json"), "utf8"),
+  );
+  set.imageAssetPath = "sets/future-set.png";
+  await json(`${library}/sets/future-set.json`, set);
   await rm(path.join(root, library, "images/sets/future-set.jpg"));
   await writeFile(
     path.join(root, library, "images/sets/future-set.png"),

@@ -1,3 +1,7 @@
+import {
+  validateCommerceStack,
+  type CommerceContent,
+} from "../../modules/index.ts";
 import { validateModuleCatalogs } from "../modules/catalog-validation.ts";
 import {
   isQuota,
@@ -701,6 +705,23 @@ export class AtomicPackageRuntime {
         this.#files,
       );
       if (inventories.kind === "failed") return inventories;
+      validateCommerceStack(
+        [...candidate.values()].map((item) => {
+          const config = validated.get(item.packageId)!.config as {
+            commerce?: CommerceContent;
+            shopId?: string;
+            setIds?: string[];
+          };
+          return {
+            id: item.packageId,
+            dependencies: item.dependencies.map((d) => d.packageId),
+            sets: [...(inventories.value.get(item.packageId)?.sets ?? [])],
+            commerce: config.commerce,
+            shopId: config.shopId,
+            selectedSetIds: config.setIds,
+          };
+        }),
+      );
       for (const item of candidate.values()) {
         if (signal.aborted) return failed("OPERATION_CANCELLED");
         if (item.packageType !== "freeplay" && item.packageType !== "chapter")

@@ -1,72 +1,114 @@
 import type { OpenedCard } from "../../model/story-state.ts";
+import type { BoosterProduct } from "../../../modules/index.ts";
 import type { ShopCardOffer } from "./shop-rarity.ts";
 import { PACK_SIZE } from "./shop-pricing.ts";
-
-function packPools(contents: readonly ShopCardOffer[]) {
-  const commons = contents.filter((c) => c.rarity === "common");
-  const rarePlus = contents.filter((c) => c.rarity !== "common");
-  return {
-    commonPool: commons.length > 0 ? commons : contents,
-    rarePlusPool: rarePlus.length > 0 ? rarePlus : contents,
-  };
+function pools(contents: readonly ShopCardOffer[], product?: BoosterProduct) {
+  if (product !== undefined)
+    return product.slots.map((slot) => {
+      const weighted = contents.flatMap((card) => {
+        const weight = slot.rarities.find(
+          (r) => r.rarity === card.rarity,
+        )?.weight;
+        return weight === undefined ? [] : [{ card, weight }];
+      });
+      return {
+        count: slot.count,
+        cards: weighted.length
+          ? weighted
+          : contents.map((card) => ({ card, weight: 1 })),
+      };
+    });
+  const commons = contents.filter((c) => c.rarity === "common"),
+    rare = contents.filter((c) => c.rarity !== "common");
+  return [
+    {
+      count: PACK_SIZE - 1,
+      cards: (commons.length ? commons : contents).map((card) => ({
+        card,
+        weight: 1,
+      })),
+    },
+    {
+      count: 1,
+      cards: (rare.length ? rare : contents).map((card) => ({
+        card,
+        weight: 1,
+      })),
+    },
+  ];
 }
-
-/** Uses the sell screen's per-code valuation, including cross-set reprints. */
+export function boosterSize(product?: BoosterProduct): number {
+  return product?.slots.reduce((sum, slot) => sum + slot.count, 0) ?? PACK_SIZE;
+}
 export function expectedPackResale(
   contents: readonly ShopCardOffer[],
   sellPrice: (card: ShopCardOffer) => number,
+  product?: BoosterProduct,
 ): number {
-  if (contents.length === 0) return 0;
-  const { commonPool, rarePlusPool } = packPools(contents);
-  const mean = (pool: readonly ShopCardOffer[]) =>
-    pool.reduce((total, card) => total + sellPrice(card), 0) / pool.length;
-  return (PACK_SIZE - 1) * mean(commonPool) + mean(rarePlusPool);
+  if (!contents.length) return 0;
+  return pools(contents, product).reduce(
+    (total, pool) =>
+      total +
+      (pool.count *
+        pool.cards.reduce(
+          (sum, item) => sum + item.weight * sellPrice(item.card),
+          0,
+        )) /
+        pool.cards.reduce((sum, item) => sum + item.weight, 0),
+    0,
+  );
 }
-
 export function generatePack(
   contents: readonly ShopCardOffer[],
   random: () => number,
+  product?: BoosterProduct,
 ): readonly OpenedCard[] {
-  /* A set with nothing in it cannot fill a pack. It is reachable from a
-     tampered save and from a data file that drops a set, and reading past the
-     end of an empty pool threw mid-dispatch — an uncaught exception with the
-     dialog already closed. */
-  if (contents.length === 0) return [];
-  const { commonPool, rarePlusPool } = packPools(contents);
-
-  const cards: OpenedCard[] = [];
-  for (let i = 0; i < PACK_SIZE - 1; i++) {
-    // pools are always non-empty by construction (filtered or whole contents)
-    const offer = commonPool[Math.floor(random() * commonPool.length)]!;
-    cards.push({ code: offer.code, rarity: offer.rarity });
-  }
-  const finalOffer = rarePlusPool[Math.floor(random() * rarePlusPool.length)]!;
-  cards.push({ code: finalOffer.code, rarity: finalOffer.rarity });
-
-  return cards;
+  if (!contents.length) return [];
+  const result: OpenedCard[] = [];
+  for (const pool of pools(contents, product))
+    for (let index = 0; index < pool.count; index++) {
+      const value = random();
+      if (!Number.isFinite(value) || value < 0 || value >= 1)
+        throw new Error("PACK_RANDOM_INVALID");
+      let target =
+        value * pool.cards.reduce((sum, item) => sum + item.weight, 0);
+      const selected = pool.cards.find((item) => {
+        target -= item.weight;
+        return target < 0;
+      })!;
+      result.push({ code: selected.card.code, rarity: selected.card.rarity });
+    }
+  return result;
 }
-
-/** The picks the loaded shop data can actually open. A pick naming a set with
-    no contents opens nothing, so it is dropped here rather than consuming the
-    packs it could never turn into cards. */
 export function openablePicks<T extends { setId: string; count: number }>(
   picks: readonly T[],
-  contentsOf: (setId: string) => readonly ShopCardOffer[],
+  contentsOf: (id: string) => readonly ShopCardOffer[],
 ): readonly T[] {
-  return picks.filter(({ setId }) => contentsOf(setId).length > 0);
+  return picks.filter((pick) => contentsOf(pick.setId).length > 0);
 }
-
 export function openBoosters(
   picks: readonly { setId: string; count: number }[],
-  contentsOf: (setId: string) => readonly ShopCardOffer[],
+  contentsOf: (id: string) => readonly ShopCardOffer[],
   random: () => number,
+  productOf?: (id: string) => BoosterProduct | undefined,
 ): readonly OpenedCard[] {
-  const all: OpenedCard[] = [];
-  for (const { setId, count } of openablePicks(picks, contentsOf)) {
-    const contents = contentsOf(setId);
-    for (let i = 0; i < count; i++) {
-      all.push(...generatePack(contents, random));
-    }
+  const eligible = openablePicks(picks, contentsOf);
+  if (eligible.length > 1000) return [];
+  let total = 0,
+    packs = 0;
+  for (const { setId, count } of eligible) {
+    if (!Number.isSafeInteger(count) || count < 1 || count > 1000) return [];
+    packs += count;
+    total += count * boosterSize(productOf?.(setId));
+    if (packs > 1000 || total > 100000) return [];
   }
-  return all;
+  const result: OpenedCard[] = [];
+  for (const { setId, count } of openablePicks(picks, contentsOf)) {
+    if (!Number.isSafeInteger(count) || count < 1 || count > 1000) return [];
+    for (let index = 0; index < count; index++)
+      result.push(
+        ...generatePack(contentsOf(setId), random, productOf?.(setId)),
+      );
+  }
+  return result;
 }

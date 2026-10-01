@@ -1,3 +1,4 @@
+import { validateCommerce } from "../../modules/index.ts";
 import { isChapterModule } from "../../modules/index.ts";
 import { packageDatabaseFailure } from "./package-database-failure.ts";
 import { parseStoryDocument } from "../../story/ports/index.ts";
@@ -339,11 +340,14 @@ function validateConfig(manifest: PackageManifest, value: unknown): boolean {
         "locales",
         "revisions",
         "requiredScripts",
+        ...(Object.hasOwn(value, "commerce") ? ["commerce"] : []),
       ]) &&
       value.defaultLocale === "en" &&
       stringArray(value.locales, false, true) &&
       exactStringRecord(value.revisions, ["babelCdb", "cardScripts"]) &&
-      requiredScripts(value.requiredScripts)
+      requiredScripts(value.requiredScripts) &&
+      (value.commerce === undefined ||
+        validateCommerce(value.commerce, undefined, false))
     );
   if (manifest.packageType === "freeplay")
     return (
@@ -362,6 +366,7 @@ function validateConfig(manifest: PackageManifest, value: unknown): boolean {
       "setIds",
       "mapAssetPath",
       ...(Object.hasOwn(value, "module") ? ["module"] : []),
+      ...(Object.hasOwn(value, "shopId") ? ["shopId"] : []),
     ]) &&
     nonempty(value.title) &&
     value.chapterNumber === chapter &&
@@ -370,6 +375,7 @@ function validateConfig(manifest: PackageManifest, value: unknown): boolean {
         String(value.storyContentId).length <= 256)) &&
     (value.module === undefined || isChapterModule(value.module)) &&
     defaults(value.defaults) &&
+    (value.shopId === undefined || nonempty(value.shopId)) &&
     stringArray(value.setIds, true, true) &&
     (value.mapAssetPath === null || validAssetPath(value.mapAssetPath))
   );

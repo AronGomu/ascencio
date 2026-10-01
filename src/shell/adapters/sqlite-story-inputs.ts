@@ -1,4 +1,4 @@
-import { isChapterModule } from "../../modules/index.ts";
+import { isChapterModule, type CommerceContent } from "../../modules/index.ts";
 import { createCards, type CardDefinition } from "../../cards/index.ts";
 import { OCG_TYPE, hasOcgType } from "../../cards/classification/index.ts";
 import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
@@ -170,6 +170,7 @@ export async function loadStoryInputs(
       selectedSets,
       decks,
       opponents,
+      library.commerce,
     );
 
     const pool = new SqliteImageLeasePool(storage.content);
@@ -294,6 +295,7 @@ function buildRelease(
   sets: readonly StorySet[],
   decks: QueryMap["decks"],
   opponents: QueryMap["opponents"],
+  commerce?: CommerceContent,
 ): StoryRelease {
   return parseStoryRelease({
     revision: generation,
@@ -302,6 +304,9 @@ function buildRelease(
         id: chapterId,
         ...(config.module === undefined ? {} : { module: config.module }),
         document,
+        ...(config.shopId === undefined
+          ? {}
+          : { shopId: config.shopId, commerce }),
         cardCodes: [...allowedCardCodes].sort((left, right) => left - right),
         sets,
         decks,

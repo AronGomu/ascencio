@@ -37,7 +37,7 @@
     type StoryPlaybackSettingsStore,
   } from "../playback/story-playback-settings-store.ts";
   import { createAutoFlip, type AutoFlip } from "./auto-flip.ts";
-  import { PACK_SIZE } from "./data/shop-pricing.ts";
+  import { openedPackSizes } from "../model/opened-pack-sizes.ts";
   import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
   import type { ShopRarity } from "../model/story-state.ts";
 
@@ -51,6 +51,7 @@
         without it the tile still turns over, it just cannot be magnified. */
     readonly view?: DeckBuilderCardView | null;
   }[] = [];
+  export let packSizes: readonly number[] | null | undefined = undefined;
   export let onfinish: () => void = () => undefined;
   /** The single pack's one exit. Separate from `onfinish` because it lands
       somewhere else — there is no results list to see, so Back leaves the
@@ -78,13 +79,16 @@
      shop rebuilds its card list whenever anything else about the save changes,
      and a half-revealed pack must not turn back over — nor jump back to pack
      one — because the catalog finished loading behind it. */
-  $: syncOpening(cards.map((card) => card.code).join("-"));
-  $: syncAutoRun($settings.autoFlip);
-  $: packCount = Math.ceil(cards.length / PACK_SIZE);
-  $: packCards = cards.slice(
-    packIndex * PACK_SIZE,
-    (packIndex + 1) * PACK_SIZE,
+  $: syncOpening(
+    cards.map((card) => card.code).join("-") +
+      ":" +
+      (packSizes?.join(",") ?? "legacy"),
   );
+  $: syncAutoRun($settings.autoFlip);
+  $: sizes = openedPackSizes(cards, packSizes);
+  $: packCount = sizes.length;
+  $: packStart = sizes.slice(0, packIndex).reduce((sum, size) => sum + size, 0);
+  $: packCards = cards.slice(packStart, packStart + (sizes[packIndex] ?? 0));
   $: flippedCount = flipped.filter(Boolean).length;
   $: packRevealed = packCards.length > 0 && flippedCount >= packCards.length;
   $: onLastPack = packIndex >= packCount - 1;
@@ -115,10 +119,7 @@
      starts from the same statement that moved to it instead of from whichever
      reactive statement Svelte happens to run next. */
   function startPack(): void {
-    const total = Math.max(
-      0,
-      Math.min(PACK_SIZE, cards.length - packIndex * PACK_SIZE),
-    );
+    const total = openedPackSizes(cards, packSizes)[packIndex] ?? 0;
     flipped = Array.from({ length: total }, () => false);
     pointed = null;
     pointedAnchor = null;

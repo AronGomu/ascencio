@@ -1,0 +1,14 @@
+{
+  "id": "base",
+  "sellPrices": {
+    "common": 1,
+    "rare": 2,
+    "super-rare": 5,
+    "ultra-rare": 20,
+    "secret-rare": 50,
+    "ultimate-rare": 50,
+    "ghost-rare": 50
+  },
+  "singlesMultiplier": 4,
+  "maxPackResale": 21
+}

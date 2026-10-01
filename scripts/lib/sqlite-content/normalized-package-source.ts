@@ -6,7 +6,7 @@ import type {
   RuntimeCardRecord,
   RuntimeCardText,
 } from "./normalized-card-record.ts";
-import { loadChapterOneContentSource } from "../chapter-content-source.ts";
+import { exact, reference } from "../../../src/modules/commerce/validation.ts";
 import { assertNoSymlinkParents } from "./asset-restructure.ts";
 
 export class NormalizedSourceFailure extends Error {
@@ -250,24 +250,26 @@ export async function normalizedChapterLimits(
   codes: readonly number[],
   authored: readonly { cardCode: number; deckLimit: number }[],
 ) {
-  // Existing source loader checks selection SHA, approved corrections, set/media evidence.
-  for (const relative of [
-    "card-library/authoring/card-set-source.json",
-    "card-library/authoring/shop-sets.v1.json",
-    "card-library/authoring/ygoprodeck-cardsets-2026-09-12.json",
-    "chapter-01/authoring/chapter-selections.json",
-    "chapter-01/authoring/chapter-one-corrections.json",
-    "chapter-01/authoring/chapter-one-set-media.json",
-  ])
-    await assertNoSymlinkParents(root, `assets/content/${relative}`);
-  const source = await loadChapterOneContentSource(root);
-  const global = new Set(codes);
-  const included = new Set(source.normalized.cardCodes);
-  if (source.normalized.cardCodes.some((code) => !global.has(code)))
+  const policy = await normalizedJson(
+    root,
+    "content/commerce/chapters/chapter-01.json",
+    "chapter-01",
+  );
+  if (
+    !exact(policy, ["shopId", "allowedCardCodes"]) ||
+    !reference(policy.shopId) ||
+    !Array.isArray(policy.allowedCardCodes) ||
+    !policy.allowedCardCodes.every(
+      (code) => Number.isSafeInteger(code) && codes.includes(code),
+    ) ||
+    new Set(policy.allowedCardCodes).size !== policy.allowedCardCodes.length
+  )
     throw new NormalizedSourceFailure(
       "chapter-01",
-      "authoring/chapter-selections.json",
+      "content/commerce/chapters/chapter-01.json",
     );
+  const global = new Set(codes);
+  const included = new Set<number>(policy.allowedCardCodes);
   const limits = new Map<number, number>();
   for (const row of authored) {
     if (

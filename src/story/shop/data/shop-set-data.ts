@@ -1,3 +1,11 @@
+import {
+  progressSatisfied,
+  type CampaignProgress,
+  type CommerceContent,
+  type EconomyPolicy,
+  type BoosterProduct,
+  type ProgressRequirement,
+} from "../../../modules/index.ts";
 import type { StorySet } from "../../ports/story-release.ts";
 import type { ShopRarity } from "../../model/story-state.ts";
 /* The one declaration of how the tiers rank. It lives beside the collection's
@@ -19,6 +27,10 @@ export interface ShopSetCard {
 }
 
 export interface ShopSetEntry {
+  readonly sourceSetId?: string;
+  readonly priceDp?: number;
+  readonly booster?: BoosterProduct;
+  readonly requiresProgress?: readonly ProgressRequirement[];
   readonly imageUrl?: string | null;
   readonly id: string;
   readonly name: string;
@@ -28,11 +40,19 @@ export interface ShopSetEntry {
 }
 
 export interface ShopSetData {
+  readonly economy?: EconomyPolicy;
+  readonly singles?: boolean;
+  readonly valuationSets?: readonly ShopSetEntry[];
+  readonly products?: readonly BoosterProduct[];
   readonly version: 1;
   readonly sets: readonly ShopSetEntry[];
 }
 
-export function installedShopSetData(sets: readonly StorySet[]): ShopSetData {
+export function installedShopSetData(
+  sets: readonly StorySet[],
+  commerce?: CommerceContent,
+  shopId?: string,
+): ShopSetData {
   const data: ShopSetData = Object.freeze({
     version: 1 as const,
     sets: Object.freeze(
@@ -47,19 +67,53 @@ export function installedShopSetData(sets: readonly StorySet[]): ShopSetData {
       ),
     ),
   });
+  const shop = commerce?.shops.find((shop) => shop.id === shopId);
+  if (commerce !== undefined && shop === undefined)
+    throw new Error("STORY_SHOP_INVALID");
+  const economy = commerce?.economies.find(
+    (economy) => economy.id === shop?.economyId,
+  );
+  const configured: readonly ShopSetEntry[] =
+    shop === undefined
+      ? data.sets
+      : shop.offers.map((offer) => {
+          const booster = commerce!.boosters.find(
+            (product) => product.id === offer.boosterId,
+          )!;
+          const set = data.sets.find((set) => set.id === booster.setId);
+          if (!set) throw new Error("STORY_SHOP_SET_MISSING");
+          return {
+            ...set,
+            id: booster.id,
+            name: booster.name,
+            sourceSetId: set.id,
+            priceDp: offer.priceDp,
+            released: offer.enabled,
+            booster,
+            requiresProgress: offer.requiresProgress,
+          };
+        });
+  const valuation = { ...data, valuationSets: data.sets };
   return Object.freeze({
-    ...data,
+    ...valuation,
+    ...(economy === undefined
+      ? {}
+      : { economy, singles: shop!.singles, products: commerce!.boosters }),
     sets: Object.freeze(
-      data.sets.map((set) =>
+      configured.map((set) =>
         Object.freeze({
           ...set,
           released:
+            set.released &&
             set.cards.length > 0 &&
             expectedPackResale(
               set.cards,
               ({ code }) =>
-                SELL_PRICE_DP[resolveCardRarity(code, data, undefined)],
-            ) <= MAX_PACK_RESALE_DP,
+                (economy?.sellPrices ?? SELL_PRICE_DP)[
+                  resolveCardRarity(code, valuation, undefined)
+                ],
+              set.booster,
+            ) <= (economy?.maxPackResale ?? MAX_PACK_RESALE_DP),
         }),
       ),
     ),
@@ -127,7 +181,12 @@ export function contentsOf(
   data: ShopSetData,
   setId: string,
 ): readonly ShopCardOffer[] {
-  const entry = data.sets.find((s) => s.id === setId);
+  const product = data.products?.find((product) => product.id === setId);
+  const entry =
+    data.sets.find((s) => s.id === setId) ??
+    (product === undefined
+      ? undefined
+      : data.valuationSets?.find((set) => set.id === product.setId));
   if (entry === undefined) return [];
   return entry.cards.map((c) => ({ code: c.code, rarity: c.rarity }));
 }
@@ -141,8 +200,17 @@ export function contentsOf(
 export function isSetReleased(
   data: ShopSetData | null,
   setId: string,
+  progress: CampaignProgress = {
+    schemaVersion: 1,
+    completedChapterIds: [],
+    facts: {},
+  },
 ): boolean {
-  return data?.sets.find((s) => s.id === setId)?.released === true;
+  const set = data?.sets.find((s) => s.id === setId);
+  return (
+    set?.released === true &&
+    progressSatisfied(progress, set.requiresProgress ?? [])
+  );
 }
 
 const rarityIndexByData = new WeakMap<
@@ -155,7 +223,7 @@ function rarityIndex(data: ShopSetData): ReadonlyMap<number, ShopRarity> {
   if (cached !== undefined) return cached;
 
   const indexed = new Map<number, ShopRarity>();
-  for (const set of data.sets) {
+  for (const set of data.valuationSets ?? data.sets) {
     for (const card of set.cards) {
       const best = indexed.get(card.code);
       if (

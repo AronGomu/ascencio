@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
+import ShopSetDialog from "../../../src/story/shop/ShopSetDialog.svelte";
+import ShopCardListScreen from "../../../src/story/shop/ShopCardListScreen.svelte";
 import SetTile from "../../../src/story/shop/SetTile.svelte";
 import ShopBrowseScreen from "../../../src/story/shop/ShopBrowseScreen.svelte";
 import { latestReleasedSets } from "../../../src/story/shop/data/latest-sets.ts";
@@ -29,6 +31,51 @@ function browse(sets: readonly ShopSetEntry[]): HTMLElement {
 }
 
 describe("shop set tiles", () => {
+  it("uses authored product price for totals and disables unaffordable multiples", async () => {
+    const buys: unknown[] = [];
+    const { container } = render(ShopSetDialog, {
+      set: { ...set("three-card", 2026), priceDp: 12 },
+      dp: 100,
+      onbuy: (id: string, count: number) => buys.push([id, count]),
+      onclose: noop,
+    });
+    expect(
+      container.querySelector('[data-cy="story-shop-buy-one"]')?.textContent,
+    ).toContain("12 DP");
+    const ten = container.querySelector<HTMLButtonElement>(
+      '[data-cy="story-shop-buy-ten"]',
+    )!;
+    expect(ten.textContent).toContain("120 DP");
+    expect(ten.disabled).toBe(true);
+    await fireEvent.click(
+      container.querySelector('[data-cy="story-shop-buy-one"]')!,
+    );
+    expect(buys).toEqual([["three-card", 1]]);
+  });
+  it("shows content prices while disabling singles when the shop forbids them", () => {
+    const { container } = render(ShopCardListScreen, {
+      setName: "Custom",
+      dp: 100,
+      singlesEnabled: false,
+      cards: [
+        {
+          key: "rare",
+          code: 2,
+          name: "Rare",
+          description: "",
+          imageUrl: null,
+          rarity: "rare",
+          priceDp: 33,
+        },
+      ],
+    });
+    const buy = container.querySelector<HTMLButtonElement>(
+      '[data-cy="story-shop-card-buy-rare"]',
+    )!;
+    expect(buy.textContent).toContain("33 DP");
+    expect(buy.disabled).toBe(true);
+  });
+
   it("renders the set image when one exists", () => {
     const container = browse([
       { ...set(LOB, 2002), imageUrl: "blob:installed-set" },

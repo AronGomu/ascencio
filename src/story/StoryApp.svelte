@@ -1,7 +1,10 @@
 <script lang="ts">
   import { resolveSavedBeat } from "./model/restore-module-story.ts";
   import { DEFAULT_CHAPTER_MODULE } from "../modules/index.ts";
-  import { recordCampaignProgress } from "./saves/campaign-progress.ts";
+  import {
+    recordCampaignProgress,
+    campaignProgress,
+  } from "./saves/campaign-progress.ts";
   import { afterUpdate, getContext, onDestroy, onMount } from "svelte";
   import type { Cards } from "../cards/index.ts";
   import type {
@@ -80,7 +83,7 @@
     type ShopSetData,
   } from "./shop/data/shop-set-data.ts";
   import { openablePicks, openBoosters } from "./shop/data/pack-generator.ts";
-  import { singlePriceDp } from "./shop/data/shop-pricing.ts";
+  import { singlePriceDp, SELL_PRICE_DP } from "./shop/data/shop-pricing.ts";
   import { cardsDeckCatalog } from "../decks/catalog/index.ts";
   import { catalogByCode } from "../decks/validation/index.ts";
   import type { DeckBuilderCardView } from "../decks/catalog/index.ts";
@@ -289,6 +292,8 @@
   let focusedScreen: StoryScreen = state.screen;
   let shopData: ShopSetData | null = installedShopSetData(
     release.chapters.flatMap((chapter) => chapter.sets),
+    chapter.commerce,
+    chapter.shopId,
   );
   const mediaLeases: StoryMediaLease[] = [];
   const mediaAbort = new AbortController();
@@ -516,7 +521,11 @@
       description: view?.description ?? "",
       imageUrl: view?.imageUrl ?? null,
       rarity: card.rarity,
-      priceDp: singlePriceDp(card.rarity),
+      priceDp:
+        shopData?.economy === undefined
+          ? singlePriceDp(card.rarity)
+          : shopData.economy.sellPrices[card.rarity] *
+            shopData.economy.singlesMultiplier,
     };
   });
   /* Null until the catalog lands, which the briefing renders as "still
@@ -631,6 +640,8 @@
     shopDataError = null;
     shopData = installedShopSetData(
       release.chapters.flatMap((chapter) => chapter.sets),
+      chapter.commerce,
+      chapter.shopId,
     );
   }
 
@@ -648,12 +659,17 @@
     mapImageUrl = retain(await media.acquireMap(chapter.id, mediaAbort.signal));
     const data = installedShopSetData(
       release.chapters.flatMap((chapter) => chapter.sets),
+      chapter.commerce,
+      chapter.shopId,
     );
     const sets = await Promise.all(
       data.sets.map(async (set) => ({
         ...set,
         imageUrl: retain(
-          await media!.acquireSetImage(set.id, mediaAbort.signal),
+          await media!.acquireSetImage(
+            set.sourceSetId ?? set.id,
+            mediaAbort.signal,
+          ),
         ),
       })),
     );
@@ -705,7 +721,9 @@
       type: "open-boosters",
       picks: openable,
       mode,
-      cards: openBoosters(openable, contents, Math.random),
+      cards: openBoosters(openable, contents, Math.random, (id) =>
+        data.products?.find((product) => product.id === id),
+      ),
     });
   }
 
@@ -714,7 +732,18 @@
     overlay = null;
   }
   function dispatch(command: Parameters<typeof reduceStory>[1]): void {
-    const next = reduceStory(state, command, document);
+    const next = reduceStory(
+      state,
+      command,
+      document,
+      shopData === null
+        ? undefined
+        : {
+            data: shopData,
+            progress: campaignProgress(binding),
+            catalog: cardViewByCode,
+          },
+    );
     if (next !== state && !["continue", "load", "reset"].includes(command.type))
       dirty = true;
     state = next;
@@ -1298,7 +1327,14 @@
         {:else if state.screen === "shop-browse"}
           <svelte:component
             this={shop.ShopBrowseScreen}
-            sets={shopData?.sets ?? null}
+            sets={shopData?.sets.map((set) => ({
+              ...set,
+              released: isSetReleased(
+                shopData,
+                set.id,
+                campaignProgress(binding),
+              ),
+            })) ?? null}
             error={shopDataError}
             dp={state.dp}
             onbuy={(setId, count) =>
@@ -1306,7 +1342,11 @@
                 type: "buy-packs",
                 setId,
                 count,
-                released: isSetReleased(shopData, setId),
+                released: isSetReleased(
+                  shopData,
+                  setId,
+                  campaignProgress(binding),
+                ),
               })}
             onviewcards={(setId) => dispatch({ type: "view-set-cards", setId })}
             onretry={() => {
@@ -1319,6 +1359,7 @@
           <svelte:component
             this={shop.ShopCardListScreen}
             setName={shopSetName}
+            singlesEnabled={shopData?.singles !== false}
             dp={state.dp}
             cards={shopCards}
             {imageSource}
@@ -1330,6 +1371,7 @@
           <svelte:component
             this={shop.ShopSellScreen}
             cards={sellableCards}
+            sellPrices={shopData?.economy?.sellPrices ?? SELL_PRICE_DP}
             error={shopDataError ?? catalogError}
             {state}
             onsell={(items) => dispatch({ type: "sell-cards", items })}
@@ -1340,6 +1382,7 @@
           <svelte:component
             this={shop.BoosterOpeningScreen}
             cards={openedCardViews}
+            packSizes={state.openedPackSizes}
             settings={playbackSettings}
             onfinish={() => dispatch({ type: "finish-opening" })}
             onback={() => dispatch({ type: "acknowledge-opened" })}
@@ -1475,7 +1518,10 @@
       <svelte:component
         this={shop.BoosterInventoryDialog}
         boosters={state.boosters}
-        setNameOf={(id) => shopData!.sets.find((s) => s.id === id)?.name ?? id}
+        setNameOf={(id) =>
+          shopData!.products?.find((product) => product.id === id)?.name ??
+          shopData!.sets.find((s) => s.id === id)?.name ??
+          id}
         onopen={(picks) => openPicks(picks, "sequential")}
         onopenall={(picks) => openPicks(picks, "all")}
         onclose={() => {

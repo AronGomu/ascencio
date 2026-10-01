@@ -104,6 +104,36 @@ afterEach(() => {
 });
 
 describe("booster reveal", () => {
+  it("resumes saved variable pack boundaries and advances from three cards to five", async () => {
+    const user = userEvent.setup();
+    const saved = JSON.parse(
+      JSON.stringify({ cards: pack(8), packSizes: [3, 5] }),
+    );
+    const first = render(BoosterOpeningScreen, saved);
+    expect(first.container.querySelectorAll(".opening-tile")).toHaveLength(3);
+    first.unmount();
+    const { container } = render(BoosterOpeningScreen, saved);
+    for (let index = 0; index < 3; index++)
+      await user.click(tile(container, index));
+    await user.click(
+      container.querySelector('[data-cy="story-shop-opening-next-pack"]')!,
+    );
+    expect(container.querySelectorAll(".opening-tile")).toHaveLength(5);
+    await user.click(tile(container, 0));
+    expect(
+      container.querySelector('[data-cy="story-shop-opening-name-0"]')
+        ?.textContent,
+    ).toBe("Card 3");
+  });
+  it("renders bounded hundred-card packs in the existing scrollable grid", () => {
+    const { container } = render(BoosterOpeningScreen, {
+      cards: pack(100),
+      packSizes: [100],
+    });
+    expect(container.querySelectorAll(".opening-tile")).toHaveLength(100);
+    expect(SOURCE).toMatch(/overflow-y:\s*auto/);
+  });
+
   it("all cards start face down", () => {
     const { container } = render(BoosterOpeningScreen, { cards: pack() });
     for (let index = 0; index < 9; index += 1) {

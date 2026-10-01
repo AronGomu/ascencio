@@ -107,6 +107,7 @@ export interface StoryState {
   /** The set whose card list is open. */
   readonly shopSetId: string | null;
   /** The result of the last booster opening. */
+  readonly openedPackSizes?: readonly number[] | null;
   readonly openedCards: readonly OpenedCard[] | null;
   readonly openingMode: "sequential" | "all" | null;
 }

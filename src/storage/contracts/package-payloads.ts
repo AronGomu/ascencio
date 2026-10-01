@@ -1,3 +1,4 @@
+import type { CommerceContent } from "../../modules/index.ts";
 import type { ChapterModule } from "../../modules/index.ts";
 import type { BattleRuntimeInput } from "../../battle/ports/index.ts";
 import type { CardDefinition } from "../../cards/index.ts";
@@ -24,6 +25,7 @@ export interface DuelCoreConfig {
 }
 
 export interface CardLibraryConfig {
+  readonly commerce?: CommerceContent;
   readonly defaultLocale: "en";
   readonly locales: readonly string[];
   readonly revisions: BattleRuntimeInput["revisions"];
@@ -40,6 +42,7 @@ export interface FreeplayConfig {
 }
 
 export interface ChapterConfig {
+  readonly shopId?: string;
   readonly module?: ChapterModule;
   readonly title: string;
   readonly chapterNumber: number;

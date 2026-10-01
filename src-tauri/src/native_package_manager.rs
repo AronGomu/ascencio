@@ -1112,7 +1112,7 @@ mod tests {
         for (id, code) in [("card-library", 1), ("card-pack-extra", 999)] {
             let path = root.join(format!("{id}.sqlite"));
             let db = Connection::open(&path).unwrap();
-            db.execute_batch("CREATE TABLE cards(code INTEGER,definition_json TEXT);CREATE TABLE card_texts(card_code INTEGER,locale TEXT,name TEXT,description TEXT,strings_json TEXT);CREATE TABLE scripts(name TEXT,source TEXT);CREATE TABLE sets(id TEXT);").unwrap();
+            db.execute_batch("CREATE TABLE cards(code INTEGER,definition_json TEXT);CREATE TABLE card_texts(card_code INTEGER,locale TEXT,name TEXT,description TEXT,strings_json TEXT);CREATE TABLE scripts(name TEXT,source TEXT);CREATE TABLE sets(id TEXT);CREATE TABLE package_meta(key TEXT,value_json TEXT);INSERT INTO package_meta VALUES ('config','{}');").unwrap();
             db.execute(
                 "INSERT INTO cards VALUES (?,?)",
                 params![code, format!("{{\"code\":{code}}}")],
@@ -1253,6 +1253,9 @@ fn validate_content_rows(db: &Connection, header: &Value) -> Result<(), String> 
             if config["defaultLocale"] != "en"
                 || !config["locales"].is_array()
                 || !config["requiredScripts"].is_object()
+                || config
+                    .get("commerce")
+                    .is_some_and(|content| !crate::native_commerce::valid_content(content))
             {
                 return Err("Library config invalid".into());
             }
@@ -1377,7 +1380,7 @@ fn validate_content_rows(db: &Connection, header: &Value) -> Result<(), String> 
     Ok(())
 }
 
-fn valid_chapter_module(value: &Value) -> bool {
+pub(crate) fn valid_chapter_module(value: &Value) -> bool {
     let Some(object) = value.as_object() else {
         return false;
     };
@@ -1429,6 +1432,21 @@ fn validate_candidate_content(
     paths: &HashMap<String, PathBuf>,
     headers: &HashMap<String, Value>,
 ) -> Result<(), String> {
+    let mut configs = HashMap::new();
+    for (id, path) in paths {
+        let db = open_package(path)?;
+        let source: String = db
+            .query_row(
+                "SELECT value_json FROM package_meta WHERE key='config'",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|error| error.to_string())?;
+        configs.insert(
+            id.clone(),
+            serde_json::from_str::<Value>(&source).map_err(|error| error.to_string())?,
+        );
+    }
     let mut identities: HashMap<String, Value> = HashMap::new();
     let mut cards: HashMap<u64, HashSet<String>> = HashMap::new();
     let mut sets: HashMap<String, String> = HashMap::new();
@@ -1468,6 +1486,7 @@ fn validate_candidate_content(
             }
         }
     }
+    crate::native_commerce::validate_stack(&configs, headers, &sets)?;
     for (id, path) in paths {
         let kind = headers[id]["packageType"]
             .as_str()

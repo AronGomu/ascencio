@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFile } from "node:fs/promises";
+import { ContentDiagnostic } from "../src/modules/commerce/composition.ts";
 import { exportPackages } from "./lib/sqlite-content/index.ts";
 import type { PackageBuildSpec } from "../src/storage/contracts/package-build.ts";
 
@@ -37,7 +38,22 @@ async function run(args: readonly string[]): Promise<number> {
     console.error(`exporting packages from ${args[1]}`);
     const result = await exportPackages(root, spec);
     return output(result, result.kind === "ok" ? 0 : 2);
-  } catch {
+  } catch (error) {
+    if (error instanceof ContentDiagnostic)
+      return output(
+        {
+          kind: "failed",
+          error: {
+            code: error.code,
+            phase: "compile",
+            source: error.source,
+            path: error.source,
+            pointer: error.pointer,
+            related: error.related,
+          },
+        },
+        2,
+      );
     return output(
       { kind: "failed", error: { code: "STORAGE_UNAVAILABLE" } },
       1,

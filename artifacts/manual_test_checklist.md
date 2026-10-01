@@ -102,3 +102,12 @@ Use a disposable native profile and prepared test packages. These checks remain 
 - [ ] R1. Populate more than 1024 valid deck and deck-autosave records in the disposable profile. Reset that user-data category in Admin; verify all selected records are removed together, unrelated settings and Story saves remain intact, and restart preserves the result.
 - [ ] R2. While a card preview is still loading, leave and immediately reopen it several times. Verify the final preview loads, remains usable, and closes normally without a stale cancellation error.
 - [ ] R3. Import prepared package fixtures with `chapter-010`, a leading-zero version such as `01.0.0`, or a version component greater than `9007199254740991`. Verify each is rejected and the active generation, installed packages, and user data remain unchanged.
+
+## Moddable shop content — 2026-10-01
+
+Use a disposable native profile and separately versioned prepared test packages. These checks remain pending human/device verification.
+
+- [ ] M1. Open the base chapter shop with an existing save. Confirm stored booster quantities survive the update, eligible packs still cost 100 DP and grant eight common plus one non-common draw, and singles/resale labels match the base economy.
+- [ ] M2. Compile the small-pack example into a new package version and install it. Buy both products sharing one set; confirm 12/25 DP totals and separate quantities. Open both, save mid-reveal, restart and verify three-card then five-card boundaries, without granting cards twice.
+- [ ] M3. Install a test economy with common 7 DP, rare 11 DP and singles multiplier 3. Confirm rare singles cost 33 DP and common resale grants 7 DP. Disable singles and confirm Buy controls are disabled. Gate an offer on a campaign fact and confirm it remains unavailable until that fact is satisfied.
+- [ ] M4. Remove a shop offer while keeping its product installed; confirm owned packs remain openable. Remove the product and confirm its unopened quantity survives. Reject a conflicting mod or undeclared package reference and verify active packages and user saves stay unchanged.

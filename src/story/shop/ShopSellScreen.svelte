@@ -16,6 +16,7 @@
      nothing: a card's price follows its rarity, and rarity is only knowable
      from that data. Selling is irreversible, so the screen offers no rows at
      all until it can price them. */
+  export let sellPrices = SELL_PRICE_DP;
   export let cards:
     | readonly {
         code: number;
@@ -42,7 +43,7 @@
   let sellButton: HTMLButtonElement;
 
   $: total = (cards ?? []).reduce(
-    (sum, c) => sum + (selected[c.code] ?? 0) * SELL_PRICE_DP[c.rarity],
+    (sum, c) => sum + (selected[c.code] ?? 0) * sellPrices[c.rarity],
     0,
   );
   $: cardNameByCode = new Map(
@@ -149,7 +150,7 @@
             Owned {card.owned}
           </p>
           <p class="price" data-cy={`story-shop-sell-price-${card.code}`}>
-            {SELL_PRICE_DP[card.rarity]} DP
+            {sellPrices[card.rarity]} DP
           </p>
           <div class="stepper" data-cy={`story-shop-sell-stepper-${card.code}`}>
             <button

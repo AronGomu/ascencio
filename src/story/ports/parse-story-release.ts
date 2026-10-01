@@ -1,5 +1,5 @@
 import type { ChapterModule } from "../../modules/index.ts";
-import { isChapterModule } from "../../modules/index.ts";
+import { isChapterModule, validateCommerce } from "../../modules/index.ts";
 import { cardCode } from "../../cards/index.ts";
 import type { StoryRelease, StorySet } from "./story-release.ts";
 import { parseStoryDocument } from "./story-document.ts";
@@ -68,6 +68,9 @@ function chapter(value: unknown): StoryRelease["chapters"][number] {
     "decks",
     "opponents",
     "defaults",
+    ...(typeof value === "object" && value !== null
+      ? ["commerce", "shopId"].filter((key) => Object.hasOwn(value, key))
+      : []),
     ...(typeof value === "object" &&
     value !== null &&
     Object.hasOwn(value, "module")
@@ -75,10 +78,35 @@ function chapter(value: unknown): StoryRelease["chapters"][number] {
       : []),
   ]);
   if (r.module !== undefined && !isChapterModule(r.module)) invalid();
+  if (
+    r.commerce !== undefined &&
+    (!validateCommerce(r.commerce) ||
+      typeof r.shopId !== "string" ||
+      !r.commerce.shops.some((shop) => shop.id === r.shopId))
+  )
+    invalid();
+  if (r.shopId !== undefined && r.commerce === undefined) invalid();
   const cardCodes = array(r.cardCodes, code);
   unique(cardCodes, (c) => c);
   const sets = array(r.sets, set);
   unique(sets, (s) => s.id);
+  const commerce = r.commerce;
+  if (
+    commerce !== undefined &&
+    commerce.shops
+      .find((shop) => shop.id === r.shopId)!
+      .offers.some(
+        (offer) =>
+          !sets.some(
+            (set) =>
+              set.id ===
+              commerce.boosters.find(
+                (product) => product.id === offer.boosterId,
+              )!.setId,
+          ),
+      )
+  )
+    invalid();
   const decks = array(r.decks, (value) => {
     const d = record(value, ["id", "name", "main", "extra", "side"]);
     return {
@@ -110,6 +138,9 @@ function chapter(value: unknown): StoryRelease["chapters"][number] {
       : {
           module: r.module as ChapterModule,
         }),
+    ...(r.commerce === undefined
+      ? {}
+      : { commerce: r.commerce, shopId: text(r.shopId) }),
     document: r.document === null ? null : parseStoryDocument(r.document),
     cardCodes,
     sets,

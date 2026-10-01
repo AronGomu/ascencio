@@ -348,6 +348,16 @@ describe("focused Cards/Decks public entries", () => {
     const declared = declaredExports("src/modules/index.ts");
     expect([...declared.values, ...declared.types].sort()).toEqual(
       [
+        "CommerceContent",
+        "EconomyPolicy",
+        "BoosterProduct",
+        "ShopDefinition",
+        "CommerceRarity",
+        "CanonicalSet",
+        "COMMERCE_RARITIES",
+        "validateCommerce",
+        "mergeCommerce",
+        "validateCommerceStack",
         "CampaignProgress",
         "ChapterModule",
         "DEFAULT_CHAPTER_MODULE",

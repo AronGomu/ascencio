@@ -11,20 +11,24 @@
 
   let custom = 1;
 
-  $: canAffordOne = dp >= PACK_PRICE_DP;
-  $: canAffordTen = dp >= PACK_PRICE_DP * 10;
+  $: priceDp = set.priceDp ?? PACK_PRICE_DP;
+  $: canAffordOne = dp >= priceDp;
+  $: canAffordTen = dp >= priceDp * 10;
   $: canAffordCustom =
-    Number.isInteger(custom) && custom >= 1 && dp >= custom * PACK_PRICE_DP;
+    Number.isSafeInteger(custom) &&
+    custom >= 1 &&
+    Number.isSafeInteger(custom * priceDp) &&
+    dp >= custom * priceDp;
 </script>
 
 <OverlayShell title={set.name} labelId="shop-set-title" {onclose}>
   <p class="price-line" data-cy="story-shop-set-price">
-    {PACK_PRICE_DP} DP / pack
+    {priceDp} DP / pack
   </p>
 
   {#if !canAffordOne}
     <p class="buy-error" role="alert" data-cy="story-shop-buy-error">
-      Not enough DP. You have {dp} DP; packs cost {PACK_PRICE_DP} DP each.
+      Not enough DP. You have {dp} DP; packs cost {priceDp} DP each.
     </p>
   {/if}
 
@@ -33,14 +37,14 @@
       type="button"
       disabled={!canAffordOne}
       data-cy="story-shop-buy-one"
-      onclick={() => onbuy(set.id, 1)}>Buy 1 · {PACK_PRICE_DP} DP</button
+      onclick={() => onbuy(set.id, 1)}>Buy 1 · {priceDp} DP</button
     >
 
     <button
       type="button"
       disabled={!canAffordTen}
       data-cy="story-shop-buy-ten"
-      onclick={() => onbuy(set.id, 10)}>Buy 10 · {PACK_PRICE_DP * 10} DP</button
+      onclick={() => onbuy(set.id, 10)}>Buy 10 · {priceDp * 10} DP</button
     >
   </div>
 

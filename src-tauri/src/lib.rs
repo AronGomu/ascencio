@@ -8,6 +8,7 @@ use std::{
 use tauri::{path::BaseDirectory, Manager};
 use tauri_plugin_fs::{FsExt, OpenOptions};
 use tauri_plugin_opener::OpenerExt;
+mod native_commerce;
 mod native_package_manager;
 mod native_storage;
 mod native_user_data;

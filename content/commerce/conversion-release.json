@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "packageId": "duel-core",
+      "version": "1.0.0",
+      "bytes": 1011712,
+      "sha256": "52ab0c9cd83bbba6bf88c782a8ae2f12d5ec49b2c18e08e4a4ddedaf3aa78f9c"
+    },
+    {
+      "packageId": "card-library",
+      "version": "1.0.0",
+      "bytes": 2652434432,
+      "sha256": "34da2e1e11125f4ad2ee3ad3fbe9fcf2761ad2dc33adbe5e00f7093b0799c5f2"
+    },
+    {
+      "packageId": "freeplay",
+      "version": "1.0.0",
+      "bytes": 49152,
+      "sha256": "94f823fb63bb190304845feae0d527dcb6ec6ecbd24a971513b52a3bc48859d8"
+    },
+    {
+      "packageId": "chapter-01",
+      "version": "1.0.0",
+      "bytes": 196608,
+      "sha256": "1bec727903e32cc4768eb844ef91d10f6763a854a67d1e4381fd4fd6ebba3307"
+    }
+  ]
+}

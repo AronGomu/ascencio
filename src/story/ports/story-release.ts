@@ -1,4 +1,4 @@
-import type { ChapterModule } from "../../modules/index.ts";
+import type { ChapterModule, CommerceContent } from "../../modules/index.ts";
 // src/story/ports/story-release.ts; public through src/story/ports/index.ts
 import type { CardCode } from "../../cards/index.ts";
 import type { DeckCardLists } from "../../decks/contracts/index.ts";
@@ -48,6 +48,8 @@ export interface StoryRelease {
   readonly chapters: readonly {
     readonly id: string;
     readonly module?: ChapterModule;
+    readonly commerce?: CommerceContent;
+    readonly shopId?: string;
     readonly document: StoryDocument | null;
     readonly cardCodes: readonly CardCode[];
     readonly sets: readonly StorySet[];

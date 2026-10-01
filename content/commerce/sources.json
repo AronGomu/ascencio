@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "baseVersion": "1.0.0",
+  "sets": ["assets/content/card-library/sets"],
+  "economies": ["content/commerce/economies"],
+  "boosters": ["assets/content/card-library/boosters"],
+  "shops": ["content/commerce/shops"],
+  "mods": []
+}

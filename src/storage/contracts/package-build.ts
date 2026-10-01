@@ -5,6 +5,8 @@ export interface PackageBuildSpec {
   readonly packages: readonly {
     readonly manifest: PackageManifest;
     readonly sourceRoot: string;
+    readonly sourceManifest?: string;
+    readonly sourceVersion?: string;
   }[];
 }
 

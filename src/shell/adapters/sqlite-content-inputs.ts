@@ -1,3 +1,4 @@
+import { validateCommerce } from "../../modules/index.ts";
 import type { CardDefinition } from "../../cards/index.ts";
 import type {
   CardLibraryConfig,
@@ -91,7 +92,8 @@ export function isCardLibraryConfig(
     Array.isArray(required.cards) &&
     required.cards.every((name) => typeof name === "string") &&
     Array.isArray(required.globals) &&
-    required.globals.every((name) => typeof name === "string")
+    required.globals.every((name) => typeof name === "string") &&
+    (record.commerce === undefined || validateCommerce(record.commerce))
   );
 }
 

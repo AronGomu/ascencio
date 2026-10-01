@@ -1,3 +1,4 @@
+import { validOpenedPackSizes } from "../model/opened-pack-sizes.ts";
 import { validFacts, stableReference } from "../../modules/index.ts";
 import type {
   PersistedStoryState,
@@ -65,7 +66,17 @@ const RARITY_SET = new Set([
 export function isPersistableStoryState(
   value: unknown,
 ): value is PersistedStoryState {
-  if (!exactRecord(value, STATE_KEYS)) return false;
+  if (
+    !exactRecord(value, [
+      ...STATE_KEYS,
+      ...(typeof value === "object" &&
+      value !== null &&
+      Object.hasOwn(value, "openedPackSizes")
+        ? ["openedPackSizes"]
+        : []),
+    ])
+  )
+    return false;
   if (
     !hasString(SCREEN_SET, value.screen) ||
     !(
@@ -98,6 +109,7 @@ export function isPersistableStoryState(
     ) ||
     !nullableReference(value.shopSetId) ||
     !validOpenedCards(value.openedCards) ||
+    !validOpenedPackSizes(value.openedPackSizes, value.openedCards) ||
     ![null, "sequential", "all"].includes(value.openingMode as null | string)
   )
     return false;

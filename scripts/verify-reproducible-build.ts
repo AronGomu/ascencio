@@ -18,7 +18,7 @@ try {
     await rm(path.join(projectRoot, output), { recursive: true, force: true });
     await build({
       root: projectRoot,
-      mode: "private",
+      mode: "native",
       logLevel: "warn",
       build: { outDir: output, emptyOutDir: true },
     });

@@ -176,3 +176,29 @@ describe("SQLite card image source", () => {
     ).rejects.toThrow("SQLITE_IMAGE_SOURCE_CLOSED");
   });
 });
+
+it("falls back to installed full art when a cropped illustration is absent", async () => {
+  vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:full-fallback");
+  vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  const query = vi.fn(async (request: ContentQuery) =>
+    ok(
+      request.kind === "asset" && request.path.includes("/full/")
+        ? asset(8)
+        : null,
+    ),
+  );
+  const source = createSqliteCardImageSource(contentQuery(query));
+  const lease = await source.acquire(
+    cardCode(42),
+    "cropped",
+    new AbortController().signal,
+  );
+  expect(lease?.url).toBe("blob:full-fallback");
+  expect(
+    query.mock.calls.map(([request]) =>
+      request.kind === "asset" ? request.path : null,
+    ),
+  ).toEqual(["cards/cropped/42.jpg", "cards/full/42.jpg"]);
+  lease?.release();
+  source.close();
+});

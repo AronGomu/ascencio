@@ -813,3 +813,43 @@ it.each(["library", "duel-start"] as const)(
     await new Promise((resolve) => setTimeout(resolve, 0));
   },
 );
+
+it("loads a native preview without catalog URLs, cancels stale hover and releases leases", async () => {
+  const pending = Promise.withResolvers<{
+    url: string;
+    release(): void;
+  } | null>();
+  const released = vi.fn();
+  const acquire = vi.fn((code: number, signal: AbortSignal) => {
+    expect(code).toBe(101);
+    signal.throwIfAborted();
+    return pending.promise;
+  });
+  const view = render(
+    DeckSelectScreen,
+    props({ mode: "library", opponent: null, acquireCardImage: acquire }),
+  );
+  await waitFor(() =>
+    expect(find("deck-select-docked-list-main-row-101")).not.toBeNull(),
+  );
+  const row = cy("deck-select-docked-list-main-row-101");
+  await fireEvent.pointerEnter(row);
+  expect(acquire).toHaveBeenCalledWith(101, expect.any(AbortSignal));
+  await fireEvent.pointerLeave(row);
+  expect(acquire.mock.calls[0]![1].aborted).toBe(true);
+  pending.resolve({ url: "blob:native-late", release: released });
+  await waitFor(() => expect(released).toHaveBeenCalledOnce());
+  expect(find("deck-select-card-art-float")).toBeNull();
+  const release = vi.fn();
+  await view.rerender({
+    acquireCardImage: async () => ({ url: "blob:native-full", release }),
+  });
+  await fireEvent.pointerEnter(row);
+  await waitFor(() =>
+    expect(cy("deck-select-card-art-float").getAttribute("src")).toBe(
+      "blob:native-full",
+    ),
+  );
+  view.unmount();
+  expect(release).toHaveBeenCalledOnce();
+});

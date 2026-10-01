@@ -47,7 +47,6 @@ export type {
   UserNamespace,
   UserRecord,
 } from "./contracts/user-data.ts";
-export type { RpcArgs, RpcRequest, RpcResponse } from "./contracts/rpc.ts";
 export type {
   AsyncPreferencePort,
   StoryReadLogPort,

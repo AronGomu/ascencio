@@ -8,7 +8,6 @@ import {
 import "fake-indexeddb/auto";
 import { cleanup, render, screen, waitFor } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteDB } from "idb";
 import DeckEditorApp from "../../../src/deck-editor/index.ts";
 import * as legacyDatabase from "../../fixtures/deck-database.ts";
 import { DeckStorageError } from "../../../src/decks/repository/index.ts";
@@ -38,7 +37,13 @@ afterEach(async () => {
   openLegacy = null;
   vi.restoreAllMocks();
   await disposeTestDeckRepositories();
-  await deleteDB(legacyDatabase.LEGACY_DECK_DATABASE_NAME);
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(
+      legacyDatabase.LEGACY_DECK_DATABASE_NAME,
+    );
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
 });
 
 function query(name: string): HTMLElement | null {

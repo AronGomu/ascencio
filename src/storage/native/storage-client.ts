@@ -10,7 +10,7 @@ import type {
 import type { StorageResult } from "../contracts/package.ts";
 import { JsonUserDataStore } from "../json/user-data-store.ts";
 import { nativeUserJsonBackend } from "./user-json-backend.ts";
-import { validQuery } from "../runtime/content-query-runtime.ts";
+import { validQuery } from "../contracts/validate-content-query.ts";
 import {
   orderPackages,
   parsePackageManifest,

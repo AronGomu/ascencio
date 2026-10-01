@@ -4,11 +4,11 @@
 
 ## Platform
 
-web
+native
 
 ## Users
 
-One primary user: a **single player, alone, offline, at a desktop browser**, playing a story campaign the way the older Yu-Gi-Oh! handheld games were played — a long sitting, no opponent waiting, no clock, no ladder.
+One primary user: a **single player, alone, offline, in a Tauri desktop application**, playing a story campaign the way the older Yu-Gi-Oh! handheld games were played — a long sitting, no opponent waiting, no clock, no ladder.
 
 They know Yu-Gi-Oh! well enough that the rules are not the interesting part. What they came for is the story, and duels are how the story advances. They are not a competitive player looking for a testing client, and not a newcomer learning what a Normal Summon is.
 

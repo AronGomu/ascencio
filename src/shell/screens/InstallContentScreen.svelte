@@ -1,11 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type {
-    AppUpdateController,
-    AppUpdateView,
-  } from "../application/app-update-controller.ts";
   import { downloadUserData } from "../application/user-data-download.ts";
-  import { PACKAGE_DOWNLOAD_LINKS } from "../application/download-links.ts";
   import {
     failureCopy,
     type ManualContentController,
@@ -13,7 +8,6 @@
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
   import type { StorageFailure } from "../../storage/index.ts";
   import {
-    isNativeApp,
     isNativeDesktop,
     openNativeContentFolder,
     seedNativeContent,
@@ -21,30 +15,22 @@
 
   export let gate: CoreGate;
   export let manual: ManualContentController | null = null;
-  export let appUpdates: AppUpdateController | null = null;
   export let storageFailure: StorageFailure | null = null;
   export let onback: () => void;
 
   let view = manual?.view ?? null;
   let boundManual: ManualContentController | null = null;
   let unsubscribeManual: (() => void) | null = null;
-  let updateView: AppUpdateView | null = appUpdates?.view ?? null;
-  let boundUpdates: AppUpdateController | null = null;
-  let unsubscribeUpdates: (() => void) | null = null;
   const nativeDesktop = isNativeDesktop();
-  const nativeApp = isNativeApp();
   let nativeContentPath = "";
   let nativeFolderError = "";
   $: removeCandidate = view?.removal ?? null;
   $: actionsBlocked =
-    updateView?.phase === "approving" ||
-    updateView?.phase === "committing" ||
     view?.busy === true ||
     view?.refreshPending === true ||
     view?.state.kind === "restore-outcome-unknown" ||
     removeCandidate !== null;
   $: bindManual(manual);
-  $: bindUpdates(appUpdates);
 
   function bindManual(next: ManualContentController | null): void {
     if (next === boundManual) return;
@@ -53,15 +39,6 @@
     view = next?.view ?? null;
     unsubscribeManual = next?.subscribe((value) => (view = value)) ?? null;
     if (next !== null) void next.refresh();
-  }
-
-  function bindUpdates(next: AppUpdateController | null): void {
-    if (next === boundUpdates) return;
-    unsubscribeUpdates?.();
-    boundUpdates = next;
-    updateView = next?.view ?? null;
-    unsubscribeUpdates =
-      next?.subscribe((value) => (updateView = value)) ?? null;
   }
 
   async function importFiles(event: Event): Promise<void> {
@@ -94,22 +71,6 @@
     return `${value.toLocaleString()} bytes`;
   }
 
-  async function checkAppUpdate(): Promise<void> {
-    if (actionsBlocked || appUpdates === null) return;
-    await appUpdates.check();
-  }
-
-  async function approveAppUpdate(): Promise<void> {
-    if (
-      actionsBlocked ||
-      appUpdates === null ||
-      updateView?.candidate === null ||
-      updateView?.candidate === undefined
-    )
-      return;
-    await appUpdates.approve(updateView.candidate);
-  }
-
   async function openContentFolder(): Promise<void> {
     try {
       await openNativeContentFolder();
@@ -127,13 +88,12 @@
       });
     return () => {
       unsubscribeManual?.();
-      unsubscribeUpdates?.();
     };
   });
 </script>
 
 <main class="install-content" data-cy="install-content-screen">
-  <h1 data-cy="install-content-heading">Content & updates</h1>
+  <h1 data-cy="install-content-heading">Installed content</h1>
   <p role="status" data-cy="install-content-readiness">
     {coreGateMessage(gate)}
   </p>
@@ -156,7 +116,7 @@
 
   {#if storageFailure?.code === "APP_ALREADY_OPEN" || view?.state.kind === "already-open"}
     <p role="alert" data-cy="content-already-open">
-      App already open in another tab. Close that tab, then retry here.
+      Application is already open. Close the other instance, then retry here.
     </p>
   {:else if view === null}
     <p role="alert" data-cy="install-content-unavailable">
@@ -193,31 +153,6 @@
         Only import packages from sources you trust. Corruption checks do not
         authenticate the publisher.
       </p>
-      {#if !nativeApp}<div
-          class="download-list"
-          data-cy="content-download-list"
-        >
-          {#each PACKAGE_DOWNLOAD_LINKS as link (link.packageId)}
-            <p data-cy={`content-download-row-${link.packageId}`}>
-              <span data-cy={`content-download-title-${link.packageId}`}
-                >{link.title}</span
-              >
-              {#if link.url === null}
-                <span data-cy={`content-download-${link.packageId}`}>
-                  Download unavailable
-                </span>
-              {:else}
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-cy={`content-download-${link.packageId}`}
-                  >Open download location</a
-                >
-              {/if}
-            </p>
-          {/each}
-        </div>{/if}
       <label data-cy="content-import-label">
         Import content packages
         <input
@@ -280,14 +215,14 @@
               <p data-cy={`content-package-details-${active.packageId}`}>
                 Version {active.version} · {bytes(active.bytes)}
               </p>
-              {#if !nativeApp}<button
-                  type="button"
-                  class="secondary"
-                  data-cy={`content-remove-${active.packageId}`}
-                  disabled={actionsBlocked}
-                  onclick={() => manual!.requestRemoval(active.packageId)}
-                  >Remove</button
-                >{/if}
+              <button
+                type="button"
+                class="secondary"
+                data-cy={`content-remove-${active.packageId}`}
+                disabled={actionsBlocked}
+                onclick={() => manual!.requestRemoval(active.packageId)}
+                >Remove</button
+              >
             </article>
           {/each}
         {/if}
@@ -405,62 +340,13 @@
     </section>
   {/if}
 
-  <section class="action-group" data-cy="core-update-actions">
-    <h2 data-cy="core-update-heading">App update</h2>
-    <button
-      type="button"
-      class="secondary"
-      data-cy="content-check-updates"
-      disabled={actionsBlocked || updateView?.canCheck !== true}
-      onclick={checkAppUpdate}>Check for app update</button
-    >
-    {#if updateView?.phase === "checking" || updateView?.phase === "approving"}
-      <button
-        type="button"
-        class="secondary"
-        data-cy="core-update-cancel"
-        disabled={view?.navigationBlocked === true}
-        onclick={() => appUpdates?.cancel()}
-        >{updateView.phase === "checking"
-          ? "Cancel check"
-          : "Cancel approval"}</button
-      >
-    {/if}
-    {#if updateView?.candidate !== null && updateView?.candidate !== undefined}
-      <p data-cy="core-update-candidate">
-        Build {updateView.candidate.buildId} · content API {updateView.candidate
-          .coreContentApiVersion}
-      </p>
-    {/if}
-    <button
-      type="button"
-      data-cy="core-approve-update"
-      disabled={actionsBlocked || updateView?.canApprove !== true}
-      onclick={approveAppUpdate}>Approve app update</button
-    >
-    <p role="status" aria-live="polite" data-cy="core-update-status">
-      {updateView?.message ?? "App updates are unavailable in this browser."}
-    </p>
-    <p data-cy="core-update-instructions">
-      App updates remain separate from content packages. Close all app tabs,
-      then reopen after an approved update installs.
-    </p>
-  </section>
-
   <button
     type="button"
     class="secondary"
     data-cy="install-content-back"
-    disabled={view?.navigationBlocked === true ||
-      updateView?.phase === "committing"}
+    disabled={view?.navigationBlocked === true}
     onclick={() => {
-      if (
-        view?.navigationBlocked !== true &&
-        updateView?.phase !== "committing"
-      ) {
-        appUpdates?.cancel();
-        onback();
-      }
+      if (view?.navigationBlocked !== true) onback();
     }}>Back to Main Menu</button
   >
 </main>
@@ -501,18 +387,11 @@
   .action-group > p,
   [role="alertdialog"] h3,
   [role="alertdialog"] p,
-  [role="alertdialog"] ul,
-  .download-list {
+  [role="alertdialog"] ul {
     flex-basis: 100%;
     min-width: 0;
   }
 
-  .download-list {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .download-list p,
   article {
     display: flex;
     flex-wrap: wrap;

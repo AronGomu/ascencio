@@ -5,9 +5,9 @@
   "identifier": "com.ascencio.storyduel",
   "build": {
     "beforeDevCommand": "npm run native:prepare && npm run dev -- --mode native",
-    "devUrl": "http://localhost:4202",
-    "beforeBuildCommand": "npm run native:prepare && npm run build:native && npm run native:verify-staged",
-    "frontendDist": "../dist"
+    "devUrl": "http://127.0.0.1:4204",
+    "beforeBuildCommand": "npm run native:prepare && npm run build && npm run native:verify-staged",
+    "frontendDist": "../generated/build/app"
   },
   "app": {
     "windows": [

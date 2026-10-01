@@ -8,7 +8,7 @@
    The battle module is passed in rather than imported: `src/battle/index.ts`
    also exports `BattleFacade`, and a static import of it from the shell makes
    the duel eager — the "shell initial JavaScript" budget in
-   `scripts/verify-browser-build.ts` rejects that build. `AppShell` reaches it
+   `scripts/verify-native-build.ts` rejects that build. `AppShell` reaches it
    through `loaders.duel()`, exactly as the free-play match setup does. */
 
 import type { BattleRequest } from "../../battle/index.ts";

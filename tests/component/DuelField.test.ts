@@ -357,7 +357,7 @@ describe("DuelField", () => {
     expect(Number.parseFloat(field?.style.width ?? "NaN")).toBeGreaterThan(0);
   });
 
-  it("keeps the measured board box while the virtual plane fills upward", async () => {
+  it("keeps flat camera geometry inside measured native field bounds", async () => {
     let width = 900;
     let height = 735;
     const callbacks: ResizeObserverCallback[] = [];
@@ -394,10 +394,12 @@ describe("DuelField", () => {
     expect(field?.style.width).toBe("900px");
     expect(field?.style.height).toBe("735px");
     const renderedPlaneHeight = Number.parseFloat(plane?.style.height ?? "NaN");
-    expect(renderedPlaneHeight).toBeGreaterThan(735);
-    expect(Number.parseFloat(content?.style.height ?? "NaN")).toBeGreaterThan(
-      735,
+    expect(renderedPlaneHeight).toBe(735);
+    expect(Number.parseFloat(content?.style.height ?? "NaN")).toBeCloseTo(
+      createFieldRenderLayout(false, width, height).geometry.height,
+      5,
     );
+    expect(plane?.style.transform).toBe("");
 
     width = 600;
     height = 900;

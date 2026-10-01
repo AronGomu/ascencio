@@ -622,9 +622,6 @@ describe("public domain APIs are frozen", () => {
         "RemovePackageResult",
         "RestoreOutcomeUnknown",
         "RestoreUserDataResult",
-        "RpcArgs",
-        "RpcRequest",
-        "RpcResponse",
         "SetRow",
         "StorageCode",
         "StorageFailure",
@@ -648,7 +645,7 @@ describe("public domain APIs are frozen", () => {
          metadata only — the `.ydk` payloads stay behind
          `deck-sources-browser.ts` — and every one of them is reached through
          `loaders.duel()`, never a static import, or the duel turns eager and
-         the shell budget in `verify-browser-build.ts` rejects the build. */
+         the shell budget in `verify-native-build.ts` rejects the build. */
       values: [
         "BattleFacade",
         "BattleRequestError",
@@ -755,6 +752,8 @@ describe("public domain APIs are frozen", () => {
         "pinSelectedFirst",
       ],
       types: [
+        "AcquireDeckImage",
+        "DeckImageLease",
         "DeckSelectMode",
         "DeckSelectScope",
         "DeckSort",
@@ -789,7 +788,7 @@ describe("public domain APIs are frozen", () => {
          internals the shell may not reach — while the screen itself is mounted
          for both worlds. All three are reached through the shell's lazy
          `import("../story/index.ts")`, never a static import, or the visual
-         novel turns eager and the shell budget in `verify-browser-build.ts`
+         novel turns eager and the shell budget in `verify-native-build.ts`
          rejects the build. `loadCollectionScreen` is a loader rather than a
          re-export of the component for the same reason one level down:
          `StoryApp` never renders that screen, and carrying it took the story

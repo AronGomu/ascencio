@@ -28,7 +28,7 @@ const DOMAIN_CHUNK_PREFIXES: ReadonlyArray<
    the measurement recorded next to each entry. They guard drift with visible
    headroom rather than tracking the measurement, so ordinary churn does not
    move them; a domain crossing its ceiling is a chunk-composition change worth
-   a look. `verify-browser-build.ts` gates them and
+   a look. `verify-native-build.ts` gates them and
    `tests/unit/domain-chunk-closure.test.ts` asserts the built tree keeps at
    least 10% headroom, so both read this one table. */
 export const DOMAIN_BUDGET_BYTES: Readonly<

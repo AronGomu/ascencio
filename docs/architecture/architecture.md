@@ -6,23 +6,20 @@
 
 This is the canonical architecture entry point. Detailed decisions are intentionally atomic and grouped by concern so humans and AI can load only the context needed for a task.
 
-## Current manual SQLite architecture
+## Current Tauri architecture
 
-[ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md) records implemented cutover. [Manual SQLite content import](04-data/manual-sqlite-content-import.md) is current operational/runtime detail; [manual setup gates](../assets/manual-sqlite-setup.md) separate code readiness from owner release/manual acceptance.
+[ADR-103](../ADR/103_ADR_tauri_only_runtime_and_asset_ui.md) owns the native-only cutover and A1–A4 repairs. [Native content staging](../assets/native-content-release.md) describes default installation. [ADR-102](../ADR/102_ADR_content_modules_and_campaign_facts.md) owns module dependencies and save facts.
 
-| ID  | Current invariant                                                                                          | Implementation anchor                                                                                                        |
-| --- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| S1  | App-only build; content package bytes never enter `generated/build/app/`, precache, or Vite source serving | `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, `scripts/lib/vite-content-deny.ts`, `scripts/verify-browser-build.ts`    |
-| S2  | Manual immutable SQLite import; no live progressive/ZIP/R2/download/selector path                          | `src/storage/create-storage-client.ts`, `src/storage/sqlite-worker.ts`, `src/shell/application/manual-content-controller.ts` |
-| S3  | Package-owned assets/global cards/standalone Free Play; optional media warns without hidden fetch          | `scripts/lib/asset-roots.ts`, `src/shell/adapters/sqlite-freeplay-inputs.ts`                                                 |
-| S4  | JSON/localStorage user data; backup replacement only; no legacy migration                                  | `src/storage/json/user-data-store.ts`, `src/shell/application/user-persistence-owner.ts`                                     |
-| S5  | One SQLite-owning tab; Duel Worker remains sole OCG rules authority                                        | `src/storage/sqlite-worker.ts`, `src/battle/worker/duel.worker-browser.ts`                                                   |
+| Boundary | Current implementation |
+| --- | --- |
+| Tauri startup and native storage only | `src/main.ts`, `src/storage/create-storage-client.ts`, `src/storage/native/storage-client.ts` |
+| Verified content installed from resources; fixed read-only queries | `src-tauri/src/native_storage.rs`, `src-tauri/src/native_package_manager.rs` |
+| Atomic JSON user records; no browser persistence or migration | `src/storage/json/user-data-store.ts`, `src-tauri/src/native_user_data.rs` |
+| Installed media leases for covers and previews | `src/shell/adapters/sqlite-image-source.ts`, `src/deck-select/DeckSelectScreen.svelte` |
+| Svelte field with coherent flat geometry in WebKit | `src/battle/field/perspective.ts`, `src/battle/app/components/DuelField.svelte` |
+| Webview contains no browser SQLite/PWA/raw content | `scripts/verify-native-build.ts`, `src-tauri/tauri.conf.json` |
 
-Automated evidence means code-ready, not manually accepted. Owner Chromium rows remain unchecked in durable manual checklist named by root `AGENTS.md`. Source completeness, redistribution rights, public links, uploads, and hosting approval remain owner-owned; all tracked download URLs are null.
-
-## Tauri native storage path
-
-[ADR-100](../ADR/100_ADR_tauri_native_sqlite_storage.md) owns the native path. Tauri packages the verified release SQLite files as resources; Rust seeds them to `app_data_dir/game-content/` and queries the active files read-only through fixed commands. `src/storage/native/storage-client.ts` maps those commands to the same `LocalStorageClient` contract used by the shell. Mutable records use a separate native `user-data.sqlite`. The browser continues to use the ADR-099 OPFS Worker. Native release packaging and offline device acceptance await the complete local content snapshot.
+The native content reader still uses SQLite packages. Browser/OPFS/IndexedDB/PWA details below and in ADR-099/100 are historical. Physical mobile acceptance remains separate from automated WebKit viewport checks.
 
 ## Navigation protocol
 

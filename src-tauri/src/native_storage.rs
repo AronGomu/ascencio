@@ -419,10 +419,16 @@ fn execute_query(db: &Connection, request: ContentQuery) -> Result<Value, String
             let mut sets = Vec::new();
             for item in rows.as_array().ok_or("rows")? {
                 let id = item[0].as_str().ok_or("id")?;
-                let mut set = json_text(item[1].as_str().ok_or("metadata")?.to_owned())?;
+                let metadata = json_text(item[1].as_str().ok_or("metadata")?.to_owned())?;
                 let cards = collect(db, "SELECT sc.card_code,ct.name,sc.rarity,sc.printing_code,sc.source_rarity,sc.source_rarity_code FROM set_cards sc JOIN card_texts ct ON ct.card_code=sc.card_code AND ct.locale='en' WHERE sc.set_id=? ORDER BY sc.card_code,sc.printing_code,sc.source_rarity,sc.source_rarity_code", &[&id], |row| Ok(json!({"code":row.get::<_, i64>(0)?,"name":row.get::<_, String>(1)?,"rarity":row.get::<_, String>(2)?,"printingCode":row.get::<_, String>(3)?,"sourceRarity":row.get::<_, String>(4)?,"sourceRarityCode":row.get::<_, String>(5)?})))?;
-                set["cards"] = cards;
-                sets.push(set);
+                // Storage metadata (for example imageAssetPath) stays behind
+                // the media reader. Story receives the semantic set contract.
+                sets.push(json!({
+                    "id": metadata["id"],
+                    "name": metadata["name"],
+                    "releaseYear": metadata["releaseYear"],
+                    "cards": cards,
+                }));
             }
             Ok(Value::Array(sets))
         }
@@ -508,4 +514,36 @@ fn asset(db: &Connection, path: &str, cap: i64) -> Result<Value, String> {
         return Err("Asset integrity mismatch".into());
     }
     Ok(json!({"mime":mime,"bytes":bytes}))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn story_sets_expose_semantic_fields_and_keep_media_metadata_private() {
+        let db = Connection::open_in_memory().unwrap();
+        db.execute_batch("CREATE TABLE sets(id TEXT, metadata_json TEXT);
+            CREATE TABLE set_cards(set_id TEXT,card_code INTEGER,rarity TEXT,printing_code TEXT,source_rarity TEXT,source_rarity_code TEXT);
+            CREATE TABLE card_texts(card_code INTEGER,locale TEXT,name TEXT);
+            INSERT INTO card_texts VALUES(123,'en','Test card');
+            INSERT INTO set_cards VALUES('first',123,'Common','FIRST-001','Common','C');").unwrap();
+        db.execute("INSERT INTO sets VALUES(?,?)", params!["first", json!({"id":"first","name":"First set","releaseYear":2002,"imageAssetPath":"sets/first.jpg"}).to_string()]).unwrap();
+        let sets = execute_query(
+            &db,
+            ContentQuery::Sets {
+                package_id: "card-library".into(),
+            },
+        )
+        .unwrap();
+        let keys: Vec<_> = sets[0]
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(String::as_str)
+            .collect();
+        assert_eq!(keys, vec!["cards", "id", "name", "releaseYear"]);
+        assert_eq!(sets[0]["cards"][0]["code"], 123);
+        assert_eq!(sets[0]["cards"][0]["name"], "Test card");
+    }
 }

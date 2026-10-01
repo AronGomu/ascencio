@@ -4,6 +4,7 @@
   import type { BattlePresentationInput } from "../../battle/ports/index.ts";
   import {
     DeckSelectScreen,
+    type AcquireDeckImage,
     type DecklistRow,
     type DecklistView,
     type OpponentView,
@@ -13,8 +14,13 @@
     catalogByCode,
     type PinnedDeckRuleset,
   } from "../../decks/validation/index.ts";
+  import type { CardImageSource } from "../../cards/images/index.ts";
+  import { cardCode } from "../../cards/index.ts";
   import { CARD_FRAME_COLORS, cardFrameOf } from "../../cards/index.ts";
-  import { croppedCardImageUrl } from "../cards/deck-cover.ts";
+  import {
+    croppedCardImageUrl,
+    deckCoverCardCode,
+  } from "../cards/deck-cover.ts";
   import type { DeckRepository } from "../../decks/repository/index.ts";
   import type {
     BattleDeckModule,
@@ -46,6 +52,7 @@
   import DomainLoadError from "./DomainLoadError.svelte";
 
   export let presentation: BattlePresentationInput;
+  export let imageSource: CardImageSource | null = null;
   export let ruleset: PinnedDeckRuleset;
   export let settings: ShellSettingsStore;
   export let createRepository: () => DeckRepository = () => {
@@ -417,8 +424,27 @@
     });
   }
 
-  function cardImageFor(code: number): string | null {
-    return catalog.get(code)?.imageUrl ?? null;
+  $: acquireCardImage = imageSource === null ? null : cardResolver(imageSource);
+  $: acquireCover =
+    imageSource === null ? null : coverResolver(imageSource, decks);
+  function cardResolver(source: CardImageSource): AcquireDeckImage<number> {
+    return (code, signal) => source.acquire(cardCode(code), "full", signal);
+  }
+  function coverResolver(
+    source: CardImageSource,
+    listing: readonly SelectableDeck[],
+  ): AcquireDeckImage<string> {
+    return async (key, signal) => {
+      const deck = listing.find((candidate) => candidate.key === key);
+      if (deck === undefined) return null;
+      const code = deckCoverCardCode({
+        ...deck.lists,
+        illustrationCardCode: null,
+      });
+      return code === null
+        ? null
+        : await source.acquire(cardCode(code), "cropped", signal);
+    };
   }
 
   function start(): void {
@@ -485,7 +511,8 @@
     {playerDeck}
     {seat}
     {decklistFor}
-    {cardImageFor}
+    {acquireCardImage}
+    {acquireCover}
     onseat={(next) => (seat = next)}
     onpickopponent={pickOpponent}
     onselect={select}

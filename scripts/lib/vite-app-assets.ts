@@ -4,7 +4,6 @@ import type { Plugin } from "vite";
 
 export interface AppBuildBoundary {
   base: string;
-  sqliteWasm: string | null;
 }
 
 /** App metadata only. Content acquisition is never a build prerequisite. */
@@ -23,12 +22,9 @@ export function appAssetsPlugin(
     name: "ygo-app-assets",
     configResolved(config) {
       boundary.base = config.base;
-      if (
-        config.command === "build" &&
-        !["private", "native"].includes(config.mode)
-      )
+      if (config.command === "build" && config.mode !== "native")
         throw new Error(
-          "Public deployment is not approved; use an explicit private or native build mode",
+          "Public deployment is not approved; use native build mode",
         );
     },
     configureServer(server) {
@@ -70,22 +66,10 @@ export function appAssetsPlugin(
       const wasm = Object.values(bundle).filter((output) =>
         output.fileName.endsWith(".wasm"),
       );
-      if (
-        wasm.length !== 1 ||
-        wasm[0]!.type !== "asset" ||
-        !Buffer.from(wasm[0]!.source).equals(
-          await readFile(
-            path.join(
-              projectRoot,
-              "node_modules/@sqlite.org/sqlite-wasm/dist/sqlite3.wasm",
-            ),
-          ),
-        )
-      )
+      if (wasm.length !== 0)
         throw new Error(
-          "App bundle must contain exactly the pinned SQLite executable WASM",
+          "Native frontend must not bundle browser SQLite or engine WASM; the native content reader owns them",
         );
-      boundary.sqliteWasm = wasm[0]!.fileName;
       for (const output of Object.values(bundle)) {
         if (
           /\.(?:sqlite|db|zip|jpg|jpeg|png|webp|mp3|mp4|ogg|webm|lua|cdb)$/i.test(
@@ -113,7 +97,6 @@ export function appAssetsPlugin(
       for (const [source, fileName] of [
         ["assets/app/app-icon.svg", "app-icon.svg"],
         ["node_modules/svelte/LICENSE.md", "licenses/svelte-MIT.txt"],
-        ["node_modules/idb/LICENSE", "licenses/idb-ISC.txt"],
         ["vendor/ocgcore-wasm/0.1.2/LICENSE", "licenses/ocgcore-wasm-MIT.txt"],
       ] as const)
         this.emitFile({

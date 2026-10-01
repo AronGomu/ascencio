@@ -1,7 +1,42 @@
 <script lang="ts">
-  import type { DeckTileModel } from "./deck-select-contracts.ts";
+  import { onDestroy } from "svelte";
+  import type {
+    AcquireDeckImage,
+    DeckImageLease,
+    DeckTileModel,
+  } from "./deck-select-contracts.ts";
 
   export let tile: DeckTileModel;
+  export let acquireCover: AcquireDeckImage<string> | null = null;
+  let coverLease: DeckImageLease | null = null;
+  let coverRequest: AbortController | null = null;
+  let coverToken = 0;
+  $: void loadCover(acquireCover, tile.key);
+  async function loadCover(
+    resolve: AcquireDeckImage<string> | null,
+    key: string,
+  ): Promise<void> {
+    const token = ++coverToken;
+    coverRequest?.abort();
+    coverLease?.release();
+    coverLease = null;
+    failedArtUrls = [];
+    if (resolve === null) return;
+    const request = new AbortController();
+    coverRequest = request;
+    try {
+      const lease = await resolve(key, request.signal);
+      if (token !== coverToken || request.signal.aborted) lease?.release();
+      else coverLease = lease;
+    } catch {
+      // Missing art leaves the deck playable with its existing placeholder.
+    }
+  }
+  onDestroy(() => {
+    coverToken += 1;
+    coverRequest?.abort();
+    coverLease?.release();
+  });
   /** Visual selection halo: null = none. Selected focus uses orange (--selected). */
   export let halo: "you" | "opponent" | "focus" | null = null;
   /** "Yours" tag while filling the opponent seat. */
@@ -49,14 +84,12 @@
   /* A deck that fails validation cannot be picked, so the press surface itself
      carries the fact — the dimming is the sighted echo, never the source. */
   let failedArtUrls: readonly string[] = [];
+  $: coverUrl = coverLease?.url ?? tile.coverImageUrl;
   $: fullCardFallbackUrl =
-    tile.coverImageUrl?.replace(
-      "/runtime/images-cropped/",
-      "/runtime/images/",
-    ) ?? null;
+    coverUrl?.replace("/runtime/images-cropped/", "/runtime/images/") ?? null;
   $: artUrl =
-    tile.coverImageUrl !== null && !failedArtUrls.includes(tile.coverImageUrl)
-      ? tile.coverImageUrl
+    coverUrl !== null && !failedArtUrls.includes(coverUrl)
+      ? coverUrl
       : fullCardFallbackUrl !== null &&
           !failedArtUrls.includes(fullCardFallbackUrl)
         ? fullCardFallbackUrl

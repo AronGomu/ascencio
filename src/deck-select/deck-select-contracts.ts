@@ -47,3 +47,13 @@ export interface OpponentView {
   /** Story: true → portrait not a control, deck card shows "🔒 Set by the story". */
   readonly locked: boolean;
 }
+
+/** Image ownership crosses the presentation boundary without a storage dependency. */
+export interface DeckImageLease {
+  readonly url: string;
+  release(): void;
+}
+export type AcquireDeckImage<Key> = (
+  key: Key,
+  signal: AbortSignal,
+) => Promise<DeckImageLease | null>;

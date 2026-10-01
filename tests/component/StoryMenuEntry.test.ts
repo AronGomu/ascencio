@@ -1,5 +1,6 @@
 import {
   semanticShellFixture,
+  semanticShellStartup,
   disposeSemanticShells,
 } from "../fixtures/semantic-shell.ts";
 import {
@@ -13,6 +14,7 @@ import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as coreGate from "../../src/shell/core/core-gate.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
 import { createShellStore } from "../../src/shell/shell-store.ts";
@@ -98,30 +100,14 @@ afterEach(async () => {
 
 describe("the main menu's story entries", () => {
   it("keeps quota-refused progress mounted through the production session wrapper and retries", async () => {
-    const props = storyShellProps();
-    const write = vi.spyOn(props.saves, "write").mockResolvedValueOnce({
-      kind: "failed",
-      reason: "quota",
-    });
-    const close = vi.fn(async () => {});
-    const application = {
-      acquire: vi.fn(async () => ({
-        generation: 1,
-        gameplay: READY_CORE_GATE.gameplay,
-        storyRelease: props.storyRelease,
-        storyCards: props.storyCards,
-        storyMedia: {
-          acquireMap: async () => null,
-          acquireSetImage: async () => null,
-        },
-        images: { acquire: async () => null },
-        saves: props.saves,
-        close,
-      })),
-      clear: vi.fn(),
-      close: vi.fn(),
-      subscribe: () => () => {},
-    };
+    const props = storyAppProps();
+    const write = vi
+      .spyOn(props.saves, "write")
+      .mockResolvedValueOnce({ kind: "failed", reason: "quota" });
+    const startup = await semanticShellStartup(undefined, props.saves);
+    vi.spyOn(coreGate, "loadCoreStartup").mockResolvedValue(startup);
+    const application = startup.application!;
+    const clear = vi.spyOn(application, "clear");
     const store = createShellStore("#/story", (next) => {
       hash = next;
     });
@@ -129,12 +115,12 @@ describe("the main menu's story entries", () => {
       store,
       loaders,
       application,
-      initialCoreGate: READY_CORE_GATE,
+      initialCoreGate: null,
     });
     await fireEvent.click(await waitForCy("story-narrative-dialogue"));
     const beat = cy("story-narrative-cursor")!.textContent;
     const mountedStory = cy("story-app");
-    const clearedBeforeSave = application.clear.mock.calls.length;
+    const clearedBeforeSave = clear.mock.calls.length;
     await fireEvent.click(await waitForCy("story-narrative-menu"));
     await fireEvent.click(await waitForCy("story-pause-save"));
     await fireEvent.click(await waitForCy("story-save-load-overwrite-confirm"));

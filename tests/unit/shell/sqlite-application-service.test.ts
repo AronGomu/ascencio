@@ -1,8 +1,4 @@
-import { IDBFactory } from "fake-indexeddb";
 import { createApplicationAdmission } from "../../../src/shell/application/application-admission.ts";
-import { createAppUpdateController } from "../../../src/shell/application/app-update-controller.ts";
-import { readCoreApproval } from "../../../src/shell/application/core-update-approval.ts";
-import { testLocks } from "../../fixtures/application-locks.ts";
 import { JsonUserDataStore } from "../../../src/storage/json/user-data-store.ts";
 import { createSqliteStoryRepository } from "../../../src/story/saves/index.ts";
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
@@ -529,71 +525,7 @@ describe("SQLite Shell application composition", () => {
   });
 });
 
-describe("root update and session admission", () => {
-  it("rejects session after prepare starts; precommit cancel immediately restores navigation without orphan lock", async () => {
-    const admission = createApplicationAdmission();
-    const f = harness();
-    const service = createSqliteApplicationService({
-      admission,
-      storage: f.storage,
-      users: users(),
-      flushUserWrites: async () => ok(undefined),
-      loadFreeplayInputs: async () => inputs(),
-      closeFreeplayInputs: () => undefined,
-    });
-    const entered = Promise.withResolvers<void>();
-    const prepared = Promise.withResolvers<() => Promise<void>>();
-    const update = vi.fn(async () => undefined);
-    const factory = new IDBFactory();
-    const locks = testLocks();
-    const candidate = {
-      schemaVersion: 1,
-      buildId: "build-b",
-      coreContentApiVersion: 1,
-    } as const;
-    const updater = createAppUpdateController({
-      admission,
-      factory,
-      locks,
-      currentBuildId: "build-a",
-      appBaseUrl: "https://app.test/",
-      fetch: async () => new Response(JSON.stringify(candidate)),
-      isSessionActive: () => service.sessionActive(),
-      prepareServiceWorkerUpdate: async () => {
-        entered.resolve();
-        return prepared.promise;
-      },
-    });
-    await updater.check();
-    const approving = updater.approve(candidate);
-    await entered.promise;
-    await expect(
-      service.application.acquire("freeplay", new AbortController().signal),
-    ).rejects.toThrow("APP_SESSION_ACTIVE");
-    expect(f.storage.packages.acquireSession).not.toHaveBeenCalled();
-    updater.cancel();
-    const acquiring = service.application.acquire(
-      "freeplay",
-      new AbortController().signal,
-    );
-    await approving;
-    const session = await acquiring;
-    await locks.request(
-      "ygo-application-lifecycle-v1",
-      { mode: "exclusive", ifAvailable: true },
-      (lock) => {
-        expect(lock).not.toBeNull();
-      },
-    );
-    prepared.resolve(update);
-    await Promise.resolve();
-    expect(await readCoreApproval(factory)).toBeNull();
-    expect(update).not.toHaveBeenCalled();
-    await session.close();
-    await updater.dispose();
-    await service.dispose();
-  });
-
+describe("root session admission", () => {
   it("session gate spans acquisition, active inputs, flush, failed close; rejected acquire releases gate", async () => {
     const admission = createApplicationAdmission();
     const f = harness();
@@ -611,19 +543,19 @@ describe("root update and session admission", () => {
       "freeplay",
       new AbortController().signal,
     );
-    expect(admission.enter("approval")).toBeNull();
+    expect(admission.enter("restore")).toBeNull();
     expect(admission.enter("restore")).toBeNull();
     loaded.resolve(inputs());
     const session = await started;
-    expect(admission.enter("approval")).toBeNull();
+    expect(admission.enter("restore")).toBeNull();
     const closing = session.close();
-    expect(admission.enter("approval")).toBeNull();
+    expect(admission.enter("restore")).toBeNull();
     flushing.resolve({
       kind: "failed",
       error: { code: "STORAGE_UNAVAILABLE" },
     });
     await expect(closing).rejects.toThrow("STORAGE_UNAVAILABLE");
-    const released = admission.enter("approval");
+    const released = admission.enter("restore");
     expect(released).not.toBeNull();
     released!();
     const abort = new AbortController();
@@ -631,7 +563,7 @@ describe("root update and session admission", () => {
     await expect(
       service.application.acquire("freeplay", abort.signal),
     ).rejects.toMatchObject({ name: "AbortError" });
-    const afterFailure = admission.enter("approval");
+    const afterFailure = admission.enter("restore");
     expect(afterFailure).not.toBeNull();
     afterFailure!();
     await service.dispose();

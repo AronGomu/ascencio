@@ -86,18 +86,22 @@ it("retired-progressive-browser: Story public migration capability is gone", () 
   expect(existsSync("src/story/saves/story-migration.ts")).toBe(false);
 });
 
-it("retired hosted tooling leaves SQLite/source commands and operational idb", () => {
+it("native runtime retires browser SQLite and keeps source commands", () => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8"));
   for (const name of [
     "@aws-sdk/client-s3",
     "@aws-sdk/lib-storage",
     "@zip.js/zip.js",
     "wrangler",
+    "@sqlite.org/sqlite-wasm",
+    "idb",
+    "vite-plugin-pwa",
+    "workbox-precaching",
   ])
     expect({ ...pkg.dependencies, ...pkg.devDependencies }).not.toHaveProperty(
       name,
     );
-  for (const name of ["@sqlite.org/sqlite-wasm", "@noble/hashes", "idb"])
+  for (const name of ["@noble/hashes", "@tauri-apps/api"])
     expect(pkg.dependencies).toHaveProperty(name);
   for (const name of [
     "assets:setup",

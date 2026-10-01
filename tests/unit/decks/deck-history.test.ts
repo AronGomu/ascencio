@@ -19,9 +19,9 @@ describe("bounded deck history", () => {
       reason: "restore",
     });
     expect(history.undo).toHaveLength(1);
-    const undone = undoDeckUpdate(history)!;
+    const undone = undoDeckUpdate(history, after)!;
     expect(undone.cards).toEqual(before);
-    expect(redoDeckUpdate(undone.history)?.cards).toEqual(after);
+    expect(redoDeckUpdate(undone.history, before)?.cards).toEqual(after);
   });
 
   it("retains exactly 50 card updates with monotonic sequence", () => {

@@ -26,9 +26,9 @@ Applies to Claude Code, Codex, and pi; each has the `graphify` skill installed g
 
 ## Purpose and status
 
-YGO Story Duel Simulator is a browser-first, offline Yu-Gi-Oh! duel client. One shell exposes Duel Simulator, Deck Editor, Visual Novel, and manual content lifecycle. Project Ignis `ygopro-core` is sole authority for rules, legal actions, effects, and results.
+YGO Story Duel Simulator is an offline Tauri desktop/mobile Yu-Gi-Oh! duel client. One shell exposes Duel Simulator, Deck Editor, Visual Novel, and manual content lifecycle. Project Ignis `ygopro-core` is sole authority for rules, legal actions, effects, and results.
 
-Current content uses user-selected immutable SQLite packages in OPFS. App bundle is content-free except SQLite executable; package sources/output never enter `generated/build/app/` or precache. Mutable user data uses `user-data.json` in native app data and `ascencio:user-data:v1` in browser localStorage; app never migrates or deletes legacy stores.
+Current content uses verified immutable packages in the native app-data directory, read by Rust. Freeplay and Chapter 1 ship as default resources. Mutable data uses atomic native `user-data.json`; legacy stores remain untouched. Browser deployment, OPFS, SQLite WASM, PWA updates, localStorage saves and IndexedDB diagnostics are retired; see ADR-103. Content packages still use the existing native SQLite reader, pending a separate filesystem-media migration.
 
 The three-UI restructure (plan `PLAN_2026_08_14_three_ui_restructure`) is complete as of 2026-08-15 (commit tagged `restructure-complete`). All three domains — Duel Simulator, Deck Editor, Visual Novel — are live under one shell, reachable through `index.html`. Development runs on a single trunk; the per-domain branch and worktree topology is retired, see [`docs/ADR/045_ADR_single_branch_trunk_development.md`](docs/ADR/045_ADR_single_branch_trunk_development.md). Build budgets are machine-enforced per domain via `npm run build:verify`.
 
@@ -38,7 +38,7 @@ Repo keeps one single long-lived branch: `main`. Every change commits there, wha
 
 Module boundaries are enforced by lint and tests, not by branches. A cross-domain feature is one commit on `main`, reviewed as one thing; the checks in `## Boundary rules` below are what stops it from reaching past a public entry.
 
-The private browser MVP baseline and semantic Svelte DOM duel-field migration are complete. Product browser = Chromium PWA family. Field acceptance uses automated Chromium evidence only.
+The private browser MVP baseline and semantic Svelte DOM duel-field migration are complete. Product targets Tauri desktop/mobile webviews. Field verification includes Chromium and WebKit, with physical mobile-device acceptance still separate.
 
 ## Documentation routing
 
@@ -47,6 +47,7 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 - Use [`docs/story/README.md`](docs/story/README.md) as the narrative canon router for any story, character, or chapter question; runtime content under `src/story/content/` derives from it and never contradicts it (ADR-053).
 - Use [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) as completed semantic DOM-field migration history.
 - Use [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) as completed MVP/Phaser baseline history.
+- R0. Use [`docs/ADR/103_ADR_tauri_only_runtime_and_asset_ui.md`](docs/ADR/103_ADR_tauri_only_runtime_and_asset_ui.md) for current platform/runtime and asset presentation boundaries. Browser-specific decisions in ADR-099/100/101 are historical.
 - R1. Use [`docs/ADR/099_ADR_completed_manual_sqlite_cutover.md`](docs/ADR/099_ADR_completed_manual_sqlite_cutover.md) plus [`docs/architecture/04-data/manual-sqlite-content-import.md`](docs/architecture/04-data/manual-sqlite-content-import.md) for current manual package/runtime/user-data architecture.
 - R3. Use [`docs/assets/content-modules.md`](docs/assets/content-modules.md) and [`docs/ADR/102_ADR_content_modules_and_campaign_facts.md`](docs/ADR/102_ADR_content_modules_and_campaign_facts.md) for card/chapter composition and save-based prerequisites; ADR-101 owns JSON user persistence.
 - R2. Use [`docs/assets/manual-sqlite-setup.md`](docs/assets/manual-sqlite-setup.md) for current owner setup/release gates; use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for retained source acquisition/verification.
@@ -83,7 +84,7 @@ Commit a plan before retiring it and that SHA stays a real address: `git show <s
 | Rules       | Vendored `ocgcore-wasm@0.1.2` / Project Ignis `ygopro-core`                                             | Authoritative duel engine                                                                                                   |
 | Isolation   | Dedicated Web Worker                                                                                    | Sole owner of WASM, protocol, scripts, handles, and state projection                                                        |
 | Data        | BabelCDB, CardScripts, Project Ignis strings                                                            | Versioned card/effect/protocol snapshot                                                                                     |
-| Persistence | SQLite WASM + OPFS for content; JSON/localStorage for saves; retained `idb`/Cache Storage operationally | Immutable content registry/packages, JSON/localStorage user records; app-update approval/diagnostics + app shell cache only |
+| Persistence | Native Rust content reader; atomic JSON for saves | Immutable native content modules; JSON user records; downloadable diagnostics |
 | Tests       | Node test runner, Vitest, Testing Library, Playwright                                                   | Unit, component, integration, and browser coverage                                                                          |
 | Quality     | TypeScript, ESLint, Prettier, CI                                                                        | Types, lint, format, compatibility, assets, and build gates                                                                 |
 
@@ -121,8 +122,8 @@ What the rules encode:
 - Canvas may be future pointer-transparent decoration only after separate measured ADR.
 - Synchronous core callbacks use preloaded memory and perform no async I/O.
 - C1. Frozen engine compatibility and Project Ignis content are validated as immutable SQLite package stack; registry generation commit owns activation.
-- C2. App build/cache contains exact SQLite executable, never OCG WASM, package DBs, card/chapter media, raw content, ZIP/progressive/R2 metadata.
-- C3. Package lifecycle never reads/writes saves. User data lives in native `user-data.json` or browser localStorage; legacy stores remain untouched/unread; no migration from legacy stores. Campaign facts remain in JSON saves when modules are removed.
+- C2. Webview build contains no SQLite executable, OCG WASM, package DBs or card/chapter media. Tauri resources own verified content; app-data owns installed modules.
+- C3. Package lifecycle never reads/writes saves. User data lives in native `user-data.json`; legacy stores remain untouched/unread; no migration from legacy stores. Campaign facts remain in JSON saves when modules are removed.
 - Production duels shuffle normally; deterministic inputs are test/diagnostic-only.
 
 ## File design policy
@@ -160,7 +161,7 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 │   └── archive/                       # Superseded historical context
 ├── package.json
 ├── tsconfig.json
-├── index.html                         # Browser entry document
+├── index.html                         # Tauri webview entry document
 ├── vite.config.ts                     # Vite/Svelte/Worker build config
 ├── src/
 │   ├── main.ts
@@ -176,7 +177,7 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 │   ├── decks/                         # Shared deck-data library
 │   ├── deck-editor/                   # Deck Editor domain
 │   ├── story/                         # Visual Novel domain
-│   ├── storage/                       # SQLite contracts/schema/client/Worker/runtime
+│   ├── storage/                       # Native content contracts/client, schema and producer/test helpers
 │   └── styles/
 ├── scripts/                           # Asset acquisition/verification tools
 │   └── lib/                           # Focused pipeline modules
@@ -184,7 +185,7 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 ├── e2e/                               # All Playwright browser suites
 │   ├── e2e-global/                    # Production-browser application tests
 │   ├── e2e-acceptance/                # Isolated visual acceptance harness tests
-│   └── e2e-core/                      # PWA/core lifecycle browser tests
+│   └── e2e-native/                    # Native IPC/webview integration tests
 ├── vendor/ocgcore-wasm/0.1.2/         # Checked-in verified engine
 ├── public/                            # Retained source/history; Vite publicDir is disabled
 ├── generated/                         # Ignored acquisition, build, package, and test outputs

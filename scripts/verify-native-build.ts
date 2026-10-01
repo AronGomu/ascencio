@@ -29,24 +29,12 @@ for (const forbidden of [
   await assertMissing(forbidden);
 const inventory = await findFiles(outputRoot);
 const wasmFiles = inventory.filter((file) => file.endsWith(".wasm"));
-if (
-  wasmFiles.length !== 1 ||
-  !/^sqlite3-[A-Za-z0-9_-]+\.wasm$/.test(path.basename(wasmFiles[0]!))
-)
-  throw new Error("App build must contain exactly the SQLite executable WASM");
-const sqliteWasm = wasmFiles[0]!;
-if (
-  sha256(await readFile(sqliteWasm)) !==
-  sha256(
-    await readFile(
-      path.join(
-        projectRoot,
-        "node_modules/@sqlite.org/sqlite-wasm/dist/sqlite3.wasm",
-      ),
-    ),
-  )
-)
-  throw new Error("App WASM differs from pinned SQLite executable");
+if (wasmFiles.length !== 0)
+  throw new Error(
+    "Native frontend must not ship browser SQLite or engine WASM",
+  );
+for (const retired of ["service-worker.js", "manifest.webmanifest"])
+  await assertMissing(retired);
 for (const file of inventory)
   if (
     /\.(?:sqlite|db|zip|jpg|jpeg|png|webp|mp3|mp4|ogg|webm|lua|cdb)$/i.test(
@@ -57,11 +45,6 @@ for (const file of inventory)
     throw new Error(
       `App build contains forbidden content: ${path.relative(outputRoot, file)}`,
     );
-const sw = await readFile(path.join(outputRoot, "service-worker.js"), "utf8");
-const sqliteUrl = `${process.env.BASE_PATH ?? "/"}${path.relative(outputRoot, sqliteWasm).replaceAll("\\", "/")}`;
-if (!sw.includes(`"url":"${sqliteUrl}"`))
-  throw new Error("SQLite executable absent from shell precache");
-
 const privateDeploymentMarker = await readFile(
   path.join(outputRoot, "PRIVATE_DEPLOYMENT_ONLY.txt"),
   "utf8",
@@ -79,7 +62,7 @@ const synchronousEngineChunks = javaScriptFiles.filter((file) =>
 );
 if (jspiChunks.length > 0 || synchronousEngineChunks.length !== 1)
   throw new Error(
-    `Browser build emitted an unexpected engine chunk set: ${[
+    `Native frontend emitted an unexpected engine chunk set: ${[
       ...jspiChunks,
       ...synchronousEngineChunks,
     ]
@@ -87,12 +70,12 @@ if (jspiChunks.length > 0 || synchronousEngineChunks.length !== 1)
       .join(", ")}`,
   );
 if ((await stat(synchronousEngineChunks[0]!)).size > 100_000)
-  throw new Error("Browser build emitted the embedded-WASM fallback chunk");
+  throw new Error("Native frontend emitted the embedded-WASM fallback chunk");
 const workerFile = javaScriptFiles.find((file) =>
   path.basename(file).startsWith("duel.worker-browser-"),
 );
 if (workerFile === undefined)
-  throw new Error("Browser build did not emit the dedicated duel Worker");
+  throw new Error("Native frontend did not emit the dedicated duel Worker");
 
 const forbidden = [
   "node:fs",
@@ -103,6 +86,11 @@ const forbidden = [
   "node:module",
   "node:worker_threads",
   "create-node-runtime",
+  "navigator.storage",
+  "navigator.serviceWorker",
+  "indexedDB.open",
+  "sqlite3-opfs",
+  "ascencio:user-data:v1",
   "duel.worker-node",
   "mvp-preset-node",
   "node_modules/ocgcore-wasm",
@@ -115,7 +103,7 @@ for (const file of javaScriptFiles) {
   const match = forbidden.find((value) => source.includes(value));
   if (match !== undefined)
     throw new Error(
-      `Browser bundle ${path.relative(outputRoot, file)} contains forbidden Node/engine resolution marker: ${match}`,
+      `Native frontend bundle ${path.relative(outputRoot, file)} contains forbidden Node/engine resolution marker: ${match}`,
     );
 }
 
@@ -125,8 +113,7 @@ console.log(
     {
       status: "ok",
       mode: "app-only",
-      sqliteUrl,
-      sqliteWasmBytes: (await stat(sqliteWasm)).size,
+      wasmBytes: 0,
       worker: path.basename(workerFile),
       chunkBytes: sizeSummary,
     },
@@ -141,7 +128,7 @@ async function verifySingleHtmlEntry(): Promise<void> {
     .filter((file) => file.endsWith(".html"));
   if (documents.join("\n") !== "index.html")
     throw new Error(
-      `Browser build must ship exactly one entry document: ${documents.join(", ")}`,
+      `Native frontend must ship exactly one entry document: ${documents.join(", ")}`,
     );
 }
 
@@ -156,7 +143,7 @@ async function verifyNoRemovedPhaserResidue(): Promise<void> {
     packageJson.dependencies?.phaser !== undefined ||
     packageJson.devDependencies?.phaser !== undefined
   )
-    throw new Error("Browser build must not depend on Phaser");
+    throw new Error("Native frontend must not depend on Phaser");
   const forbiddenMarkers = [
     "node_modules/phaser",
     "phaser-MIT",
@@ -172,7 +159,7 @@ async function verifyNoRemovedPhaserResidue(): Promise<void> {
       (value) => relative.includes(value) || source.includes(value),
     );
     if (marker !== undefined)
-      throw new Error(`Browser build retains Phaser artifact: ${marker}`);
+      throw new Error(`Native frontend retains Phaser artifact: ${marker}`);
   }
 }
 
@@ -188,14 +175,14 @@ async function verifyNoAcceptanceHarnessResidue(): Promise<void> {
     const relative = path.relative(outputRoot, file).replaceAll("\\", "/");
     if (forbiddenFiles.has(relative))
       throw new Error(
-        `Browser build contains acceptance-only file: ${relative}`,
+        `Native frontend contains acceptance-only file: ${relative}`,
       );
     if (!/\.(?:html|js|css)$/.test(relative)) continue;
     const source = await readFile(file, "utf8");
     const marker = forbiddenMarkers.find((value) => source.includes(value));
     if (marker !== undefined)
       throw new Error(
-        `Browser build ${relative} contains acceptance-only marker: ${marker}`,
+        `Native frontend ${relative} contains acceptance-only marker: ${marker}`,
       );
   }
 }
@@ -203,7 +190,6 @@ async function verifyNoAcceptanceHarnessResidue(): Promise<void> {
 async function verifyThirdPartyLicenses(): Promise<void> {
   const licenses = [
     ["licenses/svelte-MIT.txt", "node_modules/svelte/LICENSE.md"],
-    ["licenses/idb-ISC.txt", "node_modules/idb/LICENSE"],
     ["licenses/ocgcore-wasm-MIT.txt", "vendor/ocgcore-wasm/0.1.2/LICENSE"],
   ] as const;
   for (const [packaged, source] of licenses) {
@@ -212,7 +198,9 @@ async function verifyThirdPartyLicenses(): Promise<void> {
       readFile(path.join(projectRoot, source)),
     ]);
     if (left.byteLength !== right.byteLength || sha256(left) !== sha256(right))
-      throw new Error(`Browser build license differs from source: ${packaged}`);
+      throw new Error(
+        `Native frontend license differs from source: ${packaged}`,
+      );
   }
 }
 
@@ -226,22 +214,13 @@ async function verifySizeBudgets(
       sizes.set(file, (await stat(file)).size);
     }),
   );
-  const sqliteWorkers = javaScriptFiles.filter((file) =>
-    path.basename(file).startsWith("sqlite-worker-"),
-  );
-  if (sqliteWorkers.length !== 1)
-    throw new Error("App build must emit one SQLite Worker");
-  const sqliteBytes = sizes.get(sqliteWorkers[0]!) ?? 0;
-  const sqliteExecutableFiles = javaScriptFiles.filter((file) =>
-    /^sqlite(?:3)?-/.test(path.basename(file)),
-  );
-  const sqliteExecutableBytes = sqliteExecutableFiles.reduce(
-    (total, file) => total + (sizes.get(file) ?? 0),
-    0,
-  );
-  const routableFiles = javaScriptFiles.filter(
-    (file) => file !== workerFile && !sqliteExecutableFiles.includes(file),
-  );
+  if (
+    javaScriptFiles.some((file) =>
+      /^sqlite-worker-|^sqlite3-/.test(path.basename(file)),
+    )
+  )
+    throw new Error("Native frontend must not emit SQLite workers");
+  const routableFiles = javaScriptFiles.filter((file) => file !== workerFile);
   const shellFiles = await staticHtmlScriptClosure(
     outputRoot,
     "index.html",
@@ -260,12 +239,6 @@ async function verifySizeBudgets(
   const budgets: ReadonlyArray<readonly [string, number, number]> = [
     ["shell initial JavaScript", shellBytes, 115_000],
     ["Duel Worker JavaScript", sizes.get(workerFile) ?? 0, 200_000],
-    // SQLite executable is separate from unchanged shell/domain ceilings.
-    // 297,367 measured -> ceil(bytes / 25,000) * 25,000 * 1.15.
-    ["SQLite Worker JavaScript", sqliteBytes, 345_000],
-    // Include SQLite package auxiliary Workers too: 541,826 measured, same rounding.
-    ["SQLite executable JavaScript", sqliteExecutableBytes, 632_500],
-    ["SQLite executable WASM", (await stat(sqliteWasm)).size, 1_000_000],
     ...domainReports.map(
       ({ domain, bytes }) =>
         [
@@ -287,8 +260,6 @@ async function verifySizeBudgets(
   }
   return {
     shell: shellBytes,
-    sqliteWorker: sqliteBytes,
-    sqliteExecutableJs: sqliteExecutableBytes,
     worker: sizes.get(workerFile) ?? 0,
     ...Object.fromEntries(
       domainReports.map(({ domain, bytes }) => [domain, bytes]),

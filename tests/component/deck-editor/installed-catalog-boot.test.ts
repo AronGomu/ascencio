@@ -50,12 +50,13 @@ describe("deck editor catalog boot", () => {
       }),
     };
     const { rerender, unmount } = render(DeckEditorApp, {
-      catalogInput: { ...catalogInput, images },
+      props: {
+        catalogInput: { ...catalogInput, images },
+        context: { kind: "free-play", createRepository: () => repository },
+      },
     });
     await waitFor(() => expect(query("deck-library")).not.toBeNull());
-    const repo = await IndexedDbDeckRepository.open();
-    const decks = await repo.list();
-    repo.close();
+    const decks = await repository.list();
     await rerender({ deckId: decks[0]!.id });
     await waitFor(() =>
       expect(

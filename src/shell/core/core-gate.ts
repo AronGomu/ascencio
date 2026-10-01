@@ -1,5 +1,4 @@
 import type { ShellApplication } from "./sqlite-sessions.ts";
-import type { AppUpdateController } from "../application/app-update-controller.ts";
 import type { SqliteApplicationStatus } from "../application/sqlite-application-service.ts";
 import type { PackageId } from "../../storage/index.ts";
 export { loadCoreStartup } from "../application/core-startup.ts";
@@ -22,7 +21,6 @@ export type CoreGate =
 
 export interface CoreStartup {
   readonly application?: ShellApplication;
-  readonly appUpdates?: AppUpdateController;
   readonly userPersistence?: UserPersistenceOwner;
   readonly applicationStatus?: SqliteApplicationStatus;
   readonly subscribeApplicationStatus?: (
@@ -31,11 +29,6 @@ export interface CoreStartup {
   readonly dispose?: () => Promise<void>;
   readonly gate: CoreGate;
 }
-
-export type CoreFetch = (
-  input: string,
-  init?: RequestInit,
-) => Promise<Response>;
 
 export function coreGateMessage(gate: CoreGate): string {
   if (gate.kind === "checking") return "Checking installed content…";
@@ -49,7 +42,7 @@ export function coreGateMessage(gate: CoreGate): string {
         ? `Free Play needs these packages in order: ${gate.missing.join(", ")}.`
         : "Content is required before Free Play can start.";
     case "storage-unavailable":
-      return "Browser storage is unavailable. Content cannot be verified.";
+      return "Native storage is unavailable. Content cannot be verified.";
     case "content-invalid":
       return "Content configuration is invalid. Gameplay remains locked.";
   }

@@ -76,7 +76,6 @@
     type StoryEntryIntent,
   } from "./shell-store.ts";
   import { computeStageBox, type StageBox } from "./stage-layout.ts";
-  import type { AppUpdateController } from "./application/app-update-controller.ts";
   import {
     createManualContentController,
     type ManualContentController,
@@ -193,7 +192,6 @@
   }
   export let initialCoreGate: CoreGate | null = null;
   export let application: ShellApplication | null = null;
-  export let appUpdates: AppUpdateController | null = null;
   let domainSession: SessionByMode[keyof SessionByMode] | null = null;
   let freeplayInputs: FreeplayInputs | null = null;
   let domainReady = false;
@@ -293,8 +291,6 @@
     const requestedMode = (requested = requestedRoute) =>
       destroyed ||
       manualContent?.view.navigationBlocked === true ||
-      appUpdates?.view.phase === "approving" ||
-      appUpdates?.view.phase === "committing" ||
       recovering ||
       application !== app ||
       coreGate.kind !== "ready"
@@ -664,19 +660,12 @@
     // Covers hash/back/keyboard/programmatic routes before Story reset or mode
     // acquisition; button disabling alone cannot protect a destructive restore.
     if (
-      (manualContent?.view.navigationBlocked === true ||
-        appUpdates?.view.phase === "committing") &&
+      manualContent?.view.navigationBlocked === true &&
       state.route.kind !== "install-content"
     ) {
       store.navigate(INSTALL_CONTENT_ROUTE, { replace: true });
       return;
     }
-    if (
-      state.route.kind !== "install-content" &&
-      (appUpdates?.view.phase === "approving" ||
-        appUpdates?.view.phase === "checking")
-    )
-      appUpdates.cancel();
     if (state.storyEntryIntent === "new" && storyEntryIntent !== "new") {
       // Invalidate synchronously; observe and track cleanup without delaying
       // publication of the newest route/entry behind an older async callback.
@@ -941,15 +930,7 @@
   onMount(() => {
     let mounted = true;
     if (initialCoreGate === null) {
-      const appBaseUrl = new URL(
-        import.meta.env.BASE_URL,
-        globalThis.location.origin,
-      ).href;
-      void loadCoreStartup(
-        (input, init) => globalThis.fetch(input, init),
-        appBaseUrl,
-        globalThis.indexedDB,
-      )
+      void loadCoreStartup()
         .then(async (startup) => {
           if (!mounted) {
             if (startup.dispose !== undefined) await startup.dispose();
@@ -960,7 +941,6 @@
             return;
           }
           application = startup.application ?? null;
-          appUpdates = startup.appUpdates ?? null;
           disposeRoot = startup.dispose ?? null;
           applicationStatus = startup.applicationStatus ?? { warnings: [] };
           unsubscribeApplicationStatus?.();
@@ -999,11 +979,7 @@
     const syncFromLocation = () => store.syncFromHash(globalThis.location.hash);
     globalThis.addEventListener("hashchange", syncFromLocation);
     const protectRestore = (event: BeforeUnloadEvent): void => {
-      if (
-        manualContent?.view.navigationBlocked !== true &&
-        appUpdates?.view.phase !== "committing"
-      )
-        return;
+      if (manualContent?.view.navigationBlocked !== true) return;
       event.preventDefault();
       event.returnValue = "";
     };
@@ -1030,7 +1006,6 @@
       adminSeedAbort?.abort();
       unsubscribeApplication?.();
       unsubscribeApplicationStatus?.();
-      const updateDisposal = appUpdates?.dispose();
       const manualDisposal = manualContent?.dispose();
       globalThis.removeEventListener("unhandledrejection", asyncFailure);
       globalThis.removeEventListener("error", syncFailure);
@@ -1040,7 +1015,6 @@
           // The seed action owns its short-lived session until flush/release.
           // Its caller reports failure; teardown still must drain its settlement.
           await Promise.allSettled(adminSeed === null ? [] : [adminSeed]);
-          await updateDisposal;
           await manualDisposal;
           await handoff.reset().catch(domainError);
           if (disposeRoot !== null) await disposeRoot();
@@ -1128,7 +1102,6 @@
             <svelte:component
               this={module.default}
               gate={coreGate}
-              {appUpdates}
               manual={manualContent}
               storageFailure={userPersistenceError === null
                 ? null
@@ -1336,6 +1309,7 @@
               <svelte:component
                 this={module.default}
                 presentation={freeplayPresentation}
+                imageSource={cardImages}
                 ruleset={freeplayInputs?.editor.ruleset ??
                   gameplay!.editor().ruleset}
                 settings={activeSettings}

@@ -5,12 +5,10 @@ import type { ShellGameplay } from "../core/installed-inputs.ts";
 import type { ShellApplication } from "../core/shell-application.ts";
 import { emptyDeckHistory } from "../../decks/editing/index.ts";
 
-const SNAPSHOT_DATABASE_NAME = "ygo-story-duel";
-
 export interface AdminStorageTarget {
   readonly id: string;
   readonly label: string;
-  readonly kind: "user" | "indexeddb";
+  readonly kind: "user";
   readonly name: string;
   readonly namespaces?: readonly UserNamespace[];
 }
@@ -37,12 +35,6 @@ export const ADMIN_STORAGE_TARGETS: readonly AdminStorageTarget[] =
       kind: "user",
       name: "user-data.json",
       namespaces: ["preferences", "story-read-log"],
-    } as const),
-    Object.freeze({
-      id: "duel-snapshots",
-      label: "Operational duel diagnostics",
-      kind: "indexeddb",
-      name: SNAPSHOT_DATABASE_NAME,
     } as const),
   ]);
 
@@ -73,27 +65,6 @@ export const ADMIN_TEST_DECK_NAME = "Admin test deck";
 
 export type AdminResetResult =
   { readonly outcome: "deleted" } | { readonly outcome: "blocked" };
-
-export async function resetOperationalStorageTarget(
-  target: AdminStorageTarget,
-  factory: IDBFactory,
-): Promise<AdminResetResult> {
-  if (target.kind !== "indexeddb")
-    throw new Error(
-      `User namespace reset requires injected user data capability`,
-    );
-  return await new Promise<AdminResetResult>((resolve, reject) => {
-    const request = factory.deleteDatabase(target.name);
-    request.onsuccess = () => resolve({ outcome: "deleted" });
-    request.onblocked = () => resolve({ outcome: "blocked" });
-    request.onerror = () =>
-      reject(
-        new Error(`Could not delete database ${target.name}`, {
-          cause: request.error,
-        }),
-      );
-  });
-}
 
 export async function seedAdminTestDeck(
   application: ShellApplication,

@@ -1,15 +1,12 @@
 import { PROTOTYPE_RULESET } from "../../src/decks/validation/index.ts";
 import type { ShellApplication } from "../../src/shell/core/shell-application.ts";
 import { installedGameplayFixture } from "../fixtures/installed-gameplay.ts";
-import "fake-indexeddb/auto";
-import { openDB } from "idb";
 import { describe, expect, it, vi } from "vitest";
 import {
   ADMIN_ROUTES,
   ADMIN_STORAGE_TARGETS,
   ADMIN_TEST_DECK_ID,
   buildAdminTestDeck,
-  resetOperationalStorageTarget,
   type AdminStorageTarget,
 } from "../../src/shell/admin/admin-actions.ts";
 
@@ -49,40 +46,6 @@ describe("admin storage targets", () => {
       "preferences",
       "story-read-log",
     ]);
-  });
-
-  it("classifies duel snapshots as operational IndexedDB", () => {
-    expect(target("duel-snapshots")).toMatchObject({
-      kind: "indexeddb",
-      name: "ygo-story-duel",
-    });
-  });
-});
-
-describe("resetOperationalStorageTarget", () => {
-  it("deletes an operational IndexedDB database", async () => {
-    const name = `admin-reset-${crypto.randomUUID()}`;
-    const database = await openDB(name, 1, {
-      upgrade(db) {
-        db.createObjectStore("rows");
-      },
-    });
-    database.close();
-
-    await expect(
-      resetOperationalStorageTarget(
-        { id: "probe", label: "Probe", kind: "indexeddb", name },
-        indexedDB,
-      ),
-    ).resolves.toEqual({ outcome: "deleted" });
-  });
-
-  it("rejects user namespace targets without injected user data reset", async () => {
-    await expect(
-      resetOperationalStorageTarget(target("decks"), indexedDB),
-    ).rejects.toThrow(
-      "User namespace reset requires injected user data capability",
-    );
   });
 });
 

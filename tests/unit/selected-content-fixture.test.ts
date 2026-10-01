@@ -17,10 +17,12 @@ describe("domain fixture retirement contract", () => {
     expect(read("vite.config.ts")).not.toMatch(
       /selected-content|domain-fixture/,
     );
-    expect(read("src/storage/sqlite-worker.ts")).not.toMatch(
+    expect(read("src/storage/native/storage-client.ts")).not.toMatch(
       /domain-fixture|fixtureFault/,
     );
-    expect(read("src/storage/contracts/rpc.ts")).not.toMatch(/fixture|corrupt/);
+    expect(read("src/storage/contracts/validate-content-query.ts")).not.toMatch(
+      /fixture|corrupt/,
+    );
   });
 });
 

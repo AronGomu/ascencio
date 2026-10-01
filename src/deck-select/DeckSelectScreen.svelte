@@ -6,6 +6,8 @@
   import DeleteDeckConfirm from "./DeleteDeckConfirm.svelte";
   import RenameDeckDialog from "./RenameDeckDialog.svelte";
   import type {
+    AcquireDeckImage,
+    DeckImageLease,
     DeckSelectMode,
     DeckSort,
     DeckTileModel,
@@ -78,6 +80,16 @@
   /** Full-size text-free card art URL for a code; null = no art float. */
   export let cardImageFor: ((code: number) => string | null) | null = null;
 
+  export let acquireCover: AcquireDeckImage<string> | null = null;
+  export let acquireCardImage: AcquireDeckImage<number> | null = null;
+  let artLease: DeckImageLease | null = null;
+  let artRequest: AbortController | null = null;
+  $: resetImageResolver(acquireCardImage);
+  function resetImageResolver(_resolve: AcquireDeckImage<number> | null): void {
+    void _resolve;
+    hideArt();
+  }
+
   let filter = "";
   let filterField: HTMLInputElement;
   /** Which tile's kebab is open, and the kebab itself for the sheet to sit
@@ -110,6 +122,7 @@
   } | null = null;
   // Compare original resolution, not the legacy cropped fallback after an error.
   $: if (
+    acquireCardImage === null &&
     art !== null &&
     fullCardImageUrl(cardImageFor?.(art.code) ?? null) !== art.sourceUrl
   )
@@ -346,6 +359,7 @@
   }
 
   onDestroy(() => {
+    hideArt();
     restToken += 1;
     playerRestToken += 1;
     opponentRestToken += 1;
@@ -446,8 +460,25 @@
   /* The row names the card; the float is the card itself, held clear of the
      dock so it never covers the list it came from. Its box keeps the printed
      card ratio while short or narrow viewports shrink both axes together. */
-  function showArt(code: number, anchor: HTMLElement): void {
-    const sourceUrl = cardImageFor?.(code) ?? null;
+  async function showArt(code: number, anchor: HTMLElement): Promise<void> {
+    hideArt();
+    const token = artToken;
+    let sourceUrl = cardImageFor?.(code) ?? null;
+    if (acquireCardImage !== null) {
+      const request = new AbortController();
+      artRequest = request;
+      try {
+        const lease = await acquireCardImage(code, request.signal);
+        if (token !== artToken || request.signal.aborted) {
+          lease?.release();
+          return;
+        }
+        artLease = lease;
+        sourceUrl = lease?.url ?? null;
+      } catch {
+        return;
+      }
+    }
     if (sourceUrl === null) {
       hideArt();
       return;
@@ -481,7 +512,6 @@
       FLOAT_GAP,
       Math.min(rect.top, window.innerHeight - FLOAT_GAP - height),
     );
-    const token = ++artToken;
     const fallbackUrl = sourceUrl.includes("/runtime/images-cropped/")
       ? sourceUrl
       : sourceUrl.replace("/runtime/images/", "/runtime/images-cropped/");
@@ -497,6 +527,10 @@
 
   function hideArt(): void {
     artToken += 1;
+    artRequest?.abort();
+    artRequest = null;
+    artLease?.release();
+    artLease = null;
     art = null;
   }
 
@@ -770,6 +804,8 @@
               <DecklistPanel
                 decklist={playerList}
                 cy="deck-select-seat-list-player"
+                onrowhover={previews ? showArt : null}
+                onrowleave={hideArt}
               />
             {/if}
           </div>
@@ -874,6 +910,8 @@
               <DecklistPanel
                 decklist={opponentList}
                 cy="deck-select-seat-list-opponent"
+                onrowhover={previews ? showArt : null}
+                onrowleave={hideArt}
               />
             {/if}
           </div>
@@ -992,6 +1030,7 @@
     {#each shown as candidate (candidate.key)}
       <DeckTile
         tile={candidate}
+        {acquireCover}
         halo={haloFor(candidate)}
         yours={seat === "opponent" && candidate.key === playerDeck?.key}
         onpress={() => onselect(candidate.key)}
@@ -1631,6 +1670,17 @@
       padding-left: 0;
       border-bottom: 1px solid var(--border);
       border-left: 0;
+    }
+  }
+
+  /* A stacked desktop panel must leave room for the deck illustrations.
+     Its lists scroll within the measured seat rows instead of consuming the
+     entire window at Tauri's minimum width. */
+  @media (min-width: 40.001rem) and (max-width: 62rem) {
+    .seat-panel {
+      height: min(45dvh, 28rem);
+      --p: 4rem;
+      min-height: 0;
     }
   }
 

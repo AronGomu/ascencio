@@ -45,7 +45,6 @@
   import DuelHud from "./components/duel-field/DuelHud.svelte";
   import DuelLog from "./components/duel-field/DuelLog.svelte";
   import LoadingOverlay from "./components/LoadingOverlay.svelte";
-  import { SnapshotStore } from "../storage/snapshot-store.ts";
   import { downloadDuelDiagnostics } from "./diagnostics/download-diagnostics.ts";
   import { DuelWorkerClient } from "./DuelWorkerClient.ts";
   import {
@@ -664,32 +663,6 @@
             ).length ?? 0,
         },
       });
-      const resultType = $duel.result?.type ?? "diagnostic";
-      void (async () => {
-        const store = await SnapshotStore.open();
-        try {
-          await store.recordDebugRun({
-            id: crypto.randomUUID(),
-            snapshotId: trace.snapshotId,
-            createdAt: new Date().toISOString(),
-            resultType,
-            traceEntries: trace.entries.length,
-          });
-        } finally {
-          store.close();
-        }
-      })().catch((error: unknown) => {
-        showTransient(
-          error instanceof Error
-            ? `Debug-run metadata was not saved: ${error.message}`
-            : "Debug-run metadata was not saved.",
-          "error",
-        );
-      });
-      showTransient(
-        "Diagnostics downloaded. The file contains the production seed; share it carefully.",
-        "success",
-      );
     } catch (error) {
       showTransient(
         error instanceof Error

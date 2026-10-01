@@ -2,17 +2,19 @@
 
 This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
 
-## Target migration
+## Current native runtime
 
-[`TAURI_MIGRATION_SPECIFICATION.md`](TAURI_MIGRATION_SPECIFICATION.md) records the requested desktop/mobile target: bundled offline game content, Free Play entry from the main menu and Visual Novel, accessible manual asset updates, a local build-content cleanup script, and a private Google Drive asset backup. [ADR-100](ADR/100_ADR_tauri_native_sqlite_storage.md) records the native code path and its pending content/device release gates. ADR-099 remains the browser runtime decision.
+[`TAURI_MIGRATION_SPECIFICATION.md`](TAURI_MIGRATION_SPECIFICATION.md) records the requested desktop/mobile target: bundled offline game content, Free Play entry from the main menu and Visual Novel, accessible manual asset updates, a local build-content cleanup script, and a private Google Drive asset backup. [ADR-100](ADR/100_ADR_tauri_native_sqlite_storage.md) records the native code path and its pending content/device release gates. [ADR-103](ADR/103_ADR_tauri_only_runtime_and_asset_ui.md) retires the browser runtime and records native asset presentation.
 
 [`assets/google-drive-backup.md`](assets/google-drive-backup.md) gives the personal backup and restore procedure for the full restorable repository, including ignored game assets.
 
 [`assets/native-content-release.md`](assets/native-content-release.md) gives native package staging and cleanup commands.
 
-[ADR-101](ADR/101_ADR_json_user_data_storage.md) replaces SQLite user saves with native JSON files and browser localStorage. SQLite remains in the current content pipeline.
+[`assets/game-asset-loading-audit.html`](assets/game-asset-loading-audit.html) presents the asset detection/loading architecture, the 2026-10-01 Chapter 1 and Freeplay defect audit, WebKit field rendering evidence, and proposed repairs.
 
-## Current manual SQLite implementation
+[ADR-101](ADR/101_ADR_json_user_data_storage.md) replaces SQLite user saves with native JSON files and browser localStorage. The browser adapter is retired by ADR-103. SQLite remains in the current native content pipeline.
+
+## Historical browser package implementation
 
 [ADR-099](ADR/099_ADR_completed_manual_sqlite_cutover.md) consolidates completed cutover from hosted/progressive/ZIP delivery to manual immutable SQLite packages, isolated user data, one SQLite-owning tab, and app-only builds.
 

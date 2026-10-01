@@ -31,27 +31,24 @@
     "generate:shop-sets": "node scripts/generate-shop-sets.ts",
     "dev": "vite",
     "build": "npm run vendor:verify && npm run build:app && npm run build:verify",
-    "build:app": "vite build --mode private",
+    "build:app": "vite build --mode native",
     "build:native": "vite build --mode native",
-    "build:verify": "node scripts/verify-browser-build.ts",
+    "build:verify": "node scripts/verify-native-build.ts",
     "build:reproducible": "node scripts/verify-reproducible-build.ts",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.{ts,svelte,css}\" \"tests/**/*.{ts,svelte}\" \"scripts/**/*.ts\" \"e2e/**/*.ts\" \"*.html\" \"*.{js,json,ts}\"",
     "format:check": "prettier --check \"src/**/*.{ts,svelte,css}\" \"tests/**/*.{ts,svelte}\" \"scripts/**/*.ts\" \"e2e/**/*.ts\" \"*.html\" \"*.{js,json,ts}\"",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
+    "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json --config ./vite.config.ts",
     "test:legacy": "node --test tests/*.test.ts",
     "test:unit": "vitest run tests/unit --exclude tests/unit/decks/deck-catalog-performance.test.ts && vitest run tests/unit/decks/deck-catalog-performance.test.ts",
     "test:component": "vitest run tests/component",
     "test:integration": "vitest run tests/integration",
-    "test:e2e": "playwright test",
-    "test:core": "playwright test -c playwright.core.config.ts --project=chromium",
-    "test:content:fixtures": "playwright test -c playwright.content-fixture.config.ts",
-    "test:content:legacy": "node scripts/verify-content-browser-run.ts && playwright test -c playwright.content.config.ts && playwright test -c playwright.content-built.config.ts && playwright test -c playwright.t3.config.ts",
+    "test:e2e": "playwright test -c playwright.native.config.ts",
     "test:acceptance": "playwright test -c playwright.acceptance.config.ts",
     "test": "npm run test:legacy && npm run test:unit && npm run test:component && npm run test:integration",
     "check:headless": "npm run format:check && npm run lint && npm run typecheck && npm run test:legacy && npm run test:unit && npm run test:integration && npm run vendor:verify && npm run assets:verify && npm run snapshot:verify",
-    "check:browser": "npm run test:component && npm run build && npm run build:reproducible && npm run test:e2e && npm run test:acceptance && npm run test:core && npm run test:content:fixtures",
+    "check:browser": "npm run test:component && npm run build && npm run build:reproducible && npm run test:e2e && npm run test:acceptance",
     "check": "npm run check:headless && npm run check:browser",
     "content:export": "node scripts/export-content-packages.ts",
     "content:verify": "node scripts/verify-content-package.ts",
@@ -64,7 +61,9 @@
     "native:android:dev": "tauri android dev",
     "native:android:build": "tauri android build",
     "native:ios:dev": "tauri ios dev",
-    "native:ios:build": "tauri ios build"
+    "native:ios:build": "tauri ios build",
+    "test:native:webview": "playwright test -c playwright.native.config.ts",
+    "test:native:rust": "cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -86,15 +85,11 @@
     "typescript": "^6.0.0",
     "typescript-eslint": "^8.63.0",
     "vite": "^8.1.4",
-    "vite-plugin-pwa": "1.3.0",
-    "vitest": "^4.1.10",
-    "workbox-precaching": "7.4.1"
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "@noble/hashes": "2.4.0",
-    "@sqlite.org/sqlite-wasm": "3.53.4-build1",
     "@tauri-apps/api": "^2.12.0",
-    "idb": "^8.0.3",
     "svelte": "^5.56.4"
   }
 }

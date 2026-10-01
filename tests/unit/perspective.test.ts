@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { fieldPlaneTransform } from "../../src/battle/field/perspective.ts";
 
 describe("fieldPlaneTransform", () => {
-  it("uses the default field camera and tilt", () => {
-    expect(fieldPlaneTransform()).toBe("perspective(600px) rotateX(20deg)");
+  it("uses a flat camera for native webviews", () => {
+    expect(fieldPlaneTransform()).toBe("");
   });
 
   it("disables the transform for flat mode", () => {

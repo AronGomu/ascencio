@@ -2,40 +2,11 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import InstallContentScreen from "../../src/shell/screens/InstallContentScreen.svelte";
-import type {
-  AppUpdateController,
-  AppUpdateView,
-} from "../../src/shell/application/app-update-controller.ts";
+
 import type {
   ManualContentController,
   ManualContentView,
 } from "../../src/shell/application/manual-content-controller.ts";
-
-const updateView: AppUpdateView = {
-  phase: "available",
-  message: "App update available. Approval is required before installation.",
-  canCheck: true,
-  canApprove: true,
-  candidate: {
-    schemaVersion: 1,
-    buildId: "0.1.0+candidate",
-    coreContentApiVersion: 1,
-  },
-};
-
-function updates(view: AppUpdateView = updateView) {
-  return {
-    view,
-    subscribe(listener: (value: AppUpdateView) => void) {
-      listener(view);
-      return () => undefined;
-    },
-    check: vi.fn(async () => undefined),
-    approve: vi.fn(async () => undefined),
-    cancel: vi.fn(),
-    dispose: vi.fn(async () => undefined),
-  } satisfies AppUpdateController;
-}
 
 const manualView: ManualContentView = {
   state: {
@@ -92,11 +63,10 @@ function manual(view: ManualContentView = manualView): ManualContentController {
 afterEach(cleanup);
 
 describe("InstallContentScreen composition", () => {
-  it("keeps manual packages, persistent media warning, and app approval separate", () => {
+  it("shows installed content and optional media warnings without a browser updater", () => {
     const view = render(InstallContentScreen, {
       gate: { kind: "locked", reason: "content-required" },
       manual: manual(),
-      appUpdates: updates(),
       onback: vi.fn(),
     });
     expect(
@@ -108,8 +78,8 @@ describe("InstallContentScreen composition", () => {
       view.getByRole("button", { name: "Verify installed content" }),
     ).toBeTruthy();
     expect(
-      view.getByRole("button", { name: "Approve app update" }),
-    ).toBeTruthy();
+      view.queryByRole("button", { name: "Approve app update" }),
+    ).toBeNull();
     expect(
       view.queryByRole("button", { name: "Install required data" }),
     ).toBeNull();
@@ -119,7 +89,6 @@ describe("InstallContentScreen composition", () => {
     const view = render(InstallContentScreen, {
       gate: { kind: "checking" },
       manual: null,
-      appUpdates: null,
       onback: vi.fn(),
     });
     expect(
@@ -130,7 +99,6 @@ describe("InstallContentScreen composition", () => {
     await view.rerender({
       gate: { kind: "locked", reason: "content-required" },
       manual: manual(),
-      appUpdates: null,
       onback: vi.fn(),
     });
     expect(
@@ -140,115 +108,28 @@ describe("InstallContentScreen composition", () => {
     ).toBeNull();
   });
 
-  it("requires explicit app update approval", async () => {
-    const appUpdates = updates();
-    const view = render(InstallContentScreen, {
-      gate: { kind: "checking" },
-      manual: manual(),
-      appUpdates,
-      onback: vi.fn(),
-    });
-    expect(
-      view.getByText("Build 0.1.0+candidate · content API 1"),
-    ).toBeTruthy();
-    await fireEvent.click(
-      view.getByRole("button", { name: "Approve app update" }),
-    );
-    expect(appUpdates.approve).toHaveBeenCalledWith(updateView.candidate);
-  });
-
   it.each([
-    {
-      name: "committed restore",
-      state: { kind: "restoring" } as const,
-      busy: true,
-    },
-    {
-      name: "unknown restore outcome",
-      state: { kind: "restore-outcome-unknown" } as const,
-      busy: false,
-    },
+    { state: { kind: "restoring" } as const, busy: true },
+    { state: { kind: "restore-outcome-unknown" } as const, busy: false },
   ])(
-    "blocks app update checks and approval during $name",
-    ({ state, busy }) => {
-      const blocked: ManualContentView = {
-        ...manualView,
-        state,
-        busy,
-        navigationBlocked: true,
-        message:
-          "Restoring user data. This operation cannot be cancelled. Keep this app open.",
-      };
-      const appUpdates = updates();
+    "blocks navigation and content writes during restore",
+    async ({ state, busy }) => {
+      const onback = vi.fn();
       const view = render(InstallContentScreen, {
         gate: { kind: "checking" },
-        manual: manual(blocked),
-        appUpdates,
-        onback: vi.fn(),
+        manual: manual({ ...manualView, state, busy, navigationBlocked: true }),
+        onback,
       });
-
       expect(
-        view.getByRole("button", { name: "Check for app update" }),
+        view.getByRole("button", { name: "Back to Main Menu" }),
       ).toHaveProperty("disabled", true);
       expect(
-        view.getByRole("button", { name: "Approve app update" }),
+        view.getByRole("button", { name: "Export user-data.json" }),
       ).toHaveProperty("disabled", true);
-      expect(appUpdates.check).not.toHaveBeenCalled();
-      expect(appUpdates.approve).not.toHaveBeenCalled();
+      await fireEvent.click(
+        view.getByRole("button", { name: "Back to Main Menu" }),
+      );
+      expect(onback).not.toHaveBeenCalled();
     },
   );
-});
-
-describe("app approval UI lifecycle", () => {
-  it("precommit cancel remains usable while restore and content actions are blocked", async () => {
-    const appUpdates = updates({
-      ...updateView,
-      phase: "approving",
-      canCheck: false,
-      canApprove: false,
-    });
-    const onback = vi.fn();
-    const view = render(InstallContentScreen, {
-      gate: { kind: "locked", reason: "content-required" },
-      manual: manual(),
-      appUpdates,
-      onback,
-    });
-    expect(
-      view.getByRole("button", { name: "Verify installed content" }),
-    ).toHaveProperty("disabled", true);
-    const cancel = view.getByRole("button", { name: "Cancel approval" });
-    expect(cancel).toHaveProperty("disabled", false);
-    await fireEvent.click(cancel);
-    expect(appUpdates.cancel).toHaveBeenCalledOnce();
-    await fireEvent.click(
-      view.getByRole("button", { name: "Back to Main Menu" }),
-    );
-    expect(appUpdates.cancel).toHaveBeenCalledTimes(2);
-    expect(onback).toHaveBeenCalledOnce();
-  });
-
-  it("noncancellable consent commit blocks back and offers no misleading cancel", async () => {
-    const appUpdates = updates({
-      ...updateView,
-      phase: "committing",
-      canCheck: false,
-      canApprove: false,
-    });
-    const onback = vi.fn();
-    const view = render(InstallContentScreen, {
-      gate: { kind: "locked", reason: "content-required" },
-      manual: manual(),
-      appUpdates,
-      onback,
-    });
-    expect(
-      view.queryByRole("button", { name: /Cancel (check|approval)/ }),
-    ).toBeNull();
-    const back = view.getByRole("button", { name: "Back to Main Menu" });
-    expect(back).toHaveProperty("disabled", true);
-    await fireEvent.click(back);
-    expect(onback).not.toHaveBeenCalled();
-    expect(appUpdates.cancel).not.toHaveBeenCalled();
-  });
 });

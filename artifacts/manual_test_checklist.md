@@ -74,3 +74,16 @@ No publish/install/remote commands. These checks do not certify gameplay or dist
 - [ ] Try removing a declared dependency; verify refusal preserves installed modules and all user data.
 - [ ] Reorder scenes while retaining beat IDs; verify the same saved scene resumes. Delete that beat and verify resume refuses without modifying the save.
 - [ ] Try conflicting card/set IDs or module API version 2; verify activation fails without changing the previous stack.
+
+
+## Tauri-only asset repairs — 2026-10-01 (ADR-103)
+
+Automated webview checks use a test IPC bridge and disposable saves; these owner/device rows remain pending.
+
+- [ ] Start a fresh native installation offline: Freeplay and Chapter 1 are ready without importing content.
+- [ ] Select New Game: narrative beat 1 opens without a content-invalid recovery.
+- [ ] In Freeplay, both installed decks show illustrations; hover or keyboard-focus cards in either seat list to see full previews. Leaving the row closes its preview.
+- [ ] Start a duel in the Linux WebKitGTK app: both hands, both field sides and legal zone controls are visible and usable. Opponent identities remain hidden.
+- [ ] Resize to the desktop minimum; verify field controls and hands remain reachable.
+- [ ] Install on physical Android/iOS, test portrait rotation and touch field controls offline, and restart to confirm JSON saves persist.
+- [ ] Build a native release: webview files come from generated/build/app; content resources are verified separately.

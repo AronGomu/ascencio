@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import { readFileSync } from "node:fs";
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DeckTile from "../../../src/deck-select/DeckTile.svelte";
@@ -262,4 +268,29 @@ describe("DeckTile", () => {
       "Actions for Prototype Control",
     );
   });
+});
+
+it("releases stale native covers after deck changes and mounted covers on unmount", async () => {
+  const pending = Promise.withResolvers<{
+    url: string;
+    release(): void;
+  } | null>();
+  const staleRelease = vi.fn();
+  const currentRelease = vi.fn();
+  const acquire = vi.fn((key: string, signal: AbortSignal) =>
+    (signal.throwIfAborted(), key === "k1")
+      ? pending.promise
+      : Promise.resolve({ url: "blob:cover-k2", release: currentRelease }),
+  );
+  const view = render(DeckTile, { tile: tile(), acquireCover: acquire });
+  await waitFor(() => expect(acquire).toHaveBeenCalledOnce());
+  await view.rerender({ tile: tile({ key: "k2" }) });
+  await waitFor(() =>
+    expect(cy("deck-tile-art-k2").getAttribute("src")).toBe("blob:cover-k2"),
+  );
+  expect(acquire.mock.calls[0]![1].aborted).toBe(true);
+  pending.resolve({ url: "blob:cover-stale", release: staleRelease });
+  await waitFor(() => expect(staleRelease).toHaveBeenCalledOnce());
+  view.unmount();
+  expect(currentRelease).toHaveBeenCalledOnce();
 });

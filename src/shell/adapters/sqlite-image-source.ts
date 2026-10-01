@@ -37,15 +37,22 @@ export function createSqliteCardImageSource(
   pool = new SqliteImageLeasePool(content),
 ): SqliteCardImageSource {
   return Object.freeze({
-    acquire: (
+    acquire: async (
       code: CardCode,
       variant: CardImageVariant,
       signal: AbortSignal,
     ) => {
       const path = `cards/${variant}/${code}.jpg`;
-      return pool.acquire(
+      const lease = await pool.acquire(
         `card-library:${path}`,
         { kind: "asset", packageId: "card-library", path },
+        signal,
+      );
+      if (lease !== null || variant !== "cropped") return lease;
+      const fullPath = `cards/full/${code}.jpg`;
+      return await pool.acquire(
+        `card-library:${fullPath}`,
+        { kind: "asset", packageId: "card-library", path: fullPath },
         signal,
       );
     },

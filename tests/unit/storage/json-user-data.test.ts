@@ -7,10 +7,7 @@ import {
   emptyUserDocument,
   parseUserDocument,
 } from "../../../src/storage/json/user-document.ts";
-import {
-  openBrowserUserData,
-  USER_DATA_STORAGE_KEY,
-} from "../../../src/storage/json/browser-user-data.ts";
+
 import { openNativeStorage } from "../../../src/storage/native/storage-client.ts";
 import { DEFAULT_SHELL_SETTINGS } from "../../../src/shell/settings/index.ts";
 import type { StorageResult } from "../../../src/storage/contracts/package.ts";
@@ -281,20 +278,6 @@ describe("JSON user persistence", () => {
       kind: "failed",
       error: { code: "STORAGE_UNAVAILABLE" },
     });
-  });
-
-  it("uses one dedicated localStorage key and preserves unrelated legacy keys", async () => {
-    const storage = new Map<string, string>([["legacy", "keep"]]);
-    vi.stubGlobal("localStorage", {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, source: string) => storage.set(key, source),
-    });
-    value(await openBrowserUserData().writeUser([preference()]));
-    expect(storage.has(USER_DATA_STORAGE_KEY)).toBe(true);
-    expect(storage.get("legacy")).toBe("keep");
-    expect(
-      value(await openBrowserUserData().readUser("preferences", "shell")),
-    ).toMatchObject({ payload: DEFAULT_SHELL_SETTINGS });
   });
 
   it("native client saves JSON through file commands without SQLite user commands", async () => {

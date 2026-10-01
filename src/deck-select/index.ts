@@ -1,4 +1,6 @@
 export type {
+  AcquireDeckImage,
+  DeckImageLease,
   DeckSelectMode,
   DeckSelectScope,
   DeckSort,

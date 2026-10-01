@@ -15,10 +15,7 @@ import {
   parseBattleRequest,
 } from "../../src/battle/battle-contracts.ts";
 import { installedSelectableDecks } from "../../src/battle/decks/installed-selectable-decks.ts";
-import {
-  findSelectableDeck,
-  presetSelectableDecks,
-} from "../../src/battle/decks/selectable-decks.ts";
+import { findSelectableDeck } from "../../src/battle/decks/selectable-decks.ts";
 import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
 import {
   catalogByCode,
@@ -65,15 +62,18 @@ const VALID_MAIN = Array.from(
 
 /* Both active Chapter 1 decks, with real IDs checked by parseBattleRequest. */
 const PRESETS = DECK_CATALOG;
-const PRESET_DECKS = presetSelectableDecks(PRESETS);
+const PRESET_DECKS = PRESETS.map((deck) => ({
+  key: `preset:${deck.id}`,
+  label: deck.name,
+}));
 const RAW_GAMEPLAY = installedGameplayFromCatalog(PROTOTYPE_CATALOG, {
   decks: Object.freeze(
     PRESET_DECKS.map((deck) => ({
       id: deck.key.slice("preset:".length),
       name: deck.label,
-      main: deck.lists.main,
-      extra: deck.lists.extra,
-      side: deck.lists.side,
+      main: VALID_MAIN,
+      extra: [],
+      side: [],
     })),
   ),
   opponents: Object.freeze([

@@ -551,6 +551,6 @@ export function failureCopy(error: StorageFailure): string {
     case "OPERATION_CANCELLED":
       return "Operation cancelled. Installed data is unchanged.";
     default:
-      return `${error.code}. Retry from Content & updates.`;
+      return `${error.code}. Retry from Content.`;
   }
 }

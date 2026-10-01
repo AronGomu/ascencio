@@ -156,7 +156,7 @@ describe("app/content build boundary", () => {
   });
 
   it.each(["/", "/private/game/"])(
-    "builds without acquired roots; exact SQLite executable precache under %s",
+    "builds native webview without acquired roots or browser SQLite under %s",
     async (base) => {
       const target = await fixture();
       try {
@@ -171,14 +171,13 @@ describe("app/content build boundary", () => {
         await build({
           root: target,
           configFile: path.join(target, "vite.config.ts"),
-          mode: "private",
+          mode: "native",
           base,
           logLevel: "silent",
         });
         const inventory = await files(path.join(target, APP_BUILD_OUTPUT));
         const wasm = inventory.filter((file) => file.endsWith(".wasm"));
-        expect(wasm).toHaveLength(1);
-        expect(wasm[0]).toMatch(/^assets\/sqlite3-[\w-]+\.wasm$/);
+        expect(wasm).toHaveLength(0);
         expect(
           inventory.filter((file) =>
             /(?:\.sqlite|\.db|\.zip|\.jpg|\.png|\.webp|\.mp3|\.mp4|\.ogg)$|^(?:content|runtime|story|generated)\/|core-bootstrap/.test(
@@ -192,24 +191,8 @@ describe("app/content build boundary", () => {
         expect(
           inventory.filter((file) => file.endsWith(".woff2")),
         ).toHaveLength(3);
-        const sw = await readFile(
-          path.join(target, APP_BUILD_OUTPUT, "service-worker.js"),
-          "utf8",
-        );
-        const precacheUrls = [...sw.matchAll(/"url":"([^"]+)"/g)].map(
-          (match) => match[1]!,
-        );
-        expect(precacheUrls).toContain(`${base}${wasm[0]}`);
-        expect(
-          precacheUrls.every((url) =>
-            new URL(url, `https://app.invalid${base}`).pathname.startsWith(
-              base,
-            ),
-          ),
-        ).toBe(true);
-        expect(precacheUrls.filter((url) => url.endsWith(".wasm"))).toEqual([
-          `${base}${wasm[0]}`,
-        ]);
+        expect(inventory).not.toContain("service-worker.js");
+        expect(inventory).not.toContain("manifest.webmanifest");
         const manifest = JSON.parse(
           await readFile(
             path.join(target, APP_BUILD_OUTPUT, ".vite/manifest.json"),
@@ -230,18 +213,11 @@ describe("app/content build boundary", () => {
             expect(Object.hasOwn(manifest, dependency)).toBe(true);
           for (const css of entry.css ?? []) expect(inventory).toContain(css);
         }
-        const sqliteWorker = inventory.find((file) =>
-          /^assets\/sqlite-worker-.*\.js$/.test(file),
-        )!;
         expect(
-          await readFile(
-            path.join(target, APP_BUILD_OUTPUT, sqliteWorker),
-            "utf8",
+          inventory.filter((file) =>
+            /^assets\/sqlite(?:3)?-worker-/.test(file),
           ),
-        ).toContain(`${base}${wasm[0]}`);
-        expect(sw).toContain("index.html");
-        expect(sw).not.toContain("skipWaiting");
-        expect(sw).not.toContain("clients.claim");
+        ).toEqual([]);
         const release = JSON.parse(
           await readFile(
             path.join(target, APP_BUILD_OUTPUT, "core-release.json"),
@@ -272,8 +248,7 @@ describe("app/content build boundary", () => {
                 excludedRootsAbsent: true,
                 inventory,
                 manifest,
-                precacheUrls,
-                sqliteUrl: `${base}${wasm[0]}`,
+                wasmBytes: 0,
               },
               null,
               2,
@@ -604,7 +579,6 @@ describe("app/content build boundary", () => {
                       "@id/__x00__vite/modulepreload-polyfill.js",
                       "@id/%5F%5Fx00%5F%5Fvite/modulepreload-polyfill.js",
                       "@%69d/__x00__vite/modulepreload-polyfill.js",
-                      "@id//@vite-plugin-pwa/virtual:pwa-register?import",
                       "assets/app/fonts/forum-latin.woff2",
                     ]
                   : []),

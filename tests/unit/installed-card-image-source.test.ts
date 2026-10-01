@@ -4,7 +4,7 @@ import { createSqliteCardImageSource } from "../../src/shell/adapters/sqlite-ima
 import { imageQueryFixture } from "../fixtures/sqlite-image-query.ts";
 
 afterEach(() => vi.restoreAllMocks());
-it("pre-aborted acquire never queries; missing unknown card uses package placeholder without fallback", async () => {
+it("pre-aborted acquire never queries; missing unknown card returns no image after checking both variants", async () => {
   const { query, content } = imageQueryFixture(),
     source = createSqliteCardImageSource(content);
   const aborted = new AbortController();
@@ -22,8 +22,14 @@ it("pre-aborted acquire never queries; missing unknown card uses package placeho
       new AbortController().signal,
     ),
   ).toBeNull();
-  expect(query).toHaveBeenCalledExactlyOnceWith(
+  expect(query).toHaveBeenNthCalledWith(
+    1,
     { kind: "asset", packageId: "card-library", path: "cards/cropped/999.jpg" },
+    expect.any(AbortSignal),
+  );
+  expect(query).toHaveBeenNthCalledWith(
+    2,
+    { kind: "asset", packageId: "card-library", path: "cards/full/999.jpg" },
     expect.any(AbortSignal),
   );
   source.close();

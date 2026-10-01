@@ -1,5 +1,5 @@
 export interface ApplicationAdmission {
-  enter(kind: "session" | "restore" | "approval"): (() => void) | null;
+  enter(kind: "session" | "restore"): (() => void) | null;
   close(): void;
 }
 
@@ -9,7 +9,7 @@ export function createApplicationAdmission(): ApplicationAdmission {
   let exclusive = false;
   let closed = false;
   return Object.freeze({
-    enter(kind: "session" | "restore" | "approval") {
+    enter(kind: "session" | "restore") {
       if (closed || exclusive || (kind !== "session" && sessions > 0))
         return null;
       if (kind === "session") sessions += 1;

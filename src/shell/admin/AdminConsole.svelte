@@ -6,7 +6,6 @@
     ADMIN_ROUTES,
     ADMIN_STORAGE_TARGETS,
     ADMIN_TEST_DECK_ID,
-    resetOperationalStorageTarget,
     type AdminResetResult,
     type AdminStorageTarget,
   } from "./admin-actions.ts";
@@ -23,9 +22,7 @@
   export let resetTarget: (
     target: AdminStorageTarget,
   ) => Promise<AdminResetResult> = async (target) =>
-    target.kind === "user"
-      ? await resetUserTarget(target)
-      : await resetOperationalStorageTarget(target, globalThis.indexedDB);
+    await resetUserTarget(target);
   const lifetime = new AbortController();
   onDestroy(() => lifetime.abort());
 

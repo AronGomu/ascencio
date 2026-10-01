@@ -1,6 +1,5 @@
 import { mount } from "svelte";
 import AppShell from "./shell/AppShell.svelte";
-import { registerServiceWorker } from "./shell/pwa/register-service-worker.ts";
 import { isNativeApp, seedNativeContent } from "./shell/native/content.ts";
 import "./styles/app.css";
 
@@ -9,16 +8,12 @@ if (target === null) throw new Error("Application mount point is missing");
 
 async function start(target: HTMLElement): Promise<void> {
   try {
-    if (isNativeApp()) {
-      target.textContent = "Checking installed content…";
-      await seedNativeContent();
-    }
+    if (!isNativeApp()) throw new Error("Open this application through Tauri.");
+    target.textContent = "Checking installed content…";
+    await seedNativeContent();
     target.dataset.appShell = "ready";
     target.replaceChildren();
     mount(AppShell, { target });
-    /* Registration reports every outcome through Settings. No activation request
-     is sent: updated code waits until every old controlled tab has closed. */
-    if (!isNativeApp()) void registerServiceWorker();
   } catch (error) {
     target.replaceChildren();
     const main = document.createElement("main");

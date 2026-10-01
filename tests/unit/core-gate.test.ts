@@ -34,13 +34,9 @@ beforeEach(() => vi.stubGlobal("__APP_BUILD_ID__", "core-gate-fixture"));
 afterEach(() => vi.unstubAllGlobals());
 
 describe("CORE startup gate", () => {
-  it("missing Web Locks blocks without consulting network or legacy stores", async () => {
+  it("non-native execution blocks without consulting network or legacy stores", async () => {
     const fetch = vi.fn();
-    const startup = await loadCoreStartup(
-      fetch,
-      "https://example.test/",
-      {} as IDBFactory,
-    );
+    const startup = await loadCoreStartup();
     expect(startup.gate).toEqual({
       kind: "locked",
       reason: "storage-unavailable",
@@ -48,11 +44,12 @@ describe("CORE startup gate", () => {
     expect(fetch).not.toHaveBeenCalled();
     await startup.dispose?.();
   });
-  it("missing browser storage blocks before network", async () => {
+  it("missing Tauri storage blocks before network", async () => {
     const fetch = vi.fn();
-    expect(
-      (await loadCoreStartup(fetch, "https://example.test/", undefined)).gate,
-    ).toEqual({ kind: "locked", reason: "storage-unavailable" });
+    expect((await loadCoreStartup()).gate).toEqual({
+      kind: "locked",
+      reason: "storage-unavailable",
+    });
     expect(fetch).not.toHaveBeenCalled();
     expect(coreGateMessage(locked)).toContain("Content is required");
   });

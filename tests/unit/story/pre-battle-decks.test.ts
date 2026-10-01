@@ -1,5 +1,5 @@
 import { buildStarterGrant } from "../../../src/story/decks/starter-grant.ts";
-import { ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -275,7 +275,7 @@ describe("a brand-new save's first encounter", () => {
       JSON.parse(
         await readFile(
           path.resolve(
-            `${ASSET_SOURCES.data.source}/catalog/${kind}/${shard}.json`,
+            `${PACKAGE_ASSET_SOURCES.data.source}/catalog/${kind}/${shard}.json`,
           ),
           "utf8",
         ),

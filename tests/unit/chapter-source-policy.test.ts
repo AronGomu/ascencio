@@ -15,15 +15,23 @@ const promoSet = "Yu-Gi-Oh! Power of Chaos: Yugi the Destiny promotional cards";
 const prizeSet = "Yu-Gi-Oh! World Championship 2004 prize cards";
 
 async function realInputs() {
-  const sourceBytes = await readFile("content/authoring/card-set-source.json");
+  const sourceBytes = await readFile(
+    "assets/content/card-library/authoring/card-set-source.json",
+  );
   const source = JSON.parse(sourceBytes.toString("utf8")) as {
     sets: ChapterSourceSet[];
   };
   const selections = JSON.parse(
-    await readFile("content/chapter-selections.json", "utf8"),
+    await readFile(
+      "assets/content/chapter-01/authoring/chapter-selections.json",
+      "utf8",
+    ),
   ) as { chapters: { setNames: string[] }[] };
   const corrections = JSON.parse(
-    await readFile("content/authoring/chapter-one-corrections.json", "utf8"),
+    await readFile(
+      "assets/content/chapter-01/authoring/chapter-one-corrections.json",
+      "utf8",
+    ),
   ) as ChapterSourceCorrections;
   const selectedNames = new Set(selections.chapters[0]!.setNames);
   return {

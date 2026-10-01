@@ -45,12 +45,14 @@ async function bytes(relative: string) {
 async function json<T>(relative: string): Promise<T> {
   return JSON.parse((await bytes(relative)).toString("utf8")) as T;
 }
-const source = await json<Source>("content/authoring/card-set-source.json");
+const source = await json<Source>(
+  "assets/content/card-library/authoring/card-set-source.json",
+);
 const selections = await json<ChapterSelections>(
-  "content/chapter-selections.json",
+  "assets/content/chapter-01/authoring/chapter-selections.json",
 );
 const corrections = await json<ChapterSourceCorrections>(
-  "content/authoring/chapter-one-corrections.json",
+  "assets/content/chapter-01/authoring/chapter-one-corrections.json",
 );
 const byName = new Map(source.sets.map((set) => [set.name, set]));
 const assignedNames = selections.chapters.flatMap(
@@ -113,7 +115,7 @@ describe("Chapter 1 authoring scope", () => {
   });
   it("records owner-approved bounded scope without claiming globally verified chronology", async () => {
     const policy = await json<{ chapters: unknown[] }>(
-      "content/authoring/chapter-policy.json",
+      "assets/content/chapter-01/authoring/chapter-policy.json",
     );
     expect(policy).toMatchObject({
       status: "approved-chapter-one-scope",
@@ -140,7 +142,11 @@ describe("Chapter 1 authoring scope", () => {
   it("preserves full immutable source and unresolved provenance without granting orphans", async () => {
     expect(
       createHash("sha256")
-        .update(await bytes("content/authoring/card-set-source.json"))
+        .update(
+          await bytes(
+            "assets/content/card-library/authoring/card-set-source.json",
+          ),
+        )
         .digest("hex"),
     ).toBe(sourceSha256);
     expect(selections.sourceSha256).toBe(sourceSha256);
@@ -164,7 +170,7 @@ describe("Chapter 1 authoring scope", () => {
     const history = await json<{
       status: string;
       selections: ChapterSelections;
-    }>("content/authoring/superseded-six-era-mapping.json");
+    }>("assets/content/chapter-01/authoring/superseded-six-era-mapping.json");
     expect(history.status).toBe("superseded-by-chapter-one-only-scope");
     expect(history.selections.chapters).toHaveLength(6);
     expect(
@@ -173,7 +179,7 @@ describe("Chapter 1 authoring scope", () => {
     const evidence = await json<{
       status: string;
       productFamilies: Record<string, { locales: unknown[] }>;
-    }>("content/authoring/release-date-evidence.json");
+    }>("assets/content/chapter-01/authoring/release-date-evidence.json");
     expect(evidence.status).toBe(
       "superseded-six-era-authoring-evidence-not-release-approval",
     );

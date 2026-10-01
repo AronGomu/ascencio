@@ -3,7 +3,7 @@ import {
   disposeTestDeckRepositories,
   type TestDeckRepository,
 } from "../../fixtures/sqlite-deck-repository.ts";
-import { ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES } from "../../../scripts/lib/asset-roots.ts";
 // @vitest-environment node
 
 import "fake-indexeddb/auto";
@@ -160,7 +160,7 @@ describe("the bundled starter list", () => {
       JSON.parse(
         await readFile(
           path.resolve(
-            `${ASSET_SOURCES.data.source}/catalog/${kind}/${shard}.json`,
+            `${PACKAGE_ASSET_SOURCES.data.source}/catalog/${kind}/${shard}.json`,
           ),
           "utf8",
         ),

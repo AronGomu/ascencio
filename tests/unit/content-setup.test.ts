@@ -383,7 +383,7 @@ describe("content setup", () => {
   });
   it("source copy and approved policy remain explicit incomplete inputs", async () => {
     const bytes = await readFile(
-      "content/authoring/card-set-source.json",
+      "assets/content/card-library/authoring/card-set-source.json",
       "utf8",
     );
     expect(digest(bytes)).toBe(
@@ -393,7 +393,10 @@ describe("content setup", () => {
     expect(source.sets).toHaveLength(1036);
     expect(source.cardsWithoutSetMembership).toHaveLength(509);
     const policy = JSON.parse(
-      await readFile("content/authoring/chapter-policy.json", "utf8"),
+      await readFile(
+        "assets/content/chapter-01/authoring/chapter-policy.json",
+        "utf8",
+      ),
     );
     expect(
       policy.chapters.map((chapter: { id: string }) => chapter.id),

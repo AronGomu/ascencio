@@ -42,8 +42,10 @@ export async function openNativeStorage(): Promise<
   });
   if (initial.kind === "failed") return initial;
   const mediaListeners = new Set<(warning: MediaWarning) => void>();
-  const sessions = new Set<string>();
+  const sessions = new Map<string, () => Promise<void>>();
+  const acquisitions = new Set<Promise<unknown>>();
   let closed = false;
+  let closing: Promise<void> | null = null;
   const userData = new JsonUserDataStore(nativeUserJsonBackend());
   const unavailable = <T>(): StorageResult<T> => failed("STORAGE_UNAVAILABLE");
   const guard = async <T>(
@@ -170,29 +172,35 @@ export async function openNativeStorage(): Promise<
               };
         },
         cleanupUnused: async () => await guard("native_package_cleanup"),
-        acquireSession: async () => {
-          if (closed) return unavailable();
-          const acquired = await guard<{
-            sessionId: string;
-            generation: number;
-          }>("native_package_acquire");
-          if (acquired.kind === "failed") return acquired;
-          sessions.add(acquired.value.sessionId);
-          let released = false;
-          return {
-            kind: "ok",
-            value: {
-              generation: acquired.value.generation,
-              release: async () => {
-                if (released) return;
-                released = true;
-                sessions.delete(acquired.value.sessionId);
-                await invoke("native_package_release", {
-                  sessionId: acquired.value.sessionId,
-                });
-              },
-            },
-          };
+        acquireSession: () => {
+          if (closed) return Promise.resolve(unavailable());
+          const acquisition = (async (): ReturnType<
+            LocalStorageClient["packages"]["acquireSession"]
+          > => {
+            const acquired = await guard<{
+              sessionId: string;
+              generation: number;
+            }>("native_package_acquire");
+            if (acquired.kind === "failed") return acquired;
+            const { sessionId, generation } = acquired.value;
+            let releasing: Promise<void> | null = null;
+            const release = (): Promise<void> =>
+              (releasing ??= (async () => {
+                await invoke("native_package_release", { sessionId });
+                sessions.delete(sessionId);
+              })());
+            sessions.set(sessionId, release);
+            // Close drains this acquisition and owns cleanup of its late lease.
+            return closed
+              ? unavailable()
+              : { kind: "ok", value: { generation, release } };
+          })();
+          acquisitions.add(acquisition);
+          void acquisition.then(
+            () => acquisitions.delete(acquisition),
+            () => acquisitions.delete(acquisition),
+          );
+          return acquisition;
         },
       },
       content: createModuleCatalogQueries(
@@ -248,16 +256,22 @@ export async function openNativeStorage(): Promise<
         mediaListeners.add(listener);
         return () => mediaListeners.delete(listener);
       },
-      close: async () => {
+      close: () => {
+        if (closing !== null) return closing;
         closed = true;
-        await userData.close();
         mediaListeners.clear();
-        await Promise.all(
-          [...sessions].map(async (sessionId) => {
-            sessions.delete(sessionId);
-            await invoke("native_package_release", { sessionId });
-          }),
-        );
+        closing = (async () => {
+          const drained = await Promise.allSettled([
+            userData.close(),
+            ...acquisitions,
+          ]);
+          const released = await Promise.allSettled(
+            [...sessions.values()].map((release) => release()),
+          );
+          for (const result of [...drained, ...released])
+            if (result.status === "rejected") throw result.reason;
+        })();
+        return closing;
       },
     },
   };

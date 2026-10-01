@@ -12,11 +12,11 @@ function testAliases(worker = false): Plugin {
       if (!worker && source.endsWith("/core-startup.ts"))
         return path.resolve(root, "tests/fixtures/selected-content-browser.ts");
       if (
-        worker &&
-        source.endsWith("/browser-sqlite.ts") &&
-        importer?.endsWith("/sqlite-worker.ts")
+        !worker &&
+        source.endsWith("/json/browser-user-data.ts") &&
+        importer?.endsWith("/create-storage-client.ts")
       )
-        return path.resolve(root, "tests/fixtures/domain-sqlite-faults.ts");
+        return path.resolve(root, "tests/fixtures/domain-user-json-faults.ts");
       return null;
     },
   };

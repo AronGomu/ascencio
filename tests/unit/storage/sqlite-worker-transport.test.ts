@@ -1,11 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StorageRpcClient } from "../../../src/storage/runtime/rpc-client.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
-import { createUserDataFixture } from "./sqlite-fixtures.ts";
-import { createRuntimeFixture, databaseAdapter } from "./runtime-fixtures.ts";
-import { DEFAULT_SHELL_SETTINGS } from "../../../src/shell/settings/index.ts";
-import type { StorageResult } from "../../../src/storage/contracts/package.ts";
-import type { RestoreOutcomeUnknown } from "../../../src/storage/contracts/user-data.ts";
+import { createRuntimeFixture } from "./runtime-fixtures.ts";
 
 const workerModuleState = vi.hoisted(() => ({ opened: undefined as unknown }));
 
@@ -63,18 +58,11 @@ class WorkerScope extends EventTarget {
   }
 }
 
-interface WorkerFixture {
-  readonly client: StorageRpcClient;
-  readonly read: Promise<StorageResult<unknown>>;
-  readonly restore: Promise<StorageResult<unknown> | RestoreOutcomeUnknown>;
-  readonly scope: WorkerScope;
-  readonly transport: WorkerTransportBridge;
-  readonly userData: UserDataRuntime;
-}
-
-async function startWorker(
-  opened: unknown,
-): Promise<Pick<WorkerFixture, "client" | "scope" | "transport">> {
+async function startWorker(opened: unknown): Promise<{
+  client: StorageRpcClient;
+  scope: WorkerScope;
+  transport: WorkerTransportBridge;
+}> {
   vi.resetModules();
   workerModuleState.opened = opened;
   const transport = new WorkerTransportBridge();
@@ -97,101 +85,34 @@ async function startWorker(
   return { client: new StorageRpcClient(transport), scope, transport };
 }
 
-async function restoreFixture(): Promise<WorkerFixture> {
-  const packages = createRuntimeFixture();
-  const database = createUserDataFixture();
-  const adapter = databaseAdapter(database.database);
-  const userData = new UserDataRuntime({
-    database: adapter,
-    files: packages.files,
-    randomId: () => crypto.randomUUID(),
-  });
-  await userData.writeUser([
-    {
-      kind: "put",
-      namespace: "preferences",
-      key: "shell",
-      expectedRevision: null,
-      payload: { ...DEFAULT_SHELL_SETTINGS, rotationNoticeDismissed: true },
-    },
-  ]);
-  const exported = await userData.exportUserData();
-  if (exported.kind !== "ok") throw new Error("export failed");
-  const backup = new File(
-    [await exported.value.arrayBuffer()],
-    "user-data.sqlite",
-  );
-  await userData.writeUser([
-    {
-      kind: "put",
-      namespace: "preferences",
-      key: "shell",
-      expectedRevision: 1,
-      payload: { ...DEFAULT_SHELL_SETTINGS, rotationNoticeDismissed: false },
-    },
-  ]);
-  const worker = await startWorker({
-    kind: "ok",
-    value: {
-      registry: packages.registry,
-      userData: { kind: "ok", value: adapter },
-      files: packages.files,
-    },
-  });
-  const inspected = await worker.client.request("inspectUserDataBackup", [
-    backup,
-  ]);
-  if (inspected.kind !== "ok") throw new Error("inspect failed");
-  const value = inspected.value as { token: string; currentRevision: number };
-  worker.scope.failReplies = true;
-  const restore = worker.client.request("restoreUserData", [
-    value.token,
-    value.currentRevision,
-    true,
-  ]);
-  const read = worker.client.request("current", []);
-  return { ...worker, userData, restore, read };
-}
-
 describe("SQLite Worker fatal reply transport", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     workerModuleState.opened = undefined;
   });
 
-  it("escalates two failed reply posts after committed restore and settles every client request once", async () => {
-    const f = await restoreFixture();
-    const restoreSettled = vi.fn();
-    const readSettled = vi.fn();
-    void f.restore.then(restoreSettled);
-    void f.read.then(readSettled);
-
+  it("escalates failed package replies and settles every pending request", async () => {
+    const packages = createRuntimeFixture();
+    const f = await startWorker({
+      kind: "ok",
+      value: { registry: packages.registry, files: packages.files },
+    });
+    f.scope.failReplies = true;
+    const first = f.client.request("current", []);
+    const second = f.client.request("current", []);
     await f.scope.secondFailedReply.promise;
     await new Promise<void>((resolve) => setImmediate(resolve));
-    expect(f.scope.failedReplies).toBe(2);
     expect(f.scope.reportedErrors).toBe(1);
-    await expect(f.restore).resolves.toEqual({
-      kind: "restore-outcome-unknown",
-    });
-    await expect(f.read).resolves.toEqual({
+    await expect(first).resolves.toEqual({
       kind: "failed",
       error: { code: "STORAGE_UNAVAILABLE" },
     });
-    expect(await f.userData.readUser("preferences", "shell")).toMatchObject({
-      kind: "ok",
-      value: { payload: { rotationNoticeDismissed: true } },
-    });
-    await expect(f.client.request("current", [])).resolves.toEqual({
+    await expect(second).resolves.toEqual({
       kind: "failed",
       error: { code: "STORAGE_UNAVAILABLE" },
     });
-
-    f.scope.reportError();
     f.client.closeTransport();
-    expect(restoreSettled).toHaveBeenCalledOnce();
-    expect(readSettled).toHaveBeenCalledOnce();
     expect(f.transport.terminated).toBe(1);
-    await f.userData.close();
   });
 
   it("keeps normal startup failure authoritative without transport escalation", async () => {

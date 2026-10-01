@@ -1,12 +1,15 @@
-import type { StorageResult } from "../contracts/package.ts";
-import type { UserNamespace, UserRecord } from "../contracts/user-data.ts";
+import { USER_DATA_SCHEMA_SQL } from "./legacy-user-schema.ts";
+import type { StorageResult } from "../../src/storage/contracts/package.ts";
+import type {
+  UserNamespace,
+  UserRecord,
+} from "../../src/storage/contracts/user-data.ts";
 import {
   USER_DATA_MAX_PAYLOAD_BYTES,
   validateUserRecordPayload,
-} from "../schema/user-record-validation.ts";
-import { userDatabaseFailure } from "../schema/package-database-failure.ts";
-import { USER_DATA_SCHEMA_SQL } from "../schema/sql.ts";
-import type { RuntimeDatabase } from "./runtime-ports.ts";
+} from "../../src/storage/schema/user-record-validation.ts";
+import { userDatabaseFailure } from "../../src/storage/schema/package-database-failure.ts";
+import type { RuntimeDatabase } from "../../src/storage/runtime/runtime-ports.ts";
 
 export const USER_DATA_MAX_BACKUP_BYTES = 256 * 1024 * 1024;
 export const USER_NAMESPACES = [

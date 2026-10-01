@@ -18,6 +18,7 @@ const storyRoot = path.resolve("src/story");
    implementation or permits deep storage imports. */
 function reachableFromStory(target: string): boolean {
   return (
+    target === "src/modules/index.ts" ||
     target === "src/battle/battle-contracts.ts" ||
     target === "src/shell/index.ts" ||
     target === "src/storage/index.ts" ||

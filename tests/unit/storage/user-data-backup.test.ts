@@ -1,3 +1,4 @@
+import { USER_DATA_SCHEMA_SQL } from "../../fixtures/legacy-user-schema.ts";
 import {
   allUserMutations,
   logicalUserSnapshot,
@@ -9,11 +10,8 @@ import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SHELL_SETTINGS } from "../../../src/shell/settings/shell-settings.ts";
-import {
-  USER_DATA_MAX_PAYLOAD_BYTES,
-  USER_DATA_SCHEMA_SQL,
-} from "../../../src/storage/schema/index.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { USER_DATA_MAX_PAYLOAD_BYTES } from "../../../src/storage/schema/index.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import type {
   RuntimeDatabase,
   RuntimeFileStore,

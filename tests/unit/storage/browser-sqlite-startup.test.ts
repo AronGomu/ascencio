@@ -9,7 +9,6 @@ import {
 } from "./sqlite-fixtures.ts";
 import { databaseAdapter, packageOpenFailures } from "./runtime-fixtures.ts";
 import { AtomicPackageRuntime } from "../../../src/storage/runtime/atomic-package-runtime.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
 import { StorageRpcDispatcher } from "../../../src/storage/runtime/rpc-dispatch.ts";
 const mocks = vi.hoisted(() => ({ init: vi.fn() }));
 vi.mock("@sqlite.org/sqlite-wasm", () => ({ default: mocks.init }));
@@ -123,25 +122,14 @@ it("keeps content/current/query usable with corrupt user DB and preserves its by
   expect(opened.kind).toBe("ok");
   if (opened.kind !== "ok") throw new Error("startup failed");
   const browser = opened.value;
-  expect(browser.userData).toEqual({
-    kind: "failed",
-    error: { code: "USER_DATA_INVALID" },
-  });
   const packages = new AtomicPackageRuntime({
     registry: browser.registry,
     files: browser.files,
     now: () => "2026-09-24T00:00:00.000Z",
     randomId: () => "degraded",
   });
-  const userData = new UserDataRuntime({
-    ...(browser.userData.kind === "ok"
-      ? { database: browser.userData.value }
-      : { failure: browser.userData.error }),
-    files: browser.files,
-    randomId: () => "degraded-user",
-  });
   const post = vi.fn();
-  const dispatcher = new StorageRpcDispatcher(packages, post, userData);
+  const dispatcher = new StorageRpcDispatcher(packages, post);
   await dispatcher.dispatch({ id: "current", method: "current", args: [] });
   expect(post.mock.lastCall?.[0]).toMatchObject({ result: { kind: "ok" } });
   await dispatcher.dispatch({
@@ -152,19 +140,9 @@ it("keeps content/current/query usable with corrupt user DB and preserves its by
   expect(post.mock.lastCall?.[0]).toMatchObject({
     result: { kind: "ok", value: expect.any(Object) },
   });
-  for (const [method, args] of [
-    ["readUser", ["preferences", "shell"]],
-    ["listUser", ["preferences"]],
-    ["writeUser", [[]]],
-    ["exportUserData", []],
-    ["inspectUserDataBackup", [new File([], "backup.sqlite")]],
-    ["restoreUserData", ["token", 0, true]],
-  ]) {
-    await dispatcher.dispatch({ id: method, method, args });
-    expect(post.mock.lastCall?.[0]).toMatchObject({
-      result: { kind: "failed", error: { code: "USER_DATA_INVALID" } },
-    });
-  }
+  expect(
+    fixture.handles.some((handle) => handle.key === "/user-data.sqlite"),
+  ).toBe(false);
   expect(readFileSync(fixture.user.file)).toEqual(fixture.before);
   await dispatcher.dispatch({ id: "close", method: "close", args: [] });
   for (const handle of fixture.handles)
@@ -175,28 +153,13 @@ it("keeps content/current/query usable with corrupt user DB and preserves its by
 it.each(packageOpenFailures)(
   "preserves typed native $label startup cause and closes opened handles",
   async ({ error, code }) => {
-    for (const failKey of ["/content-registry.sqlite", "/user-data.sqlite"]) {
+    for (const failKey of ["/content-registry.sqlite"]) {
       for (const failAt of ["open", "pragma"] as const) {
         const fixture = nativeFixture({ failKey, failAt, error });
         const opened = await openBrowserSqliteRuntime();
         const expected =
-          code === "PACKAGE_INTEGRITY_FAILED"
-            ? failKey === "/user-data.sqlite"
-              ? "USER_DATA_INVALID"
-              : "STORAGE_UNAVAILABLE"
-            : code;
-        if (failKey === "/content-registry.sqlite") {
-          expect(opened).toEqual({ kind: "failed", error: { code: expected } });
-        } else {
-          expect(opened.kind).toBe("ok");
-          if (opened.kind !== "ok") throw new Error("startup failed");
-          expect(opened.value.userData).toEqual({
-            kind: "failed",
-            error: { code: expected },
-          });
-          opened.value.registry.close();
-          opened.value.files.close();
-        }
+          code === "PACKAGE_INTEGRITY_FAILED" ? "STORAGE_UNAVAILABLE" : code;
+        expect(opened).toEqual({ kind: "failed", error: { code: expected } });
         for (const handle of fixture.handles)
           expect(handle.close).toHaveBeenCalledOnce();
         expect(fixture.pauseVfs).toHaveBeenCalledOnce();
@@ -218,7 +181,6 @@ it("closes staged handle if secure-open pragmas fail", async () => {
   expect(() => opened.value.files.openDatabase("/staged.sqlite")).toThrow(
     "injected pragma",
   );
-  if (opened.value.userData.kind === "ok") opened.value.userData.value.close();
   opened.value.registry.close();
   opened.value.files.close();
   for (const handle of fixture.handles)

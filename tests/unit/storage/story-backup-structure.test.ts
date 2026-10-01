@@ -1,6 +1,6 @@
 import { readFileSync, rmdirSync, unlinkSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import { createSqliteStoryRepository } from "../../../src/story/saves/sqlite-story-repository.ts";
 import { createUserDataFixture } from "./sqlite-fixtures.ts";
 import {

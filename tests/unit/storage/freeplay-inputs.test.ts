@@ -23,8 +23,8 @@ import {
 } from "../../../src/decks/validation/index.ts";
 import { assertInstalledCardPool } from "../../../src/battle/worker/decks/resolve-duel-decks.ts";
 import { loadNormalizedCatalog } from "../../../scripts/lib/sqlite-content/normalized-package-source.ts";
-import productionDecks from "../../../assets/content/freeplay/decks.json" with { type: "json" };
-import productionLimits from "../../../assets/content/freeplay/limits.json" with { type: "json" };
+import productionDecks from "../../../content/freeplay/decks.json" with { type: "json" };
+import productionLimits from "../../../content/freeplay/limits.json" with { type: "json" };
 import {
   closeFreeplayInputs,
   loadFreeplayInputs,
@@ -51,7 +51,7 @@ import {
   fixtureFile,
 } from "./runtime-fixtures.ts";
 import { createSqliteUserServices } from "../../../src/shell/adapters/sqlite-user-services.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import {
   createBlankDeck,
   emptyDeckHistory,

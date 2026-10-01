@@ -1,10 +1,14 @@
+import type { FactValue } from "../../modules/index.ts";
 // src/story/saves/generation-contracts.ts; public through src/story/saves/index.ts
 import type { StoryState } from "../model/story-state.ts";
 export type StorySlotKey =
   `manual:${1 | 2 | 3}` | "autosave" | "checkpoint:pre-duel";
 export interface StoryBinding {
   readonly chapterId: string;
-  readonly contentId: "prototype-prologue-v1";
+  readonly contentId: string;
+  readonly facts?: Readonly<Record<string, FactValue>>;
+  readonly factsSchemaVersion?: 1;
+  readonly beatId?: string;
   readonly revision: number;
   readonly completedChapterIds: readonly string[];
 }

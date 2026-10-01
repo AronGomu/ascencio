@@ -33,8 +33,8 @@ export async function writePackageArchive(
   root: string,
   packages: readonly ExportReceipt[],
 ): Promise<PackageArchiveReceipt> {
-  if (packages.length < 1 || packages.length > 4)
-    throw new Error("package archive requires one to four packages");
+  if (packages.length < 1 || packages.length > 64)
+    throw new Error("package archive requires one to sixty-four packages");
   const output = path.resolve(root, ARCHIVE_RELATIVE);
   await assertNoSymlinkParents(root, ARCHIVE_RELATIVE);
   await mkdir(path.dirname(output), { recursive: true });

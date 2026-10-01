@@ -64,7 +64,7 @@ export interface PackageStore {
   >;
 }
 
-export type ContentQuery =
+export type DirectContentQuery =
   | {
       readonly kind: "cards";
       readonly locale: string;
@@ -99,7 +99,23 @@ export type ContentQuery =
     }
   | { readonly kind: "set-image"; readonly setId: string };
 
+export type ContentQuery =
+  | DirectContentQuery
+  | {
+      readonly kind: "module-query";
+      readonly packageId: PackageId;
+      readonly query: Extract<
+        DirectContentQuery,
+        { kind: "cards" | "scripts" | "sets" | "set-image" }
+      >;
+    };
+
 export interface QueryMap {
+  readonly "module-query":
+    | QueryMap["cards"]
+    | QueryMap["scripts"]
+    | QueryMap["sets"]
+    | QueryMap["set-image"];
   readonly cards: readonly CardDefinition[];
   readonly "card-search": readonly number[];
   readonly config:

@@ -1,3 +1,4 @@
+import { validFacts, stableReference } from "../../modules/index.ts";
 import type {
   PersistedStoryState,
   PersistedStoryEnvelope,
@@ -149,7 +150,23 @@ export function parseStoredStoryEnvelope(
 function validStoryBinding(
   value: unknown,
 ): value is PersistedStoryEnvelope["story"] {
-  if (!exactRecord(value, STORY_KEYS)) return false;
+  if (
+    !plainRecord(value) ||
+    !exactRecord(value, [
+      ...STORY_KEYS,
+      ...["facts", "factsSchemaVersion", "beatId"].filter((key) =>
+        Object.hasOwn(value, key),
+      ),
+    ])
+  )
+    return false;
+  if (
+    (value.facts !== undefined && !validFacts(value.facts)) ||
+    (value.factsSchemaVersion !== undefined &&
+      value.factsSchemaVersion !== 1) ||
+    (value.beatId !== undefined && !stableReference(value.beatId))
+  )
+    return false;
   if (
     !reference(value.chapterId) ||
     !reference(value.contentId) ||

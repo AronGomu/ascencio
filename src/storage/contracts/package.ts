@@ -1,5 +1,9 @@
 export type PackageId =
-  "duel-core" | "card-library" | "freeplay" | `chapter-${string}`;
+  | "duel-core"
+  | "card-library"
+  | "freeplay"
+  | `chapter-${string}`
+  | `card-pack-${string}`;
 export type PackageType = "duel-core" | "card-library" | "freeplay" | "chapter";
 
 export interface PackageDependency {

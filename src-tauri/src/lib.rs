@@ -46,21 +46,16 @@ pub(crate) fn content_folder(handle: &tauri::AppHandle) -> Result<PathBuf, Strin
 }
 
 pub(crate) fn manifest_is_valid(manifest: &ReleaseManifest) -> bool {
-    if manifest.schema_version != 1 || manifest.packages.is_empty() {
+    if manifest.schema_version != 1
+        || manifest
+            .generation
+            .is_some_and(|generation| generation > 9_007_199_254_740_991)
+    {
         return false;
     }
     let mut ids = std::collections::HashSet::new();
     for package in &manifest.packages {
-        let chapter = package.package_id.strip_prefix("chapter-");
-        let valid_id = matches!(
-            package.package_id.as_str(),
-            "duel-core" | "card-library" | "freeplay"
-        ) || chapter.is_some_and(|number| {
-            number.len() >= 2
-                && number.bytes().all(|byte| byte.is_ascii_digit())
-                && !number.starts_with("00")
-                && number != "00"
-        });
+        let valid_id = native_package_manager::valid_id(&package.package_id);
         let valid_version = package.version.split('.').count() == 3
             && package
                 .version
@@ -78,24 +73,7 @@ pub(crate) fn manifest_is_valid(manifest: &ReleaseManifest) -> bool {
             return false;
         }
     }
-    let mut chapters: Vec<u32> = ids
-        .iter()
-        .filter_map(|id| {
-            id.strip_prefix("chapter-")
-                .and_then(|value| value.parse().ok())
-        })
-        .collect();
-    chapters.sort_unstable();
-    if chapters
-        .iter()
-        .enumerate()
-        .any(|(index, chapter)| *chapter != (index + 1) as u32)
-    {
-        return false;
-    }
-    ["duel-core", "card-library", "freeplay", "chapter-01"]
-        .iter()
-        .all(|required| ids.contains(required))
+    true
 }
 
 pub(crate) fn verified_file(path: &Path, package: &ReleasePackage) -> Result<bool, String> {
@@ -135,7 +113,16 @@ fn bundled_manifest(handle: &tauri::AppHandle) -> Result<ReleaseManifest, String
         .map_err(|error| error.to_string())?;
     let manifest: ReleaseManifest =
         serde_json::from_str(&source).map_err(|error| error.to_string())?;
-    if !manifest_is_valid(&manifest) {
+    if !manifest_is_valid(&manifest)
+        || !["duel-core", "card-library", "freeplay", "chapter-01"]
+            .iter()
+            .all(|id| {
+                manifest
+                    .packages
+                    .iter()
+                    .any(|package| package.package_id == *id)
+            })
+    {
         return Err("Bundled content manifest is incomplete".into());
     }
     Ok(manifest)
@@ -164,13 +151,6 @@ fn seed_content(handle: &tauri::AppHandle) -> Result<ContentStatus, String> {
         return Ok(ContentStatus {
             content_folder: folder.to_string_lossy().into_owned(),
             packages: active.packages,
-        });
-    }
-    #[cfg(debug_assertions)]
-    if !resource_path(handle, "release.json")?.exists() {
-        return Ok(ContentStatus {
-            content_folder: folder.to_string_lossy().into_owned(),
-            packages: Vec::new(),
         });
     }
     let release = bundled_manifest(handle)?;
@@ -235,24 +215,15 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .manage(native_user_data::BackupState::default())
+        .manage(native_user_data::UserJsonState::default())
         .manage(native_package_manager::PackageManager::default())
-        .setup(|app| {
-            native_user_data::clear_stale_backups(app.handle()).map_err(std::io::Error::other)?;
-            Ok(())
-        })
         .invoke_handler(tauri::generate_handler![
             native_content_status,
             open_content_folder,
             native_storage::native_package_stack,
             native_storage::native_content_query,
-            native_user_data::native_user_read,
-            native_user_data::native_user_list,
-            native_user_data::native_user_write,
-            native_user_data::native_user_export,
-            native_user_data::native_user_inspect,
-            native_user_data::native_user_discard,
-            native_user_data::native_user_restore,
+            native_user_data::native_user_json_read,
+            native_user_data::native_user_json_write,
             native_package_manager::native_import_begin,
             native_package_manager::native_import_chunk,
             native_package_manager::native_import_preview,

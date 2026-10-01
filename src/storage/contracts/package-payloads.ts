@@ -1,3 +1,4 @@
+import type { ChapterModule } from "../../modules/index.ts";
 import type { BattleRuntimeInput } from "../../battle/ports/index.ts";
 import type { CardDefinition } from "../../cards/index.ts";
 import type { DeckCardLists } from "../../decks/contracts/index.ts";
@@ -39,6 +40,7 @@ export interface FreeplayConfig {
 }
 
 export interface ChapterConfig {
+  readonly module?: ChapterModule;
   readonly title: string;
   readonly chapterNumber: number;
   readonly storyContentId: StoryDocument["contentId"] | null;

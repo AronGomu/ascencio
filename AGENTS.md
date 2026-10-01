@@ -28,7 +28,7 @@ Applies to Claude Code, Codex, and pi; each has the `graphify` skill installed g
 
 YGO Story Duel Simulator is a browser-first, offline Yu-Gi-Oh! duel client. One shell exposes Duel Simulator, Deck Editor, Visual Novel, and manual content lifecycle. Project Ignis `ygopro-core` is sole authority for rules, legal actions, effects, and results.
 
-Current content uses user-selected immutable SQLite packages in OPFS. App bundle is content-free except SQLite executable; package sources/output never enter `generated/build/app/` or precache. New mutable data uses isolated `user-data.sqlite`; app never migrates or deletes legacy stores.
+Current content uses user-selected immutable SQLite packages in OPFS. App bundle is content-free except SQLite executable; package sources/output never enter `generated/build/app/` or precache. Mutable user data uses `user-data.json` in native app data and `ascencio:user-data:v1` in browser localStorage; app never migrates or deletes legacy stores.
 
 The three-UI restructure (plan `PLAN_2026_08_14_three_ui_restructure`) is complete as of 2026-08-15 (commit tagged `restructure-complete`). All three domains — Duel Simulator, Deck Editor, Visual Novel — are live under one shell, reachable through `index.html`. Development runs on a single trunk; the per-domain branch and worktree topology is retired, see [`docs/ADR/045_ADR_single_branch_trunk_development.md`](docs/ADR/045_ADR_single_branch_trunk_development.md). Build budgets are machine-enforced per domain via `npm run build:verify`.
 
@@ -48,6 +48,7 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 - Use [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) as completed semantic DOM-field migration history.
 - Use [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) as completed MVP/Phaser baseline history.
 - R1. Use [`docs/ADR/099_ADR_completed_manual_sqlite_cutover.md`](docs/ADR/099_ADR_completed_manual_sqlite_cutover.md) plus [`docs/architecture/04-data/manual-sqlite-content-import.md`](docs/architecture/04-data/manual-sqlite-content-import.md) for current manual package/runtime/user-data architecture.
+- R3. Use [`docs/assets/content-modules.md`](docs/assets/content-modules.md) and [`docs/ADR/102_ADR_content_modules_and_campaign_facts.md`](docs/ADR/102_ADR_content_modules_and_campaign_facts.md) for card/chapter composition and save-based prerequisites; ADR-101 owns JSON user persistence.
 - R2. Use [`docs/assets/manual-sqlite-setup.md`](docs/assets/manual-sqlite-setup.md) for current owner setup/release gates; use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for retained source acquisition/verification.
 - `docs/archive/` is historical only and must not override current decisions.
 
@@ -73,18 +74,18 @@ Commit a plan before retiring it and that SHA stays a real address: `git show <s
 
 ## Technical stack
 
-| Area        | Technology                                                     | Role                                                                                                                     |
-| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Language    | TypeScript (strict), Node.js 24+                               | Application, contracts, tooling, tests, and opponent policy                                                              |
-| Build       | Vite                                                           | Dev server, Worker/WASM handling, and static build                                                                       |
-| UI          | Svelte                                                         | Application layout, semantic DOM field, prompts, logs, errors, and results                                               |
-| Duel field  | Svelte DOM + CSS/SVG                                           | Native controls, typed physical layout, highlights, and non-authoritative feedback                                       |
-| Rules       | Vendored `ocgcore-wasm@0.1.2` / Project Ignis `ygopro-core`    | Authoritative duel engine                                                                                                |
-| Isolation   | Dedicated Web Worker                                           | Sole owner of WASM, protocol, scripts, handles, and state projection                                                     |
-| Data        | BabelCDB, CardScripts, Project Ignis strings                   | Versioned card/effect/protocol snapshot                                                                                  |
-| Persistence | SQLite WASM + OPFS; retained `idb`/Cache Storage operationally | Immutable content registry/packages, isolated `user-data.sqlite`; app-update approval/diagnostics + app shell cache only |
-| Tests       | Node test runner, Vitest, Testing Library, Playwright          | Unit, component, integration, and browser coverage                                                                       |
-| Quality     | TypeScript, ESLint, Prettier, CI                               | Types, lint, format, compatibility, assets, and build gates                                                              |
+| Area        | Technology                                                                                              | Role                                                                                                                        |
+| ----------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Language    | TypeScript (strict), Node.js 24+                                                                        | Application, contracts, tooling, tests, and opponent policy                                                                 |
+| Build       | Vite                                                                                                    | Dev server, Worker/WASM handling, and static build                                                                          |
+| UI          | Svelte                                                                                                  | Application layout, semantic DOM field, prompts, logs, errors, and results                                                  |
+| Duel field  | Svelte DOM + CSS/SVG                                                                                    | Native controls, typed physical layout, highlights, and non-authoritative feedback                                          |
+| Rules       | Vendored `ocgcore-wasm@0.1.2` / Project Ignis `ygopro-core`                                             | Authoritative duel engine                                                                                                   |
+| Isolation   | Dedicated Web Worker                                                                                    | Sole owner of WASM, protocol, scripts, handles, and state projection                                                        |
+| Data        | BabelCDB, CardScripts, Project Ignis strings                                                            | Versioned card/effect/protocol snapshot                                                                                     |
+| Persistence | SQLite WASM + OPFS for content; JSON/localStorage for saves; retained `idb`/Cache Storage operationally | Immutable content registry/packages, JSON/localStorage user records; app-update approval/diagnostics + app shell cache only |
+| Tests       | Node test runner, Vitest, Testing Library, Playwright                                                   | Unit, component, integration, and browser coverage                                                                          |
+| Quality     | TypeScript, ESLint, Prettier, CI                                                                        | Types, lint, format, compatibility, assets, and build gates                                                                 |
 
 ## Three-domain application direction
 
@@ -103,7 +104,7 @@ The ADR-022 boundaries above are machine-enforced, not conventions. Two checks r
 
 What the rules encode:
 
-- Public entries are `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts`, `src/deck-select/index.ts` and `src/decks/index.ts`. A cross-domain import targets one of those and nothing deeper.
+- Public entries are `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts`, `src/deck-select/index.ts`, `src/decks/index.ts` and the pure module contracts in `src/modules/index.ts`. A cross-domain import targets one of those and nothing deeper.
 - `src/deck-select/` is the shared deck-selection screen: purely presentational, it imports no sibling domain at all, and hosts map their own records into its view models. Its ESLint zone excludes every sibling's internals in both directions.
 - The duel's source lives under `src/battle/` — `app/`, `components/`, `decks/`, `duel/`, `field/`, `storage/` and `worker/` are battle internals, reachable only through `src/battle/index.ts`.
 - `src/decks/` is the shared deck-data library rather than a lazy UI domain, so its modules stay importable; only the shape of its index is frozen.
@@ -121,7 +122,7 @@ What the rules encode:
 - Synchronous core callbacks use preloaded memory and perform no async I/O.
 - C1. Frozen engine compatibility and Project Ignis content are validated as immutable SQLite package stack; registry generation commit owns activation.
 - C2. App build/cache contains exact SQLite executable, never OCG WASM, package DBs, card/chapter media, raw content, ZIP/progressive/R2 metadata.
-- C3. Package lifecycle never reads/writes saves. New user data lives in isolated `user-data.sqlite`; legacy stores remain untouched/unread; no migration or save-continuity guarantee.
+- C3. Package lifecycle never reads/writes saves. User data lives in native `user-data.json` or browser localStorage; legacy stores remain untouched/unread; no migration from legacy stores. Campaign facts remain in JSON saves when modules are removed.
 - Production duels shuffle normally; deterministic inputs are test/diagnostic-only.
 
 ## File design policy

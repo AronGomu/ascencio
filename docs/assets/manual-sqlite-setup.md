@@ -9,7 +9,7 @@
 1. L1. Install Node.js 24+ dependencies from lockfile: `npm ci`.
 2. L2. Inspect supported producer/verification syntax: `npm run content:export -- --help`; `npm run content:verify -- --help`.
 3. L3. Inspect package-root move syntax: `npm run assets:restructure -- --help`.
-4. L4. Keep producer inputs under `assets/content/<package-id>/`; keep app icon/link metadata under `assets/app/`; never move frozen `vendor/ocgcore-wasm/0.1.2/`.
+4. L4. Keep tracked duel-core and Free Play inputs under `content/duel-core/` and `content/freeplay/`; keep acquired card-library and chapter inputs under `assets/content/<package-id>/`; keep app icon/link metadata under `assets/app/`; never move frozen `vendor/ocgcore-wasm/0.1.2/`.
 5. L5. Build app independently with `npm run build`; this must not acquire or package content.
 
 Do not run export/acquisition solely to inspect syntax. Export writes immutable output and requires deliberate version/source inputs.
@@ -23,7 +23,7 @@ npm run assets:restructure -- --plan
 npm run assets:restructure -- --apply generated/content-packages/asset-move-plan.json
 ```
 
-`content:export` validates full selected recipe/dependency/reference closure and emits directly named raw SQLite files plus `generated/content-packages/content-packages.zip`. The app accepts that single ZIP or one to four raw files. `content:verify` validates one raw file only; it does not infer active stack validity. Existing differing output under same package ID/version fails immutable identity conflict and must not be overwritten or described as upgrade.
+`content:export` validates full selected recipe/dependency/reference closure and emits directly named raw SQLite files plus `generated/content-packages/content-packages.zip`. The app accepts that single ZIP or one to sixty-four raw files. `content:verify` validates one raw file only; it does not infer active stack validity. Existing differing output under same package ID/version fails immutable identity conflict and must not be overwritten or described as upgrade.
 
 Retained `assets:migrate`, `assets:promote`, and `assets:profiles:sync` are pure local source scanners/copy/profile tools. They do not publish, host, upload, download player packages, or determine browser activation.
 

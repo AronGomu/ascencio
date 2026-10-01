@@ -33,7 +33,7 @@ export async function packageQueryFixture() {
   const chapter = await loadChapterOneContentSource(process.cwd());
   const json = (path: string): unknown =>
     JSON.parse(readFileSync(path, "utf8"));
-  const core = json("assets/content/duel-core/config.json") as DuelCoreConfig;
+  const core = json("content/duel-core/config.json") as DuelCoreConfig;
   const authoredLibrary = json(
     "assets/content/card-library/config.json",
   ) as CardLibraryConfig;

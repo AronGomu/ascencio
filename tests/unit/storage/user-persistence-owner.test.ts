@@ -17,7 +17,7 @@ import { defaultPersistedUiState } from "../../../src/battle/ports/index.ts";
 import { describe, expect, it, vi } from "vitest";
 import { createUserPersistenceOwner } from "../../../src/shell/application/user-persistence-owner.ts";
 import type { LocalStorageClient } from "../../../src/storage/index.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import { createUserDataFixture } from "./sqlite-fixtures.ts";
 import { createNodeFileStore, databaseAdapter } from "./runtime-fixtures.ts";
 

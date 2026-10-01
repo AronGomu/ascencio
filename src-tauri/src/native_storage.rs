@@ -38,13 +38,8 @@ pub(crate) struct PackageStack {
 
 pub(crate) fn installed(handle: &tauri::AppHandle) -> Result<ReleaseManifest, String> {
     let path = content_folder(handle)?.join("active.json");
-    #[cfg(debug_assertions)]
     if !path.exists() {
-        return Ok(ReleaseManifest {
-            schema_version: 1,
-            packages: Vec::new(),
-            generation: Some(0),
-        });
+        crate::seed_content(handle)?;
     }
     let manifest: ReleaseManifest =
         serde_json::from_slice(&fs::read(path).map_err(|error| error.to_string())?)
@@ -132,6 +127,11 @@ pub(crate) fn native_package_stack(
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub(crate) enum ContentQuery {
+    ModuleQuery {
+        #[serde(rename = "packageId")]
+        package_id: String,
+        query: Box<ContentQuery>,
+    },
     Cards {
         locale: String,
         #[serde(rename = "afterCode")]
@@ -193,7 +193,8 @@ impl ContentQuery {
             | Self::Scripts { .. }
             | Self::Sets { .. }
             | Self::SetImage { .. } => "card-library",
-            Self::Config { package_id }
+            Self::ModuleQuery { package_id, .. }
+            | Self::Config { package_id }
             | Self::Decks { package_id }
             | Self::Opponents { package_id }
             | Self::Limits { package_id }
@@ -203,6 +204,19 @@ impl ContentQuery {
     }
     fn valid(&self) -> bool {
         match self {
+            Self::ModuleQuery { package_id, query } => {
+                (package_id == "card-library"
+                    || package_id.starts_with("card-pack-")
+                        && crate::native_package_manager::valid_id(package_id))
+                    && matches!(
+                        query.as_ref(),
+                        Self::Cards { .. }
+                            | Self::Scripts { .. }
+                            | Self::Sets { .. }
+                            | Self::SetImage { .. }
+                    )
+                    && query.valid()
+            }
             Self::Cards {
                 locale,
                 after_code,
@@ -303,6 +317,7 @@ where
 
 fn execute_query(db: &Connection, request: ContentQuery) -> Result<Value, String> {
     match request {
+        ContentQuery::ModuleQuery { query, .. } => execute_query(db, *query),
         ContentQuery::Cards {
             locale,
             after_code,

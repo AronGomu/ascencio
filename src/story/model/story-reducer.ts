@@ -143,13 +143,21 @@ function reduceStoryCommand(
         lastInputId: command.inputId,
       };
     case "choose":
-      if (state.screen !== "narrative" || state.choice !== null) return state;
+      if (
+        state.screen !== "narrative" ||
+        state.choice !== null ||
+        !Object.hasOwn(
+          document?.choiceResponses ?? CHOICE_RESPONSES,
+          command.choice,
+        )
+      )
+        return state;
       return {
         ...state,
         choice: command.choice,
-        choiceResponse: (document?.choiceResponses ?? CHOICE_RESPONSES)[
-          command.choice
-        ],
+        choiceResponse:
+          (document?.choiceResponses ?? CHOICE_RESPONSES)[command.choice] ??
+          null,
       };
     case "go-to-map":
       return {
@@ -159,9 +167,9 @@ function reduceStoryCommand(
         laterAcknowledgment:
           state.choice === null
             ? null
-            : (document?.laterAcknowledgments ?? LATER_ACKNOWLEDGMENTS)[
+            : ((document?.laterAcknowledgments ?? LATER_ACKNOWLEDGMENTS)[
                 state.choice
-              ],
+              ] ?? null),
       };
     case "select-location": {
       if (state.screen !== "map") return state;

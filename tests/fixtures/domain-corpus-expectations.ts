@@ -125,7 +125,9 @@ export function domainCorpusExpectations() {
         ),
       ),
     ],
-    core: sourceJson<DuelCoreConfig>("duel-core/config.json"),
+    core: JSON.parse(
+      readFileSync("content/duel-core/config.json", "utf8"),
+    ) as DuelCoreConfig,
     decks: sourceJson<
       {
         id: string;

@@ -344,7 +344,16 @@
         openingMode = target;
         let acquired: SessionByMode[keyof SessionByMode];
         try {
-          acquired = await app.acquire(target, controller.signal);
+          acquired = await app.acquire(
+            target,
+            controller.signal,
+            target === "story"
+              ? {
+                  intent: storyEntryIntent,
+                  checkpoint: requestedRoute.kind === "duel-session",
+                }
+              : undefined,
+          );
         } catch (error) {
           if (controller.signal.aborted) continue;
           throw error;
@@ -1104,6 +1113,7 @@
             storyAvailable={coreGate.kind === "ready" &&
               !(coreGate.missing ?? []).includes("chapter-01")}
             freeplayAvailable={coreGate.kind === "ready"}
+            resumeAvailable={coreGate.kind === "ready"}
             onfreeplaywarm={warmFreePlay}
           />
         {/key}
@@ -1257,15 +1267,24 @@
                 initialReadLog={initialStoryReadLog}
                 ruleset={gameplay!.editor().ruleset}
                 initialStorageError={checkpointReadError}
-                initialAutosaveRevision={storyAutosaveRevision}
+                initialAutosaveRevision={domainSession?.kind === "story"
+                  ? (domainSession.inputs.entry?.autosaveRevision ??
+                    storyAutosaveRevision)
+                  : storyAutosaveRevision}
                 onautosaverevision={(revision) =>
                   (storyAutosaveRevision = revision)}
                 onencounter={startEncounter}
                 {storyEntryIntent}
                 ondecks={() => store.navigate(deckRoute("story", null))}
                 onmainmenu={() => store.navigate(HOME_ROUTE)}
-                resumeState={handback?.state ?? null}
-                resumeStory={handback?.story ?? null}
+                resumeState={handback?.state ??
+                  (domainSession?.kind === "story"
+                    ? (domainSession.inputs.entry?.state ?? null)
+                    : null)}
+                resumeStory={handback?.story ??
+                  (domainSession?.kind === "story"
+                    ? (domainSession.inputs.entry?.story ?? null)
+                    : null)}
                 resolution={handback?.resolution ?? null}
                 onhandled={() => {
                   handback = null;

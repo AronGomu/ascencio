@@ -1,3 +1,4 @@
+import { isChapterModule } from "../../modules/index.ts";
 import { createCards, type CardDefinition } from "../../cards/index.ts";
 import { OCG_TYPE, hasOcgType } from "../../cards/classification/index.ts";
 import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
@@ -299,6 +300,7 @@ function buildRelease(
     chapters: [
       {
         id: chapterId,
+        ...(config.module === undefined ? {} : { module: config.module }),
         document,
         cardCodes: [...allowedCardCodes].sort((left, right) => left - right),
         sets,
@@ -364,7 +366,10 @@ function isChapterConfig(value: QueryMap["config"]): value is ChapterConfig {
     Number.isSafeInteger(record.chapterNumber) &&
     Number(record.chapterNumber) > 0 &&
     (record.storyContentId === null ||
-      record.storyContentId === "prototype-prologue-v1") &&
+      (typeof record.storyContentId === "string" &&
+        record.storyContentId.length > 0 &&
+        record.storyContentId.length <= 256)) &&
+    (record.module === undefined || isChapterModule(record.module)) &&
     typeof defaults.starterDeckId === "string" &&
     defaults.starterDeckId.length > 0 &&
     typeof defaults.opponentId === "string" &&

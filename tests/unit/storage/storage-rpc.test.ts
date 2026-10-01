@@ -7,7 +7,7 @@ import type {
   RpcResponse,
 } from "../../../src/storage/contracts/rpc.ts";
 import { AtomicPackageRuntime } from "../../../src/storage/runtime/atomic-package-runtime.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import {
   createImportablePackageFixture,
   createUserDataFixture,
@@ -194,7 +194,7 @@ describe("storage RPC", () => {
           let hits = 0;
           vi.spyOn(fixture.files, "openDatabase").mockImplementation(
             (fileKey) => {
-              const target = fileKey === key && ++opens === 3;
+              const target = fileKey === key && ++opens === 2;
               if (target && phase === "open") {
                 hits += 1;
                 throw error;

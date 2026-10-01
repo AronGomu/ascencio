@@ -15,7 +15,7 @@ import {
 import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
 import type { StoryBinding } from "../../../src/story/saves/generation-contracts.ts";
 import { createSqliteStoryRepository } from "../../../src/story/saves/sqlite-story-repository.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import type { UserDataStore } from "../../../src/storage/index.ts";
 import {
   createUserDataFixture,

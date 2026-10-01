@@ -68,6 +68,9 @@ async function workspace(): Promise<string> {
   await put(root, "content/distribution-evidence.json", "retained");
   await put(root, "content/setup-evidence.json", "retained");
   await put(root, "content/README.md", "retained");
+  await put(root, "content/duel-core/config.json", "{}");
+  await put(root, "content/freeplay/config.json", "{}");
+  await put(root, "content/freeplay/decks.json", "[]");
   await put(root, "public/story/shop-sets.v1.json", "{}");
   await put(
     root,
@@ -134,6 +137,9 @@ describe("asset source restructure", () => {
     ).toEqual([
       "content/README.md",
       "content/distribution-evidence.json",
+      "content/duel-core/config.json",
+      "content/freeplay/config.json",
+      "content/freeplay/decks.json",
       "content/setup-evidence.json",
     ]);
     expect(planned.value.unknown).toEqual([]);

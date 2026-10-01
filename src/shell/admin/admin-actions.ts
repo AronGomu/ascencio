@@ -21,21 +21,21 @@ export const ADMIN_STORAGE_TARGETS: readonly AdminStorageTarget[] =
       id: "decks",
       label: "Free-play deck library",
       kind: "user",
-      name: "user-data.sqlite",
+      name: "user-data.json",
       namespaces: ["decks", "deck-meta", "deck-autosaves"],
     } as const),
     Object.freeze({
       id: "story-saves",
       label: "Story saves",
       kind: "user",
-      name: "user-data.sqlite",
+      name: "user-data.json",
       namespaces: ["story"],
     } as const),
     Object.freeze({
       id: "preferences",
       label: "Player settings and read history",
       kind: "user",
-      name: "user-data.sqlite",
+      name: "user-data.json",
       namespaces: ["preferences", "story-read-log"],
     } as const),
     Object.freeze({
@@ -79,7 +79,9 @@ export async function resetOperationalStorageTarget(
   factory: IDBFactory,
 ): Promise<AdminResetResult> {
   if (target.kind !== "indexeddb")
-    throw new Error(`User namespace reset requires injected SQLite capability`);
+    throw new Error(
+      `User namespace reset requires injected user data capability`,
+    );
   return await new Promise<AdminResetResult>((resolve, reject) => {
     const request = factory.deleteDatabase(target.name);
     request.onsuccess = () => resolve({ outcome: "deleted" });

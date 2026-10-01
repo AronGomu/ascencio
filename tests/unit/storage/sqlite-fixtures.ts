@@ -1,3 +1,4 @@
+import { USER_DATA_SCHEMA_SQL } from "../../fixtures/legacy-user-schema.ts";
 import { mkdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
@@ -9,7 +10,6 @@ import {
   CONTENT_REGISTRY_SCHEMA_SQL,
   FREEPLAY_SCHEMA_SQL,
   PACKAGE_SCHEMA_SQL,
-  USER_DATA_SCHEMA_SQL,
   type PackageId,
   type PackageManifest,
   type PackageType,

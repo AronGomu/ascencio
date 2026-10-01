@@ -35,6 +35,7 @@ type Domain =
   | "decks"
   | "content"
   | "storage"
+  | "modules"
   | "cards"
   | "shared-svelte-ui";
 
@@ -44,6 +45,7 @@ const PUBLIC_ENTRY: Readonly<Record<Domain, string | null>> = Object.freeze({
   "shared-svelte-ui": null,
   content: null,
   storage: "src/storage/index.ts",
+  modules: "src/modules/index.ts",
   shell: "src/shell/index.ts",
   story: "src/story/index.ts",
   "deck-editor": "src/deck-editor/index.ts",
@@ -84,6 +86,7 @@ function domainOf(file: string): Domain {
   if (file.startsWith("src/cards/")) return "cards";
   if (file.startsWith("src/shared-svelte-ui/")) return "shared-svelte-ui";
   if (file.startsWith("src/content/")) return "content";
+  if (file.startsWith("src/modules/")) return "modules";
   if (file.startsWith("src/storage/")) return "storage";
   if (file.startsWith("src/shell/")) return "shell";
   if (file.startsWith("src/story/")) return "story";
@@ -107,6 +110,7 @@ function isLegalImport(from: string, to: string): boolean {
     return [
       "src/battle/ports/index.ts",
       "src/cards/index.ts",
+      "src/modules/index.ts",
       "src/decks/contracts/index.ts",
       "src/shell/settings/index.ts",
       "src/story/playback/index.ts",
@@ -114,6 +118,7 @@ function isLegalImport(from: string, to: string): boolean {
       "src/story/saves/index.ts",
     ].includes(to);
   }
+  if (source === "modules") return to.startsWith("src/modules/");
   if (source === "cards") return to.startsWith("src/cards/");
   if (source === "shared-svelte-ui")
     return to.startsWith("src/shared-svelte-ui/");
@@ -339,6 +344,25 @@ function declaredExports(
 }
 
 describe("focused Cards/Decks public entries", () => {
+  it("src/modules/index.ts exact named exports", () => {
+    const declared = declaredExports("src/modules/index.ts");
+    expect([...declared.values, ...declared.types].sort()).toEqual(
+      [
+        "CampaignProgress",
+        "ChapterModule",
+        "DEFAULT_CHAPTER_MODULE",
+        "FactValue",
+        "ProgressRequirement",
+        "factValue",
+        "isChapterModule",
+        "progressSatisfied",
+        "readFact",
+        "stableReference",
+        "validFacts",
+        "validRequirements",
+      ].sort(),
+    );
+  });
   it.each([
     "export default 123;",
     "export default function named() {}",
@@ -1136,6 +1160,7 @@ it("Story pure ports/saves entries expose exact generation contracts without UI"
   ]);
   expect(Object.keys(saves).sort()).toEqual([
     "STORY_SLOT_KEYS",
+    "chapterTransition",
     "createSqliteStoryRepository",
     "isPersistableStoryState",
     "parseStoredStoryEnvelope",
@@ -1203,7 +1228,6 @@ it("storage schema and domain validator entries are exact", () => {
       "FREEPLAY_SCHEMA_SQL",
       "PACKAGE_SCHEMA_SQL",
       "USER_DATA_MAX_PAYLOAD_BYTES",
-      "USER_DATA_SCHEMA_SQL",
       "orderPackages",
       "parsePackageManifest",
       "validatePackageDatabase",

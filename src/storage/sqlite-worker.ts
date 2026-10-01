@@ -6,7 +6,6 @@ import type { MediaWarning } from "./contracts/storage-client.ts";
 import { AtomicPackageRuntime } from "./runtime/atomic-package-runtime.ts";
 import { openBrowserSqliteRuntime } from "./runtime/browser-sqlite.ts";
 import { StorageRpcDispatcher } from "./runtime/rpc-dispatch.ts";
-import { UserDataRuntime } from "./runtime/user-data-runtime.ts";
 import { requestLifetimeOwnerLock } from "./runtime/worker-lock.ts";
 
 const worker = self as unknown as DedicatedWorkerGlobalScope;
@@ -46,31 +45,12 @@ void requestLifetimeOwnerLock(navigator.locks, async () => {
     });
     const reconciled = await runtime.reconcileInterruptedImports();
     if (reconciled.kind === "failed") {
-      if (browser.userData.kind === "ok") browser.userData.value.close();
       runtime.close();
       openingFailure = reconciled.error;
       drainPending();
       return;
     }
-    const userData = new UserDataRuntime({
-      ...(browser.userData.kind === "ok"
-        ? { database: browser.userData.value }
-        : { failure: browser.userData.error }),
-      files: browser.files,
-      randomId: () => crypto.randomUUID(),
-    });
-    const userReconciled = await userData.reconcileStagedBackups();
-    if (userReconciled.kind === "failed") {
-      try {
-        await userData.close();
-      } finally {
-        runtime.close();
-      }
-      openingFailure = userReconciled.error;
-      drainPending();
-      return;
-    }
-    dispatcher = new StorageRpcDispatcher(runtime, post, userData);
+    dispatcher = new StorageRpcDispatcher(runtime, post);
     drainPending();
     await new Promise<void>((resolve) => {
       releaseOwner = resolve;

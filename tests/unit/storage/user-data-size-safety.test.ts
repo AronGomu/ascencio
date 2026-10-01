@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import {
   validateUserDataDatabase,
   USER_DATA_MAX_BACKUP_BYTES,
-} from "../../../src/storage/runtime/user-data-validation.ts";
+} from "../../fixtures/legacy-user-data-validation.ts";
 import { USER_DATA_MAX_PAYLOAD_BYTES } from "../../../src/storage/schema/user-record-validation.ts";
 import { createUserDataFixture } from "./sqlite-fixtures.ts";
 import {

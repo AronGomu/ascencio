@@ -17,6 +17,7 @@ const MANIFEST_KEYS = [
 ] as const;
 const DEPENDENCY_KEYS = ["packageId", "requirement", "version"] as const;
 const VERSION = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
+const CARD_PACK_ID = /^card-pack-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CHAPTER_ID = /^chapter-(0[1-9]|[1-9][0-9]+)$/;
 
 export function parsePackageManifest(
@@ -59,7 +60,20 @@ export function parsePackageManifest(
   const ids = dependencies.map(({ packageId }) => packageId);
   if (new Set(ids).size !== ids.length || !lexicallySorted(ids))
     return invalid();
-  if (!validDependencyShape(packageId, dependencies)) return invalid();
+  if (packageId === "duel-core" && dependencies.length !== 0) return invalid();
+  const required = packageId.startsWith("card-pack-")
+    ? "card-library"
+    : packageId === "card-library"
+      ? "duel-core"
+      : packageId === "freeplay"
+        ? "card-library"
+        : null;
+  if (
+    required !== null &&
+    !dependencies.some(({ packageId }) => packageId === required)
+  )
+    return invalid();
+  if (packageType === "chapter" && dependencies.length === 0) return invalid();
 
   return {
     kind: "ok",
@@ -102,7 +116,9 @@ export function orderPackages(
   );
   for (const item of parsedSelected.value) candidate.set(item.packageId, item);
 
-  for (const manifest of [...candidate.values()].sort(comparePackage)) {
+  for (const manifest of [...candidate.values()].sort((a, b) =>
+    a.packageId.localeCompare(b.packageId),
+  )) {
     for (const dependency of manifest.dependencies) {
       const resolved = candidate.get(dependency.packageId);
       if (resolved === undefined)
@@ -128,7 +144,7 @@ export function orderPackages(
 
   return {
     kind: "ok",
-    value: Object.freeze([...parsedSelected.value].sort(comparePackage)),
+    value: Object.freeze(topologicalOrder(parsedSelected.value, candidate)),
   };
 }
 
@@ -142,34 +158,6 @@ function parseAll(
     parsed.push(result.value);
   }
   return { kind: "ok", value: parsed };
-}
-
-function validDependencyShape(
-  packageId: PackageId,
-  dependencies: readonly PackageDependency[],
-): boolean {
-  const rank = packageRank(packageId);
-  if (rank === null) return false;
-  if (
-    dependencies.some(({ packageId: id }) => {
-      const dependencyRank = packageRank(id);
-      return dependencyRank === null || dependencyRank >= rank;
-    })
-  )
-    return false;
-  const required = predecessorOf(packageId);
-  if (required === null) return dependencies.length === 0;
-  return dependencies.some(({ packageId: id }) => id === required);
-}
-
-function predecessorOf(packageId: PackageId): PackageId | null {
-  if (packageId === "duel-core") return null;
-  if (packageId === "card-library") return "duel-core";
-  if (packageId === "freeplay") return "card-library";
-  const chapter = chapterNumber(packageId);
-  if (chapter === null) return null;
-  if (chapter === 1) return "freeplay";
-  return `chapter-${String(chapter - 1).padStart(2, "0")}`;
 }
 
 function hasCycle(candidate: ReadonlyMap<PackageId, PackageManifest>): boolean {
@@ -206,16 +194,27 @@ function compareVersion(left: string, right: string): number {
   return 0;
 }
 
-function comparePackage(left: PackageManifest, right: PackageManifest): number {
-  return packageRank(left.packageId)! - packageRank(right.packageId)!;
-}
-
-function packageRank(packageId: PackageId): number | null {
-  if (packageId === "duel-core") return 0;
-  if (packageId === "card-library") return 1;
-  if (packageId === "freeplay") return 2;
-  const chapter = chapterNumber(packageId);
-  return chapter === null ? null : chapter + 2;
+function topologicalOrder(
+  selected: readonly PackageManifest[],
+  candidate: ReadonlyMap<PackageId, PackageManifest>,
+): PackageManifest[] {
+  const selectedIds = new Set(selected.map((item) => item.packageId));
+  const visited = new Set<PackageId>();
+  const ordered: PackageManifest[] = [];
+  const visit = (item: PackageManifest): void => {
+    if (visited.has(item.packageId)) return;
+    visited.add(item.packageId);
+    for (const dependency of [...item.dependencies].sort((a, b) =>
+      a.packageId.localeCompare(b.packageId),
+    ))
+      visit(candidate.get(dependency.packageId)!);
+    if (selectedIds.has(item.packageId)) ordered.push(item);
+  };
+  for (const item of [...selected].sort((a, b) =>
+    a.packageId.localeCompare(b.packageId),
+  ))
+    visit(item);
+  return ordered;
 }
 
 function chapterNumber(packageId: string): number | null {
@@ -228,7 +227,9 @@ function chapterNumber(packageId: string): number | null {
 function parsePackageId(value: unknown): PackageId | null {
   if (value === "duel-core" || value === "card-library" || value === "freeplay")
     return value;
-  return typeof value === "string" && chapterNumber(value) !== null
+  return typeof value === "string" &&
+    value.length <= 128 &&
+    (chapterNumber(value) !== null || CARD_PACK_ID.test(value))
     ? (value as PackageId)
     : null;
 }
@@ -244,7 +245,8 @@ function parsePackageType(value: unknown): PackageType | null {
 
 function typeFor(packageId: PackageId): PackageType {
   if (packageId === "duel-core") return "duel-core";
-  if (packageId === "card-library") return "card-library";
+  if (packageId === "card-library" || packageId.startsWith("card-pack-"))
+    return "card-library";
   if (packageId === "freeplay") return "freeplay";
   return "chapter";
 }

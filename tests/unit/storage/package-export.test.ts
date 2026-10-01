@@ -51,6 +51,48 @@ afterEach(async () => {
 });
 
 describe("immutable SQLite package export", () => {
+  it("exports tracked duel-core and Free Play sources with the frozen vendor engine", async () => {
+    const root = await workspace();
+    const spec = JSON.parse(
+      await readFile(
+        path.join(root, "tests/fixtures/sqlite/packages.json"),
+        "utf8",
+      ),
+    );
+    for (const packageId of ["duel-core", "freeplay"]) {
+      await copyTree(
+        path.join(root, `tests/fixtures/sqlite/sources/${packageId}`),
+        path.join(root, `content/${packageId}`),
+      );
+      spec.packages.find(
+        (entry: { manifest: { packageId: string } }) =>
+          entry.manifest.packageId === packageId,
+      ).sourceRoot = `content/${packageId}`;
+    }
+    await rm(path.join(root, "content/duel-core/engine"), { recursive: true });
+    await copyTree(
+      path.resolve("vendor/ocgcore-wasm/0.1.2"),
+      path.join(root, "vendor/ocgcore-wasm/0.1.2"),
+    );
+    const result = await exportPackages(root, spec);
+    expect(result.kind).toBe("ok");
+    if (result.kind !== "ok") return;
+    const db = new DatabaseSync(
+      path.join(root, "generated/content-packages/duel-core-1.0.0.sqlite"),
+      { readOnly: true },
+    );
+    try {
+      const engine = db
+        .prepare("SELECT data FROM assets WHERE path = ?")
+        .get("engine/ocgcore.sync.wasm") as { data: Uint8Array };
+      expect(Buffer.from(engine.data)).toEqual(
+        await readFile("vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm"),
+      );
+    } finally {
+      db.close();
+    }
+  });
+
   it("writes exact-schema packages with global cards independent of chapter limits", async () => {
     const root = await workspace();
     const spec = JSON.parse(

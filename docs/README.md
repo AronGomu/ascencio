@@ -10,6 +10,8 @@ This directory contains current project documentation and historical context. Ro
 
 [`assets/native-content-release.md`](assets/native-content-release.md) gives native package staging and cleanup commands.
 
+[ADR-101](ADR/101_ADR_json_user_data_storage.md) replaces SQLite user saves with native JSON files and browser localStorage. SQLite remains in the current content pipeline.
+
 ## Current manual SQLite implementation
 
 [ADR-099](ADR/099_ADR_completed_manual_sqlite_cutover.md) consolidates completed cutover from hosted/progressive/ZIP delivery to manual immutable SQLite packages, isolated user data, one SQLite-owning tab, and app-only builds.
@@ -175,3 +177,5 @@ Superseded records retained at stable paths for old plan links:
 - [`ADR/003_ADR_field_first_application_chrome.md`](ADR/003_ADR_field_first_application_chrome.md) → superseded by ADR-019.
 - [`ADR/013_ADR_browser_persisted_ui_state.md`](ADR/013_ADR_browser_persisted_ui_state.md) → superseded by ADR-020.
 - [`duel-field-interaction-shell.html`](duel-field-interaction-shell.html), [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html), [`duel-field-interaction-model-v3.html`](duel-field-interaction-model-v3.html) → historical interaction generations; ADR-019/021 + current architecture HTML override them.
+
+Current module authoring and campaign prerequisites: [Content modules](assets/content-modules.md), [ADR-102](ADR/102_ADR_content_modules_and_campaign_facts.md).

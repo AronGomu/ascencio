@@ -2,7 +2,13 @@ import type { RpcArgs, RpcRequest, RpcResponse } from "../contracts/rpc.ts";
 import type { PackageId, StorageResult } from "../contracts/package.ts";
 import type { AtomicPackageRuntime } from "./atomic-package-runtime.ts";
 import { validQuery } from "./content-query-runtime.ts";
-import type { UserDataRuntime } from "./user-data-runtime.ts";
+import type { UserDataStore } from "../contracts/user-data.ts";
+type ManagedUserStore = Omit<UserDataStore, "restoreUserData"> & {
+  restoreUserData(
+    ...args: Parameters<UserDataStore["restoreUserData"]>
+  ): Promise<StorageResult<{ readonly revision: number }>>;
+  close(): Promise<void>;
+};
 
 const METHODS = [
   "current",
@@ -41,14 +47,14 @@ export function validateRpcRequest(value: unknown): StorageResult<RpcRequest> {
 export class StorageRpcDispatcher {
   readonly #runtime: AtomicPackageRuntime;
   readonly #post: (value: RpcResponse) => void;
-  readonly #userData: UserDataRuntime | undefined;
+  readonly #userData: ManagedUserStore | undefined;
   readonly #controllers = new Map<string, AbortController>();
   readonly #sessions = new Map<string, () => Promise<void>>();
 
   constructor(
     runtime: AtomicPackageRuntime,
     post: (value: RpcResponse) => void,
-    userData?: UserDataRuntime,
+    userData?: ManagedUserStore,
   ) {
     this.#runtime = runtime;
     this.#post = post;
@@ -224,7 +230,7 @@ export async function dispatchRpcRequest(
   request: RpcRequest,
   runtime: AtomicPackageRuntime,
   post: (value: RpcResponse) => void,
-  userData?: UserDataRuntime,
+  userData?: ManagedUserStore,
 ): Promise<void> {
   await new StorageRpcDispatcher(runtime, post, userData).dispatch(request);
 }
@@ -290,7 +296,9 @@ function validPackageId(value: unknown): value is PackageId {
     value === "card-library" ||
     value === "freeplay" ||
     (typeof value === "string" &&
-      /^chapter-(?:0[1-9]|[1-9][0-9]+)$/.test(value))
+      (/^chapter-(?:0[1-9]|[1-9][0-9]+)$/.test(value) ||
+        (value.length <= 128 &&
+          /^card-pack-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))))
   );
 }
 function validUserMutation(value: unknown): boolean {

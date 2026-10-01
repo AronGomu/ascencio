@@ -10,7 +10,7 @@
         "dependencies": [],
         "createdAt": "2026-09-24T00:00:00.000Z"
       },
-      "sourceRoot": "assets/content/duel-core"
+      "sourceRoot": "content/duel-core"
     },
     {
       "manifest": {
@@ -44,7 +44,7 @@
         ],
         "createdAt": "2026-09-24T00:00:00.000Z"
       },
-      "sourceRoot": "assets/content/freeplay"
+      "sourceRoot": "content/freeplay"
     },
     {
       "manifest": {

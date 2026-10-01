@@ -1,3 +1,5 @@
+import type { ChapterModule } from "../../modules/index.ts";
+import { isChapterModule } from "../../modules/index.ts";
 import { cardCode } from "../../cards/index.ts";
 import type { StoryRelease, StorySet } from "./story-release.ts";
 import { parseStoryDocument } from "./story-document.ts";
@@ -66,7 +68,13 @@ function chapter(value: unknown): StoryRelease["chapters"][number] {
     "decks",
     "opponents",
     "defaults",
+    ...(typeof value === "object" &&
+    value !== null &&
+    Object.hasOwn(value, "module")
+      ? ["module"]
+      : []),
   ]);
+  if (r.module !== undefined && !isChapterModule(r.module)) invalid();
   const cardCodes = array(r.cardCodes, code);
   unique(cardCodes, (c) => c);
   const sets = array(r.sets, set);
@@ -97,6 +105,11 @@ function chapter(value: unknown): StoryRelease["chapters"][number] {
   const d = record(r.defaults, ["starterDeckId", "opponentId"]);
   return {
     id: text(r.id),
+    ...(r.module === undefined
+      ? {}
+      : {
+          module: r.module as ChapterModule,
+        }),
     document: r.document === null ? null : parseStoryDocument(r.document),
     cardCodes,
     sets,

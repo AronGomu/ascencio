@@ -50,3 +50,27 @@ No publish/install/remote commands. These checks do not certify gameplay or dist
 - [ ] B3. Run `npm run content:catalog`. Unmapped selected set names must fail explicitly; never invent IDs or drop duplicate-membership sets to pass. With complete fixture input, inspect exact source digest records and chapter IDs.
 - [ ] B4. With explicit prepared fixture, run `npm run content:pack -- --empty-history`; inspect core exclusion, chapter policy set IDs, runtime dependency, bounded part refs. `content:verify` must validate all objects. Missing history input must fail; retained release objects must remain byte-identical.
 - [ ] B5. Only on an approved disk, run `node tests/fixtures/asset-delivery-large.ts --directory /approved-disk/new-fixture --bytes 4294967297`. Record stdout with peak RSS/archive hashes/disk requirement. 10 GiB variant uses `--bytes 10737418240`, requires at least 50.5 GiB free. Actual >4 GiB proof remains pending until this runs; small ZIP64 fixtures are not equivalent.
+
+
+## JSON user-data storage — 2026-09-30
+
+- [ ] In Tauri, change settings, save a deck and save Story; restart and verify all three persist in app-data `user-data.json`.
+- [ ] In Chromium, repeat the save/reload checks and verify `ascencio:user-data:v1` exists in localStorage.
+- [ ] Export `user-data.json`, change saved data, inspect the export and confirm replacement; verify decks, preferences, and Story return together.
+- [ ] Inspect malformed JSON, an unsupported format/version, and an old SQLite backup; verify rejection preserves current saves.
+- [ ] Change a save after inspecting a valid backup; verify confirmation rejects the stale preview.
+- [ ] Reset one user-data category in Admin; verify unrelated categories and installed content remain intact.
+- [ ] Verify existing SQLite saves and legacy localStorage keys remain untouched; no migration is attempted.
+
+- [ ] Start `npm run native:dev` with empty native content storage: Free Play and Chapter 01 are installed automatically and their menu actions are available; restart preserves the installed set and JSON user saves.
+
+## Content modules — 2026-10-01
+
+- [ ] Import a chapter that depends on Card Library without declaring its previous chapter; verify it can install with the earlier chapter absent.
+- [ ] Save completion and choices in Chapter 01; remove Chapter 01, install an eligible later chapter, and verify Continue carries wallet, boosters, collection, decks and facts forward.
+- [ ] Remove the current saved chapter with no eligible successor; verify Continue reports unavailable content and the save remains intact.
+- [ ] Import a card pack; verify search, preview, duel scripts and sets include its content. Remove an unused pack and verify its cards leave the catalog.
+- [ ] Import a module that references a pack's cards without declaring the dependency; verify rejection preserves the active generation.
+- [ ] Try removing a declared dependency; verify refusal preserves installed modules and all user data.
+- [ ] Reorder scenes while retaining beat IDs; verify the same saved scene resumes. Delete that beat and verify resume refuses without modifying the save.
+- [ ] Try conflicting card/set IDs or module API version 2; verify activation fails without changing the previous stack.

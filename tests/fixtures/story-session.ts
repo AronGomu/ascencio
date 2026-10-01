@@ -12,7 +12,7 @@ import { installedDuelGameplayFixture } from "./installed-duel-gameplay.ts";
 import type { StoryState } from "../../src/story/model/story-state.ts";
 import type { StorySlotKey } from "../../src/story/saves/index.ts";
 import { unlinkSync, rmdirSync } from "node:fs";
-import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "./legacy-user-data-runtime.ts";
 import { createUserDataFixture } from "../unit/storage/sqlite-fixtures.ts";
 import {
   createNodeFileStore,

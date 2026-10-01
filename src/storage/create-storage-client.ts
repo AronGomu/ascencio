@@ -1,3 +1,4 @@
+import { createModuleCatalogQueries } from "./modules/catalog-queries.ts";
 import type {
   ContentQuery,
   ImportProgress,
@@ -7,7 +8,7 @@ import type {
 } from "./contracts/storage-client.ts";
 import type { RpcArgs } from "./contracts/rpc.ts";
 import type { StorageResult } from "./contracts/package.ts";
-import type { RestoreUserDataResult } from "./contracts/user-data.ts";
+import { openBrowserUserData } from "./json/browser-user-data.ts";
 import { StorageRpcClient } from "./runtime/rpc-client.ts";
 import { isTauri } from "@tauri-apps/api/core";
 
@@ -40,6 +41,7 @@ export async function openLocalStorage(): Promise<
 
 function createFacade(rpc: StorageRpcClient): LocalStorageClient {
   let closed = false;
+  const userData = openBrowserUserData();
   return {
     packages: {
       current: async () => cast(await rpc.request("current", [])),
@@ -86,46 +88,33 @@ function createFacade(rpc: StorageRpcClient): LocalStorageClient {
         };
       },
     },
-    content: {
-      query: async <Q extends ContentQuery>(request: Q, signal: AbortSignal) =>
-        await cancellableRequest<QueryMap[Q["kind"]]>(
-          rpc,
-          "query",
-          [request],
-          signal,
-        ),
-    },
-    userData: userFacade(rpc),
+    content: createModuleCatalogQueries(
+      {
+        query: async <Q extends ContentQuery>(
+          request: Q,
+          signal: AbortSignal,
+        ) =>
+          await cancellableRequest<QueryMap[Q["kind"]]>(
+            rpc,
+            "query",
+            [request],
+            signal,
+          ),
+      },
+      async () => cast(await rpc.request("current", [])),
+    ),
+    userData,
     subscribeMediaWarnings: (listener) => rpc.subscribeMediaWarnings(listener),
     close: async () => {
       if (closed) return;
       closed = true;
       try {
+        await userData.close();
         requireRpcSuccess(await rpc.request("close", []));
       } finally {
         rpc.closeTransport();
       }
     },
-  };
-}
-
-function userFacade(rpc: StorageRpcClient): LocalStorageClient["userData"] {
-  return {
-    readUser: async (namespace, key) =>
-      cast(await rpc.request("readUser", [namespace, key])),
-    listUser: async (namespace) =>
-      cast(await rpc.request("listUser", [namespace])),
-    writeUser: async (mutations) =>
-      cast(await rpc.request("writeUser", [mutations])),
-    exportUserData: async () => cast(await rpc.request("exportUserData", [])),
-    inspectUserDataBackup: async (file) =>
-      cast(await rpc.request("inspectUserDataBackup", [file])),
-    restoreUserData: async (token, revision, confirmed) =>
-      (await rpc.request("restoreUserData", [
-        token,
-        revision,
-        confirmed,
-      ])) as RestoreUserDataResult,
   };
 }
 

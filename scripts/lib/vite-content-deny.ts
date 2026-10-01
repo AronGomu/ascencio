@@ -3,7 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Connect, Plugin, ViteDevServer } from "vite";
 
-const PRIVATE_ROOTS = ["assets/content", "generated/content-packages"] as const;
+const PRIVATE_ROOTS = [
+  "assets/content",
+  "content/duel-core",
+  "content/freeplay",
+  "generated/content-packages",
+] as const;
 function within(candidate: string, root: string): boolean {
   const relative = path.relative(root, candidate);
   return (

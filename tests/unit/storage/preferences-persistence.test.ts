@@ -9,7 +9,7 @@ import type {
   UserMutation,
   UserRecord,
 } from "../../../src/storage/index.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import {
   createUserDataFixture,
   type PackageFixtureDatabase,

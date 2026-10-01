@@ -9,7 +9,9 @@ assets/shared/runtime/
 assets/shared/card-images/
 assets/shared/card-back.jpg
 assets/shared/set-images/
-assets/content/
+assets/content/card-library/
+assets/content/card-pack-*/
+assets/content/chapter-*/
 coverage/
 *.log
 

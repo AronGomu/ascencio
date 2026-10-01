@@ -19,3 +19,5 @@ export type {
   PersistedStoryEnvelope,
   StoredStoryReadResult,
 } from "./persisted-story-contracts.ts";
+
+export { chapterTransition } from "./chapter-transition.ts";

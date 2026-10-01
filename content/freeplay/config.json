@@ -1,0 +1,8 @@
+{
+  "title": "Free Play",
+  "defaults": {
+    "starterDeckId": "freeplay-player",
+    "opponentId": "freeplay-opponent"
+  },
+  "rulesetId": "prototype-single-ruleset"
+}

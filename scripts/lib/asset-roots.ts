@@ -57,7 +57,7 @@ export const PACKAGE_ASSET_SOURCES = {
   dataManifestSha256: {
     source: "generated/content-inputs/data/manifest.sha256",
   },
-  strings: { source: "assets/content/duel-core/strings" },
+  strings: { source: "content/duel-core/strings" },
   runtime: { source: "generated/content-inputs/runtime" },
   fullImages: { source: "assets/content/card-library/images/full" },
   croppedImages: { source: "assets/content/card-library/images/cropped" },

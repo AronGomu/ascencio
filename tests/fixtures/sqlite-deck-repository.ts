@@ -2,7 +2,7 @@ import { existsSync, readFileSync, rmdirSync, unlinkSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import type { DeckRepository } from "../../src/decks/repository/index.ts";
 import { createSqliteDeckRepository } from "../../src/decks/repository/sqlite.ts";
-import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "./legacy-user-data-runtime.ts";
 import { createUserDataFixture } from "../unit/storage/sqlite-fixtures.ts";
 import {
   createNodeFileStore,

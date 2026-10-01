@@ -198,12 +198,6 @@ export function isStoryState(
   if (typeof value !== "object" || value === null) return false;
   const state = value as Record<string, unknown>;
   const screens = new Set<string>(STORY_SCREENS);
-  const choices = new Set([
-    null,
-    "trust-rin",
-    "challenge-rin",
-    "observe-first",
-  ]);
   const outcomes = new Set([null, "win", "loss", "abort", "failure"]);
   /* Both handoff fields accept `undefined` as well as `null`: a save written
      before the duel handoff existed carries neither key, and reading that as
@@ -235,7 +229,12 @@ export function isStoryState(
       (Number.isSafeInteger(state.lastInputId) &&
         (state.lastInputId as number) >= 0)
     ) ||
-    !choices.has(state.choice as null | string) ||
+    !(
+      state.choice === null ||
+      (typeof state.choice === "string" &&
+        state.choice.length > 0 &&
+        state.choice.length <= 256)
+    ) ||
     !(
       state.choiceResponse === null || typeof state.choiceResponse === "string"
     ) ||

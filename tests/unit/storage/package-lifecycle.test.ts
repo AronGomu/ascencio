@@ -126,7 +126,7 @@ describe("package lifecycle", () => {
           let hits = 0;
           vi.spyOn(fixture.files, "openDatabase").mockImplementation(
             (fileKey) => {
-              const target = fileKey === key && ++opens === 3;
+              const target = fileKey === key && ++opens === 2;
               if (target && phase === "open") {
                 hits += 1;
                 throw error;

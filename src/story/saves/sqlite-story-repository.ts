@@ -165,7 +165,6 @@ async function writeSnapshot(
     };
     if (
       parseStoredStoryEnvelope(slot, envelope).kind !== "ready" ||
-      story.contentId !== "prototype-prologue-v1" ||
       !isStoryState(state, Number.MAX_SAFE_INTEGER)
     )
       return { kind: "failed", reason: "unknown" };
@@ -225,23 +224,14 @@ function strictEnvelope(
 ): Extract<StorySaveReadResult, { readonly kind: "ready" }> | null {
   if (parsed.kind !== "ready") return null;
   const value = parsed.envelope;
-  if (
-    value.story.contentId !== "prototype-prologue-v1" ||
-    !isStoryState(value.state, Number.MAX_SAFE_INTEGER)
-  )
-    return null;
+  if (!isStoryState(value.state, Number.MAX_SAFE_INTEGER)) return null;
   const envelope: StorySaveEnvelope = {
     schemaVersion: 6,
     slot: value.slot,
     revision: value.revision,
     savedAt: value.savedAt,
     state: value.state,
-    story: {
-      chapterId: value.story.chapterId,
-      contentId: value.story.contentId,
-      revision: value.story.revision,
-      completedChapterIds: value.story.completedChapterIds,
-    },
+    story: structuredClone(value.story),
   };
   return { kind: "ready", envelope };
 }

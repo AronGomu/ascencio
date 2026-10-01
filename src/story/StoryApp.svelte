@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { resolveSavedBeat } from "./model/restore-module-story.ts";
+  import { DEFAULT_CHAPTER_MODULE } from "../modules/index.ts";
+  import { recordCampaignProgress } from "./saves/campaign-progress.ts";
   import { afterUpdate, getContext, onDestroy, onMount } from "svelte";
   import type { Cards } from "../cards/index.ts";
   import type {
@@ -102,9 +105,11 @@
   const { chapter, binding: initialBinding } = storySession(release);
   export let resumeStory: StoryBinding | null = null;
   let binding: StoryBinding = resumeStory ?? initialBinding;
-  $: document = release.chapters.find(
-    (chapter) => chapter.id === binding.chapterId,
-  )!.document!;
+  $: activeChapter =
+    release.chapters.find((chapter) => chapter.id === binding.chapterId) ??
+    chapter;
+  $: document = activeChapter.document!;
+  $: chapterModule = activeChapter.module ?? DEFAULT_CHAPTER_MODULE;
   let manualBinding: StoryBinding | null = null;
   let autosaveBinding: StoryBinding | null = null;
   export let initialStorageError: string | null = null;
@@ -230,7 +235,17 @@
   const freshEntry = entryIntent === "new" && resumeState === null;
   let state =
     resumeState !== null
-      ? restoreStoryState(resumeState)
+      ? {
+          ...restoreStoryState(resumeState),
+          narrativeIndex: resolveSavedBeat(
+            resumeState,
+            binding,
+            (
+              release.chapters.find((item) => item.id === binding.chapterId) ??
+              chapter
+            ).document!,
+          ),
+        }
       : entryIntent === null || entryIntent === "new"
         ? reduceStory(createInitialStoryState(), {
             type: "new-game",
@@ -354,8 +369,16 @@
     autosaveRevision =
       autosave.kind === "ready" ? autosave.envelope.revision : 0;
     onautosaverevision(autosaveRevision);
-    manualState = manual.kind === "ready" ? manual.envelope.state : null;
-    autosaveState = autosave.kind === "ready" ? autosave.envelope.state : null;
+    manualState =
+      manual.kind === "ready" &&
+      manual.envelope.story.chapterId === binding.chapterId
+        ? manual.envelope.state
+        : null;
+    autosaveState =
+      autosave.kind === "ready" &&
+      autosave.envelope.story.chapterId === binding.chapterId
+        ? autosave.envelope.state
+        : null;
     latestSaveSlot = newerSlot(manual, autosave);
     storageOperationError = readProblem(manual) ?? readProblem(autosave);
     state = {
@@ -515,7 +538,9 @@
   $: beat =
     document.beats[Math.min(state.narrativeIndex, document.beats.length - 1)]!;
   $: activeChoices =
-    beat.id === "choice-pause" && state.choice === null ? document.choices : [];
+    beat.id === chapterModule.choiceBeatId && state.choice === null
+      ? document.choices
+      : [];
   $: historyEntries = document.beats
     .slice(0, state.narrativeIndex + 1)
     .map(({ speaker, text }) => ({ speaker, text }));
@@ -693,6 +718,12 @@
     if (next !== state && !["continue", "load", "reset"].includes(command.type))
       dirty = true;
     state = next;
+    binding = recordCampaignProgress(
+      binding,
+      state,
+      chapterModule,
+      document.beats[state.narrativeIndex]?.id,
+    );
   }
   function newGame(): void {
     autosaveRevision = 0;
@@ -710,10 +741,7 @@
     if (next === null || next === appliedResolution) return;
     appliedResolution = next;
     handoffError = null;
-    state = reduceStory(state, {
-      type: "battle-result",
-      result: storyBattleResult(next),
-    });
+    dispatch({ type: "battle-result", result: storyBattleResult(next) });
     dirty = true;
   }
 
@@ -796,7 +824,19 @@
   }
 
   function resumeSnapshot(snapshot: StoryState): void {
-    state = { ...restoreStoryState(snapshot), screen: snapshot.savedScreen };
+    let beatIndex: number;
+    try {
+      beatIndex = resolveSavedBeat(snapshot, binding, document);
+    } catch (error) {
+      storageOperationError =
+        error instanceof Error ? error.message : "STORY_SAVE_UNAVAILABLE";
+      return;
+    }
+    state = {
+      ...restoreStoryState(snapshot),
+      narrativeIndex: beatIndex,
+      screen: snapshot.savedScreen,
+    };
     inputId = snapshot.lastInputId ?? 0;
     dirty = false;
   }
@@ -942,34 +982,51 @@
   async function retryManualSave(): Promise<void> {
     await openSave(); // Re-read, then require a new confirmation; never silently rebase.
   }
-  async function autosaveReward(): Promise<void> {
+  async function autosaveProgress(): Promise<void> {
+    await autosaveReward(state.screen);
+  }
+  let autosaveTail: Promise<void> = Promise.resolve();
+  async function autosaveReward(
+    savedScreen: StoryScreen = "reward",
+  ): Promise<void> {
     autosaveStatus = "pending";
     const snapshot = structuredClone({
       ...state,
-      savedScreen: "reward" as const,
+      savedScreen,
     });
     const savedBinding = structuredClone(binding);
-    const result = await saves.write(
-      AUTOSAVE_SLOT,
-      snapshot,
-      autosaveRevision,
-      savedBinding,
-    );
-    autosaveStatus =
-      result.kind === "written"
-        ? toasts === undefined
-          ? "success"
-          : "idle"
-        : "failure";
-    if (result.kind === "written") {
-      autosaveRevision = result.revision;
-      onautosaverevision(autosaveRevision);
-      autosaveBinding = savedBinding;
-      autosaveState = snapshot;
-      latestSaveSlot = "autosave";
-      dirty = false;
-      toasts?.show({ message: "Autosave complete.", tone: "success" });
-    } else storageOperationError = writeProblem(result);
+    const stateAtRequest = state;
+    const previousWrite = autosaveTail;
+    let releaseWrite!: () => void;
+    autosaveTail = new Promise<void>((resolve) => {
+      releaseWrite = resolve;
+    });
+    await previousWrite;
+    try {
+      const result = await saves.write(
+        AUTOSAVE_SLOT,
+        snapshot,
+        autosaveRevision,
+        savedBinding,
+      );
+      autosaveStatus =
+        result.kind === "written"
+          ? toasts === undefined
+            ? "success"
+            : "idle"
+          : "failure";
+      if (result.kind === "written") {
+        autosaveRevision = result.revision;
+        onautosaverevision(autosaveRevision);
+        autosaveBinding = savedBinding;
+        autosaveState = snapshot;
+        latestSaveSlot = "autosave";
+        if (state === stateAtRequest) dirty = false;
+        toasts?.show({ message: "Autosave complete.", tone: "success" });
+      } else storageOperationError = writeProblem(result);
+    } finally {
+      releaseWrite();
+    }
   }
   /** Leaves for the deck editor, but only once this run is on disk.
 
@@ -1020,6 +1077,7 @@
       return;
     }
     dispatch({ type: "acknowledge-reward" });
+    void autosaveProgress();
   }
   async function reset(): Promise<void> {
     try {

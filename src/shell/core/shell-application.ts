@@ -1,3 +1,5 @@
+import type { StoryBinding } from "../../story/saves/index.ts";
+import type { StoryState } from "../../story/index.ts";
 import type {
   BattlePresentationInput,
   BattleRuntimeSource,
@@ -24,7 +26,17 @@ export interface FreeplayInputs {
   readonly presentation: BattlePresentationInput;
   readonly editor: EditorCatalogInput;
 }
+export interface StorySessionRequest {
+  readonly intent: "new" | "continue" | "load" | null;
+  readonly chapterId?: `chapter-${string}`;
+  readonly checkpoint?: boolean;
+}
 export interface StoryInputs {
+  readonly entry?: {
+    readonly autosaveRevision: number;
+    readonly state: StoryState;
+    readonly story: StoryBinding;
+  };
   readonly users: ShellUserServices;
   readonly gameplay: ShellGameplay;
   readonly cards: Cards;
@@ -52,6 +64,7 @@ export interface ShellApplication {
   acquire<M extends keyof SessionByMode>(
     mode: M,
     signal: AbortSignal,
+    story?: StorySessionRequest,
   ): Promise<SessionByMode[M]>;
   clear(): void;
   close(): void;

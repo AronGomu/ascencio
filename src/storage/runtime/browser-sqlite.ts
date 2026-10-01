@@ -6,20 +6,15 @@ import sqlite3InitModule, {
   type SqlValue,
 } from "@sqlite.org/sqlite-wasm";
 import sqliteWasmUrl from "@sqlite.org/sqlite-wasm/sqlite3.wasm?url";
-import {
-  CONTENT_REGISTRY_SCHEMA_SQL,
-  USER_DATA_SCHEMA_SQL,
-} from "../schema/sql.ts";
+import { CONTENT_REGISTRY_SCHEMA_SQL } from "../schema/sql.ts";
 import type { SqliteValue } from "../schema/package-database.ts";
 import type {
   RuntimeDatabase,
   RuntimeFileStore,
   RuntimeRunResult,
 } from "./runtime-ports.ts";
-import { validateUserDataDatabase } from "./user-data-validation.ts";
 
 const REGISTRY_KEY = "/content-registry.sqlite";
-const USER_DATA_KEY = "/user-data.sqlite";
 
 type SqliteInit = (options: {
   readonly locateFile: (path: string) => string;
@@ -27,7 +22,6 @@ type SqliteInit = (options: {
 
 export interface BrowserSqliteRuntime {
   readonly registry: RuntimeDatabase;
-  readonly userData: StorageResult<RuntimeDatabase>;
   readonly files: RuntimeFileStore;
 }
 
@@ -58,7 +52,6 @@ export async function openBrowserSqliteRuntime(): Promise<
   }
   const names = pool.getFileNames();
   const registryExisted = names.includes(REGISTRY_KEY);
-  const userDataExisted = names.includes(USER_DATA_KEY);
   const exportBytes = (database: Database): Uint8Array => {
     if (database.pointer === undefined) throw new Error("database is closed");
     return sqlite3.capi.sqlite3_js_db_export(database.pointer);
@@ -85,30 +78,10 @@ export async function openBrowserSqliteRuntime(): Promise<
       ? failure
       : { kind: "failed", error: { code: "STORAGE_UNAVAILABLE" } };
   }
-  let userDatabase: RuntimeDatabase | null = null;
-  let userData: StorageResult<RuntimeDatabase>;
-  try {
-    userDatabase = databaseAdapter(
-      new sqlite3.oo1.DB(USER_DATA_KEY, "c", pool.vfsName),
-      exportBytes,
-    );
-    userDatabase.all("PRAGMA trusted_schema=OFF");
-    userDatabase.all("PRAGMA foreign_keys=ON");
-    if (!userDataExisted) userDatabase.exec(USER_DATA_SCHEMA_SQL);
-    const validation = validateUserDataDatabase(userDatabase);
-    userData =
-      validation.kind === "failed"
-        ? validation
-        : { kind: "ok", value: userDatabase };
-  } catch (error) {
-    userData = userDatabaseFailure(error);
-  }
-  if (userData.kind === "failed") userDatabase?.close();
   return {
     kind: "ok",
     value: {
       registry,
-      userData,
       files: fileStore(sqlite3.oo1.DB, pool, exportBytes),
     },
   };

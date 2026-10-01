@@ -1,4 +1,8 @@
-# Content setup preflight — Chapter 1 only
+# Content inputs
+
+`duel-core/` contains tracked engine configuration and English strings. `freeplay/` contains tracked defaults, deck definitions/YDK sources, opponents, and card limits. `packages.json` points the SQLite producer at these folders; acquired card-library and chapter sources remain under ignored `assets/content/`. SQLite and ZIP outputs remain ignored under `generated/content-packages/`.
+
+## Historical content setup preflight — Chapter 1 only
 
 State: superseded pre-normalization T1 snapshot. Current private prerequisites, approved corrections, normalized 75-set/1,627-code baseline, and remaining media gaps live in [`docs/assets/core-installation.md`](../docs/assets/core-installation.md). Historical observations below remain evidence only; they do not override current source policy. No packaging, downloads, activation, or deployment occurs in this command.
 
@@ -74,3 +78,5 @@ R4. Scope change is not final T1 readiness. Selected collector-edition source ma
 ## Human gates
 
 The release owner must review source obligations and permission evidence before changing distribution status to `approved`. Record evidence identifiers, not credentials. Configure `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` only through the appropriate secret store; set the nonsecret `CLOUDFLARE_PAGES_PROJECT` variable. Record the actual project and protected production-environment evidence. Obtain native Android, iPhone, and iPad tester access. This verifier performs no account creation, credential validation, protection changes, or deployment.
+
+Additional card packs and chapters follow [the module authoring contract](../docs/assets/content-modules.md). File dependencies describe installed content; story prerequisites read campaign facts from JSON saves.

@@ -302,6 +302,10 @@ describe("app/content build boundary", () => {
         }
         const privateJson = [
           "assets/content/card-library/images/sets/manifest.json",
+          "content/duel-core/config.json",
+          "content/duel-core/strings/en.json",
+          "content/freeplay/config.json",
+          "content/freeplay/decks.json",
           "generated/content-packages/manifest.json",
         ];
         for (const file of privateJson) {

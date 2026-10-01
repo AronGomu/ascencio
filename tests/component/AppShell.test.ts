@@ -13,7 +13,7 @@ import {
   createNodeFileStore,
   databaseAdapter,
 } from "../unit/storage/runtime-fixtures.ts";
-import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../fixtures/legacy-user-data-runtime.ts";
 import { createSqliteStoryRepository } from "../../src/story/saves/sqlite-story-repository.ts";
 import type {
   FreeplaySession,

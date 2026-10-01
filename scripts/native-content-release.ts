@@ -13,6 +13,7 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
+import { orderPackages } from "../src/storage/schema/package-manifest.ts";
 import { verifyPackageFile } from "./lib/sqlite-content/index.ts";
 import type { PackageBuildSpec } from "../src/storage/contracts/package-build.ts";
 
@@ -72,13 +73,15 @@ async function verifiedLocalRelease(): Promise<ReleaseManifest> {
   for (const entry of recipe.packages) {
     const { packageId, version } = entry.manifest;
     if (
-      !/^(duel-core|card-library|freeplay|chapter-\d{2})$/.test(packageId) ||
+      !/^(duel-core|card-library|freeplay|chapter-(?:0[1-9]|[1-9][0-9]+)|card-pack-[a-z0-9]+(?:-[a-z0-9]+)*)$/.test(
+        packageId,
+      ) ||
       !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(version) ||
       ids.has(packageId)
     )
       throw new Error(`Invalid or duplicate recipe package ${packageId}`);
     ids.add(packageId);
-    const relative = `generated/content-packages/${packageId}/${version}.sqlite`;
+    const relative = `generated/content-packages/${packageId}-${version}.sqlite`;
     const result = await verifyPackageFile(root, relative);
     if (
       result.kind === "failed" ||
@@ -100,26 +103,12 @@ async function verifiedLocalRelease(): Promise<ReleaseManifest> {
     "chapter-01",
   ])
     if (!ids.has(required)) throw new Error(`Native release lacks ${required}`);
-  const chapters = [...ids]
-    .filter((id) => id.startsWith("chapter-"))
-    .map((id) => Number(id.slice("chapter-".length)))
-    .sort((a, b) => a - b);
-  if (chapters.some((chapter, index) => chapter !== index + 1))
-    throw new Error(
-      "Native chapters must form an uninterrupted sequence from chapter-01",
-    );
-  for (const entry of recipe.packages)
-    for (const dependency of entry.manifest.dependencies)
-      if (
-        !recipe.packages.some(
-          (candidate) =>
-            candidate.manifest.packageId === dependency.packageId &&
-            candidate.manifest.version === dependency.version,
-        )
-      )
-        throw new Error(
-          `Unsatisfied dependency for ${entry.manifest.packageId}`,
-        );
+  const graph = orderPackages(
+    recipe.packages.map((entry) => entry.manifest),
+    [],
+  );
+  if (graph.kind === "failed")
+    throw new Error(`Invalid native module dependencies: ${graph.error.code}`);
   return { schemaVersion: 1, packages };
 }
 
@@ -164,8 +153,7 @@ async function prepare(release: ReleaseManifest): Promise<void> {
       const from = path.join(
         root,
         "generated/content-packages",
-        item.packageId,
-        `${item.version}.sqlite`,
+        `${item.packageId}-${item.version}.sqlite`,
       );
       const to = path.join(temporary, `${item.packageId}.sqlite`);
       await copyFile(from, to);

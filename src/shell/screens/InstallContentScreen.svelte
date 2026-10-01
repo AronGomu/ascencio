@@ -344,13 +344,13 @@
         type="button"
         data-cy="user-data-export"
         disabled={actionsBlocked}
-        onclick={exportBackup}>Export user-data.sqlite</button
+        onclick={exportBackup}>Export user-data.json</button
       >
       <label data-cy="user-data-import-label">
         Inspect backup
         <input
           type="file"
-          accept=".sqlite,application/vnd.sqlite3"
+          accept=".json,application/json"
           data-cy="user-data-import-file"
           disabled={actionsBlocked}
           onchange={inspectBackup}

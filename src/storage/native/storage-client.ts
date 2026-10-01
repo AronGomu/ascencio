@@ -1,3 +1,4 @@
+import { createModuleCatalogQueries } from "../modules/catalog-queries.ts";
 import { invoke } from "@tauri-apps/api/core";
 import type {
   ContentQuery,
@@ -7,17 +8,8 @@ import type {
   QueryMap,
 } from "../contracts/storage-client.ts";
 import type { StorageResult } from "../contracts/package.ts";
-import type {
-  BackupPreview,
-  UserMutation,
-  UserRecord,
-} from "../contracts/user-data.ts";
-import { validateUserRecordPayload } from "../schema/user-record-validation.ts";
-import {
-  isUserNamespace,
-  payloadRevisionMatches,
-  validUserKey,
-} from "../runtime/user-data-validation.ts";
+import { JsonUserDataStore } from "../json/user-data-store.ts";
+import { nativeUserJsonBackend } from "./user-json-backend.ts";
 import { validQuery } from "../runtime/content-query-runtime.ts";
 import {
   orderPackages,
@@ -42,18 +34,6 @@ async function call<T>(
   }
 }
 
-function validRecord(record: UserRecord): boolean {
-  return (
-    isUserNamespace(record.namespace) &&
-    validUserKey(record.key) &&
-    Number.isSafeInteger(record.revision) &&
-    record.revision >= 1 &&
-    validateUserRecordPayload(record.namespace, record.key, record.payload)
-      .kind === "ok" &&
-    payloadRevisionMatches(record.namespace, record.payload, record.revision)
-  );
-}
-
 export async function openNativeStorage(): Promise<
   StorageResult<LocalStorageClient>
 > {
@@ -63,8 +43,8 @@ export async function openNativeStorage(): Promise<
   if (initial.kind === "failed") return initial;
   const mediaListeners = new Set<(warning: MediaWarning) => void>();
   const sessions = new Set<string>();
-  const stagedBackups = new Set<string>();
   let closed = false;
+  const userData = new JsonUserDataStore(nativeUserJsonBackend());
   const unavailable = <T>(): StorageResult<T> => failed("STORAGE_UNAVAILABLE");
   const guard = async <T>(
     command: string,
@@ -215,179 +195,67 @@ export async function openNativeStorage(): Promise<
           };
         },
       },
-      content: {
-        query: async <Q extends ContentQuery>(
-          request: Q,
-          signal: AbortSignal,
-        ): Promise<StorageResult<QueryMap[Q["kind"]]>> => {
-          if (closed) return unavailable();
-          if (signal.aborted) return failed("OPERATION_CANCELLED");
-          if (!validQuery(request))
-            return { kind: "failed", error: { code: "RPC_INVALID" } };
-          const result = await guard<QueryMap[Q["kind"]]>(
-            "native_content_query",
-            { request },
-          );
-          if (
-            result.kind === "ok" &&
-            (request.kind === "asset" || request.kind === "set-image")
-          ) {
-            const media = result.value as QueryMap["asset"];
-            if (media !== null) {
-              const raw = media.bytes as unknown;
-              if (!Array.isArray(raw))
-                return { kind: "failed", error: { code: "PACKAGE_INVALID" } };
-              (media as { bytes: Uint8Array }).bytes = Uint8Array.from(raw);
-            } else {
-              const warning: MediaWarning =
-                request.kind === "asset"
-                  ? {
-                      packageId: request.packageId,
-                      path: request.path,
-                      reason: "missing",
-                    }
-                  : {
-                      packageId: "card-library",
-                      path: `sets/${request.setId}`,
-                      reason: "missing",
-                    };
-              for (const listener of mediaListeners) listener(warning);
-            }
-          }
-          return result;
-        },
-      },
-      userData: {
-        readUser: async (namespace, key) => {
-          if (!isUserNamespace(namespace) || !validUserKey(key))
-            return failed("USER_DATA_INVALID");
-          const result = await guard<UserRecord | null>("native_user_read", {
-            namespace,
-            key,
-          });
-          return result.kind === "ok" &&
-            result.value !== null &&
-            !validRecord(result.value)
-            ? failed("USER_DATA_INVALID")
-            : result;
-        },
-        listUser: async (namespace) => {
-          if (!isUserNamespace(namespace)) return failed("USER_DATA_INVALID");
-          const result = await guard<readonly UserRecord[]>(
-            "native_user_list",
-            { namespace },
-          );
-          return result.kind === "ok" && !result.value.every(validRecord)
-            ? failed("USER_DATA_INVALID")
-            : result;
-        },
-        writeUser: async (mutations: readonly UserMutation[]) => {
-          if (!Array.isArray(mutations)) return failed("USER_DATA_INVALID");
-          for (const mutation of mutations) {
+      content: createModuleCatalogQueries(
+        {
+          query: async <Q extends ContentQuery>(
+            request: Q,
+            signal: AbortSignal,
+          ): Promise<StorageResult<QueryMap[Q["kind"]]>> => {
+            if (closed) return unavailable();
+            if (signal.aborted) return failed("OPERATION_CANCELLED");
+            if (!validQuery(request))
+              return { kind: "failed", error: { code: "RPC_INVALID" } };
+            const result = await guard<QueryMap[Q["kind"]]>(
+              "native_content_query",
+              { request },
+            );
             if (
-              !isUserNamespace(mutation.namespace) ||
-              !validUserKey(mutation.key)
-            )
-              return failed("USER_DATA_INVALID");
-            if (mutation.kind === "put") {
-              if (
-                validateUserRecordPayload(
-                  mutation.namespace,
-                  mutation.key,
-                  mutation.payload,
-                ).kind === "failed"
-              )
-                return failed("USER_DATA_INVALID");
-              const nextRevision = (mutation.expectedRevision ?? 0) + 1;
-              if (
-                !Number.isSafeInteger(nextRevision) ||
-                !payloadRevisionMatches(
-                  mutation.namespace,
-                  mutation.payload,
-                  nextRevision,
-                )
-              )
-                return failed("USER_DATA_INVALID");
+              result.kind === "ok" &&
+              (request.kind === "asset" ||
+                request.kind === "set-image" ||
+                (request.kind === "module-query" &&
+                  request.query.kind === "set-image"))
+            ) {
+              const media = result.value as QueryMap["asset"];
+              if (media !== null) {
+                const raw = media.bytes as unknown;
+                if (!Array.isArray(raw))
+                  return { kind: "failed", error: { code: "PACKAGE_INVALID" } };
+                (media as { bytes: Uint8Array }).bytes = Uint8Array.from(raw);
+              } else {
+                const warning: MediaWarning =
+                  request.kind === "asset"
+                    ? {
+                        packageId: request.packageId,
+                        path: request.path,
+                        reason: "missing",
+                      }
+                    : {
+                        packageId: "card-library",
+                        path: `sets/${request.kind === "module-query" ? (request.query as Extract<ContentQuery, { kind: "set-image" }>).setId : request.setId}`,
+                        reason: "missing",
+                      };
+                for (const listener of mediaListeners) listener(warning);
+              }
             }
-          }
-          const result = await guard<readonly UserRecord[]>(
-            "native_user_write",
-            { mutations },
-          );
-          return result.kind === "ok" && !result.value.every(validRecord)
-            ? failed("USER_DATA_INVALID")
-            : result;
+            return result;
+          },
         },
-        exportUserData: async () => {
-          if (closed) return unavailable();
-          try {
-            const bytes = await invoke<ArrayBuffer>("native_user_export");
-            return {
-              kind: "ok",
-              value: new File([bytes], "user-data.sqlite", {
-                type: "application/vnd.sqlite3",
-              }),
-            };
-          } catch {
-            return failed("USER_DATA_INVALID");
-          }
-        },
-        inspectUserDataBackup: async (
-          file,
-        ): Promise<StorageResult<BackupPreview>> => {
-          await Promise.all(
-            [...stagedBackups].map(async (token) => {
-              stagedBackups.delete(token);
-              await invoke("native_user_discard", { token });
-            }),
-          );
-          if (file.size > 256 * 1024 * 1024)
-            return { kind: "failed", error: { code: "USER_DATA_TOO_LARGE" } };
-          const result = await invoke<
-            StorageResult<BackupPreview & { rows: UserRecord[] }>
-          >(
-            "native_user_inspect",
-            new Uint8Array(await file.arrayBuffer()),
-          ).catch(() =>
-            failed<BackupPreview & { rows: UserRecord[] }>(
-              "STORAGE_UNAVAILABLE",
-            ),
-          );
-          if (result.kind === "failed") return result;
-          const { rows, ...preview } = result.value;
-          if (!Array.isArray(rows) || !rows.every(validRecord)) {
-            await invoke("native_user_discard", { token: preview.token });
-            return failed("USER_DATA_INVALID");
-          }
-          stagedBackups.add(preview.token);
-          return { kind: "ok", value: preview };
-        },
-        restoreUserData: async (token, expectedRevision, confirmed) => {
-          stagedBackups.delete(token);
-          return await guard("native_user_restore", {
-            token,
-            expectedRevision,
-            confirmed,
-          });
-        },
-      },
+        async () => guard("native_package_stack", { verify: false }),
+      ),
+      userData,
       subscribeMediaWarnings: (listener) => {
         mediaListeners.add(listener);
         return () => mediaListeners.delete(listener);
       },
       close: async () => {
         closed = true;
+        await userData.close();
         mediaListeners.clear();
         await Promise.all(
           [...sessions].map(async (sessionId) => {
             sessions.delete(sessionId);
             await invoke("native_package_release", { sessionId });
-          }),
-        );
-        await Promise.all(
-          [...stagedBackups].map(async (token) => {
-            stagedBackups.delete(token);
-            await invoke("native_user_discard", { token });
           }),
         );
       },

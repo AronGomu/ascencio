@@ -52,7 +52,7 @@ download and integrity-check pinned ocgcore-wasm package
 → hash every generated artifact
 → write manifest.json
 → independently verify the staging snapshot
-→ write verified package inputs under assets/content/** and generated/content-inputs/**
+→ write verified package inputs under assets/content/**, content/duel-core/strings/** and generated/content-inputs/**
 ```
 
 ## Card normalization
@@ -181,10 +181,11 @@ node scripts/sync-assets.ts \
 assets/
 ├── app/                        # app icon + optional external download-link metadata
 └── content/
-    ├── duel-core/              # strings/config inputs; frozen vendor remains separate
     ├── card-library/           # global data/scripts/images/sets inputs
-    ├── freeplay/               # standalone decks/opponents/limits/config
     └── chapter-01/             # story/decks/opponents/limits/media
+content/
+├── duel-core/                 # tracked strings/config; frozen vendor remains separate
+└── freeplay/                  # tracked decks/opponents/limits/config
 generated/
 ├── acquisition/               # acquired non-authoritative engine + reports
 ├── content-inputs/             # derived data/runtime manifests
@@ -192,7 +193,7 @@ generated/
 .cache/upstream/                # acquisition caches
 ```
 
-Downloaded source families remain ignored by Git. Operational reports are diagnostics, not app assets or activation receipts. Public package export/upload still requires complete sources, explicit redistribution approval, immutable identity, owner links, and manual acceptance; no automatic publishing exists.
+Downloaded card-library and chapter source families remain ignored by Git. Duel-core configuration/strings and Free Play data are tracked under `content/`. Operational reports are diagnostics, not app assets or activation receipts. Public package export/upload still requires complete sources, explicit redistribution approval, immutable identity, owner links, and manual acceptance; no automatic publishing exists.
 
 ## Integrity guarantees
 

@@ -260,6 +260,13 @@ export default tseslint.config(
                   return;
                 }
                 if (source === target) return;
+                if (
+                  (target === "modules" && to !== "src/modules/index.ts") ||
+                  (source === "modules" && target !== null)
+                ) {
+                  context.report({ node, messageId: "boundary" });
+                  return;
+                }
                 if (target === "storage" && to !== "src/storage/index.ts") {
                   context.report({ node, messageId: "storage" });
                   return;

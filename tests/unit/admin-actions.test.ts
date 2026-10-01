@@ -38,10 +38,10 @@ describe("admin route index", () => {
 });
 
 describe("admin storage targets", () => {
-  it("targets explicit SQLite user namespaces", () => {
+  it("targets explicit JSON user namespaces", () => {
     expect(target("decks")).toMatchObject({
       kind: "user",
-      name: "user-data.sqlite",
+      name: "user-data.json",
       namespaces: ["decks", "deck-meta", "deck-autosaves"],
     });
     expect(target("story-saves").namespaces).toEqual(["story"]);
@@ -77,11 +77,11 @@ describe("resetOperationalStorageTarget", () => {
     ).resolves.toEqual({ outcome: "deleted" });
   });
 
-  it("rejects user namespace targets without injected SQLite reset", async () => {
+  it("rejects user namespace targets without injected user data reset", async () => {
     await expect(
       resetOperationalStorageTarget(target("decks"), indexedDB),
     ).rejects.toThrow(
-      "User namespace reset requires injected SQLite capability",
+      "User namespace reset requires injected user data capability",
     );
   });
 });

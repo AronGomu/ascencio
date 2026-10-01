@@ -10,13 +10,13 @@ This is the canonical architecture entry point. Detailed decisions are intention
 
 [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md) records implemented cutover. [Manual SQLite content import](04-data/manual-sqlite-content-import.md) is current operational/runtime detail; [manual setup gates](../assets/manual-sqlite-setup.md) separate code readiness from owner release/manual acceptance.
 
-| ID  | Current invariant                                                                                 | Implementation anchor                                                                                                        |
-| --- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| S1  | App-only build; content package bytes never enter `generated/build/app/`, precache, or Vite source serving       | `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, `scripts/lib/vite-content-deny.ts`, `scripts/verify-browser-build.ts`    |
-| S2  | Manual immutable SQLite import; no live progressive/ZIP/R2/download/selector path                 | `src/storage/create-storage-client.ts`, `src/storage/sqlite-worker.ts`, `src/shell/application/manual-content-controller.ts` |
-| S3  | Package-owned assets/global cards/standalone Free Play; optional media warns without hidden fetch | `scripts/lib/asset-roots.ts`, `src/shell/adapters/sqlite-freeplay-inputs.ts`                                                 |
-| S4  | Isolated `user-data.sqlite`; backup replacement only; no legacy migration or save-continuity gate | `src/storage/runtime/user-data-runtime.ts`, `src/shell/application/user-persistence-owner.ts`                                |
-| S5  | One SQLite-owning tab; Duel Worker remains sole OCG rules authority                               | `src/storage/sqlite-worker.ts`, `src/battle/worker/duel.worker-browser.ts`                                                   |
+| ID  | Current invariant                                                                                          | Implementation anchor                                                                                                        |
+| --- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| S1  | App-only build; content package bytes never enter `generated/build/app/`, precache, or Vite source serving | `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, `scripts/lib/vite-content-deny.ts`, `scripts/verify-browser-build.ts`    |
+| S2  | Manual immutable SQLite import; no live progressive/ZIP/R2/download/selector path                          | `src/storage/create-storage-client.ts`, `src/storage/sqlite-worker.ts`, `src/shell/application/manual-content-controller.ts` |
+| S3  | Package-owned assets/global cards/standalone Free Play; optional media warns without hidden fetch          | `scripts/lib/asset-roots.ts`, `src/shell/adapters/sqlite-freeplay-inputs.ts`                                                 |
+| S4  | JSON/localStorage user data; backup replacement only; no legacy migration                                  | `src/storage/json/user-data-store.ts`, `src/shell/application/user-persistence-owner.ts`                                     |
+| S5  | One SQLite-owning tab; Duel Worker remains sole OCG rules authority                                        | `src/storage/sqlite-worker.ts`, `src/battle/worker/duel.worker-browser.ts`                                                   |
 
 Automated evidence means code-ready, not manually accepted. Owner Chromium rows remain unchecked in durable manual checklist named by root `AGENTS.md`. Source completeness, redistribution rights, public links, uploads, and hosting approval remain owner-owned; all tracked download URLs are null.
 
@@ -146,3 +146,5 @@ Commits: `e07fa3eb` opened the root; the hosts moved onto it in `a36d2300` (free
 - A cross-cutting change must update every affected decision in one change.
 - Superseded decisions move to `docs/archive/`; current files must not contain competing alternatives.
 - Keep decisions concise, explicit, and searchable with stable terminology from this index.
+
+Module composition and campaign prerequisites are governed by [ADR-102](../ADR/102_ADR_content_modules_and_campaign_facts.md) and [the authoring contract](../assets/content-modules.md). Installed file dependencies and saved story facts are separate; card packs merge into the catalog, and chapter removal preserves campaign progress.

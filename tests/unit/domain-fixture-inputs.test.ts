@@ -9,7 +9,7 @@ import { packageQueryFixture } from "../fixtures/package-query.ts";
 import { loadFreeplayInputs } from "../../src/shell/adapters/sqlite-freeplay-inputs.ts";
 import { loadStoryInputs } from "../../src/shell/adapters/sqlite-story-inputs.ts";
 import { createSqliteUserServices } from "../../src/shell/adapters/sqlite-user-services.ts";
-import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../fixtures/legacy-user-data-runtime.ts";
 import { createUserDataFixture } from "./storage/sqlite-fixtures.ts";
 import {
   createNodeFileStore,

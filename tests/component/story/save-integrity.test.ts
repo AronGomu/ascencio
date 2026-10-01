@@ -23,7 +23,7 @@ import {
   createNodeFileStore,
   databaseAdapter,
 } from "../../unit/storage/runtime-fixtures.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 
 const owned: (() => Promise<void>)[] = [];
 afterEach(async () => {

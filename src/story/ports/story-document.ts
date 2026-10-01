@@ -8,14 +8,12 @@ import {
   text,
   unique,
 } from "./release-value.ts";
-const choices = ["trust-rin", "challenge-rin", "observe-first"] as const;
-function responses(value: unknown): Readonly<Record<StoryChoiceId, string>> {
-  const r = record(value, choices);
-  return {
-    "trust-rin": text(r["trust-rin"]),
-    "challenge-rin": text(r["challenge-rin"]),
-    "observe-first": text(r["observe-first"]),
-  };
+function responses(
+  value: unknown,
+  ids: readonly string[],
+): Readonly<Record<StoryChoiceId, string>> {
+  const r = record(value, ids);
+  return Object.fromEntries(ids.map((id) => [id, text(r[id])]));
 }
 export function parseStoryDocument(value: unknown): StoryDocument {
   const r = record(value, [
@@ -55,20 +53,26 @@ export function parseStoryDocument(value: unknown): StoryDocument {
     r.choices,
     (value) => {
       const c = record(value, ["id", "label"]);
-      return { id: literal(c.id, ...choices), label: text(c.label) };
+      return { id: text(c.id, 256), label: text(c.label) };
     },
-    3,
+    32,
   );
   unique(beats, (b) => b.id);
   unique(selected, (c) => c.id);
-  if (!beats.length || selected.length !== 3) invalid();
+  if (!beats.length) invalid();
   return freeze({
     schemaVersion: literal(r.schemaVersion, 1),
-    contentId: literal(r.contentId, "prototype-prologue-v1"),
+    contentId: text(r.contentId, 256),
     title: text(r.title),
     beats,
     choices: selected,
-    choiceResponses: responses(r.choiceResponses),
-    laterAcknowledgments: responses(r.laterAcknowledgments),
+    choiceResponses: responses(
+      r.choiceResponses,
+      selected.map(({ id }) => id),
+    ),
+    laterAcknowledgments: responses(
+      r.laterAcknowledgments,
+      selected.map(({ id }) => id),
+    ),
   });
 }

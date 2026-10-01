@@ -11,7 +11,7 @@ import {
 import { createInitialStoryState } from "../../src/story/model/story-state.ts";
 import { unlinkSync, rmdirSync } from "node:fs";
 import { createSqliteStoryRepository } from "../../src/story/saves/index.ts";
-import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../fixtures/legacy-user-data-runtime.ts";
 import { createUserDataFixture } from "../unit/storage/sqlite-fixtures.ts";
 import {
   createNodeFileStore,
@@ -89,6 +89,29 @@ afterEach(async () => {
 });
 
 describe("MainMenuScreen", () => {
+  it("can continue a saved chapter when chapter 01 is not installed", async () => {
+    await saves.write("autosave", createInitialStoryState(), null, {
+      ...storyBindingFixture(),
+      chapterId: "chapter-02",
+      contentId: "chapter02-story",
+    });
+    const store = createShellStore("#/", () => {});
+    render(MainMenuScreen, {
+      saves,
+      store,
+      coreGate: { kind: "ready", generation: 2 },
+      storyAvailable: false,
+      resumeAvailable: true,
+    });
+    await settleSaveProbe();
+    expect((query("main-menu-new-game") as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect((query("main-menu-continue") as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+    expect((query("main-menu-load") as HTMLButtonElement).disabled).toBe(false);
+  });
   it("renders the five entries with Free Play last", async () => {
     await writeStorySave();
     renderMenu();

@@ -1,3 +1,4 @@
+import { validateModuleCatalogs } from "../modules/catalog-validation.ts";
 import {
   isQuota,
   packageDatabaseFailure,
@@ -694,25 +695,33 @@ export class AtomicPackageRuntime {
     }
     const libraryItem = candidate.get("card-library");
     if (!libraryItem) return { kind: "ok", value: undefined };
-    let library: RuntimeDatabase | null = null;
     try {
-      library = this.#files.openDatabase(libraryItem.fileKey);
-      const cardCodes = new Set(
-        library
-          .all("SELECT code FROM cards ORDER BY code")
-          .map((row) => row.code)
-          .filter((value): value is number => typeof value === "number"),
+      const inventories = validateModuleCatalogs(
+        [...candidate.values()],
+        this.#files,
       );
-      const setIds = new Set(
-        library
-          .all("SELECT id FROM sets ORDER BY id")
-          .map((row) => row.id)
-          .filter((value): value is string => typeof value === "string"),
-      );
+      if (inventories.kind === "failed") return inventories;
       for (const item of candidate.values()) {
         if (signal.aborted) return failed("OPERATION_CANCELLED");
         if (item.packageType !== "freeplay" && item.packageType !== "chapter")
           continue;
+        const allowed = new Set<PackageId>();
+        const visit = (id: PackageId): void => {
+          if (allowed.has(id)) return;
+          allowed.add(id);
+          for (const dependency of candidate.get(id)?.dependencies ?? [])
+            visit(dependency.packageId);
+        };
+        visit(item.packageId);
+        const catalogs = [...inventories.value].filter(([id]) =>
+          allowed.has(id),
+        );
+        const cardCodes = new Set(
+          catalogs.flatMap(([, catalog]) => [...catalog.cards]),
+        );
+        const setIds = new Set(
+          catalogs.flatMap(([, catalog]) => [...catalog.sets]),
+        );
         let database: RuntimeDatabase | null = null;
         try {
           database = this.#files.openDatabase(item.fileKey);
@@ -763,8 +772,6 @@ export class AtomicPackageRuntime {
       return { kind: "ok", value: undefined };
     } catch (error) {
       return packageDatabaseFailure(error, libraryItem.packageId);
-    } finally {
-      library?.close();
     }
   }
 
@@ -852,11 +859,15 @@ function manifestOnly(value: PackageManifest): PackageManifest {
 }
 
 function comparePackage(left: PackageManifest, right: PackageManifest): number {
-  return rank(left.packageId) - rank(right.packageId);
+  return (
+    rank(left.packageId) - rank(right.packageId) ||
+    left.packageId.localeCompare(right.packageId)
+  );
 }
 function rank(packageId: PackageId): number {
   if (packageId === "duel-core") return 0;
   if (packageId === "card-library") return 1;
+  if (packageId.startsWith("card-pack-")) return 1.5;
   if (packageId === "freeplay") return 2;
   return Number(packageId.slice(8)) + 2;
 }

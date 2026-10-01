@@ -12,6 +12,7 @@
   export let coreGate: CoreGate;
   export let storyAvailable = coreGate.kind === "ready";
   export let freeplayAvailable = coreGate.kind === "ready";
+  export let resumeAvailable = storyAvailable;
   /* Free play opens on a deck list, and reading that list means the whole
      packaged card database. Reported the moment a player reaches for the
      entry — pointer over it, or focus on it — so the read happens while they
@@ -27,9 +28,14 @@
   let settingsOpen = false;
 
   onMount(() => {
-    if (!storyAvailable || coreGate.kind !== "ready") return;
+    if (!resumeAvailable || coreGate.kind !== "ready") return;
     if (saves === null) return;
-    void Promise.all([saves.read("manual:1"), saves.read("autosave")])
+    void Promise.all([
+      saves.read("manual:1"),
+      saves.read("manual:2"),
+      saves.read("manual:3"),
+      saves.read("autosave"),
+    ])
       .then((results) => {
         hasSave = results.some((result) => result.kind === "ready");
         const problem = results.find(
@@ -83,16 +89,20 @@
     <button
       type="button"
       data-cy="main-menu-continue"
-      disabled={!storyAvailable || !hasSave}
-      title={!storyAvailable || !hasSave ? storyReason() : undefined}
+      disabled={!resumeAvailable || !hasSave}
+      title={!resumeAvailable || !hasSave
+        ? "A compatible save and its content modules are required."
+        : undefined}
       onclick={() => store.enterStory("continue")}>Continue</button
     >
     <button
       type="button"
       class="secondary"
       data-cy="main-menu-load"
-      disabled={!storyAvailable}
-      title={!storyAvailable ? storyReason() : undefined}
+      disabled={!resumeAvailable}
+      title={!resumeAvailable
+        ? "Install the saved chapter to load your game."
+        : undefined}
       onclick={() => store.enterStory("load")}>Load</button
     >
     <button

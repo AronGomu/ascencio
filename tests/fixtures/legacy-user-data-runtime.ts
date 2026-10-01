@@ -1,18 +1,24 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import type { StorageFailure, StorageResult } from "../contracts/package.ts";
+import type {
+  StorageFailure,
+  StorageResult,
+} from "../../src/storage/contracts/package.ts";
 import type {
   BackupPreview,
   UserMutation,
   UserNamespace,
   UserRecord,
-} from "../contracts/user-data.ts";
+} from "../../src/storage/contracts/user-data.ts";
 import {
   isQuota,
   userDatabaseFailure,
-} from "../schema/package-database-failure.ts";
-import { validateUserRecordPayload } from "../schema/user-record-validation.ts";
-import type { RuntimeDatabase, RuntimeFileStore } from "./runtime-ports.ts";
+} from "../../src/storage/schema/package-database-failure.ts";
+import { validateUserRecordPayload } from "../../src/storage/schema/user-record-validation.ts";
+import type {
+  RuntimeDatabase,
+  RuntimeFileStore,
+} from "../../src/storage/runtime/runtime-ports.ts";
 import {
   isUserNamespace,
   preflightUserDataDatabase,
@@ -21,7 +27,7 @@ import {
   validateUserDataDatabase,
   validUserKey,
   type ValidatedUserRow,
-} from "./user-data-validation.ts";
+} from "./legacy-user-data-validation.ts";
 
 const FILE_CHUNK_BYTES = 1024 * 1024;
 const SQLITE_MIME = "application/vnd.sqlite3";

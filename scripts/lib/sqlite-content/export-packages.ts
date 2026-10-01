@@ -271,7 +271,7 @@ async function loadSource(
       incomplete(entry.manifest.packageId, asset.source);
   }
   if (entry.manifest.packageType === "duel-core") {
-    const production = entry.sourceRoot === "assets/content/duel-core";
+    const production = entry.sourceRoot === "content/duel-core";
     const required = production
       ? ([
           [
@@ -477,12 +477,43 @@ function emptySource(
 }
 
 function validateCrossPackageSources(sources: readonly PackageSource[]): void {
-  const library = sources.find(
-    ({ manifest }) => manifest.packageId === "card-library",
+  const libraries = sources.filter(
+    ({ manifest }) => manifest.packageType === "card-library",
   );
-  const codes = new Set(library?.cards.map(({ code }) => code) ?? []);
-  const setIds = new Set(library?.sets.map(({ id }) => id) ?? []);
-  if (library) {
+  const codes = new Set(
+    libraries.flatMap((library) => library.cards.map(({ code }) => code)),
+  );
+  const setIds = new Set<string>();
+  for (const library of libraries) {
+    unique(
+      library.sets.map(({ id }) => id),
+      library.manifest.packageId,
+      "sets.json",
+    );
+    for (const set of library.sets) {
+      if (setIds.has(set.id))
+        throw new ExpectedFailure(
+          failed("PACKAGE_IDENTITY_CONFLICT", library.manifest.packageId),
+        );
+      setIds.add(set.id);
+    }
+  }
+  const identities = new Map<string, string>();
+  for (const library of libraries) {
+    for (const [id, value] of [
+      ...library.cards.map((row) => [`card:${row.code}`, canonicalJson(row)]),
+      ...library.texts.map((row) => [
+        `text:${row.cardCode}:${row.locale}`,
+        canonicalJson(row),
+      ]),
+      ...library.scripts.map((row) => [`script:${row.name}`, row.source]),
+    ]) {
+      if (identities.has(id!) && identities.get(id!) !== value)
+        throw new ExpectedFailure(
+          failed("PACKAGE_IDENTITY_CONFLICT", library.manifest.packageId),
+        );
+      identities.set(id!, value!);
+    }
     unique(
       library.cards.map(({ code }) => String(code)),
       library.manifest.packageId,
@@ -582,6 +613,29 @@ function validateCrossPackageSources(sources: readonly PackageSource[]): void {
       source.opponents.map(({ id }) => id),
       source.manifest.packageId,
       "opponents.json",
+    );
+    const allowed = new Set<PackageId>();
+    const visit = (id: PackageId): void => {
+      if (allowed.has(id)) return;
+      allowed.add(id);
+      for (const dependency of sources.find(
+        (item) => item.manifest.packageId === id,
+      )?.manifest.dependencies ?? [])
+        visit(dependency.packageId);
+    };
+    visit(source.manifest.packageId);
+    const availableLibraries = libraries.filter((library) =>
+      allowed.has(library.manifest.packageId),
+    );
+    const codes = new Set(
+      availableLibraries.flatMap((library) =>
+        library.cards.map((card) => card.code),
+      ),
+    );
+    const setIds = new Set(
+      availableLibraries.flatMap((library) =>
+        library.sets.map((set) => set.id),
+      ),
     );
     for (const deck of source.decks)
       for (const code of [
@@ -1039,7 +1093,10 @@ function validAssetSource(value: unknown): value is AssetSource {
 }
 function validSourceRoot(value: string, packageId: PackageId): boolean {
   return (
-    value === `assets/content/${packageId}` ||
+    value ===
+      (packageId === "duel-core" || packageId === "freeplay"
+        ? `content/${packageId}`
+        : `assets/content/${packageId}`) ||
     value === `tests/fixtures/sqlite/sources/${packageId}`
   );
 }

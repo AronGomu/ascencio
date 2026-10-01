@@ -213,6 +213,8 @@ function dependencyPackages(
     for (const dependency of active.dependencies) visit(dependency.packageId);
   };
   visit(rootPackageId);
+  for (const active of packages)
+    if (active.packageType === "card-library") visit(active.packageId);
   return Object.freeze(
     [...found.values()].sort((left, right) =>
       left.packageId.localeCompare(right.packageId),

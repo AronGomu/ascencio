@@ -13,7 +13,7 @@ describe("domain fixture retirement contract", () => {
       );
     }
   });
-  it("keeps test startup and SQLite fault hooks out of production configuration", () => {
+  it("keeps test startup and user JSON fault hooks out of production configuration", () => {
     expect(read("vite.config.ts")).not.toMatch(
       /selected-content|domain-fixture/,
     );
@@ -37,9 +37,8 @@ it("keeps one real user owner and same-store production repository factory", () 
   );
 });
 
-it("restricts raw Worker mutations to fixed test fault operations", () => {
-  const fixture = read("tests/fixtures/domain-sqlite-faults.ts");
-  expect(fixture).toContain("event.stopImmediatePropagation()");
+it("restricts raw user JSON mutations to fixed test fault operations", () => {
+  const fixture = read("tests/fixtures/domain-user-json-faults.ts");
   expect(fixture).toContain('operation.kind === "corrupt-story"');
   expect(fixture).toContain('operation.kind === "clear-story"');
   expect(fixture).toContain('operation.kind === "fail-deck-write"');

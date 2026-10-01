@@ -1,3 +1,5 @@
+import { selectStoryModule } from "./story-module-selection.ts";
+import { chapterTransition } from "../../story/saves/index.ts";
 import {
   createApplicationAdmission,
   type ApplicationAdmission,
@@ -23,6 +25,7 @@ import type {
   SessionByMode,
   ShellApplication,
   StoryInputs,
+  StorySessionRequest,
 } from "../core/shell-application.ts";
 import type { ShellUserServices } from "../core/user-services.ts";
 
@@ -104,6 +107,7 @@ export function createSqliteApplicationService(options: {
     mode: M,
     signal: AbortSignal,
     releaseAdmission: () => void,
+    storyRequest?: StorySessionRequest,
   ): Promise<SessionByMode[M]> {
     throwIfAborted(signal);
     if (disposed) throw abortError();
@@ -128,8 +132,21 @@ export function createSqliteApplicationService(options: {
       if (current.value.generation !== lease.generation)
         throw new Error("APP_CONTENT_GENERATION_CHANGED");
       const readiness = packageReadiness(current.value);
+      const selected =
+        mode === "story" && storyRequest !== undefined
+          ? await selectStoryModule(
+              options.storage,
+              current.value,
+              storyRequest,
+              linked.signal,
+            )
+          : null;
       const ready =
-        mode === "freeplay" ? readiness.freeplay : readiness.newGame;
+        mode === "freeplay"
+          ? readiness.freeplay
+          : selected !== null
+            ? readiness.freeplay
+            : readiness.newGame;
       if (!ready) {
         const required =
           mode === "freeplay"
@@ -150,9 +167,36 @@ export function createSqliteApplicationService(options: {
           : await loadStoryInputs(
               options.storage,
               options.users,
-              "chapter-01",
+              selected?.chapterId ?? "chapter-01",
               linked.signal,
             );
+      if (
+        mode === "story" &&
+        selected?.previous &&
+        (selected.advancing || storyRequest?.intent === "continue")
+      ) {
+        const storyInputs = inputs as StoryInputs;
+        const autosave = await storyInputs.saves.read("autosave");
+        if (autosave.kind === "corrupt" || autosave.kind === "incompatible")
+          throw new Error("STORY_SAVE_UNAVAILABLE");
+        const entry = selected.advancing
+          ? chapterTransition(selected.previous, storyInputs.release)
+          : {
+              state: {
+                ...selected.previous.state,
+                screen: selected.previous.state.savedScreen,
+              },
+              story: selected.previous.story,
+            };
+        inputs = Object.freeze({
+          ...storyInputs,
+          entry: {
+            ...entry,
+            autosaveRevision:
+              autosave.kind === "ready" ? autosave.envelope.revision : 0,
+          },
+        });
+      }
       throwIfAborted(linked.signal);
       let closePromise: Promise<void> | null = null;
       const session = Object.freeze({
@@ -213,11 +257,12 @@ export function createSqliteApplicationService(options: {
   const acquire: ShellApplication["acquire"] = <M extends keyof SessionByMode>(
     mode: M,
     signal: AbortSignal,
+    storyRequest?: StorySessionRequest,
   ): Promise<SessionByMode[M]> => {
     const releaseAdmission = admission.enter("session");
     if (releaseAdmission === null)
       return Promise.reject(new Error("APP_SESSION_ACTIVE"));
-    const started = acquireMode(mode, signal, releaseAdmission);
+    const started = acquireMode(mode, signal, releaseAdmission, storyRequest);
     void started.catch(releaseAdmission);
     acquiring.add(started);
     // Tracker observes settlement only; acquire caller retains original rejection.

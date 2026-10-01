@@ -1,6 +1,6 @@
 import { rmdirSync, unlinkSync } from "node:fs";
 import { createSqliteUserServices } from "../../src/shell/adapters/sqlite-user-services.ts";
-import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "./legacy-user-data-runtime.ts";
 import { createUserDataFixture } from "../unit/storage/sqlite-fixtures.ts";
 import {
   createNodeFileStore,

@@ -9,7 +9,7 @@ import type {
   UserDataStore,
 } from "../../../src/storage/index.ts";
 import { AtomicPackageRuntime } from "../../../src/storage/runtime/atomic-package-runtime.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../legacy-user-data-runtime.ts";
 import {
   createImportablePackageFixture,
   createUserDataFixture,

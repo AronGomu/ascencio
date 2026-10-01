@@ -4,7 +4,6 @@ export {
   CONTENT_REGISTRY_SCHEMA_SQL,
   FREEPLAY_SCHEMA_SQL,
   PACKAGE_SCHEMA_SQL,
-  USER_DATA_SCHEMA_SQL,
 } from "./sql.ts";
 export type {
   PackageDependency,

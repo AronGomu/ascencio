@@ -431,8 +431,18 @@ fn owned_asset_path(package_type: &str, path: &str) -> bool {
         _ => false,
     }
 }
-fn valid_id(id: &str) -> bool {
+pub(crate) fn valid_id(id: &str) -> bool {
     matches!(id, "duel-core" | "card-library" | "freeplay")
+        || (id.len() <= 128
+            && id.strip_prefix("card-pack-").is_some_and(|suffix| {
+                !suffix.is_empty()
+                    && suffix.split('-').all(|part| {
+                        !part.is_empty()
+                            && part
+                                .bytes()
+                                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
+                    })
+            }))
         || id.strip_prefix("chapter-").is_some_and(|suffix| {
             suffix.len() >= 2
                 && suffix.bytes().all(|b| b.is_ascii_digit())
@@ -454,6 +464,37 @@ fn valid_header_dependencies(header: &Value) -> bool {
     let Some(dependencies) = header["dependencies"].as_array() else {
         return false;
     };
+    let expected_type = if id == "duel-core" {
+        "duel-core"
+    } else if id == "card-library" || id.starts_with("card-pack-") {
+        "card-library"
+    } else if id == "freeplay" {
+        "freeplay"
+    } else {
+        "chapter"
+    };
+    if header["packageType"] != expected_type {
+        return false;
+    }
+    let required = if id.starts_with("card-pack-") {
+        Some("card-library")
+    } else if id == "card-library" {
+        Some("duel-core")
+    } else if id == "freeplay" {
+        Some("card-library")
+    } else {
+        None
+    };
+    if id == "duel-core" && !dependencies.is_empty()
+        || required.is_some_and(|required| {
+            !dependencies
+                .iter()
+                .any(|dependency| dependency["packageId"] == required)
+        })
+        || expected_type == "chapter" && dependencies.is_empty()
+    {
+        return false;
+    }
     let mut previous = "";
     for dependency in dependencies {
         let Some(required_id) = dependency["packageId"].as_str() else {
@@ -475,6 +516,42 @@ fn valid_header_dependencies(header: &Value) -> bool {
     true
 }
 fn dependencies_valid(headers: &HashMap<String, Value>) -> bool {
+    fn visit<'a>(
+        id: &'a str,
+        headers: &'a HashMap<String, Value>,
+        visiting: &mut HashSet<&'a str>,
+        visited: &mut HashSet<&'a str>,
+    ) -> bool {
+        if visiting.contains(id) {
+            return false;
+        }
+        if visited.contains(id) {
+            return true;
+        }
+        visiting.insert(id);
+        if let Some(dependencies) = headers
+            .get(id)
+            .and_then(|header| header["dependencies"].as_array())
+        {
+            for dependency in dependencies {
+                if let Some(required) = dependency["packageId"].as_str() {
+                    if !visit(required, headers, visiting, visited) {
+                        return false;
+                    }
+                }
+            }
+        }
+        visiting.remove(id);
+        visited.insert(id);
+        true
+    }
+    let mut visited = HashSet::new();
+    for id in headers.keys() {
+        if !visit(id, headers, &mut HashSet::new(), &mut visited) {
+            return false;
+        }
+    }
+
     for (id, header) in headers {
         let Some(dependencies) = header["dependencies"].as_array() else {
             return false;
@@ -576,6 +653,15 @@ pub(crate) fn native_import_commit(
         if !dependencies_valid(&headers) {
             return Err("PACKAGE_DEPENDENCY_INCOMPATIBLE");
         }
+        let mut paths: HashMap<String, PathBuf> = active
+            .packages
+            .iter()
+            .map(|package| (package.package_id.clone(), package_path(&root, package)))
+            .collect();
+        for (source, package) in &staged {
+            paths.insert(package.package_id.clone(), source.clone());
+        }
+        validate_candidate_content(&paths, &headers).map_err(|_| "PACKAGE_SOURCE_INCOMPLETE")?;
         let mut changed = false;
         for (source, package) in staged {
             let target = package_path(&root, &package);
@@ -798,6 +884,121 @@ mod tests {
     use super::*;
     use rusqlite::params;
 
+    fn header(id: &str, kind: &str, dependencies: &[&str]) -> Value {
+        json!({"packageId":id,"packageType":kind,"version":"1.0.0","schemaVersion":1,"createdAt":"2026-09-24T00:00:00.000Z","dependencies":dependencies.iter().map(|id|json!({"packageId":id,"requirement":"minimum","version":"1.0.0"})).collect::<Vec<_>>()})
+    }
+    #[test]
+    fn module_graph_allows_absent_previous_chapters_and_rejects_cycles() {
+        let mut headers = HashMap::from([
+            (
+                "duel-core".to_owned(),
+                header("duel-core", "duel-core", &[]),
+            ),
+            (
+                "card-library".to_owned(),
+                header("card-library", "card-library", &["duel-core"]),
+            ),
+            (
+                "chapter-02".to_owned(),
+                header("chapter-02", "chapter", &["card-library"]),
+            ),
+        ]);
+        assert!(headers.values().all(valid_header_dependencies));
+        assert!(dependencies_valid(&headers));
+        headers.insert(
+            "chapter-02".into(),
+            header("chapter-02", "chapter", &["chapter-03"]),
+        );
+        headers.insert(
+            "chapter-03".into(),
+            header("chapter-03", "chapter", &["chapter-02"]),
+        );
+        assert!(!dependencies_valid(&headers));
+    }
+    #[test]
+    fn versioned_progress_requirements_and_card_pack_ids_are_validated() {
+        assert!(valid_id("card-pack-expansion-one"));
+        assert!(!valid_id("card-pack-../escape"));
+        let module = json!({"apiVersion":1,"choiceBeatId":null,"requiresProgress":[{"kind":"chapter-completed","chapterId":"chapter-01"},{"kind":"fact","id":"chapter-01:choice","equals":"trust-rin"}],"completion":[]});
+        assert!(valid_chapter_module(&module));
+        let mut future = module.clone();
+        future["apiVersion"] = json!(2);
+        assert!(!valid_chapter_module(&future));
+        let mut malformed = module;
+        malformed["requiresProgress"][1]["id"] = json!("unqualified");
+        assert!(!valid_chapter_module(&malformed));
+    }
+    #[test]
+    fn active_registry_can_be_empty_or_contain_only_a_later_chapter() {
+        let mut active = ReleaseManifest {
+            schema_version: 1,
+            generation: Some(8),
+            packages: vec![],
+        };
+        assert!(manifest_is_valid(&active));
+        active.packages.push(ReleasePackage {
+            package_id: "chapter-02".into(),
+            version: "1.0.0".into(),
+            bytes: 1024,
+            sha256: "a".repeat(64),
+        });
+        assert!(manifest_is_valid(&active));
+    }
+    #[test]
+    fn candidate_cards_require_declared_modules_and_conflicts_are_rejected() {
+        let root = std::env::temp_dir().join(format!("ascencio-modules-{}", Uuid::new_v4()));
+        fs::create_dir(&root).unwrap();
+        let mut paths = HashMap::new();
+        for (id, code) in [("card-library", 1), ("card-pack-extra", 999)] {
+            let path = root.join(format!("{id}.sqlite"));
+            let db = Connection::open(&path).unwrap();
+            db.execute_batch("CREATE TABLE cards(code INTEGER,definition_json TEXT);CREATE TABLE card_texts(card_code INTEGER,locale TEXT,name TEXT,description TEXT,strings_json TEXT);CREATE TABLE scripts(name TEXT,source TEXT);CREATE TABLE sets(id TEXT);").unwrap();
+            db.execute(
+                "INSERT INTO cards VALUES (?,?)",
+                params![code, format!("{{\"code\":{code}}}")],
+            )
+            .unwrap();
+            paths.insert(id.to_owned(), path);
+        }
+        let chapter = root.join("chapter.sqlite");
+        let db = Connection::open(&chapter).unwrap();
+        db.execute_batch("CREATE TABLE decks(cards_json TEXT);CREATE TABLE chapter_card_limits(card_code INTEGER);CREATE TABLE package_meta(key TEXT,value_json TEXT);INSERT INTO decks VALUES ('{\"main\":[999],\"extra\":[],\"side\":[]}');INSERT INTO package_meta VALUES ('config','{\"setIds\":[]}');").unwrap();
+        drop(db);
+        paths.insert("chapter-02".into(), chapter);
+        let mut headers = HashMap::from([
+            (
+                "card-library".into(),
+                header("card-library", "card-library", &[]),
+            ),
+            (
+                "card-pack-extra".into(),
+                header("card-pack-extra", "card-library", &["card-library"]),
+            ),
+            (
+                "chapter-02".into(),
+                header("chapter-02", "chapter", &["card-library"]),
+            ),
+        ]);
+        assert!(validate_candidate_content(&paths, &headers).is_err());
+        headers.insert(
+            "chapter-02".into(),
+            header(
+                "chapter-02",
+                "chapter",
+                &["card-library", "card-pack-extra"],
+            ),
+        );
+        assert!(validate_candidate_content(&paths, &headers).is_ok());
+        let db = Connection::open(&paths["card-pack-extra"]).unwrap();
+        db.execute_batch(
+            "UPDATE cards SET code=1,definition_json='{\"code\":1,\"conflicting\":true}'",
+        )
+        .unwrap();
+        drop(db);
+        assert!(validate_candidate_content(&paths, &headers).is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+
     fn fixture() -> PathBuf {
         let path =
             std::env::temp_dir().join(format!("ascencio-native-package-{}.sqlite", Uuid::new_v4()));
@@ -954,6 +1155,13 @@ fn validate_content_rows(db: &Connection, header: &Value) -> Result<(), String> 
                 return Err("Play config invalid".into());
             }
             if kind == "chapter"
+                && config
+                    .get("module")
+                    .is_some_and(|module| !valid_chapter_module(module))
+            {
+                return Err("Chapter module API invalid".into());
+            }
+            if kind == "chapter"
                 && config["chapterNumber"].as_u64()
                     != header["packageId"]
                         .as_str()
@@ -1005,6 +1213,183 @@ fn validate_content_rows(db: &Connection, header: &Value) -> Result<(), String> 
             }
         }
         _ => return Err("Unknown package type".into()),
+    }
+    Ok(())
+}
+
+fn valid_chapter_module(value: &Value) -> bool {
+    let Some(object) = value.as_object() else {
+        return false;
+    };
+    fn requirements(value: &Value) -> bool {
+        value.as_array().is_some_and(|items| {
+            items.len() <= 1000
+                && items.iter().all(|item| {
+                    let Some(record) = item.as_object() else {
+                        return false;
+                    };
+                    let reference = |value: &Value| {
+                        value.as_str().is_some_and(|s| {
+                            !s.is_empty() && s.encode_utf16().count() <= 256 && !s.contains('\0')
+                        })
+                    };
+                    match item["kind"].as_str() {
+                        Some("chapter-completed") => {
+                            record.len() == 2 && reference(&item["chapterId"])
+                        }
+                        Some("fact") => {
+                            record.len() == 3
+                                && record.contains_key("equals")
+                                && reference(&item["id"])
+                                && item["id"].as_str().is_some_and(|id| id.contains(':'))
+                                && (item["equals"].is_null()
+                                    || item["equals"].is_boolean()
+                                    || item["equals"].is_number()
+                                    || item["equals"]
+                                        .as_str()
+                                        .is_some_and(|s| s.encode_utf16().count() <= 4096))
+                        }
+                        _ => false,
+                    }
+                })
+        })
+    }
+    object.len() == 4
+        && object.contains_key("choiceBeatId")
+        && value["apiVersion"] == 1
+        && requirements(&value["requiresProgress"])
+        && requirements(&value["completion"])
+        && (value["choiceBeatId"].is_null()
+            || value["choiceBeatId"].as_str().is_some_and(|id| {
+                !id.is_empty() && id.encode_utf16().count() <= 256 && !id.contains('\0')
+            }))
+}
+
+fn validate_candidate_content(
+    paths: &HashMap<String, PathBuf>,
+    headers: &HashMap<String, Value>,
+) -> Result<(), String> {
+    let mut identities: HashMap<String, Value> = HashMap::new();
+    let mut cards: HashMap<u64, HashSet<String>> = HashMap::new();
+    let mut sets: HashMap<String, String> = HashMap::new();
+    for (id, path) in paths {
+        if headers[id]["packageType"] != "card-library" {
+            continue;
+        }
+        let db = open_package(path)?;
+        for (sql, prefix) in [
+            ("SELECT CAST(code AS TEXT), definition_json FROM cards", "card"),
+            ("SELECT CAST(card_code AS TEXT)||':'||locale, json_array(name,description,strings_json) FROM card_texts", "text"),
+            ("SELECT name, json_quote(source) FROM scripts", "script"),
+        ] {
+            let mut stmt = db.prepare(sql).map_err(|error| error.to_string())?;
+            let rows = stmt.query_map([], |row| Ok((row.get::<_, String>(0)?,row.get::<_, String>(1)?))).map_err(|error| error.to_string())?;
+            for row in rows {
+                let (key, payload) = row.map_err(|error| error.to_string())?;
+                let value: Value = serde_json::from_str(&payload).map_err(|error| error.to_string())?;
+                let identity = format!("{prefix}:{key}");
+                if identities.get(&identity).is_some_and(|previous| previous != &value) { return Err("Module content identity conflict".into()); }
+                identities.insert(identity,value);
+                if prefix == "card" { cards.entry(key.parse().map_err(|_| "Invalid card ID")?).or_default().insert(id.clone()); }
+            }
+        }
+        let mut stmt = db
+            .prepare("SELECT id FROM sets")
+            .map_err(|error| error.to_string())?;
+        let rows = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|error| error.to_string())?;
+        for row in rows {
+            if sets
+                .insert(row.map_err(|error| error.to_string())?, id.clone())
+                .is_some()
+            {
+                return Err("Module set identity conflict".into());
+            }
+        }
+    }
+    for (id, path) in paths {
+        let kind = headers[id]["packageType"]
+            .as_str()
+            .ok_or("Package type missing")?;
+        if !["chapter", "freeplay"].contains(&kind) {
+            continue;
+        }
+        let mut allowed = HashSet::new();
+        let mut pending = vec![id.clone()];
+        while let Some(required) = pending.pop() {
+            if !allowed.insert(required.clone()) {
+                continue;
+            }
+            for dependency in headers[&required]["dependencies"]
+                .as_array()
+                .ok_or("Invalid dependencies")?
+            {
+                pending.push(
+                    dependency["packageId"]
+                        .as_str()
+                        .ok_or("Invalid dependency")?
+                        .to_owned(),
+                );
+            }
+        }
+        let has_card = |code: u64| {
+            cards
+                .get(&code)
+                .is_some_and(|owners| owners.iter().any(|owner| allowed.contains(owner)))
+        };
+        let db = open_package(path)?;
+        let mut stmt = db
+            .prepare("SELECT cards_json FROM decks")
+            .map_err(|error| error.to_string())?;
+        let rows = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|error| error.to_string())?;
+        for row in rows {
+            let deck: Value = serde_json::from_str(&row.map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+            for group in ["main", "extra", "side"] {
+                for code in deck[group].as_array().ok_or("Invalid deck")? {
+                    if !code.as_u64().is_some_and(has_card) {
+                        return Err("Missing module card".into());
+                    }
+                }
+            }
+        }
+        let table = if kind == "chapter" {
+            "chapter_card_limits"
+        } else {
+            "freeplay_card_limits"
+        };
+        let mut limits = db
+            .prepare(&format!("SELECT card_code FROM {table}"))
+            .map_err(|error| error.to_string())?;
+        let rows = limits
+            .query_map([], |row| row.get::<_, u64>(0))
+            .map_err(|error| error.to_string())?;
+        for code in rows {
+            if !has_card(code.map_err(|error| error.to_string())?) {
+                return Err("Missing module limit card".into());
+            }
+        }
+        if kind == "chapter" {
+            let source: String = db
+                .query_row(
+                    "SELECT value_json FROM package_meta WHERE key='config'",
+                    [],
+                    |row| row.get(0),
+                )
+                .map_err(|error| error.to_string())?;
+            let config: Value = serde_json::from_str(&source).map_err(|error| error.to_string())?;
+            if config["setIds"].as_array().is_none_or(|ids| {
+                ids.iter().any(|id| {
+                    id.as_str()
+                        .is_none_or(|id| sets.get(id).is_none_or(|owner| !allowed.contains(owner)))
+                })
+            }) {
+                return Err("Missing module set".into());
+            }
+        }
     }
     Ok(())
 }

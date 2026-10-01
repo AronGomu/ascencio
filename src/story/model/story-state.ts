@@ -19,7 +19,7 @@ export const STORY_SCREENS = [
 ] as const;
 
 export type StoryScreen = (typeof STORY_SCREENS)[number];
-export type ChoiceId = "trust-rin" | "challenge-rin" | "observe-first";
+export type ChoiceId = string;
 export type BattleResult = "win" | "loss" | "abort" | "failure";
 export type MapAccess = "available" | "locked" | "hidden";
 export type LocationId = "old-arena" | "archive" | "hidden-gate" | "card-shop";

@@ -6,19 +6,20 @@
 
 ## Current model
 
-App ships no game-content package. User obtains either one ZIP containing one to four immutable `.sqlite` packages or one to four raw `.sqlite` files outside app, opens **Content & updates**, then selects them locally. App never fetches package bytes from configured links. Null links in `assets/app/download-links.json` show download unavailable without disabling file picker.
+Browser app ships no game-content package. Native Tauri releases install Duel Core, Card Library, Free Play and Chapter 01 by default. User obtains either one ZIP containing one to sixty-four immutable `.sqlite` packages or one to sixty-four raw `.sqlite` files outside app, opens **Content & updates**, then selects them locally. App never fetches package bytes from configured links. Null links in `assets/app/download-links.json` show download unavailable without disabling file picker.
 
-Package chain:
+Base dependencies (chapter ordering is save-based; see ADR-102):
 
 ```text
-duel-core → card-library → freeplay → chapter-01 → chapter-02 → …
+duel-core → card-library → freeplay
+                      ↘ chapters and card packs (declared dependencies)
 ```
 
 - P1. `duel-core`: frozen OCG WASM/manifest plus engine config/strings. Loader, protocol, and opponent-policy JS stay compiled app code.
 - P2. `card-library`: global cards/text/scripts/sets/search indexes plus available optional card/set media.
 - P3. `freeplay`: standalone presets, opponents, limits, ruleset, defaults.
 - P4. `chapter-NN`: chapter story/config/decks/opponents/limits/media; references global card IDs.
-- P5. `user-data.sqlite`: mutable decks, metadata/autosaves, Story, preferences, read log. It is not a package.
+- P5. Mutable decks, metadata/autosaves, Story, preferences, and read log use native `user-data.json` or browser localStorage, as recorded in [ADR-101](../../ADR/101_ADR_json_user_data_storage.md). User data is not a package.
 
 Free Play and Deck Builder require first three packages. New Game additionally requires `chapter-01`. Readiness is package-based, never save-based.
 
@@ -33,7 +34,7 @@ npm run assets:restructure -- --plan
 npm run assets:restructure -- --apply generated/content-packages/asset-move-plan.json
 ```
 
-Every command supports `--help`. `content:export` reads package-owned `assets/content/<package-id>/` roots plus frozen vendor input and writes directly named immutable releases such as `generated/content-packages/duel-core-1.0.0.sqlite`, plus `generated/content-packages/content-packages.zip` containing the selected releases. Full-recipe export validates dependency/reference closure. `content:verify` validates one raw file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
+Every command supports `--help`. `content:export` reads tracked `content/duel-core/` and `content/freeplay/` roots, acquired card-library/chapter `assets/content/<package-id>/` roots, and frozen vendor input and writes directly named immutable releases such as `generated/content-packages/duel-core-1.0.0.sqlite`, plus `generated/content-packages/content-packages.zip` containing the selected releases. Full-recipe export validates dependency/reference closure. `content:verify` validates one raw file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
 
 Re-export with identical inputs is a no-op. Existing same package ID/version with different identity fails. Source completeness, rights, external links, and upload remain owner gates; fixture success does not prove public-release readiness.
 
@@ -44,7 +45,7 @@ Re-export with identical inputs is a no-op. Existing same package ID/version wit
 Import flow:
 
 1. I1. Main thread requests persistence/capacity estimate; unavailable estimate warns rather than inventing capacity.
-2. I2. Worker accepts exactly one ZIP containing one to four top-level SQLite files, or one to four raw SQLite files. ZIP entries are streamed directly to OPFS with declared-size and CRC-32 checks; package bytes are never expanded together in memory.
+2. I2. Worker accepts exactly one ZIP containing one to sixty-four top-level SQLite files, or one to sixty-four raw SQLite files. ZIP entries are streamed directly to OPFS with declared-size and CRC-32 checks; package bytes are never expanded together in memory.
 3. I3. Worker streams selected packages to operation-owned staging names, hashes bytes, parses manifests, validates exact schemas/rows/assets and dependency closure. Package identity comes from the database manifest, never the filename or ZIP entry name.
 4. I4. Entire selection validates before one registry generation compare-and-swap exposes new mappings.
 5. I5. Failure, quota exhaustion, archive corruption, or precommit cancellation preserves prior active stack and user DB. Postcommit cancellation reports committed result.
@@ -62,7 +63,7 @@ Active package files open read-only. Queries are fixed, parameterized RPC operat
 
 ## User-data isolation and backups
 
-`user-data.sqlite` uses structural domain validators and revision compare-and-swap writes. Package operations never read or write it. Browser backup export emits standalone `user-data.sqlite`; inspection validates size, schema, integrity, namespaces, and payload structure without content lookup. Confirmed restore atomically replaces user records only and leaves package registry unchanged.
+The shared JSON user-data store uses structural domain validators and revision checks. Native writes replace `user-data.json` through a temporary file; browser writes replace one `ascencio:user-data:v1` localStorage entry. Package operations never read or write saves. Backup export emits `user-data.json`; inspection validates format, version, namespaces, and domain payloads without content lookup. Confirmed restore replaces the user snapshot only after an unchanged preview revision. Legacy SQLite saves are neither read nor migrated.
 
 Legacy browser stores remain untouched and unread. No migration, deletion, fallback, save repair, content selector, or save-continuity gate exists. Structurally valid obsolete refs survive backup/restore. Continue may fail after content change; New Game must still initialize from active packages without reading saved slots.
 
@@ -72,8 +73,10 @@ Operational app-update approval and Battle diagnostics may retain IndexedDB. The
 
 `vite.config.ts` uses `publicDir:false`. Explicit `assets/app/` imports provide icon/link metadata. Build emits app code/fonts/licenses plus exact pinned SQLite executable JS/WASM. Service Worker precaches shell and SQLite runtime only.
 
-`scripts/lib/vite-content-deny.ts` blocks direct and aliased Vite/`@fs` access to `assets/content/**` and `generated/content-packages/**`. `scripts/verify-browser-build.ts` rejects package DBs, ZIPs, OCG WASM, card/chapter media, raw content, and extra WASM in `generated/build/app/` or precache. App build requires no acquired roots and triggers no source acquisition.
+`scripts/lib/vite-content-deny.ts` blocks direct and aliased Vite/`@fs` access to `assets/content/**`, `content/duel-core/**`, `content/freeplay/**`, and `generated/content-packages/**`. `scripts/verify-browser-build.ts` rejects package DBs, ZIPs, OCG WASM, card/chapter media, raw content, and extra WASM in `generated/build/app/` or precache. App build requires no acquired roots and triggers no source acquisition.
 
 ## Acceptance boundary
 
 Automated unit/component/integration/build gates establish code readiness, schemas, dependency logic, caller retirement, and output boundaries. They do not prove Chromium OPFS durability, actual browser download completion, quota/crash outcomes, second-tab recovery, offline gameplay, or backup file survival. Owner runs unchecked durable manual checklist named by root `AGENTS.md`.
+
+Card-pack composition and independent chapter prerequisites are defined in [Content modules](../../assets/content-modules.md). Previous chapters need not remain installed when later chapters read saved campaign facts.

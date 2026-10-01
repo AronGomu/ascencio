@@ -6,7 +6,7 @@ export interface UserDataDownloadAdapter {
 }
 
 export const DOWNLOAD_REQUESTED =
-  "Download requested. Check your browser downloads for user-data.sqlite; saving is not confirmed.";
+  "Download requested. Check your browser downloads for user-data.json; saving is not confirmed.";
 export const DOWNLOAD_FAILED =
   "User data download failed. No saved backup was confirmed. Retry export.";
 
@@ -15,7 +15,7 @@ const browserDownload: UserDataDownloadAdapter = {
   createAnchor(url) {
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "user-data.sqlite";
+    anchor.download = "user-data.json";
     anchor.hidden = true;
     anchor.dataset.cy = "user-data-export-download";
     document.body.append(anchor);

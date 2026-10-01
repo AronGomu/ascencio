@@ -3,6 +3,13 @@ import { createApplicationAdmission } from "../../../src/shell/application/appli
 import { createAppUpdateController } from "../../../src/shell/application/app-update-controller.ts";
 import { readCoreApproval } from "../../../src/shell/application/core-update-approval.ts";
 import { testLocks } from "../../fixtures/application-locks.ts";
+import { JsonUserDataStore } from "../../../src/storage/json/user-data-store.ts";
+import { createSqliteStoryRepository } from "../../../src/story/saves/index.ts";
+import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
+import {
+  storyBindingFixture,
+  storyReleaseFixture,
+} from "../../fixtures/story-release.ts";
 import { describe, expect, it, vi } from "vitest";
 import type {
   FreeplayInputs,
@@ -121,6 +128,81 @@ function harness(initial = stack()) {
 }
 
 describe("SQLite Shell application composition", () => {
+  it("resumes a later module from a manual slot while retaining the autosave revision", async () => {
+    const f = harness(
+      stack(7, ["duel-core", "card-library", "freeplay", "chapter-02"]),
+    );
+    let source: string | null = null;
+    const data = new JsonUserDataStore({
+      read: async () => source,
+      write: async (next) => {
+        source = next;
+        return ok(undefined);
+      },
+    });
+    const saves = createSqliteStoryRepository(data);
+    const binding = {
+      ...storyBindingFixture(),
+      chapterId: "chapter-02",
+      contentId: "next-document",
+    };
+    const clock = vi.spyOn(Date, "now").mockReturnValue(100);
+    await saves.write(
+      "autosave",
+      createInitialStoryState(),
+      null,
+      storyBindingFixture(),
+    );
+    clock.mockReturnValue(200);
+    await saves.write(
+      "manual:3",
+      {
+        ...createInitialStoryState(),
+        dp: 777,
+        screen: "map",
+        savedScreen: "map",
+      },
+      null,
+      binding,
+    );
+    clock.mockRestore();
+    Object.assign(f.storage, {
+      userData: data,
+      content: { query: async () => ok({ chapterNumber: 2 }) },
+    });
+    const loadStory = vi.fn(
+      async (
+        _storage: LocalStorageClient,
+        _users: ShellUserServices,
+        _chapterId: `chapter-${string}`,
+      ) => {
+        expect(_storage).toBe(f.storage);
+        expect(_users).toBeDefined();
+        expect(_chapterId).toBe("chapter-02");
+        return { ...storyInputs(), release: storyReleaseFixture(7), saves };
+      },
+    );
+    const app = createSqliteApplicationService({
+      storage: f.storage,
+      users: users(),
+      flushUserWrites: async () => ok(undefined),
+      loadStoryInputs: loadStory,
+      closeStoryInputs: () => {},
+    });
+    const session = await app.application.acquire(
+      "story",
+      new AbortController().signal,
+      { intent: "continue" },
+    );
+    expect(loadStory.mock.calls[0]?.[2]).toBe("chapter-02");
+    expect(session.inputs.entry).toMatchObject({
+      autosaveRevision: 1,
+      state: { screen: "map", dp: 777 },
+      story: binding,
+    });
+    await session.close();
+    await app.dispose();
+  });
   it("leases before readiness and semantic input load; publishes lease generation and runtime identity", async () => {
     const f = harness();
     const loaded = inputs("0123456789abcdef");

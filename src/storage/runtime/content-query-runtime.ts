@@ -50,7 +50,7 @@ export function queryContent<Q extends ContentQuery>(
     return {
       kind: "ok",
       value: executeQuery(
-        request,
+        request.kind === "module-query" ? request.query : request,
         database,
         active,
         mediaWarning,
@@ -67,7 +67,7 @@ export function queryContent<Q extends ContentQuery>(
 }
 
 function executeQuery(
-  request: ContentQuery,
+  request: Exclude<ContentQuery, { kind: "module-query" }>,
   database: RuntimeDatabase,
   active: ActivePackage,
   mediaWarning: (warning: MediaWarning) => void,
@@ -314,6 +314,18 @@ function requiredEnginePath(packageId: PackageId, path: string): boolean {
 export function validQuery(value: unknown): value is ContentQuery {
   if (!plain(value) || typeof value.kind !== "string") return false;
   switch (value.kind) {
+    case "module-query":
+      return (
+        exact(value, ["kind", "packageId", "query"]) &&
+        typeof value.packageId === "string" &&
+        (value.packageId === "card-library" ||
+          /^card-pack-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.packageId)) &&
+        plain(value.query) &&
+        ["cards", "scripts", "sets", "set-image"].includes(
+          String(value.query.kind),
+        ) &&
+        validQuery(value.query)
+      );
     case "cards":
       return (
         exact(value, ["kind", "locale", "afterCode", "limit"]) &&
@@ -383,6 +395,9 @@ function validPackageId(value: unknown): value is PackageId {
   return (
     value === "duel-core" ||
     value === "card-library" ||
+    (typeof value === "string" &&
+      value.length <= 128 &&
+      /^card-pack-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
     validPlayPackageId(value)
   );
 }

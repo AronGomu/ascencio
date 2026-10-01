@@ -3,7 +3,7 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SHELL_SETTINGS } from "../../../src/shell/settings/shell-settings.ts";
 import { USER_DATA_MAX_PAYLOAD_BYTES } from "../../../src/storage/schema/index.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import type { RuntimeDatabase } from "../../../src/storage/runtime/runtime-ports.ts";
 import {
   createRegistryFixture,

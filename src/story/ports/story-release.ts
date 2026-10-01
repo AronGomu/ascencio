@@ -1,7 +1,8 @@
+import type { ChapterModule } from "../../modules/index.ts";
 // src/story/ports/story-release.ts; public through src/story/ports/index.ts
 import type { CardCode } from "../../cards/index.ts";
 import type { DeckCardLists } from "../../decks/contracts/index.ts";
-export type StoryChoiceId = "trust-rin" | "challenge-rin" | "observe-first";
+export type StoryChoiceId = string;
 export type StoryRarity =
   | "common"
   | "rare"
@@ -12,7 +13,7 @@ export type StoryRarity =
   | "ghost-rare";
 export interface StoryDocument {
   readonly schemaVersion: 1;
-  readonly contentId: "prototype-prologue-v1";
+  readonly contentId: string;
   readonly title: string;
   readonly beats: readonly {
     readonly id: string;
@@ -46,6 +47,7 @@ export interface StoryRelease {
   readonly revision: number;
   readonly chapters: readonly {
     readonly id: string;
+    readonly module?: ChapterModule;
     readonly document: StoryDocument | null;
     readonly cardCodes: readonly CardCode[];
     readonly sets: readonly StorySet[];

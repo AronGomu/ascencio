@@ -1,15 +1,15 @@
-import { UserDataRuntime } from "../../src/storage/runtime/user-data-runtime.ts";
-import { createUserDataFixture } from "../unit/storage/sqlite-fixtures.ts";
-import {
-  createNodeFileStore,
-  databaseAdapter,
-} from "../unit/storage/runtime-fixtures.ts";
+import { JsonUserDataStore } from "../../src/storage/json/user-data-store.ts";
 
+/** Existing consumer fixtures exercise the current JSON store through UserDataStore. */
 export function sqliteUserRuntime() {
-  const database = createUserDataFixture();
-  return new UserDataRuntime({
-    database: databaseAdapter(database.database),
-    files: createNodeFileStore(),
-    randomId: () => crypto.randomUUID(),
+  let source: string | null = null;
+  return new JsonUserDataStore({
+    read: async () => source,
+    write: async (next, expected) => {
+      if (source !== expected)
+        return { kind: "failed", error: { code: "STORAGE_CONFLICT" } };
+      source = next;
+      return { kind: "ok", value: undefined };
+    },
   });
 }

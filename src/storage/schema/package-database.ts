@@ -1,3 +1,4 @@
+import { isChapterModule } from "../../modules/index.ts";
 import { packageDatabaseFailure } from "./package-database-failure.ts";
 import { parseStoryDocument } from "../../story/ports/index.ts";
 import type { PackageManifest, StorageResult } from "../contracts/package.ts";
@@ -360,11 +361,14 @@ function validateConfig(manifest: PackageManifest, value: unknown): boolean {
       "defaults",
       "setIds",
       "mapAssetPath",
+      ...(Object.hasOwn(value, "module") ? ["module"] : []),
     ]) &&
     nonempty(value.title) &&
     value.chapterNumber === chapter &&
     (value.storyContentId === null ||
-      value.storyContentId === "prototype-prologue-v1") &&
+      (nonempty(value.storyContentId) &&
+        String(value.storyContentId).length <= 256)) &&
+    (value.module === undefined || isChapterModule(value.module)) &&
     defaults(value.defaults) &&
     stringArray(value.setIds, true, true) &&
     (value.mapAssetPath === null || validAssetPath(value.mapAssetPath))

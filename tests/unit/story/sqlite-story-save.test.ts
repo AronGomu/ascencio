@@ -12,7 +12,7 @@ import {
   STORY_SLOT_KEYS,
   type StorySlotKey,
 } from "../../../src/story/saves/index.ts";
-import { UserDataRuntime } from "../../../src/storage/runtime/user-data-runtime.ts";
+import { UserDataRuntime } from "../../fixtures/legacy-user-data-runtime.ts";
 import { storyBindingFixture } from "../../fixtures/story-release.ts";
 import { storyDeckFixture } from "../../fixtures/story-decks.ts";
 import { createUserDataFixture } from "../storage/sqlite-fixtures.ts";
@@ -458,7 +458,6 @@ describe("current envelope validation without migration", () => {
     const f = fixture();
     await f.write("autosave", createInitialStoryState());
     for (const state of [
-      { ...createInitialStoryState(), choice: "removed-choice" },
       { ...createInitialStoryState(), locations: [] },
       {
         ...createInitialStoryState(),

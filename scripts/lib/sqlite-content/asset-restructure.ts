@@ -74,7 +74,7 @@ const ROOT_MAPPINGS = [
   ],
   [
     "assets/shared/data/current/strings",
-    "assets/content/duel-core/strings",
+    "content/duel-core/strings",
     "duel-core",
   ],
   [
@@ -194,11 +194,11 @@ const FILE_MAPPINGS = new Map<
   ["content/core-bootstrap.json", ["assets/app/content-bootstrap.json", "app"]],
   [
     "src/battle/duel/presets/decks/player.ydk",
-    ["assets/content/freeplay/decks/player.ydk", "freeplay"],
+    ["content/freeplay/decks/player.ydk", "freeplay"],
   ],
   [
     "src/battle/duel/presets/decks/opponent.ydk",
-    ["assets/content/freeplay/decks/opponent.ydk", "freeplay"],
+    ["content/freeplay/decks/opponent.ydk", "freeplay"],
   ],
   [
     "src/battle/duel/presets/decks/chapter-one-starter.ydk",
@@ -212,6 +212,14 @@ const FILE_MAPPINGS = new Map<
 const RETAINED = new Map<string, string>([
   ["content/README.md", "governance documentation"],
   ["content/packages.json", "package build recipe"],
+  ["content/duel-core/config.json", "tracked duel-core configuration"],
+  ["content/duel-core/strings/en.json", "tracked duel-core strings"],
+  ["content/freeplay/config.json", "tracked Free Play configuration"],
+  ["content/freeplay/decks.json", "tracked Free Play decks"],
+  ["content/freeplay/decks/player.ydk", "tracked Free Play deck source"],
+  ["content/freeplay/decks/opponent.ydk", "tracked Free Play deck source"],
+  ["content/freeplay/opponents.json", "tracked Free Play opponents"],
+  ["content/freeplay/limits.json", "tracked Free Play limits"],
   ["content/distribution-evidence.json", "release governance evidence"],
   ["content/setup-evidence.json", "release governance evidence"],
   ["src/battle/duel/presets/decks/burning-abyss.ydk", "unused legacy preset"],

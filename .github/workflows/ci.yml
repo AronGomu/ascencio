@@ -28,16 +28,23 @@ jobs:
         with:
           path: |
             .cache/upstream
+            assets/content/card-library/data
+            assets/content/card-library/images/full
+            assets/content/card-library/images/cropped
+            assets/content/card-library/images/card-back.jpg
+            assets/content/card-library/images/sets
             generated
             !generated/build
             !generated/tests
-          key: mvp-assets-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/sync-*.ts', 'scripts/download-images.ts', 'src/battle/duel/presets/decks/*.ydk') }}
+          key: mvp-assets-v2-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/**/*.ts', 'content/**/*.json', 'content/**/*.ydk', 'assets/content/**/authoring/**/*.json', 'image-content-lock.json', 'assets-source-lock.json') }}
           restore-keys: |
-            mvp-assets-${{ runner.os }}-
+            mvp-assets-v2-${{ runner.os }}-
 
       - run: npm ci
       - name: Regenerate and verify the pinned snapshot
         run: npm run assets:mvp -- --concurrency 8 --requests-per-second 8
+      - name: Acquire and verify pinned set images
+        run: npm run assets:sets && npm run assets:sets:verify
       - name: Verify an isolated offline headless checkout
         shell: bash
         run: |

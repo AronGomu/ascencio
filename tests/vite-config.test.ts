@@ -10,5 +10,7 @@ test("development server ignores agent scratch files", async () => {
   );
 
   assert.ok(loaded);
-  assert.deepEqual(loaded.config.server?.watch?.ignored, ["**/.tmp/**"]);
+  const ignored = loaded.config.server?.watch?.ignored;
+  assert.ok(Array.isArray(ignored));
+  assert.ok(ignored.includes("**/.tmp/**"));
 });

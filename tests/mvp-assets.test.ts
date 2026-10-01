@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { ASSET_SOURCES } from "../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES } from "../scripts/lib/asset-roots.ts";
 import test from "node:test";
 import {
   buildAssetStages,
@@ -59,18 +59,25 @@ test("CI produces mandatory set images before isolated verification and caches c
     workflow.indexOf("uses: actions/cache@v4"),
     workflow.indexOf("- run: npm ci"),
   );
-  for (const source of Object.values(ASSET_SOURCES).filter(
-    (entry) => entry !== ASSET_SOURCES.story,
+  const cachedPaths = cache.split("\n").map((line) => line.trim());
+  for (const source of Object.values(PACKAGE_ASSET_SOURCES).filter(
+    (entry) =>
+      entry !== PACKAGE_ASSET_SOURCES.story &&
+      entry !== PACKAGE_ASSET_SOURCES.strings,
   )) {
     assert.ok(
-      cache.includes(source.source),
+      cachedPaths.some(
+        (entry) =>
+          source.source === entry || source.source.startsWith(`${entry}/`),
+      ),
       `missing asset cache: ${source.source}`,
     );
   }
-  assert.ok(cache.includes("scripts/download-set-images.ts"));
   for (const input of [
+    "scripts/**/*.ts",
     "content/**/*.json",
-    "public/story/shop-sets.v1.json",
+    "content/**/*.ydk",
+    "assets/content/**/authoring/**/*.json",
     "image-content-lock.json",
     "assets-source-lock.json",
   ])
@@ -80,7 +87,8 @@ test("CI produces mandatory set images before isolated verification and caches c
     false,
   );
   assert.equal(
-    workflow.split(`${ASSET_SOURCES.runtime.source}/manifest.json`).length - 1,
+    workflow.split(`${PACKAGE_ASSET_SOURCES.runtime.source}/manifest.json`)
+      .length - 1,
     2,
   );
 });

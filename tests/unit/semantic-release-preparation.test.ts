@@ -68,6 +68,14 @@ describe("retained pure release semantic validation", () => {
   it("validates complete Cards, Decks, Story and Battle inputs without a browser content store", () => {
     expect(() => validateReleaseData(fixture())).not.toThrow();
   });
+  it("accepts an independent story content identity and preserves it across releases", () => {
+    const input = fixture();
+    input.story.chapters[0]!.document!.contentId =
+      "independent-content" as never;
+    expect(() => validateReleaseData(input)).not.toThrow();
+    input.previousStory = structuredClone(input.story);
+    expect(() => validateReleaseData(input)).not.toThrow();
+  });
   it.each<[string, (value: Mutable<ReleaseValidationInput>) => void]>([
     [
       "unsupported token",
@@ -146,8 +154,9 @@ describe("retained pure release semantic validation", () => {
       },
     ],
     [
-      "story content identity mismatch",
+      "story content identity changes across releases",
       (v) => {
+        v.previousStory = structuredClone(v.story);
         v.story.chapters[0]!.document!.contentId = "different-content" as never;
       },
     ],

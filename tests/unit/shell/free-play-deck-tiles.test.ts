@@ -1,24 +1,34 @@
 import { describe, expect, it } from "vitest";
-import {
-  DECK_CATALOG,
-  presetSelectableDecks,
-  type SelectableDeck,
-} from "../../../src/battle/index.ts";
+import type { SelectableDeck } from "../../../src/battle/index.ts";
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import { deckId } from "../../../src/decks/contracts/index.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import { freePlayDeckTile } from "../../../src/shell/screens/free-play-deck-tiles.ts";
 
 /* How free play describes one deck to the shared selection screen. Pure, so it
-   is tested against real bundled decks rather than through the screen: the
+   is tested with installed and local deck snapshots: the
    cover rule and default flag are the whole of the mapping. */
 
-const PRACTICE = {
-  ...presetSelectableDecks(DECK_CATALOG).find(
-    (deck) => deck.key === "preset:chapter-one-practice",
-  )!,
+const PRACTICE_LISTS = { main: [7, 8], extra: [], side: [] };
+const PRACTICE: SelectableDeck = {
   key: "chapter:chapter-one-practice",
-  source: "chapter" as const,
+  label: "Chapter 1 Practice",
+  source: "chapter",
+  selection: {
+    kind: "local",
+    deck: {
+      ref: {
+        type: "local",
+        deckId: deckId("chapter:chapter-one-practice"),
+        revision: 0,
+      },
+      name: "Chapter 1 Practice",
+      ...PRACTICE_LISTS,
+      validationDigest: "installed-fixture:chapter-one-practice",
+    },
+  },
+  lists: PRACTICE_LISTS,
+  updatedAt: null,
 };
 const UPDATED_AT = "2026-08-20T10:00:00.000Z";
 const LOCAL_DECK_ID = deckId("built-deck");
@@ -78,7 +88,7 @@ describe("freePlayDeckTile", () => {
     const tile = freePlayDeckTile(
       PRACTICE,
       context({
-        catalog: catalogOf(cover, PRACTICE.lists.main[0]!),
+        catalog: catalogOf(...PRACTICE.lists.main),
         aiOwnerByDeckKey: new Map([
           ["chapter:chapter-one-practice", "Vault Warden"],
         ]),
@@ -90,10 +100,10 @@ describe("freePlayDeckTile", () => {
     expect(tile.readOnly).toBe(true);
     expect(tile.meta).toBe("Installed chapter");
     expect(tile.lockedBy).toBe("Vault Warden");
-    /* Chapter 1 practice has no Extra Deck; the first Main card is its cover. */
+    /* With no Extra Deck, the first Main card is the cover. */
     expect(tile.coverImageUrl).toBe(`/images/${cover}.jpg`);
     /* Free play never lists a deck it cannot play, so every tile is legal and
-       none of them is deletable from a bundled row. */
+       none of them is deletable from an installed chapter row. */
     expect(tile.legal).toBe(true);
     expect(tile.blockReason).toBeNull();
     expect(tile.deletable).toBe(false);

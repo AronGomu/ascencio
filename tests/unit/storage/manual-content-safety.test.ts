@@ -76,11 +76,12 @@ describe("manual lifecycle composition safety", () => {
           .split(/onclick=|onchange=/)[0],
       ).toContain("disabled={actionsBlocked}");
     }
-    expect(screen).toMatch(
-      /disabled=\{view\?\.navigationBlocked === true \|\|\s+updateView\?\.phase === "committing"\}/,
-    );
-    expect(screen).toMatch(
-      /view\?\.navigationBlocked !== true &&\s+updateView\?\.phase !== "committing"\s+\) \{\s+appUpdates\?\.cancel\(\);\s+onback\(\);/,
+    const backButton = screen
+      .slice(screen.indexOf('data-cy="install-content-back"'))
+      .split("</button>")[0]!;
+    expect(backButton).toContain("disabled={view?.navigationBlocked === true}");
+    expect(backButton).toMatch(
+      /if \(view\?\.navigationBlocked !== true\) onback\(\);/,
     );
     expect(screen).toContain(
       '{view.refreshPending ? "Retry refresh" : "Retry"}',

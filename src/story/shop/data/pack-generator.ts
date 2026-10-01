@@ -2,6 +2,27 @@ import type { OpenedCard } from "../../model/story-state.ts";
 import type { ShopCardOffer } from "./shop-rarity.ts";
 import { PACK_SIZE } from "./shop-pricing.ts";
 
+function packPools(contents: readonly ShopCardOffer[]) {
+  const commons = contents.filter((c) => c.rarity === "common");
+  const rarePlus = contents.filter((c) => c.rarity !== "common");
+  return {
+    commonPool: commons.length > 0 ? commons : contents,
+    rarePlusPool: rarePlus.length > 0 ? rarePlus : contents,
+  };
+}
+
+/** Uses the sell screen's per-code valuation, including cross-set reprints. */
+export function expectedPackResale(
+  contents: readonly ShopCardOffer[],
+  sellPrice: (card: ShopCardOffer) => number,
+): number {
+  if (contents.length === 0) return 0;
+  const { commonPool, rarePlusPool } = packPools(contents);
+  const mean = (pool: readonly ShopCardOffer[]) =>
+    pool.reduce((total, card) => total + sellPrice(card), 0) / pool.length;
+  return (PACK_SIZE - 1) * mean(commonPool) + mean(rarePlusPool);
+}
+
 export function generatePack(
   contents: readonly ShopCardOffer[],
   random: () => number,
@@ -11,11 +32,7 @@ export function generatePack(
      end of an empty pool threw mid-dispatch — an uncaught exception with the
      dialog already closed. */
   if (contents.length === 0) return [];
-  const commons = contents.filter((c) => c.rarity === "common");
-  const rarePlus = contents.filter((c) => c.rarity !== "common");
-
-  const commonPool = commons.length > 0 ? commons : contents;
-  const rarePlusPool = rarePlus.length > 0 ? rarePlus : contents;
+  const { commonPool, rarePlusPool } = packPools(contents);
 
   const cards: OpenedCard[] = [];
   for (let i = 0; i < PACK_SIZE - 1; i++) {

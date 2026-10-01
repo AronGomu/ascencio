@@ -80,7 +80,7 @@ it("Optional set media null never requests raw fallback art or blocks buying pac
   await user.click(document.querySelector('[data-cy="story-shop-buy-one"]')!);
   expect(
     document.querySelector('[data-cy="story-top-bar-dp"]')?.textContent,
-  ).toContain("850 DP");
+  ).toContain("900 DP");
 });
 it("handoff resume preserves completed chapter binding through autosave", async () => {
   const release = storyReleaseFixture();

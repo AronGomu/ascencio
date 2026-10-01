@@ -143,6 +143,19 @@ describe("MainMenuScreen", () => {
     ]);
   });
 
+  it("disables Continue when only a pre-duel checkpoint exists", async () => {
+    await saves.write(
+      "checkpoint:pre-duel",
+      createInitialStoryState(),
+      null,
+      storyBindingFixture(),
+    );
+    renderMenu();
+    await settleSaveProbe();
+
+    expect(query("main-menu-continue")).toHaveProperty("disabled", true);
+  });
+
   it("navigates to the free-play route from the last entry", async () => {
     const menu = renderMenu();
 

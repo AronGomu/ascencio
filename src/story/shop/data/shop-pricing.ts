@@ -1,19 +1,20 @@
 import type { ShopRarity } from "../../model/story-state.ts";
 
-/* Must stay above a pack's expected sell value (≈138–142 DP across the three
-   released sets: 8 commons + 1 rare-or-better against the ladder below), or
-   buy → open → sell loops DP upward without bound. ADR-035 rev. 3. */
-export const PACK_PRICE_DP = 150;
+/* Owner pricing: 100 DP packs, roughly 20 DP expected resale for ordinary
+   boosters. Installed sets must also pass the resale eligibility gate. */
+export const PACK_PRICE_DP = 100;
 export const PACK_SIZE = 9;
+/* One DP tolerance keeps ordinary boosters near the owner's 20 DP target. */
+export const MAX_PACK_RESALE_DP = 21;
 
 export const SELL_PRICE_DP: Readonly<Record<ShopRarity, number>> = {
-  common: 10,
-  rare: 25,
-  "super-rare": 50,
-  "ultra-rare": 100,
-  "secret-rare": 250,
-  "ultimate-rare": 500,
-  "ghost-rare": 1000,
+  common: 1,
+  rare: 2,
+  "super-rare": 5,
+  "ultra-rare": 20,
+  "secret-rare": 50,
+  "ultimate-rare": 50,
+  "ghost-rare": 50,
 };
 
 /* Derived from the price table rather than listed a second time: a rarity the

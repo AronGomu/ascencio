@@ -1,3 +1,5 @@
+import { VARIANT_PRINTINGS } from "../../src/story/shop/data/shop-printing-variants.ts";
+
 /* The fold from YGOPRODeck printings to the one rarity a set sells a card at.
    Extracted out of `scripts/generate-shop-sets.ts` so the rule is unit-testable
    without a network call. */
@@ -90,40 +92,6 @@ export function mapRarity(raw: string): ShopRarity {
       return "common";
   }
 }
-
-/* Printings that are the same card in a fancier finish. A set's Ultimate,
-   Ghost, Parallel and Gold runs reprint cards it already sells at a base
-   rarity, so they are not a second slot — and "highest printing wins" over
-   them priced ten whole sets at their foil tier, which is audit F4 (issue #4):
-   every non-common in those sets came out `ultimate-rare` at 500 DP each and a
-   150 DP pack sold back for ≈580 DP. Kept as raw upstream strings rather than
-   mapped tiers because `Ultimate Rare` and `Ghost Rare` have tiers of their
-   own, which a card printed as nothing else still deserves. */
-export const VARIANT_PRINTINGS: ReadonlySet<string> = new Set([
-  "Ultimate Rare",
-  "Ghost Rare",
-  "Parallel Rare",
-  "Super Parallel Rare",
-  "Ultra Parallel Rare",
-  "Secret Parallel Rare",
-  "Duel Terminal Normal Parallel Rare",
-  "Duel Terminal Rare Parallel Rare",
-  "Duel Terminal Super Parallel Rare",
-  "Duel Terminal Ultra Parallel Rare",
-  "Duel Terminal Secret Parallel Rare",
-  "Mosaic Rare",
-  "Shatterfoil Rare",
-  "Starlight Rare",
-  "Collector's Rare",
-  "Prismatic Secret Rare",
-  "Gold Rare",
-  "Premium Gold Rare",
-  "Gold Secret Rare",
-  "Platinum Secret Rare",
-  "Extra Secret Rare",
-  "Quarter Century Secret Rare",
-  "Ultra Rare (Pharaoh's Rare)",
-]);
 
 /** The one rarity a set sells a card at, given every rarity that set printed
     it as. Base printings decide it; the highest of them wins, so a genuine

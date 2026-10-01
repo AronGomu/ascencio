@@ -683,8 +683,8 @@ describe("StoryApp", () => {
   /* The card database is fetched rather than compiled in, so the shop opens
      before it lands. What it carries has to reach the screen when it does:
      a name for a code no set sells, and the rarity the sell price is read
-     from — which for a 3000 ATK monster is secret-rare at 250 DP, not the
-     10 DP floor an unresolved card would degrade to. */
+     from — which for a 3000 ATK monster is secret-rare at 50 DP, not the
+     1 DP floor an unresolved card would degrade to. */
   it("names and prices a sell row from the catalog once it resolves", async () => {
     installShopDataOnlyNetwork();
     installPrototypeActiveCatalog();
@@ -702,7 +702,7 @@ describe("StoryApp", () => {
     expect(
       container.querySelector('[data-cy="story-shop-sell-price-89631139"]')
         ?.textContent,
-    ).toContain("250 DP");
+    ).toContain("50 DP");
     expect(
       container.querySelector('[data-cy="story-shop-sell-owned-89631139"]')
         ?.textContent,

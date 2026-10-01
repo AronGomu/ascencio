@@ -663,6 +663,7 @@
             ).length ?? 0,
         },
       });
+      showTransient("Diagnostics downloaded.", "success");
     } catch (error) {
       showTransient(
         error instanceof Error

@@ -17,14 +17,14 @@ import {
 
 const jsonPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../../../public/story/shop-sets.v1.json",
+  "../../../assets/content/card-library/authoring/shop-sets.v1.json",
 );
 const parsed = parseShopSetData(
   JSON.parse(readFileSync(jsonPath, "utf-8")) as unknown,
 );
 if (parsed === null)
   throw new Error(
-    "public/story/shop-sets.v1.json does not parse as ShopSetData",
+    "assets/content/card-library/authoring/shop-sets.v1.json does not parse as ShopSetData",
   );
 const { sets } = parsed;
 
@@ -86,16 +86,8 @@ describe("shipped set pack value", () => {
     }
   });
 
-  /* ADR-035 §5: a pack must cost more than it sells back for, or buy → open →
-     sell mints DP without bound. `released` is the progression switch, so this
-     assertion is what turns a future flip of that flag into a red test rather
-     than into a DP fountain. Audit F4, issue #4.
-
-     Released sets only. After the base-printing fold, 29 of the 50 sets still
-     sell a pack back for 150 DP or more — cause is `secret-rare` at 250 DP in
-     a uniform rare-plus draw, not the fold — and closing that needs a pricing
-     change (raise PACK_PRICE_DP, or weight the draw) that is an owner
-     decision, not this test's business. */
+  /* Retained authoring data must obey the current ladder too. Native installed
+     projections and their 20 DP target are covered in installed-shop-set-data. */
   it("every released set costs more per pack than the pack sells back for", () => {
     const released = sets.filter((s) => s.released);
     expect(released.length).toBeGreaterThan(0);

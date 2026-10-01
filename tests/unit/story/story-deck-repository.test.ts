@@ -139,6 +139,16 @@ describe("story deck repository", () => {
     expect(context.persisted).toHaveLength(1);
   });
 
+  it("deletes a deck created by the preceding queued write", async () => {
+    const context = harness();
+    await Promise.all([
+      context.repository.create(storyDeck("alpha"), history),
+      context.repository.delete(deckId("alpha"), 1),
+    ]);
+    expect(context.state.decks).toEqual([]);
+    expect(context.persisted).toHaveLength(2);
+  });
+
   it("list returns the save's decks, in state order", async () => {
     const { repository } = harness({
       decks: [storyDeck("alpha"), storyDeck("beta")],

@@ -87,7 +87,7 @@ describe("ShopSellScreen", () => {
     expect(plus.disabled).toBe(true);
     await user.click(plus);
     expect(readout.textContent).toBe("1");
-    expect(totalEl.textContent).toContain("25");
+    expect(totalEl.textContent).toContain("2 DP");
   });
 
   it("sell hands the receipt out", async () => {

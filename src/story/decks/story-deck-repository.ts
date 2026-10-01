@@ -81,12 +81,12 @@ export function createStoryDeckRepository({
   function commit(
     command: StoryCommand,
     landed: (state: StoryState) => boolean,
-    beforeDispatch?: () => void,
+    beforeDispatch?: () => void | false,
   ): Promise<void> {
     return serialize(async () => {
       const previous = readState();
       try {
-        beforeDispatch?.();
+        if (beforeDispatch?.() === false) return;
         dispatch(command);
         if (!landed(readState()))
           throw new DeckStorageError(
@@ -127,11 +127,15 @@ export function createStoryDeckRepository({
     open: boolean,
   ): Promise<StoredDeck> {
     guard(deck);
-    if (find(deck.id) !== undefined)
-      throw new DeckRevisionConflictError(deck.revision);
     const next = stamp(deck, 1);
-    await commit({ type: "deck-create", deck: next }, (state) =>
-      state.decks.some(({ id }) => id === next.id),
+    await commit(
+      { type: "deck-create", deck: next },
+      (state) => state.decks.find(({ id }) => id === next.id) === next,
+      () => {
+        const current = find(deck.id);
+        if (current !== undefined)
+          throw new DeckRevisionConflictError(current.revision);
+      },
     );
     /* Session state only after the write landed: a refused create must leave no
        trace for the editor's recovery probe to mistake for a committed deck. */
@@ -170,9 +174,7 @@ export function createStoryDeckRepository({
       const next = stamp(deck, expectedRevision + 1);
       await commit(
         { type: "deck-save", deck: next },
-        (state) =>
-          state.decks.find(({ id }) => id === next.id)?.revision ===
-          next.revision,
+        (state) => state.decks.find(({ id }) => id === next.id) === next,
         () => {
           const current = find(deck.id);
           if (current === undefined || current.revision !== expectedRevision)
@@ -184,16 +186,18 @@ export function createStoryDeckRepository({
     },
 
     async delete(id, expectedRevision) {
-      const current = find(id);
-      if (current !== undefined && current.revision !== expectedRevision)
-        throw new DeckRevisionConflictError(current.revision);
       /* A deck that is already gone is not a conflict — a retried delete has to
          settle — but it is also not a change worth writing a save for. */
-      if (current !== undefined)
-        await commit(
-          { type: "deck-delete", id },
-          (state) => !state.decks.some((deck) => deck.id === id),
-        );
+      await commit(
+        { type: "deck-delete", id },
+        (state) => !state.decks.some((deck) => deck.id === id),
+        () => {
+          const current = find(id);
+          if (current === undefined) return false;
+          if (current.revision !== expectedRevision)
+            throw new DeckRevisionConflictError(current.revision);
+        },
+      );
       /* Everything that named the deck goes out with it, so no part of the
          session is left pointing at a deck the save no longer has — but only
          once the write landed, so a refused delete leaves the session pointing

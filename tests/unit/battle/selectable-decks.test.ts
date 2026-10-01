@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildActiveCardDataManifest } from "../../../scripts/lib/active-card-data-manifest.ts";
-import { buildActiveCardTextManifest } from "../../../scripts/lib/active-card-text-manifest.ts";
-import { buildActiveImageManifest } from "../../../scripts/lib/active-image-manifest.ts";
 import {
   findSelectableDeck,
   listSelectableDecks,
   presetSelectableDecks,
 } from "../../../src/battle/decks/selectable-decks.ts";
-import { parseYdk } from "../../../src/battle/duel/presets/deck-parser.ts";
 import { DECK_SOURCES } from "../../../src/battle/duel/presets/deck-sources-browser.ts";
 import {
   catalogByCode,
@@ -15,7 +11,6 @@ import {
   quantityLimit,
   validateDeckDraft,
 } from "../../../src/decks/validation/index.ts";
-import { packagedCatalog } from "../../../src/decks/catalog/packaged-catalog.ts";
 import { PROTOTYPE_CATALOG } from "../../fixtures/catalog.ts";
 import type { DeckRecord, DeckRepository } from "../../../src/decks/index.ts";
 import {
@@ -82,18 +77,8 @@ async function list(repository: Pick<DeckRepository, "list" | "load">) {
 }
 
 describe("listSelectableDecks", () => {
-  it("lists every bundled preset even with an empty repository", async () => {
-    const decks = await list(repositoryOf());
-
-    expect(decks).toHaveLength(DECK_CATALOG.length);
-    expect(decks.every((deck) => deck.source === "preset")).toBe(true);
-    expect(decks.map((deck) => deck.key)).toEqual(
-      DECK_CATALOG.map((preset) => `preset:${preset.id}`),
-    );
-    expect(decks[0]?.selection).toEqual({
-      kind: "preset",
-      deckId: DECK_CATALOG[0]?.id,
-    });
+  it("does not bundle preset decks in the webview", async () => {
+    expect(await list(repositoryOf())).toEqual([]);
   });
 
   it("lists a ready local deck", async () => {
@@ -171,40 +156,17 @@ describe("listSelectableDecks", () => {
     expect(second.at(-1)?.key).toBe("local:rev-deck:2");
   });
 
-  it("keeps presets ahead of local decks", async () => {
+  it("lists only local decks without installed package inputs", async () => {
     const decks = await list(repositoryOf(deckRecord("ready-deck", validMain)));
 
-    expect(decks.map((deck) => deck.source)).toEqual([
-      ...DECK_CATALOG.map(() => "preset"),
-      "local",
-    ]);
+    expect(decks.map((deck) => deck.source)).toEqual(["local"]);
   });
 });
 
 describe("presetSelectableDecks", () => {
-  it("carries the card lists of every bundled deck, undated", () => {
-    const decks = presetSelectableDecks(DECK_CATALOG);
-
-    expect(decks).toHaveLength(DECK_CATALOG.length);
-    for (const deck of decks) {
-      expect(deck.lists.main.length).toBeGreaterThan(0);
-      expect(Object.isFrozen(deck.lists)).toBe(true);
-      /* Compiled into the build: no bundled deck has ever been saved. */
-      expect(deck.updatedAt).toBeNull();
-    }
-  });
-
-  /* Parsed rather than restated: a tile counting 40 cards is only worth
-     showing if the count is the one the Worker will draw from. */
-  it("reads each deck's lists from its own `.ydk` source", () => {
-    const player = presetSelectableDecks(DECK_CATALOG).find(
-      (deck) => deck.key === "preset:chapter-one-starter",
-    );
-    const parsed = parseYdk(DECK_SOURCES.get("chapter-one-starter")!);
-
-    expect(player?.lists.main).toEqual(parsed.main);
-    expect(player?.lists.extra).toEqual(parsed.extra);
-    expect(player?.lists.side).toEqual(parsed.side);
+  it("leaves presets to installed native content", () => {
+    expect(DECK_SOURCES.size).toBe(0);
+    expect(presetSelectableDecks(DECK_CATALOG)).toEqual([]);
   });
 });
 
@@ -215,66 +177,11 @@ describe("findSelectableDeck", () => {
     expect(findSelectableDeck(decks, "local:ready-deck:1")?.source).toBe(
       "local",
     );
-    expect(
-      findSelectableDeck(decks, "preset:chapter-one-starter")?.source,
-    ).toBe("preset");
+    expect(findSelectableDeck(decks, "preset:chapter-one-starter")).toBeNull();
     expect(findSelectableDeck(decks, "local:ready-deck:2")).toBeNull();
     expect(findSelectableDeck([], "preset:chapter-one-starter")).toBeNull();
   });
 });
 
-/* The listing above is right, and it used to always say no: the editor built
-   from a hand-written fixture while `__ACTIVE_IMAGE_MANIFEST__` was cut from
-   the six bundled `.ydk` decks, so only eight cards were in both and the
-   pinned ruleset capped those eight below the 40-card Main minimum. No deck a
-   player could assemble was one this build could draw.
-
-   The editor and the duel now await one runtime catalog read
-   (`src/decks/catalog/runtime-catalog.ts`, ADR-043), so the editor's offer is
-   the duel's card set less its Tokens, never a different set. This asserts that from the build's own manifests rather than
-   from the browser globals, which is the earliest place the claim can be
-   checked — and it goes red the day packaging shrinks back below a legal deck.
-   `a local deck built from the packaged catalog duels` in
-   `e2e/e2e-global/duel-smoke.spec.ts` walks the same claim end to end. */
-describe("packaged local deck coverage", () => {
-  it("packages enough legal cards to assemble a deck the duel can draw", () => {
-    const packagedCodes = buildActiveImageManifest(
-      process.cwd(),
-      "coverage",
-    ).files.map(({ code }) => code);
-    const packaged = packagedCatalog(
-      buildActiveCardDataManifest(process.cwd(), new Set(packagedCodes)),
-      buildActiveCardTextManifest(process.cwd(), new Set(packagedCodes)),
-    );
-    const assemblableMain = packaged.filter(
-      (card) => card.canonicalZone === "main",
-    );
-    const largestPlayableDeck = assemblableMain.reduce(
-      (total, card) => total + quantityLimit(PROTOTYPE_RULESET, card.code),
-      0,
-    );
-
-    expect(packaged).toHaveLength(packagedCodes.length);
-    expect(largestPlayableDeck).toBeGreaterThanOrEqual(40);
-
-    /* Assembled the way the editor would, then run through the validator the
-       picker consults: legal to build is only worth asserting if it is also
-       legal to duel. */
-    const codes = assemblableMain
-      .filter((card) => quantityLimit(PROTOTYPE_RULESET, card.code) === 3)
-      .map(({ code }) => code);
-    const main = Array.from(
-      { length: 40 },
-      (_, index) => codes[index % codes.length]!,
-    );
-    const validation = validateDeckDraft(
-      { main, extra: [], side: [] },
-      catalogByCode(packaged),
-      PROTOTYPE_RULESET,
-    );
-
-    expect(
-      validation.issues.filter((issue) => issue.severity === "error"),
-    ).toEqual([]);
-  });
-});
+/* Installed package catalog coverage lives in storage/freeplay-inputs.test.ts;
+   the webview no longer bundles card manifests or preset deck bytes. */

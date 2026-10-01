@@ -8,6 +8,9 @@ import { RARITY_ORDER } from "../../collection/group-by-rarity.ts";
 import type { ShopCardOffer } from "./shop-rarity.ts";
 import { inferRarity } from "./shop-rarity.ts";
 import type { DeckBuilderCardView } from "../../../decks/catalog/index.ts";
+import { installedShopCards } from "./installed-shop-cards.ts";
+import { expectedPackResale } from "./pack-generator.ts";
+import { MAX_PACK_RESALE_DP, SELL_PRICE_DP } from "./shop-pricing.ts";
 
 export interface ShopSetCard {
   readonly code: number;
@@ -30,7 +33,7 @@ export interface ShopSetData {
 }
 
 export function installedShopSetData(sets: readonly StorySet[]): ShopSetData {
-  return Object.freeze({
+  const data: ShopSetData = Object.freeze({
     version: 1 as const,
     sets: Object.freeze(
       [...new Map(sets.map((set) => [set.id, set])).values()].map((set) =>
@@ -39,9 +42,24 @@ export function installedShopSetData(sets: readonly StorySet[]): ShopSetData {
           name: set.name,
           releaseYear: set.releaseYear,
           released: true,
-          cards: Object.freeze(
-            set.cards.map((card) => Object.freeze({ ...card })),
-          ),
+          cards: installedShopCards(set),
+        }),
+      ),
+    ),
+  });
+  return Object.freeze({
+    ...data,
+    sets: Object.freeze(
+      data.sets.map((set) =>
+        Object.freeze({
+          ...set,
+          released:
+            set.cards.length > 0 &&
+            expectedPackResale(
+              set.cards,
+              ({ code }) =>
+                SELL_PRICE_DP[resolveCardRarity(code, data, undefined)],
+            ) <= MAX_PACK_RESALE_DP,
         }),
       ),
     ),

@@ -374,11 +374,11 @@ describe("story state model", () => {
     expect(PROLOGUE.beats.length).toBeLessThanOrEqual(40);
   });
 
-  it("buying ten packs pays fifteen hundred dp", () => {
+  it("buying ten packs pays one thousand dp", () => {
     const browse = {
       ...createInitialStoryState(),
       screen: "shop-browse" as const,
-      dp: 1500,
+      dp: 1000,
     };
     const next = reduceStory(browse, {
       type: "buy-packs",
@@ -514,7 +514,7 @@ describe("story state model", () => {
       code: 111,
       rarity: "common",
     });
-    expect(next.dp).toBe(60);
+    expect(next.dp).toBe(96);
     expect(next.collection[111]).toBe(1);
   });
 
@@ -522,7 +522,7 @@ describe("story state model", () => {
     const cards = {
       ...createInitialStoryState(),
       screen: "shop-cards" as const,
-      dp: 30,
+      dp: 3,
     };
     const next = reduceStory(cards, {
       type: "buy-single",
@@ -683,7 +683,7 @@ describe("story state model", () => {
         { code: 222, quantity: 1, rarity: "ultra-rare" },
       ],
     });
-    expect(next.dp).toBe(620);
+    expect(next.dp).toBe(522);
     expect(next.collection).toEqual({ 111: 1 });
   });
 
@@ -702,7 +702,7 @@ describe("story state model", () => {
       type: "sell-cards",
       items: [{ code: 111, quantity: 1, rarity: "ghost-rare" }],
     });
-    expect(next.dp).toBe(1000);
+    expect(next.dp).toBe(50);
     expect(next.collection).toEqual({});
   });
 

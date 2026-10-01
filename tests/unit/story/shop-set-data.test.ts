@@ -229,7 +229,7 @@ describe("resolveCardRarity", () => {
 describe("shipped JSON invariants", () => {
   const jsonPath = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
-    "../../../public/story/shop-sets.v1.json",
+    "../../../assets/content/card-library/authoring/shop-sets.v1.json",
   );
 
   it("shipped data holds fifty ordered sets", () => {

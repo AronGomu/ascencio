@@ -565,15 +565,8 @@ describe("BattleFacade", () => {
       expect(diagnosticsSpies.download).toHaveBeenCalledTimes(1),
     );
     expect(diagnosticsSpies.download.mock.calls[0]?.[0]).toBe(TRACE);
-    await vi.waitFor(() =>
-      expect(debugStore.recordDebugRun).toHaveBeenCalledWith(
-        expect.objectContaining({
-          snapshotId: TRACE.snapshotId,
-          traceEntries: TRACE.entries.length,
-        }),
-      ),
-    );
-    expect(debugStore.close).toHaveBeenCalled();
+    expect(debugStore.recordDebugRun).not.toHaveBeenCalled();
+    expect(debugStore.close).not.toHaveBeenCalled();
     expect(workerClientSpies.requestDiagnostics).toHaveBeenCalledTimes(1);
     expect(element("duel-error-message").textContent).toContain(
       "Diagnostics downloaded",

@@ -9,10 +9,7 @@ afterEach(() => vi.unstubAllGlobals());
 it("writes acquired shop sets only to package-owned authoring", async () => {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async () => ({
-      ok: true,
-      json: async () => ({ data: [] }),
-    })),
+    vi.fn(async () => new Response(JSON.stringify({ data: [] }))),
   );
   await import("../../scripts/generate-shop-sets.ts");
   const output = path.resolve(

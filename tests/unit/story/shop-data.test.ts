@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
 import { inferRarity } from "../../../src/story/shop/data/shop-rarity.ts";
 import {
+  PACK_PRICE_DP,
   SELL_PRICE_DP,
   singlePriceDp,
 } from "../../../src/story/shop/data/shop-pricing.ts";
@@ -127,10 +128,18 @@ describe("shop data contracts", () => {
   });
 
   it("sell prices ladder and singles are four times", () => {
-    expect(SELL_PRICE_DP.common).toBe(10);
-    expect(SELL_PRICE_DP["ghost-rare"]).toBe(1000);
-    expect(singlePriceDp("common")).toBe(40);
-    expect(singlePriceDp("secret-rare")).toBe(1000);
+    expect(PACK_PRICE_DP).toBe(100);
+    expect(SELL_PRICE_DP).toEqual({
+      common: 1,
+      rare: 2,
+      "super-rare": 5,
+      "ultra-rare": 20,
+      "secret-rare": 50,
+      "ultimate-rare": 50,
+      "ghost-rare": 50,
+    });
+    expect(singlePriceDp("common")).toBe(4);
+    expect(singlePriceDp("secret-rare")).toBe(200);
   });
 
   it("pack shape is eight commons plus one better", () => {

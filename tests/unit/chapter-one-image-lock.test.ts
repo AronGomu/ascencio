@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -29,7 +29,10 @@ describe("Chapter 1 image pins", () => {
       await readFile(`${ASSET_SOURCES.setImages.source}/manifest.json`, "utf8"),
     ) as { readonly files: readonly { readonly setId: string }[] };
     const evidence = JSON.parse(
-      await readFile("content/authoring/chapter-one-set-media.json", "utf8"),
+      await readFile(
+        "assets/content/chapter-01/authoring/chapter-one-set-media.json",
+        "utf8",
+      ),
     ) as { readonly setsWithoutImage: readonly { readonly id: string }[] };
     expect(lock.sets.map(({ setId }) => setId)).toEqual(
       manifest.files.map(({ setId }) => setId),

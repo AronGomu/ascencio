@@ -2,6 +2,32 @@
 
 Status: accepted · 2026-08-16 (rev. 2 after the user-confirmed VN feedback/shop grill rounds 1–2; rev. 3 2026-08-17: pack price 100 → 150 DP after review measured pack expected sell value at ≈138–142 DP, making every pack a guaranteed profit; rev. 4 2026-08-27: delivery is network-first with cache fallback — the original cache-first read served a stale Cache Storage payload forever once populated (audit F3, issue #3); rev. 5 2026-08-27: `buy-packs` refuses a set that is not released — the flag was enforced only by a presentation early-return, so the reducer accepted a purchase for any set id (audit F4, issue #4); rev. 6 2026-08-27: the printing fold prefers a card's base printing — "highest wins" priced ten sets entirely at Ultimate Rare, making a 150 DP pack sell back for ≈580 DP, and because rarity is resolved at read time a collection saved before the new data ships loses value on the 568 codes that drop a tier (audit F4, issue #4)) · Commit: `d81f2fb`
 
+## Current pricing amendment — 2026-10-01 (rev. 7)
+
+Owner decision during resolution of GitHub issue #4: packs cost **100 DP**;
+ordinary booster resale should average around **20 DP**. Resale per card is
+Common **1**, Rare **2**, Super Rare **5**, Ultra Rare **20**, and Secret,
+Ultimate or Ghost Rare **50 DP**. Singles retain the existing four-times-resale
+multiplier. These values supersede the historical pricing in decision 5 below.
+Existing code-count collections use this ladder on their next valuation; saves
+are not rewritten.
+
+ADR-103 retired the browser fetch/cache delivery in decisions 1–2. The current
+shop projects installed native chapter sets. Pack contents now apply the same
+base-printing fold as acquisition, while installed printing provenance remains
+intact for set browsing. Installation alone does not make packs purchasable.
+A nonempty pack is released only when its expected resale is at most **21 DP**:
+a one-DP tolerance around the owner's target retains ordinary boosters such as
+Legend of Blue Eyes and Pharaoh's Servant. The calculation uses the generator's
+actual eight-common/one-rare-plus pools, including empty-pool fallbacks, and the
+sell screen's highest cross-set rarity valuation. Expensive promo packs remain
+listed but unavailable. Draw probabilities and pack size remain unchanged.
+
+The implementation and regression contract are
+`src/story/shop/data/shop-pricing.ts`,
+`src/story/shop/data/shop-set-data.ts`, and
+`tests/unit/story/installed-shop-set-data.test.ts`.
+
 ## Context
 
 Feedback wants real-life YGO extensions (hundreds eventually), rarity-colored halos on every shop card, DP prices (common sells at 10). The pinned duel snapshot (~120 cards) carries **no** per-set membership and **no** rarity. Grill rounds 1–2 (user-confirmed) settled sourcing and scope.

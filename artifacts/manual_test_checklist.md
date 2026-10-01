@@ -87,3 +87,10 @@ Automated webview checks use a test IPC bridge and disposable saves; these owner
 - [ ] Resize to the desktop minimum; verify field controls and hands remain reachable.
 - [ ] Install on physical Android/iOS, test portrait rotation and touch field controls offline, and restart to confirm JSON saves persist.
 - [ ] Build a native release: webview files come from generated/build/app; content resources are verified separately.
+
+
+## Remote issue resolution — 2026-10-01
+
+- [ ] I1. In native Story shop, buy one eligible pack: wallet decreases by 100 DP and nine cards are granted when opened. Verify resale labels: Common 1, Rare 2, Super Rare 5, Ultra Rare 20, special rarities 50 DP.
+- [ ] I2. Browse installed promo sets whose expected pack resale exceeds 21 DP: verify they remain visible but their packs cannot be purchased. Ordinary eligible boosters remain purchasable.
+- [ ] I3. During a duel error, verify unsolicited diagnostics create no download; click Download and verify the file plus confirmation message appear.

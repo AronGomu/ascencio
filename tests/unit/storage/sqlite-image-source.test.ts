@@ -92,6 +92,61 @@ describe("SQLite card image source", () => {
     source.close();
   });
 
+  it("starts a fresh shared read after every prior caller cancels, despite a delayed native reply", async () => {
+    const oldReply = deferred<StorageResult<QueryMap["asset"]>>();
+    const freshReply = deferred<StorageResult<QueryMap["asset"]>>();
+    const signals: AbortSignal[] = [];
+    const query = vi.fn((_request: ContentQuery, signal: AbortSignal) => {
+      signals.push(signal);
+      // Native IPC can complete after its caller's signal has been aborted.
+      return signals.length === 1 ? oldReply.promise : freshReply.promise;
+    });
+    const create = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:fresh");
+    const revoke = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => {});
+    const source = createSqliteCardImageSource(contentQuery(query));
+    const first = new AbortController();
+    const cancelled = source.acquire(cardCode(7), "full", first.signal);
+    first.abort();
+    await expect(cancelled).rejects.toMatchObject({ name: "AbortError" });
+    expect(signals[0]?.aborted).toBe(true);
+
+    const fresh = Promise.allSettled([
+      source.acquire(cardCode(7), "full", new AbortController().signal),
+      source.acquire(cardCode(7), "full", new AbortController().signal),
+    ]);
+    const readsBeforeOldReply = query.mock.calls.length;
+    oldReply.resolve(ok(asset(3)));
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const urlsAfterOldReply = create.mock.calls.length;
+
+    // The old read's finally must not remove the replacement pending read.
+    const later = Promise.allSettled([
+      source.acquire(cardCode(7), "full", new AbortController().signal),
+    ]);
+    freshReply.resolve(ok(asset(4)));
+    const results = [...(await fresh), ...(await later)];
+    for (const result of results)
+      if (result.status === "fulfilled") result.value?.release();
+    source.close();
+
+    expect(readsBeforeOldReply).toBe(2);
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(signals[1]?.aborted).toBe(false);
+    expect(urlsAfterOldReply).toBe(0);
+    expect(results).toEqual(
+      Array.from({ length: 3 }, () => ({
+        status: "fulfilled",
+        value: { url: "blob:fresh", release: expect.any(Function) },
+      })),
+    );
+    expect(create).toHaveBeenCalledOnce();
+    expect(revoke).toHaveBeenCalledExactlyOnceWith("blob:fresh");
+  });
+
   it("bounds unleased cache to 64 MiB and never evicts active leases", async () => {
     let created = 0;
     vi.spyOn(URL, "createObjectURL").mockImplementation(

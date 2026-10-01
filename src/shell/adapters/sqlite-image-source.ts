@@ -115,8 +115,10 @@ export class SqliteImageLeasePool {
     } finally {
       pending.waiters -= 1;
       if (pending.waiters === 0) {
-        if (!pending.settled) pending.controller.abort();
-        else if (!received) this.#trim();
+        if (!pending.settled) {
+          if (this.#pending.get(key) === pending) this.#pending.delete(key);
+          pending.controller.abort();
+        } else if (!received) this.#trim();
       }
     }
     if (this.#closed) {

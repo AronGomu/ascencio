@@ -3,7 +3,8 @@ import { fixtureFile } from "./runtime-fixtures.ts";
 import { createSqliteStoryRepository } from "../../../src/story/saves/sqlite-story-repository.ts";
 import { storyBindingFixture } from "../../fixtures/story-release.ts";
 // @vitest-environment node
-import { statSync, readFileSync, rmSync } from "node:fs";
+import { createReadStream, statSync, readFileSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
@@ -29,25 +30,30 @@ import type { RuntimeFileStore } from "../../../src/storage/runtime/runtime-port
 import { createStoryInputsHarness } from "../../fixtures/sqlite/story-inputs-runtime.ts";
 import { databaseAdapter } from "./runtime-fixtures.ts";
 
-const AUTHORITATIVE_PACKAGES = {
-  "duel-core": {
-    path: ".tmp/manual-sqlite-t2-final/generated/content-packages/duel-core/1.0.0.sqlite",
-    sha256: "52ab0c9cd83bbba6bf88c782a8ae2f12d5ec49b2c18e08e4a4ddedaf3aa78f9c",
-  },
-  "card-library": {
-    path: ".tmp/manual-sqlite-t2-final/generated/content-packages/card-library/1.0.0.sqlite",
-    sha256: "34da2e1e11125f4ad2ee3ad3fbe9fcf2761ad2dc33adbe5e00f7093b0799c5f2",
-  },
-  freeplay: {
-    path: ".tmp/manual-sqlite-t4a-repair/generated/content-packages/freeplay/1.0.0.sqlite",
-    sha256: "94f823fb63bb190304845feae0d527dcb6ec6ecbd24a971513b52a3bc48859d8",
-  },
-  "chapter-01": {
-    path: ".tmp/manual-sqlite-t2-final/generated/content-packages/chapter-01/1.0.0.sqlite",
-    sha256: "1bec727903e32cc4768eb844ef91d10f6763a854a67d1e4381fd4fd6ebba3307",
-  },
-} as const;
-type AcceptedPackageId = keyof typeof AUTHORITATIVE_PACKAGES;
+const nativeRelease = JSON.parse(
+  readFileSync("content/native-release.json", "utf8"),
+) as {
+  schemaVersion: 1;
+  packages: {
+    packageId: PackageId;
+    version: string;
+    bytes: number;
+    sha256: string;
+  }[];
+};
+const AUTHORITATIVE_PACKAGES = nativeRelease.packages.map((source) => ({
+  ...source,
+  path: `generated/content-packages/${source.packageId}-${source.version}.sqlite`,
+}));
+
+async function verifyPinnedPackage(
+  source: (typeof AUTHORITATIVE_PACKAGES)[number],
+) {
+  expect(statSync(source.path).size).toBe(source.bytes);
+  const hash = createHash("sha256");
+  for await (const chunk of createReadStream(source.path)) hash.update(chunk);
+  expect(hash.digest("hex")).toBe(source.sha256);
+}
 
 function ok<T>(value: T): StorageResult<T> {
   return { kind: "ok", value };
@@ -124,19 +130,23 @@ describe("New Game independence", () => {
   }, 120_000);
 
   it("loads authoritative accepted packages read-only under an acquired generation lease", async () => {
+    expect(nativeRelease.schemaVersion).toBe(1);
+    expect(AUTHORITATIVE_PACKAGES.map(({ packageId }) => packageId)).toEqual([
+      "duel-core",
+      "card-library",
+      "freeplay",
+      "chapter-01",
+    ]);
     const registry = new DatabaseSync(":memory:");
     registry.exec(CONTENT_REGISTRY_SCHEMA_SQL);
     registry
       .prepare("UPDATE registry_state SET generation=41 WHERE singleton=1")
       .run();
     const paths = new Map<string, string>();
-    const manifests = new Map<AcceptedPackageId, PackageManifest>();
-    for (const [packageId, source] of Object.entries(
-      AUTHORITATIVE_PACKAGES,
-    ) as [
-      AcceptedPackageId,
-      (typeof AUTHORITATIVE_PACKAGES)[AcceptedPackageId],
-    ][]) {
+    const manifests = new Map<PackageId, PackageManifest>();
+    for (const source of AUTHORITATIVE_PACKAGES) {
+      await verifyPinnedPackage(source);
+      const { packageId } = source;
       const absolute = path.resolve(source.path);
       const packageDatabase = new DatabaseSync(absolute, { readOnly: true });
       const row = packageDatabase
@@ -150,6 +160,8 @@ describe("New Game independence", () => {
         created_at: string;
       };
       packageDatabase.close();
+      expect(row.package_id).toBe(packageId);
+      expect(row.version).toBe(source.version);
       const manifest: PackageManifest = {
         packageId: row.package_id,
         packageType: row.package_type,
@@ -286,13 +298,15 @@ describe("New Game independence", () => {
     await lease.value.release();
     await storage.close();
     expect(openedHandles).toBe(closedHandles);
+    for (const source of AUTHORITATIVE_PACKAGES)
+      await verifyPinnedPackage(source);
     console.info(
       "T6B_AUTHORITATIVE_PROBE",
       JSON.stringify({
         generation: 41,
         packages: Object.fromEntries(
-          Object.entries(AUTHORITATIVE_PACKAGES).map(([packageId, source]) => [
-            packageId,
+          AUTHORITATIVE_PACKAGES.map((source) => [
+            source.packageId,
             { path: path.resolve(source.path), sha256: source.sha256 },
           ]),
         ),

@@ -60,11 +60,15 @@ function cy(value: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-cy="${value}"]`);
 }
 
-async function waitForCy(value: string): Promise<HTMLElement> {
+async function waitForCy(
+  value: string,
+  buttonState: "enabled" | "disabled" = "enabled",
+): Promise<HTMLElement> {
   await vi.waitFor(() => {
     const found = cy(value);
     expect(found, `waiting for data-cy="${value}"`).not.toBeNull();
-    if (found instanceof HTMLButtonElement) expect(found.disabled).toBe(false);
+    if (found instanceof HTMLButtonElement)
+      expect(found.disabled).toBe(buttonState === "disabled");
   }, REAL_IMPORT);
   return cy(value)!;
 }
@@ -123,7 +127,7 @@ describe("the main menu's story entries", () => {
     const clearedBeforeSave = clear.mock.calls.length;
     await fireEvent.click(await waitForCy("story-narrative-menu"));
     await fireEvent.click(await waitForCy("story-pause-save"));
-    await fireEvent.click(await waitForCy("story-save-load-overwrite-confirm"));
+    await fireEvent.click(await waitForCy("story-save-load-save"));
     await vi.waitFor(() => expect(write).toHaveBeenCalledOnce());
     await vi.waitFor(() =>
       expect(cy("story-save-load-failure")).not.toBeNull(),
@@ -133,6 +137,9 @@ describe("the main menu's story entries", () => {
     expect(application.clear).toHaveBeenCalledTimes(clearedBeforeSave);
     expect(cy("application-recovery-message")).toBeNull();
     await fireEvent.click(await waitForCy("story-save-load-retry"));
+    const retryConfirmation = await waitForCy("story-save-load-save");
+    expect(write).toHaveBeenCalledOnce();
+    await fireEvent.click(retryConfirmation);
     await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(2));
     await vi.waitFor(() => expect(cy("story-save-load-failure")).toBeNull());
     const saved = await props.saves.read("manual:1");
@@ -199,7 +206,7 @@ describe("the main menu's story entries", () => {
     await user.click(await waitForCy("main-menu-load"));
     await user.click(await waitForCy("story-load-slot-manual-delete"));
     await user.click(await waitForCy("story-load-delete-confirm"));
-    await waitForCy("story-load-slot-manual-disabled");
+    await waitForCy("story-load-slot-manual-disabled", "disabled");
     expect(await saves.read("manual:1")).toEqual({
       kind: "empty",
       slot: "manual:1",
@@ -208,10 +215,9 @@ describe("the main menu's story entries", () => {
     hash = "#/";
     renderShell();
     await user.click(await waitForCy("main-menu-load"));
-    expect(await waitForCy("story-load-slot-manual-disabled")).toHaveProperty(
-      "disabled",
-      true,
-    );
+    expect(
+      await waitForCy("story-load-slot-manual-disabled", "disabled"),
+    ).toHaveProperty("disabled", true);
     expect(await waitForCy("story-load-slot-autosave-load")).toHaveProperty(
       "disabled",
       false,
@@ -229,14 +235,12 @@ describe("the main menu's story entries", () => {
     await waitForCy("story-storage-error");
     await fireEvent.click(await waitForCy("story-narrative-menu"));
     await fireEvent.click(await waitForCy("story-pause-load"));
-    expect(await waitForCy("story-load-slot-manual-disabled")).toHaveProperty(
-      "disabled",
-      true,
-    );
-    expect(await waitForCy("story-load-slot-autosave-load")).toHaveProperty(
-      "disabled",
-      true,
-    );
+    expect(
+      await waitForCy("story-load-slot-manual-disabled", "disabled"),
+    ).toHaveProperty("disabled", true);
+    expect(
+      await waitForCy("story-load-slot-autosave-load", "disabled"),
+    ).toHaveProperty("disabled", true);
     expect(cy("story-narrative-cursor")?.textContent).toBe("Beat 1");
   });
 

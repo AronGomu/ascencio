@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import FieldBoard from "../../src/battle/app/components/duel-field/FieldBoard.svelte";
 import { mapSnapshotToBoard } from "../../src/battle/field/board-view-model.ts";
 import { createFieldRenderLayout } from "../../src/battle/field/duel-field-geometry.ts";
+import { fieldPlaneTransform } from "../../src/battle/field/perspective.ts";
 import {
   BOARD_CARD_TEXTS,
   BOARD_VIEW_MODEL_FIXTURES,
@@ -13,7 +14,7 @@ import {
 afterEach(cleanup);
 
 describe("FieldBoard perspective plane", () => {
-  it("renders every field zone inside the configured plane", () => {
+  it("renders every field zone and both hands inside the default flat plane", () => {
     const mapped = mapSnapshotToBoard(
       BOARD_VIEW_MODEL_FIXTURES["ST-05"],
       BOARD_CARD_TEXTS,
@@ -24,7 +25,7 @@ describe("FieldBoard perspective plane", () => {
       board: mapped.value,
       renderLayout: createFieldRenderLayout(true, 1280, 1422),
       planeHeight: 1422,
-      planeTransform: "perspective(600px) rotateX(20deg)",
+      planeTransform: fieldPlaneTransform(),
       cardBackUrl: "card-back.png",
       placeholderUrl: "placeholder.png",
     });
@@ -33,8 +34,8 @@ describe("FieldBoard perspective plane", () => {
       '[data-cy="duel-field-board-plane"]',
     );
     expect(plane?.style.height).toBe("1422px");
-    expect(plane?.style.transform).toBe("perspective(600px) rotateX(20deg)");
-    expect(plane?.style.getPropertyValue("--hand-upright")).toBe("-20deg");
+    expect(plane?.style.transform).toBe("");
+    expect(plane?.style.getPropertyValue("--hand-upright")).toBe("0deg");
     const zones = container.querySelectorAll('[data-cy^="field-zone-"]');
     expect(zones.length).toBeGreaterThan(0);
     for (const zone of zones) expect(plane?.contains(zone)).toBe(true);

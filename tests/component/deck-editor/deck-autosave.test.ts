@@ -136,7 +136,7 @@ describe("deck autosave controller", () => {
     }
   });
 
-  it("ignores late saves after another deck opens", async () => {
+  it("persists the current deck before opening a queued deck", async () => {
     let resolveDeferredSave!: (value: StoredDeck) => void;
     const deferredSave = new Promise<StoredDeck>((resolve) => {
       resolveDeferredSave = resolve;
@@ -164,9 +164,10 @@ describe("deck autosave controller", () => {
       [first.deck.id, first],
       [second.deck.id, second],
     ]);
+    const load = vi.fn(async (id: DeckId) => values.get(id) ?? null);
     const repository: DeckRepository = {
       list: async () => [...values.values()].map(({ deck }) => deck),
-      load: async (id) => values.get(id) ?? null,
+      load,
       create: async (deck, history) => ({ deck, history }),
       createAndOpen: async (deck, history) => ({ deck, history }),
       save: async (expectedRevision, deck, history) => {
@@ -191,14 +192,30 @@ describe("deck autosave controller", () => {
     );
     await controller.initialize();
     const save = controller.mutate({ type: "add", cardCode: 89631139 });
+    await vi.waitFor(() => expect(get(controller).saveState).toBe("saving"));
+    let opened = false;
+    const open = controller.openDeck(second.deck.id).then((result) => {
+      opened = true;
+      return result;
+    });
     await Promise.resolve();
-    await controller.openDeck(second.deck.id);
+    expect(opened).toBe(false);
+    expect(load).not.toHaveBeenCalledWith(second.deck.id);
+    expect(get(controller).current?.deck.id).toBe(first.deck.id);
+    expect(get(controller).current?.deck.main).toEqual([89631139]);
     resolveDeferredSave({
       deck: { ...first.deck, main: [89631139], revision: 2 },
       history: first.history,
     });
-    await save;
+    await expect(save).resolves.toBe(true);
+    await expect(open).resolves.toBe(true);
+    expect((await repository.load(first.deck.id))?.deck).toMatchObject({
+      main: [89631139],
+      revision: 2,
+    });
     expect(get(controller).current?.deck.id).toBe(second.deck.id);
+    expect(get(controller).current?.deck.main).toEqual(second.deck.main);
+    expect(get(controller).saveState).toBe("saved");
   });
 
   it("does not offer duplicate import retry after post-commit refresh failure", async () => {

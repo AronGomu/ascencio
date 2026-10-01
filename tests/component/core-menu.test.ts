@@ -40,7 +40,7 @@ describe("asset-free CORE menu", () => {
     });
     await waitFor(() => expect(close).toHaveBeenCalledOnce());
   });
-  it("requires chapter package for Story, keeps Free Play ready, and retains exact media warnings", async () => {
+  it("requires chapter-01 for New Game, keeps Load and Free Play ready, and retains exact media warnings", async () => {
     let publishStatus!: (status: {
       readonly warnings: readonly {
         readonly packageId: "card-library";
@@ -72,12 +72,9 @@ describe("asset-free CORE menu", () => {
     await waitFor(() =>
       expect(query("main-menu-free-play")).toHaveProperty("disabled", false),
     );
-    for (const cy of [
-      "main-menu-new-game",
-      "main-menu-continue",
-      "main-menu-load",
-    ])
+    for (const cy of ["main-menu-new-game", "main-menu-continue"])
       expect(query(cy)).toHaveProperty("disabled", true);
+    expect(query("main-menu-load")).toHaveProperty("disabled", false);
     expect(query("core-gate-status")?.textContent).toContain(
       "New Game requires chapter-01",
     );

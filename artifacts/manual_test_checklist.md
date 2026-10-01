@@ -94,3 +94,11 @@ Automated webview checks use a test IPC bridge and disposable saves; these owner
 - [ ] I1. In native Story shop, buy one eligible pack: wallet decreases by 100 DP and nine cards are granted when opened. Verify resale labels: Common 1, Rare 2, Super Rare 5, Ultra Rare 20, special rarities 50 DP.
 - [ ] I2. Browse installed promo sets whose expected pack resale exceeds 21 DP: verify they remain visible but their packs cannot be purchased. Ordinary eligible boosters remain purchasable.
 - [ ] I3. During a duel error, verify unsolicited diagnostics create no download; click Download and verify the file plus confirmation message appear.
+
+## Audit regressions — 2026-10-01
+
+Use a disposable native profile and prepared test packages. These checks remain pending human/device verification.
+
+- [ ] R1. Populate more than 1024 valid deck and deck-autosave records in the disposable profile. Reset that user-data category in Admin; verify all selected records are removed together, unrelated settings and Story saves remain intact, and restart preserves the result.
+- [ ] R2. While a card preview is still loading, leave and immediately reopen it several times. Verify the final preview loads, remains usable, and closes normally without a stale cancellation error.
+- [ ] R3. Import prepared package fixtures with `chapter-010`, a leading-zero version such as `01.0.0`, or a version component greater than `9007199254740991`. Verify each is rejected and the active generation, installed packages, and user data remain unchanged.

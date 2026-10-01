@@ -937,6 +937,7 @@ it.each([
       expect(application.acquire).toHaveBeenCalledWith(
         "story",
         expect.any(AbortSignal),
+        { intent: null, checkpoint: hash === "#/duel/session/direct" },
       ),
     );
     expect(document.body.textContent).not.toContain(
@@ -979,6 +980,7 @@ it("runs menu New Game through acquired Story inputs without reading saved slots
   expect(application.acquire).toHaveBeenCalledWith(
     "story",
     expect.any(AbortSignal),
+    { intent: "new", checkpoint: false },
   );
   expect(read).not.toHaveBeenCalled();
 });

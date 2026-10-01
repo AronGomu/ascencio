@@ -84,12 +84,16 @@ export class JsonUserDataStore implements UserDataStore {
       return Promise.resolve(fail("USER_DATA_INVALID"));
     }
     return this.#run(async () => {
-      if (!Array.isArray(captured) || captured.length > 1024)
-        return fail("USER_DATA_INVALID");
+      if (!Array.isArray(captured)) return fail("USER_DATA_INVALID");
       const state = await this.#read();
       if (state.kind === "failed") return state;
       if (captured.length === 0) return ok([]);
-      const records = [...state.value.document.records];
+      const records = new Map(
+        state.value.document.records.map((row) => [
+          JSON.stringify([row.namespace, row.key]),
+          row,
+        ]),
+      );
       const changed: UserRecord[] = [];
       const seen = new Set<string>();
       for (const mutation of captured) {
@@ -102,11 +106,7 @@ export class JsonUserDataStore implements UserDataStore {
         const identity = JSON.stringify([mutation.namespace, mutation.key]);
         if (seen.has(identity)) return fail("USER_DATA_INVALID");
         seen.add(identity);
-        const index = records.findIndex(
-          (row) =>
-            row.namespace === mutation.namespace && row.key === mutation.key,
-        );
-        const previous = records[index];
+        const previous = records.get(identity);
         if (
           mutation.expectedRevision !== null &&
           (!safeRevision(mutation.expectedRevision) ||
@@ -117,7 +117,7 @@ export class JsonUserDataStore implements UserDataStore {
           return fail("STORAGE_CONFLICT");
         if (mutation.kind === "delete") {
           if (!previous) return fail("STORAGE_CONFLICT");
-          records.splice(index, 1);
+          records.delete(identity);
         } else if (mutation.kind === "put") {
           const revision = (previous?.revision ?? 0) + 1;
           if (!safeRevision(revision)) return fail("USER_DATA_INVALID");
@@ -141,15 +141,14 @@ export class JsonUserDataStore implements UserDataStore {
             revision,
             payload: mutation.payload,
           };
-          if (previous) records[index] = record;
-          else records.push(record);
+          records.set(identity, record);
           changed.push(record);
         } else return fail("USER_DATA_INVALID");
       }
       const revision = state.value.document.revision + 1;
       if (!safeRevision(revision)) return fail("USER_DATA_INVALID");
       const committed = await this.#commit(
-        { ...state.value.document, revision, records },
+        { ...state.value.document, revision, records: [...records.values()] },
         state.value.source,
       );
       return committed.kind === "failed" ? committed : ok(changed);

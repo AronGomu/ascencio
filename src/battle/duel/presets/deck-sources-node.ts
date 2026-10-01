@@ -6,7 +6,12 @@ export async function loadDeckSources(): Promise<ReadonlyMap<DeckId, string>> {
   const entries = await Promise.all(
     DECK_CATALOG.map(async ({ id, fileName }) => {
       const source = await readFile(
-        fileURLToPath(new URL(`./decks/${fileName}`, import.meta.url)),
+        fileURLToPath(
+          new URL(
+            `../../../../assets/content/chapter-01/decks/${fileName}`,
+            import.meta.url,
+          ),
+        ),
         "utf8",
       );
       return [id, source] as const;

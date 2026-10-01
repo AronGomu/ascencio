@@ -30,7 +30,7 @@ export function buildActiveImageManifest(
   );
   const deckSources = DECK_CATALOG.map(({ fileName }) =>
     readFileSync(
-      path.join(projectRoot, "src/battle/duel/presets/decks", fileName),
+      path.join(projectRoot, "assets/content/chapter-01/decks", fileName),
       "utf8",
     ),
   );

@@ -1,5 +1,5 @@
 import { buildStarterGrant } from "../../src/story/decks/starter-grant.ts";
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { afterEach, describe, expect, it } from "vitest";
@@ -56,13 +56,13 @@ const legacyIds = [
 ];
 
 describe("Chapter 1 bundled prerequisites", () => {
-  it("browser and Node adapters expose only two new decks, never legacy IDs or their exclusive reviewed codes", async () => {
+  it("Node exposes only two current decks and their reviewed codes; webview bundles no deck payloads", async () => {
     const sources = await loadDeckSources();
     expect([...sources.keys()]).toEqual([
       "chapter-one-starter",
       "chapter-one-practice",
     ]);
-    expect(DECK_SOURCES).toEqual(sources);
+    expect(DECK_SOURCES.size).toBe(0);
     for (const id of legacyIds)
       expect((sources as ReadonlyMap<string, string>).has(id)).toBe(false);
     expect(reviewedCardPool(sources)).toEqual(
@@ -86,7 +86,9 @@ describe("Chapter 1 bundled prerequisites", () => {
   );
 
   it("each active deck is exact 40/0/0, source-selected, buildable and runtime-supported under current quantities", async () => {
-    const bytes = await readFile("content/authoring/card-set-source.json");
+    const bytes = await readFile(
+      "assets/content/card-library/authoring/card-set-source.json",
+    );
     expect(createHash("sha256").update(bytes).digest("hex")).toBe(
       "b3ac778e5f1b9927554ef8e66185a596c0c35d71ab642b448c952c6c9050496d",
     );
@@ -94,10 +96,16 @@ describe("Chapter 1 bundled prerequisites", () => {
       sets: ChapterSourceSet[];
     };
     const selections = JSON.parse(
-      await readFile("content/chapter-selections.json", "utf8"),
+      await readFile(
+        "assets/content/chapter-01/authoring/chapter-selections.json",
+        "utf8",
+      ),
     ) as { chapters: { setNames: string[] }[] };
     const corrections = JSON.parse(
-      await readFile("content/authoring/chapter-one-corrections.json", "utf8"),
+      await readFile(
+        "assets/content/chapter-01/authoring/chapter-one-corrections.json",
+        "utf8",
+      ),
     ) as ChapterSourceCorrections;
     const names = new Set(selections.chapters[0]!.setNames);
     const selected = new Set(
@@ -117,8 +125,10 @@ describe("Chapter 1 bundled prerequisites", () => {
       const codes = uniqueDeckCodes(deck);
       expect([...codes].filter((code) => !selected.has(code))).toEqual([]);
       const dependencies = await loadActiveDuelDependenciesNode(
-        ASSET_SOURCES.data.source,
+        PACKAGE_ASSET_SOURCES.data.source,
         codes,
+        undefined,
+        PACKAGE_ASSET_SOURCES.strings.source,
       );
       const shards = [
         ...new Set(
@@ -131,7 +141,7 @@ describe("Chapter 1 bundled prerequisites", () => {
             async (shard) =>
               JSON.parse(
                 await readFile(
-                  `${ASSET_SOURCES.data.source}/catalog/cards/${shard}.json`,
+                  `${PACKAGE_ASSET_SOURCES.data.source}/catalog/cards/${shard}.json`,
                   "utf8",
                 ),
               ) as AssetDeckCardRecord[],
@@ -163,8 +173,9 @@ describe("Chapter 1 bundled prerequisites", () => {
     }
   });
 
-  it("legacy new-game and new-library starter agree; all three personas explicitly use DM practice", () => {
-    expect(STARTER_DECK_LIST).toBe(DECK_SOURCES.get("chapter-one-starter"));
+  it("legacy new-game and new-library starter agree with the Chapter 1 source", async () => {
+    const sources = await loadDeckSources();
+    expect(STARTER_DECK_LIST).toBe(sources.get("chapter-one-starter"));
     const starter = parseYdk(STARTER_DECK_LIST);
     expect([...starter.main].sort((a, b) => a - b)).toEqual(main(46986414));
     const state = reduceStory(createInitialStoryState(), {

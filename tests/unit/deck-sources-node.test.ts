@@ -22,13 +22,8 @@ describe("bundled deck sources", () => {
     }
   });
 
-  it("browser and Node source adapters contain identical text per id", async () => {
-    const nodeSources = await loadDeckSources();
-
-    expect(DECK_SOURCES.size).toBe(2);
-    for (const { id } of DECK_CATALOG) {
-      expect(DECK_SOURCES.get(id)).toBe(nodeSources.get(id));
-    }
+  it("webview source adapter bundles no deck payloads; installed packages supply them", () => {
+    expect(DECK_SOURCES.size).toBe(0);
   });
 
   it("every bundled deck parses and validates against its constraints", async () => {

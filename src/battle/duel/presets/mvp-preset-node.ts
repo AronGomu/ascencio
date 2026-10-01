@@ -5,11 +5,21 @@ import { createMvpPreset, type MvpPreset } from "./mvp-preset.ts";
 export async function loadMvpPreset(): Promise<MvpPreset> {
   const [playerSource, opponentSource] = await Promise.all([
     readFile(
-      fileURLToPath(new URL("./decks/player.ydk", import.meta.url)),
+      fileURLToPath(
+        new URL(
+          "../../../../content/freeplay/decks/player.ydk",
+          import.meta.url,
+        ),
+      ),
       "utf8",
     ),
     readFile(
-      fileURLToPath(new URL("./decks/opponent.ydk", import.meta.url)),
+      fileURLToPath(
+        new URL(
+          "../../../../content/freeplay/decks/opponent.ydk",
+          import.meta.url,
+        ),
+      ),
       "utf8",
     ),
   ]);

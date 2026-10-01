@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
@@ -118,8 +118,10 @@ describe("bundled Chapter 1 pair matrix", () => {
       [...sources].map(([id, source]) => [id, parseYdk(source)] as const),
     );
     const dependencies = await loadActiveDuelDependenciesNode(
-      path.resolve(ASSET_SOURCES.data.source),
+      path.resolve(PACKAGE_ASSET_SOURCES.data.source),
       new Set([...reviewedCardPool(sources)].map(cardCode)),
+      undefined,
+      path.resolve(PACKAGE_ASSET_SOURCES.strings.source),
     );
     cards = dependencies.cards;
   });

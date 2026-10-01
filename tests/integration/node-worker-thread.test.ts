@@ -1,4 +1,5 @@
 import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
+import { once } from "node:events";
 import { describe, expect, it, onTestFinished } from "vitest";
 import { parseDuelDeckSelection } from "../../src/battle/duel/contracts/duel-deck-selection.ts";
 import { duelId } from "../../src/battle/duel/contracts/ids.ts";
@@ -178,11 +179,15 @@ describe("real Node duel Worker thread", () => {
 
   it("terminates the headless Worker when initialization exceeds its bound", async () => {
     const harness = new NodeDuelWorkerHarness({ fixture: "unresponsive" });
+    onTestFinished(async () => {
+      await harness.terminate();
+    });
+    await once(harness.worker, "online");
 
     await expect(harness.initializeWithin(100)).rejects.toThrow(
       "Timed out after 100ms waiting for a Duel Worker message",
     );
-    await expect(harness.waitForExit()).resolves.toBe(0);
+    await expect(harness.waitForExit()).resolves.toBe(1);
   });
 
   it("falls back to forced termination when graceful disposal times out", async () => {
@@ -190,11 +195,12 @@ describe("real Node duel Worker thread", () => {
     onTestFinished(async () => {
       await harness.terminate();
     });
+    await once(harness.worker, "online");
 
     await expect(harness.disposeGracefully(100)).rejects.toThrow(
       "Timed out after 100ms waiting for Worker exit",
     );
-    await expect(harness.waitForExit()).resolves.toBe(0);
+    await expect(harness.waitForExit()).resolves.toBe(1);
   });
 
   it("can forcibly terminate an initialized Worker within a bound", async () => {

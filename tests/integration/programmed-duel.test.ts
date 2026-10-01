@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -49,6 +49,8 @@ beforeAll(async () => {
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(preset.player, preset.opponent),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
   scenarios = await loadProgrammedScenarios();
 });

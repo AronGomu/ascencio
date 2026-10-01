@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 // @vitest-environment jsdom
 
 import { readFile } from "node:fs/promises";
@@ -78,6 +78,8 @@ beforeAll(async () => {
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(...decks.values()),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
   danteCapture = captureDanteMaterialDecision({
     adapter,
@@ -515,7 +517,11 @@ async function loadCoreForDomTest(): Promise<OcgCoreAdapter> {
 async function loadDeck(name: string): Promise<ParsedDeck> {
   return parseYdk(
     await readFile(
-      path.resolve(`src/battle/duel/presets/decks/${name}.ydk`),
+      path.resolve(
+        name === "burning-abyss"
+          ? `tests/fixtures/decks/${name}.ydk`
+          : `content/freeplay/decks/${name}.ydk`,
+      ),
       "utf8",
     ),
   );

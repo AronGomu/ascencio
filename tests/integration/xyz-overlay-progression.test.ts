@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -84,6 +84,8 @@ beforeAll(async () => {
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(...decks.values()),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
 });
 
@@ -263,7 +265,9 @@ async function loadDeck(name: string): Promise<ParsedDeck> {
     await readFile(
       fileURLToPath(
         new URL(
-          `../../src/battle/duel/presets/decks/${name}.ydk`,
+          name === "burning-abyss"
+            ? `../fixtures/decks/${name}.ydk`
+            : `../../content/freeplay/decks/${name}.ydk`,
           import.meta.url,
         ),
       ),

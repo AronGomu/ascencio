@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,10 +43,7 @@ beforeAll(async () => {
   spellbook = parseYdk(
     await readFile(
       fileURLToPath(
-        new URL(
-          "../../src/battle/duel/presets/decks/spellbook.ydk",
-          import.meta.url,
-        ),
+        new URL("../fixtures/decks/spellbook.ydk", import.meta.url),
       ),
       "utf8",
     ),
@@ -55,6 +52,8 @@ beforeAll(async () => {
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(spellbook, opponent),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
 });
 

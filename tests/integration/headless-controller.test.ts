@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
@@ -22,6 +22,8 @@ beforeAll(async () => {
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(preset.player, preset.opponent),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
 });
 

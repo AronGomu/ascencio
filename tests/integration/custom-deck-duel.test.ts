@@ -1,5 +1,5 @@
 import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { duelId, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
@@ -28,6 +28,8 @@ async function createRuntime(): Promise<{
   const dependencies = await loadActiveDuelDependenciesNode(
     ASSET_ROOT,
     uniqueDeckCodes(preset.player, preset.opponent),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
   return {
     runtime: new DuelWorkerRuntime(async () => ({

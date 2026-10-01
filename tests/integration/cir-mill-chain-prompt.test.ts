@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -90,10 +90,7 @@ beforeAll(async () => {
   burningAbyss = parseYdk(
     await readFile(
       fileURLToPath(
-        new URL(
-          "../../src/battle/duel/presets/decks/burning-abyss.ydk",
-          import.meta.url,
-        ),
+        new URL("../fixtures/decks/burning-abyss.ydk", import.meta.url),
       ),
       "utf8",
     ),
@@ -102,6 +99,8 @@ beforeAll(async () => {
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(burningAbyss, opponent),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
 });
 

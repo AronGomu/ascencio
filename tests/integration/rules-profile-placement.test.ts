@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -47,16 +47,15 @@ beforeAll(async () => {
   adapter = await loadVendoredCoreNode();
   // Extra-deck placement requires this historical Fusion fixture, not an active preset.
   const source = await readFile(
-    new URL(
-      "../../src/battle/duel/presets/decks/shaddoll.ydk",
-      import.meta.url,
-    ),
+    new URL("../fixtures/decks/shaddoll.ydk", import.meta.url),
     "utf8",
   );
   preset = createMvpPreset(source, source);
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(preset.player, preset.opponent),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
 });
 

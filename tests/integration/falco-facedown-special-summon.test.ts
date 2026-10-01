@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,18 +75,15 @@ beforeAll(async () => {
   adapter = await loadVendoredCoreNode();
   shaddoll = parseYdk(
     await readFile(
-      fileURLToPath(
-        new URL(
-          "../../src/battle/duel/presets/decks/shaddoll.ydk",
-          import.meta.url,
-        ),
-      ),
+      fileURLToPath(new URL("../fixtures/decks/shaddoll.ydk", import.meta.url)),
       "utf8",
     ),
   );
   dependencies = await loadActiveDuelDependenciesNode(
     path.resolve(ASSET_SOURCES.data.source),
     uniqueDeckCodes(shaddoll, shaddoll),
+    undefined,
+    ASSET_SOURCES.strings.source,
   );
 });
 

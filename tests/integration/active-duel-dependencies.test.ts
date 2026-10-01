@@ -1,4 +1,4 @@
-import { ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
@@ -16,6 +16,8 @@ describe("real MVP dependency snapshot", () => {
     const dependencies = await loadActiveDuelDependenciesNode(
       path.resolve(ASSET_SOURCES.data.source),
       codes,
+      undefined,
+      ASSET_SOURCES.strings.source,
     );
     const catalogCodes = new Set(dependencies.cards.keys());
     // These are explicit historical MVP fixtures, no longer the active reviewed pool.

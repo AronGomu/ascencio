@@ -161,6 +161,7 @@ export default tseslint.config(
       "assets/**",
       "node_modules/**",
       "src-tauri/target/**",
+      "src-tauri/resources/**",
       "vendor/**",
     ],
   },

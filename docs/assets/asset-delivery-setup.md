@@ -5,7 +5,7 @@
 
 Historical body preserved unchanged for provenance.
 
-T1 provides read-only setup, strict Node-only schemas, path guards, common local lock, rights-scope parsing. Migration, bundling, publishing, downloading, pruning and player installation remain separate slices. Existing `assets:mvp`, `content:setup:verify` and private build paths are unchanged.
+T1 provides read-only setup, strict Node-only schemas, path guards, common local lock, rights-scope parsing. Migration, bundling, publishing, downloading, pruning and player installation remain separate slices. Existing `assets:bootstrap`, `content:setup:verify` and private build paths are unchanged.
 
 ## Developer setup — no publisher credentials
 

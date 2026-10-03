@@ -18,6 +18,7 @@ interface MountedImage {
   readonly controller: AbortController;
   readonly owners: Set<ImageOwner>;
   lease: SourceImageLease | null;
+  unsubscribe?: (() => void) | undefined;
   readonly start: () => Promise<void>;
 }
 
@@ -51,6 +52,7 @@ export function createSemanticImageLeases(
   function forget(entry: MountedImage): void {
     entries.delete(entry.code);
     entry.controller.abort();
+    entry.unsubscribe?.();
     entry.lease?.release();
     entry.lease = null;
     queue.delete(entry);
@@ -65,7 +67,7 @@ export function createSemanticImageLeases(
     onProgress(diagnostics.size, allowed.size);
     for (const owner of entry.owners)
       for (const listener of owner.listeners)
-        listener(entry.lease?.url ?? placeholderUrl);
+        listener(entry.lease?.url || placeholderUrl);
   }
   async function acquire(entry: MountedImage): Promise<void> {
     try {
@@ -83,6 +85,7 @@ export function createSemanticImageLeases(
         return;
       }
       entry.lease = lease;
+      entry.unsubscribe = lease?.subscribe?.(() => record(entry));
       record(entry);
     } catch (error) {
       if (
@@ -133,9 +136,7 @@ export function createSemanticImageLeases(
       const owner: ImageOwner = { listeners: new Set(), released: false };
       mounted.owners.add(owner);
       const url = (): string =>
-        owner.released
-          ? placeholderUrl
-          : (mounted.lease?.url ?? placeholderUrl);
+        owner.released ? placeholderUrl : mounted.lease?.url || placeholderUrl;
       const handle: CardImageLease = Object.freeze({
         get url() {
           return url();

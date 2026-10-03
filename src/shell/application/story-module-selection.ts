@@ -36,7 +36,10 @@ export async function selectStoryModule(
       throw new Error("STORY_MODULE_UNAVAILABLE:chapter-01");
     return { chapterId: "chapter-01", previous: null, advancing: false };
   }
-  const saves = createSqliteStoryRepository(storage.userData);
+  const saves = createSqliteStoryRepository(
+    storage.userData,
+    storage.composition,
+  );
   const slots = request.checkpoint
     ? ["checkpoint:pre-duel" as const]
     : [

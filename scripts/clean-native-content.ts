@@ -35,9 +35,23 @@ if (
       !target.startsWith(`${bundledStage}${path.sep}`)
     )
       throw new Error("Refusing a source or generated release input directory");
-    if ((await readFile(path.join(target, marker), "utf8")) !== expectedMarker)
+    let content =
+      path.basename(target) === "readable-content"
+        ? target
+        : path.join(target, "readable-content");
+    let stageMarker = path.join(content, ".ascencio-readable-stage");
+    let expected = "ascencio-readable-stage-v1\n";
+    try {
+      await lstat(content);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      // Retain explicit cleanup of historical developer SQLite stages only.
+      content = path.join(target, "game-content");
+      stageMarker = path.join(target, marker);
+      expected = expectedMarker;
+    }
+    if ((await readFile(stageMarker, "utf8")) !== expected)
       throw new Error("Target lacks the native staging marker");
-    const content = path.join(target, "game-content");
     const info = await lstat(content);
     if (!info.isDirectory() || info.isSymbolicLink())
       throw new Error("Game content must be a real directory");
@@ -53,7 +67,7 @@ if (
     );
     if (args.includes("--delete")) {
       await rm(content, { recursive: true });
-      console.log("Removed staged game content only");
+      console.log("Removed staged readable content only");
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

@@ -12,6 +12,10 @@ export interface DeckCatalogIndex {
   readonly lowerNames: readonly string[];
 }
 
+const IMMUTABLE_INDEXES = new WeakMap<
+  readonly DeckBuilderCardView[],
+  DeckCatalogIndex
+>();
 const SORT_ORDERS = new WeakMap<DeckCatalogIndex, readonly number[]>();
 
 function exactSortOrder(index: DeckCatalogIndex): readonly number[] {
@@ -36,6 +40,10 @@ export function deckCatalogSortOrder(
 export function buildDeckCatalogIndex(
   source: readonly DeckBuilderCardView[],
 ): DeckCatalogIndex {
+  const cached = Object.isFrozen(source)
+    ? IMMUTABLE_INDEXES.get(source)
+    : undefined;
+  if (cached) return cached;
   const cards = new Array<DeckBuilderCardView>(source.length);
   const lowerNames = new Array<string>(source.length);
   const order = new Array<number>(source.length);
@@ -61,6 +69,7 @@ export function buildDeckCatalogIndex(
     lowerNames: Object.freeze(lowerNames),
   });
   SORT_ORDERS.set(index, Object.freeze(order));
+  if (Object.isFrozen(source)) IMMUTABLE_INDEXES.set(source, index);
   return index;
 }
 

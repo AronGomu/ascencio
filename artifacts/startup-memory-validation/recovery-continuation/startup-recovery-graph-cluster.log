@@ -1,0 +1,9 @@
+[graphify] community set changed since labeling (531 saved labels, 526 communities now; renamed 412 community(ies) by their hub). Run `graphify label` to refresh names with the LLM.
+Loading existing graph...
+Graph: 14203 nodes, 39608 edges
+Re-clustering...
+[graphify] backed up semantic+curated graph (7 files) -> 2026-10-03/
+Graph has 14203 nodes (above 5000 limit). Building aggregated community view...
+graph.html written (aggregated: 526 community nodes, 1302 cross-community edges)
+Tip: run with --obsidian for full node-level detail.
+Done - 526 communities. GRAPH_REPORT.md, graph.json and graph.html updated.

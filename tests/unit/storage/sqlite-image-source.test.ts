@@ -232,7 +232,7 @@ describe("SQLite card image source", () => {
   });
 });
 
-it("falls back to installed full art when a cropped illustration is absent", async () => {
+it("keeps a missing cropped illustration missing even when full art exists", async () => {
   vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:full-fallback");
   vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
   const query = vi.fn(async (request: ContentQuery) =>
@@ -248,12 +248,12 @@ it("falls back to installed full art when a cropped illustration is absent", asy
     "cropped",
     new AbortController().signal,
   );
-  expect(lease?.url).toBe("blob:full-fallback");
+  expect(lease).toBeNull();
   expect(
     query.mock.calls.map(([request]) =>
       request.kind === "asset" ? request.path : null,
     ),
-  ).toEqual(["cards/cropped/42.jpg", "cards/full/42.jpg"]);
+  ).toEqual(["cards/cropped/42.jpg"]);
   lease?.release();
   source.close();
 });

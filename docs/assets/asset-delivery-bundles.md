@@ -15,7 +15,7 @@ Producer implementation: `scripts/lib/asset-delivery/bundle.ts` (`bundleAssets`)
 | C2 | `npm run content:catalog` | Explicit authoring preparation at `generated/asset-delivery/prepared-player.json`. |
 | C3 | `npm run assets:bundle -- --target all --empty-history` | Offline first-release candidate: dev, core, runtime, chapter-01 objects. Requires prepared metadata. |
 | C4 | `npm run content:pack -- --retained-metadata generated/asset-delivery/retained/metadata.json` | Same producer, prod target; exact explicit history. |
-| C5 | `npm run content:verify` | Read-only current candidate schema/hash/closure/streamed archive verification. `--run generated/asset-delivery/runs/<uuid>` checks another completed candidate. |
+| C5 | `npm run legacy:content:verify-sqlite` | Read-only current candidate schema/hash/closure/streamed archive verification. `--run generated/asset-delivery/runs/<uuid>` checks another completed candidate. |
 
 All commands accept `--help`. `--version <package-version>` selects release-candidate intent; it must match `package.json`. Channel/version identity beyond appVersion is operational, not hashed. JSON final stdout follows `AssetResult`; stderr contains JSON phase/path/byte progress. Expected failures exit 2; unexpected internal faults exit 1.
 

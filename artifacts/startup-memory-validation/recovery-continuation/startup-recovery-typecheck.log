@@ -1,0 +1,7 @@
+
+> ascencio@0.1.0 typecheck
+> tsc --noEmit && svelte-check --tsconfig ./tsconfig.json --config ./vite.config.ts
+
+tests/component/story/StoryEventMedia.test.ts(93,24): error TS7006: Parameter '_chapter' implicitly has an 'any' type.
+tests/component/story/StoryEventMedia.test.ts(93,34): error TS7006: Parameter '_id' implicitly has an 'any' type.
+tests/component/story/StoryEventMedia.test.ts(93,39): error TS7006: Parameter 'requestSignal' implicitly has an 'any' type.

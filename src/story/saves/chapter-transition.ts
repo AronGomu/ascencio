@@ -21,6 +21,14 @@ export function chapterTransition(
       screen: "narrative",
       savedScreen: "narrative",
       progressExists: true,
+      narrativeIndex: chapter.document!.chain
+        ? chapter.document!.beats.findIndex(
+            (b) => b.id === chapter.document!.chain!.entryBeatId,
+          )
+        : 0,
+      ...(chapter.document!.chain
+        ? { visitedBeatIds: [chapter.document!.chain.entryBeatId] }
+        : {}),
       dp: previous.state.dp,
       boosters: structuredClone(previous.state.boosters),
       collection: structuredClone(previous.state.collection),
@@ -32,7 +40,8 @@ export function chapterTransition(
       chapterId: chapter.id,
       contentId: chapter.document!.contentId,
       revision: release.revision,
-      beatId: chapter.document!.beats[0]!.id,
+      beatId:
+        chapter.document!.chain?.entryBeatId ?? chapter.document!.beats[0]!.id,
     },
   };
 }

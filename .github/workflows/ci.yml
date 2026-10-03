@@ -42,9 +42,9 @@ jobs:
 
       - run: npm ci
       - name: Regenerate and verify the pinned snapshot
-        run: npm run assets:mvp -- --concurrency 8 --requests-per-second 8
+        run: npm run assets:bootstrap -- --concurrency 8 --requests-per-second 8
       - name: Acquire and verify pinned set images
-        run: npm run assets:sets && npm run assets:sets:verify
+        run: npm run assets:sets:download-images && npm run assets:sets:verify-images
       - name: Verify an isolated offline headless checkout
         shell: bash
         run: |

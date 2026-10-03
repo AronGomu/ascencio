@@ -1,106 +1,114 @@
-import { DatabaseSync } from "node:sqlite";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync, realpathSync } from "node:fs";
 import path from "node:path";
 import type { Page } from "@playwright/test";
-import { queryContent } from "../../src/storage/runtime/content-query-runtime.ts";
 import type {
-  ActivePackage,
-  ContentQuery,
-  PackageStack,
-} from "../../src/storage/index.ts";
-import type { RuntimeFileStore } from "../../src/storage/runtime/runtime-ports.ts";
+  CriticalRelease,
+  CriticalSnapshot,
+} from "../../src/storage/contracts/critical-snapshot.ts";
 
-/** Webview integration fixture: actual staged packages, disposable saves.
- * Rust query projection has a separate native regression test. No browser store
- * is installed and no real player data is read or written by this harness.
- */
+/** Readable resource bridge only. Actual Rust filesystem/decoder acceptance is separate. */
 export async function installNativeContentBridge(page: Page): Promise<void> {
-  const folder =
-    process.env.NATIVE_TEST_CONTENT_DIR ?? "src-tauri/resources/game-content";
-  const manifest = JSON.parse(
+  const folder = path.resolve(
+    process.env.NATIVE_TEST_CONTENT_DIR ??
+      "src-tauri/resources/readable-content",
+  );
+  const release = JSON.parse(
     readFileSync(path.join(folder, "release.json"), "utf8"),
-  ) as {
-    packages: {
-      packageId: ActivePackage["packageId"];
-      version: string;
-      bytes: number;
-      sha256: string;
-    }[];
-  };
-  const packages = manifest.packages.map((item) => {
-    const fileKey = path.resolve(folder, `${item.packageId}.sqlite`);
-    const db = new DatabaseSync(fileKey, { readOnly: true });
-    try {
-      const header = db.prepare("SELECT * FROM package_manifest").get()!;
-      return {
-        ...item,
-        fileKey,
-        packageType: header.package_type,
-        schemaVersion: header.schema_version,
-        dependencies: JSON.parse(String(header.dependencies_json)),
-        createdAt: header.created_at,
-      } as ActivePackage;
-    } finally {
-      db.close();
-    }
-  });
-  const stack: PackageStack = { generation: 1, packages };
-  const files = {
-    openDatabase(fileKey: string) {
-      const db = new DatabaseSync(fileKey, { readOnly: true });
-      return {
-        all: (sql: string, args: unknown[] = []) =>
-          db.prepare(sql).all(...(args as never[])),
-        close: () => db.close(),
-      };
-    },
-  } as unknown as RuntimeFileStore;
+  ) as CriticalRelease;
+  const snapshots = release.packages.map(
+    (pack) =>
+      JSON.parse(
+        readFileSync(path.join(folder, pack.path), "utf8"),
+      ) as CriticalSnapshot,
+  );
+  const metadata = JSON.stringify(snapshots);
+  const engine = readFileSync(
+    path.join(folder, "duel-core/engine/ocgcore.sync.wasm"),
+  );
+  const vendorManifest = readFileSync(
+    path.join(folder, "duel-core/engine/vendor-manifest.json"),
+    "utf8",
+  );
   let userJson: string | null = null;
+  let userRevision = 0;
+  const log = {
+    sessionId: "fixture",
+    path: null,
+    loggingError: null,
+    diagnostics: [],
+    droppedDiagnostics: 0,
+  };
   await page.exposeFunction(
     "nativeTestInvoke",
     async (command: string, args: Record<string, unknown> = {}) => {
       switch (command) {
-        case "native_content_status":
-          return { contentFolder: folder, packages: manifest.packages };
-        case "native_package_stack":
-          return { kind: "ok", value: stack };
-        case "native_package_acquire":
+        case "native_startup_log_status":
+          return log;
+        case "native_startup_log_record":
+          return { ...log, diagnostics: [args.diagnostic] };
+        case "native_startup_load":
           return {
-            kind: "ok",
-            value: { sessionId: "native-test", generation: 1 },
+            sessionId: args.sessionId,
+            generation: 1,
+            metadataBytes: Buffer.byteLength(metadata),
+            engineBytes: engine.length,
+            vendorManifest,
+            packages: release.packages,
           };
-        case "native_package_release":
+        case "native_startup_metadata":
+          return { text: metadata };
+        case "native_startup_engine":
+          return { base64: engine.toString("base64") };
+        case "native_content_location":
+          return folder;
+        case "native_startup_cancel":
+        case "native_startup_close":
+        case "native_user_json_close":
+        case "native_io_trace_maintenance":
           return;
-        case "native_user_json_read":
-          return userJson;
-        case "native_user_json_write":
-          if (args.expected !== userJson)
-            return {
-              kind: "failed",
-              error: { code: "USER_REVISION_CONFLICT" },
-            };
+        case "native_user_json_open":
+          return { sessionId: "fixture-writer", source: userJson };
+        case "native_user_json_commit": {
+          if (args.expectedRevision !== userRevision)
+            return { kind: "failed", error: { code: "STORAGE_CONFLICT" } };
           userJson = String(args.source);
+          userRevision = (JSON.parse(userJson) as { revision: number })
+            .revision;
           return { kind: "ok", value: null };
-        case "native_content_query": {
-          const result = queryContent(
-            args.request as ContentQuery,
-            stack,
-            new AbortController().signal,
-            files,
-            () => {},
+        }
+        case "native_live_media_revision":
+        case "native_live_media_read": {
+          const snapshot = snapshots.find(
+            (pack) => pack.manifest.packageId === args.packageId,
+          );
+          const mapping = snapshot?.media.find(
+            (media) => media.id === args.logicalId,
           );
           if (
-            result.kind === "ok" &&
-            result.value !== null &&
-            typeof result.value === "object" &&
-            "bytes" in result.value
+            !mapping ||
+            mapping.path
+              .split("/")
+              .some((part) => !part || part === ".." || part === ".") ||
+            /[\\:\0]/.test(mapping.path)
           )
-            return {
-              kind: "ok",
-              value: { ...result.value, bytes: Array.from(result.value.bytes) },
-            };
-          return result;
+            return null;
+          const root = path.join(folder, String(args.packageId));
+          try {
+            const resolved = realpathSync(path.join(root, mapping.path));
+            if (!resolved.startsWith(`${root}${path.sep}`)) return null;
+            const stat = statSync(resolved);
+            if (!stat.isFile() || stat.size > 64 * 1024 * 1024) return null;
+            return command === "native_live_media_revision"
+              ? `${stat.size}:${stat.mtimeMs}:${stat.ino}`
+              : { base64: readFileSync(resolved).toString("base64") };
+          } catch {
+            return null;
+          }
         }
+        case "plugin:event|listen":
+          return 1;
+        case "plugin:event|unlisten":
+          return;
         default:
           throw new Error(`Unexpected native command: ${command}`);
       }
@@ -110,13 +118,30 @@ export async function installNativeContentBridge(page: Page): Promise<void> {
     const runtime = globalThis as unknown as {
       isTauri: boolean;
       nativeTestInvoke: (command: string, args: unknown) => Promise<unknown>;
-      __TAURI_INTERNALS__: {
-        invoke: (command: string, args: unknown) => Promise<unknown>;
-      };
+      __TAURI_INTERNALS__: Record<string, unknown>;
     };
     runtime.isTauri = true;
+    Object.defineProperty(globalThis, "__TAURI_EVENT_PLUGIN_INTERNALS__", {
+      value: { unregisterListener: () => {} },
+    });
+    let id = 0;
     runtime.__TAURI_INTERNALS__ = {
-      invoke: (command, args) => runtime.nativeTestInvoke(command, args),
+      metadata: {
+        currentWindow: { label: "main" },
+        currentWebview: { label: "main" },
+      },
+      transformCallback: () => ++id,
+      unregisterCallback: () => {},
+      invoke: async (command: string, args: unknown) => {
+        const value = await runtime.nativeTestInvoke(command, args);
+        if (value && typeof value === "object" && "text" in value)
+          return new TextEncoder().encode(String(value.text)).buffer;
+        if (value && typeof value === "object" && "base64" in value)
+          return Uint8Array.from(atob(String(value.base64)), (c) =>
+            c.charCodeAt(0),
+          ).buffer;
+        return value;
+      },
     };
   });
 }

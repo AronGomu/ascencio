@@ -1,0 +1,1 @@
+{"schemaVersion":1,"sources":{"/config":{"file":"config.json","pointer":""},"/decks/0":{"file":"decks/freeplay-opponent.json","pointer":""},"/decks/1":{"file":"decks/freeplay-player.json","pointer":""},"/limits":{"file":"rules.json","pointer":"/quantityByCode"},"/opponents/0":{"file":"opponents/freeplay-opponent.json","pointer":""}}}

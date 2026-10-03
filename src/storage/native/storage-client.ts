@@ -1,5 +1,5 @@
 import { createModuleCatalogQueries } from "../modules/catalog-queries.ts";
-import { invoke } from "@tauri-apps/api/core";
+import { invokeNative as invoke } from "./invoke.ts";
 import type {
   ContentQuery,
   LocalStorageClient,

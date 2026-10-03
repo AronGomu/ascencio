@@ -1,0 +1,63 @@
+
+> ascencio@0.1.0 check:headless
+> npm run format:check && npm run lint && npm run typecheck && npm run test:legacy && npm run test:unit && npm run test:integration && npm run vendor:verify && npm run assets:verify && npm run snapshot:verify
+
+
+> ascencio@0.1.0 format:check
+> prettier --check "src/**/*.{ts,svelte,css}" "tests/**/*.{ts,svelte}" "scripts/**/*.ts" "e2e/**/*.ts" "*.html" "*.{js,json,ts}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ascencio@0.1.0 lint
+> eslint .
+
+
+> ascencio@0.1.0 typecheck
+> tsc --noEmit && svelte-check --tsconfig ./tsconfig.json --config ./vite.config.ts
+
+Loading svelte-check in workspace: /home/aron/Projects/ascencio
+Getting Svelte diagnostics...
+
+/home/aron/Projects/ascencio/src/story/shop/ShopSellScreen.svelte:241:5
+Warn: Also define the standard property 'line-clamp' for compatibility (css)
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+/home/aron/Projects/ascencio/tests/fixtures/BattleFacadeProbe.svelte:9:14
+Warn: Component has unused export property 'runtimeSource'. If it is for external reference only, please consider using `export const runtimeSource`
+https://svelte.dev/e/export_let_unused (svelte)
+
+  export let runtimeSource: BattleRuntimeSource;
+  export let presentation: BattlePresentationInput;
+
+/home/aron/Projects/ascencio/tests/fixtures/BattleFacadeProbe.svelte:10:14
+Warn: Component has unused export property 'presentation'. If it is for external reference only, please consider using `export const presentation`
+https://svelte.dev/e/export_let_unused (svelte)
+  export let runtimeSource: BattleRuntimeSource;
+  export let presentation: BattlePresentationInput;
+  export let ruleset: PinnedDeckRuleset;
+
+/home/aron/Projects/ascencio/tests/fixtures/DeckEditorProbe.svelte:4:14
+Warn: Component has unused export property 'catalogInput'. If it is for external reference only, please consider using `export const catalogInput`
+https://svelte.dev/e/export_let_unused (svelte)
+
+  export let catalogInput: DeckEditorDomainProps["catalogInput"];
+  export let context: DeckEditorDomainProps["context"];
+
+/home/aron/Projects/ascencio/tests/component/deck-select/deck-tile.test.ts:321:5
+Error: Type 'Mock<() => Promise<{ readonly url: string; subscribe(listener: () => void): () => void; release: Mock<Procedure>; }>>' is not assignable to type 'AcquireDeckImage<string> | null | undefined'.
+  Type 'Mock<() => Promise<{ readonly url: string; subscribe(listener: () => void): () => void; release: Mock<Procedure>; }>>' is not assignable to type 'AcquireDeckImage<string>'.
+    Type 'Promise<{ readonly url: string; subscribe(listener: () => void): () => void; release: Mock<Procedure>; }>' is not assignable to type 'Promise<DeckImageLease | null>'.
+      Type '{ readonly url: string; subscribe(listener: () => void): () => void; release: Mock<Procedure>; }' is not assignable to type 'DeckImageLease'.
+        Types of property 'subscribe' are incompatible.
+          Type '(listener: () => void) => () => void' is not assignable to type '(listener: (url: string) => void) => () => void'.
+            Types of parameters 'listener' and 'listener' are incompatible.
+              Target signature provides too few arguments. Expected 1 or more, but got 0. 
+    tile: tile({ coverImageUrl: "/runtime/images-cropped/stale.jpg" }),
+    acquireCover,
+  });
+
+====================================
+svelte-check found 1 error and 4 warnings in 4 files

@@ -1,9 +1,11 @@
 import type { FactValue } from "../../modules/index.ts";
 // src/story/saves/generation-contracts.ts; public through src/story/saves/index.ts
 import type { StoryState } from "../model/story-state.ts";
+import type { ContentComposition } from "../../storage/index.ts";
 export type StorySlotKey =
   `manual:${1 | 2 | 3}` | "autosave" | "checkpoint:pre-duel";
 export interface StoryBinding {
+  readonly contentComposition?: ContentComposition;
   readonly chapterId: string;
   readonly contentId: string;
   readonly facts?: Readonly<Record<string, FactValue>>;
@@ -27,6 +29,7 @@ export type StorySaveReadResult =
       readonly kind: "incompatible";
       readonly slot: StorySlotKey;
       readonly found: number;
+      readonly reason?: "content-composition";
     }
   | {
       readonly kind: "corrupt";

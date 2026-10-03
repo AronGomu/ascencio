@@ -1,0 +1,7 @@
+{
+  "id": "freeplay-opponent",
+  "name": "Free Play Opponent",
+  "line": "Ready to duel.",
+  "deckId": "freeplay-opponent",
+  "policyId": "basic"
+}

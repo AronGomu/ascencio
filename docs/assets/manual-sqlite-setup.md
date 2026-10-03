@@ -7,25 +7,25 @@
 ## Local setup
 
 1. L1. Install Node.js 24+ dependencies from lockfile: `npm ci`.
-2. L2. Inspect supported producer/verification syntax: `npm run content:export -- --help`; `npm run content:verify -- --help`.
-3. L3. Inspect package-root move syntax: `npm run assets:restructure -- --help`.
+2. L2. Inspect supported producer/verification syntax: `npm run legacy:content:export-sqlite -- --help`; `npm run legacy:content:verify-sqlite -- --help`.
+3. L3. Inspect package-root move syntax: `npm run legacy:assets:copy-to-package-roots -- --help`.
 4. L4. Keep tracked duel-core and Free Play inputs under `content/duel-core/` and `content/freeplay/`; keep acquired card-library and chapter inputs under `assets/content/<package-id>/`; keep app icon/link metadata under `assets/app/`; never move frozen `vendor/ocgcore-wasm/0.1.2/`.
-5. L5. Build app independently with `npm run build`; this must not acquire or package content.
+5. L5. Build app independently with `npm run frontend:build`; this must not acquire or package content.
 
 Do not run export/acquisition solely to inspect syntax. Export writes immutable output and requires deliberate version/source inputs.
 
 ## Current commands
 
 ```sh
-npm run content:export -- --spec content/packages.json
-npm run content:verify -- --file generated/content-packages/duel-core-1.0.0.sqlite
-npm run assets:restructure -- --plan
-npm run assets:restructure -- --apply generated/content-packages/asset-move-plan.json
+npm run legacy:content:export-sqlite -- --spec content/packages.json
+npm run legacy:content:verify-sqlite -- --file generated/content-packages/duel-core-1.0.0.sqlite
+npm run legacy:assets:copy-to-package-roots -- --plan
+npm run legacy:assets:copy-to-package-roots -- --apply generated/content-packages/asset-move-plan.json
 ```
 
-`content:export` validates full selected recipe/dependency/reference closure and emits directly named raw SQLite files plus `generated/content-packages/content-packages.zip`. The app accepts that single ZIP or one to sixty-four raw files. `content:verify` validates one raw file only; it does not infer active stack validity. Existing differing output under same package ID/version fails immutable identity conflict and must not be overwritten or described as upgrade.
+`legacy:content:export-sqlite` validates full selected recipe/dependency/reference closure and emits directly named raw SQLite files plus `generated/content-packages/content-packages.zip`. The app accepts that single ZIP or one to sixty-four raw files. `legacy:content:verify-sqlite` validates one raw file only; it does not infer active stack validity. Existing differing output under same package ID/version fails immutable identity conflict and must not be overwritten or described as upgrade.
 
-Retained `assets:migrate`, `assets:promote`, and `assets:profiles:sync` are pure local source scanners/copy/profile tools. They do not publish, host, upload, download player packages, or determine browser activation.
+Retained `legacy:assets:copy-migrate`, `legacy:assets:profile-promote`, and `legacy:assets:inventory` are pure local source scanners/copy/profile tools. They do not publish, host, upload, download player packages, or determine browser activation.
 
 ## Code-ready state
 

@@ -4,6 +4,8 @@
 > Date: 2026-09-30
 > Scope: mutable user records and backup/restore; content packages remain unchanged
 
+> Implemented amendment: [ADR-104](104_ADR_startup_memory_content_and_mod_overrides.md) accepts one startup user-data read, memory-authoritative state, an exclusive native writer without disk compare-and-swap rereads, and restore through a new startup/maintenance cycle. This is implemented in the cached native writer and indexed memory store. The remaining text records the superseded persistence baseline. ADR-103 already retires the browser adapter.
+
 The owner chose JSON files/localStorage to simplify user persistence. Mutable saves do not require a database or SQL queries.
 
 Native Tauri stores one `user-data.json` in its app-data directory. Browser builds store the same versioned JSON document under localStorage key `ascencio:user-data:v1`. The document contains decks, deck metadata/autosaves, Story records, preferences, and read history. Domain adapters continue using `UserDataStore`.

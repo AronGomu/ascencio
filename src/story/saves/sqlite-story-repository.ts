@@ -3,6 +3,7 @@ import type {
   StorageFailure,
   UserDataStore,
   UserRecord,
+  ContentComposition,
 } from "../../storage/index.ts";
 import { isStoryState } from "./story-save-contracts.ts";
 import { isStorySlotKey, storyChapterLabel } from "./story-save-contracts.ts";
@@ -19,6 +20,7 @@ import type { PersistedStoryEnvelope } from "./persisted-story-contracts.ts";
 
 export function createSqliteStoryRepository(
   store: UserDataStore,
+  composition?: ContentComposition,
 ): GenerationSaveRepository {
   return {
     async read(slot) {
@@ -30,7 +32,20 @@ export function createSqliteStoryRepository(
           slot,
           reason: result.error.code,
         };
-      return readRecord(slot, result.value);
+      const read = readRecord(slot, result.value);
+      if (
+        read.kind === "ready" &&
+        read.envelope.story.contentComposition &&
+        read.envelope.story.contentComposition.identity !==
+          composition?.identity
+      )
+        return {
+          kind: "incompatible",
+          slot,
+          found: 6,
+          reason: "content-composition",
+        };
+      return read;
     },
 
     write(slot, state, expectedRevision, story) {
@@ -39,6 +54,13 @@ export function createSqliteStoryRepository(
       try {
         stateSnapshot = structuredClone(state);
         storySnapshot = structuredClone(story);
+        if (
+          storySnapshot.contentComposition &&
+          storySnapshot.contentComposition.identity !== composition?.identity
+        )
+          return Promise.resolve({ kind: "failed", reason: "unknown" });
+        if (composition?.requiredMods.length)
+          storySnapshot = { ...storySnapshot, contentComposition: composition };
       } catch {
         return Promise.resolve({ kind: "failed", reason: "unknown" });
       }

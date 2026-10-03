@@ -1,6 +1,5 @@
 import { mount } from "svelte";
-import AppShell from "./shell/AppShell.svelte";
-import { isNativeApp, seedNativeContent } from "./shell/native/content.ts";
+import StartupRoot from "./shell/startup/StartupRoot.svelte";
 import "./styles/app.css";
 
 const target = document.querySelector<HTMLElement>("#app");
@@ -8,12 +7,7 @@ if (target === null) throw new Error("Application mount point is missing");
 
 async function start(target: HTMLElement): Promise<void> {
   try {
-    if (!isNativeApp()) throw new Error("Open this application through Tauri.");
-    target.textContent = "Checking installed content…";
-    await seedNativeContent();
-    target.dataset.appShell = "ready";
-    target.replaceChildren();
-    mount(AppShell, { target });
+    mount(StartupRoot, { target });
   } catch (error) {
     target.replaceChildren();
     const main = document.createElement("main");

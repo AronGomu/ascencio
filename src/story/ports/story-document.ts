@@ -1,3 +1,4 @@
+import { parseStoryEventChain } from "./story-event-chain.ts";
 import type { StoryChoiceId, StoryDocument } from "./story-release.ts";
 import {
   array,
@@ -24,6 +25,9 @@ export function parseStoryDocument(value: unknown): StoryDocument {
     "choices",
     "choiceResponses",
     "laterAcknowledgments",
+    ...(value && typeof value === "object" && "chain" in value
+      ? ["chain"]
+      : []),
   ]);
   const beats = array(r.beats, (value) => {
     const b = record(value, [
@@ -61,6 +65,15 @@ export function parseStoryDocument(value: unknown): StoryDocument {
   unique(selected, (c) => c.id);
   if (!beats.length) invalid();
   return freeze({
+    ...(r.chain === undefined
+      ? {}
+      : {
+          chain: parseStoryEventChain(
+            r.chain,
+            beats.map((b) => b.id),
+            selected.map((c) => c.id),
+          ),
+        }),
     schemaVersion: literal(r.schemaVersion, 1),
     contentId: text(r.contentId, 256),
     title: text(r.title),

@@ -223,6 +223,14 @@ export function isStoryState(
     typeof state.savedScreen !== "string" ||
     !screens.has(state.savedScreen) ||
     typeof state.progressExists !== "boolean" ||
+    !(
+      state.visitedBeatIds === undefined ||
+      (Array.isArray(state.visitedBeatIds) &&
+        state.visitedBeatIds.length <= 500 &&
+        state.visitedBeatIds.every(
+          (id) => typeof id === "string" && id.length > 0 && id.length <= 256,
+        ))
+    ) ||
     !Number.isSafeInteger(state.narrativeIndex) ||
     (state.narrativeIndex as number) < 0 ||
     (state.narrativeIndex as number) >= beatCount ||

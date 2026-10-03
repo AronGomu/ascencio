@@ -1,0 +1,12 @@
+
+> ascencio@0.1.0 content:compile:json
+> node scripts/readable-content.ts compile --help
+
+Usage: npm run content:convert:sqlite-to-json -- <verified.sqlite> <new-source-directory>
+       npm run content:compile:json -- <source-directory> <output-directory>
+
+> ascencio@0.1.0 content:convert:sqlite-to-json
+> node scripts/readable-content.ts convert --help
+
+Usage: npm run content:convert:sqlite-to-json -- <verified.sqlite> <new-source-directory>
+       npm run content:compile:json -- <source-directory> <output-directory>

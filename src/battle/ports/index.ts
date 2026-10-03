@@ -14,6 +14,7 @@ export type {
   BattlePresentationOpponent,
 } from "./battle-presentation-input.ts";
 export { validateFrozenBattleExecutable } from "./frozen-battle-executable.ts";
+export { prepareBattleRuntime } from "./prepare-battle-runtime.ts";
 export {
   defaultPersistedUiState,
   isPersistedUiState,

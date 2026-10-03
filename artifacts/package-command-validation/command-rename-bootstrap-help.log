@@ -1,0 +1,19 @@
+
+> ascencio@0.1.0 assets:bootstrap
+> node scripts/download-mvp-assets.ts --help
+
+Download and verify every external asset required by the MVP.
+
+Usage:
+  npm run assets:bootstrap -- [options]
+  download-mvp-assets.cmd [options]       Windows
+  ./download-mvp-assets.sh [options]      macOS/Linux
+
+Options:
+  --offline                  Regenerate from existing Git/image caches without network access
+  --force-images             Redownload images that are already cached
+  --concurrency <count>      Override simultaneous image workers (default: 18)
+  --requests-per-second <n>  Override image request rate, maximum 20 (default: 18)
+  -h, --help                 Show this help
+
+The command is resumable. Existing valid JPEGs are verified and skipped.

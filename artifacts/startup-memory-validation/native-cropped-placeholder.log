@@ -1,0 +1,2 @@
+{"run": 0, "condition": "warm startup; 32 enabled mods, 39 effect cards and one deck override", "readyWallMs": 3031.5780589990027, "memoryAtReady": {"rssBytes": 1918308352, "pssBytes": 1342242816}, "peakProcessFamilyMemory": {"rssBytes": 2178924544, "pssBytes": 1612011520}, "samples": 88, "exitCode": 0}
+acceptance: passed None

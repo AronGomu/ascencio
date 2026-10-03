@@ -4,6 +4,8 @@
 
 A failed duel must leave enough evidence to reproduce it.
 
+Startup/content I/O measurement is covered by [startup I/O evidence](startup-io-evidence.md). The current package gate records `baseline-ready`; complete ADR-104 preload and release/device timing remain pending.
+
 ## Run metadata
 
 Record application/build/browser version, preset duel ID, seed, snapshot ID, engine/catalog/script/string/image revisions, and a bounded main-thread image-cache hit/miss/failure summary.

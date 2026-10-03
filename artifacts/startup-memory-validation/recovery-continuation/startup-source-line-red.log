@@ -1,0 +1,31 @@
+2:37:50 PM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+ ❯ tests/component/shell/StartupRoot.test.ts (3 tests | 1 failed) 114ms
+   × shows the available Lua line without inventing a column 39ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > shows the available Lua line without inventing a column
+AssertionError: expected 'fixture: broken.lua:2:1' to be 'fixture: broken.lua:2' // Object.is equality
+
+Expected: "fixture: broken.lua:2"
+Received: "fixture: broken.lua:2:1"
+
+ ❯ tests/component/shell/StartupRoot.test.ts:67:5
+     65|     view.container.querySelector('[data-cy="startup-diagnostic-source-…
+     66|       ?.textContent,
+     67|   ).toBe("fixture: broken.lua:2");
+       |     ^
+     68| });
+     69| it("reports source-located failure before content admission and opens …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  14:37:50
+   Duration  919ms (transform 345ms, setup 307ms, import 129ms, tests 114ms, environment 297ms)
+

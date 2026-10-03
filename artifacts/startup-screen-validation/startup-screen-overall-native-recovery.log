@@ -1,0 +1,6 @@
+invalid-user: passed; exit 0; user marker true
+invalid-base: passed; exit 0; user marker true
+invalid-mod-json: passed; exit 0; user marker true
+invalid-mod-lua: passed; exit 0; user marker true
+missing-mod-root: passed; exit 0; user marker true
+maintenance: passed; exit 0; user marker true

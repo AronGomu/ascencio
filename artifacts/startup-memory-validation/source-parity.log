@@ -1,0 +1,5 @@
+
+> ascencio@0.1.0 content:parity
+> node scripts/verify-readable-parity.ts
+
+Parity passed: 207 queries; 14794 cards; 13549 scripts. Repeat compilation produced identical bytes.

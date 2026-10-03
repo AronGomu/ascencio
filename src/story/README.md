@@ -7,11 +7,11 @@ a production domain of the shell, not a separate entry document.
 ## Run
 
 ```bash
-npm run dev
+npm run frontend:dev
 ```
 
 Open the app and select **Visual novel** from the home hub, or go straight to
-`#/story`. Production-like review uses `npm run build` then `npm run preview`
+`#/story`. Production-like review uses `npm run frontend:build` then `npm run frontend:preview`
 and the same `#/story` route.
 
 ## Boundaries

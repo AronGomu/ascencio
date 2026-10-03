@@ -63,10 +63,10 @@
   <div class="flow">
     <div class="box"><h4>1 · Source</h4>
       <p><b>BabelCDB</b> + CardScripts + Ignis strings, pinned and hash-verified</p>
-      <p><code>npm run assets:sync</code> → <code>generated/assets/current/</code></p></div>
+      <p><code>npm run assets:upstream:sync</code> → <code>generated/assets/current/</code></p></div>
     <div class="box"><h4>2 · Snapshot</h4>
       <p><b>manifest.json</b> declares 451 files with bytes + sha256</p>
-      <p><code>npm run snapshot:verify</code></p></div>
+      <p><code>npm run content:source-manifest:verify</code></p></div>
     <div class="box"><h4>3 · Package</h4>
       <p><b>copySnapshotAssets</b> copies <i>every declared file</i> into <code>dist/runtime/assets/current/</code></p>
       <p class="now">was: bundled-deck closure only</p></div>
@@ -116,7 +116,7 @@
     <li><b>The engine stays authoritative.</b> Nothing here decides legality; the Worker still loads the card data and
     scripts it needs and still refuses what it cannot run.</li>
     <li><b>The snapshot stays one verified unit.</b> Files are copied because the manifest declares them, and
-    <code>build:verify</code> re-checks byte length and digest for every one.</li>
+    <code>frontend:verify</code> re-checks byte length and digest for every one.</li>
     <li><b>Art is decoration.</b> A missing image is a placeholder, never a validation error and never a reason to
     withhold a deck.</li>
   </ul>

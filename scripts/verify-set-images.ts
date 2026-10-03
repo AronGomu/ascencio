@@ -14,7 +14,7 @@ import { verifySetImageManifest } from "./lib/set-images.ts";
 
 /* ADR-052. Re-hashes the acquired shop set art against the manifest
    `scripts/download-set-images.ts` wrote. Reads only the local archive, so it
-   is the offline half of the pipeline and runs inside `npm run assets:verify`. */
+   is the offline half of the pipeline and runs inside `npm run assets:verify-all`. */
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
@@ -48,7 +48,7 @@ failures.push(...verification.failures);
 
 /* Audit F16b. The manifest above was written by the downloader from these same
    bytes, so it cannot tell art refreshed upstream from art substituted there.
-   The tracked lock can: it is checked in, and only `npm run assets:lock`
+   The tracked lock can: it is checked in, and only `npm run assets:images:pin`
    rewrites it. */
 const lock = parseImageContentLock(
   JSON.parse(
@@ -80,7 +80,7 @@ async function readManifest(manifestPath: string): Promise<string> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     throw new Error(
-      `Set image manifest is missing: ${path.relative(projectRoot, manifestPath).replaceAll(path.sep, "/")}. Run \`npm run assets:sets\`.`,
+      `Set image manifest is missing: ${path.relative(projectRoot, manifestPath).replaceAll(path.sep, "/")}. Run \`npm run assets:sets:download-images\`.`,
     );
   }
 }

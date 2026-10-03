@@ -20,6 +20,7 @@
   let activeKey: string | null = null;
   let activeAbort: AbortController | null = null;
   let activeLease: CardImageLease | null = null;
+  let unsubscribeImage: (() => void) | undefined;
   let imageUrl: string | null = null;
 
   $: synchronize(imageSource, preview?.key ?? null, code);
@@ -30,6 +31,8 @@
   function release(): void {
     activeAbort?.abort();
     activeAbort = null;
+    unsubscribeImage?.();
+    unsubscribeImage = undefined;
     activeLease?.release();
     activeLease = null;
     imageUrl = null;
@@ -59,7 +62,10 @@
           return;
         }
         activeLease = lease;
-        imageUrl = lease?.url ?? null;
+        imageUrl = lease?.url || null;
+        unsubscribeImage = lease?.subscribe?.((url) => {
+          imageUrl = url || null;
+        });
       },
       (error: unknown) => {
         if (!controller.signal.aborted)

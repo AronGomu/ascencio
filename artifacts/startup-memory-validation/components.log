@@ -1,0 +1,20 @@
+
+> ascencio@0.1.0 test:component
+> vitest run tests/component
+
+1:48:10 PM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+1:48:14 PM [vite-plugin-svelte] tests/fixtures/BattleFacadeProbe.svelte:9:13 Component has unused export property 'runtimeSource'. If it is for external reference only, please consider using `export const runtimeSource`
+https://svelte.dev/e/export_let_unused
+1:48:14 PM [vite-plugin-svelte] tests/fixtures/BattleFacadeProbe.svelte:10:13 Component has unused export property 'presentation'. If it is for external reference only, please consider using `export const presentation`
+https://svelte.dev/e/export_let_unused
+1:48:14 PM [vite-plugin-svelte] tests/fixtures/DeckEditorProbe.svelte:4:13 Component has unused export property 'catalogInput'. If it is for external reference only, please consider using `export const catalogInput`
+https://svelte.dev/e/export_let_unused
+
+ Test Files  148 passed (148)
+      Tests  1412 passed (1412)
+   Start at  13:48:10
+   Duration  78.21s (transform 29.53s, setup 45.14s, import 44.52s, tests 307.24s, environment 96.03s)
+

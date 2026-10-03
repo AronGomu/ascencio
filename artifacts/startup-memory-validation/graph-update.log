@@ -1,0 +1,16 @@
+[graphify] fail-closed: kept node(s) from 1 source file(s) that left the scan corpus but still exist on disk (ignore rules or filters changed?). Run a full re-extraction to purge them if the exclusion is intentional.
+[graphify extract] incremental scan of /home/aron/Projects/ascencio
+[graphify extract] re-queuing 64 manifest-stamped code file(s) with no nodes in graph.json (prior failed extraction, #2543)
+[graphify extract] --code-only: skipping 213 non-code file(s) (152 docs, 0 papers, 61 images) — no LLM extraction
+[graphify extract] 70 code, 0 docs, 0 papers, 0 images changed; 1685 unchanged; 0 deleted
+[graphify extract] 30 file(s) not classified (no supported extension or shebang), skipped: .gitattributes, .gitignore, .graphifyignore, .prettierignore, acceptance.css, app.css (+24 more)
+[graphify extract] 1 file(s) skipped as potentially sensitive (rename or move if wrongly flagged): tokens.css
+[graphify extract] AST extraction on 70 code files...
+  warning: 1 file(s) had syntax errors and may be partially extracted: src/battle/app/acceptance/AcceptanceHarness.svelte (first error at line 1, 3 symbol(s) extracted)
+[graphify] Replaced 5 node(s) from re-extracted source file(s).
+[graphify] Pruned 1 node(s) from 1 deleted or excluded source file(s).
+[graphify] backed up semantic+curated graph (7 files) -> 2026-10-03/
+[graphify extract] wrote /home/aron/Projects/ascencio/graphify-out/graph.json: 14111 nodes, 39077 edges, 531 communities
+[graphify extract] wrote /home/aron/Projects/ascencio/graphify-out/.graphify_analysis.json
+[graphify extract] incremental summary: 1685 files cached/unchanged, 70 re-extracted, 0 deleted
+[graphify extract] next: run `graphify cluster-only /home/aron/Projects/ascencio` to generate GRAPH_REPORT.md and name communities

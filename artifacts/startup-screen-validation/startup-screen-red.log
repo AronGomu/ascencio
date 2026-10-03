@@ -1,0 +1,1761 @@
+1:08:51 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+ ❯ tests/component/shell/StartupRoot.test.ts (6 tests | 6 failed) 6042ms
+   × shows only the agreed error summary and four ordered actions before admission 1025ms
+   × keeps all Lua source locations and independent diagnostics in Copy Error 1003ms
+   × keeps the original error copyable when disk logging fails 1003ms
+   × restores bundled content only after ownership closes, then retries preparation 1003ms
+   × shows real step progress, resets between steps and never offers Cancel 1004ms
+   × Close flushes and releases state before requesting native exit 1003ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > shows only the agreed error summary and four ordered actions before admission
+TestingLibraryElementError: Unable to find an element with the text: Saved data could not be loaded. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [0m [0m
+    [36m<main[39m
+      [33maria-busy[39m=[32m"false"[39m
+      [33mclass[39m=[32m"startup svelte-keydrd"[39m
+      [33mdata-cy[39m=[32m"startup-surface"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"panel svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-panel"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-heading"[39m
+          [33mtabindex[39m=[32m"-1"[39m
+        [36m>[39m
+          [0mApplication could not start[0m
+        [36m</h1>[39m
+        [0m [0m
+        [36m<p[39m
+          [33maria-live[39m=[32m"polite"[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-status"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [0m1 startup error[0m
+        [36m</p>[39m
+        [0m [0m
+        [36m<ol[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+          [36m>[39m
+            [36m<strong[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+            [36m>[39m
+              [0mUSER_DATA_INVALID[0m
+            [36m</strong>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+            [36m>[39m
+              [0mUSER_DATA_INVALID: user-data.json: expected value at line 2 column 4[0m
+            [36m</p>[39m
+            [0m [0m
+            [36m<pre[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+            [36m>[39m
+              [0muser-data.json:2:4[0m
+            [36m</pre>[39m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+            [36m>[39m
+              [0mKeep the current file. While the app is closed, repair user-data.json or restore a known valid copy, then reopen.[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [0m[0m
+        [36m</ol>[39m
+        [0m [0m
+        [0m [0m
+        [36m<p[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-log-path"[39m
+        [36m>[39m
+          [0mLog: /fixture/log.jsonl[0m
+        [36m</p>[39m
+        [0m [0m
+        [0m [0m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-actions"[39m
+        [36m>[39m
+          [0m [0m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-retry"[39m
+          [36m>[39m
+            [0mRetry[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log"[39m
+          [36m>[39m
+            [0mOpen log[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+          [36m>[39m
+            [0mOpen log folder[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-details"[39m
+          [36m>[39m
+            [0mCopy details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+          [36m>[39m
+            [0mCopy log path[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-export-details"[39m
+          [36m>[39m
+            [0mExport details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-quit"[39m
+          [36m>[39m
+            [0mQuit[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [0m [0m
+        [0m [0m
+      [36m</section>[39m
+    [36m</main>[39m
+    [0m[0m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mApplication could not start[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m1 startup error[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<ol[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+          [36m>[39m
+            [36m<li[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+            [36m>[39m
+              [36m<strong[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+              [36m>[39m
+                [0mUSER_DATA_INVALID[0m
+              [36m</strong>[39m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+              [36m>[39m
+                [0mUSER_DATA_INVALID: user-data.json: expected value at line 2 column 4[0m
+              [36m</p>[39m
+              [0m [0m
+              [36m<pre[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+              [36m>[39m
+                [0muser-data.json:2:4[0m
+              [36m</pre>[39m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+              [36m>[39m
+                [0mKeep the current file. While the app is closed, repair user-data.json or restore a known valid copy, then reopen.[0m
+              [36m</p>[39m
+            [36m</li>[39m
+            [0m[0m
+          [36m</ol>[39m
+          [0m [0m
+          [0m [0m
+          [36m<p[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-log-path"[39m
+          [36m>[39m
+            [0mLog: /fixture/log.jsonl[0m
+          [36m</p>[39m
+          [0m [0m
+          [0m [0m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-actions"[39m
+          [36m>[39m
+            [0m [0m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-retry"[39m
+            [36m>[39m
+              [0mRetry[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log"[39m
+            [36m>[39m
+              [0mOpen log[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+            [36m>[39m
+              [0mOpen log folder[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-details"[39m
+            [36m>[39m
+              [0mCopy details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+            [36m>[39m
+              [0mCopy log path[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-export-details"[39m
+            [36m>[39m
+              [0mExport details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-quit"[39m
+            [36m>[39m
+              [0mQuit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [0m [0m
+          [0m [0m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Module.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/component/shell/StartupRoot.test.ts:30:9
+     28| it("shows only the agreed error summary and four ordered actions befor…
+     29|   const view = render(StartupRoot);
+     30|   await waitFor(() => expect(view.getByText("Saved data could not be l…
+       |         ^
+     31|   expect(view.getByRole("heading", { level: 1 }).textContent).toBe("Ap…
+     32|   expect(view.getByRole("heading", { level: 2 }).textContent).toBe("Sa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > keeps all Lua source locations and independent diagnostics in Copy Error
+TestingLibraryElementError: Unable to find an element with the text: Mod could not be loaded. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [0m [0m
+    [36m<main[39m
+      [33maria-busy[39m=[32m"false"[39m
+      [33mclass[39m=[32m"startup svelte-keydrd"[39m
+      [33mdata-cy[39m=[32m"startup-surface"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"panel svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-panel"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-heading"[39m
+          [33mtabindex[39m=[32m"-1"[39m
+        [36m>[39m
+          [0mApplication could not start[0m
+        [36m</h1>[39m
+        [0m [0m
+        [36m<p[39m
+          [33maria-live[39m=[32m"polite"[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-status"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [0m2 startup errors[0m
+        [36m</p>[39m
+        [0m [0m
+        [36m<ol[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+          [36m>[39m
+            [36m<strong[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+            [36m>[39m
+              [0mMOD_LUA_SYNTAX[0m
+            [36m</strong>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+            [36m>[39m
+              [0mInvalid Lua[0m
+            [36m</p>[39m
+            [0m [0m
+            [36m<pre[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+            [36m>[39m
+              [0mfixture: broken.lua:2[0m
+            [36m</pre>[39m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+            [36m>[39m
+              [0mCorrect Lua[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostic-1"[39m
+          [36m>[39m
+            [36m<strong[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-code-1"[39m
+            [36m>[39m
+              [0mMOD_JSON_SYNTAX[0m
+            [36m</strong>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-message-1"[39m
+            [36m>[39m
+              [0mInvalid JSON[0m
+            [36m</p>[39m
+            [0m [0m
+            [36m<pre[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-source-1"[39m
+            [36m>[39m
+              [0mmod.json:3:5[0m
+            [36m</pre>[39m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-remedy-1"[39m
+            [36m>[39m
+              [0mCorrect JSON[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [0m[0m
+        [36m</ol>[39m
+        [0m [0m
+        [0m [0m
+        [36m<p[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-log-path"[39m
+        [36m>[39m
+          [0mLog: /fixture/log.jsonl[0m
+        [36m</p>[39m
+        [0m [0m
+        [0m [0m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-actions"[39m
+        [36m>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-disable-mods"[39m
+          [36m>[39m
+            [0mDisable mods and retry[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-retry"[39m
+          [36m>[39m
+            [0mRetry[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log"[39m
+          [36m>[39m
+            [0mOpen log[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+          [36m>[39m
+            [0mOpen log folder[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-details"[39m
+          [36m>[39m
+            [0mCopy details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+          [36m>[39m
+            [0mCopy log path[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-export-details"[39m
+          [36m>[39m
+            [0mExport details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-quit"[39m
+          [36m>[39m
+            [0mQuit[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [0m [0m
+        [0m [0m
+      [36m</section>[39m
+    [36m</main>[39m
+    [0m[0m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mApplication could not start[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m2 startup errors[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<ol[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+          [36m>[39m
+            [36m<li[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+            [36m>[39m
+              [36m<strong[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+              [36m>[39m
+                [0mMOD_LUA_SYNTAX[0m
+              [36m</strong>[39m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+              [36m>[39m
+                [0mInvalid Lua[0m
+              [36m</p>[39m
+              [0m [0m
+              [36m<pre[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+              [36m>[39m
+                [0mfixture: broken.lua:2[0m
+              [36m</pre>[39m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+              [36m>[39m
+                [0mCorrect Lua[0m
+              [36m</p>[39m
+            [36m</li>[39m
+            [36m<li[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-1"[39m
+            [36m>[39m
+              [36m<strong[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-code-1"[39m
+              [36m>[39m
+                [0mMOD_JSON_SYNTAX[0m
+              [36m</strong>[39m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-message-1"[39m
+              [36m>[39m
+                [0mInvalid JSON[0m
+              [36m</p>[39m
+              [0m [0m
+              [36m<pre[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-source-1"[39m
+              [36m>[39m
+                [0mmod.json:3:5[0m
+              [36m</pre>[39m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-remedy-1"[39m
+              [36m>[39m
+                [0mCorrect JSON[0m
+              [36m</p>[39m
+            [36m</li>[39m
+            [0m[0m
+          [36m</ol>[39m
+          [0m [0m
+          [0m [0m
+          [36m<p[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-log-path"[39m
+          [36m>[39m
+            [0mLog: /fixture/log.jsonl[0m
+          [36m</p>[39m
+          [0m [0m
+          [0m [0m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-actions"[39m
+          [36m>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-disable-mods"[39m
+            [36m>[39m
+              [0mDisable mods and retry[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-retry"[39m
+            [36m>[39m
+              [0mRetry[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log"[39m
+            [36m>[39m
+              [0mOpen log[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+            [36m>[39m
+              [0mOpen log folder[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-details"[39m
+            [36m>[39m
+              [0mCopy details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+            [36m>[39m
+              [0mCopy log path[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-export-details"[39m
+            [36m>[39m
+              [0mExport details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-quit"[39m
+            [36m>[39m
+              [0mQuit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [0m [0m
+          [0m [0m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Module.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/component/shell/StartupRoot.test.ts:45:9
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > keeps the original error copyable when disk logging fails
+TestingLibraryElementError: Unable to find an element with the text: Saved data could not be loaded. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [0m [0m
+    [36m<main[39m
+      [33maria-busy[39m=[32m"false"[39m
+      [33mclass[39m=[32m"startup svelte-keydrd"[39m
+      [33mdata-cy[39m=[32m"startup-surface"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"panel svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-panel"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-heading"[39m
+          [33mtabindex[39m=[32m"-1"[39m
+        [36m>[39m
+          [0mApplication could not start[0m
+        [36m</h1>[39m
+        [0m [0m
+        [36m<p[39m
+          [33maria-live[39m=[32m"polite"[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-status"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [0m1 startup error[0m
+        [36m</p>[39m
+        [0m [0m
+        [36m<ol[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+          [36m>[39m
+            [36m<strong[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+            [36m>[39m
+              [0mUSER_DATA_INVALID[0m
+            [36m</strong>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+            [36m>[39m
+              [0mUSER_DATA_INVALID: user-data.json: expected value at line 2 column 4[0m
+            [36m</p>[39m
+            [0m [0m
+            [36m<pre[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+            [36m>[39m
+              [0muser-data.json:2:4[0m
+            [36m</pre>[39m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+            [36m>[39m
+              [0mKeep the current file. While the app is closed, repair user-data.json or restore a known valid copy, then reopen.[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [0m[0m
+        [36m</ol>[39m
+        [0m [0m
+        [0m [0m
+        [0m [0m
+        [36m<p[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-log-failure"[39m
+        [36m>[39m
+          [0mThe log could not be written: Error: LOG_DENIED. Copy or export
+          details below.[0m
+        [36m</p>[39m
+        [0m [0m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-actions"[39m
+        [36m>[39m
+          [0m [0m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-retry"[39m
+          [36m>[39m
+            [0mRetry[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0mOpen log[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0mOpen log folder[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-details"[39m
+          [36m>[39m
+            [0mCopy details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0mCopy log path[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-export-details"[39m
+          [36m>[39m
+            [0mExport details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-quit"[39m
+          [36m>[39m
+            [0mQuit[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [0m [0m
+        [0m [0m
+      [36m</section>[39m
+    [36m</main>[39m
+    [0m[0m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mApplication could not start[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m1 startup error[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<ol[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+          [36m>[39m
+            [36m<li[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+            [36m>[39m
+              [36m<strong[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+              [36m>[39m
+                [0mUSER_DATA_INVALID[0m
+              [36m</strong>[39m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+              [36m>[39m
+                [0mUSER_DATA_INVALID: user-data.json: expected value at line 2 column 4[0m
+              [36m</p>[39m
+              [0m [0m
+              [36m<pre[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+              [36m>[39m
+                [0muser-data.json:2:4[0m
+              [36m</pre>[39m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+              [36m>[39m
+                [0mKeep the current file. While the app is closed, repair user-data.json or restore a known valid copy, then reopen.[0m
+              [36m</p>[39m
+            [36m</li>[39m
+            [0m[0m
+          [36m</ol>[39m
+          [0m [0m
+          [0m [0m
+          [0m [0m
+          [36m<p[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-log-failure"[39m
+          [36m>[39m
+            [0mThe log could not be written: Error: LOG_DENIED. Copy or export
+          details below.[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-actions"[39m
+          [36m>[39m
+            [0m [0m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-retry"[39m
+            [36m>[39m
+              [0mRetry[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [0mOpen log[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [0mOpen log folder[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-details"[39m
+            [36m>[39m
+              [0mCopy details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [0mCopy log path[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-export-details"[39m
+            [36m>[39m
+              [0mExport details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-quit"[39m
+            [36m>[39m
+              [0mQuit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [0m [0m
+          [0m [0m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Module.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/component/shell/StartupRoot.test.ts:57:9
+     55|   mocks.invoke.mockRejectedValue(new Error("LOG_DENIED"));
+     56|   const view = render(StartupRoot);
+     57|   await waitFor(() => expect(view.getByText("Saved data could not be l…
+       |         ^
+     58|   expect((view.getByRole("button", { name: "Open Log" }) as HTMLButton…
+     59|   await fireEvent.click(view.getByRole("button", { name: "Copy Error" …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > restores bundled content only after ownership closes, then retries preparation
+TestingLibraryElementError: Unable to find an element with the text: Game content verification failed. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [0m [0m
+    [36m<main[39m
+      [33maria-busy[39m=[32m"false"[39m
+      [33mclass[39m=[32m"startup svelte-keydrd"[39m
+      [33mdata-cy[39m=[32m"startup-surface"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"panel svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-panel"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-heading"[39m
+          [33mtabindex[39m=[32m"-1"[39m
+        [36m>[39m
+          [0mApplication could not start[0m
+        [36m</h1>[39m
+        [0m [0m
+        [36m<p[39m
+          [33maria-live[39m=[32m"polite"[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-status"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [0m1 startup error[0m
+        [36m</p>[39m
+        [0m [0m
+        [36m<ol[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+          [36m>[39m
+            [36m<strong[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+            [36m>[39m
+              [0mBASE_HASH_MISMATCH[0m
+            [36m</strong>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+            [36m>[39m
+              [0mBASE_HASH_MISMATCH: card-library/critical.json[0m
+            [36m</p>[39m
+            [0m [0m
+            [36m<pre[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+            [36m>[39m
+              [0mcard-library/critical.json[0m
+            [36m</pre>[39m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+            [36m>[39m
+              [0mRepair the named critical snapshot from the bundled trusted release, then retry. Edited authoring JSON is not activated in normal mode.[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [0m[0m
+        [36m</ol>[39m
+        [0m [0m
+        [0m [0m
+        [36m<p[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-log-path"[39m
+        [36m>[39m
+          [0mLog: /fixture/log.jsonl[0m
+        [36m</p>[39m
+        [0m [0m
+        [0m [0m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-repair-content"[39m
+          [36m>[39m
+            [0mRepair bundled critical content and retry[0m
+          [36m</button>[39m
+          [0m [0m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-retry"[39m
+          [36m>[39m
+            [0mRetry[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log"[39m
+          [36m>[39m
+            [0mOpen log[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+          [36m>[39m
+            [0mOpen log folder[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-details"[39m
+          [36m>[39m
+            [0mCopy details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+          [36m>[39m
+            [0mCopy log path[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-export-details"[39m
+          [36m>[39m
+            [0mExport details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-quit"[39m
+          [36m>[39m
+            [0mQuit[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [0m [0m
+        [0m [0m
+      [36m</section>[39m
+    [36m</main>[39m
+    [0m[0m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mApplication could not start[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m1 startup error[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<ol[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+          [36m>[39m
+            [36m<li[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+            [36m>[39m
+              [36m<strong[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+              [36m>[39m
+                [0mBASE_HASH_MISMATCH[0m
+              [36m</strong>[39m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+              [36m>[39m
+                [0mBASE_HASH_MISMATCH: card-library/critical.json[0m
+              [36m</p>[39m
+              [0m [0m
+              [36m<pre[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+              [36m>[39m
+                [0mcard-library/critical.json[0m
+              [36m</pre>[39m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+              [36m>[39m
+                [0mRepair the named critical snapshot from the bundled trusted release, then retry. Edited authoring JSON is not activated in normal mode.[0m
+              [36m</p>[39m
+            [36m</li>[39m
+            [0m[0m
+          [36m</ol>[39m
+          [0m [0m
+          [0m [0m
+          [36m<p[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-log-path"[39m
+          [36m>[39m
+            [0mLog: /fixture/log.jsonl[0m
+          [36m</p>[39m
+          [0m [0m
+          [0m [0m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-repair-content"[39m
+            [36m>[39m
+              [0mRepair bundled critical content and retry[0m
+            [36m</button>[39m
+            [0m [0m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-retry"[39m
+            [36m>[39m
+              [0mRetry[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log"[39m
+            [36m>[39m
+              [0mOpen log[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+            [36m>[39m
+              [0mOpen log folder[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-details"[39m
+            [36m>[39m
+              [0mCopy details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+            [36m>[39m
+              [0mCopy log path[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-export-details"[39m
+            [36m>[39m
+              [0mExport details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-quit"[39m
+            [36m>[39m
+              [0mQuit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [0m [0m
+          [0m [0m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Module.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/component/shell/StartupRoot.test.ts:67:9
+     65|   mocks.prepare.mockRejectedValueOnce("BASE_HASH_MISMATCH: card-librar…
+     66|   const view = render(StartupRoot);
+     67|   await waitFor(() => expect(view.getByText("Game content verification…
+       |         ^
+     68|   await fireEvent.click(view.getByRole("button", { name: "Restore" }));
+     69|   await waitFor(() => expect(mocks.prepare).toHaveBeenCalledTimes(2));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > shows real step progress, resets between steps and never offers Cancel
+TestingLibraryElementError: Unable to find role="progressbar"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [0m [0m
+    [36m<main[39m
+      [33maria-busy[39m=[32m"true"[39m
+      [33mclass[39m=[32m"startup svelte-keydrd"[39m
+      [33mdata-cy[39m=[32m"startup-surface"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"panel svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-panel"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-heading"[39m
+          [33mtabindex[39m=[32m"-1"[39m
+        [36m>[39m
+          [0mverification (3/6)…[0m
+        [36m</h1>[39m
+        [0m [0m
+        [36m<p[39m
+          [33maria-live[39m=[32m"polite"[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-status"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [0mPreparing your content and saves. Gameplay opens when preparation is complete.[0m
+        [36m</p>[39m
+        [0m [0m
+        [0m [0m
+        [0m [0m
+        [36m<p[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-log-path"[39m
+        [36m>[39m
+          [0mLog: /fixture/log.jsonl[0m
+        [36m</p>[39m
+        [0m [0m
+        [0m [0m
+        [0m [0m
+        [36m<button[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-cancel"[39m
+        [36m>[39m
+          [0mCancel startup[0m
+        [36m</button>[39m
+        [0m [0m
+      [36m</section>[39m
+    [36m</main>[39m
+    [0m[0m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"true"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mverification (3/6)…[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0mPreparing your content and saves. Gameplay opens when preparation is complete.[0m
+          [36m</p>[39m
+          [0m [0m
+          [0m [0m
+          [0m [0m
+          [36m<p[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-log-path"[39m
+          [36m>[39m
+            [0mLog: /fixture/log.jsonl[0m
+          [36m</p>[39m
+          [0m [0m
+          [0m [0m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-cancel"[39m
+          [36m>[39m
+            [0mCancel startup[0m
+          [36m</button>[39m
+          [0m [0m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Module.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/component/shell/StartupRoot.test.ts:82:9
+     80|   await waitFor(() => expect(mocks.prepare).toHaveBeenCalledOnce());
+     81|   report({ sessionId: "test", phase: "verification", completed: 3, tot…
+     82|   await waitFor(() => expect(view.getByRole("progressbar").getAttribut…
+       |         ^
+     83|   report({ sessionId: "test", phase: "verification", completed: 6, tot…
+     84|   await waitFor(() => expect(view.getByRole("progressbar").getAttribut…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > Close flushes and releases state before requesting native exit
+TestingLibraryElementError: Unable to find an element with the text: Saved data could not be loaded. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [0m [0m
+    [36m<main[39m
+      [33maria-busy[39m=[32m"false"[39m
+      [33mclass[39m=[32m"startup svelte-keydrd"[39m
+      [33mdata-cy[39m=[32m"startup-surface"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"panel svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-panel"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-heading"[39m
+          [33mtabindex[39m=[32m"-1"[39m
+        [36m>[39m
+          [0mApplication could not start[0m
+        [36m</h1>[39m
+        [0m [0m
+        [36m<p[39m
+          [33maria-live[39m=[32m"polite"[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-status"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [0m1 startup error[0m
+        [36m</p>[39m
+        [0m [0m
+        [36m<ol[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+          [36m>[39m
+            [36m<strong[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+            [36m>[39m
+              [0mUSER_DATA_INVALID[0m
+            [36m</strong>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+            [36m>[39m
+              [0mUSER_DATA_INVALID: user-data.json: expected value at line 2 column 4[0m
+            [36m</p>[39m
+            [0m [0m
+            [36m<pre[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+            [36m>[39m
+              [0muser-data.json:2:4[0m
+            [36m</pre>[39m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+            [36m>[39m
+              [0mKeep the current file. While the app is closed, repair user-data.json or restore a known valid copy, then reopen.[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [0m[0m
+        [36m</ol>[39m
+        [0m [0m
+        [0m [0m
+        [36m<p[39m
+          [33mclass[39m=[32m"svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-log-path"[39m
+        [36m>[39m
+          [0mLog: /fixture/log.jsonl[0m
+        [36m</p>[39m
+        [0m [0m
+        [0m [0m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-actions"[39m
+        [36m>[39m
+          [0m [0m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-retry"[39m
+          [36m>[39m
+            [0mRetry[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log"[39m
+          [36m>[39m
+            [0mOpen log[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+          [36m>[39m
+            [0mOpen log folder[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-details"[39m
+          [36m>[39m
+            [0mCopy details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+          [36m>[39m
+            [0mCopy log path[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-export-details"[39m
+          [36m>[39m
+            [0mExport details[0m
+          [36m</button>[39m
+          [0m [0m
+          [36m<button[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-quit"[39m
+          [36m>[39m
+            [0mQuit[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [0m [0m
+        [0m [0m
+      [36m</section>[39m
+    [36m</main>[39m
+    [0m[0m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mApplication could not start[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m1 startup error[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<ol[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-diagnostics"[39m
+          [36m>[39m
+            [36m<li[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-diagnostic-0"[39m
+            [36m>[39m
+              [36m<strong[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-code-0"[39m
+              [36m>[39m
+                [0mUSER_DATA_INVALID[0m
+              [36m</strong>[39m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-message-0"[39m
+              [36m>[39m
+                [0mUSER_DATA_INVALID: user-data.json: expected value at line 2 column 4[0m
+              [36m</p>[39m
+              [0m [0m
+              [36m<pre[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-source-0"[39m
+              [36m>[39m
+                [0muser-data.json:2:4[0m
+              [36m</pre>[39m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [0m [0m
+              [36m<p[39m
+                [33mclass[39m=[32m"svelte-keydrd"[39m
+                [33mdata-cy[39m=[32m"startup-diagnostic-remedy-0"[39m
+              [36m>[39m
+                [0mKeep the current file. While the app is closed, repair user-data.json or restore a known valid copy, then reopen.[0m
+              [36m</p>[39m
+            [36m</li>[39m
+            [0m[0m
+          [36m</ol>[39m
+          [0m [0m
+          [0m [0m
+          [36m<p[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-log-path"[39m
+          [36m>[39m
+            [0mLog: /fixture/log.jsonl[0m
+          [36m</p>[39m
+          [0m [0m
+          [0m [0m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-actions"[39m
+          [36m>[39m
+            [0m [0m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-retry"[39m
+            [36m>[39m
+              [0mRetry[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log"[39m
+            [36m>[39m
+              [0mOpen log[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-open-log-folder"[39m
+            [36m>[39m
+              [0mOpen log folder[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-details"[39m
+            [36m>[39m
+              [0mCopy details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-copy-log-path"[39m
+            [36m>[39m
+              [0mCopy log path[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-export-details"[39m
+            [36m>[39m
+              [0mExport details[0m
+            [36m</button>[39m
+            [0m [0m
+            [36m<button[39m
+              [33mclass[39m=[32m"svelte-keydrd"[39m
+              [33mdata-cy[39m=[32m"startup-quit"[39m
+            [36m>[39m
+              [0mQuit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [0m [0m
+          [0m [0m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Module.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ tests/component/shell/StartupRoot.test.ts:94:9
+     92| it("Close flushes and releases state before requesting native exit", a…
+     93|   const view = render(StartupRoot);
+     94|   await waitFor(() => expect(view.getByText("Saved data could not be l…
+       |         ^
+     95|   await fireEvent.click(view.getByRole("button", { name: "Close" }));
+     96|   await waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith("nativ…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  01:08:51
+   Duration  6.83s (transform 334ms, setup 291ms, import 132ms, tests 6.04s, environment 297ms)
+

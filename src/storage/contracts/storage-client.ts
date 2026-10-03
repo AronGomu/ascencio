@@ -10,6 +10,8 @@ import type { StoryDocument } from "../../story/ports/index.ts";
 import type { PackageId, PackageManifest, StorageResult } from "./package.ts";
 import type { GlobalSet } from "./global-set.ts";
 import type { UserDataStore } from "./user-data.ts";
+import type { ReadyRequirement } from "./startup.ts";
+import type { ContentComposition } from "../mods/mod-contracts.ts";
 
 export interface ActivePackage extends PackageManifest {
   readonly fileKey: string;
@@ -145,6 +147,10 @@ export interface QueryMap {
   } | null;
 }
 export interface ContentQueries {
+  mediaRevision?(
+    request: Extract<DirectContentQuery, { kind: "asset" | "set-image" }>,
+    signal: AbortSignal,
+  ): Promise<string | null>;
   query<Q extends ContentQuery>(
     request: Q,
     signal: AbortSignal,
@@ -156,6 +162,8 @@ export interface MediaWarning {
   readonly reason: "missing" | "corrupt" | "unreadable";
 }
 export interface LocalStorageClient {
+  readonly preparedRequirements?: readonly ReadyRequirement[];
+  readonly composition?: ContentComposition;
   readonly packages: PackageStore;
   readonly content: ContentQueries;
   readonly userData: UserDataStore;

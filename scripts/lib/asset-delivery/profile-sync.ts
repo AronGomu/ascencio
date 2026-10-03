@@ -14,7 +14,7 @@ export async function runProfileSync(
   return assetCli(operation, async (progress) => {
     const flags = parseFlags(args, ["--help", "--check"]);
     if (flags.has("--help")) {
-      progress("help: assets:profiles:sync [--check]; no profile edits");
+      progress("help: legacy:assets:inventory [--check]; no profile edits");
       return;
     }
     const release = flags.has("--check")

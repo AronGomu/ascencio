@@ -45,10 +45,10 @@ async function handEndpointMetrics(card: Locator) {
   });
 }
 
-test("seeded v2 zone settings hydrate visual state and missing state uses defaults", async ({
+test("resident display settings control the field independently of retired browser saves", async ({
   page,
 }) => {
-  await page.goto("?scenario=field-emz");
+  await page.goto("?scenario=field-emz&display=hidden");
   await page.evaluate(() =>
     localStorage.setItem(
       "ygo.ui.v2",
@@ -72,7 +72,7 @@ test("seeded v2 zone settings hydrate visual state and missing state uses defaul
     localStorage.removeItem("ygo.ui.v1");
     localStorage.removeItem("ygo.ui.v2");
   });
-  await page.reload();
+  await page.goto("?scenario=field-emz");
   await expect(board).toHaveAttribute("data-zone-outlines", "true");
   await expect(board).toHaveAttribute("data-zone-counts", "true");
   await expect(zone).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
@@ -118,7 +118,11 @@ for (const entry of VIEWPORT_MATRIX) {
     expect(board.y).toBeCloseTo(slot.y, 0);
     expect(board.width).toBeCloseTo(slot.width, 0);
     expect(board.height).toBeCloseTo(slot.height, 0);
-    expect(planeStyleHeight).toBeGreaterThan(board.height);
+    expect(planeStyleHeight).toBeCloseTo(board.height, 0);
+    await expect(page.locator('[data-cy="duel-field-board-plane"]')).toHaveCSS(
+      "transform",
+      "none",
+    );
     expect(Math.abs(board.y - plane.y)).toBeLessThanOrEqual(8);
     expect(content.x + content.width / 2).toBeCloseTo(
       plane.x + plane.width / 2,

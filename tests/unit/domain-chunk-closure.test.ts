@@ -16,9 +16,9 @@ const projectRoot = path.resolve(
   "../..",
 );
 const outputRoot = path.join(projectRoot, "generated/build/app");
-/* The built tree is the product of `npm run build`, which `check:headless` does
+/* The built tree is the product of `npm run frontend:build`, which `check:headless` does
    not run. The two cases that read it are skipped rather than failed when it is
-   absent; `build:verify` gates the same numbers on every real build. The
+   absent; `frontend:verify` gates the same numbers on every real build. The
    acceptance harness builds a second entry document in its own output tree, and
    its chunk split is not the shipped one, so that tree is skipped too. */
 const builtTreeExists =
@@ -196,7 +196,7 @@ describe("staticHtmlScriptClosure", () => {
    build: the main menu is eager, and a static *value* import of
    `src/story/index.ts` from anything eager makes the whole visual novel eager.
    Rollup then reports INEFFECTIVE_DYNAMIC_IMPORT, emits no `story-*.js` chunk
-   at all, and `npm run build:verify` refuses the build (measured: entry chunk
+   at all, and `npm run frontend:verify` refuses the build (measured: entry chunk
    32.49 kB → 131.31 kB). `import type` is erased, so it is not a value import
    and not a leak. */
 describe("the shell's static import of the story", () => {

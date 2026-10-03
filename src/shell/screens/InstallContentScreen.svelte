@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ModPreferences from "./ModPreferences.svelte";
   import { onMount } from "svelte";
   import { downloadUserData } from "../application/user-data-download.ts";
   import {
@@ -114,6 +115,8 @@
     {/if}
   {/if}
 
+  {#if manual !== null}<ModPreferences />{/if}
+
   {#if storageFailure?.code === "APP_ALREADY_OPEN" || view?.state.kind === "already-open"}
     <p role="alert" data-cy="content-already-open">
       Application is already open. Close the other instance, then retry here.
@@ -158,7 +161,7 @@
         <input
           type="file"
           multiple
-          accept=".zip,application/zip,.sqlite,application/vnd.sqlite3"
+          accept=".json,application/json"
           data-cy="content-import-files"
           aria-describedby="content-import-help"
           disabled={actionsBlocked}
@@ -166,7 +169,9 @@
         />
       </label>
       <p id="content-import-help" data-cy="content-import-help">
-        Choose one package ZIP, or up to four SQLite package files.
+        Choose critical JSON snapshots from the bundled trusted release. Use mod
+        import for authored additions and overrides. Restart preparation after
+        maintenance.
       </p>
       {#if view.state.kind === "importing"}
         <p role="status" data-cy="content-import-progress">

@@ -91,14 +91,14 @@ https://images.ygoprodeck.com/images/cards/<ID>.jpg
 https://images.ygoprodeck.com/images/cards_cropped/<ID>.jpg
 ```
 
-`npm run assets:images` downloads full-card JPEGs; `npm run assets:images:cropped` downloads text-free artwork crops into sibling resumable archives:
+`npm run assets:cards:download-full` downloads full-card JPEGs; `npm run assets:cards:download-cropped` downloads text-free artwork crops into sibling resumable archives:
 
 ```text
 assets/content/card-library/images/full/<ID>.jpg
 assets/content/card-library/images/cropped/<ID>.jpg
 ```
 
-For browser-build work that only needs bundled preset decks, `npm run assets:images:cropped:active` acquires their cropped art without downloading the complete catalog.
+For browser-build work that only needs bundled preset decks, `npm run assets:cards:download-cropped-reviewed-pool` acquires their cropped art without downloading the complete catalog.
 
 The downloader respects YGOPRODeck's documented 20-request/second ceiling, validates JPEG signatures, retries transient failures, skips valid existing files, and records unavailable IDs in `download-report.json`.
 
@@ -119,7 +119,7 @@ The images and generated data remain ignored by Git because committing approxima
 From the repository root, one command downloads, generates and verifies every external MVP asset in the required order:
 
 ```bash
-npm run assets:mvp
+npm run assets:bootstrap
 ```
 
 It is resumable: Git caches are reused and valid existing JPEGs are signature-checked and skipped. A failed network run can be continued by running the same command again. Cross-process locks reject overlapping acquisition runs, and `generated/mvp-assets-status.json` is only marked `ready` after both archives pass verification; consumers must not use a snapshot marked `in-progress` or `failed`.
@@ -141,27 +141,27 @@ No npm package installation is required for acquisition itself; the launchers us
 To regenerate and verify entirely from already-downloaded Git and image caches without network access:
 
 ```bash
-npm run assets:mvp -- --offline
+npm run assets:bootstrap -- --offline
 ```
 
 Useful image overrides:
 
 ```bash
-npm run assets:mvp -- --concurrency 8 --requests-per-second 12
-npm run assets:mvp -- --force-images
+npm run assets:bootstrap -- --concurrency 8 --requests-per-second 12
+npm run assets:bootstrap -- --force-images
 ```
 
 The lower-level commands remain available for diagnosis or partial maintenance:
 
 ```bash
-npm run assets:engine
-npm run assets:engine:verify
-npm run assets:sync
-npm run assets:verify
-npm run assets:images
-npm run assets:images:cropped
-npm run assets:images:cropped:active
-npm run assets:images:verify
+npm run assets:engine:acquire
+npm run assets:engine:verify-acquired
+npm run assets:upstream:sync
+npm run assets:verify-all
+npm run assets:cards:download-full
+npm run assets:cards:download-cropped
+npm run assets:cards:download-cropped-reviewed-pool
+npm run assets:cards:verify-full
 npm test
 npm run typecheck
 ```
@@ -197,9 +197,9 @@ Downloaded card-library and chapter source families remain ignored by Git. Duel-
 
 ## Integrity guarantees
 
-`npm run assets:engine:verify` checks the pinned package identity, every extracted file's size and SHA-256, required adapter files, and the WebAssembly magic header. Package acquisition also verifies npm's pinned SHA-512 integrity value before extraction.
+`npm run assets:engine:verify-acquired` checks the pinned package identity, every extracted file's size and SHA-256, required adapter files, and the WebAssembly magic header. Package acquisition also verifies npm's pinned SHA-512 integrity value before extraction.
 
-`npm run assets:verify` checks:
+`npm run assets:verify-all` checks:
 
 - every generated file's byte length and SHA-256;
 - the external `manifest.sha256` digest and rejection of unmanifested files;
@@ -212,19 +212,19 @@ Downloaded card-library and chapter source families remain ignored by Git. Duel-
 - image URL/card-ID consistency;
 - that image redistribution has not been marked approved accidentally.
 
-Every image check above re-hashes files against a manifest generated from those same files, so bytes substituted upstream would verify clean, and `generated/` is ignored by Git, so no reviewer diff would show them either. `image-content-lock.json` at the repository root closes that loop. It is the only image digest under version control and covers the shipped surface alone: the byte length and SHA-256 of every full card plus cropped illustration the preset decks use (120 each today), and every shop set image (50 today). `npm run build:verify` compares both packaged card-image forms against it and `npm run assets:sets:verify` compares the set archive; either fails on a difference — including art shipped without a pin.
+Every image check above re-hashes files against a manifest generated from those same files, so bytes substituted upstream would verify clean, and `generated/` is ignored by Git, so no reviewer diff would show them either. `image-content-lock.json` at the repository root closes that loop. It is the only image digest under version control and covers the shipped surface alone: the byte length and SHA-256 of every full card plus cropped illustration the preset decks use (120 each today), and every shop set image (50 today). `npm run frontend:verify` compares both packaged card-image forms against it and `npm run assets:sets:verify-images` compares the set archive; either fails on a difference — including art shipped without a pin.
 
 YGOPRODeck publishes no digest of its own, so the lock is seeded from the first fetch: it proves the bytes have not changed since they were pinned, not that they are genuine. Regenerating it after an intended upstream art refresh is a separate, explicit command, never a side effect of downloading or verifying, because a lock rewritten by the run it guards would prove nothing:
 
 ```bash
-npm run assets:lock
+npm run assets:images:pin
 ```
 
 Entries and keys are ordered by content alone, so the resulting diff shows the art whose bytes moved and nothing else.
 
 ## Retired delivery generations
 
-Hosted dev/player ZIP/object bundles are retired. [`asset-delivery-bundles.md`](asset-delivery-bundles.md) remains historical rationale only. Current output is immutable SQLite via `content:export`; app never consumes acquisition roots directly.
+Hosted dev/player ZIP/object bundles are retired. [`asset-delivery-bundles.md`](asset-delivery-bundles.md) remains historical rationale only. Current output is immutable SQLite via `legacy:content:export-sqlite`; app never consumes acquisition roots directly.
 
 ## First successful snapshot
 

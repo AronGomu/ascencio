@@ -76,8 +76,10 @@ describe("DeckTile", () => {
     expect(source).toMatch(/text-shadow:/);
   });
 
-  it("falls back to full card when cropped art is unavailable", async () => {
+  it("shows Image missing and keeps selection usable when cropped art fails", async () => {
+    const onpress = vi.fn();
     render(DeckTile, {
+      onpress,
       tile: tile({
         coverImageUrl: "/runtime/images-cropped/89631139.jpg",
       }),
@@ -86,9 +88,12 @@ describe("DeckTile", () => {
     expect(image.src).toContain("/runtime/images-cropped/89631139.jpg");
 
     await fireEvent.error(image);
-    expect((cy("deck-tile-art-k1") as HTMLImageElement).src).toContain(
-      "/runtime/images/89631139.jpg",
+    expect(find("deck-tile-art-k1")).toBeNull();
+    expect(cy("deck-tile-art-placeholder-k1").textContent).toBe(
+      "Image missing",
     );
+    await userEvent.setup().click(cy("deck-tile-press-k1"));
+    expect(onpress).toHaveBeenCalledOnce();
   });
 
   it("press fires onpress, dblclick fires ondblpress", async () => {
@@ -293,4 +298,37 @@ it("releases stale native covers after deck changes and mounted covers on unmoun
   await waitFor(() => expect(staleRelease).toHaveBeenCalledOnce());
   view.unmount();
   expect(currentRelease).toHaveBeenCalledOnce();
+});
+
+it("shows the placeholder for a missing live crop and recovers when repaired", async () => {
+  let url = "";
+  let changed: ((url: string) => void) | undefined;
+  const release = vi.fn();
+  const acquireCover = vi.fn(async () => ({
+    get url() {
+      return url;
+    },
+    subscribe(listener: (url: string) => void) {
+      changed = listener;
+      return () => {
+        changed = undefined;
+      };
+    },
+    release,
+  }));
+  const view = render(DeckTile, {
+    tile: tile({ coverImageUrl: "/runtime/images-cropped/stale.jpg" }),
+    acquireCover,
+  });
+  await waitFor(() => expect(acquireCover).toHaveBeenCalledOnce());
+  await waitFor(() => expect(find("deck-tile-art-k1")).toBeNull());
+  expect(cy("deck-tile-art-placeholder-k1").textContent).toBe("Image missing");
+  expect((cy("deck-tile-press-k1") as HTMLButtonElement).disabled).toBe(false);
+  url = "blob:repaired-crop";
+  changed?.(url);
+  await waitFor(() =>
+    expect(cy("deck-tile-art-k1").getAttribute("src")).toBe(url),
+  );
+  view.unmount();
+  expect(release).toHaveBeenCalledOnce();
 });

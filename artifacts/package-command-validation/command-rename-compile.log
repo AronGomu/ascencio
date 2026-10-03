@@ -1,0 +1,5 @@
+
+> ascencio@0.1.0 content:compile:json
+> node scripts/readable-content.ts compile .tmp/command-rename-converted .tmp/command-rename-converted
+
+freeplay: 1541 bytes; sha256 ebc1c865314210708fa6029ec70f97be59b3aabd01fd198cb793bf6d2e238a67

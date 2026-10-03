@@ -51,6 +51,7 @@ export interface OpponentView {
 /** Image ownership crosses the presentation boundary without a storage dependency. */
 export interface DeckImageLease {
   readonly url: string;
+  subscribe?(listener: (url: string) => void): () => void;
   release(): void;
 }
 export type AcquireDeckImage<Key> = (

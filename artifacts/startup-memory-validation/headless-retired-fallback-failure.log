@@ -1,0 +1,211 @@
+
+> ascencio@0.1.0 check:headless
+> npm run format:check && npm run lint && npm run typecheck && npm run test:legacy && npm run test:unit && npm run test:integration && npm run vendor:verify && npm run assets:verify && npm run snapshot:verify
+
+
+> ascencio@0.1.0 format:check
+> prettier --check "src/**/*.{ts,svelte,css}" "tests/**/*.{ts,svelte}" "scripts/**/*.ts" "e2e/**/*.ts" "*.html" "*.{js,json,ts}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ascencio@0.1.0 lint
+> eslint .
+
+
+> ascencio@0.1.0 typecheck
+> tsc --noEmit && svelte-check --tsconfig ./tsconfig.json --config ./vite.config.ts
+
+Loading svelte-check in workspace: /home/aron/Projects/ascencio
+Getting Svelte diagnostics...
+
+/home/aron/Projects/ascencio/src/story/shop/ShopSellScreen.svelte:241:5
+Warn: Also define the standard property 'line-clamp' for compatibility (css)
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+/home/aron/Projects/ascencio/tests/fixtures/BattleFacadeProbe.svelte:9:14
+Warn: Component has unused export property 'runtimeSource'. If it is for external reference only, please consider using `export const runtimeSource`
+https://svelte.dev/e/export_let_unused (svelte)
+
+  export let runtimeSource: BattleRuntimeSource;
+  export let presentation: BattlePresentationInput;
+
+/home/aron/Projects/ascencio/tests/fixtures/BattleFacadeProbe.svelte:10:14
+Warn: Component has unused export property 'presentation'. If it is for external reference only, please consider using `export const presentation`
+https://svelte.dev/e/export_let_unused (svelte)
+  export let runtimeSource: BattleRuntimeSource;
+  export let presentation: BattlePresentationInput;
+  export let ruleset: PinnedDeckRuleset;
+
+/home/aron/Projects/ascencio/tests/fixtures/DeckEditorProbe.svelte:4:14
+Warn: Component has unused export property 'catalogInput'. If it is for external reference only, please consider using `export const catalogInput`
+https://svelte.dev/e/export_let_unused (svelte)
+
+  export let catalogInput: DeckEditorDomainProps["catalogInput"];
+  export let context: DeckEditorDomainProps["context"];
+
+====================================
+svelte-check found 0 errors and 4 warnings in 3 files
+
+> ascencio@0.1.0 test:legacy
+> node --test tests/*.test.ts
+
+✔ canonical metadata smoke: compact UTF-8 plus LF (0.953633ms)
+✔ canonical metadata rejects ambiguity; code-point sorted keys, not insertion or UTF-16 order (1.25248ms)
+✔ cross-platform managed paths reject traversal, devices, forbidden roots, aliases (1.252449ms)
+✔ parent guards reject links before writes; lock serializes common namespace (36.148633ms)
+✔ Node SDK imports rejected from browser modules, including dynamic import (548.845296ms)
+✔ strict source profile rejects unknown keys (0.643974ms)
+✔ schema-defined sorted sets reject permutations without reordering arbitrary arrays (2.210391ms)
+✔ caseless Unicode collision checks include capital sharp-S and normalized parent aliases (0.255794ms)
+▶ lock ENOSPC at mkdir/open/write/sync is expected disk-full; handles close and residue remains busy
+  ✔ mkdir (2.290105ms)
+  ✔ open (1.497142ms)
+  ✔ writeFile (2.373976ms)
+  ✔ sync (2.245529ms)
+✔ lock ENOSPC at mkdir/open/write/sync is expected disk-full; handles close and residue remains busy (8.925564ms)
+✔ lock release ENOSPC preserves ownership for successful retry (8.853074ms)
+✔ source metadata rejects malformed bytes and oversized input (0.25371ms)
+✔ canonical cumulative budget rejects wide metadata before oversized joins or UTF-8 output allocation (203.130261ms)
+▶ canonical single-string budget accounts for UTF-8 and JSON escaping before stringify
+  ✔ "x" (0.153997ms)
+  ✔ "é" (105.163512ms)
+  ✔ "𐀀" (65.670393ms)
+  ✔ "\u0001" (59.624512ms)
+  ✔ "\"" (158.63096ms)
+✔ canonical single-string budget accounts for UTF-8 and JSON escaping before stringify (389.848323ms)
+✔ canonical exact byte cap includes delimiters/LF; escaping and Unicode bytes stay exact (347.901048ms)
+✔ strict asset-profile: exact schema, reject unknown keys and unsafe nested integers (0.288147ms)
+✔ strict file-digest: exact schema, reject unknown keys and unsafe nested integers (0.300431ms)
+✔ strict selected-asset: exact schema, reject unknown keys and unsafe nested integers (0.943602ms)
+✔ strict frozen-inventory: exact schema, reject unknown keys and unsafe nested integers (3.408014ms)
+✔ strict migration-plan: exact schema, reject unknown keys and unsafe nested integers (0.16562ms)
+✔ New unused file: ignored originals remain dev-only without media decoding (120.312927ms)
+✔ Migration collision: preview/apply preserve every original and reject differing destinations before first copy (58.175962ms)
+✔ Promotion stable: exact list twice keeps profile bytes and asset bytes unchanged (131.720105ms)
+✔ Directory growth: next scan adds/removes sorted tree membership on segment boundaries (56.138617ms)
+✔ Selection conflicts: duplicate ownership and logical paths fail even across unused profiles (15.68349ms)
+✔ Broken reference: check fails explicit missing file; pure scan omits; missing tree warns (50.57579ms)
+✔ DAG: dependencies selected explicitly, unused profiles excluded, cycles/missing deps invalid (71.386577ms)
+✔ Core split and promotion/migration mapping retain existing browser URLs (264.111443ms)
+✔ Migration source hash and membership guards reject changes; no receipt or copied bytes (44.395701ms)
+✔ Migration retry adopts crash output without receipt; source mutation never overwritten (37.181884ms)
+✔ Unsafe input: credential names, links, case and Unicode collisions rejected regardless gitignore (57.118491ms)
+✔ Case mismatch explicit rule reports unsafe path, not absent-file fallback (8.880056ms)
+✔ Tree promotion defaults to canonical mapping, unmapped requires explicit prefix; no reassignment (149.647453ms)
+✔ Common local lock excludes migration, promotion, profile sync writers (5.427676ms)
+✔ Public Node CLI help/invalid flags emit exact final AssetResult and exit status (530.087418ms)
+✔ Migration race: destination appears at exclusive install, differing bytes survive (74.551721ms)
+✔ Migration copy guard detects external source mutation, removes own temp, leaves originals (57.441728ms)
+✔ Migration filesystem without exclusive hardlinks fails closed, no rename fallback (58.795973ms)
+✔ Migration crash before/after link and before receipt is retryable after explicit stale-lock recovery (829.741862ms)
+✔ Migration temp cleanup error is surfaced, receipt not claimed, retry adopts verified output (90.158849ms)
+✔ Public command runners exercise real fixture sync/migrate/promote outputs, conflicts and common lock (654.891486ms)
+✔ Frozen vendor authority: only exact tracked WASM/manifest copied into prepared inventory (15.569593ms)
+✔ Deep dependency DAG stays bounded by data, not JavaScript call-stack depth (14.278449ms)
+✔ CLI distinguishes expected disk/permission errors from unexpected faults without raw error leakage (1.186302ms)
+✔ explicit media selection requires selected art without inventing files from gameplay metadata (36.724756ms)
+✔ Source deleted between directory enumeration and hashing fails source-change guard (11.216305ms)
+✔ Observed root disappearance and enumerated file disappearance fail ASSET_SOURCE_CHANGED (14.904008ms)
+✔ Migration preflight rejects empty-directory case/Unicode aliases before any copy (46.407258ms)
+✔ Migration independent temp supports long basenames and preflights derived 512-byte boundary (237.493791ms)
+✔ CLI nullish/non-Error throws still emit one final sanitized AssetResult (0.380194ms)
+✔ Promotion rule diff is linear over sorted rules, including unchanged 100000-rule control (158.485502ms)
+✔ Promotion apply compares bounded constituents, not a duplicated over-32MiB wrapper (12253.59233ms)
+✔ Migration recovery leaves partial, replaced-inode and unknown temps untouched behind the gate (682.359338ms)
+✔ Unknown operational-shaped originals fail recovery without filename-based omission or deletion (58.590728ms)
+✔ Owned migration handle preserves bounded partial writes on ENOSPC, EFBIG and zero progress (393.869455ms)
+✔ Linux ulimit-f write failure retains actual partial migration bytes and recovery marker (146.035589ms)
+ℹ native EFBIG; partial1024 retained; source16384 unchanged; scan/writers blocked
+✔ source inventory versions reject leading zeros in numeric prerelease identifiers (1.498967ms)
+✔ R6 lint rejects dynamic Node and scripts imports in content (642.378106ms)
+▶ R8 source-open races use stable codes, unexpected I/O retains identity
+  ✔ ENOENT (4.094009ms)
+  ✔ ELOOP (1.412509ms)
+  ✔ EIO (1.274793ms)
+✔ R8 source-open races use stable codes, unexpected I/O retains identity (8.830009ms)
+✔ readCatalog converts a YGOPro-compatible CDB (6.39708ms)
+✔ production commands and workflows do not invoke retired browser content preflight (1.232541ms)
+✔ production storage fails closed without the native Tauri runtime (0.80183ms)
+✔ wanted image codes include the shop set data (1.830136ms)
+✔ a code the source cannot serve is reported, not fatal (0.276945ms)
+✔ isJpeg requires complete JPEG start and end markers (0.198143ms)
+✔ MVP asset command runs every online acquisition and verification stage in order (1.371429ms)
+✔ offline MVP asset command performs no network image stage (0.236337ms)
+✔ CI produces mandatory set images before isolated verification and caches current asset roots (1.181232ms)
+✔ MVP asset options enforce the provider request ceiling (0.436333ms)
+✔ resolveProjectSubpath allows paths inside the approved project directory (0.851295ms)
+✔ resolveProjectSubpath rejects traversal and absolute paths (0.47096ms)
+{"status":"failed","code":"ASSET_SOURCE_CHANGED","path":"asset-profiles/nightly.json"}
+✔ profile sync rejects a nightly selection changed during its scan (106.294482ms)
+✔ asset run lock prevents overlapping processes and can be reacquired (9.027522ms)
+✔ asset run lock safely reclaims a dead owner's lock (3.640834ms)
+✔ atomic JSON writer publishes complete status documents (2.368466ms)
+✔ bounded shop fetch retains URL encoding and folded card output (22.150147ms)
+✔ declared oversized shop response is cancelled before JSON decoding (1.611213ms)
+✔ chunked shop response cannot exceed body cap; stream is cancelled (2.238655ms)
+✔ shop response at exact byte cap is accepted (10.124792ms)
+✔ 15-second shop timeout aborts stalled headers (0.66222ms)
+✔ shop timeout remains attached while reading stalled body (0.623495ms)
+✔ shop fetch retains HTTP errors and rejects malformed JSON (0.670034ms)
+✔ Git source refs accept branches, tags and commit hashes (1.077322ms)
+✔ pinned source revisions must match the checked-out commit (1.237731ms)
+✔ Git source refs reject option and refspec injection (0.2072ms)
+{"timestamp":"2026-10-03T11:51:09.745Z","operation":"git","status":"start","cwd":"/tmp/ygo-assets-source-f7ZBek/cache/BabelCDB","args":["rev-parse","--git-dir"]}
+{"timestamp":"2026-10-03T11:51:09.748Z","operation":"git","status":"ok","cwd":"/tmp/ygo-assets-source-f7ZBek/cache/BabelCDB","args":["rev-parse","--git-dir"],"durationMs":3}
+{"timestamp":"2026-10-03T11:51:09.748Z","operation":"git","status":"start","cwd":"/tmp/ygo-assets-source-f7ZBek/cache/BabelCDB","args":["remote","get-url","origin"]}
+{"timestamp":"2026-10-03T11:51:09.751Z","operation":"git","status":"ok","cwd":"/tmp/ygo-assets-source-f7ZBek/cache/BabelCDB","args":["remote","get-url","origin"],"durationMs":3}
+{"timestamp":"2026-10-03T11:51:09.751Z","operation":"validateSourceCache","status":"miss","repository":"https://github.com/ProjectIgnis/BabelCDB.git","directory":"/tmp/ygo-assets-source-f7ZBek/cache/BabelCDB","detail":"Cached source repository mismatch"}
+✔ offline source sync rejects a cache cloned from another repository (46.230352ms)
+✔ cached origin credentials stay out of diagnostics and error causes (13.472019ms)
+✔ parseStringsConf imports supported Project Ignis string sections (1.396839ms)
+✔ readTarFiles extracts regular package files (1.678172ms)
+✔ readTarFiles rejects paths outside the package root (0.460329ms)
+✔ unpackSetcodes extracts packed 16-bit archetype codes (1.155693ms)
+✔ unpackSetcodes preserves unsigned high-bit values exposed as signed SQLite integers (0.138658ms)
+✔ transformCard preserves unsigned 64-bit race flags (0.194176ms)
+✔ transformCard decodes level, pendulum scales and link marker (0.12925ms)
+✔ numeric identifiers map to stable shards (0.304228ms)
+✔ verify-assets rejects catalog records stored in wrong shards (218.175378ms)
+✔ development server ignores agent scratch files (163.240317ms)
+ℹ tests 108
+ℹ suites 0
+ℹ pass 108
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17607.251328
+
+> ascencio@0.1.0 test:unit
+> vitest run tests/unit --exclude tests/unit/decks/deck-catalog-performance.test.ts && vitest run tests/unit/decks/deck-catalog-performance.test.ts
+
+1:51:27 PM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+  [1/50] Legend of Blue Eyes White Dragon…   [2/50] Metal Raiders…   [3/50] Spell Ruler…   [4/50] Pharaoh's Servant…   [5/50] Labyrinth of Nightmare…   [6/50] Legacy of Darkness…   [7/50] Pharaonic Guardian…   [8/50] Magician's Force…   [9/50] Dark Crisis…   [10/50] Invasion of Chaos…   [11/50] Ancient Sanctuary…   [12/50] Soul of the Duelist…   [13/50] Rise of Destiny…   [14/50] Flaming Eternity…   [15/50] The Lost Millennium…   [16/50] Cybernetic Revolution…   [17/50] Elemental Energy…   [18/50] Shadow of Infinity…   [19/50] Enemy of Justice…   [20/50] Power of the Duelist…   [21/50] Cyberdark Impact…   [22/50] Strike of Neos…   [23/50] Force of the Breaker…   [24/50] Tactical Evolution…   [25/50] Gladiator's Assault…   [26/50] Phantom Darkness…   [27/50] Light of Destruction…   [28/50] The Duelist Genesis…   [29/50] Crossroads of Chaos…   [30/50] Crimson Crisis…   [31/50] Raging Battle…   [32/50] Ancient Prophecy…   [33/50] Stardust Overdrive…   [34/50] Absolute Powerforce…   [35/50] The Shining Darkness…   [36/50] Duelist Revolution…   [37/50] Starstrike Blast…   [38/50] Storm of Ragnarok…   [39/50] Extreme Victory…   [40/50] Generation Force…   [41/50] Photon Shockwave…   [42/50] Order of Chaos…   [43/50] Galactic Overlord…   [44/50] Return of the Duelist…   [45/50] Abyss Rising…   [46/50] Cosmo Blazer…   [47/50] Lord of the Tachyon Galaxy…   [48/50] Judgment of the Light…   [49/50] Shadow Specters…   [50/50] Legacy of the Valiant…  ❯ tests/unit/installed-card-image-source.test.ts (3 tests | 1 failed) 13ms
+   × pre-aborted acquire never queries; missing unknown card returns no image after checking both variants 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/installed-card-image-source.test.ts > pre-aborted acquire never queries; missing unknown card returns no image after checking both variants
+AssertionError: expected 2nd "vi.fn()" call to have been called with [ { kind: 'asset', …(2) }, …(1) ], but called only 1 times
+ ❯ tests/unit/installed-card-image-source.test.ts:30:17
+     28|     expect.any(AbortSignal),
+     29|   );
+     30|   expect(query).toHaveBeenNthCalledWith(
+       |                 ^
+     31|     2,
+     32|     { kind: "asset", packageId: "card-library", path: "cards/full/999.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 267 passed (268)
+      Tests  1 failed | 3001 passed (3002)
+   Start at  13:51:27
+   Duration  67.13s (transform 14.88s, setup 60.34s, import 22.14s, tests 348.46s, environment 2.68s)
+

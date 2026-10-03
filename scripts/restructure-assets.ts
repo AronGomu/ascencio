@@ -17,7 +17,8 @@ async function run(args: readonly string[]): Promise<number> {
         {
           kind: "ok",
           value: {
-            usage: "npm run assets:restructure -- --plan | --apply <plan>",
+            usage:
+              "npm run legacy:assets:copy-to-package-roots -- --plan | --apply <plan>",
           },
         },
         0,

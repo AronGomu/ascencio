@@ -1,0 +1,33 @@
+{
+  "format": "ascencio-readable-pack",
+  "schemaVersion": 1,
+  "manifest": {
+    "packageId": "freeplay",
+    "packageType": "freeplay",
+    "version": "1.1.0",
+    "schemaVersion": 1,
+    "dependencies": [
+      {
+        "packageId": "card-library",
+        "requirement": "exact",
+        "version": "1.1.0"
+      }
+    ],
+    "createdAt": "2026-10-01T00:00:00.000Z"
+  },
+  "config": "config.json",
+  "cards": [],
+  "scripts": [],
+  "sets": [],
+  "decks": [
+    "decks/freeplay-opponent.json",
+    "decks/freeplay-player.json"
+  ],
+  "opponents": [
+    "opponents/freeplay-opponent.json"
+  ],
+  "rules": "rules.json",
+  "stories": [],
+  "media": [],
+  "engine": []
+}

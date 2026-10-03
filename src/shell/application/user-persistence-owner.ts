@@ -116,7 +116,7 @@ export async function createUserPersistenceOwner(
     client,
     client.userData,
     services,
-    createSqliteStoryRepository(client.userData),
+    createSqliteStoryRepository(client.userData, client.composition),
     {
       shell: fulfilled(reads[0], DEFAULT_SHELL_SETTINGS),
       battle: battle.value,

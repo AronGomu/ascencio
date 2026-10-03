@@ -1,0 +1,21 @@
+{
+  "kind": "actual-native-desktop-recovery",
+  "conditions": "Optimized native-acceptance build; digest-authenticated critical-only disposable fixtures, optional media intentionally absent. No physical/mobile or external-opener acceptance implied.",
+  "status": "failed",
+  "results": [
+    {
+      "scenario": "maintenance",
+      "exitCode": 0,
+      "preservedUserRecord": true,
+      "repairedByHost": false,
+      "report": {
+        "error": "Error: NATIVE_MAINTENANCE_TIMEOUT",
+        "globalErrors": [],
+        "kind": "native-maintenance-recovery",
+        "scenario": "maintenance",
+        "status": "failed"
+      },
+      "nativeOutput": "ASCENCIO_IO_READY\nASCENCIO_IO_READY\nASCENCIO_NATIVE_ACCEPTANCE_RECORDED\n"
+    }
+  ]
+}

@@ -60,6 +60,8 @@ export interface StoryState {
   readonly savedScreen: StoryScreen;
   readonly progressExists: boolean;
   readonly narrativeIndex: number;
+  /** Visited graph beats, bounded independently of cycles and saved with progress. */
+  readonly visitedBeatIds?: readonly string[];
   readonly lastInputId: number | null;
   readonly choice: ChoiceId | null;
   readonly choiceResponse: string | null;

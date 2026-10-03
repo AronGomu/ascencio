@@ -4,7 +4,7 @@ import { createSqliteCardImageSource } from "../../src/shell/adapters/sqlite-ima
 import { imageQueryFixture } from "../fixtures/sqlite-image-query.ts";
 
 afterEach(() => vi.restoreAllMocks());
-it("pre-aborted acquire never queries; missing unknown card returns no image after checking both variants", async () => {
+it("pre-aborted acquire never queries; missing cropped card returns no image without requesting full art", async () => {
   const { query, content } = imageQueryFixture(),
     source = createSqliteCardImageSource(content);
   const aborted = new AbortController();
@@ -27,11 +27,7 @@ it("pre-aborted acquire never queries; missing unknown card returns no image aft
     { kind: "asset", packageId: "card-library", path: "cards/cropped/999.jpg" },
     expect.any(AbortSignal),
   );
-  expect(query).toHaveBeenNthCalledWith(
-    2,
-    { kind: "asset", packageId: "card-library", path: "cards/full/999.jpg" },
-    expect.any(AbortSignal),
-  );
+  expect(query).toHaveBeenCalledOnce();
   source.close();
 });
 it("required query errors remain visible instead of degrading storage failure to missing media", async () => {

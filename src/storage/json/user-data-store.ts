@@ -24,19 +24,67 @@ import {
 export interface UserJsonBackend {
   read(): Promise<string | null>;
   write(source: string, expected: string | null): Promise<StorageResult<void>>;
+  close?(): Promise<void>;
 }
 
-/** One snapshot per write keeps a multi-record update and backup replacement atomic. */
+/** Initialized once; mutations and reads use the live document, writes retain exact bytes. */
 export class JsonUserDataStore implements UserDataStore {
   readonly #backend: UserJsonBackend;
   #closed = false;
   #uncertain = false;
+  #initializationError: unknown;
+  #state: StorageResult<{
+    source: string | null;
+    document: UserDocument;
+  }> | null = null;
+  readonly #records = new Map<string, UserRecord>();
+  readonly #namespaces = new Map<UserNamespace, readonly UserRecord[]>();
+  #persistedRevision = 0;
+  #pending: { source: string; expected: string | null } | null = null;
   #tail: Promise<void> = Promise.resolve();
   #backup: { token: string; revision: number; document: UserDocument } | null =
     null;
 
   constructor(backend: UserJsonBackend) {
     this.#backend = backend;
+  }
+  get initializationError(): unknown {
+    return this.#initializationError;
+  }
+
+  initialize(): Promise<StorageResult<void>> {
+    return this.#run(async () => {
+      const result = await this.#read();
+      return result.kind === "failed" ? result : ok(undefined);
+    });
+  }
+
+  get persistence() {
+    return Object.freeze({
+      acceptedRevision:
+        this.#state?.kind === "ok" ? this.#state.value.document.revision : 0,
+      persistedRevision: this.#persistedRevision,
+      dirty: this.#pending !== null,
+      uncertain: this.#uncertain,
+    });
+  }
+
+  flush(): Promise<StorageResult<void>> {
+    return this.#run(() => this.#flush());
+  }
+
+  async #flush(): Promise<StorageResult<void>> {
+    if (!this.#pending) return ok(undefined);
+    const pending = this.#pending;
+    const result = await this.#backend.write(pending.source, pending.expected);
+    if (result.kind === "ok") {
+      this.#pending = null;
+      this.#persistedRevision =
+        this.#state?.kind === "ok"
+          ? this.#state.value.document.revision
+          : this.#persistedRevision;
+    }
+    return result;
   }
 
   readUser(
@@ -50,9 +98,9 @@ export class JsonUserDataStore implements UserDataStore {
       return state.kind === "failed"
         ? state
         : ok(
-            state.value.document.records.find(
-              (row) => row.namespace === namespace && row.key === key,
-            ) ?? null,
+            structuredClone(
+              this.#records.get(JSON.stringify([namespace, key])) ?? null,
+            ),
           );
     });
   }
@@ -65,11 +113,7 @@ export class JsonUserDataStore implements UserDataStore {
       const state = await this.#read();
       return state.kind === "failed"
         ? state
-        : ok(
-            state.value.document.records
-              .filter((row) => row.namespace === namespace)
-              .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)),
-          );
+        : ok(structuredClone(this.#namespaces.get(namespace) ?? []));
     });
   }
 
@@ -85,6 +129,8 @@ export class JsonUserDataStore implements UserDataStore {
     }
     return this.#run(async () => {
       if (!Array.isArray(captured)) return fail("USER_DATA_INVALID");
+      const pending = await this.#flush();
+      if (pending.kind === "failed") return pending;
       const state = await this.#read();
       if (state.kind === "failed") return state;
       if (captured.length === 0) return ok([]);
@@ -226,6 +272,7 @@ export class JsonUserDataStore implements UserDataStore {
       const result = await this.#commit(
         { ...staged.document, revision },
         live.value.source,
+        false,
       );
       return result.kind === "failed" ? result : ok({ revision });
     }, true);
@@ -235,28 +282,76 @@ export class JsonUserDataStore implements UserDataStore {
     // Stop admission immediately, then drain work already accepted.
     this.#closed = true;
     await this.#tail;
-    this.#backup = null;
+    if (this.#uncertain) {
+      this.#backup = null;
+      await this.#backend.close?.();
+      return;
+    }
+    try {
+      const flushed = await this.#flush();
+      if (flushed.kind === "failed") throw new Error(flushed.error.code);
+    } finally {
+      this.#backup = null;
+      await this.#backend.close?.();
+    }
+  }
+
+  #index(document: UserDocument): void {
+    this.#records.clear();
+    this.#namespaces.clear();
+    const namespaces = new Map<UserNamespace, UserRecord[]>();
+    for (const row of document.records) {
+      this.#records.set(JSON.stringify([row.namespace, row.key]), row);
+      const records = namespaces.get(row.namespace) ?? [];
+      records.push(row);
+      namespaces.set(row.namespace, records);
+    }
+    for (const [namespace, rows] of namespaces)
+      this.#namespaces.set(
+        namespace,
+        rows.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)),
+      );
   }
 
   async #read(): Promise<
     StorageResult<{ source: string | null; document: UserDocument }>
   > {
+    if (this.#state !== null) return this.#state;
     const source = await this.#backend.read();
     const parsed =
       source === null ? ok(emptyUserDocument()) : parseUserDocument(source);
-    return parsed.kind === "failed"
-      ? parsed
-      : ok({ source, document: parsed.value });
+    this.#state =
+      parsed.kind === "failed"
+        ? parsed
+        : ok({ source, document: parsed.value });
+    if (parsed.kind === "ok") {
+      this.#persistedRevision = parsed.value.revision;
+      this.#index(parsed.value);
+    }
+    return this.#state;
   }
 
   async #commit(
     document: UserDocument,
     expected: string | null,
+    publishBeforeAcknowledgement = true,
   ): Promise<StorageResult<void>> {
     const source = JSON.stringify(document);
     const validated = parseUserDocument(source);
     if (validated.kind === "failed") return validated;
-    return this.#backend.write(source, expected);
+    if (publishBeforeAcknowledgement) {
+      this.#state = ok({ source, document: validated.value });
+      this.#index(validated.value);
+      this.#pending = { source, expected };
+      return this.#flush();
+    }
+    const result = await this.#backend.write(source, expected);
+    if (result.kind === "ok") {
+      this.#state = ok({ source, document: validated.value });
+      this.#index(validated.value);
+      this.#persistedRevision = document.revision;
+    }
+    return result;
   }
 
   #run<T>(
@@ -275,6 +370,7 @@ export class JsonUserDataStore implements UserDataStore {
     const result = this.#tail
       .then(() => (this.#uncertain ? fail("STORAGE_UNAVAILABLE") : operation()))
       .catch((error: unknown) => {
+        if (this.#state === null) this.#initializationError = error;
         if (
           error instanceof Error &&
           error.name === "UserWriteOutcomeUnknown"

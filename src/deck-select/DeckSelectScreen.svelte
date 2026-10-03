@@ -83,6 +83,7 @@
   export let acquireCover: AcquireDeckImage<string> | null = null;
   export let acquireCardImage: AcquireDeckImage<number> | null = null;
   let artLease: DeckImageLease | null = null;
+  let unsubscribeArt: (() => void) | undefined;
   let artRequest: AbortController | null = null;
   $: resetImageResolver(acquireCardImage);
   function resetImageResolver(_resolve: AcquireDeckImage<number> | null): void {
@@ -474,17 +475,27 @@
           return;
         }
         artLease = lease;
-        sourceUrl = lease?.url ?? null;
+        sourceUrl = lease?.url || null;
+        unsubscribeArt = lease?.subscribe?.((url) => {
+          sourceUrl = url || null;
+          if (token === artToken && art !== null) {
+            art = {
+              ...art,
+              url: url ? (fullCardImageUrl(url) ?? "") : "",
+              fallbackUrl: url ? url : null,
+            };
+          }
+        });
       } catch {
         return;
       }
     }
-    if (sourceUrl === null) {
+    if (sourceUrl === null && !artLease?.subscribe) {
       hideArt();
       return;
     }
-    const url = fullCardImageUrl(sourceUrl);
-    if (url === null) {
+    const url = fullCardImageUrl(sourceUrl) ?? "";
+    if (!url && !artLease?.subscribe) {
       hideArt();
       return;
     }
@@ -512,6 +523,7 @@
       FLOAT_GAP,
       Math.min(rect.top, window.innerHeight - FLOAT_GAP - height),
     );
+    sourceUrl ??= "";
     const fallbackUrl = sourceUrl.includes("/runtime/images-cropped/")
       ? sourceUrl
       : sourceUrl.replace("/runtime/images/", "/runtime/images-cropped/");
@@ -529,6 +541,8 @@
     artToken += 1;
     artRequest?.abort();
     artRequest = null;
+    unsubscribeArt?.();
+    unsubscribeArt = undefined;
     artLease?.release();
     artLease = null;
     art = null;
@@ -537,7 +551,8 @@
   function handleArtError(token: number, failedUrl: string): void {
     if (art === null || art.token !== token || art.url !== failedUrl) return;
     if (art.fallbackUrl === null) {
-      hideArt();
+      if (artLease?.subscribe) art = { ...art, url: "" };
+      else hideArt();
       return;
     }
     art = { ...art, url: art.fallbackUrl, fallbackUrl: null };
@@ -1182,7 +1197,7 @@
   {/if}
 </section>
 
-{#if art !== null}
+{#if art !== null && art.url}
   {@const visibleArt = art}
   <img
     class="art-float"

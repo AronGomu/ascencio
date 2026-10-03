@@ -43,7 +43,7 @@ test("offline MVP asset command performs no network image stage", () => {
 
 test("CI produces mandatory set images before isolated verification and caches current asset roots", () => {
   const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
-  const producer = workflow.indexOf("run: npm run assets:sets");
+  const producer = workflow.indexOf("run: npm run assets:sets:download-images");
   const isolated = workflow.indexOf(
     "name: Verify an isolated offline headless checkout",
   );
@@ -53,7 +53,7 @@ test("CI produces mandatory set images before isolated verification and caches c
   );
   assert.match(
     workflow,
-    /run: npm run assets:sets && npm run assets:sets:verify/,
+    /run: npm run assets:sets:download-images && npm run assets:sets:verify-images/,
   );
   const cache = workflow.slice(
     workflow.indexOf("uses: actions/cache@v4"),

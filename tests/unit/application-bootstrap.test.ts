@@ -1,4 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("../../src/shell/application/prepare-application-inputs.ts", () => ({
+  prepareApplicationInputs: async () => ({
+    requirements: [
+      "domain-projections",
+      "engine-preparation",
+      "screen-modules",
+    ],
+    freeplay: {},
+    stories: new Map(),
+    close: () => {},
+  }),
+}));
 const mocks = vi.hoisted(() => ({ service: vi.fn(), users: vi.fn() }));
 vi.mock("../../src/shell/application/sqlite-application-service.ts", () => ({
   createSqliteApplicationService: mocks.service,
@@ -15,7 +27,13 @@ describe("native application bootstrap", () => {
       order.push("users");
     });
     mocks.users.mockResolvedValue({
-      storage: {},
+      storage: {
+        preparedRequirements: [
+          "critical-content",
+          "user-state",
+          "mod-composition",
+        ],
+      },
       services: {},
       close,
       flush: vi.fn(),
@@ -53,7 +71,13 @@ describe("native application bootstrap", () => {
   });
   it("keeps content controls available when default modules are absent", async () => {
     mocks.users.mockResolvedValue({
-      storage: {},
+      storage: {
+        preparedRequirements: [
+          "critical-content",
+          "user-state",
+          "mod-composition",
+        ],
+      },
       services: {},
       close: vi.fn(),
       flush: vi.fn(),

@@ -1,0 +1,108 @@
+{
+  "vendor": "vendor/ocgcore-wasm/0.1.2",
+  "imports": [
+    {
+      "module": "a",
+      "name": "a",
+      "kind": "function",
+      "implementation": "function(a,b,c){X=c;try{var d=Q(a);switch(b){case 0:var e=Y();if(0>e)break;for(;L[e];)e++;return eb(d,e).W;case 1:case 2:return 0;case 3:return d.flags;case 4:return e=Y(),\nd.flags|=e,0;case 12:return e=Y(),v[e+0>>1]=2,0;case 13:case 14:return 0}return-28}catch(f){if(\"undefined\"==typeof T||\"ErrnoError\"!==f.name)throw f;return-f.U}}"
+    },
+    {
+      "module": "a",
+      "name": "b",
+      "kind": "function",
+      "implementation": "function(a){try{var b=Q(a);lb(b);return 0}catch(c){if(\"undefined\"==typeof T||\"ErrnoError\"!==c.name)throw c;return c.U}}"
+    },
+    {
+      "module": "a",
+      "name": "c",
+      "kind": "function",
+      "implementation": "function(a,b,c,d){X=d;try{b=b?F(u,b):\"\";b=nb(a,b);var e=d?Y():0;return kb(b,c,e).W}catch(f){if(\"undefined\"==typeof T||\"ErrnoError\"!==f.name)throw f;return-f.U}}"
+    },
+    {
+      "module": "a",
+      "name": "d",
+      "kind": "function",
+      "implementation": "function(a,b,c,d){try{a:{var e=Q(a);a=b;for(var f,k=b=0;k<c;k++){var p=z[a>>2],q=z[a+4>>2];a+=8;var m=e,w=p,r=q,y=f,qa=t;if(0>r||0>y)throw new H(28);if(null===m.W)throw new H(8);if(0===(m.flags&2097155))throw new H(8);if(J(m.node.mode))throw new H(31);if(!m.O.write)throw new H(28);m.seekable&&m.flags&1024&&mb(m,0,2);var U=\"undefined\"!=typeof y;if(!U)y=m.position;else if(!m.seekable)throw new H(70);var V=m.O.write(m,qa,w,r,y,void 0);U||(m.position+=\nV);var D=V;if(0>D){var W=-1;break a}b+=D;if(D<q)break;\"undefined\"!=typeof f&&(f+=D)}W=b}z[d>>2]=W;return 0}catch(N){if(\"undefined\"==typeof T||\"ErrnoError\"!==N.name)throw N;return N.U}}"
+    },
+    {
+      "module": "a",
+      "name": "e",
+      "kind": "function",
+      "implementation": "function(a,b,c){X=c;try{var d=Q(a);switch(b){case 21509:return d.R?0:-59;case 21505:if(!d.R)return-59;if(d.R.aa.Da){a=[3,28,127,21,4,0,1,0,17,19,26,0,18,15,23,22,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];var e=Y();x[e>>2]=25856;x[e+4>>2]=5;x[e+8>>2]=191;x[e+12>>2]=35387;for(var f=0;32>f;f++)t[e+f+17]=a[f]||0}return 0;case 21510:case 21511:case 21512:return d.R?\n0:-59;case 21506:case 21507:case 21508:if(!d.R)return-59;if(d.R.aa.Ea)for(e=Y(),a=[],f=0;32>f;f++)a.push(t[e+f+17]);return 0;case 21519:if(!d.R)return-59;e=Y();return x[e>>2]=0;case 21520:return d.R?-28:-59;case 21531:e=Y();if(!d.O.Ca)throw new H(59);return d.O.Ca(d,b,e);case 21523:if(!d.R)return-59;d.R.aa.Fa&&(f=[24,80],e=Y(),v[e>>1]=f[0],v[e+2>>1]=f[1]);return 0;case 21524:return d.R?0:-59;case 21515:return d.R?0:-59;default:return-28}}catch(k){if(\"undefined\"==typeof T||\"ErrnoError\"!==k.name)throw k;\nreturn-k.U}}"
+    },
+    {
+      "module": "a",
+      "name": "f",
+      "kind": "function",
+      "implementation": "()=>Date.now()"
+    },
+    {
+      "module": "a",
+      "name": "g",
+      "kind": "function",
+      "implementation": "function(a,b,c){if(!(0<=a&&3>=a))return 28;A[c>>3]=BigInt(Math.round(1E6*(0===a?Date.now():performance.now())));return 0}"
+    },
+    {
+      "module": "a",
+      "name": "h",
+      "kind": "function",
+      "implementation": "()=>E(\"\")"
+    },
+    {
+      "module": "a",
+      "name": "i",
+      "kind": "function",
+      "implementation": "function(a,b,c){try{g.handleDataReader(a,b,c)}catch(d){console.warn(d)}}"
+    },
+    {
+      "module": "a",
+      "name": "j",
+      "kind": "function",
+      "implementation": "function(a,b,c){try{const d=g.handleScriptReader(a,b,c?F(u,c):\"\");if(d){const e=Fa(d),f=rb(e+1);Ga(d,u,f,e+1);try{return sb(b,f,e,c)}finally{tb(f)}}return 0}catch(d){return console.warn(d),\n0}}"
+    },
+    {
+      "module": "a",
+      "name": "k",
+      "kind": "function",
+      "implementation": "a=>{var b=u.length;a>>>=0;if(2147483648<a)return!1;for(var c=1;4>=c;c*=2){var d=b*(1+.2/c);d=Math.min(d,a+100663296);a:{d=(Math.min(2147483648,65536*Math.ceil(Math.max(a,d)/65536))-n.buffer.byteLength+\n65535)/65536|0;try{n.grow(d);ma();var e=1;break a}catch(f){}e=void 0}if(e)return!0}return!1}"
+    },
+    {
+      "module": "a",
+      "name": "l",
+      "kind": "function",
+      "implementation": "function(a,b,c){try{b=b?F(u,b):\"\";b=nb(a,b);if(c)if(512===c){var d=b,e=O(d,{parent:!0}).node,f=G(d),k=K(e,f),p=cb(e,f,!0);if(p)throw new H(p);if(!e.N.la)throw new H(63);if(k.da)throw new H(10);e.N.la(e,f);Pa(k)}else return-28;else{e=b;d=O(e,{parent:!0}).node;if(!d)throw new H(44);var q=G(e),m=K(d,q),w=cb(d,q,!1);if(w)throw new H(w);\nif(!d.N.na)throw new H(63);if(m.da)throw new H(10);d.N.na(d,q);Pa(m)}return 0}catch(r){if(\"undefined\"==typeof T||\"ErrnoError\"!==r.name)throw r;return-r.U}}"
+    },
+    {
+      "module": "a",
+      "name": "m",
+      "kind": "function",
+      "implementation": "function(a,b,c,d){b=-9007199254740992>b||9007199254740992<b?NaN:Number(b);try{if(isNaN(b))return 61;var e=Q(a);mb(e,b,c);A[d>>3]=BigInt(e.position);e.qa&&0===b&&0===c&&(e.qa=null);return 0}catch(f){if(\"undefined\"==\ntypeof T||\"ErrnoError\"!==f.name)throw f;return f.U}}"
+    },
+    {
+      "module": "a",
+      "name": "n",
+      "kind": "function",
+      "implementation": "function(a,b){try{var c=Q(a);if(c.W===b)return-28;if(0>b||4096<=b)return-8;var d=L[b];d&&lb(d);return eb(c,b).W}catch(e){if(\"undefined\"==typeof T||\"ErrnoError\"!==e.name)throw e;return-e.U}}"
+    },
+    {
+      "module": "a",
+      "name": "o",
+      "kind": "function",
+      "implementation": "function(a,b,c,d){try{a:{var e=Q(a);a=b;for(var f,k=b=0;k<c;k++){var p=z[a>>2],q=z[a+4>>2];a+=8;var m=e,w=p,r=q,y=f,qa=t;if(0>r||0>y)throw new H(28);if(null===m.W)throw new H(8);if(1===(m.flags&2097155))throw new H(8);if(J(m.node.mode))throw new H(31);if(!m.O.read)throw new H(28);var U=\n\"undefined\"!=typeof y;if(!U)y=m.position;else if(!m.seekable)throw new H(70);var V=m.O.read(m,qa,w,r,y);U||(m.position+=V);var D=V;if(0>D){var W=-1;break a}b+=D;if(D<q)break;\"undefined\"!=typeof f&&(f+=D)}W=b}z[d>>2]=W;return 0}catch(N){if(\"undefined\"==typeof T||\"ErrnoError\"!==N.name)throw N;return N.U}}"
+    },
+    {
+      "module": "a",
+      "name": "p",
+      "kind": "function",
+      "implementation": "function(a,b,c){g.handleLogHandler(a,b?F(u,b):\"\",c)}"
+    },
+    {
+      "module": "a",
+      "name": "q",
+      "kind": "function",
+      "implementation": "(a,b,c,d)=>E(`Assertion failed: ${a?F(u,a):\"\"}, at: `+[b?b?F(u,b):\"\":\"unknown filename\",c,d?d?F(u,d):\"\":\"unknown function\"])"
+    }
+  ],
+  "sourcePolicy": "The sync loader owns a virtual Emscripten filesystem. Native Tauri IPC is not supplied as a WASM host import. Worker callbacks resolve cards/scripts from prepared memory. Syntax validation is not proof of script correctness or immunity to hangs."
+}

@@ -1,9 +1,10 @@
+use crate::native_io_trace::{self, Category, Operation};
 use crate::{content_folder, manifest_is_valid, verified_file, ReleaseManifest, ReleasePackage};
 use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path};
+use std::path::Path;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -41,9 +42,11 @@ pub(crate) fn installed(handle: &tauri::AppHandle) -> Result<ReleaseManifest, St
     if !path.exists() {
         crate::seed_content(handle)?;
     }
-    let manifest: ReleaseManifest =
-        serde_json::from_slice(&fs::read(path).map_err(|error| error.to_string())?)
-            .map_err(|error| error.to_string())?;
+    let manifest: ReleaseManifest = serde_json::from_slice(
+        &native_io_trace::read(&path, Category::Registry, "active-manifest")
+            .map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| error.to_string())?;
     if !manifest_is_valid(&manifest) {
         return Err("Installed content manifest is invalid".into());
     }
@@ -55,6 +58,11 @@ pub(crate) fn package_path(folder: &Path, package: &ReleasePackage) -> std::path
 }
 
 pub(crate) fn open_package(path: &Path) -> Result<Connection, String> {
+    open_package_category(path, Category::Registry)
+}
+
+fn open_package_category(path: &Path, category: Category) -> Result<Connection, String> {
+    let _open = native_io_trace::start(category, Operation::SqliteOpen, "package-open");
     let connection = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)
         .map_err(|error| error.to_string())?;
     connection
@@ -89,6 +97,11 @@ pub(crate) fn native_package_stack(
     handle: tauri::AppHandle,
     verify: bool,
 ) -> Outcome<PackageStack> {
+    let _command = native_io_trace::start(
+        Category::Registry,
+        Operation::Command,
+        "native_package_stack",
+    );
     let manifest = match installed(&handle) {
         Ok(value) => value,
         Err(_) => return failed("STORAGE_UNAVAILABLE", None),
@@ -186,6 +199,26 @@ pub(crate) enum ContentQuery {
 }
 
 impl ContentQuery {
+    fn io_category(&self) -> Category {
+        match self {
+            Self::ModuleQuery { query, .. } => query.io_category(),
+            Self::Scripts { .. } => Category::Scripts,
+            Self::Config { .. } => Category::Config,
+            Self::SetImage { .. } => Category::Media,
+            Self::Asset { package_id, path } => {
+                if package_id == "duel-core"
+                    && ["engine/ocgcore.sync.wasm", "engine/vendor-manifest.json"]
+                        .contains(&path.as_str())
+                {
+                    Category::Engine
+                } else {
+                    Category::Media
+                }
+            }
+            _ => Category::Gameplay,
+        }
+    }
+
     fn package_id(&self) -> &str {
         match self {
             Self::Cards { .. }
@@ -261,6 +294,8 @@ pub(crate) fn native_content_query(
     handle: tauri::AppHandle,
     request: ContentQuery,
 ) -> Outcome<Value> {
+    let category = request.io_category();
+    let _command = native_io_trace::start(category, Operation::Command, "native_content_query");
     if !request.valid() {
         return failed("RPC_INVALID", None);
     }
@@ -280,10 +315,11 @@ pub(crate) fn native_content_query(
         Ok(value) => value,
         Err(_) => return failed("STORAGE_UNAVAILABLE", None),
     };
-    let db = match open_package(&package_path(&folder, package)) {
+    let db = match open_package_category(&package_path(&folder, package), category) {
         Ok(value) => value,
         Err(_) => return failed("PACKAGE_INVALID", Some(&package_id)),
     };
+    let _query = native_io_trace::start(category, Operation::SqlQuery, "content-query");
     match execute_query(&db, request) {
         Ok(value) => Outcome::Ok { value },
         Err(_) => failed("PACKAGE_INVALID", Some(&package_id)),

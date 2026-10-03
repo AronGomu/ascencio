@@ -406,13 +406,13 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
     if (unsupported || full || cropped || missingSets)
       add(
         "SOURCE_COVERAGE_REQUIRED",
-        `Selected source gaps: ${unsupported} unsupported runtime cards; ${full} missing full images; ${cropped} missing cropped images; ${missingSets} missing set images. Run npm run assets:mvp; npm run assets:images:cropped; npm run assets:sets. Existing acquisition scope may not cover every selected set/card; rerun verification and remediate remaining gaps without substitutions.`,
+        `Selected source gaps: ${unsupported} unsupported runtime cards; ${full} missing full images; ${cropped} missing cropped images; ${missingSets} missing set images. Run npm run assets:bootstrap; npm run assets:cards:download-cropped; npm run assets:sets:download-images. Existing acquisition scope may not cover every selected set/card; rerun verification and remediate remaining gaps without substitutions.`,
       );
   }
   if (!input.availability.runtimeVerified)
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Local runtime snapshot is missing or invalid. Run npm run assets:mvp; npm run vendor:verify; npm run snapshot:verify. Frozen engine verification remains mandatory.",
+      "Local runtime snapshot is missing or invalid. Run npm run assets:bootstrap; npm run vendor:verify; npm run content:source-manifest:verify. Frozen engine verification remains mandatory.",
     );
   if (!input.availability.prototypeMedia)
     add(

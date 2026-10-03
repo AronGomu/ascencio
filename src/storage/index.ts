@@ -56,4 +56,35 @@ export {
   parsePackageManifest,
 } from "./schema/package-manifest.ts";
 export { openLocalStorage } from "./create-storage-client.ts";
+export {
+  prepareNativeStorage,
+  closePreparedNativeStorage,
+  flushPreparedNativeStorage,
+  disableStartupMods,
+} from "./native/startup-storage.ts";
+export type { StartupProgress } from "./native/prepared-storage.ts";
+export type { ContentComposition } from "./mods/mod-contracts.ts";
+export { isContentComposition } from "./mods/validate-composition.ts";
+export {
+  DEFAULT_MOD_PREFERENCES,
+  isModPreferences,
+} from "./mods/mod-preferences.ts";
+export type { ModPreferences } from "./mods/mod-preferences.ts";
 export { userWriteLifecycle } from "./user-write-lifecycle.ts";
+
+export { invokeNative, nativeIoTrace } from "./native/invoke.ts";
+export { assertNoCriticalReads } from "./diagnostics/io-trace.ts";
+export { assertStartupReady, READY_REQUIREMENTS } from "./contracts/startup.ts";
+export type { ReadyRequirement, StartupPhase } from "./contracts/startup.ts";
+export type {
+  IoCategory,
+  IoOperation,
+  IoTraceEvent,
+  IoTraceSnapshot,
+} from "./contracts/io-trace.ts";
+
+export type {
+  StartupDiagnostic,
+  DiagnosticLocation,
+  StartupLogStatus,
+} from "./contracts/startup-diagnostic.ts";

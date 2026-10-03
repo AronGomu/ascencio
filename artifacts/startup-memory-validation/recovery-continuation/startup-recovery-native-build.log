@@ -1,0 +1,25 @@
+   Compiling ascencio v0.1.0 (/home/aron/Projects/ascencio/src-tauri)
+warning: variants `Command`, `SqliteOpen`, and `SqlQuery` are never constructed
+  --> src/native_io_trace.rs:31:5
+   |
+30 | pub(crate) enum Operation {
+   |                 --------- variants in this enum
+31 |     Command,
+   |     ^^^^^^^
+...
+35 |     SqliteOpen,
+   |     ^^^^^^^^^^
+36 |     SqlQuery,
+   |     ^^^^^^^^
+   |
+   = note: `Operation` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `read` is never used
+   --> src/native_io_trace.rs:248:15
+    |
+248 | pub(crate) fn read(path: &Path, category: Category, label: &'static str) -> io::Result<Vec<u8>> {
+    |               ^^^^
+
+warning: `ascencio` (lib) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 30.68s

@@ -1,0 +1,10 @@
+12:25:41 PM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+
+ Test Files  3 passed (3)
+      Tests  7 passed (7)
+   Start at  12:25:41
+   Duration  865ms (transform 564ms, setup 776ms, import 152ms, tests 178ms, environment 316ms)
+

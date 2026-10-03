@@ -20,7 +20,8 @@ export default defineConfig({
     { name: "webkit-mobile", use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
-    command: "npm run dev -- --mode native --host 127.0.0.1 --port 4402",
+    command:
+      "npm run frontend:dev -- --mode native --host 127.0.0.1 --port 4402",
     url: "http://127.0.0.1:4402",
     reuseExistingServer: false,
     timeout: 30_000,

@@ -97,11 +97,13 @@ describe("JSON user persistence", () => {
     let saved: string | null = null;
     native.invoke.mockImplementation(
       async (command: string, args?: { source: string }) => {
-        if (command === "native_user_json_write" && args) {
+        if (command === "native_user_json_commit" && args) {
+          if (saved === args.source) return { kind: "ok", value: undefined };
           saved = args.source;
           throw new Error("lost reply");
         }
-        if (command === "native_user_json_read") return saved;
+        if (command === "native_user_json_open")
+          return { sessionId: "writer", source: saved };
         throw new Error(command);
       },
     );
@@ -296,9 +298,11 @@ describe("JSON user persistence", () => {
               readiness: { duel: false, story: false },
             },
           };
-        if (command === "native_user_json_read") return f.backend.read();
-        if (command === "native_user_json_write" && args)
-          return f.backend.write(args.source, args.expected);
+        if (command === "native_user_json_open")
+          return { sessionId: "writer", source: await f.backend.read() };
+        if (command === "native_user_json_commit" && args)
+          return f.backend.write(args.source, f.source());
+        if (command === "native_user_json_close") return;
         throw new Error(command);
       },
     );

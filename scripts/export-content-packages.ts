@@ -14,7 +14,9 @@ async function run(args: readonly string[]): Promise<number> {
       return output(
         {
           kind: "ok",
-          value: { usage: "npm run content:export -- --spec <file>" },
+          value: {
+            usage: "npm run legacy:content:export-sqlite -- --spec <file>",
+          },
         },
         0,
       );

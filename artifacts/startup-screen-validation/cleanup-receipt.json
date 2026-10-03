@@ -1,0 +1,161 @@
+{
+  "status": "archived-verified-removed",
+  "files": [
+    {
+      "removedPath": ".tmp/startup-screen-browser-bridge.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-browser-bridge.log",
+      "sha256": "4f721432ff016d541da1a24cbc4ae3a215317724873121254f7d282dfca41915",
+      "bytes": 670
+    },
+    {
+      "removedPath": ".tmp/startup-screen-browser-visual.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-browser-visual.log",
+      "sha256": "94de6fd2cb66fec11f9a4e66a88bd119d6b72d446f14cb7a6e40c2b1db66c757",
+      "bytes": 6332
+    },
+    {
+      "removedPath": ".tmp/startup-screen-components.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-components.log",
+      "sha256": "748bd8f34d9bc54133cf90eba16e59ffc90e035fad869f0027f7bbcb75954cdc",
+      "bytes": 1187
+    },
+    {
+      "removedPath": ".tmp/startup-screen-graph-update.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-graph-update.log",
+      "sha256": "8a39a9bf38067af6c99704041de3307ab2e0fe565ab98f9f1a635d2ebff60377",
+      "bytes": 1858
+    },
+    {
+      "removedPath": ".tmp/startup-screen-green-action-fix.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-green-action-fix.log",
+      "sha256": "8ce4a03c709a0d550201a6201f5a2802ab201f880edeada6c532be299a7ede91",
+      "bytes": 339
+    },
+    {
+      "removedPath": ".tmp/startup-screen-green-final.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-green-final.log",
+      "sha256": "1a5445267ffe36c5fe26f870f6cc0ba73bd762d4cd38f4b36d00e20c5d23065c",
+      "bytes": 1230
+    },
+    {
+      "removedPath": ".tmp/startup-screen-green.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-green.log",
+      "sha256": "098ec49b8ebddafc809ba8d93c4dd1a32c85050c51f7f7c57d225b024be73cf7",
+      "bytes": 339
+    },
+    {
+      "removedPath": ".tmp/startup-screen-headless.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-headless.log",
+      "sha256": "c824e7452e46f743a017911b1aaa2739c6521154e7cb5c65ca82944f6077c04b",
+      "bytes": 17081
+    },
+    {
+      "removedPath": ".tmp/startup-screen-native-build-final-fixture.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-native-build-final-fixture.log",
+      "sha256": "8564eec7b99b0fa23faf3fa87549140916f2774f6dcaac01c848d0980d9ca031",
+      "bytes": 11799
+    },
+    {
+      "removedPath": ".tmp/startup-screen-native-build.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-native-build.log",
+      "sha256": "e4c7cafbf185bed868562b7f814dd3bc76b1a66117d5d9984cc415b6550a8038",
+      "bytes": 11799
+    },
+    {
+      "removedPath": ".tmp/startup-screen-native-default-build.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-native-default-build.log",
+      "sha256": "b1b100d90cd84a71d604702701a21e46b71a1fb4b5bf85790abc719aad370ca8",
+      "bytes": 11770
+    },
+    {
+      "removedPath": ".tmp/startup-screen-native-overall-build.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-native-overall-build.log",
+      "sha256": "b6b73c1c379e1aac6ab6f8721fd09628ea641708beafe9e3dec5005f58981f92",
+      "bytes": 11799
+    },
+    {
+      "removedPath": ".tmp/startup-screen-native-recovery-final.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-native-recovery-final.log",
+      "sha256": "bea266e31908de69c6f7ac489ca770dfbba146ca16296b78bc7abff559ac7322",
+      "bytes": 292
+    },
+    {
+      "removedPath": ".tmp/startup-screen-native-recovery.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-native-recovery.log",
+      "sha256": "bea266e31908de69c6f7ac489ca770dfbba146ca16296b78bc7abff559ac7322",
+      "bytes": 292
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-components.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-components.log",
+      "sha256": "1084b66b1743b22dc1f6060430a9f1d375a3b7f3825773f81d7261f9aed32cac",
+      "bytes": 1187
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-format.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-format.log",
+      "sha256": "7f0c2a0c910df87058c2c689f003aa39ce50ea4893c9dcb2cf4601e92d4d3d81",
+      "bytes": 166
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-graph-cluster.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-graph-cluster.log",
+      "sha256": "9efee6818debd80a06d65d350ee82ac1dc5a3dc46ee8e091058857a7408f4843",
+      "bytes": 616
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-graph-update.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-graph-update.log",
+      "sha256": "53c6be0d6111930b39313b504d96972f16aad53d854f6bb39cc19746963e84a6",
+      "bytes": 1858
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-green-fixed.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-green-fixed.log",
+      "sha256": "53116327fc8afb675dcce553b6ba8f8a9f2560da01ec2fe0b0ec5055fa8af6a1",
+      "bytes": 339
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-green.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-green.log",
+      "sha256": "e4e33ae88e0e7360dcb3285da04331adeaf7662ae34445bab86fca54f6ab67d1",
+      "bytes": 8449
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-headless.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-headless.log",
+      "sha256": "2e59ad9d5a2997641c941b43f0ff46fe50326b08fb9e984ac6dd523187529c4a",
+      "bytes": 17078
+    },
+    {
+      "removedPath": ".tmp/startup-screen-overall-native-recovery.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-overall-native-recovery.log",
+      "sha256": "bea266e31908de69c6f7ac489ca770dfbba146ca16296b78bc7abff559ac7322",
+      "bytes": 292
+    },
+    {
+      "removedPath": ".tmp/startup-screen-red.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-red.log",
+      "sha256": "59d984780d152c4f60f6e6f22e7708299e7627155173c1a914818f59246ad165",
+      "bytes": 65792
+    },
+    {
+      "removedPath": ".tmp/startup-screen-rust.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-rust.log",
+      "sha256": "e5aa591822fc917b284a26888f72b4201d54f02d9e142428e42573afac0ce0cc",
+      "bytes": 14061
+    },
+    {
+      "removedPath": ".tmp/startup-screen-types.log",
+      "archivedPath": "artifacts/startup-screen-validation/startup-screen-types.log",
+      "sha256": "955a071c66a795f9df1c0389897abd2d4a864100f6d472861a4c2470cc65476e",
+      "bytes": 1714
+    },
+    {
+      "removedPath": ".tmp/startup-overall-update.py",
+      "archivedPath": "artifacts/startup-screen-validation/startup-overall-update.py",
+      "sha256": "ab65039026b5857589ac1e435f4df2622880026e4a5acd3175a6a9d752e31d54",
+      "bytes": 2232
+    }
+  ]
+}

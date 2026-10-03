@@ -1,0 +1,62 @@
+
+> ascencio@0.1.0 test:browser:visual-acceptance
+> playwright test -c playwright.acceptance.config.ts
+
+
+[WebServer] (node:103475) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:103505) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:103718) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 41 tests using 1 worker
+
+
+(node:103762) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:128:1 › approved browse metrics cover checks 1-16
+[2/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:297:1 › exact target modes cover checks 17-21 and 29-32
+[3/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:392:1 › maximum lock and stale draft cover checks 22-28
+[4/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:462:1 › responsive overflow and keyboard cover checks 33-36
+[5/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:549:1 › range compatibility enables inclusive Validate and locks at three
+[6/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:567:1 › Hand source compatibility keeps full fixed source order
+[7/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:582:1 › duplicate choice compatibility keeps two opaque IDs keyboard and max safe
+[8/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:624:1 › an opponent card renders upright in the list
+[9/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:632:1 › a neutral browse entry shows no halo on hover
+[10/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:647:1 › an actionable entry halos green on hover
+[11/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:658:1 › an over-maximum entry halos red
+[12/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:672:1 › a selected entry stays orange even while hovered
+[13/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:48:1 › resident display settings control the field independently of retired browser saves
+[14/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:100:3 › board fills its slot and anchors projected content at 1920x1080 field-emz
+[15/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:100:3 › board fills its slot and anchors projected content at 1920x1080 field-no-emz
+[16/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:100:3 › board fills its slot and anchors projected content at 2560x1440 field-emz
+[17/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:100:3 › board fills its slot and anchors projected content at 2560x1440 field-no-emz
+[18/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:100:3 › board fills its slot and anchors projected content at 1366x768 field-emz
+[19/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:100:3 › board fills its slot and anchors projected content at 1366x768 field-no-emz
+[20/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:145:3 › pixel board keeps five-pixel gaps and ratio (field-emz)
+[21/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:145:3 › pixel board keeps five-pixel gaps and ratio (field-no-emz)
+[22/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:177:1 › phase bar fills its track and splits at the exact midpoint
+[23/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:210:1 › phase keeps actionable controls at least forty-four pixels
+[24/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:226:1 › phase reduced motion changes no semantics
+[25/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:235:1 › Defense and Set rotate inner art without moving outer placement
+[26/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:289:1 › six and twenty card hands keep height with conditional overlay scrollbar
+[27/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:330:1 › preview bounds text with stable width and vertical overlay
+[28/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:411:1 › hand cards are centered when the hand fits
+[29/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:426:1 › an overflowing hand still scrolls to both ends
+[30/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:448:1 › opponent twenty-card overlay uses negative row-reverse scrolling
+[31/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:508:1 › duel colors resolve from tokens
+[32/41] [chromium] › e2e/e2e-acceptance/full-height-field.spec.ts:605:1 › a non-candidate field card halos red only while targeting
+[33/41] [chromium] › e2e/e2e-acceptance/hand-zoom.spec.ts:18:1 › the zoomed hand card overflows the hand band and bottom-anchors its chips on it
+[34/41] [chromium] › e2e/e2e-acceptance/hand-zoom.spec.ts:79:1 › a motionless pointer leaves the overlay mounted, never strobing
+[35/41] [chromium] › e2e/e2e-acceptance/hand-zoom.spec.ts:125:1 › the hand card under the overlay still takes the pointer
+[36/41] [chromium] › e2e/e2e-acceptance/hand-zoom.spec.ts:204:1 › the open overlay leaves every data-cy in the document unique
+[37/41] [chromium] › e2e/e2e-acceptance/harness.spec.ts:8:3 › field-emz renders real deterministic field
+[38/41] [chromium] › e2e/e2e-acceptance/harness.spec.ts:8:3 › field-no-emz renders real deterministic field
+[39/41] [chromium] › e2e/e2e-acceptance/harness.spec.ts:8:3 › field-defense renders real deterministic field
+[40/41] [chromium] › e2e/e2e-acceptance/harness.spec.ts:21:1 › unknown scenario fails visibly without fallback board
+[41/41] [chromium] › e2e/e2e-acceptance/harness.spec.ts:31:1 › missing scenario fails visibly without fallback board
+  41 passed (29.0s)

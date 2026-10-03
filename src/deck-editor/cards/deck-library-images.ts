@@ -15,6 +15,7 @@ interface LibraryImage {
   readonly source: CardImageSource;
   readonly controller: AbortController;
   lease: CardImageLease | null;
+  unsubscribe?: (() => void) | undefined;
 }
 
 /** Own only library covers and the selected deck's crop/full presentation leases. */
@@ -36,6 +37,7 @@ export function createDeckLibraryImages(
   }
   function release(entry: LibraryImage): void {
     entry.controller.abort();
+    entry.unsubscribe?.();
     entry.lease?.release();
     entry.lease = null;
   }
@@ -54,6 +56,7 @@ export function createDeckLibraryImages(
         lease?.release();
       else {
         entry.lease = lease;
+        entry.unsubscribe = lease?.subscribe?.(publish);
         publish();
       }
     } catch (error) {

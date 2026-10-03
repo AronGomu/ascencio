@@ -1,5 +1,9 @@
 import { isChapterModule, type CommerceContent } from "../../modules/index.ts";
-import { createCards, type CardDefinition } from "../../cards/index.ts";
+import {
+  createCards,
+  type CardDefinition,
+  type Cards,
+} from "../../cards/index.ts";
 import { OCG_TYPE, hasOcgType } from "../../cards/classification/index.ts";
 import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
 import { cloneCardLists } from "../../decks/contracts/index.ts";
@@ -65,6 +69,8 @@ export async function loadStoryInputs(
   users: ShellUserServices,
   chapterId: `chapter-${string}`,
   signal: AbortSignal,
+  residentCards?: Cards,
+  sharedImages?: SqliteImageLeasePool,
 ): Promise<LoadedStoryInputs> {
   throwIfAborted(signal);
   const controller = new AbortController();
@@ -107,7 +113,9 @@ export async function loadStoryInputs(
         isChapterConfig,
         controller.signal,
       ),
-      readAllCards(storage.content, controller.signal),
+      residentCards
+        ? Promise.resolve(residentCards.all())
+        : readAllCards(storage.content, controller.signal),
       query(
         storage.content,
         { kind: "decks", packageId: chapterId },
@@ -143,7 +151,7 @@ export async function loadStoryInputs(
           );
     throwIfAborted(controller.signal);
 
-    const cards = createCards(definitions);
+    const cards = residentCards ?? createCards(definitions);
     const limitMap = new Map(limits);
     const allowedCardCodes = new Set(
       definitions
@@ -173,8 +181,12 @@ export async function loadStoryInputs(
       library.commerce,
     );
 
-    const pool = new SqliteImageLeasePool(storage.content);
-    const images = createSqliteCardImageSource(storage.content, pool);
+    const pool = sharedImages ?? new SqliteImageLeasePool(storage.content);
+    const images = createSqliteCardImageSource(
+      storage.content,
+      pool,
+      sharedImages === undefined,
+    );
     const media = createSqliteStoryMedia(
       pool,
       chapterId,
@@ -264,17 +276,20 @@ export async function loadStoryInputs(
         cards,
         release,
         media,
-        saves: createSqliteStoryRepository(storage.userData),
+        saves: createSqliteStoryRepository(
+          storage.userData,
+          storage.composition,
+        ),
         close() {
           if (closed) return;
           closed = true;
-          pool.close();
+          if (sharedImages === undefined) pool.close();
         },
       });
       throwIfAborted(controller.signal);
       return loaded;
     } catch (error) {
-      pool.close();
+      if (sharedImages === undefined) pool.close();
       throw error;
     }
   } catch (error) {

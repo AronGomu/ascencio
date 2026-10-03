@@ -318,7 +318,10 @@ function validateSchema(
   return null;
 }
 
-function validateConfig(manifest: PackageManifest, value: unknown): boolean {
+export function validateConfig(
+  manifest: PackageManifest,
+  value: unknown,
+): boolean {
   if (!plainRecord(value)) return false;
   if (manifest.packageType === "duel-core")
     return (

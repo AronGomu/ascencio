@@ -1,4 +1,5 @@
 import { validOpenedPackSizes } from "../model/opened-pack-sizes.ts";
+import { isContentComposition } from "../../storage/index.ts";
 import { validFacts, stableReference } from "../../modules/index.ts";
 import type {
   PersistedStoryState,
@@ -71,6 +72,11 @@ export function isPersistableStoryState(
       ...STATE_KEYS,
       ...(typeof value === "object" &&
       value !== null &&
+      Object.hasOwn(value, "visitedBeatIds")
+        ? ["visitedBeatIds"]
+        : []),
+      ...(typeof value === "object" &&
+      value !== null &&
       Object.hasOwn(value, "openedPackSizes")
         ? ["openedPackSizes"]
         : []),
@@ -85,6 +91,14 @@ export function isPersistableStoryState(
     ) ||
     !hasString(SCREEN_SET, value.savedScreen) ||
     typeof value.progressExists !== "boolean" ||
+    !(
+      value.visitedBeatIds === undefined ||
+      (Array.isArray(value.visitedBeatIds) &&
+        value.visitedBeatIds.length <= 500 &&
+        value.visitedBeatIds.every(
+          (id) => typeof id === "string" && id.length > 0 && id.length <= 256,
+        ))
+    ) ||
     !count(value.narrativeIndex) ||
     !(value.lastInputId === null || count(value.lastInputId)) ||
     !nullableReference(value.choice) ||
@@ -166,14 +180,16 @@ function validStoryBinding(
     !plainRecord(value) ||
     !exactRecord(value, [
       ...STORY_KEYS,
-      ...["facts", "factsSchemaVersion", "beatId"].filter((key) =>
-        Object.hasOwn(value, key),
+      ...["facts", "factsSchemaVersion", "beatId", "contentComposition"].filter(
+        (key) => Object.hasOwn(value, key),
       ),
     ])
   )
     return false;
   if (
     (value.facts !== undefined && !validFacts(value.facts)) ||
+    (value.contentComposition !== undefined &&
+      !isContentComposition(value.contentComposition)) ||
     (value.factsSchemaVersion !== undefined &&
       value.factsSchemaVersion !== 1) ||
     (value.beatId !== undefined && !stableReference(value.beatId))

@@ -76,7 +76,10 @@ export const DOMAIN_BUDGET_BYTES: Readonly<
      deck-editor 163,620 bytes and story 158,739 bytes; each now uses
      ceil(measured/25,000) = 7 -> 175,000 * 1.15. Static whole-catalog data remains
      absent; growth is installed-data code shared by both domains. */
-  story: 201_250,
+  // ADR-104: stable branching event chains, media ownership and composition-bound saves.
+  // Measured closure 181,618 bytes before final media wiring; preserve the existing
+  // ceil(measured/25,000)*25,000*1.15 rule instead of weakening the headroom check.
+  story: 230_000,
 };
 
 /** Bytes each domain's lazy chunk adds on top of the shell it loads into. */

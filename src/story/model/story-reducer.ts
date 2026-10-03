@@ -104,7 +104,8 @@ export type StoryCommand =
 export function reduceStory(
   state: StoryState,
   command: StoryCommand,
-  document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments">,
+  document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments"> &
+    Partial<Pick<StoryDocument, "beats" | "chain">>,
   shop?: StoryShopContext,
 ): StoryState {
   return rememberStoryStateTransition(
@@ -116,7 +117,8 @@ export function reduceStory(
 function reduceStoryCommand(
   state: StoryState,
   command: StoryCommand,
-  document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments">,
+  document?: Pick<StoryDocument, "choiceResponses" | "laterAcknowledgments"> &
+    Partial<Pick<StoryDocument, "beats" | "chain">>,
   shop?: StoryShopContext,
 ): StoryState {
   switch (command.type) {
@@ -129,6 +131,14 @@ function reduceStoryCommand(
       const { deck, collection } = command.starterGrant;
       return {
         ...initial,
+        narrativeIndex: document?.chain
+          ? document.beats!.findIndex(
+              (b) => b.id === document.chain!.entryBeatId,
+            )
+          : initial.narrativeIndex,
+        ...(document?.chain
+          ? { visitedBeatIds: [document.chain.entryBeatId] }
+          : {}),
         screen: "narrative",
         savedScreen: "narrative",
         progressExists: true,
@@ -153,12 +163,53 @@ function reduceStoryCommand(
     case "advance":
       if (state.screen !== "narrative" || state.lastInputId === command.inputId)
         return state;
+      if (document?.chain) {
+        const node = document.chain.nodes.find(
+          (n) => n.beatId === document.beats?.[state.narrativeIndex]?.id,
+        );
+        if (!node || node.choices.length) return state;
+        if (node.next === null)
+          return {
+            ...state,
+            screen: "map",
+            savedScreen: "map",
+            lastInputId: command.inputId,
+          };
+        return {
+          ...state,
+          visitedBeatIds: [
+            ...(state.visitedBeatIds ?? [node.beatId]),
+            node.next,
+          ].slice(-500),
+          narrativeIndex: document.beats!.findIndex((b) => b.id === node.next),
+          lastInputId: command.inputId,
+        };
+      }
       return {
         ...state,
         narrativeIndex: state.narrativeIndex + 1,
         lastInputId: command.inputId,
       };
     case "choose":
+      if (document?.chain && state.screen === "narrative") {
+        const node = document.chain.nodes.find(
+          (n) => n.beatId === document.beats?.[state.narrativeIndex]?.id,
+        );
+        const selected = node?.choices.find((c) => c.id === command.choice);
+        if (!selected) return state;
+        return {
+          ...state,
+          visitedBeatIds: [
+            ...(state.visitedBeatIds ?? [node!.beatId]),
+            selected.target,
+          ].slice(-500),
+          choice: command.choice,
+          choiceResponse: document.choiceResponses[command.choice] ?? null,
+          narrativeIndex: document.beats!.findIndex(
+            (b) => b.id === selected.target,
+          ),
+        };
+      }
       if (
         state.screen !== "narrative" ||
         state.choice !== null ||

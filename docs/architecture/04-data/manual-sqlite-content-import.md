@@ -28,13 +28,13 @@ Free Play and Deck Builder require first three packages. New Game additionally r
 Current commands:
 
 ```sh
-npm run content:export -- --spec content/packages.json
-npm run content:verify -- --file generated/content-packages/duel-core-1.0.0.sqlite
-npm run assets:restructure -- --plan
-npm run assets:restructure -- --apply generated/content-packages/asset-move-plan.json
+npm run legacy:content:export-sqlite -- --spec content/packages.json
+npm run legacy:content:verify-sqlite -- --file generated/content-packages/duel-core-1.0.0.sqlite
+npm run legacy:assets:copy-to-package-roots -- --plan
+npm run legacy:assets:copy-to-package-roots -- --apply generated/content-packages/asset-move-plan.json
 ```
 
-Every command supports `--help`. `content:export` reads tracked `content/duel-core/` and `content/freeplay/` roots, acquired card-library/chapter `assets/content/<package-id>/` roots, and frozen vendor input and writes directly named immutable releases such as `generated/content-packages/duel-core-1.0.0.sqlite`, plus `generated/content-packages/content-packages.zip` containing the selected releases. Full-recipe export validates dependency/reference closure. `content:verify` validates one raw file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
+Every command supports `--help`. `legacy:content:export-sqlite` reads tracked `content/duel-core/` and `content/freeplay/` roots, acquired card-library/chapter `assets/content/<package-id>/` roots, and frozen vendor input and writes directly named immutable releases such as `generated/content-packages/duel-core-1.0.0.sqlite`, plus `generated/content-packages/content-packages.zip` containing the selected releases. Full-recipe export validates dependency/reference closure. `legacy:content:verify-sqlite` validates one raw file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
 
 Re-export with identical inputs is a no-op. Existing same package ID/version with different identity fails. Source completeness, rights, external links, and upload remain owner gates; fixture success does not prove public-release readiness.
 

@@ -59,7 +59,7 @@ Generated data, downloaded images, caches, and `node_modules/` are intentionally
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) 24 or newer
+- [Node.js](https://nodejs.org/) 26 or newer
 - [Git](https://git-scm.com/)
 - npm, included with Node.js
 - Network access for the initial asset download
@@ -71,16 +71,16 @@ Generated data, downloaded images, caches, and `node_modules/` are intentionally
 git clone git@github.com:AronGomu/ascencio.git
 cd ascencio
 npm ci
-npm run assets:mvp
+npm run assets:bootstrap
 npm run check
-npm run dev
+npm run frontend:dev
 ```
 
-`npm run assets:mvp` is resumable. Existing Git caches and valid JPEGs are reused, so rerun the same command after a temporary network failure. The development server prints its local URL and serves the same trusted runtime files used by production packaging.
+`npm run assets:bootstrap` is resumable. Existing Git caches and valid JPEGs are reused, so rerun the same command after a temporary network failure. The development server prints its local URL and serves the same trusted runtime files used by production packaging.
 
 ## Public asset delivery setup
 
-- A1. Developer downloads need **no publisher credentials**. Current acquisition remains `assets:mvp`; the single anonymous `assets:download` command is planned, not implemented by the setup slice.
+- A1. Developer downloads need **no publisher credentials**. Current acquisition remains `assets:bootstrap`; the single anonymous `assets:download` command is planned, not implemented by the setup slice.
 - A2. `npm run assets:setup -- --help` explains read-only preflight. After owner supplies public config, `npm run assets:setup -- --check` validates syntax and reports pending publisher prerequisites without requiring credentials. Optional `--remote --origin <exact-origin>` performs read-only public/S3 probes; repeat `--origin` for actual dev/prod origins. Never provisions or publishes.
 - A3. [Owner setup](docs/assets/asset-delivery-setup.md) frontloads R2/account/domain/CORS/budget/rights/device prerequisites and explicit empty-index bootstrap. Public originals and unreleased bytes require explicit eligibility approval; public availability does not establish rights.
 - A4. Dev metadata truth means matching archive membership and bytes, **not** exhaustive upstream availability or gameplay readiness. Existing `content:setup:verify` remains separate. [Root inventory](docs/assets/asset-root-inventory.md) records the pre-migration mapping; no assets moved in this slice.
@@ -99,45 +99,39 @@ npm run dev
 ./download-mvp-assets.sh
 ```
 
-Both launchers accept the same options as `npm run assets:mvp` and can be launched from outside the repository because they set their own working directory.
+Both launchers accept the same options as `npm run assets:bootstrap` and can be launched from outside the repository because they set their own working directory.
 
 ## npm commands
 
-| Command                        | Description                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `npm ci`                       | Install the exact development dependencies from `package-lock.json`.                             |
-| `npm run assets:profiles:sync -- --check` | Check canonical roots, references, profile ownership without mutation. |
-| `npm run assets:promote -- --help` | Preview/apply explicit delivery rules; no asset moves. |
-| `npm run assets:migrate -- --plan` | Preview hash-guarded copy-only legacy migration; originals retained. |
-| `npm run assets:mvp`           | Download, generate, and verify all currently supported external MVP assets.                      |
-| `npm run assets:engine`        | Download, integrity-check, extract, and publish the pinned engine package.                       |
-| `npm run assets:engine:verify` | Verify the extracted engine package and WASM header.                                             |
-| `npm run assets:sync`          | Fetch Project Ignis sources and regenerate catalog, text, scripts, strings, and image manifests. |
-| `npm run assets:sync:offline`  | Regenerate data from the existing local Git source caches without fetching.                      |
-| `npm run assets:verify`        | Verify generated data manifests, hashes, counts, shards, and coverage.                           |
-| `npm run assets:images`        | Download or resume the full-card JPEG archive.                                                   |
-| `npm run assets:images:verify` | Verify image coverage, report consistency, sizes, and JPEG boundaries.                           |
-| `npm run dev`                  | Start the Vite development server.                                                               |
-| `npm run build`                | Verify vendor/snapshot integrity, build `dist/`, and independently verify the package.           |
-| `npm run preview`              | Serve the current production build locally.                                                      |
-| `npm run build:reproducible`   | Produce two isolated builds and require identical file hashes.                                   |
-| `npm test`                     | Run the legacy, unit, component, and real-WASM integration suites.                               |
-| `npm run test:unit`            | Run the focused Vitest unit suite.                                                               |
-| `npm run test:component`       | Run Svelte component tests.                                                                      |
-| `npm run test:integration`     | Run real asset/WASM integration tests.                                                           |
-| `npm run test:e2e`             | Build at a non-root base and run the Playwright browser suite.                                   |
-| `npm run check`                | Run every headless, component, build, reproducibility, and browser gate.                         |
-| `npm run lint`                 | Run ESLint.                                                                                      |
-| `npm run format:check`         | Verify Prettier formatting.                                                                      |
-| `npm run typecheck`            | Run strict TypeScript and Svelte checking.                                                       |
-| `npm run vendor:verify`        | Verify every vendored engine file against its reviewed manifest.                                 |
-| `npm run snapshot:verify`      | Verify the generated runtime snapshot files and digests.                                         |
-| `npm run check:headless`       | Run the complete mandatory local headless quality gate.                                          |
+Use Node 26 or newer. [Complete command reference](docs/development-commands.md) describes every command and the coverage of the aggregate checks.
+
+| ID | Command | Description |
+| --- | --- | --- |
+| C1 | `npm run native:build-and-start:linux` | Build the standalone desktop application and launch it on Linux. No development server required. |
+| C2 | `npm run native:desktop:dev` | Launch the native desktop application with its development server. |
+| C3 | `npm run native:desktop:build` | Prepare content, build the frontend, then build/package the native desktop application. |
+| C4 | `npm run frontend:dev` | Start Vite only; ordinary browser navigation does not provide native IPC. |
+| C5 | `npm run frontend:build` | Verify frozen vendor files, bundle application code to `generated/build/app/`, and check frontend boundaries/budgets. |
+| C6 | `npm run frontend:preview` | Serve built frontend files for inspection and browser fixtures; does not launch Tauri. |
+| C7 | `npm run assets:bootstrap` | Acquire/verify the pinned engine, upstream source data and card images; generate/verify the source manifest. Set artwork and JSON release staging are separate. |
+| C8 | `npm run assets:upstream:sync -- --offline` | Regenerate source data from existing Git caches without fetching. |
+| C9 | `npm run content:convert:sqlite-to-json -- <input.sqlite> <new-source-directory>` | Convert verified historical content into readable sources and media. |
+| C10 | `npm run content:compile:json -- <source-directory> <output-directory>` | Compile readable sources into critical snapshots and source maps. |
+| C11 | `npm run content:release:pin` | Review and pin the tracked critical-release manifest. |
+| C12 | `npm run content:stage:native` | Check pinned inputs and atomically stage native content resources. |
+| C13 | `npm run content:stage:verify-native` | Verify staged content and frozen engine buffers. |
+| C14 | `npm run mods:bundle -- <mod-directory> <new-bundle.json>` | Create a declared-file JSON mod import bundle. |
+| C15 | `npm test` | Run tooling, unit/performance, component and integration suites; excludes browser and Rust tests. |
+| C16 | `npm run test:browser:native-bridge` | Run Playwright browser/native-IPC fixtures, not the desktop executable. |
+| C17 | `npm run test:native:rust` | Run native Rust tests. |
+| C18 | `npm run check` | Run headless quality/assets plus component, frontend-build and browser gates; excludes Rust, JSON parity and actual native/physical acceptance. |
+| C19 | `npm run content:verify:sqlite-json-parity` | Compare historical SQLite queries with JSON snapshots and check deterministic compilation. |
+| C20 | `npm run legacy:assets:inventory -- --check` | Check retained legacy source/profile ownership without mutation. |
 
 To display the unified downloader help:
 
 ```bash
-npm run assets:mvp -- --help
+npm run assets:bootstrap -- --help
 ```
 
 Root/profile migration details: [`docs/assets/asset-profiles.md`](docs/assets/asset-profiles.md). Legacy acquisition is explicit; scan/promotion never refresh upstream inputs.
@@ -145,7 +139,7 @@ Root/profile migration details: [`docs/assets/asset-profiles.md`](docs/assets/as
 ## Unified asset command options
 
 ```bash
-npm run assets:mvp -- [options]
+npm run assets:bootstrap -- [options]
 ```
 
 | Option                          | Description                                                                       |
@@ -159,9 +153,9 @@ npm run assets:mvp -- [options]
 Examples:
 
 ```bash
-npm run assets:mvp -- --offline
-npm run assets:mvp -- --concurrency 8 --requests-per-second 12
-npm run assets:mvp -- --force-images
+npm run assets:bootstrap -- --offline
+npm run assets:bootstrap -- --concurrency 8 --requests-per-second 12
+npm run assets:bootstrap -- --force-images
 ```
 
 The Windows and Unix launchers accept the same arguments:
@@ -178,7 +172,7 @@ The Windows and Unix launchers accept the same arguments:
 
 ## Lower-level command lines
 
-Use these commands for diagnosis, custom output directories, pinned source revisions, or partial maintenance. Prefer `npm run assets:mvp` for normal setup.
+Use these commands for diagnosis, custom output directories, pinned source revisions, or partial maintenance. Prefer `npm run assets:bootstrap` for normal setup.
 
 ### Engine acquisition
 
@@ -288,19 +282,19 @@ Per-duel bounded traces record revisions, process/message ordering, public event
 ## Production build and static hosting
 
 ```bash
-npm run build
-npm run preview -- --host 127.0.0.1
+npm run frontend:build
+npm run frontend:preview -- --host 127.0.0.1
 ```
 
-Deploy the contents of `dist/` as immutable static files. For a subpath, set Vite's base while building (for example `BASE_PATH=/duel/ npm run build` on POSIX or `$env:BASE_PATH='/duel/'; npm run build` in PowerShell). The Worker, WASM, runtime closure, card images, and licenses are emitted beneath that base. `npm run build:verify` rejects missing/extra artifacts, hash drift, Node-only imports, disabled engine fallbacks, missing third-party licenses, and size-budget regressions. `npm run build:app` deliberately uses Vite's `private` mode; an ordinary production-mode build refuses to package artwork while redistribution remains unapproved and every private artifact includes `PRIVATE_DEPLOYMENT_ONLY.txt`.
+Deploy the contents of `dist/` as immutable static files. For a subpath, set Vite's base while building (for example `BASE_PATH=/duel/ npm run frontend:build` on POSIX or `$env:BASE_PATH='/duel/'; npm run frontend:build` in PowerShell). The Worker, WASM, runtime closure, card images, and licenses are emitted beneath that base. `npm run frontend:verify` rejects missing/extra artifacts, hash drift, Node-only imports, disabled engine fallbacks, missing third-party licenses, and size-budget regressions. `npm run frontend:bundle` deliberately uses Vite's `private` mode; an ordinary production-mode build refuses to package artwork while redistribution remains unapproved and every private artifact includes `PRIVATE_DEPLOYMENT_ONLY.txt`.
 
 Keep the deployment private. The generated active-image manifest records `redistributionApproved: false`, and the documented BabelCDB, Project Ignis, artwork, trademark, AGPL source-availability, and other content obligations still require an authorized distribution review.
 
 ## Updating the pinned snapshot
 
-1. Update upstream inputs on an isolated branch with `npm run assets:sync` (or `assets:sync:offline`).
-2. Refresh/verify images with `npm run assets:images` and `npm run assets:images:verify`.
-3. Run `npm run snapshot:generate` and `npm run snapshot:verify`.
+1. Update upstream inputs on an isolated branch with `npm run assets:upstream:sync` (or `assets:upstream:sync -- --offline`).
+2. Refresh/verify images with `npm run assets:cards:download-full` and `npm run assets:cards:verify-full`.
+3. Run `npm run content:source-manifest:generate` and `npm run content:source-manifest:verify`.
 4. Review revision, count, protocol, trace, and active-dependency changes.
 5. Run `npm run check`; activate/publish only if every gate passes. Keep the previous snapshot available for rollback.
 

@@ -1,0 +1,4847 @@
+{
+  "kind": "actual-native-desktop-recovery",
+  "conditions": "Optimized native-acceptance build; digest-authenticated critical-only disposable fixtures, optional media intentionally absent. No physical/mobile or external-opener acceptance implied.",
+  "status": "passed",
+  "results": [
+    {
+      "scenario": "invalid-user",
+      "exitCode": 0,
+      "preservedUserRecord": true,
+      "repairedByHost": true,
+      "report": {
+        "action": "startup-retry",
+        "globalErrors": [],
+        "headingFocused": true,
+        "initialCode": "USER_DATA_INVALID",
+        "initialLog": {
+          "diagnostics": [
+            {
+              "causes": [
+                "USER_DATA_INVALID: user-data.json: key must be a string at line 2 column 1"
+              ],
+              "code": "USER_DATA_INVALID",
+              "message": "USER_DATA_INVALID: user-data.json: key must be a string at line 2 column 1",
+              "notes": [],
+              "phase": "startup",
+              "remediation": "Keep the current file. While the app is closed, repair user-data.json or restore a known valid copy, then reopen.",
+              "severity": "error",
+              "source": {
+                "column": 1,
+                "file": "user-data.json",
+                "line": 2
+              }
+            }
+          ],
+          "droppedDiagnostics": 0,
+          "loggingError": null,
+          "path": "/home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-user/startup-native-data/com.ascencio.storyduel/logs/ascencio-startup-62e59d2a-60bf-46e5-8dbd-25c1d0434096.jsonl",
+          "sessionId": "62e59d2a-60bf-46e5-8dbd-25c1d0434096"
+        },
+        "initialSource": {
+          "column": 1,
+          "file": "user-data.json",
+          "line": 2
+        },
+        "kind": "native-startup-recovery",
+        "scenario": "invalid-user",
+        "status": "passed",
+        "trace": {
+          "frontend": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "gameplay",
+                "durationMs": 228,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 0
+              },
+              {
+                "category": "engine",
+                "durationMs": 35,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1
+              },
+              {
+                "category": "user-data",
+                "durationMs": 1,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 471
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 13,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 473
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "native_startup_log_record",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 487
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 2,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 541
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 544
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 222,
+                "label": "native_startup_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 546
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 208,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 768
+              },
+              {
+                "category": "engine",
+                "durationMs": 30,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 768
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1207
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 12,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 3477
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc"
+          },
+          "native": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 0.0001
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.016870999999999997,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 0.161583
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.545162,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 0.19756
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.02046800000000004,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 0.7436539999999999
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.6371340000000001,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 0.764332
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 45.38853,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1.410143
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 23.20486200000001,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 46.801107
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 328.469415,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 70.006851
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.18651899999997568,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 401.232162
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.002655000000004293,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 401.419533
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.20238899999992557,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 401.422488
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 1.56436199999996,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 401.635047
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.09827400000000353,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 403.20004
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 4.0694670000000315,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 403.299306
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 1.454656,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 407.389031
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.388196999999991,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 408.844419
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 1.0525930000000017,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 17,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 409.243537
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.004377999999974236,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 18,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 410.297312
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.002835000000004584,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 19,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 882.34638
+              },
+              {
+                "bytes": 9,
+                "category": "user-data",
+                "durationMs": 0.009778000000096654,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 20,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 882.349566
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 21,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 956.854226
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.007433999999989283,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 22,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 956.903488
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.035577000000103,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 23,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 956.929968
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.019266000000015993,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 24,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 956.965745
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.49674000000004526,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 956.985222
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 29.308119999999917,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 957.488415
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 21.45387000000005,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 986.79896
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 161.91653200000007,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 28,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1008.253481
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.16153299999996307,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 29,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1173.488202
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0027250000000549335,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 30,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1173.649915
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.1536069999999654,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 31,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1173.652771
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.04775000000017826,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 32,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1173.811147
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.07193499999993946,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 33,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1173.858997
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 3.6547199999999975,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 34,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1173.934278
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.3359899999998106,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 35,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1177.604116
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3822159999999713,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 36,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1177.9411280000002
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.015648999999712032,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 37,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1178.3297260000002
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.0019930000000840664,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 38,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1178.345506
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0025239999999939755,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 39,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1618.027555
+              },
+              {
+                "bytes": 153,
+                "category": "user-data",
+                "durationMs": 0.012973999999758234,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 40,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1618.0306610000002
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.007082999999738604,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 41,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 1618.0523010000002
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 42,
+                "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc",
+                "startedMs": 3887.772058
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "b7cc5800-3d2c-410b-8446-922e4e1be6fc"
+          }
+        }
+      },
+      "nativeOutput": "ASCENCIO_NATIVE_ACCEPTANCE_RECORDED\nASCENCIO_IO_READY\nASCENCIO_NATIVE_ACCEPTANCE_RECORDED\n"
+    },
+    {
+      "scenario": "invalid-base",
+      "exitCode": 0,
+      "preservedUserRecord": true,
+      "repairedByHost": false,
+      "report": {
+        "action": "startup-repair-content",
+        "globalErrors": [],
+        "headingFocused": true,
+        "initialCode": "BASE_HASH_MISMATCH",
+        "initialLog": {
+          "diagnostics": [
+            {
+              "causes": [
+                "BASE_HASH_MISMATCH: /home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-base/startup-native-data/com.ascencio.storyduel/critical-generations/ecaac0c83b622838a5ce5a6ac73ea69dfdc735b345460380fee81ab8f21e4a5a/card-library/critical.json: expected 8dcf5f6e82ecb15f6bf886a12b5837d41fa1214a5489d38cd106467ca28f4925 received 4e4b5878901d953ab6e04ab04ea34c263b1d3f19cbcfcf31bad19e2a97aa8fc0"
+              ],
+              "code": "BASE_HASH_MISMATCH",
+              "expected": "8dcf5f6e82ecb15f6bf886a12b5837d41fa1214a5489d38cd106467ca28f4925",
+              "message": "BASE_HASH_MISMATCH: /home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-base/startup-native-data/com.ascencio.storyduel/critical-generations/ecaac0c83b622838a5ce5a6ac73ea69dfdc735b345460380fee81ab8f21e4a5a/card-library/critical.json: expected 8dcf5f6e82ecb15f6bf886a12b5837d41fa1214a5489d38cd106467ca28f4925 received 4e4b5878901d953ab6e04ab04ea34c263b1d3f19cbcfcf31bad19e2a97aa8fc0",
+              "notes": [],
+              "phase": "startup",
+              "received": "4e4b5878901d953ab6e04ab04ea34c263b1d3f19cbcfcf31bad19e2a97aa8fc0",
+              "remediation": "Repair the named critical snapshot from the bundled trusted release, then retry. Edited authoring JSON is not activated in normal mode.",
+              "severity": "error",
+              "source": {
+                "file": "/home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-base/startup-native-data/com.ascencio.storyduel/critical-generations/ecaac0c83b622838a5ce5a6ac73ea69dfdc735b345460380fee81ab8f21e4a5a/card-library/critical.json"
+              }
+            }
+          ],
+          "droppedDiagnostics": 0,
+          "loggingError": null,
+          "path": "/home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-base/startup-native-data/com.ascencio.storyduel/logs/ascencio-startup-fa0174de-08d1-4660-933d-ff08af7dc55b.jsonl",
+          "sessionId": "fa0174de-08d1-4660-933d-ff08af7dc55b"
+        },
+        "initialSource": {
+          "file": "/home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-base/startup-native-data/com.ascencio.storyduel/critical-generations/ecaac0c83b622838a5ce5a6ac73ea69dfdc735b345460380fee81ab8f21e4a5a/card-library/critical.json"
+        },
+        "kind": "native-startup-recovery",
+        "scenario": "invalid-base",
+        "status": "passed",
+        "trace": {
+          "frontend": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "gameplay",
+                "durationMs": 219.0000000000001,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 0
+              },
+              {
+                "category": "engine",
+                "durationMs": 25,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 0
+              },
+              {
+                "category": "user-data",
+                "durationMs": 2,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 492
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 4,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 2670.0000000000005
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "37666183-465d-489d-9e28-05e68e12db79"
+          },
+          "native": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 0.00017
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.012512999999999996,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 0.12690800000000002
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.48719299999999993,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 0.15395799999999998
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.01947700000000008,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 0.642013
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.481923,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 0.66162
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 25.816736,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 1.148212
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 42.624286,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 26.967142
+              },
+              {
+                "bytes": 46163,
+                "category": "maintenance",
+                "durationMs": 0.4142570000000063,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 123.381201
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.01918600000000481,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 123.795989
+              },
+              {
+                "bytes": 52097858,
+                "category": "maintenance",
+                "durationMs": 36.948578,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 127.705316
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 21.446695000000005,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 164.657511
+              },
+              {
+                "bytes": 1541,
+                "category": "maintenance",
+                "durationMs": 0.04016500000000178,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 234.348806
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.003696999999988293,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 234.389212
+              },
+              {
+                "bytes": 179089,
+                "category": "maintenance",
+                "durationMs": 0.6801449999999818,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 237.750972
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.07480000000003884,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 238.432971
+              },
+              {
+                "bytes": 933449,
+                "category": "maintenance",
+                "durationMs": 1.6431889999999785,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 242.150999
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.37234799999998813,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 17,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 243.79533
+              },
+              {
+                "bytes": 3992,
+                "category": "maintenance",
+                "durationMs": 0.04780900000000088,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 18,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 250.174126
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.004277999999970916,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 19,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 250.22275700000003
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 20,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 265.28837300000004
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.007714000000021315,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 21,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 265.324801
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.0227729999999724,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 22,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 265.34561
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.02310299999999188,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 23,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 265.368643
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.3641920000000596,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 24,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 265.391917
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 13.40823899999998,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 265.759927
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 21.14739400000002,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 279.170621
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 274.450082,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 300.318786
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.15366800000003877,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 28,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 575.765286
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0027550000000928776,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 29,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 575.919144
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.316293000000087,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 30,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 575.9220889999999
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.05462200000010853,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 31,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 576.2450249999999
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.07371899999998277,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 32,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 576.2998670000001
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 3.5834559999999556,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 33,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 576.373956
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.2411619999999175,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 34,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 579.974685
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3841899999999896,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 35,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 580.216157
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.03089700000009543,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 36,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 580.68701
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.002073999999993248,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 37,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 580.718128
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.005169999999907304,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 38,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 1076.454172
+              },
+              {
+                "bytes": 153,
+                "category": "user-data",
+                "durationMs": 0.013695000000097934,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 39,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 1076.459903
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.00896599999987302,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 40,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 1076.486002
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 41,
+                "sessionId": "37666183-465d-489d-9e28-05e68e12db79",
+                "startedMs": 3252.975069
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "37666183-465d-489d-9e28-05e68e12db79"
+          }
+        }
+      },
+      "nativeOutput": "ASCENCIO_NATIVE_ACCEPTANCE_RECORDED\nASCENCIO_IO_READY\nASCENCIO_NATIVE_ACCEPTANCE_RECORDED\n"
+    },
+    {
+      "scenario": "invalid-mod-json",
+      "exitCode": 0,
+      "preservedUserRecord": true,
+      "repairedByHost": false,
+      "report": {
+        "action": "startup-disable-mods",
+        "globalErrors": [],
+        "headingFocused": true,
+        "initialCode": "MOD_JSON_SYNTAX",
+        "initialLog": {
+          "diagnostics": [
+            {
+              "causes": [],
+              "code": "MOD_JSON_SYNTAX",
+              "message": "key must be a string at line 2 column 1",
+              "notes": [],
+              "phase": "mod-composition",
+              "remediation": "Correct or explicitly disable this enabled mod, then retry startup.",
+              "severity": "error",
+              "source": {
+                "column": 1,
+                "file": "mod.json",
+                "line": 2,
+                "modId": "recovery",
+                "pointer": ""
+              }
+            }
+          ],
+          "droppedDiagnostics": 0,
+          "loggingError": null,
+          "path": "/home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-mod-json/startup-native-data/com.ascencio.storyduel/logs/ascencio-startup-48e640ad-566b-4da2-a3f6-2eba84c52111.jsonl",
+          "sessionId": "48e640ad-566b-4da2-a3f6-2eba84c52111"
+        },
+        "initialSource": {
+          "column": 1,
+          "file": "mod.json",
+          "line": 2,
+          "modId": "recovery",
+          "pointer": ""
+        },
+        "kind": "native-startup-recovery",
+        "scenario": "invalid-mod-json",
+        "status": "passed",
+        "trace": {
+          "frontend": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "gameplay",
+                "durationMs": 182,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 0
+              },
+              {
+                "category": "engine",
+                "durationMs": 17,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 0
+              },
+              {
+                "category": "user-data",
+                "durationMs": 5,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 352
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 10,
+                "label": "native_mods_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 360
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 371
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 15,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 371
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "native_startup_log_record",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 387
+              },
+              {
+                "category": "user-data",
+                "durationMs": 1,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 426
+              },
+              {
+                "category": "user-data",
+                "durationMs": 8,
+                "label": "native_user_json_commit",
+                "operation": "write",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 428
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 436
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 2,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 437
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 440
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 194,
+                "label": "native_startup_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 442
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 178,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 636
+              },
+              {
+                "category": "engine",
+                "durationMs": 14.000000000000227,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 636
+              },
+              {
+                "category": "user-data",
+                "durationMs": 1,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 985
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 17,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 3292
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18"
+          },
+          "native": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 0.00011
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.01202200000000002,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 0.114545
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.23814700000000005,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 0.141074
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.02397499999999997,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 0.379531
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.7086069999999999,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 0.403687
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 34.366077,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 1.121051
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 22.149702000000005,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 35.489672999999996
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 284.632923,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 57.640046
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.1995039999999335,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 342.59202700000003
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.00272499999999809,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 342.792292
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.3937879999999722,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 342.795298
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.7892889999999397,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 343.20119900000003
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0752109999999675,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 343.990989
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 4.030524000000071,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 344.06640999999996
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 1.6932439999999929,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 348.116821
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.4025649999999814,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 349.811056
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.044032000000015614,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 17,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 350.224672
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.0020239999999489555,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 18,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 350.273503
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0023950000000922955,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 19,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 703.320794
+              },
+              {
+                "bytes": 322,
+                "category": "user-data",
+                "durationMs": 0.009177000000022415,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 20,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 703.323399
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0065020000000686196,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 21,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 703.342365
+              },
+              {
+                "bytes": 9,
+                "category": "gameplay",
+                "durationMs": 0.021911000000045533,
+                "label": "enabled-mod-source",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 22,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 712.416651
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.002916000000027452,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 23,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 777.8138839999999
+              },
+              {
+                "bytes": 322,
+                "category": "user-data",
+                "durationMs": 0.00862599999993563,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 24,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 777.8172410000001
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.008555999999884989,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 777.8394020000001
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.009607999999957428,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 779.6976450000001
+              },
+              {
+                "category": "user-data",
+                "durationMs": 6.618413000000032,
+                "label": "user-json-cached-atomic-write",
+                "operation": "write",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 779.712984
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 28,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 793.427416
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.02009799999996176,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 29,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 793.491296
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.02477699999997185,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 30,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 793.541059
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.02024800000003779,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 31,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 793.566066
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.5596290000000863,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 32,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 793.5865239999999
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 15.085391999999956,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 33,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 794.159438
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 23.612663,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 34,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 809.248908
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 149.38768300000004,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 35,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 832.863214
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.02138999999999669,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 36,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 982.524109
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.002685000000042237,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 37,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 982.545659
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.4473990000000186,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 38,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 982.548514
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.04722900000012942,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 39,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 983.003487
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0725760000000264,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 40,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 983.051217
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 3.2334399999999732,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 41,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 983.123953
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.16645200000004934,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 42,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 986.368944
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3766849999999522,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 43,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 986.535497
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.013514999999983957,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 44,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 986.918945
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.001852999999982785,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 45,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 986.932591
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.00313600000004044,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 46,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 1336.331411
+              },
+              {
+                "bytes": 322,
+                "category": "user-data",
+                "durationMs": 0.011891999999988911,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 47,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 1336.334837
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.009287999999969545,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 48,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 1336.361036
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 49,
+                "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18",
+                "startedMs": 3642.021256
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "1d93a0bd-b14c-440c-b444-4603b681da18"
+          }
+        }
+      },
+      "nativeOutput": "ASCENCIO_NATIVE_ACCEPTANCE_RECORDED\nASCENCIO_IO_READY\nASCENCIO_NATIVE_ACCEPTANCE_RECORDED\n"
+    },
+    {
+      "scenario": "invalid-mod-lua",
+      "exitCode": 0,
+      "preservedUserRecord": true,
+      "repairedByHost": false,
+      "report": {
+        "action": "startup-disable-mods",
+        "globalErrors": [],
+        "headingFocused": true,
+        "initialCode": "MOD_LUA_SYNTAX",
+        "initialLog": {
+          "diagnostics": [
+            {
+              "causes": [],
+              "code": "MOD_LUA_SYNTAX",
+              "message": "syntax error: broken.lua:2: <name> expected near '='",
+              "notes": [],
+              "phase": "mod-composition",
+              "remediation": "Correct or explicitly disable this enabled mod, then retry startup.",
+              "severity": "error",
+              "source": {
+                "file": "broken.lua",
+                "line": 2,
+                "modId": "recovery",
+                "pointer": ""
+              }
+            }
+          ],
+          "droppedDiagnostics": 0,
+          "loggingError": null,
+          "path": "/home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/invalid-mod-lua/startup-native-data/com.ascencio.storyduel/logs/ascencio-startup-a4e68151-4836-4c8f-b6fc-4b955a9b5f7f.jsonl",
+          "sessionId": "a4e68151-4836-4c8f-b6fc-4b955a9b5f7f"
+        },
+        "initialSource": {
+          "file": "broken.lua",
+          "line": 2,
+          "modId": "recovery",
+          "pointer": ""
+        },
+        "kind": "native-startup-recovery",
+        "scenario": "invalid-mod-lua",
+        "status": "passed",
+        "trace": {
+          "frontend": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "gameplay",
+                "durationMs": 198,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 0
+              },
+              {
+                "category": "engine",
+                "durationMs": 22,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 0
+              },
+              {
+                "category": "user-data",
+                "durationMs": 24.000000000000114,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 373
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.9999999999998864,
+                "label": "native_mods_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 399.0000000000001
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 401.0000000000001
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 10.999999999999886,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 401.0000000000001
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "native_startup_log_record",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 414
+              },
+              {
+                "category": "user-data",
+                "durationMs": 1,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 432
+              },
+              {
+                "category": "user-data",
+                "durationMs": 13,
+                "label": "native_user_json_commit",
+                "operation": "write",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 434
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 1,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 447
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 4,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 448
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 452
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 225,
+                "label": "native_startup_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 455
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 216,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 680
+              },
+              {
+                "category": "engine",
+                "durationMs": 29,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 681
+              },
+              {
+                "category": "user-data",
+                "durationMs": 1,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1110
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 17,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 3600
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "4595729d-a18d-4fdd-b683-485011485271"
+          },
+          "native": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 0.000191
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.01785399999999998,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 0.130304
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.251502,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 0.167043
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.021050000000000013,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 0.419366
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.5519450000000001,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 0.440616
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 36.791471,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1.000485
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 22.489849,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 37.795061
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 346.123736,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 60.286112
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.2059360000000083,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 407.331114
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.003697000000045136,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 407.538262
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.3836489999999913,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 407.5422
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 1.1607759999999985,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 407.93718
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.07793599999996559,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 409.098988
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 3.912862999999959,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 409.177615
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 2.1296609999999987,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 413.112629
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.4025250000000256,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 415.243392
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.04124699999999848,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 17,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 415.65808
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.001993000000027223,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 18,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 415.700219
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.003467000000000553,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 19,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 799.50606
+              },
+              {
+                "bytes": 322,
+                "category": "user-data",
+                "durationMs": 0.01122099999997772,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 20,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 799.509817
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.009166999999933978,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 21,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 799.534624
+              },
+              {
+                "bytes": 246,
+                "category": "gameplay",
+                "durationMs": 0.0196369999999888,
+                "label": "enabled-mod-source",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 22,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 816.620404
+              },
+              {
+                "bytes": 18,
+                "category": "gameplay",
+                "durationMs": 0.007835000000000036,
+                "label": "enabled-mod-source",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 23,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 816.647655
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.002985999999964406,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 24,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 849.667597
+              },
+              {
+                "bytes": 322,
+                "category": "user-data",
+                "durationMs": 0.00809500000002572,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 849.670883
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.006682999999952699,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 849.689698
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.00968799999998282,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 851.53148
+              },
+              {
+                "category": "user-data",
+                "durationMs": 11.607823999999937,
+                "label": "user-json-cached-atomic-write",
+                "operation": "write",
+                "phase": "startup",
+                "sequence": 28,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 851.545957
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 29,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 873.262516
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.020028000000024804,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 30,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 873.333789
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.031199000000015076,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 31,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 873.381208
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.02049899999997251,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 32,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 873.412617
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.5530360000000201,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 33,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 873.433276
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 14.118458999999916,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 34,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 874.0066800000001
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 24.63823400000001,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 35,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 888.127434
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 177.809709,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 36,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 912.76679
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.20582599999988815,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 37,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1090.863436
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.003385999999863998,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 38,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1091.070114
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.4249769999998989,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 39,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1091.07371
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.06381899999996676,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 40,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1091.5158090000002
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.07565199999999095,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 41,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1091.579979
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 4.159234999999853,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 42,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1091.656001
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.2169659999999567,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 43,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1095.830435
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3986970000000838,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 44,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1096.047772
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.02027799999996205,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 45,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1096.459353
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.00203300000021045,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 46,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1096.4798019999998
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.003335999999762862,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 47,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1527.8103170000002
+              },
+              {
+                "bytes": 322,
+                "category": "user-data",
+                "durationMs": 0.013094000000137385,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 48,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1527.813954
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.009067000000186454,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 49,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 1527.841826
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 50,
+                "sessionId": "4595729d-a18d-4fdd-b683-485011485271",
+                "startedMs": 4016.482725
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "4595729d-a18d-4fdd-b683-485011485271"
+          }
+        }
+      },
+      "nativeOutput": "ASCENCIO_NATIVE_ACCEPTANCE_RECORDED\nASCENCIO_IO_READY\nASCENCIO_NATIVE_ACCEPTANCE_RECORDED\n"
+    },
+    {
+      "scenario": "missing-mod-root",
+      "exitCode": 0,
+      "preservedUserRecord": true,
+      "repairedByHost": false,
+      "report": {
+        "action": "startup-disable-mods",
+        "globalErrors": [],
+        "headingFocused": true,
+        "initialCode": "MOD_ROOT_UNAVAILABLE",
+        "initialLog": {
+          "diagnostics": [
+            {
+              "causes": [
+                "MOD_ROOT_UNAVAILABLE: No such file or directory (os error 2)"
+              ],
+              "code": "MOD_ROOT_UNAVAILABLE",
+              "message": "MOD_ROOT_UNAVAILABLE: No such file or directory (os error 2)",
+              "notes": [],
+              "phase": "mod-composition",
+              "remediation": "Correct the enabled mods or restore their selected folder, or explicitly disable mods and retry. Your saves have not been removed.",
+              "severity": "error"
+            }
+          ],
+          "droppedDiagnostics": 0,
+          "loggingError": null,
+          "path": "/home/aron/Projects/ascencio/.tmp/native-recovery-20897832-5a14-4578-985d-f0d784ea4fd2/missing-mod-root/startup-native-data/com.ascencio.storyduel/logs/ascencio-startup-464100ba-fa8c-4e57-a424-73e944a353a1.jsonl",
+          "sessionId": "464100ba-fa8c-4e57-a424-73e944a353a1"
+        },
+        "kind": "native-startup-recovery",
+        "scenario": "missing-mod-root",
+        "status": "passed",
+        "trace": {
+          "frontend": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "gameplay",
+                "durationMs": 139,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0
+              },
+              {
+                "category": "engine",
+                "durationMs": 13,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0
+              },
+              {
+                "category": "user-data",
+                "durationMs": 5,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 252
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 1,
+                "label": "native_mods_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 259
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 261
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 9,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 261
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "native_startup_log_record",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 271
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 308
+              },
+              {
+                "category": "user-data",
+                "durationMs": 6.000000000000114,
+                "label": "native_user_json_commit",
+                "operation": "write",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 309
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 1,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 315.0000000000001
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 2,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 316.0000000000001
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 318.0000000000001
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 152.9999999999999,
+                "label": "native_startup_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 319.0000000000001
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 140,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 472
+              },
+              {
+                "category": "engine",
+                "durationMs": 11,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 472
+              },
+              {
+                "category": "user-data",
+                "durationMs": 1,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 719
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 17,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 2034.0000000000005
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3"
+          },
+          "native": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0.00008
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.012654,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0.106339
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.288621,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0.134542
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.02302299999999996,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0.423423
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.548848,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0.446587
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 21.815172,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 0.999252
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 22.245098,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 22.816819
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 225.01586399999997,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 45.062718
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.23129299999999375,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 270.341926
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0025650000000041473,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 270.574702
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.2886710000000221,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 270.577587
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 1.0434449999999629,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 270.87016600000004
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0696399999999926,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 271.913852
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 2.442195999999967,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 271.983793
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 1.5142470000000117,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 274.43154
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3749420000000327,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 275.946088
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.027300999999965825,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 17,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 276.324377
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.0018939999999929569,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 18,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 276.355224
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.002384000000006381,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 19,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 529.395537
+              },
+              {
+                "bytes": 438,
+                "category": "user-data",
+                "durationMs": 0.008806000000049607,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 20,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 529.3981719999999
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.008696000000099957,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 21,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 529.4164059999999
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.00204400000006899,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 22,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 585.035297
+              },
+              {
+                "bytes": 438,
+                "category": "user-data",
+                "durationMs": 0.0059909999999945285,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 23,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 585.037551
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.01566000000002532,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 24,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 585.051507
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.003165999999964697,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 585.914124
+              },
+              {
+                "category": "user-data",
+                "durationMs": 6.288704999999936,
+                "label": "user-json-cached-atomic-write",
+                "operation": "write",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 585.920476
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 596.521132
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.005269999999995889,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 28,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 596.555256
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.019526999999925465,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 29,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 596.575964
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.018554999999992106,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 30,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 596.595691
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.3358600000001388,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 31,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 596.614346
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 9.529749000000038,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 32,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 596.952991
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 20.701154000000088,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 33,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 606.484834
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 118.11057100000004,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 34,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 627.187922
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.018273999999905755,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 35,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 745.544935
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.002354999999965912,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 36,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 745.563349
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.37613499999997657,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 37,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 745.565854
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.034565000000043256,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 38,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 745.9446939999999
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0690389999999752,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 39,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 745.979319
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 2.1059759999999415,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 40,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 746.048539
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.15980999999999312,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 41,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 748.158062
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3603259999999864,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 42,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 748.318182
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.007723999999939224,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 43,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 748.680772
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.0016340000000809596,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 44,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 748.688626
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.002484999999978754,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 45,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 996.691968
+              },
+              {
+                "bytes": 438,
+                "category": "user-data",
+                "durationMs": 0.010479000000145788,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 46,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 996.694824
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.007633999999939078,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 47,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 996.718779
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 48,
+                "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3",
+                "startedMs": 2311.1742940000004
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "223ff1c9-8e28-4458-aa41-ae0178e6b4c3"
+          }
+        }
+      },
+      "nativeOutput": "ASCENCIO_NATIVE_ACCEPTANCE_RECORDED\nASCENCIO_IO_READY\nASCENCIO_NATIVE_ACCEPTANCE_RECORDED\n"
+    },
+    {
+      "scenario": "maintenance",
+      "exitCode": 0,
+      "preservedUserRecord": true,
+      "repairedByHost": false,
+      "report": {
+        "backupRestoredAndReadmitted": true,
+        "chapterRemovedImportedAndRestarted": true,
+        "globalErrors": [],
+        "kind": "native-maintenance-recovery",
+        "restoreConfirmationShown": true,
+        "scenario": "maintenance",
+        "stage": "restore-backup",
+        "status": "passed",
+        "trace": {
+          "frontend": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "gameplay",
+                "durationMs": 135,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 0
+              },
+              {
+                "category": "engine",
+                "durationMs": 11,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 0
+              },
+              {
+                "category": "user-data",
+                "durationMs": 6,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 246
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 4,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1466
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 6,
+                "label": "native_content_location",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 5,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1508
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "maintenance",
+                "operation": "phase",
+                "phase": "maintenance",
+                "sequence": 6,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1544
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 10,
+                "label": "native_critical_maintenance",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 7,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1545
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 3,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 8,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1600
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 7,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 9,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1603
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 1,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 10,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1611
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1612
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 158.00000000000043,
+                "label": "native_startup_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1614
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 150.99999999999957,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1772.0000000000005
+              },
+              {
+                "category": "engine",
+                "durationMs": 13,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1773
+              },
+              {
+                "category": "user-data",
+                "durationMs": 2,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2107
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 16,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3114
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "maintenance",
+                "operation": "phase",
+                "phase": "maintenance",
+                "sequence": 17,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3130
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 44,
+                "label": "native_critical_maintenance",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 18,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3131.0000000000005
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 19,
+                "label": "native_critical_maintenance",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 19,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3185
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 4,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 20,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3234
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 7,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 21,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3238
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 2.0000000000004547,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 22,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3246
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 23,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3248.0000000000005
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 187,
+                "label": "native_startup_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 24,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3249
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 174,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3436
+              },
+              {
+                "category": "engine",
+                "durationMs": 25.999999999999545,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3437.0000000000005
+              },
+              {
+                "category": "user-data",
+                "durationMs": 1.0000000000009095,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3757
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 28,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 4920
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "maintenance",
+                "operation": "phase",
+                "phase": "maintenance",
+                "sequence": 29,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 4930
+              },
+              {
+                "category": "user-data",
+                "durationMs": 8,
+                "label": "native_user_json_commit",
+                "operation": "write",
+                "phase": "maintenance",
+                "sequence": 30,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 4982
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 3,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 31,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5034
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 7,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 32,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5037
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 1,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "maintenance",
+                "sequence": 33,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5045
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 34,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5047
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 155.9999999999991,
+                "label": "native_startup_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 35,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5048.000000000001
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 155.9999999999991,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 36,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5205.000000000001
+              },
+              {
+                "category": "engine",
+                "durationMs": 14.99999999999909,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 37,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5205.000000000001
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 38,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5535
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0,
+                "label": "native_mods_load",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 39,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5536
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 2,
+                "label": "native_mods_activate",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 40,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 6010
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 41,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 7313
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6"
+          },
+          "native": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 0.00017
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.012151999999999996,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 0.112381
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 1.000876,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 0.138229
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.02301299999999995,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1.139696
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.5354729999999999,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1.16317
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 22.283669,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1.704214
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 20.580808000000005,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 23.989937
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 227.635425,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 44.571376
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.15972899999997026,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 272.448845
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0023850000000038563,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 272.609195
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.2690440000000649,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 272.61177
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.9378070000000208,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 272.885323
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.07499000000001388,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 273.823391
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 1.982325000000003,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 273.898602
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 1.5118629999999484,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 275.88414300000005
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.4447430000000168,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 277.396457
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.03205000000002656,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 17,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 277.86056599999995
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.0025939999999309293,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 18,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 277.89644400000003
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0028449999998656494,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 19,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 524.4825910000001
+              },
+              {
+                "bytes": 153,
+                "category": "user-data",
+                "durationMs": 0.012142000000039843,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 20,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 524.485777
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0043180000000120344,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 21,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 524.504732
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 22,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1744.184115
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "maintenance",
+                "operation": "phase",
+                "phase": "maintenance",
+                "sequence": 23,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1821.560646
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 9.366111000000046,
+                "label": "critical-selection-activation",
+                "operation": "write",
+                "phase": "maintenance",
+                "sequence": 24,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1823.294365
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1892.095535
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.022561999999879845,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1892.131914
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.020007000000305197,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1892.170346
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.022302000000081534,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 28,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1892.190563
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.3828080000000682,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 29,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1892.213005
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 9.79154799999992,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 30,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1892.598318
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 20.890818999999965,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 31,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1902.39178
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 125.8765580000004,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 32,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 1923.283631
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.1278389999997671,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 33,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2049.408464
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0022550000003320747,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 34,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2049.542685
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.19940300000007485,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 35,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2049.54506
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.15609200000017154,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 36,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2049.74788
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.36286999999992986,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 37,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2049.904243
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.0095379999997931,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 38,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2050.2704390000004
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.0017630000002100132,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 39,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2050.280017
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0021839999999428983,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 40,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2386.0301
+              },
+              {
+                "bytes": 153,
+                "category": "user-data",
+                "durationMs": 0.006973000000016327,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 41,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2386.032504
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.004027999999379972,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 42,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 2386.044917
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 43,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3392.248974
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "maintenance",
+                "operation": "phase",
+                "phase": "maintenance",
+                "sequence": 44,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3408.1904280000003
+              },
+              {
+                "bytes": 46163,
+                "category": "maintenance",
+                "durationMs": 0.034734999999727734,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "maintenance",
+                "sequence": 45,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3409.021525
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.01873500000056083,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "maintenance",
+                "sequence": 46,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3409.0567109999997
+              },
+              {
+                "bytes": 52097858,
+                "category": "maintenance",
+                "durationMs": 20.65153999999984,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "maintenance",
+                "sequence": 47,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3409.076418
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 20.6743120000001,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "maintenance",
+                "sequence": 48,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3429.729391
+              },
+              {
+                "bytes": 1541,
+                "category": "maintenance",
+                "durationMs": 0.017092000000047847,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "maintenance",
+                "sequence": 49,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3453.339985
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.0014829999995527032,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "maintenance",
+                "sequence": 50,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3453.3573880000004
+              },
+              {
+                "bytes": 179089,
+                "category": "maintenance",
+                "durationMs": 0.03882300000032046,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "maintenance",
+                "sequence": 51,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3459.4349869999996
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.07156400000030771,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "maintenance",
+                "sequence": 52,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3459.474131
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 7.686253999999735,
+                "label": "critical-selection-activation",
+                "operation": "write",
+                "phase": "maintenance",
+                "sequence": 53,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3474.033774
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 54,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3527.255539
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.017472999999426975,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 55,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3527.3443850000003
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.018385000000307627,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 56,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3527.375984
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.022501999999803957,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 57,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3527.3945590000003
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.39885699999967983,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 58,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3527.417252
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 21.88966999999957,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 59,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3527.8185940000003
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 21.57578199999989,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 60,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3549.709726
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 136.8681830000005,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 61,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3571.2862899999996
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.1459939999999733,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 62,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3710.820047
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0026450000000295404,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 63,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3710.966161
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.12990400000035152,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 64,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3710.968886
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.03442499999982829,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 65,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3711.101304
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.06847799999968629,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 66,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3711.137212
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 2.613017000000127,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 67,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3711.20577
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.1620239999997466,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 68,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3713.834877
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3561869999998635,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 69,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3713.997071
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.009097000000110713,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 70,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3714.355743
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.001733999999942171,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 71,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 3714.3649
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0034059999993587553,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 72,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 4035.790513
+              },
+              {
+                "bytes": 153,
+                "category": "user-data",
+                "durationMs": 0.009257000000616245,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 73,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 4035.79435
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.006401999999525287,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 74,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 4035.812123
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 75,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5198.120150000001
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "maintenance",
+                "operation": "phase",
+                "phase": "maintenance",
+                "sequence": 76,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5208.214385
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.011742000000595,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "maintenance",
+                "sequence": 77,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5261.010251
+              },
+              {
+                "category": "user-data",
+                "durationMs": 6.708159999999225,
+                "label": "user-json-cached-atomic-write",
+                "operation": "write",
+                "phase": "maintenance",
+                "sequence": 78,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5261.035599000001
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "startup",
+                "operation": "phase",
+                "phase": "startup",
+                "sequence": 79,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5326.322121
+              },
+              {
+                "category": "registry",
+                "durationMs": 0.01344500000050175,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 80,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5326.362085999999
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.025988999999754014,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 81,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5326.389828
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.022963000000345343,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 82,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5326.416247
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.42398400000001857,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 83,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5326.439421
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 10.61118499999975,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 84,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5326.866531000001
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 22.43762599999991,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 85,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5337.4799
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 118.32522100000006,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 86,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5359.918237999999
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.11851200000000972,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 87,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5478.482427
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0026250000000800355,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 88,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5478.60113
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.2686329999996815,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 89,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5478.603935
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.0364079999999376,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 90,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5478.877488
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.06927900000027876,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 91,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5478.914317
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 2.7269599999990533,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 92,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5478.983847
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.16962800000055722,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 93,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5481.715956999999
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.35950400000001537,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 94,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5481.885745
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.010379000000284576,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 95,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5482.248565
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.001643000000512984,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 96,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5482.259075
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.0021440000009533833,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 97,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5813.219787999999
+              },
+              {
+                "bytes": 385,
+                "category": "user-data",
+                "durationMs": 0.00971800000024814,
+                "label": "user-json",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 98,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5813.222142
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.006983000000218453,
+                "label": "user-json-validation",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 99,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 5813.2436020000005
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 100,
+                "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6",
+                "startedMs": 7591.217844
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "a017f04b-b8f9-49c8-a7b2-e02e3ff9b1e6"
+          }
+        }
+      },
+      "nativeOutput": "ASCENCIO_IO_READY\nASCENCIO_IO_READY\nASCENCIO_IO_READY\nASCENCIO_IO_READY\nASCENCIO_NATIVE_ACCEPTANCE_RECORDED\n"
+    }
+  ]
+}

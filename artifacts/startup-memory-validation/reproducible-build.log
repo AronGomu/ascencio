@@ -1,0 +1,8 @@
+
+> ascencio@0.1.0 build:reproducible
+> node scripts/verify-reproducible-build.ts
+
+{
+  "status": "ok",
+  "files": 93
+}

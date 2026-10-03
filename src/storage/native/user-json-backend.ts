@@ -1,30 +1,45 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invokeNative as invoke } from "./invoke.ts";
 import type { StorageResult } from "../contracts/package.ts";
 import type { UserJsonBackend } from "../json/user-data-store.ts";
 
 export function nativeUserJsonBackend(): UserJsonBackend {
-  const read = () => invoke<string | null>("native_user_json_read");
+  let sessionId: string | null = null;
+  const read = async () => {
+    const opened = await invoke<{ sessionId: string; source: string | null }>(
+      "native_user_json_open",
+    );
+    sessionId = opened.sessionId;
+    return opened.source;
+  };
   return {
     read,
     async write(source, expected) {
-      try {
-        return await invoke<StorageResult<void>>("native_user_json_write", {
-          source,
-          expected,
-        });
-      } catch {
-        // A lost reply can follow a completed rename. Check before reporting failure.
+      const args = {
+        sessionId,
+        source,
+        expectedRevision:
+          expected === null
+            ? 0
+            : (JSON.parse(expected) as { revision: number }).revision,
+      };
+      for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const current = await read();
-          if (current === source) return { kind: "ok", value: undefined };
-          if (current === expected)
-            return { kind: "failed", error: { code: "STORAGE_UNAVAILABLE" } };
+          return await invoke<StorageResult<void>>(
+            "native_user_json_commit",
+            args,
+          );
         } catch {
-          /* Retain the uncertain write outcome below. */
+          /* Retry exact bytes/revision; native receipt makes acknowledgement idempotent. */
         }
-        const error = new Error("Native user save outcome is unknown");
-        error.name = "UserWriteOutcomeUnknown";
-        throw error;
+      }
+      const error = new Error("Native user save outcome is unknown");
+      error.name = "UserWriteOutcomeUnknown";
+      throw error;
+    },
+    async close() {
+      if (sessionId !== null) {
+        await invoke("native_user_json_close", { sessionId });
+        sessionId = null;
       }
     },
   };

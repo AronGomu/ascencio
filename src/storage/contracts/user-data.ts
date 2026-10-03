@@ -45,6 +45,14 @@ export type RestoreUserDataResult =
   StorageResult<{ readonly revision: number }> | RestoreOutcomeUnknown;
 
 export interface UserDataStore {
+  /** Present on the initialized native memory store; fixture ports may omit it. */
+  readonly persistence?: {
+    readonly acceptedRevision: number;
+    readonly persistedRevision: number;
+    readonly dirty: boolean;
+    readonly uncertain: boolean;
+  };
+  flush?(): Promise<StorageResult<void>>;
   readUser(
     namespace: UserNamespace,
     key: string,

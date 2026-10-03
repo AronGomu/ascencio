@@ -44,7 +44,10 @@
         );
         if (problem?.kind === "corrupt") saveError = problem.reason;
         if (problem?.kind === "incompatible")
-          saveError = `Story save schema ${problem.found} is incompatible`;
+          saveError =
+            problem.reason === "content-composition"
+              ? "This save requires its original enabled mod versions. Restore that selection and restart to continue."
+              : `Story save schema ${problem.found} is incompatible`;
       })
       .catch((error: unknown) => {
         saveError =

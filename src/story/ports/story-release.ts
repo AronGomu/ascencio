@@ -1,3 +1,4 @@
+import type { StoryEventChain } from "./story-event-chain.ts";
 import type { ChapterModule, CommerceContent } from "../../modules/index.ts";
 // src/story/ports/story-release.ts; public through src/story/ports/index.ts
 import type { CardCode } from "../../cards/index.ts";
@@ -12,6 +13,7 @@ export type StoryRarity =
   | "ultimate-rare"
   | "ghost-rare";
 export interface StoryDocument {
+  readonly chain?: StoryEventChain;
   readonly schemaVersion: 1;
   readonly contentId: string;
   readonly title: string;
@@ -69,9 +71,15 @@ export interface StoryRelease {
 }
 export interface StoryMediaLease {
   readonly url: string;
+  subscribe?(listener: (url: string) => void): () => void;
   release(): void;
 }
 export interface StoryMedia {
+  acquireEvent?(
+    chapterId: string,
+    logicalId: string,
+    signal: AbortSignal,
+  ): Promise<StoryMediaLease | null>;
   acquireMap(
     chapterId: string,
     signal: AbortSignal,

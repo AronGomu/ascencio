@@ -112,10 +112,10 @@ it("native runtime retires browser SQLite and keeps source commands", () => {
     "content:setup:verify",
   ])
     expect(pkg.scripts).not.toHaveProperty(name);
-  expect(pkg.scripts["content:export"]).toBe(
+  expect(pkg.scripts["legacy:content:export-sqlite"]).toBe(
     "node scripts/export-content-packages.ts",
   );
-  expect(pkg.scripts["content:verify"]).toBe(
+  expect(pkg.scripts["legacy:content:verify-sqlite"]).toBe(
     "node scripts/verify-content-package.ts",
   );
   for (const file of [

@@ -1,0 +1,27 @@
+1:16:06 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+ ❯ tests/component/shell/StartupRoot.test.ts (8 tests | 1 failed) 562ms
+   × shows opener failures in the same compact error layout and includes them in Copy Error 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > shows opener failures in the same compact error layout and includes them in Copy Error
+TypeError: Cannot read properties of undefined (reading 'message')
+ ❯ tests/component/shell/StartupRoot.test.ts:271:51
+    269|   await fireEvent.click(view.getByRole("button", { name: "Copy Error" …
+    270|   expect(
+    271|     JSON.parse(mocks.clipboard.mock.calls[0]![0]).actionError.message,
+       |                                                   ^
+    272|   ).toBe("LOG_OPEN_FAILED");
+    273| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 105 passed (106)
+   Start at  01:16:06
+   Duration  4.92s (transform 4.88s, setup 1.97s, import 4.02s, tests 2.94s, environment 660ms)
+

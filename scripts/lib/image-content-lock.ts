@@ -14,7 +14,7 @@ import { setImageFileName } from "./set-images.ts";
 
    What it proves is "unchanged since we pinned it", not "genuine". YGOPRODeck
    publishes no digest, so the lock is trust-on-first-use seeded and cannot
-   attest provenance. Regenerating it is an explicit act (`npm run assets:lock`)
+   attest provenance. Regenerating it is an explicit act (`npm run assets:images:pin`)
    and never a side effect of downloading or verifying, or the loop would close
    on itself again. */
 

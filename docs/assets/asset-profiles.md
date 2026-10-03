@@ -2,7 +2,7 @@
 
 ## Ownership
 
-Package sources live under `assets/content/<package-id>/`; app-only bytes live under `assets/app/`. `scripts/lib/asset-roots.ts:PACKAGE_ASSET_SOURCES` routes acquisition, validators, and runtime snapshots to package inputs. `ASSET_SOURCES` is retained only as legacy local copy/profile mapping for `assets:migrate`, `assets:promote`, and `assets:profiles:sync`; it has no build, serving, hosted-delivery, or browser-activation role. Frozen vendor bytes remain at `vendor/ocgcore-wasm/0.1.2/`; acquired engine output is tooling-only under `generated/acquisition/engine/current/`.
+Package sources live under `assets/content/<package-id>/`; app-only bytes live under `assets/app/`. `scripts/lib/asset-roots.ts:PACKAGE_ASSET_SOURCES` routes acquisition, validators, and runtime snapshots to package inputs. `ASSET_SOURCES` is retained only as legacy local copy/profile mapping for `legacy:assets:copy-migrate`, `legacy:assets:profile-promote`, and `legacy:assets:inventory`; it has no build, serving, hosted-delivery, or browser-activation role. Frozen vendor bytes remain at `vendor/ocgcore-wasm/0.1.2/`; acquired engine output is tooling-only under `generated/acquisition/engine/current/`.
 
 Sections describing `core`/`runtime`/`chapter-01` delivery profiles document retained local source tooling, not player package composition. Current package producer/lifecycle lives in [manual SQLite setup](manual-sqlite-setup.md) and [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md).
 
@@ -20,11 +20,11 @@ The chapter rules come from `content/chapter-selections.json`, `content/authorin
 ## Scan and promotion
 
 ```bash
-npm run assets:profiles:sync -- --check
-npm run assets:profiles:sync
-npm run assets:promote -- --profile chapter-01 --files-from release-assets.txt
-npm run assets:promote -- --profile chapter-01 --from assets/story/chapter-01 --all
-npm run assets:promote -- --profile chapter-01 --from assets/story/chapter-01 --all --apply
+npm run legacy:assets:inventory -- --check
+npm run legacy:assets:inventory
+npm run legacy:assets:profile-promote -- --profile chapter-01 --files-from release-assets.txt
+npm run legacy:assets:profile-promote -- --profile chapter-01 --from assets/story/chapter-01 --all
+npm run legacy:assets:profile-promote -- --profile chapter-01 --from assets/story/chapter-01 --all --apply
 ```
 
 - S1. Scan every regular file regardless Git ignore rules. No media decoding or source-code usage inference. Links, special files, credential names, unsafe/case/Unicode-colliding paths fail closed. Disappearance after root/file observation fails `ASSET_SOURCE_CHANGED`, not optional absence.
@@ -40,8 +40,8 @@ All new CLIs accept `--help`, emit structured stderr progress plus one final std
 Before switching a legacy worktree's consumers to canonical roots:
 
 ```bash
-npm run assets:migrate -- --plan
-npm run assets:migrate -- --apply generated/asset-delivery/migration-plan.json
+npm run legacy:assets:copy-migrate -- --plan
+npm run legacy:assets:copy-migrate -- --apply generated/asset-delivery/migration-plan.json
 ```
 
 - M1. Preview hashes exact M1–M9 mappings from `ASSET_SOURCES`, checks destination conflicts including empty-directory case/Unicode aliases, writes canonical plan. Derived sibling-temp paths must fit the 512-byte path/255-byte component limits before any copy. It does not copy or change source code.
@@ -66,8 +66,8 @@ Explicit acquisition commands remain available, targeting package-owned roots un
 
 ## Manual SQLite producer boundary
 
-- Q1. `content:export -- --spec <recipe>` validates the explicitly selected dependency closure and card, script, set, deck, opponent, limit, default, and story references before writing releases. Duplicate input identities reject before output. Normalized generated required-card-script declarations are intersected with catalog definitions; all script rows and globals remain available. `ExportReceipt.inventoryOnlyScripts` reports omitted required-card declarations by exact name/reason `missing-catalog-definition`; absent declared scripts still reject. Flat authored required-script config remains strict. Releases use `generated/content-packages/<package-id>/<version>.sqlite`; existing differing bytes are never replaced.
-- Q2. `content:verify -- --file <file>` verifies only that file's exact schema, rows, SQLite integrity/local foreign keys, script-source SHA-256, asset BLOB SHA-256, and full-file identity. It does not select sibling releases or certify an installed stack. Cross-package validation currently belongs to full-recipe export; selected/active-stack import and verification belong to the SQLite Worker lifecycle implementation. A directory of immutable releases is not an active stack.
-- Q3. `assets:restructure` is separate from the hosted migration above. Pending schema2 binds the exact plan digest/mapping to an exclusively created temp inode/device/uid. Retry verifies source hashes, temp-prefix bytes, sibling paths, regular-file ownership, and absence of symlinks before appending to a partial copy. A linked destination must share that owned temp inode; identical bytes alone never establish ownership. Completion records the reverse mapping before removing the verified temp/pending marker. Fully matching legacy completed receipts remain byte-identical; legacy pending records without inode evidence fail closed, preserved for inspection.
+- Q1. `legacy:content:export-sqlite -- --spec <recipe>` validates the explicitly selected dependency closure and card, script, set, deck, opponent, limit, default, and story references before writing releases. Duplicate input identities reject before output. Normalized generated required-card-script declarations are intersected with catalog definitions; all script rows and globals remain available. `ExportReceipt.inventoryOnlyScripts` reports omitted required-card declarations by exact name/reason `missing-catalog-definition`; absent declared scripts still reject. Flat authored required-script config remains strict. Releases use `generated/content-packages/<package-id>/<version>.sqlite`; existing differing bytes are never replaced.
+- Q2. `legacy:content:verify-sqlite -- --file <file>` verifies only that file's exact schema, rows, SQLite integrity/local foreign keys, script-source SHA-256, asset BLOB SHA-256, and full-file identity. It does not select sibling releases or certify an installed stack. Cross-package validation currently belongs to full-recipe export; selected/active-stack import and verification belong to the SQLite Worker lifecycle implementation. A directory of immutable releases is not an active stack.
+- Q3. `legacy:assets:copy-to-package-roots` is separate from the hosted migration above. Pending schema2 binds the exact plan digest/mapping to an exclusively created temp inode/device/uid. Retry verifies source hashes, temp-prefix bytes, sibling paths, regular-file ownership, and absence of symlinks before appending to a partial copy. A linked destination must share that owned temp inode; identical bytes alone never establish ownership. Completion records the reverse mapping before removing the verified temp/pending marker. Fully matching legacy completed receipts remain byte-identical; legacy pending records without inode evidence fail closed, preserved for inspection.
 - Q4. Recovery assumes one cooperative local writer and a trusted filesystem root. Same-user malicious mutation can forge local metadata; receipts are not cryptographic authentication. Synced file writes and unit interruption probes do not attest power-loss durability. A crash before pending publication can leave an unreceipted UUID temp; it is never adopted or deleted automatically. Originals are always retained. Do not remove a rejected pending file to bypass ownership checks.
 - Q5. Hosted `content:publish`, bundle/ZIP, R2, player-download, and selector consumers are retired. Package acquisition uses `PACKAGE_ASSET_SOURCES`; `ASSET_SOURCES` survives only for pure local scanner/copy/profile compatibility. No original-root cleanup is authorized by these commands.

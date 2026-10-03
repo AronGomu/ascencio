@@ -61,7 +61,7 @@ Foundation: objectivist (Ayn Rand) philosophy at every level — aesthetics, val
 - **Persistence** is IndexedDB (metadata, saves, decks, debug runs) plus Cache Storage (images). Settings survive in `localStorage` under `ygo.ui.v3`.
 - **One layout law**, computed in `src/shell/stage-layout.ts` and read by every domain: ≥1024px is a centred 16:9 stage, below that portrait or landscape mobile. `body` never scrolls; the stage clips.
 - **Production duels shuffle normally.** Deterministic inputs exist for tests and diagnostics only.
-- **Architecture is a modular monolith** with machine-enforced boundaries: four public entries (`src/shell`, `src/story`, `src/deck-editor`, `src/battle`) plus the shared `src/decks` library, checked by ESLint zones and `tests/unit/domain-boundaries.test.ts`. Domains load on demand under per-domain byte budgets enforced by `npm run build:verify`.
+- **Architecture is a modular monolith** with machine-enforced boundaries: four public entries (`src/shell`, `src/story`, `src/deck-editor`, `src/battle`) plus the shared `src/decks` library, checked by ESLint zones and `tests/unit/domain-boundaries.test.ts`. Domains load on demand under per-domain byte budgets enforced by `npm run frontend:verify`.
 - **Every rendered element carries a `data-cy` role attribute**, unique per document, enforced by `tests/unit/data-cy-coverage.test.ts`. Any new UI inherits this contract.
 
 **Binding constraints.**

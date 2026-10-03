@@ -250,10 +250,14 @@
           ),
         }
       : entryIntent === null || entryIntent === "new"
-        ? reduceStory(createInitialStoryState(), {
-            type: "new-game",
-            starterGrant: buildInstalledStarterGrant(chapter, ruleset),
-          })
+        ? reduceStory(
+            createInitialStoryState(),
+            {
+              type: "new-game",
+              starterGrant: buildInstalledStarterGrant(chapter, ruleset),
+            },
+            document,
+          )
         : createInitialStoryState();
   /* A restored checkpoint with no result to apply is a handoff that never
      produced one — a duel that was never mounted, or a session route that
@@ -296,6 +300,7 @@
     chapter.shopId,
   );
   const mediaLeases: StoryMediaLease[] = [];
+  const mediaSubscriptions: (() => void)[] = [];
   const mediaAbort = new AbortController();
   let mapImageUrl: string | null = null;
   let imageError: string | null = null;
@@ -327,6 +332,7 @@
     destroyed = true;
     stopPlaybackTimer();
     mediaAbort.abort();
+    mediaSubscriptions.forEach((unsubscribe) => unsubscribe());
     mediaLeases.forEach((lease) => lease.release());
   });
 
@@ -411,7 +417,9 @@
   function readProblem(result: StorySaveReadResult): string | null {
     if (result.kind === "corrupt") return `${result.slot}: ${result.reason}`;
     if (result.kind === "incompatible")
-      return `${result.slot}: save schema ${String(result.found)} is incompatible`;
+      return result.reason === "content-composition"
+        ? `${result.slot}: this save requires a different mod composition. Restore its required mod versions and restart preparation.`
+        : `${result.slot}: save schema ${String(result.found)} is incompatible`;
     return null;
   }
 
@@ -546,13 +554,24 @@
       : ENCOUNTER_LABELS[state.encounterId];
   $: beat =
     document.beats[Math.min(state.narrativeIndex, document.beats.length - 1)]!;
-  $: activeChoices =
-    beat.id === chapterModule.choiceBeatId && state.choice === null
+  $: activeChoices = document.chain
+    ? document.choices.filter((c) =>
+        document
+          .chain!.nodes.find((n) => n.beatId === beat.id)
+          ?.choices.some((choice) => choice.id === c.id),
+      )
+    : beat.id === chapterModule.choiceBeatId && state.choice === null
       ? document.choices
       : [];
-  $: historyEntries = document.beats
-    .slice(0, state.narrativeIndex + 1)
-    .map(({ speaker, text }) => ({ speaker, text }));
+  $: chainNode = document.chain?.nodes.find((node) => node.beatId === beat.id);
+  $: historyEntries = (
+    document.chain
+      ? (state.visitedBeatIds ?? [beat.id]).flatMap((id) => {
+          const visited = document.beats.find((entry) => entry.id === id);
+          return visited ? [visited] : [];
+        })
+      : document.beats.slice(0, state.narrativeIndex + 1)
+  ).map(({ speaker, text }) => ({ speaker, text }));
   /* Playback is driven from here rather than from a reactive statement: it
      schedules an advance, and an advance is what re-runs it. The key makes
      that loop terminate at one timer per beat — an update that changes
@@ -614,9 +633,13 @@
     }
     const halt = playbackHalt(playback, {
       hasChoices: activeChoices.length > 0,
-      atLastBeat: state.narrativeIndex >= document.beats.length - 1,
+      atLastBeat: document.chain
+        ? chainNode?.next == null
+        : state.narrativeIndex >= document.beats.length - 1,
       nextBeatRead: readBeats.has(
-        document.beats[state.narrativeIndex + 1]?.id ?? "",
+        (document.chain
+          ? chainNode?.next
+          : document.beats[state.narrativeIndex + 1]?.id) ?? "",
       ),
       skipUnread: $playbackSettings.skipUnread,
     });
@@ -647,16 +670,28 @@
 
   async function loadImages(): Promise<void> {
     if (media === null) return;
-    const retain = (lease: StoryMediaLease | null): string | null => {
+    const retain = (
+      lease: StoryMediaLease | null,
+      changed: (url: string) => void,
+    ): string | null => {
       if (lease === null) return null;
       if (destroyed) {
         lease.release();
         return null;
       }
       mediaLeases.push(lease);
-      return lease.url;
+      const unsubscribe = lease.subscribe?.((url) => {
+        if (!destroyed) changed(url);
+      });
+      if (unsubscribe) mediaSubscriptions.push(unsubscribe);
+      return lease.url || null;
     };
-    mapImageUrl = retain(await media.acquireMap(chapter.id, mediaAbort.signal));
+    mapImageUrl = retain(
+      await media.acquireMap(chapter.id, mediaAbort.signal),
+      (url) => {
+        mapImageUrl = url || null;
+      },
+    );
     const data = installedShopSetData(
       release.chapters.flatMap((chapter) => chapter.sets),
       chapter.commerce,
@@ -670,6 +705,17 @@
             set.sourceSetId ?? set.id,
             mediaAbort.signal,
           ),
+          (url) => {
+            if (shopData)
+              shopData = {
+                ...shopData,
+                sets: shopData.sets.map((item) =>
+                  item.id === set.id
+                    ? { ...item, imageUrl: url || null }
+                    : item,
+                ),
+              };
+          },
         ),
       })),
     );
@@ -917,7 +963,7 @@
     advanceBeat();
   }
   function advanceBeat(): void {
-    if (state.narrativeIndex >= document.beats.length - 1) {
+    if (!document.chain && state.narrativeIndex >= document.beats.length - 1) {
       dispatch({ type: "go-to-map" });
       return;
     }
@@ -1204,6 +1250,18 @@
         onback={onmainmenu}
       />
     {:else if state.screen === "narrative"}
+      {#key beat.id}
+        {@const eventMedia = document.chain?.nodes.find(
+          (n) => n.beatId === beat.id,
+        )?.media}
+        {#if eventMedia}{#await import("./components/StoryEventMedia.svelte") then module}<svelte:component
+              this={module.default}
+              event={eventMedia}
+              {media}
+              chapterId={chapter.id}
+              oncomplete={advanceBeat}
+            />{/await}{/if}
+      {/key}
       <NarrativeScreen
         {beat}
         narrativeIndex={state.narrativeIndex}

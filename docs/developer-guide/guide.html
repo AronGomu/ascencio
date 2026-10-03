@@ -562,7 +562,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
     <h2>High-attention areas</h2>
     <div class="grid-3">
       <div class="panel danger"><h3>Large boundary files</h3><p><code>App.svelte</code> 1,286 lines; <code>PromptRegistry.ts</code> 1,245; Worker event parser 1,077. Changes can affect many states. Require focused tests.</p></div>
-      <div class="panel warning"><h3>Generated prerequisites</h3><p>Vite config reads generated runtime manifest at config load. Fresh checkout needs <code>npm run assets:mvp</code> before dev/build.</p></div>
+      <div class="panel warning"><h3>Generated prerequisites</h3><p>Vite config reads generated runtime manifest at config load. Fresh checkout needs <code>npm run assets:bootstrap</code> before dev/build.</p></div>
       <div class="panel warning"><h3>Private deployment</h3><p>Image redistribution remains unapproved. Normal production packaging refuses artwork. Approved command uses explicit private mode and writes marker.</p></div>
       <div class="panel"><h3>Two runtime hosts</h3><p>Browser Worker and Node Worker use shared runtime with separate asset loaders/bridges. Keep contracts host-neutral; test both boundaries.</p></div>
       <div class="panel"><h3>Fallback complexity</h3><p>Runtime + image fallbacks depend on synchronized snapshot metadata, digest receipts, cache namespaces, active/previous pointers.</p></div>
@@ -846,7 +846,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       <rect class="box-gold" x="310" y="690" width="540" height="50" rx="12"/><text class="label" x="580" y="721" text-anchor="middle">Recoverably publish generated/*/current + ready status</text><path class="arrow-gold" d="M580 645 V690"/>
       </svg>
     </figure>
-    <p>Unified command: <code>npm run assets:mvp</code>. Offline regeneration: <code>npm run assets:mvp -- --offline</code>. Run is cross-process locked; final status becomes <code>ready</code> only after all verifiers pass.</p>
+    <p>Unified command: <code>npm run assets:bootstrap</code>. Offline regeneration: <code>npm run assets:bootstrap -- --offline</code>. Run is cross-process locked; final status becomes <code>ready</code> only after all verifiers pass.</p>
   </section>
 
   <section id="data-quality--snapshot">
@@ -892,7 +892,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
 
   <section id="data-quality--build">
     <h2>Production package flow</h2>
-    <ol class="flow-list"><li><code>vendor:verify</code> proves vendored engine package/file hashes.</li><li><code>snapshot:verify</code> proves current runtime root and all generated inputs.</li><li><code>vite build --mode private</code> compiles Svelte, dedicated module Worker, sync engine adapter, lazy Phaser chunk.</li><li>Vite runtime plugin copies only recursively resolved active-deck closure, active preset images, engine WASM/manifests, licenses.</li><li>Unapproved image posture writes <code>PRIVATE_DEPLOYMENT_ONLY.txt</code>; ordinary non-private packaging refuses.</li><li><code>build:verify</code> independently rehashes source vs dist, exact file sets, content-derived IDs, engine chunk, Worker digest embedding, activation ID, licenses, forbidden Node markers, size budgets.</li><li><code>build:reproducible</code> creates two isolated builds and requires identical hashes.</li></ol>
+    <ol class="flow-list"><li><code>vendor:verify</code> proves vendored engine package/file hashes.</li><li><code>content:source-manifest:verify</code> proves current runtime root and all generated inputs.</li><li><code>vite build --mode private</code> compiles Svelte, dedicated module Worker, sync engine adapter, lazy Phaser chunk.</li><li>Vite runtime plugin copies only recursively resolved active-deck closure, active preset images, engine WASM/manifests, licenses.</li><li>Unapproved image posture writes <code>PRIVATE_DEPLOYMENT_ONLY.txt</code>; ordinary non-private packaging refuses.</li><li><code>frontend:verify</code> independently rehashes source vs dist, exact file sets, content-derived IDs, engine chunk, Worker digest embedding, activation ID, licenses, forbidden Node markers, size budgets.</li><li><code>frontend:verify-reproducible</code> creates two isolated builds and requires identical hashes.</li></ol>
     <div class="grid-2"><div class="panel"><h3>Initial JS</h3><p>Svelte app + lightweight orchestration. Phaser excluded from first-load bundle.</p></div><div class="panel"><h3>Lazy presentation</h3><p><code>DuelField.svelte</code> dynamic-imports Phaser bridge only after semantic duel UI has state/images.</p></div><div class="panel"><h3>Dedicated Worker</h3><p>Vite emits separate <code>duel.worker-browser-*</code> module containing runtime/protocol/adapter, not Node loaders.</p></div><div class="panel"><h3>Static runtime</h3><p>Dist carries manifest, sync WASM, active JSON shards/scripts/strings, active images, licenses under base-aware <code>runtime/</code>.</p></div></div>
   </section>
 
@@ -920,12 +920,12 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
     <h2>CI and local gates</h2>
     <figure class="diagram"><header><h3>Compatibility-and-browser pipeline</h3><p>.github/workflows/ci.yml</p></header>
       <svg viewBox="0 0 1160 340" role="img" aria-labelledby="data-quality--ci-title"><title id="data-quality--ci-title">CI pipeline</title><defs></defs>
-      <rect class="box" x="30" y="75" width="145" height="90" rx="10"/><text class="label" x="102" y="108" text-anchor="middle">Checkout</text><text class="small" x="102" y="132" text-anchor="middle">Node 26</text><text class="tiny" x="102" y="151" text-anchor="middle">restore caches</text><rect class="box-accent" x="215" y="75" width="175" height="90" rx="10"/><text class="label" x="302" y="108" text-anchor="middle">Regenerate</text><text class="small" x="302" y="132" text-anchor="middle">assets:mvp</text><text class="tiny" x="302" y="151" text-anchor="middle">network + verify</text><rect class="box" x="430" y="75" width="190" height="90" rx="10"/><text class="label" x="525" y="108" text-anchor="middle">Isolated copy</text><text class="small" x="525" y="132" text-anchor="middle">npm ci --offline</text><text class="tiny" x="525" y="151" text-anchor="middle">check:headless</text><rect class="box" x="660" y="75" width="175" height="90" rx="10"/><text class="label" x="747" y="108" text-anchor="middle">Browsers</text><text class="small" x="747" y="132" text-anchor="middle">install 3 engines</text><text class="tiny" x="747" y="151" text-anchor="middle">Chromium/FF/WebKit</text><rect class="box-accent" x="875" y="75" width="250" height="90" rx="10"/><text class="label" x="1000" y="108" text-anchor="middle">npm run check</text><text class="small" x="1000" y="132" text-anchor="middle">headless + browser</text><text class="tiny" x="1000" y="151" text-anchor="middle">build/repro/E2E</text>
+      <rect class="box" x="30" y="75" width="145" height="90" rx="10"/><text class="label" x="102" y="108" text-anchor="middle">Checkout</text><text class="small" x="102" y="132" text-anchor="middle">Node 26</text><text class="tiny" x="102" y="151" text-anchor="middle">restore caches</text><rect class="box-accent" x="215" y="75" width="175" height="90" rx="10"/><text class="label" x="302" y="108" text-anchor="middle">Regenerate</text><text class="small" x="302" y="132" text-anchor="middle">assets:bootstrap</text><text class="tiny" x="302" y="151" text-anchor="middle">network + verify</text><rect class="box" x="430" y="75" width="190" height="90" rx="10"/><text class="label" x="525" y="108" text-anchor="middle">Isolated copy</text><text class="small" x="525" y="132" text-anchor="middle">npm ci --offline</text><text class="tiny" x="525" y="151" text-anchor="middle">check:headless</text><rect class="box" x="660" y="75" width="175" height="90" rx="10"/><text class="label" x="747" y="108" text-anchor="middle">Browsers</text><text class="small" x="747" y="132" text-anchor="middle">install 3 engines</text><text class="tiny" x="747" y="151" text-anchor="middle">Chromium/FF/WebKit</text><rect class="box-accent" x="875" y="75" width="250" height="90" rx="10"/><text class="label" x="1000" y="108" text-anchor="middle">npm run check</text><text class="small" x="1000" y="132" text-anchor="middle">headless + browser</text><text class="tiny" x="1000" y="151" text-anchor="middle">build/repro/E2E</text>
       <path class="arrow" d="M175 120 H215"/><path class="arrow" d="M390 120 H430"/><path class="arrow" d="M620 120 H660"/><path class="arrow" d="M835 120 H875"/>
       <rect class="box-gold" x="655" y="235" width="225" height="65" rx="10"/><text class="label" x="767" y="264" text-anchor="middle">Success artifact</text><text class="small" x="767" y="286" text-anchor="middle">private dist + manifests</text><rect class="box-danger" x="925" y="235" width="200" height="65" rx="10"/><text class="label" x="1025" y="264" text-anchor="middle">Failure evidence</text><text class="small" x="1025" y="286" text-anchor="middle">traces/reports/status</text><path class="arrow-gold" d="M1000 165 C950 210 800 205 800 235"/><path class="arrow-muted" d="M1000 165 V235"/>
       </svg>
     </figure>
-    <table><thead><tr><th>Command</th><th>Use</th></tr></thead><tbody><tr><td><code>npm run test:unit</code></td><td>Fast focused implementation tests.</td></tr><tr><td><code>npm run test:component</code></td><td>Svelte prompt controls.</td></tr><tr><td><code>npm run test:integration</code></td><td>Real assets/WASM/Worker integration.</td></tr><tr><td><code>npm run check:headless</code></td><td>Format, lint, types, non-browser tests, vendor/assets/snapshot verification.</td></tr><tr><td><code>npm run check:browser</code></td><td>Component test, build, independent verify, reproducibility, browser E2E.</td></tr><tr><td><code>npm run check</code></td><td>Full release-equivalent local gate.</td></tr></tbody></table>
+    <table><thead><tr><th>Command</th><th>Use</th></tr></thead><tbody><tr><td><code>npm run test:unit-and-performance</code></td><td>Fast focused implementation tests.</td></tr><tr><td><code>npm run test:component</code></td><td>Svelte prompt controls.</td></tr><tr><td><code>npm run test:integration</code></td><td>Real assets/WASM/Worker integration.</td></tr><tr><td><code>npm run check:headless</code></td><td>Format, lint, types, non-browser tests, vendor/assets/snapshot verification.</td></tr><tr><td><code>npm run check:frontend-and-browser</code></td><td>Component test, build, independent verify, reproducibility, browser E2E.</td></tr><tr><td><code>npm run check</code></td><td>Full release-equivalent local gate.</td></tr></tbody></table>
   </section>
 
   <section id="data-quality--budgets">
@@ -952,19 +952,19 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
     <pre><code>git clone git@github.com:AronGomu/ygo-story-duel-simulator.git
 cd ygo-story-duel-simulator
 npm ci
-npm run assets:mvp
+npm run assets:bootstrap
 npm run check
-npm run dev</code></pre>
-    <div class="grid-2"><div class="panel"><h3><code>npm ci</code></h3><p>Installs exact lockfile dev/runtime deps. Node engine requirement: <code>&gt;=24.0.0</code>.</p></div><div class="panel"><h3><code>npm run assets:mvp</code></h3><p>Acquires vendored core, upstream DB/scripts/strings, image archive, generated snapshots. Resumable; rerun after network failure.</p></div><div class="panel"><h3><code>npm run check</code></h3><p>Runs complete local release gates. First run installs no browsers automatically; Playwright browser binaries must exist.</p></div><div class="panel"><h3><code>npm run dev</code></h3><p>Starts Vite. Dev middleware serves verified runtime files under configured base with no-store caching.</p></div></div>
+npm run frontend:dev</code></pre>
+    <div class="grid-2"><div class="panel"><h3><code>npm ci</code></h3><p>Installs exact lockfile dev/runtime deps. Node engine requirement: <code>&gt;=24.0.0</code>.</p></div><div class="panel"><h3><code>npm run assets:bootstrap</code></h3><p>Acquires vendored core, upstream DB/scripts/strings, image archive, generated snapshots. Resumable; rerun after network failure.</p></div><div class="panel"><h3><code>npm run check</code></h3><p>Runs complete local release gates. First run installs no browsers automatically; Playwright browser binaries must exist.</p></div><div class="panel"><h3><code>npm run frontend:dev</code></h3><p>Starts Vite. Dev middleware serves verified runtime files under configured base with no-store caching.</p></div></div>
     <h3>Quick launchers</h3><p>Windows: <code>download-mvp-assets.cmd</code>. macOS/Linux: <code>./download-mvp-assets.sh</code>. Both set project cwd, accept same flags as unified command.</p>
-    <details><summary>Useful asset flags</summary><div><pre><code>npm run assets:mvp -- --offline
-npm run assets:mvp -- --concurrency 8 --requests-per-second 12
-npm run assets:mvp -- --force-images</code></pre><p><code>--offline</code> requires populated caches/archive. Default image concurrency/rate: 18; hard max rate: 20 req/s.</p></div></details>
+    <details><summary>Useful asset flags</summary><div><pre><code>npm run assets:bootstrap -- --offline
+npm run assets:bootstrap -- --concurrency 8 --requests-per-second 12
+npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code> requires populated caches/archive. Default image concurrency/rate: 18; hard max rate: 20 req/s.</p></div></details>
   </section>
 
   <section id="onboarding--verify">
     <h2>Verify environment incrementally</h2>
-    <ol class="flow-list"><li><strong>Identity:</strong> <code>node --version</code> → 24+; <code>npm --version</code>; <code>git --version</code>.</li><li><strong>Generated status:</strong> <code>generated/mvp-assets-status.json</code> must say <code>ready</code>.</li><li><strong>Vendor:</strong> <code>npm run vendor:verify</code>.</li><li><strong>Data:</strong> <code>npm run assets:verify</code> + <code>npm run snapshot:verify</code>.</li><li><strong>Static quality:</strong> <code>npm run format:check &amp;&amp; npm run lint &amp;&amp; npm run typecheck</code>.</li><li><strong>Fast behavior:</strong> <code>npm run test:unit</code>.</li><li><strong>Real core:</strong> <code>npm run test:integration</code>.</li><li><strong>Browser package:</strong> <code>npm run build</code>, then <code>npm run test:e2e</code>.</li></ol>
+    <ol class="flow-list"><li><strong>Identity:</strong> <code>node --version</code> → 24+; <code>npm --version</code>; <code>git --version</code>.</li><li><strong>Generated status:</strong> <code>generated/mvp-assets-status.json</code> must say <code>ready</code>.</li><li><strong>Vendor:</strong> <code>npm run vendor:verify</code>.</li><li><strong>Data:</strong> <code>npm run assets:verify-all</code> + <code>npm run content:source-manifest:verify</code>.</li><li><strong>Static quality:</strong> <code>npm run format:check &amp;&amp; npm run lint &amp;&amp; npm run typecheck</code>.</li><li><strong>Fast behavior:</strong> <code>npm run test:unit-and-performance</code>.</li><li><strong>Real core:</strong> <code>npm run test:integration</code>.</li><li><strong>Browser package:</strong> <code>npm run frontend:build</code>, then <code>npm run test:browser:native-bridge</code>.</li></ol>
     <div class="notice warning"><strong>Vite prerequisite.</strong> <code>vite.config.ts</code> reads <code>generated/runtime/current/manifest.json</code> immediately. Missing generated assets can fail config loading before dev server starts.</div>
   </section>
 
@@ -1056,13 +1056,13 @@ npx vitest run tests/unit/prompt-registry.test.ts
 npx vitest run tests/integration/node-worker-thread.test.ts
 
 # production package validation
-npm run build
+npm run frontend:build
 
 # one browser test title
 npx playwright test -g "forced Worker initialization timeout"
 
 # inspect static private package
-npm run preview -- --host 127.0.0.1</code></pre>
+npm run frontend:preview -- --host 127.0.0.1</code></pre>
   </section>
 
   <section id="onboarding--traps">

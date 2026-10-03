@@ -1,4 +1,8 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { isTauri } from "@tauri-apps/api/core";
+import {
+  invokeNative as invoke,
+  openLocalStorage,
+} from "../../storage/index.ts";
 
 export interface NativeContentStatus {
   readonly contentFolder: string;
@@ -25,7 +29,14 @@ export function isNativeDesktop(): boolean {
 
 export async function seedNativeContent(): Promise<NativeContentStatus | null> {
   if (!isTauri()) return null;
-  seedTask ??= invoke<NativeContentStatus>("native_content_status");
+  seedTask ??= (async () => {
+    const storage = await openLocalStorage();
+    if (storage.kind === "failed") throw new Error(storage.error.code);
+    const stack = await storage.value.packages.current();
+    if (stack.kind === "failed") throw new Error(stack.error.code);
+    const contentFolder = await invoke<string>("native_content_location");
+    return { contentFolder, packages: stack.value.packages };
+  })();
   return await seedTask;
 }
 

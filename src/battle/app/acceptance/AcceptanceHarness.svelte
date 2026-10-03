@@ -12,7 +12,17 @@
   import { cardListAcceptanceScenario } from "./card-list-dialog-scenarios.ts";
 
   const persistedUi = createPersistedUiStore();
-  const acceptanceCardBackUrl = `${import.meta.env.BASE_URL}card-back.svg`;
+  // Isolated acceptance input: production hydration is owned by the native user store.
+  if (new URLSearchParams(window.location.search).get("display") === "hidden")
+    persistedUi.setDisplaySettings({
+      showZoneOutlines: false,
+      showZoneCounts: false,
+      showCardShadows: true,
+      showZoneLabels: true,
+    });
+  const acceptanceCardBackUrl = `data:image/svg+xml,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="290"><rect width="200" height="290" fill="#0c1018"/></svg>',
+  )}`;
   const scenarioId = acceptanceScenarioId(window.location.search);
   const previewScenario =
     scenarioId === "preview-short" || scenarioId === "preview-long";

@@ -21,7 +21,7 @@ if (options.help) {
   console.log(`Download and verify every external asset required by the MVP.
 
 Usage:
-  npm run assets:mvp -- [options]
+  npm run assets:bootstrap -- [options]
   download-mvp-assets.cmd [options]       Windows
   ./download-mvp-assets.sh [options]      macOS/Linux
 

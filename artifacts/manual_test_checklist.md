@@ -1,113 +1,45 @@
-# Manual test checklist
+# Startup memory, content and mods — manual acceptance
 
-## Progressive content, saves, media, and CORE lifecycle (T11)
+Status: implementation and automated coverage recorded separately from physical release acceptance. Use disposable app-data, never installed owner saves. This checklist covers the ADR-104 slice; the owner’s deletion of the prior historical checklist is preserved.
 
-Use a disposable Chromium profile, approved private release fixtures, and loopback origin. Required data enables play; optional media and every update remain explicit.
+Reference desktop: AMD Ryzen 7 7700, Linux x86_64. Optimized native release with opt-in isolated acceptance instrumentation. No OS cache flush. Physical Android/iOS reference: unassigned; these checks remain open.
 
-- [ ] C1. Open `#/install-content`; click **Check updates**, then **Install required data**, then **Activate content**. Verify each phase changes only after its click; Story, Free Play, Deck Editor, Collection, and a real duel open after activation. Reload offline; verify all five remain usable with zero optional-media requests.
-- [ ] C2. Pause a required or media download, close the tab, then reopen Content & Updates. Verify job is shown paused and no network resumes until **Resume required download** or **Resume media download** is clicked. Resume; verify completed files are reused while interrupted file restarts.
-- [ ] C3. With saves in manual slots, autosave, and pre-duel checkpoint, activate a forward-compatible release. Verify beat position remaps by semantic beat ID while economy, decks, timestamps, and slot revisions persist. Repeat with corrupt/future save, quota failure, cancellation after seal, and selector conflict; verify old content/save pair remains selected.
-- [ ] C4. Keep Story or duel open in tab A; attempt activation or cleanup from tab B. Verify immediate active-session block and no queued commit after tab A closes. From Main Menu, run **Delete unused assets**, then confirm **Delete all assets**; verify saves, Decks, settings, CORE shell caches, and unknown/legacy cache entries persist while playable Content selection clears.
-- [ ] C5. Discover an incompatible CORE candidate; verify approval refuses without changing installed play. Discover a compatible candidate; verify no download or install occurs before **Approve CORE update**. Close every app tab, reopen offline, and verify old controller survives unapproved candidate while approved waiting controller activates only on cold reopen.
+## Desktop native checks exercised
 
-## Chapter 1 installed gameplay
+- [x] D1. Fresh app-data launch copies sources/media once and admits the main menu only after critical preparation. Verify: actual native acceptance report and ready marker; code at `src/shell/startup/StartupRoot.svelte`.
+- [x] D2. Open Installed content and mod settings, return home, enter Freeplay, start/surrender/restart a duel and return. Verify: native 35-action acceptance passes with zero critical reads after ready.
+- [x] D3. Open Deck Editor, start a new Story, save durably, return home and Continue. Verify: native acceptance and written current JSON; legacy stores remain unread.
+- [x] D4. Replace, truncate, delete, oversize and write unsupported bytes to a mapped cropped cover while displayed; restore between failures. Verify: `STARTUP_MEMORY_CROPPED_PLACEHOLDER_ACCEPTANCE.json` passes native decoder fixture, usable Start control, “Image missing” placeholder (never full-card fallback), corrected image refresh and no global errors.
+- [x] D5. Reenter Freeplay ten times, then close orderly. Verify: all native runs finish with zero live object URLs and successful process exit.
+- [ ] D6. Use Open Log with the installed external handler. Verify: a real handler opens the actual written scoped path; a denied handler shows its failure and leaves Copy Error available.
+- [x] D7. Fail startup with corrupt user JSON, bad base digest, malformed enabled mod JSON/Lua and missing mod root. Verify: actual desktop webview `STARTUP_SCREEN_OVERALL_NATIVE_RECOVERY_2026_10_04.json` has six passing recovery/maintenance cases, focused compact errors, written source-located logs, no partial main menu, preserved user records and exit 0. Base corruption uses Restore; other errors use Close, explicit host correction of disposable fixture preferences/user JSON, then reopening.
+- [x] D8. Remove an optional chapter, restart preparation, import its exact pinned snapshot, restart again. Verify: actual desktop webview `STARTUP_MEMORY_MAINTENANCE_FINAL_ACCEPTANCE.json` passes; gameplay navigation blocked during maintenance, selection persists, representative user record survives. Campaign-fact preservation has separate native/unit coverage.
+- [x] D9. Restore a backup, then restart preparation. Verify: same actual native report passes explicit UI confirmation and durable restore; restored mod preferences receive full startup admission. All four Ready intervals pass the independent no-read assertion.
+- [ ] D10. Interrupt a process during a save and reopen. Verify: complete prior/new JSON, actionable unknown outcome, never partial JSON. Native fault tests cover write mechanics separately.
+- [x] D11. Observe one overall startup bar across changing headings. Verify: native recovery report records nondecreasing progress per attempt, including gameplay checkpoints up to 99% before admission; Restore resets for a new attempt. Component coverage verifies no Cancel, stale events cannot move progress backward, and unfinished readiness never opens Main Menu.
 
-These checks require verified Chapter 1 installation. Source-module Chromium covers both out-of-pool seat rejections (zero engine duels), calibrates its counter with a valid duel. Separate private built-app Chromium covers root/subpath install → Free Play → emitted Worker → terminal surrender without source imports or instrumentation. Manual items remain unchecked. Story save/narrative migration is outside T6.
+## Mod gameplay and lifecycle
 
-- [ ] M1. In a fresh private browser profile, install Chapter 1, then open free play. Verify only installed Chapter 1 Starter and Chapter 1 Practice chapter tiles appear. Practice Bot defaults to Chapter 1 Practice. Double-click each chapter tile; verify read-only refusal, no editor opens. Open its menu; verify Open/Rename/Delete disabled, Duplicate available, no local-default star. Copy must never say Bundled/preset.
-- [ ] M2. Select each of Practice Bot, Blaze Circuit, and Vault Warden. Verify the named persona remains distinct; each assigns Chapter 1 Practice. The shared practice tile must show installed chapter provenance, never Bundled. Override the opponent deck with Chapter 1 Starter; verify the persona remains selected. Select Blaze Circuit again; verify the opponent returns to Chapter 1 Practice.
-- [ ] M3. Start a duel with the default pair. Verify 40 Main cards per seat, no Extra/Side cards, normal AI turns, no missing-card/script/protocol error.
-- [ ] M4. Start a new story game in a disposable profile. Verify Chapter 1 Starter is granted with exactly its 40 owned copies, 1000 DP, no Extra/Side cards. Open a fresh free-play library; verify the same starter is created once and set as default.
-- [ ] M5. Using exported copies of test saves only, open a legacy v1/v2 save twice. Verify the historical Starter Deck payload and maximum-count inventory top-up remain identical between reads; wallet and checkpoint remain unchanged. Verify reads do not rewrite the stored record.
-- [ ] M6. Open copies of existing v3/v4 saves and nonempty free-play libraries, including a custom-only library with no default. Verify decks, revisions, inventory, currency, default choice, and checkpoint remain unchanged. Existing decks are not retroactively replaced with Chapter 1 cards.
-- [ ] M7. Open the admin test-deck action in a disposable profile. Verify its explicitly requested new deck matches the installed default starter deck. Verify “Launch installed duel” opens installed Free Play without creating a deck. Do not reset an existing personal library.
+- [x] M1. Enable the isolated additive card/script/deck fixture and restart. Verify: added effect cards appear in the real engine’s player hand; save/Continue and Worker restart pass with zero critical rereads.
+- [ ] M2. Change an enabled critical mod file while running, then restart. Verify: active gameplay stays fixed; restart validates the changed bytes.
+- [x] M3. Leave a malformed disabled mod alongside enabled mods. Verify: actual native recovery captures read only the enabled JSON (one source read) or manifest plus Lua (two); disabled malformed manifest causes no diagnostic or read.
+- [ ] M4. Enable two overlapping overrides without dependency-backed resolution. Verify: both writers are identified; disjoint field patches compose.
+- [ ] M5. Resume a mod-bound save with changed/missing required mods. Verify: incompatible composition message; the save is preserved and no automatic base fallback occurs.
 
-## Assumptions
+## Physical Android and iOS — pending
 
-A1. Checklist remains human-run; unchecked boxes make no manual-pass claim.
-A2. Private local/Chromium evidence establishes no publication rights, native mobile result, or live-host approval.
+- [ ] P1. Assign real reference hardware/OS versions and install the packaged release offline. Verify: startup progress remains responsive, current defaults load and absent/corrupt critical files fail visibly.
+- [ ] P2. Import the declared-file mod bundle into app-managed storage; enable and restart. Verify: persisted access, critical validation and real engine behavior; disabled mods remain unread.
+- [ ] P3. Exercise New Game, Continue, Deck Editor, first duel, Worker restart, saves, return and repeated routes. Verify: production native traces show zero critical reads after ready.
+- [ ] P4. Replace/corrupt/delete images, audio and video during display/playback. Verify: bounded refresh, placeholders/silence, skip/error/deadline completion, usable controls and no decoder crash.
+- [ ] P5. Deny logging/opener access. Verify: accessible focused error summary, scoped written log only, Copy Error fallback and working Close/eligible Restore.
+- [ ] P6. Measure fresh/warm launch, route/search p95, frame stalls, resident/peak memory and enabled-mod scaling. Verify: documented conditions and device budgets; browser viewports do not count as physical acceptance.
+- [ ] P7. Background, force-stop and reopen during accepted writes. Verify: durable complete JSON and explicit failure/unknown-outcome recovery without legacy migration.
 
+## Automated regression commands
 
-## Asset roots and profiles (T2 local candidate)
-
-No hosted upload, upstream refresh, or owner-original cleanup belongs to these checks. Use a disposable checkout for mutations.
-
-- [ ] A1. Run `npm run assets:migrate -- --plan`; inspect exact source/destination/size/SHA entries. Verify no source changes. Apply only in the disposable checkout; verify receipt hashes, all originals preserved. Run again with identical inputs; verify same-byte adoption.
-- [ ] A2. Place different destination bytes before apply. Verify `ASSET_LOCAL_CONFLICT`, original/destination unchanged, no other planned destination copied.
-- [ ] A3. Add unused `.psd` under a managed root; run `npm run assets:profiles:sync`. Verify inventory includes bytes as dev-only regardless Git ignore state. Remove only the disposable test input afterward.
-- [ ] A4. Preview exact-file and tree promotions to an authored target profile. Apply, repeat; verify stable profile bytes, no asset moves, no silent reassignment. Add a tree child; verify next scan includes it.
-- [ ] A5. Run `npm run assets:profiles:sync -- --check`. Deleting an explicitly declared file must produce `ASSET_REFERENCE_MISSING`. Initial profile selects extant optional media only; absent optional art must not be fabricated or made mandatory from gameplay metadata.
-- [ ] A6. Build at `/ygo-story-duel/`; verify fonts, full/cropped cards, card back, runtime manifests, frozen Worker/WASM retain their browser URLs. Verify original source/provenance paths cannot be fetched through direct or Vite `@fs` source paths. Automated Chromium URL/hash/font + real-Worker smoke covers this path.
-- [ ] A7. Repeat migration fault/retry fixtures on Windows/macOS filesystems. Unsupported hardlinks must fail `ASSET_LOCAL_CONFLICT`, never fall back to overwriting rename. After real process interruption, confirm process exit before removing only the exact stale lock; retry the original plan. Verify full-copy/link recovery matches clean-run inventory with no UUID temp bytes. Partial/mismatched/unowned temps must remain untouched behind `ASSET_RECOVERY_REQUIRED`; normal inventory/profile/common-lock writers stay blocked. Preserve pending marker and affected files for owner inspection, never bypass the gate by deleting metadata.
-- [ ] A8. In disposable fixtures, verify empty-directory case/Unicode aliases fail before any migration copy; long valid basenames succeed with independent short temps; derived paths exceeding 512 bytes fail preview before copying. Remove only fixture-owned inputs afterward.
-
-## Deterministic local bundles (T3 candidate)
-
-No publish/install/remote commands. These checks do not certify gameplay or distribution rights.
-
-- [ ] B1. Run `npm run assets:bundle -- --target dev`. Verify final JSON snapshot SHA; `npm run content:verify` must pass. Inspect pinned DevManifest: every safe managed-root original appears, including unclassified bytes.
-- [ ] B2. Run same command with a different `TZ`; verify identical snapshot/archive SHA. In a disposable fixture, change only file modes/insertion order; verify byte identity.
-- [ ] B3. Run `npm run content:catalog`. Unmapped selected set names must fail explicitly; never invent IDs or drop duplicate-membership sets to pass. With complete fixture input, inspect exact source digest records and chapter IDs.
-- [ ] B4. With explicit prepared fixture, run `npm run content:pack -- --empty-history`; inspect core exclusion, chapter policy set IDs, runtime dependency, bounded part refs. `content:verify` must validate all objects. Missing history input must fail; retained release objects must remain byte-identical.
-- [ ] B5. Only on an approved disk, run `node tests/fixtures/asset-delivery-large.ts --directory /approved-disk/new-fixture --bytes 4294967297`. Record stdout with peak RSS/archive hashes/disk requirement. 10 GiB variant uses `--bytes 10737418240`, requires at least 50.5 GiB free. Actual >4 GiB proof remains pending until this runs; small ZIP64 fixtures are not equivalent.
-
-
-## JSON user-data storage — 2026-09-30
-
-- [ ] In Tauri, change settings, save a deck and save Story; restart and verify all three persist in app-data `user-data.json`.
-- [ ] In Chromium, repeat the save/reload checks and verify `ascencio:user-data:v1` exists in localStorage.
-- [ ] Export `user-data.json`, change saved data, inspect the export and confirm replacement; verify decks, preferences, and Story return together.
-- [ ] Inspect malformed JSON, an unsupported format/version, and an old SQLite backup; verify rejection preserves current saves.
-- [ ] Change a save after inspecting a valid backup; verify confirmation rejects the stale preview.
-- [ ] Reset one user-data category in Admin; verify unrelated categories and installed content remain intact.
-- [ ] Verify existing SQLite saves and legacy localStorage keys remain untouched; no migration is attempted.
-
-- [ ] Start `npm run native:dev` with empty native content storage: Free Play and Chapter 01 are installed automatically and their menu actions are available; restart preserves the installed set and JSON user saves.
-
-## Content modules — 2026-10-01
-
-- [ ] Import a chapter that depends on Card Library without declaring its previous chapter; verify it can install with the earlier chapter absent.
-- [ ] Save completion and choices in Chapter 01; remove Chapter 01, install an eligible later chapter, and verify Continue carries wallet, boosters, collection, decks and facts forward.
-- [ ] Remove the current saved chapter with no eligible successor; verify Continue reports unavailable content and the save remains intact.
-- [ ] Import a card pack; verify search, preview, duel scripts and sets include its content. Remove an unused pack and verify its cards leave the catalog.
-- [ ] Import a module that references a pack's cards without declaring the dependency; verify rejection preserves the active generation.
-- [ ] Try removing a declared dependency; verify refusal preserves installed modules and all user data.
-- [ ] Reorder scenes while retaining beat IDs; verify the same saved scene resumes. Delete that beat and verify resume refuses without modifying the save.
-- [ ] Try conflicting card/set IDs or module API version 2; verify activation fails without changing the previous stack.
-
-
-## Tauri-only asset repairs — 2026-10-01 (ADR-103)
-
-Automated webview checks use a test IPC bridge and disposable saves; these owner/device rows remain pending.
-
-- [ ] Start a fresh native installation offline: Freeplay and Chapter 1 are ready without importing content.
-- [ ] Select New Game: narrative beat 1 opens without a content-invalid recovery.
-- [ ] In Freeplay, both installed decks show illustrations; hover or keyboard-focus cards in either seat list to see full previews. Leaving the row closes its preview.
-- [ ] Start a duel in the Linux WebKitGTK app: both hands, both field sides and legal zone controls are visible and usable. Opponent identities remain hidden.
-- [ ] Resize to the desktop minimum; verify field controls and hands remain reachable.
-- [ ] Install on physical Android/iOS, test portrait rotation and touch field controls offline, and restart to confirm JSON saves persist.
-- [ ] Build a native release: webview files come from generated/build/app; content resources are verified separately.
-
-
-## Remote issue resolution — 2026-10-01
-
-- [ ] I1. In native Story shop, buy one eligible pack: wallet decreases by 100 DP and nine cards are granted when opened. Verify resale labels: Common 1, Rare 2, Super Rare 5, Ultra Rare 20, special rarities 50 DP.
-- [ ] I2. Browse installed promo sets whose expected pack resale exceeds 21 DP: verify they remain visible but their packs cannot be purchased. Ordinary eligible boosters remain purchasable.
-- [ ] I3. During a duel error, verify unsolicited diagnostics create no download; click Download and verify the file plus confirmation message appear.
-
-## Audit regressions — 2026-10-01
-
-Use a disposable native profile and prepared test packages. These checks remain pending human/device verification.
-
-- [ ] R1. Populate more than 1024 valid deck and deck-autosave records in the disposable profile. Reset that user-data category in Admin; verify all selected records are removed together, unrelated settings and Story saves remain intact, and restart preserves the result.
-- [ ] R2. While a card preview is still loading, leave and immediately reopen it several times. Verify the final preview loads, remains usable, and closes normally without a stale cancellation error.
-- [ ] R3. Import prepared package fixtures with `chapter-010`, a leading-zero version such as `01.0.0`, or a version component greater than `9007199254740991`. Verify each is rejected and the active generation, installed packages, and user data remain unchanged.
-
-## Moddable shop content — 2026-10-01
-
-Use a disposable native profile and separately versioned prepared test packages. These checks remain pending human/device verification.
-
-- [ ] M1. Open the base chapter shop with an existing save. Confirm stored booster quantities survive the update, eligible packs still cost 100 DP and grant eight common plus one non-common draw, and singles/resale labels match the base economy.
-- [ ] M2. Compile the small-pack example into a new package version and install it. Buy both products sharing one set; confirm 12/25 DP totals and separate quantities. Open both, save mid-reveal, restart and verify three-card then five-card boundaries, without granting cards twice.
-- [ ] M3. Install a test economy with common 7 DP, rare 11 DP and singles multiplier 3. Confirm rare singles cost 33 DP and common resale grants 7 DP. Disable singles and confirm Buy controls are disabled. Gate an offer on a campaign fact and confirm it remains unavailable until that fact is satisfied.
-- [ ] M4. Remove a shop offer while keeping its product installed; confirm owned packs remain openable. Remove the product and confirm its unopened quantity survives. Reject a conflicting mod or undeclared package reference and verify active packages and user saves stay unchanged.
+- [x] A1. `npm run content:verify:sqlite-json-parity`: 207 semantic queries, 14,794 cards, 13,549 scripts and identical repeated snapshot bytes.
+- [x] A2. `npm run test:native:rust`: authenticated maintenance/repair, cached writer, scoped containment, bounded logs and inert Lua syntax validation.
+- [x] A3. `node scripts/verify-startup-io.ts artifacts/STARTUP_MEMORY_DESKTOP_IO.json`: independent native/frontend no-read gate.
+- [x] A4. Final headless, component, Chromium native bridge, native/default build and frontend reproducibility commands. Verify: recovery continuation logs; 3,005 unit + 9 performance, 58 integration, 1,416 component and 1 native bridge pass; earlier cropped-only visual acceptance passes 41 tests. Rebuilt actual native recovery passes six scenarios in `STARTUP_MEMORY_RECOVERY_COMPLETE_ACCEPTANCE.json`.
+- [ ] A5. Run all three WebKit native bridge projects after matching runtime dependencies are available. Verify: prior launch error `libicudata.so.74` is resolved and all projects execute; no cross-engine green claim before then.

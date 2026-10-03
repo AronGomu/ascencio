@@ -123,6 +123,15 @@
             isSessionActive: () =>
               domainSession !== null || opening !== null || closingSession,
             onRestored: async () => refreshRootAfterRestore(owner),
+            onMaintenance: owner.storage.preparedRequirements
+              ? async () => {
+                  const { nativeIoTrace } = await import("../storage/index.ts");
+                  await nativeIoTrace.markMaintenance();
+                  globalThis.dispatchEvent(
+                    new Event("application-maintenance-requested"),
+                  );
+                }
+              : undefined,
             initialMediaWarnings: applicationStatus.warnings,
           });
     userPersistenceError = owner.failure?.code ?? null;

@@ -1,0 +1,5 @@
+
+> ascencio@0.1.0 content:convert:sqlite-to-json
+> node scripts/readable-content.ts convert generated/content-packages/freeplay-1.1.0.sqlite .tmp/command-rename-converted
+
+Exported freeplay; installed content and saves untouched.

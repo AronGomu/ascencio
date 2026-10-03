@@ -153,6 +153,7 @@
   let activePreviewCode: number | null = null;
   let activePreviewAbort: AbortController | null = null;
   let activePreviewLease: CardImageLease | null = null;
+  let unsubscribeImage: (() => void) | undefined;
   let previewImageUrl: string | null = null;
 
   $: previewSource = hovered ?? selected;
@@ -188,6 +189,8 @@
   function releasePreviewImage(): void {
     activePreviewAbort?.abort();
     activePreviewAbort = null;
+    unsubscribeImage?.();
+    unsubscribeImage = undefined;
     activePreviewLease?.release();
     activePreviewLease = null;
     previewImageUrl = null;
@@ -216,7 +219,10 @@
           return;
         }
         activePreviewLease = lease;
-        previewImageUrl = lease?.url ?? null;
+        previewImageUrl = lease?.url || null;
+        unsubscribeImage = lease?.subscribe?.((url) => {
+          previewImageUrl = url || null;
+        });
       },
       (error: unknown) => {
         if (controller.signal.aborted) return;

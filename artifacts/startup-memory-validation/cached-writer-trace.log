@@ -1,0 +1,331 @@
+warning: variants `Command`, `SqliteOpen`, and `SqlQuery` are never constructed
+  --> src/native_io_trace.rs:31:5
+   |
+30 | pub(crate) enum Operation {
+   |                 --------- variants in this enum
+31 |     Command,
+   |     ^^^^^^^
+...
+35 |     SqliteOpen,
+   |     ^^^^^^^^^^
+36 |     SqlQuery,
+   |     ^^^^^^^^
+   |
+   = note: `Operation` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `read` is never used
+   --> src/native_io_trace.rs:248:15
+    |
+248 | pub(crate) fn read(path: &Path, category: Category, label: &'static str) -> io::Result<Vec<u8>> {
+    |               ^^^^
+
+warning: struct `ContentStatus` is never constructed
+  --> src/lib.rs:56:8
+   |
+56 | struct ContentStatus {
+   |        ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `content_folder` is never used
+  --> src/lib.rs:64:15
+   |
+64 | pub(crate) fn content_folder(handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+   |               ^^^^^^^^^^^^^^
+
+warning: function `verified_file` is never used
+   --> src/lib.rs:101:15
+    |
+101 | pub(crate) fn verified_file(path: &Path, package: &ReleasePackage) -> Result<bool, String> {
+    |               ^^^^^^^^^^^^^
+
+warning: function `resource_path` is never used
+   --> src/lib.rs:139:4
+    |
+139 | fn resource_path(handle: &tauri::AppHandle, name: &str) -> Result<PathBuf, String> {
+    |    ^^^^^^^^^^^^^
+
+warning: function `bundled_manifest` is never used
+   --> src/lib.rs:147:4
+    |
+147 | fn bundled_manifest(handle: &tauri::AppHandle) -> Result<ReleaseManifest, String> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `seed_content` is never used
+   --> src/lib.rs:176:4
+    |
+176 | fn seed_content(handle: &tauri::AppHandle) -> Result<ContentStatus, String> {
+    |    ^^^^^^^^^^^^
+
+warning: function `native_content_status` is never used
+   --> src/lib.rs:258:10
+    |
+258 | async fn native_content_status(handle: tauri::AppHandle) -> Result<ContentStatus, String> {
+    |          ^^^^^^^^^^^^^^^^^^^^^
+
+warning: variants `Command` and `SqlQuery` are never constructed
+  --> src/native_io_trace.rs:31:5
+   |
+30 | pub(crate) enum Operation {
+   |                 --------- variants in this enum
+31 |     Command,
+   |     ^^^^^^^
+...
+36 |     SqlQuery,
+   |     ^^^^^^^^
+   |
+   = note: `Operation` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: struct `PackageManager` is never constructed
+  --> src/native_package_manager.rs:17:19
+   |
+17 | pub(crate) struct PackageManager(Mutex<ManagerState>);
+   |                   ^^^^^^^^^^^^^^
+
+warning: struct `ManagerState` is never constructed
+  --> src/native_package_manager.rs:19:8
+   |
+19 | struct ManagerState {
+   |        ^^^^^^^^^^^^
+
+warning: struct `Staging` is never constructed
+  --> src/native_package_manager.rs:23:8
+   |
+23 | struct Staging {
+   |        ^^^^^^^
+
+warning: struct `StagedFile` is never constructed
+  --> src/native_package_manager.rs:28:8
+   |
+28 | struct StagedFile {
+   |        ^^^^^^^^^^
+
+warning: enum `Outcome` is never used
+  --> src/native_package_manager.rs:35:17
+   |
+35 | pub(crate) enum Outcome {
+   |                 ^^^^^^^
+
+warning: struct `Failure` is never constructed
+  --> src/native_package_manager.rs:41:19
+   |
+41 | pub(crate) struct Failure {
+   |                   ^^^^^^^
+
+warning: function `ok` is never used
+  --> src/native_package_manager.rs:46:4
+   |
+46 | fn ok(value: Value) -> Outcome {
+   |    ^^
+
+warning: function `failed` is never used
+  --> src/native_package_manager.rs:49:4
+   |
+49 | fn failed(code: &'static str, package_id: Option<&str>) -> Outcome {
+   |    ^^^^^^
+
+warning: function `generation` is never used
+  --> src/native_package_manager.rs:57:4
+   |
+57 | fn generation(manifest: &ReleaseManifest) -> u64 {
+   |    ^^^^^^^^^^
+
+warning: function `native_import_begin` is never used
+  --> src/native_package_manager.rs:62:15
+   |
+62 | pub(crate) fn native_import_begin(
+   |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `native_import_chunk` is never used
+   --> src/native_package_manager.rs:126:15
+    |
+126 | pub(crate) fn native_import_chunk(
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `native_import_preview` is never used
+   --> src/native_package_manager.rs:176:15
+    |
+176 | pub(crate) fn native_import_preview(
+    |               ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `write_active` is never used
+   --> src/native_package_manager.rs:604:4
+    |
+604 | fn write_active(root: &PathBuf, manifest: &ReleaseManifest) -> Result<(), String> {
+    |    ^^^^^^^^^^^^
+
+warning: function `native_import_commit` is never used
+   --> src/native_package_manager.rs:617:15
+    |
+617 | pub(crate) fn native_import_commit(
+    |               ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `native_import_cancel` is never used
+   --> src/native_package_manager.rs:747:15
+    |
+747 | pub(crate) fn native_import_cancel(state: tauri::State<'_, PackageManager>, token: String) {
+    |               ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `native_package_acquire` is never used
+   --> src/native_package_manager.rs:755:15
+    |
+755 | pub(crate) fn native_package_acquire(
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `native_package_release` is never used
+   --> src/native_package_manager.rs:772:15
+    |
+772 | pub(crate) fn native_package_release(state: tauri::State<'_, PackageManager>, session_id: String) {
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `native_package_cleanup` is never used
+   --> src/native_package_manager.rs:778:15
+    |
+778 | pub(crate) fn native_package_cleanup(
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `valid_content_filename` is never used
+   --> src/native_package_manager.rs:823:4
+    |
+823 | fn valid_content_filename(value: &str) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `native_package_remove` is never used
+   --> src/native_package_manager.rs:834:15
+    |
+834 | pub(crate) fn native_package_remove(
+    |               ^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `StorageFailure` is never constructed
+  --> src/native_storage.rs:11:19
+   |
+11 | pub(crate) struct StorageFailure {
+   |                   ^^^^^^^^^^^^^^
+
+warning: enum `Outcome` is never used
+  --> src/native_storage.rs:19:17
+   |
+19 | pub(crate) enum Outcome<T: Serialize> {
+   |                 ^^^^^^^
+
+warning: function `failed` is never used
+  --> src/native_storage.rs:24:4
+   |
+24 | fn failed<T: Serialize>(code: &'static str, package_id: Option<&str>) -> Outcome<T> {
+   |    ^^^^^^
+
+warning: struct `PackageStack` is never constructed
+  --> src/native_storage.rs:35:19
+   |
+35 | pub(crate) struct PackageStack {
+   |                   ^^^^^^^^^^^^
+
+warning: function `installed` is never used
+  --> src/native_storage.rs:40:15
+   |
+40 | pub(crate) fn installed(handle: &tauri::AppHandle) -> Result<ReleaseManifest, String> {
+   |               ^^^^^^^^^
+
+warning: function `package_path` is never used
+  --> src/native_storage.rs:56:15
+   |
+56 | pub(crate) fn package_path(folder: &Path, package: &ReleasePackage) -> std::path::PathBuf {
+   |               ^^^^^^^^^^^^
+
+warning: function `native_package_stack` is never used
+  --> src/native_storage.rs:96:15
+   |
+96 | pub(crate) fn native_package_stack(
+   |               ^^^^^^^^^^^^^^^^^^^^
+
+warning: field `package_id` is never read
+   --> src/native_storage.rs:145:9
+    |
+143 |     ModuleQuery {
+    |     ----------- field in this variant
+144 |         #[serde(rename = "packageId")]
+145 |         package_id: String,
+    |         ^^^^^^^^^^
+
+warning: field `package_id` is never read
+   --> src/native_storage.rs:161:9
+    |
+159 |     Config {
+    |     ------ field in this variant
+160 |         #[serde(rename = "packageId")]
+161 |         package_id: String,
+    |         ^^^^^^^^^^
+
+warning: field `package_id` is never read
+   --> src/native_storage.rs:170:9
+    |
+168 |     Decks {
+    |     ----- field in this variant
+169 |         #[serde(rename = "packageId")]
+170 |         package_id: String,
+    |         ^^^^^^^^^^
+
+warning: field `package_id` is never read
+   --> src/native_storage.rs:174:9
+    |
+172 |     Opponents {
+    |     --------- field in this variant
+173 |         #[serde(rename = "packageId")]
+174 |         package_id: String,
+    |         ^^^^^^^^^^
+
+warning: field `package_id` is never read
+   --> src/native_storage.rs:182:9
+    |
+180 |     Sets {
+    |     ---- field in this variant
+181 |         #[serde(rename = "packageId")]
+182 |         package_id: String,
+    |         ^^^^^^^^^^
+
+warning: field `package_id` is never read
+   --> src/native_storage.rs:186:9
+    |
+184 |     Story {
+    |     ----- field in this variant
+185 |         #[serde(rename = "packageId")]
+186 |         package_id: String,
+    |         ^^^^^^^^^^
+
+warning: methods `io_category`, `package_id`, and `valid` are never used
+   --> src/native_storage.rs:202:8
+    |
+201 | impl ContentQuery {
+    | ----------------- methods in this implementation
+202 |     fn io_category(&self) -> Category {
+    |        ^^^^^^^^^^^
+...
+222 |     fn package_id(&self) -> &str {
+    |        ^^^^^^^^^^
+...
+238 |     fn valid(&self) -> bool {
+    |        ^^^^^
+
+warning: function `native_content_query` is never used
+   --> src/native_storage.rs:293:15
+    |
+293 | pub(crate) fn native_content_query(
+    |               ^^^^^^^^^^^^^^^^^^^^
+
+warning: `ascencio` (lib) generated 2 warnings
+warning: `ascencio` (lib test) generated 44 warnings (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.33s
+     Running unittests src/lib.rs (src-tauri/target/debug/deps/ascencio_lib-3fc54c3522fdd45b)
+
+running 1 test
+test native_user_data::tests::traced_cached_writer_has_no_reads_after_ready ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (src-tauri/target/debug/deps/ascencio-cb3163d167d2870c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

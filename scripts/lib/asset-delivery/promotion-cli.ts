@@ -22,7 +22,7 @@ export async function runPromotion(
       fail("ASSET_ARGUMENT_INVALID");
     if (flags.has("--help")) {
       progress(
-        "help: assets:promote --profile <id> (--files-from <list> | --from <tree> --all [--logical-prefix <path>]) [--apply]",
+        "help: legacy:assets:profile-promote --profile <id> (--files-from <list> | --from <tree> --all [--logical-prefix <path>]) [--apply]",
       );
       return;
     }

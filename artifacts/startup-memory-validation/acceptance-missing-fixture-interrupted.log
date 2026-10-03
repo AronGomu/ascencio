@@ -1,0 +1,117 @@
+
+> ascencio@0.1.0 test:acceptance
+> playwright test -c playwright.acceptance.config.ts
+
+
+[WebServer] (node:432556) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:432634) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:433262) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 41 tests using 1 worker
+
+
+(node:433440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:128:1 › approved browse metrics cover checks 1-16
+[2/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:297:1 › exact target modes cover checks 17-21 and 29-32
+  1) [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:297:1 › exact target modes cover checks 17-21 and 29-32 
+
+    Test timeout of 180000ms exceeded.
+
+    Error: locator.click: Test timeout of 180000ms exceeded.
+    Call log:
+      - waiting for locator('[data-cy^="zone-list-entry-target-choice-"]').nth(1)
+        - locator resolved to <button type="button" aria-pressed="false" aria-disabled="false" class="zone-list-entry__target" aria-label="Graveyard target 2 in Your Graveyard" data-cy="zone-list-entry-target-choice-acceptance:multiple:1-acceptance-multiple-1"></button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <button type="button" aria-pressed="true" aria-disabled="false" class="zone-list-entry__target" aria-label="Graveyard target 1 in Your Graveyard" data-cy="zone-list-entry-target-choice-acceptance:multiple:0-acceptance-multiple-0"></button> from <div role="group" tabindex="0" data-controller="0" data-cy="zone-list-entry-acceptance:multiple:0" class="zone-list-entry is-actionable is-target is-first is-selected">…</div> subtree intercepts pointer events
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <button type="button" aria-pressed="true" aria-disabled="false" class="zone-list-entry__target" aria-label="Graveyard target 1 in Your Graveyard" data-cy="zone-list-entry-target-choice-acceptance:multiple:0-acceptance-multiple-0"></button> from <div role="group" tabindex="0" data-controller="0" data-cy="zone-list-entry-acceptance:multiple:0" class="zone-list-entry is-actionable is-target is-first is-selected">…</div> subtree intercepts pointer events
+        - retrying click action
+          - waiting 100ms
+        354 × waiting for element to be visible, enabled and stable
+            - element is visible, enabled and stable
+            - scrolling into view if needed
+            - done scrolling
+            - <button type="button" aria-pressed="true" aria-disabled="false" class="zone-list-entry__target" aria-label="Graveyard target 1 in Your Graveyard" data-cy="zone-list-entry-target-choice-acceptance:multiple:0-acceptance-multiple-0"></button> from <div role="group" tabindex="0" data-controller="0" data-cy="zone-list-entry-acceptance:multiple:0" class="zone-list-entry is-actionable is-target is-first is-selected">…</div> subtree intercepts pointer events
+          - retrying click action
+            - waiting 500ms
+
+
+      89 |   await expect(button).toBeVisible();
+      90 |   await expect(button).toBeEnabled();
+    > 91 |   await button.click();
+         |                ^
+      92 | }
+      93 |
+      94 | async function expectDocumentFits(page: Page): Promise<void> {
+        at clickTarget (/home/aron/Projects/ascencio/e2e/e2e-acceptance/card-list-dialog.spec.ts:91:16)
+        at /home/aron/Projects/ascencio/e2e/e2e-acceptance/card-list-dialog.spec.ts:320:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    generated/tests/e2e-acceptance/results/card-list-dialog-exact-tar-da6e7-over-checks-17-21-and-29-32-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    generated/tests/e2e-acceptance/results/card-list-dialog-exact-tar-da6e7-over-checks-17-21-and-29-32-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: generated/tests/e2e-acceptance/results/card-list-dialog-exact-tar-da6e7-over-checks-17-21-and-29-32-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    generated/tests/e2e-acceptance/results/card-list-dialog-exact-tar-da6e7-over-checks-17-21-and-29-32-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace generated/tests/e2e-acceptance/results/card-list-dialog-exact-tar-da6e7-over-checks-17-21-and-29-32-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:444141) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:392:1 › maximum lock and stale draft cover checks 22-28
+[4/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:462:1 › responsive overflow and keyboard cover checks 33-36
+[5/41] [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:549:1 › range compatibility enables inclusive Validate and locks at three
+  2) [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:549:1 › range compatibility enables inclusive Validate and locks at three 
+
+    Test was interrupted.
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    generated/tests/e2e-acceptance/results/card-list-dialog-range-com-339bb-Validate-and-locks-at-three-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    generated/tests/e2e-acceptance/results/card-list-dialog-range-com-339bb-Validate-and-locks-at-three-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    generated/tests/e2e-acceptance/results/card-list-dialog-range-com-339bb-Validate-and-locks-at-three-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace generated/tests/e2e-acceptance/results/card-list-dialog-range-com-339bb-Validate-and-locks-at-three-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:297:1 › exact target modes cover checks 17-21 and 29-32 
+  1 interrupted
+    [chromium] › e2e/e2e-acceptance/card-list-dialog.spec.ts:549:1 › range compatibility enables inclusive Validate and locks at three 
+  36 did not run
+  3 passed (3.2m)

@@ -2,6 +2,14 @@
 
 This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
 
+[`development-commands.md`](development-commands.md) lists every current npm command, standalone native launch instructions, and the explicit coverage limits of aggregate checks.
+
+[`startup-loading-messages.md`](startup-loading-messages.md) maps each startup heading to its work and explains how to review wording in a paused visual preview.
+
+## Accepted next content architecture
+
+[ADR-104](ADR/104_ADR_startup_memory_content_and_mod_overrides.md) records the implemented move to readable per-entity JSON, verified startup snapshots, app-lifetime memory for critical data and user records, explicit mod overrides, live optional media, and compiler-style startup errors with directly accessible logs. Use [startup content and mod authoring](assets/startup-memory-content.md) for current installation, maintenance, overrides, media and diagnostics. Older SQLite pages below are migration history. Physical mobile acceptance remains pending.
+
 ## Current native runtime
 
 [`TAURI_MIGRATION_SPECIFICATION.md`](TAURI_MIGRATION_SPECIFICATION.md) records the requested desktop/mobile target: bundled offline game content, Free Play entry from the main menu and Visual Novel, accessible manual asset updates, a local build-content cleanup script, and a private Google Drive asset backup. [ADR-100](ADR/100_ADR_tauri_native_sqlite_storage.md) records the native code path and its pending content/device release gates. [ADR-103](ADR/103_ADR_tauri_only_runtime_and_asset_ui.md) retires the browser runtime and records native asset presentation.
@@ -12,7 +20,7 @@ This directory contains current project documentation and historical context. Ro
 
 [`assets/game-asset-loading-audit.html`](assets/game-asset-loading-audit.html) presents the asset detection/loading architecture, the 2026-10-01 Chapter 1 and Freeplay defect audit, WebKit field rendering evidence, and proposed repairs.
 
-[ADR-101](ADR/101_ADR_json_user_data_storage.md) replaces SQLite user saves with native JSON files and browser localStorage. The browser adapter is retired by ADR-103. SQLite remains in the current native content pipeline.
+[ADR-101](ADR/101_ADR_json_user_data_storage.md) replaces SQLite user saves with native JSON files and browser localStorage. The browser adapter is retired by ADR-103. SQLite remains only in developer conversion and historical test tooling.
 
 ## Historical browser package implementation
 

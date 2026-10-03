@@ -1,0 +1,164 @@
+[
+  {
+    "source": ".tmp/command-rename-bootstrap-help.log",
+    "preserved": "artifacts/package-command-validation/command-rename-bootstrap-help.log",
+    "bytes": 750,
+    "sha256": "62b6e7085a862bc105ec0ef628696486ce391af3456df500367fa9dca788d3ff"
+  },
+  {
+    "source": ".tmp/command-rename-build.log",
+    "preserved": "artifacts/package-command-validation/command-rename-build.log",
+    "bytes": 10112,
+    "sha256": "2a38e6c82bdad9af2a80e8de8584932b19f90e4d42452ca5307ec146e9304e86"
+  },
+  {
+    "source": ".tmp/command-rename-compile.log",
+    "preserved": "artifacts/package-command-validation/command-rename-compile.log",
+    "bytes": 237,
+    "sha256": "568a3936b0c6d04f817fc05762bb20020339c3836d4dee1e0f5e055ace6d7f6a"
+  },
+  {
+    "source": ".tmp/command-rename-convert.log",
+    "preserved": "artifacts/package-command-validation/command-rename-convert.log",
+    "bytes": 230,
+    "sha256": "181a4c9758976fd15f11ddf3a60b2d12410cd3383465298efe8e4f8ef437e4fb"
+  },
+  {
+    "source": ".tmp/command-rename-graph-cluster.log",
+    "preserved": "artifacts/package-command-validation/command-rename-graph-cluster.log",
+    "bytes": 616,
+    "sha256": "b69c711f7f7acbdee4b343953636602cdea8a9029c4a90f344f9f681039160a4"
+  },
+  {
+    "source": ".tmp/command-rename-graph-update.log",
+    "preserved": "artifacts/package-command-validation/command-rename-graph-update.log",
+    "bytes": 1858,
+    "sha256": "74029711ff5db27958e393f310d75f69fa6529298e6578ad056e6c916a0651d3"
+  },
+  {
+    "source": ".tmp/command-rename-green.log",
+    "preserved": "artifacts/package-command-validation/command-rename-green.log",
+    "bytes": 334,
+    "sha256": "51a4827aa35622888eb2c8f4bc640cb9ac409db6c5030a8b14f8f64be7882b98"
+  },
+  {
+    "source": ".tmp/command-rename-headless.log",
+    "preserved": "artifacts/package-command-validation/command-rename-headless.log",
+    "bytes": 17080,
+    "sha256": "1d654c6e62f7054cf30259d451cb648a4e40a76b7623774fe4fe72ba4c3c28f3"
+  },
+  {
+    "source": ".tmp/command-rename-help-green.log",
+    "preserved": "artifacts/package-command-validation/command-rename-help-green.log",
+    "bytes": 524,
+    "sha256": "15d3ec7341f3b3477e2eda2b3610de93c587270d13a1c215c31cdcc9a9ec6829"
+  },
+  {
+    "source": ".tmp/command-rename-help-red.log",
+    "preserved": "artifacts/package-command-validation/command-rename-help-red.log",
+    "bytes": 515,
+    "sha256": "5236639926fc520a96f1581692a196d631d07b3fc9ccc0eeac556db1498d48d7"
+  },
+  {
+    "source": ".tmp/command-rename-native-bridge.log",
+    "preserved": "artifacts/package-command-validation/command-rename-native-bridge.log",
+    "bytes": 670,
+    "sha256": "83b6e72896eb937dd03835a9cfdf089d4de27a45aaf1bd5463ce5d21409788fb"
+  },
+  {
+    "source": ".tmp/command-rename-native-help.log",
+    "preserved": "artifacts/package-command-validation/command-rename-native-help.log",
+    "bytes": 3673,
+    "sha256": "ee5c7232c338a2aa9d6e9a5f91b4eb9f54e03e3130c0a55d2eb3fdd8b95d3682"
+  },
+  {
+    "source": ".tmp/command-rename-red.log",
+    "preserved": "artifacts/package-command-validation/command-rename-red.log",
+    "bytes": 2292,
+    "sha256": "978335b127a83d98d979fb84325dfe90406ad8b6e690ff0084a90a3b6666372c"
+  },
+  {
+    "source": ".tmp/command-rename-tooling.log",
+    "preserved": "artifacts/package-command-validation/command-rename-tooling.log",
+    "bytes": 10676,
+    "sha256": "6b51ff0695fdff9552189addea7e51d0728b3e7da3f1f3efdb2e905fffaf1468"
+  },
+  {
+    "source": ".tmp/command-rename-visual.log",
+    "preserved": "artifacts/package-command-validation/command-rename-visual.log",
+    "bytes": 6332,
+    "sha256": "c6d9688cb092dfc5da8f868bfeb64d2f6360ebc75f457db2a73faa408006707b"
+  },
+  {
+    "source": ".tmp/rename-package-commands.py",
+    "preserved": "artifacts/package-command-validation/rename-package-commands.py",
+    "bytes": 4466,
+    "sha256": "8344a3109ad8d74db25b6b0ae572e7afbfb8242785b50e33f33700571e696e63"
+  },
+  {
+    "source": ".tmp/write-command-reference.py",
+    "preserved": "artifacts/package-command-validation/write-command-reference.py",
+    "bytes": 8897,
+    "sha256": "d6cf38368ea44f8e8b729ca061e111e617cc279b00b2f59fc40ca2a939e3034b"
+  },
+  {
+    "source": ".tmp/build-startup-copy-preview.py",
+    "preserved": "artifacts/package-command-validation/build-startup-copy-preview.py",
+    "bytes": 10667,
+    "sha256": "c824e8d3fea0ffa59c8b2f3c11795eaddc790e1f2eb45719ec59425d3dbe2e53"
+  },
+  {
+    "source": ".tmp/command-rename-map.json",
+    "preserved": "artifacts/package-command-validation/command-rename-map.json",
+    "bytes": 4178,
+    "sha256": "c5bf7efda76329d07679b7771a9bc5dd3a690e0fd5f3a408e0d7d086f7d284c9"
+  },
+  {
+    "source": ".tmp/command-rename-converted/config.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/config.json",
+    "bytes": 169,
+    "sha256": "6c25f45a81a05917d331f2205aed42c81bb40ec4861b350c1d4badd3bbf25bd5"
+  },
+  {
+    "source": ".tmp/command-rename-converted/critical.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/critical.json",
+    "bytes": 1541,
+    "sha256": "ebc1c865314210708fa6029ec70f97be59b3aabd01fd198cb793bf6d2e238a67"
+  },
+  {
+    "source": ".tmp/command-rename-converted/decks/freeplay-opponent.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/decks/freeplay-opponent.json",
+    "bytes": 664,
+    "sha256": "ce11df1ce10ef98823f0eab5f08e52abaa9fd8ebc9b50019142d6219a511e01d"
+  },
+  {
+    "source": ".tmp/command-rename-converted/decks/freeplay-player.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/decks/freeplay-player.json",
+    "bytes": 655,
+    "sha256": "f86a3a252a823a4f6d0027c4031f2dd2366b7f1d65c3f6156cba9ece9ff1d70b"
+  },
+  {
+    "source": ".tmp/command-rename-converted/opponents/freeplay-opponent.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/opponents/freeplay-opponent.json",
+    "bytes": 148,
+    "sha256": "67aa7c5d7e5ff1fd4d0a71a9353c3e1c165ca8e3eb1c85e1cf423613779b786e"
+  },
+  {
+    "source": ".tmp/command-rename-converted/pack.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/pack.json",
+    "bytes": 671,
+    "sha256": "97826036000094ddc75a817db95b829d07aea60d4e564730c06f8dea162440a4"
+  },
+  {
+    "source": ".tmp/command-rename-converted/rules.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/rules.json",
+    "bytes": 162,
+    "sha256": "78e94b9f92dee1fa3fc9f3e8ca0456b7334c3e6e4c9310d8254e7bec3447a631"
+  },
+  {
+    "source": ".tmp/command-rename-converted/source-map.json",
+    "preserved": "artifacts/package-command-validation/conversion-fixture/source-map.json",
+    "bytes": 335,
+    "sha256": "0ecc537cf08c11da436b6bf2820dfe10dff86939b6489148ddb66a9e5072a017"
+  }
+]

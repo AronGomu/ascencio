@@ -1,0 +1,200 @@
+1:47:04 PM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+ ❯ tests/unit/storage/sqlite-image-source.test.ts (7 tests | 1 failed) 57ms
+   × keeps a missing cropped illustration missing even when full art exists 3ms
+ ❯ tests/component/deck-select/deck-tile.test.ts (23 tests | 2 failed) 1214ms
+     × shows Image missing and keeps selection usable when cropped art fails 10ms
+   × shows the placeholder for a missing live crop and recovers when repaired 1004ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/component/deck-select/deck-tile.test.ts > DeckTile > shows Image missing and keeps selection usable when cropped art fails
+AssertionError: expected <img …(6)></img> to be null
+
+- Expected:
+null
+
++ Received:
+<img
+  alt=""
+  class="art svelte-1pqu77v"
+  data-cy="deck-tile-art-k1"
+  decoding="async"
+  loading="lazy"
+  src="/runtime/images/89631139.jpg"
+/>
+
+ ❯ tests/component/deck-select/deck-tile.test.ts:91:38
+     89|
+     90|     await fireEvent.error(image);
+     91|     expect(find("deck-tile-art-k1")).toBeNull();
+       |                                      ^
+     92|     expect(cy("deck-tile-art-placeholder-k1").textContent).toBe("Image…
+     93|     await userEvent.setup().click(cy("deck-tile-press-k1"));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/component/deck-select/deck-tile.test.ts > shows the placeholder for a missing live crop and recovers when repaired
+AssertionError: expected <img …(6)></img> to be null
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<article[39m
+        [33mclass[39m=[32m"deck-tile svelte-1pqu77v"[39m
+        [33mdata-cy[39m=[32m"deck-tile-k1"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Select Prototype Control, Local deck"[39m
+          [33mclass[39m=[32m"press svelte-1pqu77v"[39m
+          [33mdata-cy[39m=[32m"deck-tile-press-k1"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<img[39m
+            [33malt[39m=[32m""[39m
+            [33mclass[39m=[32m"art svelte-1pqu77v"[39m
+            [33mdata-cy[39m=[32m"deck-tile-art-k1"[39m
+            [33mdecoding[39m=[32m"async"[39m
+            [33mloading[39m=[32m"lazy"[39m
+            [33msrc[39m=[32m"/runtime/images-cropped/stale.jpg"[39m
+          [36m/>[39m
+          [0m [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"name text-backdrop svelte-1pqu77v"[39m
+            [33mdata-cy[39m=[32m"deck-tile-name-k1"[39m
+          [36m>[39m
+            [0mPrototype Control[0m
+          [36m</span>[39m
+          [0m [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"tag-line text-backdrop svelte-1pqu77v"[39m
+            [33mdata-cy[39m=[32m"deck-tile-tags-k1"[39m
+          [36m>[39m
+            [0mLocal deck[0m
+          [36m</span>[39m
+        [36m</button>[39m
+        [0m [0m
+        [0m [0m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Set Prototype Control as default deck"[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mclass[39m=[32m"corner star svelte-1pqu77v outline"[39m
+          [33mdata-cy[39m=[32m"deck-tile-default-star-k1"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"svelte-1pqu77v"[39m
+            [33mdata-cy[39m=[32m"deck-tile-default-star-icon-k1"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M12 2.75 14.77 8.36 20.96 9.26 16.48 13.63 17.54 19.8 12 16.89 6.46 19.8 7.52 13.63 3.04 9.26 9.23 8.36Z"[39m
+              [33mdata-cy[39m=[32m"deck-tile-default-star-path-k1"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"1.7"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+        [36m</button>[39m
+        [0m [0m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Actions for Prototype Control"[39m
+          [33mclass[39m=[32m"corner kebab svelte-1pqu77v"[39m
+          [33mdata-cy[39m=[32m"deck-tile-menu-k1"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"svelte-1pqu77v"[39m
+            [33mdata-cy[39m=[32m"deck-tile-menu-icon-k1"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [36m>[39m
+            [36m<circle[39m
+              [33mclass[39m=[32m"svelte-1pqu77v"[39m
+              [33mcx[39m=[32m"12"[39m
+              [33mcy[39m=[32m"5"[39m
+              [33mdata-cy[39m=[32m"deck-tile-menu-dot-1-k1"[39m
+              [33mr[39m=[32m"1.5"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mclass[39m=[32m"svelte-1pqu77v"[39m
+              [33mcx[39m=[32m"12"[39m
+              [33mcy[39m=[32m"12"[39m
+              [33mdata-cy[39m=[32m"deck-tile-menu-dot-2-k1"[39m
+              [33mr[39m=[32m"1.5"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mclass[39m=[32m"svelte-1pqu77v"[39m
+              [33mcx[39m=[32m"12"[39m
+              [33mcy[39m=[32m"19"[39m
+              [33mdata-cy[39m=[32m"deck-tile-menu-dot-3-k1"[39m
+              [33mr[39m=[32m"1.5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+        [36m</button>[39m
+      [36m</article>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+- Expected:
+null
+
++ Received:
+<img
+  alt=""
+  class="art svelte-1pqu77v"
+  data-cy="deck-tile-art-k1"
+  decoding="async"
+  loading="lazy"
+  src="/runtime/images-cropped/stale.jpg"
+/>
+
+ ❯ tests/component/deck-select/deck-tile.test.ts:315:56
+    313|   });
+    314|   await waitFor(() => expect(acquireCover).toHaveBeenCalledOnce());
+    315|   await waitFor(() => expect(find("deck-tile-art-k1")).toBeNull());
+       |                                                        ^
+    316|   expect(cy("deck-tile-art-placeholder-k1").textContent).toBe("Image m…
+    317|   expect((cy("deck-tile-press-k1") as HTMLButtonElement).disabled).toB…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/storage/sqlite-image-source.test.ts > keeps a missing cropped illustration missing even when full art exists
+AssertionError: expected { url: 'blob:full-fallback', …(1) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "release": [Function release],
+  "url": "blob:full-fallback",
+}
+
+ ❯ tests/unit/storage/sqlite-image-source.test.ts:251:17
+    249|     new AbortController().signal,
+    250|   );
+    251|   expect(lease).toBeNull();
+       |                 ^
+    252|   expect(
+    253|     query.mock.calls.map(([request]) =>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 27 passed (30)
+   Start at  13:47:04
+   Duration  1.97s (transform 545ms, setup 623ms, import 108ms, tests 1.27s, environment 318ms)
+

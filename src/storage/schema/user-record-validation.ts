@@ -10,6 +10,7 @@ import {
   type StorySlotKey,
 } from "../../story/saves/index.ts";
 import type { StorageResult } from "../contracts/package.ts";
+import { isModPreferences } from "../mods/mod-preferences.ts";
 
 export const USER_DATA_MAX_PAYLOAD_BYTES = 16 * 1024 * 1024;
 const USER_NAMESPACES = new Set([
@@ -70,6 +71,7 @@ export function validateUserRecordPayload(
     if (key === "shell") valid = isShellSettings(payload);
     if (key === "battle-ui") valid = isPersistedUiState(payload);
     if (key === "story-playback") valid = isStoryPlaybackSettings(payload);
+    if (key === "content-mods") valid = isModPreferences(payload);
   }
   if (namespace === "story-read-log")
     valid = key === "read" && readLog(payload);

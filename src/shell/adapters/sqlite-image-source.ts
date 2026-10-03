@@ -9,6 +9,7 @@ import type {
   QueryMap,
   StorageFailure,
 } from "../../storage/index.ts";
+import { LiveMediaLeases } from "./live-media-leases.ts";
 
 const MAXIMUM_UNLEASED_BYTES = 64 * 1024 * 1024;
 
@@ -35,6 +36,7 @@ export interface SqliteCardImageSource extends CardImageSource {
 export function createSqliteCardImageSource(
   content: ContentQueries,
   pool = new SqliteImageLeasePool(content),
+  ownsPool = true,
 ): SqliteCardImageSource {
   return Object.freeze({
     acquire: async (
@@ -43,20 +45,15 @@ export function createSqliteCardImageSource(
       signal: AbortSignal,
     ) => {
       const path = `cards/${variant}/${code}.jpg`;
-      const lease = await pool.acquire(
+      return await pool.acquire(
         `card-library:${path}`,
         { kind: "asset", packageId: "card-library", path },
         signal,
       );
-      if (lease !== null || variant !== "cropped") return lease;
-      const fullPath = `cards/full/${code}.jpg`;
-      return await pool.acquire(
-        `card-library:${fullPath}`,
-        { kind: "asset", packageId: "card-library", path: fullPath },
-        signal,
-      );
     },
-    close: () => pool.close(),
+    close: () => {
+      if (ownsPool) pool.close();
+    },
   });
 }
 
@@ -66,6 +63,7 @@ type ImageQuery = Extract<
 >;
 
 export class SqliteImageLeasePool {
+  readonly #live: LiveMediaLeases | null;
   readonly #content: ContentQueries;
   readonly #cache = new Map<string, CacheEntry>();
   readonly #pending = new Map<string, PendingRead>();
@@ -75,6 +73,7 @@ export class SqliteImageLeasePool {
 
   constructor(content: ContentQueries) {
     this.#content = content;
+    this.#live = content.mediaRevision ? new LiveMediaLeases(content) : null;
   }
 
   async acquire(
@@ -82,6 +81,7 @@ export class SqliteImageLeasePool {
     request: ImageQuery,
     signal: AbortSignal,
   ): Promise<CardImageLease | null> {
+    if (this.#live) return this.#live.acquire(key, request, signal);
     if (this.#closed) throw new Error("SQLITE_IMAGE_SOURCE_CLOSED");
     throwIfAborted(signal);
     const cached = this.#cache.get(key);
@@ -130,6 +130,7 @@ export class SqliteImageLeasePool {
   }
 
   close(): void {
+    this.#live?.close();
     if (this.#closed) return;
     this.#closed = true;
     for (const pending of this.#pending.values()) pending.controller.abort();

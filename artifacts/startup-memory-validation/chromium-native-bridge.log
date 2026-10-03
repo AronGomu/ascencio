@@ -1,0 +1,12 @@
+
+[WebServer] (node:428817) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+
+(node:428863) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/1] [chromium-desktop] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+  1 passed (10.6s)

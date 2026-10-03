@@ -9,6 +9,7 @@
   export let tile: DeckTileModel;
   export let acquireCover: AcquireDeckImage<string> | null = null;
   let coverLease: DeckImageLease | null = null;
+  let unsubscribeCover: (() => void) | undefined;
   let coverRequest: AbortController | null = null;
   let coverToken = 0;
   $: void loadCover(acquireCover, tile.key);
@@ -18,6 +19,8 @@
   ): Promise<void> {
     const token = ++coverToken;
     coverRequest?.abort();
+    unsubscribeCover?.();
+    unsubscribeCover = undefined;
     coverLease?.release();
     coverLease = null;
     failedArtUrls = [];
@@ -27,7 +30,13 @@
     try {
       const lease = await resolve(key, request.signal);
       if (token !== coverToken || request.signal.aborted) lease?.release();
-      else coverLease = lease;
+      else {
+        coverLease = lease;
+        unsubscribeCover = lease?.subscribe?.(() => {
+          coverLease = coverLease;
+          failedArtUrls = [];
+        });
+      }
     } catch {
       // Missing art leaves the deck playable with its existing placeholder.
     }
@@ -35,6 +44,8 @@
   onDestroy(() => {
     coverToken += 1;
     coverRequest?.abort();
+    unsubscribeCover?.();
+    unsubscribeCover = undefined;
     coverLease?.release();
   });
   /** Visual selection halo: null = none. Selected focus uses orange (--selected). */
@@ -84,16 +95,10 @@
   /* A deck that fails validation cannot be picked, so the press surface itself
      carries the fact — the dimming is the sighted echo, never the source. */
   let failedArtUrls: readonly string[] = [];
-  $: coverUrl = coverLease?.url ?? tile.coverImageUrl;
-  $: fullCardFallbackUrl =
-    coverUrl?.replace("/runtime/images-cropped/", "/runtime/images/") ?? null;
+  $: coverUrl =
+    acquireCover === null ? tile.coverImageUrl : coverLease?.url || null;
   $: artUrl =
-    coverUrl !== null && !failedArtUrls.includes(coverUrl)
-      ? coverUrl
-      : fullCardFallbackUrl !== null &&
-          !failedArtUrls.includes(fullCardFallbackUrl)
-        ? fullCardFallbackUrl
-        : null;
+    coverUrl !== null && !failedArtUrls.includes(coverUrl) ? coverUrl : null;
   $: pressDisabled = disabled || !tile.legal;
   $: cyId = cyKey ?? tile.key;
 </script>
@@ -128,27 +133,11 @@
         data-cy={`deck-tile-art-${cyId}`}
       />
     {:else}
-      <!-- Authored geometry rather than a packaged asset: a deck with no cover
-           card still has to fill the whole tile behind its content. -->
-      <svg
-        class="art"
-        viewBox="0 0 200 100"
-        preserveAspectRatio="xMidYMid slice"
+      <span
+        class="art art-placeholder"
         aria-hidden="true"
-        data-cy={`deck-tile-art-placeholder-${cyId}`}
+        data-cy={`deck-tile-art-placeholder-${cyId}`}>Image missing</span
       >
-        <rect
-          class="art-field"
-          width="200"
-          height="100"
-          data-cy={`deck-tile-art-field-${cyId}`}
-        />
-        <path
-          class="art-sigil"
-          d="M140 18 L178 50 L140 82 L102 50 Z"
-          data-cy={`deck-tile-art-sigil-${cyId}`}
-        />
-      </svg>
     {/if}
     {#if onrename === null}
       <span class="name text-backdrop" data-cy={`deck-tile-name-${cyId}`}
@@ -296,12 +285,12 @@
     opacity: 0.8;
   }
 
-  .art-field {
-    fill: var(--surface-panel);
-  }
-
-  .art-sigil {
-    fill: color-mix(in srgb, var(--accent) 22%, transparent);
+  .art-placeholder {
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: #000;
+    opacity: 1;
   }
 
   .name {

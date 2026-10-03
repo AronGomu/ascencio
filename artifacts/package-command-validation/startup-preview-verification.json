@@ -1,0 +1,94 @@
+{
+  "browser": "T3 collaborative preview",
+  "verification": {
+    "toolIcon": {
+      "_tag": "website",
+      "pageUrl": "http://127.0.0.1:4406/STARTUP_COPY_WORKBENCH_2026_10_04.html?final=1"
+    },
+    "value": {
+      "cancelled": true,
+      "edited": true,
+      "mobile": {
+        "height": "844",
+        "scrollWidth": 390,
+        "viewport": 390,
+        "width": "390"
+      },
+      "reset": true,
+      "retry": true,
+      "states": [
+        {
+          "heading": "Preparing application…",
+          "id": "initial",
+          "match": true
+        },
+        {
+          "heading": "Verifying installed content…",
+          "id": "verify-installed",
+          "match": true
+        },
+        {
+          "heading": "installation (0/4)…",
+          "id": "installation",
+          "match": true
+        },
+        {
+          "heading": "source and media copy (256 files)…",
+          "id": "source-copy",
+          "match": true
+        },
+        {
+          "heading": "verification (0/6)…",
+          "id": "verification",
+          "match": true
+        },
+        {
+          "heading": "engine preparation (4/6)…",
+          "id": "engine",
+          "match": true
+        },
+        {
+          "heading": "user state (0/1)…",
+          "id": "users",
+          "match": true
+        },
+        {
+          "heading": "mod composition (0/2)…",
+          "id": "mods",
+          "match": true
+        },
+        {
+          "heading": "domain projections (0/1)…",
+          "id": "projections",
+          "match": true
+        },
+        {
+          "heading": "Preparing gameplay and screens…",
+          "id": "gameplay",
+          "match": true
+        },
+        {
+          "heading": "Startup cancelled",
+          "id": "cancelled",
+          "match": true
+        },
+        {
+          "heading": "Application could not start",
+          "id": "failed",
+          "match": true
+        }
+      ]
+    }
+  },
+  "exportVerification": {
+    "toolIcon": {
+      "_tag": "website",
+      "pageUrl": "http://127.0.0.1:4406/STARTUP_COPY_WORKBENCH_2026_10_04.html"
+    },
+    "value": {
+      "draftCount": 12,
+      "initialHeading": "Preparing application…",
+      "status": "Drafts downloaded; production copy unchanged."
+    }
+  }
+}

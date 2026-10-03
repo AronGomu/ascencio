@@ -1,0 +1,22 @@
+Re-extracting code files in . (no LLM needed)...
+  AST extraction: 100/1455 uncached files (6%) [16 workers]
+  AST extraction: 200/1455 uncached files (13%) [16 workers]
+  AST extraction: 300/1455 uncached files (20%) [16 workers]
+  AST extraction: 400/1455 uncached files (27%) [16 workers]
+  AST extraction: 500/1455 uncached files (34%) [16 workers]
+  AST extraction: 600/1455 uncached files (41%) [16 workers]
+  AST extraction: 700/1455 uncached files (48%) [16 workers]
+  AST extraction: 800/1455 uncached files (54%) [16 workers]
+  AST extraction: 900/1455 uncached files (61%) [16 workers]
+  AST extraction: 1000/1455 uncached files (68%) [16 workers]
+  AST extraction: 1100/1455 uncached files (75%) [16 workers]
+  AST extraction: 1200/1455 uncached files (82%) [16 workers]
+  AST extraction: 1300/1455 uncached files (89%) [16 workers]
+  AST extraction: 1400/1455 uncached files (96%) [16 workers]
+  AST extraction: 1455/1455 uncached files (100%) [16 workers]
+  warning: 116 file(s) had syntax errors and may be partially extracted: src/battle/BattleFacade.svelte (first error at line 1, 1 symbol(s) extracted), src/battle/app/App.svelte (first error at line 1, 11 symbol(s) extracted), src/battle/app/acceptance/AcceptanceHarness.svelte (first error at line 1, 3 symbol(s) extracted), src/battle/app/components/DeckPicker.svelte (first error at line 1, no symbols extracted), src/battle/app/components/DuelErrorDialog.svelte (first error at line 20, 1 symbol(s) extracted) (+111 more)
+[graphify] backed up semantic+curated graph (7 files) -> 2026-10-04/
+[graphify watch] Rebuilt (no clustering): 14234 nodes, 42150 edges
+[graphify watch] graph.json updated in graphify-out
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+Tip: set GEMINI_API_KEY or GOOGLE_API_KEY to use Gemini for semantic extraction.

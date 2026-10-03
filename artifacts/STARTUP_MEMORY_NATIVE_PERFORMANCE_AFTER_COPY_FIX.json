@@ -1,0 +1,1209 @@
+{
+  "hardware": {
+    "machine": "x86_64",
+    "kernel": "7.1.9-arch1-2",
+    "cpu": "AMD Ryzen 7 7700 8-Core Processor"
+  },
+  "build": "optimized release with opt-in isolated native-acceptance instrumentation",
+  "conditions": "No filesystem cache flush; process-family RSS double-counts shared pages, PSS apportions them. Sampled at 250 ms, excluding external system processes. No pre-change native measurement exists.",
+  "runs": [
+    {
+      "run": 0,
+      "condition": "fresh app-data, unflushed OS cache",
+      "readyWallMs": 21246.307986999454,
+      "memoryAtReady": {
+        "rssBytes": 1783291904,
+        "pssBytes": 1263404032
+      },
+      "peakProcessFamilyMemory": {
+        "rssBytes": 1909813248,
+        "pssBytes": 1390126080
+      },
+      "samples": 662,
+      "exitCode": -15,
+      "report": {
+        "error": "Error: NATIVE_ACCEPTANCE_MEDIA_TIMEOUT",
+        "kind": "native-webview",
+        "liveObjectUrls": 0,
+        "measurements": [
+          {
+            "action": "main-menu-install-content",
+            "durationMs": 69
+          },
+          {
+            "action": "install-content-back",
+            "durationMs": 80
+          },
+          {
+            "action": "main-menu-free-play",
+            "durationMs": 86
+          }
+        ],
+        "peakObjectUrls": 2,
+        "status": "failed",
+        "trace": {
+          "frontend": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "gameplay",
+                "durationMs": 164,
+                "label": "native_startup_metadata",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 1
+              },
+              {
+                "category": "engine",
+                "durationMs": 18,
+                "label": "native_startup_engine",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 1
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0,
+                "label": "native_user_json_open",
+                "operation": "command",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 369.0000000000037
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 4,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 1862
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 7,
+                "label": "native_content_location",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 5,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 1966
+              },
+              {
+                "category": "media",
+                "durationMs": 31,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 6,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 2126
+              },
+              {
+                "category": "media",
+                "durationMs": 3,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 7,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 2158
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 8,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 2161
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 9,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 4163
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 10,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 4163
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 11,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 4164
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 12,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 6165
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 13,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 6166
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 14,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 6166
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 15,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 8167
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 16,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 8167
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 17,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 8168
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 18,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 10169
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 19,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 10170
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 20,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 10170
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 21,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 12171
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 22,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 12172
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 23,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 12172
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 24,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 14174
+              },
+              {
+                "category": "media",
+                "durationMs": 4.999999999996362,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 25,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 14175.000000000004
+              },
+              {
+                "category": "media",
+                "durationMs": 3,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 26,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 14180
+              },
+              {
+                "category": "media",
+                "durationMs": 1.000000000003638,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 27,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 14183
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 28,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 16175
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 29,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 16176
+              },
+              {
+                "category": "media",
+                "durationMs": 0,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 30,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 16177
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 31,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18178
+              },
+              {
+                "category": "media",
+                "durationMs": 6,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 32,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18179
+              },
+              {
+                "category": "media",
+                "durationMs": 2,
+                "label": "native_live_media_read",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 33,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18185
+              },
+              {
+                "category": "media",
+                "durationMs": 1,
+                "label": "native_live_media_revision",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 34,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18187
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 7,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 35,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18940
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 7,
+                "label": "native_user_json_close",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 36,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18941
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 8,
+                "label": "native_startup_close",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 37,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18948
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0.999999999992724,
+                "label": "native_startup_log_record",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 38,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18958.000000000007
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 7,
+                "label": "native_startup_log_status",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 39,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 19187
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 1,
+                "label": "native_startup_log_record",
+                "operation": "command",
+                "phase": "ready",
+                "sequence": 40,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 19225
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6"
+          },
+          "native": {
+            "droppedEvents": 0,
+            "enabled": true,
+            "events": [
+              {
+                "category": "registry",
+                "durationMs": 0.014547,
+                "label": "critical-selection",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 1,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 0.00017999999999999998
+              },
+              {
+                "bytes": 46163,
+                "category": "maintenance",
+                "durationMs": 1.005073,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 2,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 0.081166
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.018313000000000024,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 3,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 1.08661
+              },
+              {
+                "bytes": 52097858,
+                "category": "maintenance",
+                "durationMs": 23.780455000000003,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 4,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 3.88141
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 24.463777,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 5,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 27.664299
+              },
+              {
+                "bytes": 1541,
+                "category": "maintenance",
+                "durationMs": 0.04275799999997787,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 6,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 102.883466
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.0038669999999996207,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 7,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 102.926414
+              },
+              {
+                "bytes": 179089,
+                "category": "maintenance",
+                "durationMs": 0.5042690000000078,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 8,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 106.178699
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.07361300000000881,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 9,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 106.683499
+              },
+              {
+                "bytes": 933449,
+                "category": "maintenance",
+                "durationMs": 1.7081799999999845,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 10,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 110.657025
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.4587179999999904,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 11,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 112.366387
+              },
+              {
+                "bytes": 3992,
+                "category": "maintenance",
+                "durationMs": 0.031818000000001234,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 12,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 118.569193
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 0.003125999999994633,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 13,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 118.601391
+              },
+              {
+                "category": "maintenance",
+                "durationMs": 17989.934624,
+                "label": "readable-source-installation",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 14,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 122.478864
+              },
+              {
+                "bytes": 46163,
+                "category": "gameplay",
+                "durationMs": 0.017832000001362758,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 15,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18112.429086
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.023622999997314764,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 16,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18112.447068
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.3432600000014645,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 17,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18112.470871
+              },
+              {
+                "bytes": 52097858,
+                "category": "gameplay",
+                "durationMs": 12.89992099999654,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 18,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18112.817838000003
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 22.750845999995363,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 19,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18125.719532000003
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 255.91068300000188,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 20,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18148.471379
+              },
+              {
+                "bytes": 1541,
+                "category": "gameplay",
+                "durationMs": 0.1291639999981271,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 21,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18405.328481
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.002054000004136469,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 22,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18405.457945
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.14491199999974924,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 23,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18405.460129000003
+              },
+              {
+                "bytes": 179089,
+                "category": "gameplay",
+                "durationMs": 0.04320799999914016,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 24,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18405.608948
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 0.0725010000023758,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 25,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18405.652336
+              },
+              {
+                "category": "gameplay",
+                "durationMs": 1.1919530000013765,
+                "label": "critical-snapshot",
+                "operation": "parse",
+                "phase": "startup",
+                "sequence": 26,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18405.724988
+              },
+              {
+                "bytes": 933449,
+                "category": "engine",
+                "durationMs": 0.1563319999986561,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 27,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18406.925436
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.3829619999996794,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 28,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18407.082119
+              },
+              {
+                "bytes": 3992,
+                "category": "engine",
+                "durationMs": 0.010678999999072404,
+                "label": "critical-resource",
+                "operation": "read",
+                "phase": "startup",
+                "sequence": 29,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18407.467856
+              },
+              {
+                "category": "engine",
+                "durationMs": 0.0017230000012204982,
+                "label": "critical-resource",
+                "operation": "hash",
+                "phase": "startup",
+                "sequence": 30,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18407.478665
+              },
+              {
+                "category": "user-data",
+                "durationMs": 0.00456800000029034,
+                "label": "user-json-metadata",
+                "operation": "metadata",
+                "phase": "startup",
+                "sequence": 31,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 18776.937194
+              },
+              {
+                "category": "diagnostics",
+                "durationMs": 0,
+                "label": "ready",
+                "operation": "phase",
+                "phase": "ready",
+                "sequence": 32,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 20268.051358
+              },
+              {
+                "category": "media",
+                "durationMs": 0.02784100000280887,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 33,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 20534.345729999997
+              },
+              {
+                "category": "media",
+                "durationMs": 0.018502999999327585,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 34,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 20567.469202
+              },
+              {
+                "bytes": 98527,
+                "category": "media",
+                "durationMs": 0.06066999999893597,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 35,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 20567.488226
+              },
+              {
+                "category": "media",
+                "durationMs": 0.011731000002328074,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 36,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 20569.464687
+              },
+              {
+                "category": "media",
+                "durationMs": 0.018222999999125022,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 37,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 20621.970695
+              },
+              {
+                "bytes": 98527,
+                "category": "media",
+                "durationMs": 0.04215600000316044,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 38,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 20621.989339
+              },
+              {
+                "category": "media",
+                "durationMs": 0.0185330000022077,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 39,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 22570.81564
+              },
+              {
+                "category": "media",
+                "durationMs": 0.0044679999991785735,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 40,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 22571.195536000003
+              },
+              {
+                "bytes": 98527,
+                "category": "media",
+                "durationMs": 0.02935299999808194,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 41,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 22571.200154
+              },
+              {
+                "category": "media",
+                "durationMs": 0.005711000001610955,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 42,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 22571.799697
+              },
+              {
+                "category": "media",
+                "durationMs": 0.026487000002816785,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 43,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 24573.056612999997
+              },
+              {
+                "category": "media",
+                "durationMs": 0.00647200000094017,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 44,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 24573.534556
+              },
+              {
+                "bytes": 16,
+                "category": "media",
+                "durationMs": 0.0062010000001464505,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 45,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 24573.541168
+              },
+              {
+                "category": "media",
+                "durationMs": 0.009767999999894528,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 46,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 24573.808972
+              },
+              {
+                "category": "media",
+                "durationMs": 0.019705999999132473,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 47,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 26574.840665
+              },
+              {
+                "category": "media",
+                "durationMs": 0.006352000000333646,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 48,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 26575.218658
+              },
+              {
+                "bytes": 98527,
+                "category": "media",
+                "durationMs": 0.03696700000000419,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 49,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 26575.22523
+              },
+              {
+                "category": "media",
+                "durationMs": 0.010157999997318257,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 50,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 26575.866089000003
+              },
+              {
+                "category": "media",
+                "durationMs": 0.02423399999679532,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 51,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 28577.181789
+              },
+              {
+                "category": "media",
+                "durationMs": 0.011811000000307104,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 52,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 28577.651438
+              },
+              {
+                "bytes": 25,
+                "category": "media",
+                "durationMs": 0.011751000001822833,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 53,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 28577.66345
+              },
+              {
+                "category": "media",
+                "durationMs": 0.010620000000926666,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 54,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 28577.942003
+              },
+              {
+                "category": "media",
+                "durationMs": 0.02893199999743956,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 55,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 30579.109401
+              },
+              {
+                "category": "media",
+                "durationMs": 0.008173999998689396,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 56,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 30579.608143
+              },
+              {
+                "bytes": 98527,
+                "category": "media",
+                "durationMs": 0.03244800000175019,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 57,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 30579.616488
+              },
+              {
+                "category": "media",
+                "durationMs": 0.010859999998501737,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 58,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 30580.315732
+              },
+              {
+                "category": "media",
+                "durationMs": 0.022720999990269775,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 59,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 32581.984744000005
+              },
+              {
+                "category": "media",
+                "durationMs": 0.01338400000531692,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 60,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 32582.568931
+              },
+              {
+                "category": "media",
+                "durationMs": 0.015267999999196036,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 61,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 32589.544295000003
+              },
+              {
+                "bytes": 127686,
+                "category": "media",
+                "durationMs": 0.04381000000284985,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 62,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 32589.559772999997
+              },
+              {
+                "category": "media",
+                "durationMs": 0.013213999998697544,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 63,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 32591.176808
+              },
+              {
+                "category": "media",
+                "durationMs": 0.019294999998237472,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 64,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 34583.578449
+              },
+              {
+                "category": "media",
+                "durationMs": 0.011860999999043996,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 65,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 34583.959639
+              },
+              {
+                "bytes": 98527,
+                "category": "media",
+                "durationMs": 0.04063299999688752,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 66,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 34583.973835000004
+              },
+              {
+                "category": "media",
+                "durationMs": 0.015047000000777189,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 67,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 34584.66218
+              },
+              {
+                "category": "media",
+                "durationMs": 0.023401999998895917,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 68,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 36586.128623
+              },
+              {
+                "category": "media",
+                "durationMs": 0.011510999996971805,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 69,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 36586.601889
+              },
+              {
+                "category": "media",
+                "durationMs": 0.01294400000188034,
+                "label": "live-media",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 70,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 36593.67262
+              },
+              {
+                "bytes": 127686,
+                "category": "media",
+                "durationMs": 0.03340100000787061,
+                "label": "live-media",
+                "operation": "read",
+                "phase": "ready",
+                "sequence": 71,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 36593.685924
+              },
+              {
+                "category": "media",
+                "durationMs": 0.00997800000186544,
+                "label": "live-media-revision",
+                "operation": "metadata",
+                "phase": "ready",
+                "sequence": 72,
+                "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6",
+                "startedMs": 36595.323596999995
+              }
+            ],
+            "pendingEvents": 0,
+            "schemaVersion": 1,
+            "sessionId": "66cd1a44-ac81-409d-8007-9b386ea6f8b6"
+          }
+        }
+      }
+    }
+  ]
+}

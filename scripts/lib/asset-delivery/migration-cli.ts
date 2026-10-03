@@ -15,7 +15,7 @@ export async function runMigration(
       fail("ASSET_ARGUMENT_INVALID");
     if (flags.has("--help")) {
       progress(
-        "help: assets:migrate (--plan | --apply <plan-path>); copy-only; originals preserved",
+        "help: legacy:assets:copy-migrate (--plan | --apply <plan-path>); copy-only; originals preserved",
       );
       return;
     }

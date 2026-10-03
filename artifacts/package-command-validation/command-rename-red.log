@@ -1,0 +1,54 @@
+12:16:16 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+ ❯ tests/unit/content-tooling-gates.test.ts (3 tests | 2 failed) 532ms
+   × native build verifies the webview artifact without PWA tooling 22ms
+   × launch, build and browser hooks resolve every referenced npm command 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/content-tooling-gates.test.ts > native build verifies the webview artifact without PWA tooling
+AssertionError: expected undefined to be 'vite build --mode native' // Object.is equality
+
+- Expected:
+"vite build --mode native"
+
++ Received:
+undefined
+
+ ❯ tests/unit/content-tooling-gates.test.ts:6:42
+      4| it("native build verifies the webview artifact without PWA tooling", (…
+      5|   const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+      6|   expect(pkg.scripts["frontend:bundle"]).toBe("vite build --mode nativ…
+       |                                          ^
+      7|   expect(pkg.scripts["frontend:verify"]).toBe(
+      8|     "node scripts/verify-native-build.ts",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/content-tooling-gates.test.ts > launch, build and browser hooks resolve every referenced npm command
+AssertionError: expected undefined to be 'npm run native:desktop:build -- --no-…' // Object.is equality
+
+- Expected:
+"npm run native:desktop:build -- --no-bundle && ./src-tauri/target/release/ascencio"
+
++ Received:
+undefined
+
+ ❯ tests/unit/content-tooling-gates.test.ts:27:51
+     25|     for (const [, name] of hook.matchAll(/npm run ([\w:-]+)/g))
+     26|       expect(scripts[name!], `Missing npm command: ${name}`).toBeTypeO…
+     27|   expect(scripts["native:build-and-start:linux"]).toBe(
+       |                                                   ^
+     28|     "npm run native:desktop:build -- --no-bundle && ./src-tauri/target…
+     29|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  00:16:16
+   Duration  1.02s (transform 252ms, setup 341ms, import 73ms, tests 532ms, environment 0ms)
+

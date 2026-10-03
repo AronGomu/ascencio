@@ -180,7 +180,7 @@
     <h2>High-attention areas</h2>
     <div class="grid-3">
       <div class="panel danger"><h3>Large boundary files</h3><p><code>App.svelte</code> 1,286 lines; <code>PromptRegistry.ts</code> 1,245; Worker event parser 1,077. Changes can affect many states. Require focused tests.</p></div>
-      <div class="panel warning"><h3>Generated prerequisites</h3><p>Vite config reads generated runtime manifest at config load. Fresh checkout needs <code>npm run assets:mvp</code> before dev/build.</p></div>
+      <div class="panel warning"><h3>Generated prerequisites</h3><p>Vite config reads generated runtime manifest at config load. Fresh checkout needs <code>npm run assets:bootstrap</code> before dev/build.</p></div>
       <div class="panel warning"><h3>Private deployment</h3><p>Image redistribution remains unapproved. Normal production packaging refuses artwork. Approved command uses explicit private mode and writes marker.</p></div>
       <div class="panel"><h3>Two runtime hosts</h3><p>Browser Worker and Node Worker use shared runtime with separate asset loaders/bridges. Keep contracts host-neutral; test both boundaries.</p></div>
       <div class="panel"><h3>Fallback complexity</h3><p>Runtime + image fallbacks depend on synchronized snapshot metadata, digest receipts, cache namespaces, active/previous pointers.</p></div>

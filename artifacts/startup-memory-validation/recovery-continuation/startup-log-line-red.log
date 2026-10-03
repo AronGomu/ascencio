@@ -1,0 +1,47 @@
+   Compiling ascencio v0.1.0 (/home/aron/Projects/ascencio/src-tauri)
+error[E0422]: cannot find struct, variant or union type `Source` in this scope
+   --> src/native_diagnostics.rs:267:26
+    |
+267 |             source: Some(Source { file: "broken.lua".into(), pointer: None, line: Some(2), column: None, mod_id: None }),
+    |                          ^^^^^^ not found in this scope
+
+error[E0433]: cannot find type `Path` in this scope
+   --> src/native_diagnostics.rs:279:43
+    |
+279 |         let readable = fs::read_to_string(Path::new(log.status.path.as_ref().unwrap()).with_extension("txt")).unwrap();
+    |                                           ^^^^ use of undeclared type `Path`
+    |
+help: consider importing one of these structs
+    |
+235 +     use crate::Path;
+    |
+235 +     use std::path::Path;
+    |
+
+warning: variants `Command`, `SqliteOpen`, and `SqlQuery` are never constructed
+  --> src/native_io_trace.rs:31:5
+   |
+30 | pub(crate) enum Operation {
+   |                 --------- variants in this enum
+31 |     Command,
+   |     ^^^^^^^
+...
+35 |     SqliteOpen,
+   |     ^^^^^^^^^^
+36 |     SqlQuery,
+   |     ^^^^^^^^
+   |
+   = note: `Operation` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `read` is never used
+   --> src/native_io_trace.rs:248:15
+    |
+248 | pub(crate) fn read(path: &Path, category: Category, label: &'static str) -> io::Result<Vec<u8>> {
+    |               ^^^^
+
+Some errors have detailed explanations: E0422, E0433.
+For more information about an error, try `rustc --explain E0422`.
+error: could not compile `ascencio` (lib test) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+warning: `ascencio` (lib) generated 2 warnings

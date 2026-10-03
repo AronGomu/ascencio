@@ -8,6 +8,7 @@ export async function openLocalStorage(): Promise<
 > {
   if (!isTauri())
     return { kind: "failed", error: { code: "STORAGE_UNAVAILABLE" } };
-  const { openNativeStorage } = await import("./native/storage-client.ts");
-  return await openNativeStorage();
+  const { openPreparedNativeStorage } =
+    await import("./native/prepared-storage.ts");
+  return await openPreparedNativeStorage();
 }

@@ -2,6 +2,14 @@
 
 This file is the single context initialisation file for all AI agents working on this repository. Read it first.
 
+## Opening the application
+
+When the owner asks to open/start the application on this Linux workspace, use `npm run native:build-and-start:linux` with Node 26 or newer. It builds through the Tauri CLI before launching the standalone native application; no development server is required. Keep acceptance/recovery instrumentation environment variables unset for ordinary owner launches.
+
+Do not launch an arbitrary existing `src-tauri/target/release/ascencio` binary without establishing how it was built. Plain `cargo build --release` can still use `devUrl` and show `Could not connect to 127.0.0.1: Connection refused`. Standalone builds require Tauri's `custom-protocol` feature, enabled automatically by `tauri build`; a direct Cargo build must explicitly use `--features tauri/custom-protocol` and have current frontend/resources already prepared. Use `npm run native:desktop:dev` only when development mode is requested.
+
+Verify the actual window reaches startup or Main Menu before reporting that it opened successfully; a running process alone is insufficient. Preserve an already-running owner session rather than starting another writer.
+
 ## Agent workspace layout
 
 - `docs/` : Project documentation. Contains ADR/, architecture/
@@ -11,7 +19,7 @@ This file is the single context initialisation file for all AI agents working on
 
 ## Knowledge graph (graphify) — use first
 
-`graphify-out/` holds a built knowledge graph of this repository (1921 nodes, 4670 edges, 103 labelled communities).
+`graphify-out/` holds a built knowledge graph of this repository (14111 nodes, 39077 edges, 531 labelled communities).
 
 Any question about the codebase, its architecture, or how files relate is a graphify query first, before grep/read sweeps:
 
@@ -28,9 +36,11 @@ Applies to Claude Code, Codex, and pi; each has the `graphify` skill installed g
 
 YGO Story Duel Simulator is an offline Tauri desktop/mobile Yu-Gi-Oh! duel client. One shell exposes Duel Simulator, Deck Editor, Visual Novel, and manual content lifecycle. Project Ignis `ygopro-core` is sole authority for rules, legal actions, effects, and results.
 
-Current content uses verified immutable packages in the native app-data directory, read by Rust. Freeplay and Chapter 1 ship as default resources. Mutable data uses atomic native `user-data.json`; legacy stores remain untouched. Browser deployment, OPFS, SQLite WASM, PWA updates, localStorage saves and IndexedDB diagnostics are retired; see ADR-103. Content packages still use the existing native SQLite reader, pending a separate filesystem-media migration.
+Current content uses digest-pinned JSON critical snapshots in the native app-data directory, read once by Rust during startup. Freeplay and Chapter 1 ship as default resources. Mutable data uses atomic native `user-data.json`; legacy stores remain untouched. Browser deployment, OPFS, SQLite WASM, PWA updates, localStorage saves and IndexedDB diagnostics are retired; see ADR-103. Optional media uses scoped live filesystem leases. SQLite is retained only for developer conversion and historical tests.
 
-The three-UI restructure (plan `PLAN_2026_08_14_three_ui_restructure`) is complete as of 2026-08-15 (commit tagged `restructure-complete`). All three domains — Duel Simulator, Deck Editor, Visual Novel — are live under one shell, reachable through `index.html`. Development runs on a single trunk; the per-domain branch and worktree topology is retired, see [`docs/ADR/045_ADR_single_branch_trunk_development.md`](docs/ADR/045_ADR_single_branch_trunk_development.md). Build budgets are machine-enforced per domain via `npm run build:verify`.
+Implemented content architecture: [ADR-104](docs/ADR/104_ADR_startup_memory_content_and_mod_overrides.md) defines readable per-entity JSON sources, verified startup snapshots, memory-authoritative gameplay/user state, explicit mod overrides, live noncritical media, and early compiler-style diagnostics. Startup memory, JSON sources, explicit overrides, live media and early diagnostics are implemented; physical mobile and pre-change performance acceptance remain separate release gates.
+
+The three-UI restructure (plan `PLAN_2026_08_14_three_ui_restructure`) is complete as of 2026-08-15 (commit tagged `restructure-complete`). All three domains — Duel Simulator, Deck Editor, Visual Novel — are live under one shell, reachable through `index.html`. Development runs on a single trunk; the per-domain branch and worktree topology is retired, see [`docs/ADR/045_ADR_single_branch_trunk_development.md`](docs/ADR/045_ADR_single_branch_trunk_development.md). Build budgets are machine-enforced per domain via `npm run frontend:verify`.
 
 ### Branch model
 
@@ -48,7 +58,8 @@ The private browser MVP baseline and semantic Svelte DOM duel-field migration ar
 - Use [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) as completed semantic DOM-field migration history.
 - Use [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) as completed MVP/Phaser baseline history.
 - R0. Use [`docs/ADR/103_ADR_tauri_only_runtime_and_asset_ui.md`](docs/ADR/103_ADR_tauri_only_runtime_and_asset_ui.md) for current platform/runtime and asset presentation boundaries. Browser-specific decisions in ADR-099/100/101 are historical.
-- R1. Use [`docs/ADR/099_ADR_completed_manual_sqlite_cutover.md`](docs/ADR/099_ADR_completed_manual_sqlite_cutover.md) plus [`docs/architecture/04-data/manual-sqlite-content-import.md`](docs/architecture/04-data/manual-sqlite-content-import.md) for current manual package/runtime/user-data architecture.
+- R4. Use [`docs/ADR/104_ADR_startup_memory_content_and_mod_overrides.md`](docs/ADR/104_ADR_startup_memory_content_and_mod_overrides.md) for the implemented startup-memory/JSON/mod-override/live-media architecture and diagnostics contract.
+- R1. Use [`docs/ADR/099_ADR_completed_manual_sqlite_cutover.md`](docs/ADR/099_ADR_completed_manual_sqlite_cutover.md) plus [`docs/architecture/04-data/manual-sqlite-content-import.md`](docs/architecture/04-data/manual-sqlite-content-import.md) for historical manual SQLite migration architecture; ADR-104 owns current transport and read lifetimes.
 - R3. Use [`docs/assets/content-modules.md`](docs/assets/content-modules.md) and [`docs/ADR/102_ADR_content_modules_and_campaign_facts.md`](docs/ADR/102_ADR_content_modules_and_campaign_facts.md) for card/chapter composition and save-based prerequisites; ADR-101 owns JSON user persistence.
 - R2. Use [`docs/assets/manual-sqlite-setup.md`](docs/assets/manual-sqlite-setup.md) for current owner setup/release gates; use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for retained source acquisition/verification.
 - `docs/archive/` is historical only and must not override current decisions.
@@ -121,7 +132,7 @@ What the rules encode:
 - Svelte owns all interactive application/field UI; presentation state never determines legality.
 - Canvas may be future pointer-transparent decoration only after separate measured ADR.
 - Synchronous core callbacks use preloaded memory and perform no async I/O.
-- C1. Frozen engine compatibility and Project Ignis content are validated as immutable SQLite package stack; registry generation commit owns activation.
+- C1. Frozen engine compatibility and Project Ignis content are validated as pinned JSON snapshots and frozen executable buffers; changes activate through a new startup cycle.
 - C2. Webview build contains no SQLite executable, OCG WASM, package DBs or card/chapter media. Tauri resources own verified content; app-data owns installed modules.
 - C3. Package lifecycle never reads/writes saves. User data lives in native `user-data.json`; legacy stores remain untouched/unread; no migration from legacy stores. Campaign facts remain in JSON saves when modules are removed.
 - Production duels shuffle normally; deterministic inputs are test/diagnostic-only.

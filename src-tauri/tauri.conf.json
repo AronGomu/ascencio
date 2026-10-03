@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.ascencio.storyduel",
   "build": {
-    "beforeDevCommand": "npm run native:prepare && npm run dev -- --mode native",
+    "beforeDevCommand": "npm run content:stage:native && npm run frontend:dev -- --mode native",
     "devUrl": "http://127.0.0.1:4204",
-    "beforeBuildCommand": "npm run native:prepare && npm run build && npm run native:verify-staged",
+    "beforeBuildCommand": "npm run content:stage:native && npm run frontend:build && npm run content:stage:verify-native",
     "frontendDist": "../generated/build/app"
   },
   "app": {
@@ -27,7 +27,7 @@
   "bundle": {
     "active": true,
     "resources": {
-      "resources/game-content/": "game-content/"
+      "resources/readable-content/": "readable-content/"
     }
   }
 }

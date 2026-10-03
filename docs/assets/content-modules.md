@@ -1,12 +1,14 @@
 # Content modules
 
+The workflow below describes the implemented SQLite module baseline. [ADR-104](../ADR/104_ADR_startup_memory_content_and_mod_overrides.md) accepts a pending replacement with readable entity files, JSON overrides, startup-only critical reads and live optional media. Those new source/override formats are not yet accepted by the current importer.
+
 Cards and chapters are data modules. The application loads installed modules through a registry, validates a complete candidate dependency graph, and changes the active generation atomically. Content operations never edit campaign saves. Native releases seed Duel Core, Card Library, Free Play and Chapter 01 by default; later removals and installed selections persist across restarts.
 
 The existing SQLite package transport is retained. This change adds module composition and campaign contracts; it does not replace content databases with loose files. Mutable user data is JSON/localStorage (ADR-101), separate from the content registry and package bytes.
 
 ## Manifest and installed dependencies
 
-Add a recipe entry to `content/packages.json`, with a stable `packageId`, semantic `version`, package `schemaVersion`, timestamp, source directory and sorted dependencies. Build with `npm run content:export`; validate with `npm run content:verify`. Native release preparation is documented in [native-content-release.md](native-content-release.md).
+Add a recipe entry to `content/packages.json`, with a stable `packageId`, semantic `version`, package `schemaVersion`, timestamp, source directory and sorted dependencies. Build with `npm run legacy:content:export-sqlite`; validate with `npm run legacy:content:verify-sqlite`. Native release preparation is documented in [native-content-release.md](native-content-release.md).
 
 ```json
 {

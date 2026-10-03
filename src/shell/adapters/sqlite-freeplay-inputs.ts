@@ -1,4 +1,5 @@
-import { createCards } from "../../cards/index.ts";
+import type { SqliteImageLeasePool } from "./sqlite-image-source.ts";
+import { createCards, type Cards } from "../../cards/index.ts";
 import { cardsDeckCatalog } from "../../decks/catalog/index.ts";
 import { cloneCardLists } from "../../decks/contracts/index.ts";
 import {
@@ -41,6 +42,8 @@ export async function loadFreeplayInputs(
   storage: LocalStorageClient,
   users: ShellUserServices,
   signal: AbortSignal,
+  residentCards?: Cards,
+  sharedImages?: SqliteImageLeasePool,
 ): Promise<LoadedFreeplayInputs> {
   throwIfAborted(signal);
   const controller = new AbortController();
@@ -80,7 +83,9 @@ export async function loadFreeplayInputs(
         isFreeplayConfig,
         controller.signal,
       ),
-      readAllCards(storage.content, controller.signal),
+      residentCards
+        ? Promise.resolve(residentCards.all())
+        : readAllCards(storage.content, controller.signal),
       query(
         storage.content,
         { kind: "decks", packageId: "freeplay" },
@@ -104,11 +109,15 @@ export async function loadFreeplayInputs(
     ]);
     throwIfAborted(controller.signal);
 
-    const cards = createCards(definitions);
+    const cards = residentCards ?? createCards(definitions);
     const ruleset = deckRuleset(freeplay, packages, limits);
     validatePublishedDecks(decks, cards, ruleset);
     validateFreeplayReferences(freeplay, decks, opponents);
-    const images = createSqliteCardImageSource(storage.content);
+    const images = createSqliteCardImageSource(
+      storage.content,
+      sharedImages,
+      sharedImages === undefined,
+    );
     try {
       const snapshotId = runtimeSnapshotId(packages);
       const libraryIdentity = packageById(packages, "card-library");

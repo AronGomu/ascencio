@@ -21,7 +21,7 @@ node scripts/convert-shop-content.ts content/commerce/conversion-release.json ge
 
 The destination must not exist. Its `sets/` and `boosters/` directories are the acquired canonical inputs. Place those directories under `assets/content/card-library/` for initial provisioning. The emitted `economies/`, `shops/` and `chapters/` are migration comparison output; tracked authored policy files already own those inputs. Do not replace authored changes with generated defaults.
 
-Conversion retains 1,036 set IDs, 44,298 printings and the exact 1,627-card chapter pool, including the one allowed card outside the selected sets. It does not infer IDs from titles or collapse printing variants. Old provider evidence is no longer needed for ordinary package export or image verification. Historical acquisition commands (`assets:images`, `assets:sets`, `assets:lock`, `generate:shop-sets`) retain their historical provenance inputs; this change does not provision or rewrite those archives.
+Conversion retains 1,036 set IDs, 44,298 printings and the exact 1,627-card chapter pool, including the one allowed card outside the selected sets. It does not infer IDs from titles or collapse printing variants. Old provider evidence is no longer needed for ordinary package export or image verification. Historical acquisition commands (`assets:cards:download-full`, `assets:sets:download-images`, `assets:images:pin`, `content:shop-sets:fetch-and-generate`) retain their historical provenance inputs; this change does not provision or rewrite those archives.
 
 ## Entity contracts
 
@@ -44,9 +44,9 @@ Any card-library or card-pack recipe can specify `sourceManifest` and `sourceVer
 After changing sources, bump affected immutable package versions and dependency requirements in the recipe before exporting:
 
 ```sh
-npm run content:export -- --spec content/packages.json
-npm run native:manifest
-npm run native:prepare
+npm run legacy:content:export-sqlite -- --spec content/packages.json
+npm run content:release:pin
+npm run content:stage:native
 ```
 
 Review export results before repinning or staging. Existing package bytes are never overwritten with different content under the same identity. Compiler failures report a structured code, phase, source file, JSON pointer and related sources through the normal export CLI. Prepared package installation still owns atomic activation; it never modifies saves.

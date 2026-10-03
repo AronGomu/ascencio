@@ -51,7 +51,7 @@ Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now A
   <ul>
     <li><b>Two menus in a row.</b> The shell home listed Story · Decks · Duel; picking Story showed the visual novel's own title screen with the real entries. The second menu was the game's front door.</li>
     <li><b>"Decks" became ambiguous.</b> With save-owned decks (ADR-049) a deck list is either a save's or the free-play library's. One <code>#/decks</code> route cannot say which, and a bookmark would mean whichever mode you were last in.</li>
-    <li><b>The story must stay lazy.</b> <code>domain-loaders.ts</code> imports each domain on demand and <code>build:verify</code> enforces <code>DOMAIN_BUDGET_BYTES</code>. Putting the story's title at the app root would drag the whole visual novel into first paint — so the menu moves into the shell instead.</li>
+    <li><b>The story must stay lazy.</b> <code>domain-loaders.ts</code> imports each domain on demand and <code>frontend:verify</code> enforces <code>DOMAIN_BUDGET_BYTES</code>. Putting the story's title at the app root would drag the whole visual novel into first paint — so the menu moves into the shell instead.</li>
   </ul>
 </div>
 
@@ -152,7 +152,7 @@ Decision record: ADR-051. Boundary rules unchanged (ADR-022); branch model now A
 <div class="card">
   <ul>
     <li>ADR-022 <b>import boundaries</b>: public entries only, enforced by <code>eslint.config.js</code> and <code>tests/unit/domain-boundaries.test.ts</code>.</li>
-    <li>Lazy domain loading and per-domain byte budgets (<code>build:verify</code>).</li>
+    <li>Lazy domain loading and per-domain byte budgets (<code>frontend:verify</code>).</li>
     <li>The duel handoff vocabulary — the story still never mounts a duel, and the shell still settles exactly one result.</li>
     <li>The <code>data-cy</code> contract on every rendered element.</li>
   </ul>

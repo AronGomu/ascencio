@@ -20,19 +20,19 @@
     <pre><code>git clone git@github.com:AronGomu/ygo-story-duel-simulator.git
 cd ygo-story-duel-simulator
 npm ci
-npm run assets:mvp
+npm run assets:bootstrap
 npm run check
-npm run dev</code></pre>
-    <div class="grid-2"><div class="panel"><h3><code>npm ci</code></h3><p>Installs exact lockfile dev/runtime deps. Node engine requirement: <code>&gt;=24.0.0</code>.</p></div><div class="panel"><h3><code>npm run assets:mvp</code></h3><p>Acquires vendored core, upstream DB/scripts/strings, image archive, generated snapshots. Resumable; rerun after network failure.</p></div><div class="panel"><h3><code>npm run check</code></h3><p>Runs complete local release gates. First run installs no browsers automatically; Playwright browser binaries must exist.</p></div><div class="panel"><h3><code>npm run dev</code></h3><p>Starts Vite. Dev middleware serves verified runtime files under configured base with no-store caching.</p></div></div>
+npm run frontend:dev</code></pre>
+    <div class="grid-2"><div class="panel"><h3><code>npm ci</code></h3><p>Installs exact lockfile dev/runtime deps. Node engine requirement: <code>&gt;=24.0.0</code>.</p></div><div class="panel"><h3><code>npm run assets:bootstrap</code></h3><p>Acquires vendored core, upstream DB/scripts/strings, image archive, generated snapshots. Resumable; rerun after network failure.</p></div><div class="panel"><h3><code>npm run check</code></h3><p>Runs complete local release gates. First run installs no browsers automatically; Playwright browser binaries must exist.</p></div><div class="panel"><h3><code>npm run frontend:dev</code></h3><p>Starts Vite. Dev middleware serves verified runtime files under configured base with no-store caching.</p></div></div>
     <h3>Quick launchers</h3><p>Windows: <code>download-mvp-assets.cmd</code>. macOS/Linux: <code>./download-mvp-assets.sh</code>. Both set project cwd, accept same flags as unified command.</p>
-    <details><summary>Useful asset flags</summary><div><pre><code>npm run assets:mvp -- --offline
-npm run assets:mvp -- --concurrency 8 --requests-per-second 12
-npm run assets:mvp -- --force-images</code></pre><p><code>--offline</code> requires populated caches/archive. Default image concurrency/rate: 18; hard max rate: 20 req/s.</p></div></details>
+    <details><summary>Useful asset flags</summary><div><pre><code>npm run assets:bootstrap -- --offline
+npm run assets:bootstrap -- --concurrency 8 --requests-per-second 12
+npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code> requires populated caches/archive. Default image concurrency/rate: 18; hard max rate: 20 req/s.</p></div></details>
   </section>
 
   <section id="verify">
     <h2>Verify environment incrementally</h2>
-    <ol class="flow-list"><li><strong>Identity:</strong> <code>node --version</code> → 24+; <code>npm --version</code>; <code>git --version</code>.</li><li><strong>Generated status:</strong> <code>generated/mvp-assets-status.json</code> must say <code>ready</code>.</li><li><strong>Vendor:</strong> <code>npm run vendor:verify</code>.</li><li><strong>Data:</strong> <code>npm run assets:verify</code> + <code>npm run snapshot:verify</code>.</li><li><strong>Static quality:</strong> <code>npm run format:check &amp;&amp; npm run lint &amp;&amp; npm run typecheck</code>.</li><li><strong>Fast behavior:</strong> <code>npm run test:unit</code>.</li><li><strong>Real core:</strong> <code>npm run test:integration</code>.</li><li><strong>Browser package:</strong> <code>npm run build</code>, then <code>npm run test:e2e</code>.</li></ol>
+    <ol class="flow-list"><li><strong>Identity:</strong> <code>node --version</code> → 24+; <code>npm --version</code>; <code>git --version</code>.</li><li><strong>Generated status:</strong> <code>generated/mvp-assets-status.json</code> must say <code>ready</code>.</li><li><strong>Vendor:</strong> <code>npm run vendor:verify</code>.</li><li><strong>Data:</strong> <code>npm run assets:verify-all</code> + <code>npm run content:source-manifest:verify</code>.</li><li><strong>Static quality:</strong> <code>npm run format:check &amp;&amp; npm run lint &amp;&amp; npm run typecheck</code>.</li><li><strong>Fast behavior:</strong> <code>npm run test:unit-and-performance</code>.</li><li><strong>Real core:</strong> <code>npm run test:integration</code>.</li><li><strong>Browser package:</strong> <code>npm run frontend:build</code>, then <code>npm run test:browser:native-bridge</code>.</li></ol>
     <div class="notice warning"><strong>Vite prerequisite.</strong> <code>vite.config.ts</code> reads <code>generated/runtime/current/manifest.json</code> immediately. Missing generated assets can fail config loading before dev server starts.</div>
   </section>
 
@@ -124,13 +124,13 @@ npx vitest run tests/unit/prompt-registry.test.ts
 npx vitest run tests/integration/node-worker-thread.test.ts
 
 # production package validation
-npm run build
+npm run frontend:build
 
 # one browser test title
 npx playwright test -g "forced Worker initialization timeout"
 
 # inspect static private package
-npm run preview -- --host 127.0.0.1</code></pre>
+npm run frontend:preview -- --host 127.0.0.1</code></pre>
   </section>
 
   <section id="traps">

@@ -1,0 +1,182 @@
+[
+  {
+    "removed": ".tmp/startup-recovery-final-chromium.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-chromium.log",
+    "sha256": "e878c38f4f4bec487d0815269899120528c3036bbdd09513a41356c410ab35ae"
+  },
+  {
+    "removed": ".tmp/startup-recovery-final-default-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-default-build.log",
+    "sha256": "ec62ad8a8913ca0d83edf55a8ab689aae2e97fe3a59ce8a2a8ea4858652ce617"
+  },
+  {
+    "removed": ".tmp/startup-recovery-graph-cluster.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-graph-cluster.log",
+    "sha256": "8593122ca4997d096133728f520f579657fd0bb82e906e03aa90075929894bb8"
+  },
+  {
+    "removed": ".tmp/startup-recovery-complete-native.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-complete-native.log",
+    "sha256": "bea266e31908de69c6f7ac489ca770dfbba146ca16296b78bc7abff559ac7322"
+  },
+  {
+    "removed": ".tmp/startup-recovery-final-feature-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-feature-build.log",
+    "sha256": "f10a82c9c071b4a10b59e634db21a2462be446ed7c551cd2684fd11c74bd5ee5"
+  },
+  {
+    "removed": ".tmp/startup-recovery-graph-update.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-graph-update.log",
+    "sha256": "b7b7c1ea17b846493d7f602c914dd56bb8ef848324348a687ab4856b7f6f4765"
+  },
+  {
+    "removed": ".tmp/startup-recovery-final-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-build.log",
+    "sha256": "0a59489628f0c8a4d005e4db20a6e75f9f1498c3a3f0ca82f926ff2e7c57ba56"
+  },
+  {
+    "removed": ".tmp/startup-recovery-final-rust.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-rust.log",
+    "sha256": "ca1e5724cedf007a0e59fb5df2fcf478f25e6f28899a2b64a8a1aa2600d3e0d8"
+  },
+  {
+    "removed": ".tmp/startup-recovery-final-headless.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-headless.log",
+    "sha256": "cab4e8d797c36d7b43364e3f1b389f08c4f6bcc23d0e016ea237fe600200c237"
+  },
+  {
+    "removed": ".tmp/startup-recovery-final-reproducible.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-reproducible.log",
+    "sha256": "7b3d2f386c0870904a99595ef8fdc07f7c3727c38f5edc4126e94584e915468d"
+  },
+  {
+    "removed": ".tmp/startup-recovery-final-components.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-final-components.log",
+    "sha256": "c9b75c4af0c1e72c14d0db2718319d78be629510542536f53af590763eb85211"
+  },
+  {
+    "removed": ".tmp/startup-log-line-red-2.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-log-line-red-2.log",
+    "sha256": "14705f35fd8343c7288e16393a3e40d8fd2e55f04154d9371cc94a4e08854c3c"
+  },
+  {
+    "removed": ".tmp/startup-log-line-red.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-log-line-red.log",
+    "sha256": "13716daf792e1ca485aca62b6c2a252956090870434b0a9fa112ae1e2c008e94"
+  },
+  {
+    "removed": ".tmp/startup-source-line-red.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-source-line-red.log",
+    "sha256": "5a1b6faf6b5f49c6e3eca0a295c26cdd3bcccd3441d87d22ad0b12dd892c10e9"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-route-run.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-route-run.log",
+    "sha256": "110fa69a8e6a4b23d727761c33d006d9c5281629c4e127ac2c7f0676c2294ca5"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-route-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-route-build.log",
+    "sha256": "486ad710f2342def69614cb7b2c6d34444ab267d90ff159fb28c7e4a8b9b1bbf"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-debug-run.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-debug-run.log",
+    "sha256": "a1d44227bb0cc0c6989b1c320d44b833dedbb1e88c71a8476e59fc451eea91c6"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-debug-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-debug-build.log",
+    "sha256": "4c9ff68ee1f573397fab4e95a2196c9bc8c3d305dd74905b7c5aba662dbb8847"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-native-retry.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-native-retry.log",
+    "sha256": "a1d44227bb0cc0c6989b1c320d44b833dedbb1e88c71a8476e59fc451eea91c6"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-reproducible.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-reproducible.log",
+    "sha256": "7b3d2f386c0870904a99595ef8fdc07f7c3727c38f5edc4126e94584e915468d"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-rust.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-rust.log",
+    "sha256": "8e88a6e36d7cf15b4337945713d778dc83ac233e2851960e48e83d3d9fe37c7b"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-components.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-components.log",
+    "sha256": "0bf8ba92cbfb49559319e4db2a064d856cb1831253ca39ff173f0272c079c85e"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-headless.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-headless.log",
+    "sha256": "2ecf77f5b2e6eef6ae1417ab9423544d3602d3af39b0fe5f4ec12009bb5ae772"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-native-acceptance.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-native-acceptance.log",
+    "sha256": "9fce70a06e76f34b335e25610a134e306fa60f32493969176625baca7bfdf66a"
+  },
+  {
+    "removed": ".tmp/startup-recovery-components.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-components.log",
+    "sha256": "2110168cecaa3b2c712526f2d83285d60f5e0b0b8f7d3ed1afabb5cf4b2a8f3a"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-native-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-native-build.log",
+    "sha256": "288ff3833b38d17c11809dad804dfd57edcba405fcae6a2de9917297d7def792"
+  },
+  {
+    "removed": ".tmp/startup-maintenance-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-maintenance-build.log",
+    "sha256": "ee6b96825f81439dff49956eabd25594a39b8b21d606e7d82ff269905249ecfe"
+  },
+  {
+    "removed": ".tmp/startup-recovery-headless.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-headless.log",
+    "sha256": "87f2be045d0f5dfbd0599a9a13e0e59b0e0b96360193d6619d2702fa7a12107a"
+  },
+  {
+    "removed": ".tmp/startup-recovery-native-acceptance.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-native-acceptance.log",
+    "sha256": "9fce70a06e76f34b335e25610a134e306fa60f32493969176625baca7bfdf66a"
+  },
+  {
+    "removed": ".tmp/startup-recovery-lint.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-lint.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "removed": ".tmp/startup-recovery-typecheck.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-typecheck.log",
+    "sha256": "b0aad6de59dbf5fc5f1549e7ebbeb06eab934b5e9a7a34bb0fec82838a09f3c1"
+  },
+  {
+    "removed": ".tmp/startup-recovery-native-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-native-build.log",
+    "sha256": "c1b36f8cd2cf56a55bee62b2ec5e1ba661c4ad664fcd95b04121ef5a7d07e9cd"
+  },
+  {
+    "removed": ".tmp/startup-recovery-build.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-build.log",
+    "sha256": "e966dd5e8e0853ed30d8c76d0b2f71a9700544ffd832ee29afa4c9dc51badd99"
+  },
+  {
+    "removed": ".tmp/startup-recovery-rust.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-rust.log",
+    "sha256": "54303e6386b9c3f9ea3588be4c44136d1c5aa8ddc4f1d75392ada5e6b58c76f5"
+  },
+  {
+    "removed": ".tmp/startup-recovery-focused-green.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-focused-green.log",
+    "sha256": "556fe58c5d7ce1e6a22eef7471f944c393c1d47452f666f0c5dcc41b59355d3e"
+  },
+  {
+    "removed": ".tmp/startup-recovery-tests.log",
+    "retained": "artifacts/startup-memory-validation/recovery-continuation/startup-recovery-tests.log",
+    "sha256": "fa790ef0d6cf8dbae34436d653919bcea625f7c204ffc8876c79c7865f06d170"
+  }
+]

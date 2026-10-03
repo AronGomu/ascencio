@@ -14,6 +14,18 @@ export function createSqliteStoryMedia(
   setIds: ReadonlySet<string>,
 ): StoryMedia {
   return Object.freeze({
+    acquireEvent(
+      requestedChapterId: string,
+      logicalId: string,
+      signal: AbortSignal,
+    ): Promise<StoryMediaLease | null> {
+      if (requestedChapterId !== chapterId) return Promise.resolve(null);
+      return pool.acquire(
+        `${chapterId}:${logicalId}`,
+        { kind: "asset", packageId: chapterId, path: logicalId },
+        signal,
+      );
+    },
     acquireMap(
       requestedChapterId: string,
       signal: AbortSignal,
@@ -54,7 +66,9 @@ export async function loadSqliteStoryImageLibrary(
   const cardUrls = new Map<number, string>();
   const setUrls = new Map<string, string>();
   const leases: CardImageLease[] = [];
+  const subscriptions: (() => void)[] = [];
   const dispose = () => {
+    for (const unsubscribe of subscriptions.splice(0)) unsubscribe();
     for (const lease of leases.splice(0)) lease.release();
   };
   try {
@@ -66,6 +80,11 @@ export async function loadSqliteStoryImageLibrary(
       if (lease !== null) {
         leases.push(lease);
         setUrls.set(set.id, lease.url);
+        const unsubscribe = lease.subscribe?.((url) => {
+          if (url) setUrls.set(set.id, url);
+          else setUrls.delete(set.id);
+        });
+        if (unsubscribe) subscriptions.push(unsubscribe);
       }
     }
     return Object.freeze({ cardUrls, setUrls, dispose });

@@ -1,0 +1,145 @@
+
+> ascencio@0.1.0 test:native:webview
+> playwright test -c playwright.native.config.ts
+
+
+[WebServer] (node:311900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 4 tests using 1 worker
+
+
+(node:312438) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/4] [webkit-compact] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+
+[webkit-compact] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  1) [webkit-compact] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field 
+
+    Error: browserType.launch: Target page, context or browser has been closed
+    Browser logs:
+
+    <launching> /home/aron/Projects/ascencio/generated/tests/runtime/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window
+    <launched> pid=312539
+    [pid=312539][err] /home/aron/.cache/ms-playwright/webkit-2336/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libicudata.so.74: cannot open shared object file: No such file or directory
+    Call log:
+      - <launching> /home/aron/Projects/ascencio/generated/tests/runtime/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window
+      - <launched> pid=312539
+      - [pid=312539][err] /home/aron/.cache/ms-playwright/webkit-2336/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libicudata.so.74: cannot open shared object file: No such file or directory
+      - [pid=312539] <gracefully close start>
+      - [pid=312539] <kill>
+      - [pid=312539] <will force kill>
+      - [pid=312539] <process did exit: exitCode=127, signal=null>
+      - [pid=312539] starting temporary directories cleanup
+      - [pid=312539] finished temporary directories cleanup
+      - [pid=312539] <gracefully close end>
+
+
+    Error Context: generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-compact/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-compact/trace.zip
+    Usage:
+
+        npx playwright show-trace generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-compact/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:312575) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[2/4] [chromium-desktop] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+
+[chromium-desktop] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+
+(node:314839) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/4] [webkit-desktop] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+
+[webkit-desktop] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  2) [webkit-desktop] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field 
+
+    Error: browserType.launch: Target page, context or browser has been closed
+    Browser logs:
+
+    <launching> /home/aron/Projects/ascencio/generated/tests/runtime/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window
+    <launched> pid=314852
+    [pid=314852][err] /home/aron/.cache/ms-playwright/webkit-2336/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libicudata.so.74: cannot open shared object file: No such file or directory
+    Call log:
+      - <launching> /home/aron/Projects/ascencio/generated/tests/runtime/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window
+      - <launched> pid=314852
+      - [pid=314852][err] /home/aron/.cache/ms-playwright/webkit-2336/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libicudata.so.74: cannot open shared object file: No such file or directory
+      - [pid=314852] <gracefully close start>
+      - [pid=314852] <kill>
+      - [pid=314852] <will force kill>
+      - [pid=314852] exception while trying to kill process: Error: kill ESRCH
+      - [pid=314852] <process did exit: exitCode=127, signal=null>
+      - [pid=314852] starting temporary directories cleanup
+      - [pid=314852] finished temporary directories cleanup
+      - [pid=314852] <gracefully close end>
+
+
+    Error Context: generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:314861) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[4/4] [webkit-mobile] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+
+[webkit-mobile] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  3) [webkit-mobile] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field 
+
+    Error: browserType.launch: Target page, context or browser has been closed
+    Browser logs:
+
+    <launching> /home/aron/Projects/ascencio/generated/tests/runtime/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window
+    <launched> pid=314873
+    [pid=314873][err] /home/aron/.cache/ms-playwright/webkit-2336/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libicudata.so.74: cannot open shared object file: No such file or directory
+    Call log:
+      - <launching> /home/aron/Projects/ascencio/generated/tests/runtime/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window
+      - <launched> pid=314873
+      - [pid=314873][err] /home/aron/.cache/ms-playwright/webkit-2336/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libicudata.so.74: cannot open shared object file: No such file or directory
+      - [pid=314873] <gracefully close start>
+      - [pid=314873] <kill>
+      - [pid=314873] <will force kill>
+      - [pid=314873] exception while trying to kill process: Error: kill ESRCH
+      - [pid=314873] <process did exit: exitCode=127, signal=null>
+      - [pid=314873] starting temporary directories cleanup
+      - [pid=314873] finished temporary directories cleanup
+      - [pid=314873] <gracefully close end>
+
+
+    Error Context: generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace generated/tests/native-webview/installed-content-installe-25ff0-ges-previews-and-duel-field-webkit-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  3 failed
+    [webkit-compact] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field 
+    [webkit-desktop] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field 
+    [webkit-mobile] › e2e/e2e-native/installed-content.spec.ts:4:1 › installed Chapter 1, Freeplay images, previews and duel field 
+  1 passed (15.8s)

@@ -12,13 +12,17 @@ export interface UserWriteBarrier {
 export function userWriteLifecycle(store: UserDataStore): UserWriteLifecycle {
   let lifecycle = lifecycles.get(store);
   if (lifecycle === undefined) {
-    lifecycle = new UserWriteLifecycle();
+    lifecycle = new UserWriteLifecycle(store);
     lifecycles.set(store, lifecycle);
   }
   return lifecycle;
 }
 
 class UserWriteLifecycle {
+  readonly #store: UserDataStore;
+  constructor(store: UserDataStore) {
+    this.#store = store;
+  }
   readonly #pending = new Set<Promise<void>>();
   #failure: StorageFailure | null = null;
   #barrier: Promise<unknown> | null = null;
@@ -59,8 +63,12 @@ class UserWriteLifecycle {
    * Calling flush acknowledges reported failures; later writes can recover. */
   async flush(): Promise<StorageResult<void>> {
     await Promise.all([...this.#pending]);
+    const retained = this.#store.persistence?.uncertain
+      ? undefined
+      : await this.#store.flush?.();
     const failure = this.#failure;
     this.#failure = null;
+    if (retained?.kind === "failed") return retained;
     return failure === null
       ? { kind: "ok", value: undefined }
       : { kind: "failed", error: failure };

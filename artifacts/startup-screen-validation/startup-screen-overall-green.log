@@ -1,0 +1,210 @@
+1:25:33 AM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+
+ RUN  v4.1.11 /home/aron/Projects/ascencio
+
+ ❯ tests/component/shell/StartupRoot.test.ts (8 tests | 2 failed) 2456ms
+   × shows overall progress across phases, never goes backward and never offers Cancel 1006ms
+   × reports gameplay checkpoints without admitting the menu before readiness 1305ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > shows overall progress across phases, never goes backward and never offers Cancel
+AssertionError: expected '35' to be '50' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"true"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mverification (3/6)…[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0mPreparing your content and saves. Gameplay opens when preparation is
+          complete.[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<div[39m
+            [33mclass[39m=[32m"loading svelte-6ldw3d"[39m
+            [33mdata-cy[39m=[32m"startup-progress"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-label[39m=[32m"Overall startup progress"[39m
+              [33maria-valuemax[39m=[32m"100"[39m
+              [33maria-valuemin[39m=[32m"0"[39m
+              [33maria-valuenow[39m=[32m"35"[39m
+              [33mclass[39m=[32m"track svelte-6ldw3d"[39m
+              [33mdata-cy[39m=[32m"startup-progress-track"[39m
+              [33mrole[39m=[32m"progressbar"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"fill svelte-6ldw3d"[39m
+                [33mdata-cy[39m=[32m"startup-progress-fill"[39m
+                [33mstyle[39m=[32m"transform: scaleX(0.35);"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"caption svelte-6ldw3d"[39m
+              [33mdata-cy[39m=[32m"startup-progress-caption"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mdata-cy[39m=[32m"startup-progress-label"[39m
+              [36m>[39m
+                [0mStartup progress[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<span[39m
+                [33mdata-cy[39m=[32m"startup-progress-percentage"[39m
+              [36m>[39m
+                [0m35%[0m
+              [36m</span>[39m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+Expected: "50"
+Received: "35"
+
+ ❯ tests/component/shell/StartupRoot.test.ts:191:73
+    189|   report({ sessionId: "test", phase: "verification", completed: 3, tot…
+    190|   await waitFor(() =>
+    191|     expect(view.getByRole("progressbar").getAttribute("aria-valuenow")…
+       |                                                                         ^
+    192|       "50",
+    193|     ),
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/component/shell/StartupRoot.test.ts > reports gameplay checkpoints without admitting the menu before readiness
+AssertionError: expected '87' to be '50' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [0m [0m
+      [36m<main[39m
+        [33maria-busy[39m=[32m"true"[39m
+        [33mclass[39m=[32m"startup svelte-keydrd"[39m
+        [33mdata-cy[39m=[32m"startup-surface"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"panel svelte-keydrd"[39m
+          [33mdata-cy[39m=[32m"startup-panel"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-heading"[39m
+            [33mtabindex[39m=[32m"-1"[39m
+          [36m>[39m
+            [0mPreparing gameplay and screens…[0m
+          [36m</h1>[39m
+          [0m [0m
+          [36m<p[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"svelte-keydrd"[39m
+            [33mdata-cy[39m=[32m"startup-status"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0mPreparing your content and saves. Gameplay opens when preparation is
+          complete.[0m
+          [36m</p>[39m
+          [0m [0m
+          [36m<div[39m
+            [33mclass[39m=[32m"loading svelte-6ldw3d"[39m
+            [33mdata-cy[39m=[32m"startup-progress"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-label[39m=[32m"Overall startup progress"[39m
+              [33maria-valuemax[39m=[32m"100"[39m
+              [33maria-valuemin[39m=[32m"0"[39m
+              [33maria-valuenow[39m=[32m"87"[39m
+              [33mclass[39m=[32m"track svelte-6ldw3d"[39m
+              [33mdata-cy[39m=[32m"startup-progress-track"[39m
+              [33mrole[39m=[32m"progressbar"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"fill svelte-6ldw3d"[39m
+                [33mdata-cy[39m=[32m"startup-progress-fill"[39m
+                [33mstyle[39m=[32m"transform: scaleX(0.87);"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [0m [0m
+            [36m<p[39m
+              [33mclass[39m=[32m"caption svelte-6ldw3d"[39m
+              [33mdata-cy[39m=[32m"startup-progress-caption"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mdata-cy[39m=[32m"startup-progress-label"[39m
+              [36m>[39m
+                [0mStartup progress[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<span[39m
+                [33mdata-cy[39m=[32m"startup-progress-percentage"[39m
+              [36m>[39m
+                [0m87%[0m
+              [36m</span>[39m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</main>[39m
+      [0m[0m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+Expected: "50"
+Received: "87"
+
+ ❯ tests/component/shell/StartupRoot.test.ts:254:73
+    252|   report(3, 7);
+    253|   await waitFor(() =>
+    254|     expect(view.getByRole("progressbar").getAttribute("aria-valuenow")…
+       |                                                                         ^
+    255|       "50",
+    256|     ),
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  2 failed | 104 passed (106)
+   Start at  01:25:33
+   Duration  4.85s (transform 4.54s, setup 1.93s, import 3.85s, tests 4.81s, environment 679ms)
+

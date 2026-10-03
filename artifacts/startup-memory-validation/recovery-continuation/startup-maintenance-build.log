@@ -1,0 +1,135 @@
+
+> ascencio@0.1.0 build
+> npm run vendor:verify && npm run build:app && npm run build:verify
+
+
+> ascencio@0.1.0 vendor:verify
+> node scripts/verify-vendor.ts
+
+{
+  "status": "ok",
+  "package": "ocgcore-wasm",
+  "version": "0.1.2",
+  "files": 21
+}
+
+> ascencio@0.1.0 build:app
+> vite build --mode native
+
+2:25:14 PM [vite-plugin-svelte] no Svelte config found at /home/aron/Projects/ascencio - using default configuration.
+vite v8.1.4 building client environment for native...
+[2Ktransforming...✓ 559 modules transformed.
+rendering chunks...
+computing gzip size...
+generated/build/app/PRIVATE_DEPLOYMENT_ONLY.txt                          0.07 kB │ gzip:  0.08 kB
+generated/build/app/core-release.json                                    0.07 kB │ gzip:  0.08 kB
+generated/build/app/app-icon.svg                                         0.33 kB │ gzip:  0.22 kB
+generated/build/app/assets/chunk-L5TW24SS-CYAOB92A.js                    0.54 kB
+generated/build/app/licenses/ocgcore-wasm-MIT.txt                        1.07 kB │ gzip:  0.65 kB
+generated/build/app/licenses/svelte-MIT.txt                              1.12 kB │ gzip:  0.68 kB
+generated/build/app/index.html                                           1.36 kB │ gzip:  0.52 kB
+generated/build/app/.vite/manifest.json                                 20.40 kB │ gzip:  2.88 kB
+generated/build/app/assets/ocgcore.sync-MMMSWPBB-ykLRlS6r.js            20.88 kB
+generated/build/app/assets/forum-latin-OEvxT1Ba.woff2                   23.82 kB
+generated/build/app/assets/source-serif-4-latin-BpEBLj1O.woff2         122.36 kB
+generated/build/app/assets/source-serif-4-italic-latin-BOLXpvkj.woff2  130.18 kB
+generated/build/app/assets/duel.worker-browser-Bk2heDeg.js             139.55 kB
+generated/build/app/assets/StoryEventMedia-DeWOP9-m.css                  0.29 kB │ gzip:  0.21 kB
+generated/build/app/assets/StoryCardTile-B9FvAS6D.css                    0.33 kB │ gzip:  0.25 kB
+generated/build/app/assets/DomainLoadError-CcuW_8hM.css                  0.57 kB │ gzip:  0.29 kB
+generated/build/app/assets/card-ownership-DGz6p4ZE.css                   0.91 kB │ gzip:  0.43 kB
+generated/build/app/assets/AdminConsole-DHBa0LO7.css                     1.10 kB │ gzip:  0.40 kB
+generated/build/app/assets/card-preview-C6QIfMub.css                     1.17 kB │ gzip:  0.51 kB
+generated/build/app/assets/CatalogTypeInput-CYP8kQsb.css                 1.24 kB │ gzip:  0.44 kB
+generated/build/app/assets/AppShell-CY83g_5D.css                         1.54 kB │ gzip:  0.64 kB
+generated/build/app/assets/InstallContentScreen-CeJLlWu4.css             1.84 kB │ gzip:  0.61 kB
+generated/build/app/assets/CollectionScreen-DsR6wpRi.css                 2.51 kB │ gzip:  0.89 kB
+generated/build/app/assets/styles-BvNxHD9n.css                           3.95 kB │ gzip:  1.20 kB
+generated/build/app/assets/battle-DCtIZ6Cv.css                           4.04 kB │ gzip:  1.30 kB
+generated/build/app/assets/advanced-search-loader-DPnQlaUg.css           4.28 kB │ gzip:  1.10 kB
+generated/build/app/assets/shop-screens-DSjaFzub.css                    13.04 kB │ gzip:  2.97 kB
+generated/build/app/assets/story-pMzEDNRr.css                           17.02 kB │ gzip:  3.97 kB
+generated/build/app/assets/deck-editor-BuxR9P_B.css                     17.42 kB │ gzip:  3.74 kB
+generated/build/app/assets/deck-select-DWuT9zAc.css                     18.35 kB │ gzip:  3.71 kB
+generated/build/app/assets/app-C2EP9IBl.css                             53.59 kB │ gzip: 10.92 kB
+generated/build/app/assets/index-client-DrhmhpBD.js                      0.02 kB │ gzip:  0.04 kB
+generated/build/app/assets/toast-context-D05YhPcP.js                     0.03 kB │ gzip:  0.05 kB
+generated/build/app/assets/playback-B2uboaZ2.js                          0.04 kB │ gzip:  0.06 kB
+generated/build/app/assets/storage-DmemGIzf.js                           0.08 kB │ gzip:  0.09 kB
+generated/build/app/assets/contracts-Bn6ZzOnX.js                         0.11 kB │ gzip:  0.12 kB
+generated/build/app/assets/decks-C4qfw5mi.js                             0.11 kB │ gzip:  0.10 kB
+generated/build/app/assets/deck-catalog-order-Bcg3D9Cp.js                0.17 kB │ gzip:  0.15 kB
+generated/build/app/assets/settings-BZ_AFBEA.js                          0.21 kB │ gzip:  0.17 kB
+generated/build/app/assets/deck-contracts-D9EaWHCa.js                    0.27 kB │ gzip:  0.19 kB
+generated/build/app/assets/repository-C99160cM.js                        0.35 kB │ gzip:  0.23 kB
+generated/build/app/assets/opened-pack-sizes-DnO1dC4q.js                 0.35 kB │ gzip:  0.24 kB
+generated/build/app/assets/group-by-rarity-b25Y0yJg.js                   0.47 kB │ gzip:  0.28 kB
+generated/build/app/assets/validate-published-decks-BNiGzfRJ.js          0.51 kB │ gzip:  0.36 kB
+generated/build/app/assets/validation-DtJ9pxY6.js                        0.52 kB │ gzip:  0.37 kB
+generated/build/app/assets/focus-trap-D4niS4Oj.js                        0.54 kB │ gzip:  0.31 kB
+generated/build/app/assets/handoff-request-DfF9dFJw.js                   0.56 kB │ gzip:  0.36 kB
+generated/build/app/assets/shell-DE7gBl26.js                             0.62 kB │ gzip:  0.35 kB
+generated/build/app/assets/story-handoff-DZJ6IzfP.js                     0.66 kB │ gzip:  0.35 kB
+generated/build/app/assets/deck-resolver-2aPUQxL4.js                     0.69 kB │ gzip:  0.35 kB
+generated/build/app/assets/deck-parser-DL_4r2Q9.js                       0.73 kB │ gzip:  0.41 kB
+generated/build/app/assets/package-readiness-CQn8tfhn.js                 0.74 kB │ gzip:  0.45 kB
+generated/build/app/assets/story-playback-settings-Dc4FNM1x.js           0.76 kB │ gzip:  0.44 kB
+generated/build/app/assets/ocg-mask-CM558nO-.js                          0.82 kB │ gzip:  0.55 kB
+generated/build/app/assets/free-play-deck-listing-DF1D1HCc.js            1.04 kB │ gzip:  0.55 kB
+generated/build/app/assets/preload-helper-Czpn1I53.js                    1.19 kB │ gzip:  0.67 kB
+generated/build/app/assets/event-CYbZRCw_.js                             1.32 kB │ gzip:  0.62 kB
+generated/build/app/assets/DomainLoadError-sIpRTbSW.js                   1.32 kB │ gzip:  0.67 kB
+generated/build/app/assets/admin-actions-BnxUU851.js                     1.85 kB │ gzip:  0.88 kB
+generated/build/app/assets/StoryCardTile-CkNJo95c.js                     1.95 kB │ gzip:  1.02 kB
+generated/build/app/assets/create-storage-client-DtV5ulUt.js             2.24 kB │ gzip:  1.10 kB
+generated/build/app/assets/routes-DYenWpKl.js                            2.42 kB │ gzip:  0.82 kB
+generated/build/app/assets/StoryEventMedia-Bw-eW5ZW.js                   2.45 kB │ gzip:  1.17 kB
+generated/build/app/assets/deck-history-DojZ_DVB.js                      2.50 kB │ gzip:  0.86 kB
+generated/build/app/assets/ocg-card-mapper-DRTwXM6N.js                   2.57 kB │ gzip:  1.31 kB
+generated/build/app/assets/index-client-D_LwQUg4.js                      2.62 kB │ gzip:  0.93 kB
+generated/build/app/assets/deck-validation-TARCTYhQ.js                   2.73 kB │ gzip:  1.20 kB
+generated/build/app/assets/CatalogTypeInput-C6uYJUfN.js                  3.49 kB │ gzip:  1.59 kB
+generated/build/app/assets/card-ownership-BVfQRZZI.js                    3.74 kB │ gzip:  1.81 kB
+generated/build/app/assets/AdminConsole-CAVp_ZaN.js                      4.42 kB │ gzip:  1.75 kB
+generated/build/app/assets/stored-deck-validation-DFHFNe1e.js            4.78 kB │ gzip:  1.81 kB
+generated/build/app/assets/storage-Cu2rVfC5.js                           6.14 kB │ gzip:  2.26 kB
+generated/build/app/assets/editing-Cpc1lvLB.js                           6.44 kB │ gzip:  2.61 kB
+generated/build/app/assets/CollectionScreen-BddBjfIn.js                  6.45 kB │ gzip:  2.51 kB
+generated/build/app/assets/card-preview-Bva9biv8.js                      6.98 kB │ gzip:  2.81 kB
+generated/build/app/assets/catalog-DmlZsYQh.js                           7.72 kB │ gzip:  2.76 kB
+generated/build/app/assets/sqlite-deck-repository-BJ_vaF7S.js            8.44 kB │ gzip:  2.64 kB
+generated/build/app/assets/FreePlayMatchSetup-sd7JOm1x.js                8.96 kB │ gzip:  3.52 kB
+generated/build/app/assets/manual-content-controller-DGhEhfBL.js         9.50 kB │ gzip:  3.57 kB
+generated/build/app/assets/story-save-contracts-B7VJcONO.js             11.06 kB │ gzip:  3.80 kB
+generated/build/app/assets/InstallContentScreen-BJk_Peh2.js             15.75 kB │ gzip:  5.23 kB
+generated/build/app/assets/advanced-search-loader-CSVmbM7z.js           16.74 kB │ gzip:  5.30 kB
+generated/build/app/assets/saves-DsaK6cKw.js                            25.77 kB │ gzip:  9.44 kB
+generated/build/app/assets/shop-screens-b8uJZIML.js                     33.48 kB │ gzip: 10.40 kB
+generated/build/app/assets/AppShell-iQD3RePW.js                         37.99 kB │ gzip: 12.64 kB
+generated/build/app/assets/DuelWorkerClient-hfthnxxN.js                 38.17 kB │ gzip: 11.33 kB
+generated/build/app/assets/deck-select-DMepdXre.js                      39.72 kB │ gzip: 12.16 kB
+generated/build/app/assets/application-bootstrap-BRvrPjJp.js            40.97 kB │ gzip: 12.96 kB
+generated/build/app/assets/prepared-storage-BvRcD2rY.js                 47.84 kB │ gzip: 14.78 kB
+generated/build/app/assets/app-Bc0aaRtU.js                              80.91 kB │ gzip: 28.59 kB
+generated/build/app/assets/deck-editor-BndPUNDG.js                      86.80 kB │ gzip: 24.92 kB
+generated/build/app/assets/story-twQygeS-.js                            87.11 kB │ gzip: 27.11 kB
+generated/build/app/assets/battle-KaphY0lj.js                          237.60 kB │ gzip: 69.78 kB
+
+✓ built in 1.10s
+
+> ascencio@0.1.0 build:verify
+> node scripts/verify-native-build.ts
+
+{
+  "status": "ok",
+  "mode": "app-only",
+  "wasmBytes": 0,
+  "worker": "duel.worker-browser-Bk2heDeg.js",
+  "chunkBytes": {
+    "shell": 99102,
+    "worker": 139556,
+    "battle": 288075,
+    "deck-editor": 169496,
+    "story": 176884
+  }
+}

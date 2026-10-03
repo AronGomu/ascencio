@@ -760,8 +760,8 @@
               <div class="stage">
                 <h3>Export &amp; stage</h3>
                 <p>
-                  <code>content:export</code> produces immutable databases.
-                  <code>native:prepare</code> verifies pinned hashes and stages
+                  <code>legacy:content:export-sqlite</code> produces immutable databases.
+                  <code>content:stage:native</code> verifies pinned hashes and stages
                   four bundled defaults.
                 </p>
               </div>
@@ -826,7 +826,7 @@
               </div>
             </div>
             <p class="flow-caption">
-              Opening <code>npm run dev</code> in a browser does not
+              Opening <code>npm run frontend:dev</code> in a browser does not
               automatically expose the Tauri installation. Browser OPFS and
               native app-data are separate stores.
             </p>

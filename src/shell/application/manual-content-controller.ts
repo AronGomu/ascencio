@@ -86,7 +86,8 @@ export interface ManualContentController {
   dispose(): Promise<void>;
 }
 
-const INITIAL_MESSAGE = "Select local SQLite packages to install or update.";
+const INITIAL_MESSAGE =
+  "Select digest-pinned critical JSON packages. Changes apply after restart.";
 
 export function createManualContentController(options: {
   readonly storage: LocalStorageClient;
@@ -94,6 +95,7 @@ export function createManualContentController(options: {
   readonly isSessionActive: () => boolean;
   readonly onRestored: (hydrated: unknown) => Promise<void> | void;
   readonly initialMediaWarnings?: readonly MediaWarning[];
+  readonly onMaintenance?: (() => Promise<void>) | undefined;
 }): ManualContentController {
   const listeners = new Set<(view: ManualContentView) => void>();
   let warnings = [...(options.initialMediaWarnings ?? [])];
@@ -115,6 +117,13 @@ export function createManualContentController(options: {
   let disposing = false;
   let disposal: Promise<void> | null = null;
   let restoredStack: PackageStack | null = null;
+  let maintenanceStarted = false;
+  async function enterMaintenance(): Promise<void> {
+    if (maintenanceStarted || !options.onMaintenance) return;
+    await options.onMaintenance();
+    maintenanceStarted = true;
+    publish({});
+  }
   const restoreLocked = (): boolean =>
     current.state.kind === "restoring" ||
     current.state.kind === "restore-outcome-unknown" ||
@@ -127,11 +136,18 @@ export function createManualContentController(options: {
     current = Object.freeze({
       ...next,
       navigationBlocked:
+        maintenanceStarted ||
         next.state.kind === "restoring" ||
         next.state.kind === "restore-outcome-unknown" ||
         next.refreshPending,
     });
     for (const listener of listeners) listener(current);
+    if (maintenanceStarted && options.onMaintenance)
+      globalThis.dispatchEvent(
+        new CustomEvent("application-maintenance-state", {
+          detail: { busy: current.busy },
+        }),
+      );
   };
   const readyState = (
     stack: PackageStack,
@@ -291,6 +307,7 @@ export function createManualContentController(options: {
       const generation = stable.stack.generation;
       const abort = new AbortController();
       importAbort = abort;
+      if (options.onMaintenance) await enterMaintenance();
       publish({
         state: { kind: "importing", progress: null },
         message: "Importing selected packages…",
@@ -309,7 +326,12 @@ export function createManualContentController(options: {
       if (importAbort === abort) importAbort = null;
       if (!currentSequence(expected)) return;
       if (result.kind === "ok")
-        publishReady(result.value, "Packages imported and activated.");
+        publishReady(
+          result.value,
+          options.onMaintenance
+            ? "Packages installed. Restart to activate the new selection."
+            : "Packages imported and activated.",
+        );
       else if (result.error.code === "OPERATION_CANCELLED" && stable !== null)
         publish({
           state: stable,
@@ -324,6 +346,7 @@ export function createManualContentController(options: {
     async verifyInstalled() {
       if (!mutationAllowed() || stable === null) return;
       const expected = start();
+      if (options.onMaintenance) await enterMaintenance();
       const abort = new AbortController();
       const result = await storageCall(() =>
         options.storage.packages.verifyInstalled(abort.signal),
@@ -363,6 +386,7 @@ export function createManualContentController(options: {
         return;
       const expected = start();
       const { packageId, generation } = consent;
+      if (options.onMaintenance) await enterMaintenance();
       publish({ removal: null });
       const result = await storageCall(() =>
         options.storage.packages.removePackage(packageId, generation),
@@ -374,13 +398,14 @@ export function createManualContentController(options: {
           result.value.stack,
           result.value.cleanupPending
             ? "Package removed. Some unused files remain. Run cleanup."
-            : "Package removed.",
+            : "Package removed from the next startup. Restart to continue.",
           result.value.cleanupPending,
         );
     },
     async cleanupUnused() {
       if (!mutationAllowed() || current.busy || stable === null) return;
       const expected = start();
+      if (options.onMaintenance) await enterMaintenance();
       const result = await storageCall(() =>
         options.storage.packages.cleanupUnused(),
       );
@@ -418,6 +443,7 @@ export function createManualContentController(options: {
       if (unavailable() || current.removal !== null) return;
       if (current.busy && current.state.kind !== "loading") return;
       const expected = start();
+      if (options.onMaintenance) await enterMaintenance();
       publish({ state: { kind: "loading" }, message: "Inspecting backup…" });
       const result = await storageCall(() =>
         options.backups.inspectUserDataBackup(file),

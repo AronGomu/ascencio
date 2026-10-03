@@ -11,9 +11,9 @@ async function run(args: readonly string[]): Promise<number> {
         {
           kind: "ok",
           value: {
-            usage: "npm run content:verify -- --file <file>",
+            usage: "npm run legacy:content:verify-sqlite -- --file <file>",
             scope:
-              "Single-file schema, rows, SQLite integrity, script and asset SHA-256; not cross-package stack validity. Full-recipe references are checked by content:export.",
+              "Single-file schema, rows, SQLite integrity, script and asset SHA-256; not cross-package stack validity. Full-recipe references are checked by legacy:content:export-sqlite.",
           },
         },
         0,

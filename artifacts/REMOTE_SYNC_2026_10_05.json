@@ -19,7 +19,7 @@
     },
     {
       "id": "S3",
-      "complete": false,
+      "complete": true,
       "action": "Push main normally, fetch and verify equal HEAD/remote; preserve excluded local changes."
     }
   ],
@@ -365,11 +365,64 @@
     "docs/story/themes/proportion-study.jpg"
   ],
   "validation": "Existing final validation: 3008 unit, 9 performance, 58 integration, 108 tooling, 1421 component, 6 actual native recovery scenarios and normal Tauri release build passed.",
-  "snapshot": "Pre-commit preflight: pending publication is verified separately after this snapshot.",
+  "snapshot": "Verified implementation publication; this receipt is committed separately after capturing the actual remote state.",
   "checks": {
     "historySecrets": "gitleaks: 13 commits scanned, no leaks found",
     "stagedSecrets": "gitleaks: approximately 7.50 MB scanned, no leaks found",
     "stagedScope": "331 explicitly selected files; no deletions, vendor, owner feedback or runtime/scratch state",
     "whitespace": "Source/document checks pass. Archived raw command logs retain original trailing whitespace and are excluded from whitespace-only checks to preserve receipt hashes."
+  },
+  "result": {
+    "implementationCommit": "73c007500234406ade724bb1ddfc743759e941d4",
+    "verifiedRemoteCommit": "73c007500234406ade724bb1ddfc743759e941d4",
+    "ahead": 0,
+    "behind": 0,
+    "remainingLocalChanges": {
+      " D": 674,
+      "??": 2
+    },
+    "secretScans": "History and staged scans both report no leaks",
+    "cleanup": [
+      {
+        "removedPath": ".tmp/remote-sync-status-2026-10-05.bin",
+        "sha256": "d90c15e45a80d79aa335da1fcb6c8fd9be079dea42a7838b660bf89972570b64",
+        "bytes": 56384
+      },
+      {
+        "removedPath": ".tmp/remote-sync-numstat-2026-10-05.txt",
+        "sha256": "4819e1933fc773f99a36b6ccc51707039c8501c943a1419041c73f1dfe7bc79b",
+        "bytes": 53483
+      },
+      {
+        "removedPath": ".tmp/remote-sync-history-secret-scan-2026-10-05.json",
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "bytes": 3
+      },
+      {
+        "removedPath": ".tmp/remote-sync-history-secret-scan-2026-10-05.log",
+        "sha256": "040ba9ecf53ab7b62fee95e6537efed59ad1130937c1d22e76a4c9a63db9bc07",
+        "bytes": 177
+      },
+      {
+        "removedPath": ".tmp/remote-sync-staged-secret-scan-2026-10-05.json",
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "bytes": 3
+      },
+      {
+        "removedPath": ".tmp/remote-sync-staged-secret-scan-2026-10-05.log",
+        "sha256": "e26bdb34f8c8cea2575bb68f05f38425c211986140afc327f4ed3b35bb002bba",
+        "bytes": 174
+      },
+      {
+        "removedPath": ".tmp/remote-sync-staged-status-2026-10-05.bin",
+        "sha256": "7d759a1f53a6bc607336343d30e23bd074848a66bd709029ffba3e80772ea904",
+        "bytes": 66112
+      },
+      {
+        "removedPath": ".tmp/remote-sync-final-status-2026-10-05.bin",
+        "sha256": "2637a19ab92b62a597ff37151043b427774a744535718ed69fe3e6d131b3d429",
+        "bytes": 47930
+      }
+    ]
   }
 }

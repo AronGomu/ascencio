@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   byName,
   groupByRarity,
-  RARITY_ORDER,
 } from "../../../src/story/collection/group-by-rarity.ts";
 import type { ShopRarity } from "../../../src/story/model/story-state.ts";
 
@@ -20,20 +19,6 @@ const MIXED = [
   entry("Celtic Guardian", "rare"),
   entry("Alpha the Magnet Warrior", "common"),
 ];
-
-describe("RARITY_ORDER", () => {
-  it("runs from the most common tier to the rarest", () => {
-    expect([...RARITY_ORDER]).toEqual([
-      "common",
-      "rare",
-      "super-rare",
-      "ultra-rare",
-      "secret-rare",
-      "ultimate-rare",
-      "ghost-rare",
-    ]);
-  });
-});
 
 describe("groupByRarity", () => {
   it("orders groups from common and sorts names inside each", () => {

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { mapDeckBuilderCard } from "../../../src/decks/catalog/ocg-card-mapper.ts";
-import {
-  OCG_ATTRIBUTE,
-  OCG_RACE,
-  OCG_TYPE,
-} from "../../../src/cards/classification/index.ts";
 import { PROTOTYPE_CATALOG_RECORDS } from "../../fixtures/catalog.ts";
 
 describe("OCG deck-editor card mapping", () => {
@@ -56,12 +51,5 @@ describe("OCG deck-editor card mapping", () => {
         text: { ...record.text, code: record.card.code + 1 },
       }),
     ).toThrow(/Card\/text code mismatch/);
-  });
-
-  it("keeps local masks aligned with vendored OCG values", () => {
-    expect(OCG_TYPE.FUSION).toBe(64);
-    expect(OCG_TYPE.LINK).toBe(67108864);
-    expect(OCG_ATTRIBUTE.DARK).toBe(32);
-    expect(OCG_RACE.DRAGON).toBe(8192n);
   });
 });

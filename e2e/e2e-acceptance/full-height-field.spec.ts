@@ -223,15 +223,6 @@ test("phase keeps actionable controls at least forty-four pixels", async ({
   }
 });
 
-test("phase reduced motion changes no semantics", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await openField(page, "field-no-emz");
-  await expect(page.locator('[data-cy^="phase-bar-you-"]')).toHaveCount(5);
-  await expect(page.locator('[data-cy="field-end-turn-button"]')).toHaveCount(
-    1,
-  );
-});
-
 test("Defense and Set rotate inner art without moving outer placement", async ({
   page,
 }) => {

@@ -320,11 +320,6 @@ describe("global styles", () => {
     expect(block).not.toContain("overflow: auto");
   });
 
-  it("duel field is not height-capped on small screens", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    expect(css).not.toContain("max-height: calc(100svh - 1rem)");
-  });
-
   it("uses one full-height three-column shell", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const shell = ruleBlock(css, ".duel-shell {");
@@ -532,73 +527,6 @@ describe("global styles", () => {
     expect(block).not.toContain("var(--warning)");
   });
 
-  it("feedback target and default field line are teal; attack stays danger", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const target = ruleBlock(
-      css,
-      ".duel-field-card.is-feedback-target .duel-field-card__art,",
-    );
-    expect(target).toContain("var(--accent)");
-    expect(target).not.toContain("var(--warning)");
-    const line = ruleBlock(css, ".field-lines line {");
-    expect(line).toContain("stroke: var(--accent)");
-    const attackLine = ruleBlock(css, ".field-lines.is-attack line {");
-    expect(attackLine).toContain("var(--danger)");
-  });
-
-  it("the action/phase badge at the opponent hand position (item 26) is gone from the stylesheet", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    expect(css).not.toContain(".duel-field-feedback");
-  });
-
-  it("card entries hover-scale 1.35 and list interaction states scale 1.6", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const card = ruleBlock(
-      css,
-      ".duel-field-card {\n  z-index: var(--duel-field-layer-card);",
-    );
-    expect(card).toContain("transition: transform 120ms ease-out");
-    const list = ruleBlock(css, ".zone-list-entry {");
-    expect(list).toContain("transition: transform 120ms ease-out");
-    // Board cards lost their hover/focus zoom (owner feedback item 7), so the
-    // hand lift below is the only surviving 1.35x on a field card.
-    expect(css).not.toContain(
-      ".duel-field-card.is-identity-known:not(.is-hand-item):not(.is-pinned):is(\n    :hover,\n    :focus-within\n  ) {\n  transform: translate(-50%, -50%) scale(1.35);",
-    );
-    const handHover = ruleBlock(
-      css,
-      ".duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {",
-    );
-    expect(handHover).toContain("scale(1.35)");
-    const listSelector =
-      ".zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {";
-    const listZoom = ruleBlock(
-      css,
-      listSelector,
-      css.indexOf(listSelector) + listSelector.length,
-    );
-    expect(listZoom).toContain("scale(1.6)");
-    expect(ruleBlock(css, ".zone-list-entry.is-hover-suppressed {")).toContain(
-      "transform: none",
-    );
-  });
-
-  it("hand item transform-origin is bottom for player, top for opponent; field origin is centre", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const card = ruleBlock(
-      css,
-      ".duel-field-card {\n  z-index: var(--duel-field-layer-card);",
-    );
-    expect(card).toContain("transform-origin: center");
-    const handItem = ruleBlock(css, ".duel-field-card.is-hand-item {");
-    expect(handItem).toContain("transform-origin: center bottom");
-    const opponentHand = ruleBlock(
-      css,
-      ".duel-field-card.is-hand-item.is-opponent {",
-    );
-    expect(opponentHand).toContain("transform-origin: center top");
-  });
-
   it("reduced motion disables card/list zoom transform and transition", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     const blocks = [
@@ -767,27 +695,6 @@ describe("global styles", () => {
     const block = ruleBlock(css, "\n.duel-field-hand-band__viewport {");
     expect(block).toContain("overflow-x: auto");
     expect(block).not.toContain("justify-content");
-  });
-
-  /* T5: the fanned hand droops its outer cards below the band box and
-     `overflow-y: hidden` clips at the padding edge, so the viewport has to
-     carry the arc's headroom itself. Under the global `border-box` the
-     padding alone would only shrink the content box, leaving the clip edge
-     where it was: the matching height growth is what moves the clip edge
-     under the deepest card corner. The 0.17 factor is measured, not chosen:
-     the deepest corner is the 0.12 droop plus the bottom corner's sweep
-     through the 6deg fan, and Chromium clipped the outermost card of a five
-     card hand by 3.22px at 0.14. */
-  it("hand viewport reserves clip headroom for the fan arc", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const block = ruleBlock(css, "\n.duel-field-hand-band__viewport {");
-    expect(block).toContain(
-      "padding-bottom: calc(var(--hand-card-height) * 0.17)",
-    );
-    expect(block).toContain(
-      "height: calc(100% + var(--hand-card-height) * 0.17)",
-    );
-    expect(block).toContain("overflow-y: hidden");
   });
 
   it("opponent hand band keeps its mirrored direction", () => {

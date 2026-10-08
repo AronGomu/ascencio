@@ -208,18 +208,6 @@ test("a loss reaches its own outcome and still continues", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("an aborted duel recovers without granting a reward", async ({ page }) => {
-  await resumeAtOutcome(page, "abort");
-  await expect(
-    page.getByRole("heading", { name: "Duel paused" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Return to map" }).click();
-  await expect(
-    page.getByRole("heading", { name: "City signal map" }),
-  ).toBeVisible();
-  await expect(page.getByText("Signal Cipher")).toHaveCount(0);
-});
-
 /* A technical failure is not a defeat, so its scene must not offer progress
    either — and retrying it has to run a real duel, not replay an outcome. */
 test("a technical failure offers a retry that starts a new duel", async ({

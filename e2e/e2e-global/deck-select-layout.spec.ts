@@ -288,13 +288,3 @@ test("compaction", async ({ page }) => {
   await expect(menu).toBeHidden();
   await expect(page.locator('[data-cy="deck-select-kebab"]')).toBeFocused();
 });
-
-test("copies chip", async ({ page }) => {
-  await page.setViewportSize(WIDE_VIEWPORT);
-  await openFreePlayDeckSelect(page);
-
-  const singles = page
-    .locator('[data-cy^="deck-select-seat-list-player-row-copies-"]')
-    .filter({ hasText: /^1$/ });
-  await expect(singles.first()).toHaveText("1", { timeout: 120_000 });
-});

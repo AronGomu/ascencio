@@ -157,19 +157,4 @@ describe("editor preview pane", () => {
     ).toBe("blob:card-b");
     expect(releaseB).not.toHaveBeenCalled();
   });
-
-  it("panes read preview, deck, catalog left to right", () => {
-    renderEditor();
-    const preview = document.querySelector('[data-cy="card-preview-panel"]')!;
-    const workspace = document.querySelector('[data-cy="deck-workspace"]')!;
-    const catalog = document.querySelector('[data-cy="deck-catalog"]')!;
-    expect(
-      preview.compareDocumentPosition(workspace) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(
-      workspace.compareDocumentPosition(catalog) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-  });
 });

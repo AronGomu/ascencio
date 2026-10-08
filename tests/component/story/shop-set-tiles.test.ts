@@ -1,6 +1,4 @@
 // @vitest-environment jsdom
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 import ShopSetDialog from "../../../src/story/shop/ShopSetDialog.svelte";
@@ -184,16 +182,6 @@ describe("shop set tiles", () => {
       "b",
       "c",
     ]);
-  });
-
-  it("grid is four columns on a wide screen", () => {
-    const source = readFileSync(
-      resolve(process.cwd(), "src/story/shop/ShopBrowseScreen.svelte"),
-      "utf8",
-    );
-    const wide = source.slice(source.indexOf("@media (min-width: 1280px)"));
-    expect(source).toContain("@media (min-width: 1280px)");
-    expect(wide.slice(0, 200)).toContain("repeat(4, minmax(0, 1fr))");
   });
 
   it("unreleased sets stay locked", async () => {

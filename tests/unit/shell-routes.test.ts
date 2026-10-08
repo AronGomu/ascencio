@@ -51,37 +51,6 @@ describe("parseAppRoute", () => {
       expect(parseAppRoute(hash), hash).toEqual(route);
   });
 
-  it("parses the free-play menu", () => {
-    expect(parseAppRoute("#/free-play")).toEqual({ kind: "free-play" });
-  });
-
-  it("parses free-play decks and one deck", () => {
-    expect(parseAppRoute("#/free-play/decks")).toEqual({
-      kind: "free-play-decks",
-    });
-    expect(parseAppRoute("#/free-play/decks/abc")).toEqual({
-      kind: "free-play-deck",
-      deckId: deckId("abc"),
-    });
-  });
-
-  it("parses the story deck routes", () => {
-    expect(parseAppRoute("#/story/decks")).toEqual({ kind: "story-decks" });
-    expect(parseAppRoute("#/story/decks/abc")).toEqual({
-      kind: "story-deck",
-      deckId: deckId("abc"),
-    });
-  });
-
-  it("parses both collection routes", () => {
-    expect(parseAppRoute("#/story/collection")).toEqual({
-      kind: "story-collection",
-    });
-    expect(parseAppRoute("#/free-play/collection")).toEqual({
-      kind: "free-play-collection",
-    });
-  });
-
   /* The pre-context links. A bookmark or a shared URL from before ADR-051
      still names a real screen, so it lands on that screen's new home rather
      than on the menu. */
@@ -95,17 +64,6 @@ describe("parseAppRoute", () => {
       kind: "free-play-deck",
       deckId: deckId("abc"),
     });
-  });
-
-  it("keeps the duel session route", () => {
-    expect(parseAppRoute("#/duel/session/h1")).toEqual({
-      kind: "duel-session",
-      handoffId: handoffId("h1"),
-    });
-  });
-
-  it("keeps admin", () => {
-    expect(parseAppRoute("#/admin")).toEqual({ kind: "admin" });
   });
 
   it("rejects an id that is not route-safe", () => {

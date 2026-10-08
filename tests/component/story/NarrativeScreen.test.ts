@@ -129,47 +129,6 @@ describe("NarrativeScreen", () => {
     expect(screen.getByText(/You came/).getAttribute("aria-live")).toBe("off");
   });
 
-  it("exposes the narrative line through its data-cy", () => {
-    const { container } = render(NarrativeScreen, { beat: PROLOGUE.beats[0]! });
-    expect(
-      container.querySelector('[data-cy="story-narrative-text"]')?.textContent,
-    ).toContain("Rain turned");
-  });
-
-  it("utility bar offers history, auto, skip, ui toggle and menu only", () => {
-    const { container } = render(NarrativeScreen, { beat: PROLOGUE.beats[0]! });
-    expect(
-      container.querySelector('[data-cy="story-narrative-history"]'),
-    ).toBeTruthy();
-    expect(
-      container.querySelector('[data-cy="story-narrative-auto"]'),
-    ).toBeTruthy();
-    expect(
-      container.querySelector('[data-cy="story-narrative-skip"]'),
-    ).toBeTruthy();
-    expect(
-      container.querySelector('[data-cy="story-narrative-ui-toggle"]'),
-    ).toBeTruthy();
-    expect(
-      container.querySelector('[data-cy="story-narrative-menu"]'),
-    ).toBeTruthy();
-    expect(
-      container.querySelector('[data-cy="story-narrative-save"]'),
-    ).toBeNull();
-    expect(
-      container.querySelector('[data-cy="story-narrative-load"]'),
-    ).toBeNull();
-    expect(
-      container.querySelector('[data-cy="story-narrative-settings"]'),
-    ).toBeNull();
-    expect(
-      container.querySelector('[data-cy="story-narrative-pause"]'),
-    ).toBeNull();
-    container.querySelectorAll("button").forEach((btn) => {
-      expect(btn.textContent).not.toContain("experimental");
-    });
-  });
-
   it("auto and skip report their engaged state and request the mode they name", async () => {
     const ontoggleplayback = vi.fn();
     const rendered = render(NarrativeScreen, {

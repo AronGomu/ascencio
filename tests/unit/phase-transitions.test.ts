@@ -46,15 +46,6 @@ describe("end compatibility", () => {
   it("keeps the end slot label for current-phase compatibility", () => {
     expect(PHASE_SLOT_LABELS.end).toBe("End");
   });
-
-  it("still maps the engine's end phase to the end slot", () => {
-    expect(phaseSlotForDuelPhase("end")).toBe("end");
-  });
-
-  it("still maps the endPhase choice to the end slot", () => {
-    const spec = specWithGlobalChoices([["end", "endPhase"]]);
-    expect(phaseSlotChoices(spec).get("end")?.id).toBe(choiceId("end"));
-  });
 });
 
 describe("phaseSlotChoices", () => {

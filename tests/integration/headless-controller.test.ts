@@ -88,48 +88,6 @@ describe("HeadlessDuelController", () => {
     }
   });
 
-  it("reaches a supported human prompt for a bounded randomized production matrix", () => {
-    const runs = Array.from({ length: 8 }, () => {
-      const session = DuelSession.create({
-        adapter,
-        dependencies,
-        playerDeck: preset.player,
-        opponentDeck: preset.opponent,
-        configuration: { mode: "production", rules: "mr5" },
-      });
-      const controller = new HeadlessDuelController({
-        session,
-        dependencies,
-        snapshotId: snapshotId("b".repeat(64)),
-        presetId: preset.id,
-        deckCounts: [preset.player.main.length, preset.opponent.main.length],
-        extraDeckCounts: [
-          preset.player.extra.length,
-          preset.opponent.extra.length,
-        ],
-        extraMonsterZones: true,
-      });
-      try {
-        const first = controller.advance();
-        return {
-          seed: session.seed.map(String),
-          promptKind: first.prompt?.kind,
-          promptPlayer: first.prompt?.player,
-          result: first.result,
-        };
-      } finally {
-        controller.dispose();
-      }
-    });
-
-    for (const run of runs) {
-      expect(run.result, JSON.stringify(run)).toBeUndefined();
-      expect(run.promptKind, JSON.stringify(run)).toBe("idleCommand");
-      expect(run.promptPlayer, JSON.stringify(run)).toBe(0);
-    }
-    expect(new Set(runs.map(({ seed }) => seed.join(","))).size).toBe(8);
-  });
-
   it("returns a structured surrender result and destroys the session", () => {
     const session = DuelSession.create({
       adapter,

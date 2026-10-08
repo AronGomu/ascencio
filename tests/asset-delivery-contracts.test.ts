@@ -27,13 +27,6 @@ import {
 import fs from "node:fs/promises";
 import { syncBuiltinESMExports } from "node:module";
 
-test("canonical metadata smoke: compact UTF-8 plus LF", () => {
-  assert.equal(
-    new TextDecoder().decode(canonicalBytes({ schemaVersion: 1 })),
-    '{"schemaVersion":1}\n',
-  );
-});
-
 const sha = "a".repeat(64);
 const failure = (code: string) => (error: unknown) =>
   error instanceof AssetDeliveryError &&

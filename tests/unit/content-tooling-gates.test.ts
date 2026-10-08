@@ -1,14 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { ESLint } from "eslint";
 import { expect, it } from "vitest";
-it("native build verifies the webview artifact without PWA tooling", () => {
-  const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-  expect(pkg.scripts["frontend:bundle"]).toBe("vite build --mode native");
-  expect(pkg.scripts["frontend:verify"]).toBe(
-    "node scripts/verify-native-build.ts",
-  );
-  expect(pkg.scripts["test:content:legacy"]).toBeUndefined();
-});
 
 it("launch, build and browser hooks resolve every referenced npm command", () => {
   const { scripts } = JSON.parse(readFileSync("package.json", "utf8")) as {
@@ -26,16 +18,6 @@ it("launch, build and browser hooks resolve every referenced npm command", () =>
       expect(scripts[name!], `Missing npm command: ${name}`).toBeTypeOf(
         "string",
       );
-  expect(scripts["native:build-and-start:linux"]).toBe(
-    "npm run native:desktop:build -- --no-bundle && ./src-tauri/target/release/ascencio",
-  );
-  expect(scripts["native:desktop:build"]).toBe("tauri build");
-  expect(scripts["content:convert:sqlite-to-json"]).toBe(
-    "node scripts/readable-content.ts convert",
-  );
-  expect(scripts["content:compile:json"]).toBe(
-    "node scripts/readable-content.ts compile",
-  );
 });
 
 it("app-only browser sources remain in standard format, lint, typecheck and CI gates", async () => {

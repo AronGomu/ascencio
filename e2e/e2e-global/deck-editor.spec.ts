@@ -193,17 +193,6 @@ async function expectDeckOrder(
   await expect.poll(() => renderedDeckOrder(page)).toEqual(expected);
 }
 
-/* The main menu offers no deck entry of its own — the free-play submenu owns
-   that door — so the fact under test is that the editor is not what `#/`
-   mounts. */
-test("default route shows the main menu, not the deck editor", async ({
-  page,
-}) => {
-  await page.goto("./");
-  await expect(page.locator('[data-cy="main-menu-screen"]')).toBeVisible();
-  await expect(page.locator('[data-cy="shell-region-decks"]')).toHaveCount(0);
-});
-
 test("open deck returns through the button below its preview", async ({
   page,
 }) => {

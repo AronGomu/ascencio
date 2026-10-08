@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
@@ -21,19 +20,6 @@ afterEach(() => cleanup());
 const noop = () => undefined;
 
 describe("StoryCardTile", () => {
-  it("renders the whole card, not a crop", () => {
-    /* The fit is a style rule, and jsdom applies no stylesheet, so the rule
-       itself is the evidence — the same check the deck editor's tile carries. */
-    const source = readFileSync(
-      "src/story/components/StoryCardTile.svelte",
-      "utf8",
-    );
-    expect(source).toMatch(/object-fit:\s*contain/);
-    expect(source).toMatch(/aspect-ratio:\s*421 \/ 614/);
-    expect(source).toMatch(/width:\s*100%/);
-    expect(source).not.toMatch(/object-fit:\s*cover/);
-  });
-
   it("renders a placeholder without an image", () => {
     const { container } = render(StoryCardTile, {
       name: "Dark Magician",

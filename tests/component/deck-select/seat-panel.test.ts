@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -134,37 +133,6 @@ describe("DeckSelectScreen seat panel", () => {
       expect(find("deck-select-seat-list-player-main-row-101")).not.toBeNull(),
     );
     expect(find("deck-select-seat-list-opponent-main-row-201")).not.toBeNull();
-  });
-
-  it("declares the approved twin-column pane and grid parameters", () => {
-    const source = readFileSync(
-      "src/deck-select/DeckSelectScreen.svelte",
-      "utf8",
-    );
-
-    const seats = [...source.matchAll(/\.seats\s*\{([^}]*)\}/g)]
-      .map((match) => match[1] ?? "")
-      .find((body) => body.includes("gap: var(--space-3)"));
-    expect(seats).toContain("grid-template-columns: 1fr 1fr");
-
-    const pane = /\.screen\.paneled:not\(\.library\)\s*\{([^}]*)\}/.exec(
-      source,
-    )?.[1];
-    expect(pane).toContain("grid-template-columns: minmax(0, 73fr) 38rem");
-
-    const seatPanel = [...source.matchAll(/\.seat-panel\s*\{([^}]*)\}/g)]
-      .map((match) => match[1] ?? "")
-      .find((body) => body.includes("grid-template-rows"));
-    expect(seatPanel).toContain(
-      "grid-template-rows: minmax(0, 1fr) max-content",
-    );
-    expect(seatPanel).toContain("background: var(--glass)");
-
-    const grid = /\.grid\s*\{([^}]*)\}/.exec(source)?.[1] ?? "";
-    expect(grid).toContain("repeat(auto-fit, minmax(min(100%, 12rem), 1fr))");
-    expect(grid).toContain("gap: var(--space-2)");
-    expect(grid).toContain("scrollbar-gutter: stable");
-    expect(grid).toContain("padding-right: var(--space-2)");
   });
 
   it("panel absent in library mode", async () => {

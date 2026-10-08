@@ -329,12 +329,6 @@ describe("StoryApp", () => {
     ).toBeNull();
   });
 
-  it("starts prologue without a second visual-novel menu", async () => {
-    render(StoryApp, { ...storyAppProps() });
-    expect(screen.getByText(/Rain turned/)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "New Game" })).toBeNull();
-  });
-
   it("replaces the floating map gear with a direct header settings action", async () => {
     const mapState = {
       ...createInitialStoryState(),

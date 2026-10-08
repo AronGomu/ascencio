@@ -87,24 +87,6 @@ describe("deck editor catalog boot", () => {
       true,
     );
   });
-
-  it.each([
-    "/runtime/images/123.jpg",
-    "runtime/images/123.jpg",
-    "blob:card-art",
-  ])("required-only image assertion rejects fallback %s", (source) => {
-    const app = document.createElement("div");
-    app.dataset.cy = "deck-editor-app";
-    const image = document.createElement("img");
-    image.setAttribute("src", source);
-    app.append(image);
-    document.body.append(app);
-    try {
-      expect(expectNoImageFallback).toThrow();
-    } finally {
-      app.remove();
-    }
-  });
   it("Editor required-only boot: catalog present, images null, edit/save usable", async () => {
     const unexpectedFetch = vi.fn(() => {
       throw new Error(

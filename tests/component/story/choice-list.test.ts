@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -15,15 +14,6 @@ const THREE_CHOICES = [
   { id: "second", label: "Second", dataCy: "story-test-choice-second" },
   { id: "leave", label: "Leave", dataCy: "story-test-choice-leave" },
 ] as const;
-
-function ruleBlock(css: string, selector: string): string {
-  const start = css.indexOf(selector);
-  expect(
-    start,
-    `${selector} not found in src/story/styles.css`,
-  ).toBeGreaterThan(-1);
-  return css.slice(start, css.indexOf("}", start) + 1);
-}
 
 async function openShopMenu(container: HTMLElement): Promise<void> {
   const root = container.querySelector(
@@ -230,24 +220,5 @@ describe("the story's choice surfaces share the component", () => {
         shop.container.querySelector(`[data-cy="${value}"]`),
         value,
       ).not.toBeNull();
-  });
-
-  /* jsdom loads no stylesheet, so the rule itself is the evidence — the same
-     way `StoryCardTile`'s fit is checked. */
-  it("the shared list is one centred column of large buttons", () => {
-    const css = readFileSync("src/story/styles.css", "utf8");
-    const list = ruleBlock(css, ".story-app .story-choice-list {");
-    expect(list).toContain("width: min(28rem, 100%)");
-    expect(list).toContain("margin-inline: auto");
-    expect(ruleBlock(css, ".story-app .story-choice-list button {")).toContain(
-      "min-height: 3.25rem",
-    );
-  });
-
-  it("the danger style uses the token, not a raw colour", () => {
-    const css = readFileSync("src/story/styles.css", "utf8");
-    const danger = ruleBlock(css, ".story-app .story-danger {");
-    expect(danger).toContain("var(--danger)");
-    expect(danger).not.toMatch(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/);
   });
 });

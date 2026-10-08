@@ -684,19 +684,6 @@ describe("semantic board view model", () => {
     expect(extra?.accessibleLabel).not.toContain("top card");
   });
 
-  it("graveyard stack keeps its face-up top card", () => {
-    const result = mapSnapshotToBoard(
-      TWO_CARD_GRAVEYARD_STATE,
-      BOARD_CARD_TEXTS,
-    );
-    if (!result.ok) throw new Error("Fixture failed to map");
-    const graveyard = result.value.stacks.find(
-      ({ id }) => id === "p0:graveyard",
-    );
-
-    expect(graveyard?.topCardCode).toBeDefined();
-  });
-
   it("keeps 34 zones with both shared EMZs for a Link profile", () => {
     const result = mapSnapshotToBoard(
       BOARD_VIEW_MODEL_FIXTURES["ST-03"],

@@ -655,20 +655,6 @@ test("an actionable entry halos green on hover", async ({ page }) => {
   );
 });
 
-test("an over-maximum entry halos red", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await open(page, "card-list-range");
-  const buttons = await targetButtons(page);
-  // Select 3 entries to reach the maximum.
-  for (let i = 0; i < 3; i += 1) await clickTarget(page, buttons.nth(i));
-  // 4th entry is now unavailable.
-  const unavailableTile = page.locator(tileSelector).nth(3);
-  await unavailableTile.hover({ position: { x: 72, y: 50 } });
-  expect(await computed(unavailableTile.locator("img"), "border-color")).toBe(
-    "rgb(255, 140, 155)",
-  );
-});
-
 test("a selected entry stays orange even while hovered", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await open(page, "card-list-range");

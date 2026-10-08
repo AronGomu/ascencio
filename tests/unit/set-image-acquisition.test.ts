@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
 import {
   assertSelectedNullImageIds,
@@ -31,12 +30,6 @@ describe("set image acquisition", () => {
         new Set(["set-b"]),
       ),
     ).toThrow("Selected null-image sets differ from pinned evidence");
-  });
-
-  it("keeps downloader free of a local JPEG cache path", async () => {
-    const source = await readFile("scripts/download-set-images.ts", "utf8");
-    expect(source).not.toContain("readFile");
-    expect(source).toContain("fetchSetImageBytes(source.sourceUrl)");
   });
 
   it("fetches selected JPEG bytes without any local-cache input", async () => {

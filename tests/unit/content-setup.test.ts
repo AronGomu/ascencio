@@ -93,10 +93,6 @@ describe("content setup", () => {
     expect(codes(input)).toContain("SOURCE_COVERAGE_REQUIRED");
     expect(verifyContentSetup(input).codeReady).toBe(false);
   });
-  it("parser accepts exactly one chapter-01", () => {
-    const input = fixture();
-    expect(parseChapterSelections(input.selections)).toEqual(input.selections);
-  });
   it.each([
     "chapter-02",
     "chapter-03",

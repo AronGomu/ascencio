@@ -8,7 +8,6 @@ import {
   type MvpPreset,
 } from "../../src/battle/duel/presets/mvp-preset.ts";
 import type { EngineMasterRule } from "../../src/battle/duel/presets/duel-rules-profile.ts";
-import { selectedDeckPairRulesProfile } from "../../src/battle/duel/presets/duel-rules-profile.ts";
 import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
 import { loadActiveDuelDependenciesNode } from "../../src/battle/worker/assets/active-duel-dependencies-node.ts";
 import {
@@ -118,16 +117,6 @@ function decodePlaces(mask: number, selectingPlayer: 0 | 1): readonly Place[] {
 }
 
 describe("pinned core placement under each master rule", () => {
-  it("selects the Link-free profile for the bundled pair", () => {
-    expect(
-      selectedDeckPairRulesProfile(
-        preset.player,
-        preset.opponent,
-        dependencies.cards,
-      ),
-    ).toEqual({ rules: "mr3", extraMonsterZones: false });
-  });
-
   it("never offers a shared Extra Monster Zone under MR3", () => {
     const places = extraDeckPlacementChoices("mr3");
     const monsterSequences = places

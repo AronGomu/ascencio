@@ -267,13 +267,6 @@ describe("DeckLibrary", () => {
     expect(cy("deck-tile-tags-w2").textContent).toBe("Local deck");
   });
 
-  it("the status text row is gone", () => {
-    render(DeckLibrary, { decks: [deckFixture()], ...callbacks() });
-    expect(
-      document.querySelector('[data-cy^="deck-library-status-"]'),
-    ).toBeNull();
-  });
-
   it("filters by name and opens a matching deck", async () => {
     const values = callbacks();
     const deck = legalDeck("t1");

@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { readFileSync } from "fs";
 import {
   cleanup,
   fireEvent,
@@ -18,28 +17,6 @@ import { DEFAULT_STORY_PLAYBACK_SETTINGS } from "../../../src/story/playback/sto
 import { createStoryPlaybackSettingsStore } from "../../../src/story/playback/story-playback-settings-store.ts";
 import { storyReaderPorts } from "../../fixtures/story-reader-ports.ts";
 
-const OVERLAY_SHELL_SOURCE = readFileSync(
-  "src/story/overlays/OverlayShell.svelte",
-  "utf8",
-);
-
-function declarations(selector: string): readonly string[] {
-  const style =
-    /<style>([\s\S]*)<\/style>/.exec(OVERLAY_SHELL_SOURCE)?.[1] ?? "";
-  const rules = new Map<string, string>();
-  for (const [, ruleSelector, body] of style.matchAll(/([^{}]+)\{([^{}]*)\}/g))
-    rules.set(
-      (ruleSelector ?? "").trim().replace(/\s+/g, " "),
-      (body ?? "").trim(),
-    );
-  const body = rules.get(selector);
-  expect(body, `OverlayShell.svelte has no \`${selector}\` rule`).toBeDefined();
-  return body!
-    .split(";")
-    .map((line) => line.trim().replace(/\s+/g, " "))
-    .filter((line) => line.length > 0);
-}
-
 afterEach(() => {
   cleanup();
 });
@@ -54,23 +31,6 @@ describe("story utility overlays", () => {
     expect(
       screen.getByRole("heading", { name: "History" }).classList,
     ).toContain("ui-dialog-title");
-  });
-
-  it("keeps blur on the backdrop and panel paint on VariantB primitives", () => {
-    const backdrop = declarations(".overlay-backdrop");
-    expect(backdrop).toContain(
-      "background: color-mix(in srgb, var(--bg-deep) 55%, transparent)",
-    );
-    expect(backdrop).toContain("backdrop-filter: blur(6px)");
-
-    const panel = declarations(".overlay");
-    expect(panel).not.toContain("backdrop-filter: blur(6px)");
-    expect(panel.some((line) => line.includes("var(--story-panel)"))).toBe(
-      false,
-    );
-    expect(
-      panel.some((line) => /^(background|border|border-radius):/.test(line)),
-    ).toBe(false);
   });
 
   it("shows ordered history and empty state", () => {

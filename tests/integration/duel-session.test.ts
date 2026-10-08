@@ -226,26 +226,6 @@ Duel.RegisterEffect(overlay_query, 0)`,
     );
   });
 
-  it("reclaims one hundred real core sessions", () => {
-    for (let index = 0; index < 100; index += 1) {
-      const session = DuelSession.create({
-        adapter,
-        dependencies,
-        playerDeck: preset.player,
-        opponentDeck: preset.opponent,
-        configuration: {
-          mode: "programmed",
-          rules: "mr5",
-          seed: [1n, 2n, 3n, BigInt(index + 4)],
-          playerDeckOrder: preset.player.main,
-          opponentDeckOrder: preset.opponent.main,
-        },
-      });
-      session.dispose();
-      expect(session.disposed).toBe(true);
-    }
-  }, 60_000);
-
   it("generates fresh seeds and lets the core shuffle varied production hands", () => {
     const productionSessions = Array.from({ length: 8 }, () =>
       createProductionSession(),

@@ -1,0 +1,323 @@
+{
+  "id": "set-b9766fbb501c9aca",
+  "name": "Speed Duel: Arena of Lost Souls",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-b9766fbb501c9aca.jpg",
+  "cards": [
+    {
+      "cardCode": 31102447,
+      "printingCode": "SBLS-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6150044,
+      "printingCode": "SBLS-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 20277860,
+      "printingCode": "SBLS-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25880422,
+      "printingCode": "SBLS-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23995346,
+      "printingCode": "SBLS-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78193831,
+      "printingCode": "SBLS-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 92667214,
+      "printingCode": "SBLS-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40465719,
+      "printingCode": "SBLS-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 31000575,
+      "printingCode": "SBLS-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19159413,
+      "printingCode": "SBLS-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10209545,
+      "printingCode": "SBLS-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81977953,
+      "printingCode": "SBLS-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 87880531,
+      "printingCode": "SBLS-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66672569,
+      "printingCode": "SBLS-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22134079,
+      "printingCode": "SBLS-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54622031,
+      "printingCode": "SBLS-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73048641,
+      "printingCode": "SBLS-EN043",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52040216,
+      "printingCode": "SBLS-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90876561,
+      "printingCode": "SBLS-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36021814,
+      "printingCode": "SBLS-EN031",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 64788463,
+      "printingCode": "SBLS-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 82324105,
+      "printingCode": "SBLS-EN045",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46474915,
+      "printingCode": "SBLS-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36045450,
+      "printingCode": "SBLS-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90660762,
+      "printingCode": "SBLS-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 37580756,
+      "printingCode": "SBLS-EN044",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 68516705,
+      "printingCode": "SBLS-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52860176,
+      "printingCode": "SBLS-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25652259,
+      "printingCode": "SBLS-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94905343,
+      "printingCode": "SBLS-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23401839,
+      "printingCode": "SBLS-EN017",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52097679,
+      "printingCode": "SBLS-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32274490,
+      "printingCode": "SBLS-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33245030,
+      "printingCode": "SBLS-EN018",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 61405855,
+      "printingCode": "SBLS-EN015",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 43434803,
+      "printingCode": "SBLS-EN039",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29491031,
+      "printingCode": "SBLS-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 45939841,
+      "printingCode": "SBLS-EN042",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90434926,
+      "printingCode": "SBLS-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15052462,
+      "printingCode": "SBLS-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23424603,
+      "printingCode": "SBLS-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91996584,
+      "printingCode": "SBLS-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18756904,
+      "printingCode": "SBLS-EN040",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 68427465,
+      "printingCode": "SBLS-EN041",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 47693640,
+      "printingCode": "SBLS-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

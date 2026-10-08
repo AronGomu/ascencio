@@ -1,0 +1,302 @@
+{
+  "id": "set-b31b67f9d5225519",
+  "name": "2-Player Starter Deck: Yuya & Declan",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-b31b67f9d5225519.jpg",
+  "cards": [
+    {
+      "cardCode": 43096270,
+      "printingCode": "YS15-ENY01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38520918,
+      "printingCode": "YS15-ENY08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49881766,
+      "printingCode": "YS15-END02",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84914462,
+      "printingCode": "YS15-END05",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40619825,
+      "printingCode": "YS15-END14",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10012614,
+      "printingCode": "YS15-END15",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11761845,
+      "printingCode": "YS15-END01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65169794,
+      "printingCode": "YS15-ENY15",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16719802,
+      "printingCode": "YS15-END09",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "YS15-END20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "YS15-ENY19",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "YS15-ENY04",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56619314,
+      "printingCode": "YS15-END00",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14506878,
+      "printingCode": "YS15-ENY09",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53129443,
+      "printingCode": "YS15-ENY12",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 60082869,
+      "printingCode": "YS15-END18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20586572,
+      "printingCode": "YS15-END10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12235475,
+      "printingCode": "YS15-END07",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85306040,
+      "printingCode": "YS15-END04",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48343627,
+      "printingCode": "YS15-END11",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66337215,
+      "printingCode": "YS15-ENY05",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94664694,
+      "printingCode": "YS15-END06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62279055,
+      "printingCode": "YS15-END17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93013676,
+      "printingCode": "YS15-ENY07",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99597615,
+      "printingCode": "YS15-ENY16",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57882509,
+      "printingCode": "YS15-END19",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15960641,
+      "printingCode": "YS15-ENY06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44095762,
+      "printingCode": "YS15-END16",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 15025844,
+      "printingCode": "YS15-ENY02",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5318639,
+      "printingCode": "YS15-END13",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5318639,
+      "printingCode": "YS15-ENY13",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14315573,
+      "printingCode": "YS15-ENY20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53025096,
+      "printingCode": "YS15-ENY03",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19221310,
+      "printingCode": "YS15-ENY00",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44509898,
+      "printingCode": "YS15-ENY18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70046172,
+      "printingCode": "YS15-ENY14",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60694662,
+      "printingCode": "YS15-ENY10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97169186,
+      "printingCode": "YS15-END12",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51196174,
+      "printingCode": "YS15-ENY11",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51838385,
+      "printingCode": "YS15-END08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4206964,
+      "printingCode": "YS15-ENY17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54343893,
+      "printingCode": "YS15-END03",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

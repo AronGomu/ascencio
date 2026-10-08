@@ -1,0 +1,64 @@
+{
+  "id": "set-8bc677612ad9c0de",
+  "name": "Shadow of Infinity: Special Edition",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-8bc677612ad9c0de.jpg",
+  "cards": [
+    {
+      "cardCode": 41356845,
+      "printingCode": "SOI-ENSE1",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 41356845,
+      "printingCode": "SOI-ENSE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48642904,
+      "printingCode": "SOI-ENSE4",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 48642904,
+      "printingCode": "SOI-ENSE4",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 34016756,
+      "printingCode": "SOI-ENSE2",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 34016756,
+      "printingCode": "SOI-ENSE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "SOI-ENSE3",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "SOI-ENSE3",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

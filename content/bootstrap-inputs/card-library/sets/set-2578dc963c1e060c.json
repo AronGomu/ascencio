@@ -1,0 +1,358 @@
+{
+  "id": "set-2578dc963c1e060c",
+  "name": "World Superstars",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-2578dc963c1e060c.jpg",
+  "cards": [
+    {
+      "cardCode": 59048135,
+      "printingCode": "WSUP-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 61156777,
+      "printingCode": "WSUP-EN048",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 35537251,
+      "printingCode": "WSUP-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 24861088,
+      "printingCode": "WSUP-EN001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 73866096,
+      "printingCode": "WSUP-EN008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 34898052,
+      "printingCode": "WSUP-EN038",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 54407825,
+      "printingCode": "WSUP-EN042",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 63060238,
+      "printingCode": "WSUP-EN032",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 45010690,
+      "printingCode": "WSUP-EN036",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 28884172,
+      "printingCode": "WSUP-EN028",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 91499077,
+      "printingCode": "WSUP-EN027",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 387282,
+      "printingCode": "WSUP-EN006",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 46659709,
+      "printingCode": "WSUP-EN010",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 9260791,
+      "printingCode": "WSUP-EN009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53334641,
+      "printingCode": "WSUP-EN035",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80802524,
+      "printingCode": "WSUP-EN043",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 64283880,
+      "printingCode": "WSUP-EN029",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 54629413,
+      "printingCode": "WSUP-EN040",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 34761062,
+      "printingCode": "WSUP-EN047",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87255382,
+      "printingCode": "WSUP-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 65848811,
+      "printingCode": "WSUP-EN016",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 1833916,
+      "printingCode": "WSUP-EN017",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 91677585,
+      "printingCode": "WSUP-EN030",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 90098780,
+      "printingCode": "WSUP-EN023",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 71415349,
+      "printingCode": "WSUP-EN037",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 8316565,
+      "printingCode": "WSUP-EN015",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 7541475,
+      "printingCode": "WSUP-EN049",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63881033,
+      "printingCode": "WSUP-EN025",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 26949946,
+      "printingCode": "WSUP-EN034",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 90555947,
+      "printingCode": "WSUP-EN033",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 23649496,
+      "printingCode": "WSUP-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50260683,
+      "printingCode": "WSUP-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 46871387,
+      "printingCode": "WSUP-EN007",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 71921856,
+      "printingCode": "WSUP-EN014",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63504681,
+      "printingCode": "WSUP-EN022",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 65305468,
+      "printingCode": "WSUP-EN026",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 37115973,
+      "printingCode": "WSUP-EN021",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 26493435,
+      "printingCode": "WSUP-EN024",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 13760677,
+      "printingCode": "WSUP-EN044",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 60434189,
+      "printingCode": "WSUP-EN050",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 72044448,
+      "printingCode": "WSUP-EN011",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 10282757,
+      "printingCode": "WSUP-EN039",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50155385,
+      "printingCode": "WSUP-EN045",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 64726269,
+      "printingCode": "WSUP-EN019",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 38331564,
+      "printingCode": "WSUP-EN018",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 91110378,
+      "printingCode": "WSUP-EN020",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 8038143,
+      "printingCode": "WSUP-EN012",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 27062594,
+      "printingCode": "WSUP-EN031",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 81028112,
+      "printingCode": "WSUP-EN041",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 86559484,
+      "printingCode": "WSUP-EN046",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

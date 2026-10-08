@@ -1,0 +1,15 @@
+{
+  "id": "set-e41b938a5bc31e53",
+  "name": "Swedish Shonen Jump 2004, Issue 2 promotional card",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-e41b938a5bc31e53.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "JMP-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

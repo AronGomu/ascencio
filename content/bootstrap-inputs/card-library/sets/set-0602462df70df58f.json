@@ -1,0 +1,15 @@
+{
+  "id": "set-0602462df70df58f",
+  "name": "The Lost Art Promotion 2024 H",
+  "releaseYear": 2024,
+  "imageAssetPath": "sets/set-0602462df70df58f.jpg",
+  "cards": [
+    {
+      "cardCode": 83764719,
+      "printingCode": "LART-EN074",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

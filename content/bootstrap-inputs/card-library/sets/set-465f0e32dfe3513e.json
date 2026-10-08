@@ -1,0 +1,302 @@
+{
+  "id": "set-465f0e32dfe3513e",
+  "name": "Structure Deck: Powercode Link",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-465f0e32dfe3513e.jpg",
+  "cards": [
+    {
+      "cardCode": 43583400,
+      "printingCode": "SDPL-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 75249652,
+      "printingCode": "SDPL-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "SDPL-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27450400,
+      "printingCode": "SDPL-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 645087,
+      "printingCode": "SDPL-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42461852,
+      "printingCode": "SDPL-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84816244,
+      "printingCode": "SDPL-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65703851,
+      "printingCode": "SDPL-EN039",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97268402,
+      "printingCode": "SDPL-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46173679,
+      "printingCode": "SDPL-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80794697,
+      "printingCode": "SDPL-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 25789292,
+      "printingCode": "SDPL-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11801343,
+      "printingCode": "SDPL-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64034255,
+      "printingCode": "SDPL-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25259669,
+      "printingCode": "SDPL-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59546797,
+      "printingCode": "SDPL-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77637979,
+      "printingCode": "SDPL-EN042",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16188701,
+      "printingCode": "SDPL-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 35911108,
+      "printingCode": "SDPL-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32362575,
+      "printingCode": "SDPL-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67922702,
+      "printingCode": "SDPL-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89882100,
+      "printingCode": "SDPL-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19230408,
+      "printingCode": "SDPL-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "SDPL-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78859567,
+      "printingCode": "SDPL-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12958919,
+      "printingCode": "SDPL-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15844566,
+      "printingCode": "SDPL-EN040",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 58577036,
+      "printingCode": "SDPL-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10028593,
+      "printingCode": "SDPL-EN012",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37576645,
+      "printingCode": "SDPL-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38296564,
+      "printingCode": "SDPL-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73915051,
+      "printingCode": "SDPL-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53309998,
+      "printingCode": "SDPL-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 15066114,
+      "printingCode": "SDPL-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 67750322,
+      "printingCode": "SDPL-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89571015,
+      "printingCode": "SDPL-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72302403,
+      "printingCode": "SDPL-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73628505,
+      "printingCode": "SDPL-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41248270,
+      "printingCode": "SDPL-EN041",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59616123,
+      "printingCode": "SDPL-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29616929,
+      "printingCode": "SDPL-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 47766694,
+      "printingCode": "SDPL-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

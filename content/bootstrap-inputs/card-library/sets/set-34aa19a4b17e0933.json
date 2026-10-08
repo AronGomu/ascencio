@@ -1,0 +1,29 @@
+{
+  "id": "set-34aa19a4b17e0933",
+  "name": "Yu-Gi-Oh! 7 Trials to Glory: World Championship Tournament 2005 promotional cards",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-34aa19a4b17e0933.jpg",
+  "cards": [
+    {
+      "cardCode": 34627841,
+      "printingCode": "WC5-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 37267041,
+      "printingCode": "WC5-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37520316,
+      "printingCode": "WC5-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

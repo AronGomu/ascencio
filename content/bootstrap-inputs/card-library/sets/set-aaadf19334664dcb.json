@@ -1,0 +1,15 @@
+{
+  "id": "set-aaadf19334664dcb",
+  "name": "Hobby League 2 participation card B",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-aaadf19334664dcb.jpg",
+  "cards": [
+    {
+      "cardCode": 5318639,
+      "printingCode": "HL2-EN002",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

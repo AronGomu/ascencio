@@ -1,0 +1,22 @@
+{
+  "id": "set-71d78bd9592f349e",
+  "name": "Yu-Gi-Oh! Championship Series 2017 prize card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-71d78bd9592f349e.jpg",
+  "cards": [
+    {
+      "cardCode": 95474755,
+      "printingCode": "YCSW-EN010",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 95474755,
+      "printingCode": "YCSW-EN010",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

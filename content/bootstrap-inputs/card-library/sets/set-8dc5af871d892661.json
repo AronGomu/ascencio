@@ -1,0 +1,260 @@
+{
+  "id": "set-8dc5af871d892661",
+  "name": "Structure Deck: Lord of the Storm",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-8dc5af871d892661.jpg",
+  "cards": [
+    {
+      "cardCode": 95132338,
+      "printingCode": "SD8-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 45547649,
+      "printingCode": "SD8-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28470714,
+      "printingCode": "SD8-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "SD8-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72892473,
+      "printingCode": "SD8-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1804528,
+      "printingCode": "SD8-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60082869,
+      "printingCode": "SD8-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90219263,
+      "printingCode": "SD8-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84834865,
+      "printingCode": "SD8-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34100324,
+      "printingCode": "SD8-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91932350,
+      "printingCode": "SD8-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27927359,
+      "printingCode": "SD8-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54415063,
+      "printingCode": "SD8-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12206212,
+      "printingCode": "SD8-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6924874,
+      "printingCode": "SD8-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 75782277,
+      "printingCode": "SD8-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19613556,
+      "printingCode": "SD8-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77778835,
+      "printingCode": "SD8-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53567095,
+      "printingCode": "SD8-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82005435,
+      "printingCode": "SD8-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69162969,
+      "printingCode": "SD8-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77414722,
+      "printingCode": "SD8-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5318639,
+      "printingCode": "SD8-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70861343,
+      "printingCode": "SD8-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71044499,
+      "printingCode": "SD8-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37576645,
+      "printingCode": "SD8-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22589918,
+      "printingCode": "SD8-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28143906,
+      "printingCode": "SD8-EN012",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56120475,
+      "printingCode": "SD8-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73001017,
+      "printingCode": "SD8-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14989021,
+      "printingCode": "SD8-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78636495,
+      "printingCode": "SD8-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84696266,
+      "printingCode": "SD8-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40384720,
+      "printingCode": "SD8-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81896370,
+      "printingCode": "SD8-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12181376,
+      "printingCode": "SD8-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

@@ -1,0 +1,603 @@
+{
+  "id": "power-of-the-duelist",
+  "name": "Power of the Duelist",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/power-of-the-duelist.jpg",
+  "cards": [
+    {
+      "cardCode": 62437709,
+      "printingCode": "POTD-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62315111,
+      "printingCode": "POTD-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24104865,
+      "printingCode": "POTD-EN028",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 24104865,
+      "printingCode": "POTD-EN028",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 25920413,
+      "printingCode": "POTD-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98719226,
+      "printingCode": "POTD-EN027",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 98719226,
+      "printingCode": "POTD-EN027",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 98927491,
+      "printingCode": "POTD-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36378213,
+      "printingCode": "POTD-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36042004,
+      "printingCode": "POTD-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44702857,
+      "printingCode": "POTD-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90654356,
+      "printingCode": "POTD-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79409334,
+      "printingCode": "POTD-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59258334,
+      "printingCode": "POTD-EN060",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64599569,
+      "printingCode": "POTD-EN034",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 64599569,
+      "printingCode": "POTD-EN034",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 42682609,
+      "printingCode": "POTD-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14772491,
+      "printingCode": "POTD-EN045",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16616620,
+      "printingCode": "POTD-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51192573,
+      "printingCode": "POTD-EN029",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 51192573,
+      "printingCode": "POTD-EN029",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 24082387,
+      "printingCode": "POTD-EN051",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63477921,
+      "printingCode": "POTD-EN057",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 63477921,
+      "printingCode": "POTD-EN057",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 22147147,
+      "printingCode": "POTD-EN043",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 22147147,
+      "printingCode": "POTD-EN043",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 43405287,
+      "printingCode": "POTD-EN050",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 43405287,
+      "printingCode": "POTD-EN050",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 89899996,
+      "printingCode": "POTD-EN041",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53527835,
+      "printingCode": "POTD-EN048",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53527835,
+      "printingCode": "POTD-EN048",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 25034083,
+      "printingCode": "POTD-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55461064,
+      "printingCode": "POTD-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81866673,
+      "printingCode": "POTD-EN017",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 81866673,
+      "printingCode": "POTD-EN017",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 54749427,
+      "printingCode": "POTD-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17132130,
+      "printingCode": "POTD-EN014",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 17132130,
+      "printingCode": "POTD-EN014",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 28355718,
+      "printingCode": "POTD-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 28355718,
+      "printingCode": "POTD-EN012",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 80744121,
+      "printingCode": "POTD-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15294090,
+      "printingCode": "POTD-EN049",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55171412,
+      "printingCode": "POTD-EN031",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 55171412,
+      "printingCode": "POTD-EN031",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 28677304,
+      "printingCode": "POTD-EN033",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 28677304,
+      "printingCode": "POTD-EN033",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 81566151,
+      "printingCode": "POTD-EN032",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 81566151,
+      "printingCode": "POTD-EN032",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89943723,
+      "printingCode": "POTD-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78387742,
+      "printingCode": "POTD-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97697678,
+      "printingCode": "POTD-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23869735,
+      "printingCode": "POTD-EN058",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77565204,
+      "printingCode": "POTD-EN044",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 77565204,
+      "printingCode": "POTD-EN044",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 80921533,
+      "printingCode": "POTD-EN047",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63259351,
+      "printingCode": "POTD-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42015635,
+      "printingCode": "POTD-EN046",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42015635,
+      "printingCode": "POTD-EN046",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 17955766,
+      "printingCode": "POTD-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 17955766,
+      "printingCode": "POTD-EN003",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 43237273,
+      "printingCode": "POTD-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 43237273,
+      "printingCode": "POTD-EN005",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 89621922,
+      "printingCode": "POTD-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 89621922,
+      "printingCode": "POTD-EN004",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 96875080,
+      "printingCode": "POTD-EN053",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3659803,
+      "printingCode": "POTD-EN042",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 3659803,
+      "printingCode": "POTD-EN042",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 41382147,
+      "printingCode": "POTD-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24311595,
+      "printingCode": "POTD-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86742443,
+      "printingCode": "POTD-EN054",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37265642,
+      "printingCode": "POTD-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41160595,
+      "printingCode": "POTD-EN039",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41160595,
+      "printingCode": "POTD-EN039",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 99861526,
+      "printingCode": "POTD-EN008",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 99861526,
+      "printingCode": "POTD-EN008",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 36256625,
+      "printingCode": "POTD-EN036",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 36256625,
+      "printingCode": "POTD-EN036",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 97705809,
+      "printingCode": "POTD-EN056",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97705809,
+      "printingCode": "POTD-EN056",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 16946849,
+      "printingCode": "POTD-EN059",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50470982,
+      "printingCode": "POTD-EN052",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15894048,
+      "printingCode": "POTD-EN020",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 15894048,
+      "printingCode": "POTD-EN020",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 23299957,
+      "printingCode": "POTD-EN040",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50684552,
+      "printingCode": "POTD-EN055",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

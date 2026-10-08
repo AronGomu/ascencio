@@ -1,0 +1,1422 @@
+{
+  "id": "set-88bd21b14cb6667d",
+  "name": "Battles of Legend: Monster Mayhem",
+  "releaseYear": 2025,
+  "imageAssetPath": "sets/set-88bd21b14cb6667d.jpg",
+  "cards": [
+    {
+      "cardCode": 71422989,
+      "printingCode": "BLMM-EN164",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61314842,
+      "printingCode": "BLMM-EN161",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93053159,
+      "printingCode": "BLMM-EN011",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 93053159,
+      "printingCode": "BLMM-EN011",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 56827051,
+      "printingCode": "BLMM-EN128",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 34267821,
+      "printingCode": "BLMM-EN125",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 51618973,
+      "printingCode": "BLMM-EN024",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 80447641,
+      "printingCode": "BLMM-EN034",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "BLMM-EN119",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 47132793,
+      "printingCode": "BLMM-EN155",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "BLMM-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "BLMM-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 53797637,
+      "printingCode": "BLMM-EN123",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 65743242,
+      "printingCode": "BLMM-EN174",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 32600024,
+      "printingCode": "BLMM-EN062",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 875572,
+      "printingCode": "BLMM-EN044",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 5997110,
+      "printingCode": "BLMM-EN041",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 74387963,
+      "printingCode": "BLMM-EN043",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 42382265,
+      "printingCode": "BLMM-EN042",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98502113,
+      "printingCode": "BLMM-EN008",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 98502113,
+      "printingCode": "BLMM-EN008",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 93854893,
+      "printingCode": "BLMM-EN090",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 58984738,
+      "printingCode": "BLMM-EN126",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 75425320,
+      "printingCode": "BLMM-EN169",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 95679145,
+      "printingCode": "BLMM-EN129",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12163590,
+      "printingCode": "BLMM-EN048",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40110009,
+      "printingCode": "BLMM-EN067",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 77515704,
+      "printingCode": "BLMM-EN068",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76782778,
+      "printingCode": "BLMM-EN055",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "BLMM-EN065",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "BLMM-EN061",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 49575521,
+      "printingCode": "BLMM-EN057",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 24799107,
+      "printingCode": "BLMM-EN064",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 57416183,
+      "printingCode": "BLMM-EN069",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 42055234,
+      "printingCode": "BLMM-EN059",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14625090,
+      "printingCode": "BLMM-EN066",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89943723,
+      "printingCode": "BLMM-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 89943723,
+      "printingCode": "BLMM-EN003",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 87003671,
+      "printingCode": "BLMM-EN025",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 87003671,
+      "printingCode": "BLMM-EN025",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 74820316,
+      "printingCode": "BLMM-EN053",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 74820316,
+      "printingCode": "BLMM-EN053",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 94292987,
+      "printingCode": "BLMM-EN013",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 21281085,
+      "printingCode": "BLMM-EN014",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "BLMM-EN104",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "BLMM-EN104",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 57775790,
+      "printingCode": "BLMM-EN015",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43236494,
+      "printingCode": "BLMM-EN036",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 24299458,
+      "printingCode": "BLMM-EN171",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 50642380,
+      "printingCode": "BLMM-EN071",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "BLMM-EN093",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48835607,
+      "printingCode": "BLMM-EN052",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 48835607,
+      "printingCode": "BLMM-EN052",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 79509511,
+      "printingCode": "BLMM-EN040",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 93717133,
+      "printingCode": "BLMM-EN007",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 93717133,
+      "printingCode": "BLMM-EN007",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 423705,
+      "printingCode": "BLMM-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 423705,
+      "printingCode": "BLMM-EN004",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 27004302,
+      "printingCode": "BLMM-EN108",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19019586,
+      "printingCode": "BLMM-EN112",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90019393,
+      "printingCode": "BLMM-EN107",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 71616908,
+      "printingCode": "BLMM-EN141",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13108445,
+      "printingCode": "BLMM-EN137",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 67985943,
+      "printingCode": "BLMM-EN139",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76908448,
+      "printingCode": "BLMM-EN100",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 24220368,
+      "printingCode": "BLMM-EN023",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 1264319,
+      "printingCode": "BLMM-EN160",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 1264319,
+      "printingCode": "BLMM-EN160",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 88225269,
+      "printingCode": "BLMM-EN022",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 19355597,
+      "printingCode": "BLMM-EN145",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 47611119,
+      "printingCode": "BLMM-EN144",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 81846636,
+      "printingCode": "BLMM-EN113",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 39512984,
+      "printingCode": "BLMM-EN143",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25342956,
+      "printingCode": "BLMM-EN020",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 51831560,
+      "printingCode": "BLMM-EN021",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 51831560,
+      "printingCode": "BLMM-EN021",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 24484270,
+      "printingCode": "BLMM-EN156",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93379652,
+      "printingCode": "BLMM-EN140",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76614340,
+      "printingCode": "BLMM-EN136",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 49597193,
+      "printingCode": "BLMM-EN138",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 8692301,
+      "printingCode": "BLMM-EN142",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53408006,
+      "printingCode": "BLMM-EN109",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 64734090,
+      "printingCode": "BLMM-EN111",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "BLMM-EN088",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44330098,
+      "printingCode": "BLMM-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 44330098,
+      "printingCode": "BLMM-EN005",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 93023479,
+      "printingCode": "BLMM-EN110",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21074344,
+      "printingCode": "BLMM-EN102",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 17266660,
+      "printingCode": "BLMM-EN103",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 17266660,
+      "printingCode": "BLMM-EN103",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 94689635,
+      "printingCode": "BLMM-EN101",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 60316373,
+      "printingCode": "BLMM-EN114",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 96704018,
+      "printingCode": "BLMM-EN115",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 45705025,
+      "printingCode": "BLMM-EN116",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 84220251,
+      "printingCode": "BLMM-EN162",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37742478,
+      "printingCode": "BLMM-EN006",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 37742478,
+      "printingCode": "BLMM-EN006",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "BLMM-EN063",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 94677445,
+      "printingCode": "BLMM-EN089",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 97476032,
+      "printingCode": "BLMM-EN031",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 65569724,
+      "printingCode": "BLMM-EN033",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43685562,
+      "printingCode": "BLMM-EN081",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 82041999,
+      "printingCode": "BLMM-EN072",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 60800381,
+      "printingCode": "BLMM-EN009",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 60800381,
+      "printingCode": "BLMM-EN009",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 80727721,
+      "printingCode": "BLMM-EN106",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 52553102,
+      "printingCode": "BLMM-EN018",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 80032567,
+      "printingCode": "BLMM-EN148",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 5479217,
+      "printingCode": "BLMM-EN175",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93170499,
+      "printingCode": "BLMM-EN016",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 17548456,
+      "printingCode": "BLMM-EN150",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 17548456,
+      "printingCode": "BLMM-EN150",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 20568404,
+      "printingCode": "BLMM-EN017",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 59312550,
+      "printingCode": "BLMM-EN105",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65961683,
+      "printingCode": "BLMM-EN149",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89948817,
+      "printingCode": "BLMM-EN019",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 11398059,
+      "printingCode": "BLMM-EN154",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 11398059,
+      "printingCode": "BLMM-EN154",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 16960120,
+      "printingCode": "BLMM-EN058",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "BLMM-EN091",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 38342335,
+      "printingCode": "BLMM-EN092",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 67284908,
+      "printingCode": "BLMM-EN099",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48658295,
+      "printingCode": "BLMM-EN049",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 48658295,
+      "printingCode": "BLMM-EN049",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "BLMM-EN056",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 39752820,
+      "printingCode": "BLMM-EN159",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 89185742,
+      "printingCode": "BLMM-EN124",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 76145142,
+      "printingCode": "BLMM-EN094",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 59080,
+      "printingCode": "BLMM-EN047",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43385557,
+      "printingCode": "BLMM-EN147",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21377582,
+      "printingCode": "BLMM-EN127",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21887175,
+      "printingCode": "BLMM-EN095",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65515667,
+      "printingCode": "BLMM-EN028",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 93860227,
+      "printingCode": "BLMM-EN146",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 93860227,
+      "printingCode": "BLMM-EN146",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 97211663,
+      "printingCode": "BLMM-EN167",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 50596425,
+      "printingCode": "BLMM-EN027",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 51124303,
+      "printingCode": "BLMM-EN166",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14735698,
+      "printingCode": "BLMM-EN165",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 39468724,
+      "printingCode": "BLMM-EN135",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 99185129,
+      "printingCode": "BLMM-EN131",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 88240999,
+      "printingCode": "BLMM-EN133",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13408726,
+      "printingCode": "BLMM-EN026",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21105106,
+      "printingCode": "BLMM-EN134",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 52068432,
+      "printingCode": "BLMM-EN132",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 52068432,
+      "printingCode": "BLMM-EN132",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 6609736,
+      "printingCode": "BLMM-EN076",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 55920742,
+      "printingCode": "BLMM-EN074",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 81914447,
+      "printingCode": "BLMM-EN075",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 75046994,
+      "printingCode": "BLMM-EN050",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 75046994,
+      "printingCode": "BLMM-EN050",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19535693,
+      "printingCode": "BLMM-EN073",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 2407234,
+      "printingCode": "BLMM-EN153",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 47387961,
+      "printingCode": "BLMM-EN152",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 79625003,
+      "printingCode": "BLMM-EN037",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 16110708,
+      "printingCode": "BLMM-EN038",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40398073,
+      "printingCode": "BLMM-EN054",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 29843091,
+      "printingCode": "BLMM-EN010",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 29843091,
+      "printingCode": "BLMM-EN010",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 26493435,
+      "printingCode": "BLMM-EN163",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 94046012,
+      "printingCode": "BLMM-EN083",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 703897,
+      "printingCode": "BLMM-EN098",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 21441617,
+      "printingCode": "BLMM-EN084",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 57835716,
+      "printingCode": "BLMM-EN085",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 4055337,
+      "printingCode": "BLMM-EN087",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90351981,
+      "printingCode": "BLMM-EN097",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26845680,
+      "printingCode": "BLMM-EN096",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 28403802,
+      "printingCode": "BLMM-EN078",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 49370016,
+      "printingCode": "BLMM-EN080",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11441009,
+      "printingCode": "BLMM-EN051",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 11441009,
+      "printingCode": "BLMM-EN051",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 88453933,
+      "printingCode": "BLMM-EN060",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 63198739,
+      "printingCode": "BLMM-EN130",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 29095457,
+      "printingCode": "BLMM-EN173",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 56506740,
+      "printingCode": "BLMM-EN172",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 91020571,
+      "printingCode": "BLMM-EN121",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "BLMM-EN117",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 42104806,
+      "printingCode": "BLMM-EN039",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91019775,
+      "printingCode": "BLMM-EN030",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 32274490,
+      "printingCode": "BLMM-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 32274490,
+      "printingCode": "BLMM-EN002",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 26268488,
+      "printingCode": "BLMM-EN151",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 27415516,
+      "printingCode": "BLMM-EN122",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61665245,
+      "printingCode": "BLMM-EN157",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "BLMM-EN120",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 68897338,
+      "printingCode": "BLMM-EN012",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "BLMM-EN118",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25311006,
+      "printingCode": "BLMM-EN170",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 61529473,
+      "printingCode": "BLMM-EN177",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 49430782,
+      "printingCode": "BLMM-EN168",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 35125879,
+      "printingCode": "BLMM-EN176",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 88477149,
+      "printingCode": "BLMM-EN032",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44459942,
+      "printingCode": "BLMM-EN029",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44708154,
+      "printingCode": "BLMM-EN077",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 18313046,
+      "printingCode": "BLMM-EN079",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13258285,
+      "printingCode": "BLMM-EN070",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93084621,
+      "printingCode": "BLMM-EN158",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73664385,
+      "printingCode": "BLMM-EN046",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 17832359,
+      "printingCode": "BLMM-EN035",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27918365,
+      "printingCode": "BLMM-EN082",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93920420,
+      "printingCode": "BLMM-EN086",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37260677,
+      "printingCode": "BLMM-EN045",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

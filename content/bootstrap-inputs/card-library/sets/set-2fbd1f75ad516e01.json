@@ -1,0 +1,64 @@
+{
+  "id": "set-2fbd1f75ad516e01",
+  "name": "Exclusive Pack",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-2fbd1f75ad516e01.jpg",
+  "cards": [
+    {
+      "cardCode": 14391920,
+      "printingCode": "EP1-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15013468,
+      "printingCode": "EP1-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25236056,
+      "printingCode": "EP1-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27174286,
+      "printingCode": "EP1-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51402177,
+      "printingCode": "EP1-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 52624755,
+      "printingCode": "EP1-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87997872,
+      "printingCode": "EP1-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89731911,
+      "printingCode": "EP1-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

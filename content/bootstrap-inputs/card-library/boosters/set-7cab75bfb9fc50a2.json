@@ -1,0 +1,48 @@
+{
+  "id": "set-7cab75bfb9fc50a2",
+  "name": "Master Collection Volume 1",
+  "setId": "set-7cab75bfb9fc50a2",
+  "replacement": "with",
+  "slots": [
+    {
+      "count": 8,
+      "rarities": [
+        {
+          "rarity": "common",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    },
+    {
+      "count": 1,
+      "rarities": [
+        {
+          "rarity": "rare",
+          "weight": 1
+        },
+        {
+          "rarity": "super-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultra-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "secret-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultimate-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ghost-rare",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    }
+  ]
+}

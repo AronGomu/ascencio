@@ -1,0 +1,414 @@
+{
+  "id": "set-6124c3bddfdd38e5",
+  "name": "THE CHRONICLES DECK: Spirit Charmers (All-Foil Edition)",
+  "releaseYear": 2026,
+  "imageAssetPath": "sets/set-6124c3bddfdd38e5.jpg",
+  "cards": [
+    {
+      "cardCode": 86066372,
+      "printingCode": "CH02-EN050",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44822037,
+      "printingCode": "CH02-EN040",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 62803464,
+      "printingCode": "CH02-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37970940,
+      "printingCode": "CH02-EN004",
+      "rarity": "common",
+      "sourceRarity": "New artwork",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 37970940,
+      "printingCode": "CH02-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 37970940,
+      "printingCode": "CH02-EN004",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 97661969,
+      "printingCode": "CH02-EN045",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 62256492,
+      "printingCode": "CH02-EN031",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74426895,
+      "printingCode": "CH02-EN017",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92652813,
+      "printingCode": "CH02-EN018",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65268179,
+      "printingCode": "CH02-EN020",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 410904,
+      "printingCode": "CH02-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48016074,
+      "printingCode": "CH02-EN041",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54693926,
+      "printingCode": "CH02-EN035",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11335209,
+      "printingCode": "CH02-EN023",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 15746348,
+      "printingCode": "CH02-EN009",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74364659,
+      "printingCode": "CH02-EN001",
+      "rarity": "common",
+      "sourceRarity": "New artwork",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 74364659,
+      "printingCode": "CH02-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 74364659,
+      "printingCode": "CH02-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "CH02-EN042",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86937530,
+      "printingCode": "CH02-EN026",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 31887905,
+      "printingCode": "CH02-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 68881649,
+      "printingCode": "CH02-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 4376658,
+      "printingCode": "CH02-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 31764353,
+      "printingCode": "CH02-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 38057522,
+      "printingCode": "CH02-EN030",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 47330808,
+      "printingCode": "CH02-EN024",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76615300,
+      "printingCode": "CH02-EN010",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 759393,
+      "printingCode": "CH02-EN002",
+      "rarity": "common",
+      "sourceRarity": "New artwork",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 759393,
+      "printingCode": "CH02-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 759393,
+      "printingCode": "CH02-EN002",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 48815792,
+      "printingCode": "CH02-EN043",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 84941194,
+      "printingCode": "CH02-EN022",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 62953041,
+      "printingCode": "CH02-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 40894584,
+      "printingCode": "CH02-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 16528181,
+      "printingCode": "CH02-EN037",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "CH02-EN021",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11827244,
+      "printingCode": "CH02-EN034",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 60666820,
+      "printingCode": "CH02-EN016",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65046521,
+      "printingCode": "CH02-EN038",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74725513,
+      "printingCode": "CH02-EN025",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 84433295,
+      "printingCode": "CH02-EN046",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44680819,
+      "printingCode": "CH02-EN015",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 45819647,
+      "printingCode": "CH02-EN049",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 1528054,
+      "printingCode": "CH02-EN048",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19739265,
+      "printingCode": "CH02-EN036",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14824019,
+      "printingCode": "CH02-EN027",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 23314220,
+      "printingCode": "CH02-EN033",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89739383,
+      "printingCode": "CH02-EN032",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11911336,
+      "printingCode": "CH02-EN028",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91530236,
+      "printingCode": "CH02-EN029",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73082255,
+      "printingCode": "CH02-EN047",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25704359,
+      "printingCode": "CH02-EN039",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86395581,
+      "printingCode": "CH02-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37744402,
+      "printingCode": "CH02-EN003",
+      "rarity": "common",
+      "sourceRarity": "New artwork",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 37744402,
+      "printingCode": "CH02-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 37744402,
+      "printingCode": "CH02-EN003",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "CH02-EN044",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "set-120febb378be625f",
+  "name": "Elemental Energy: Special Edition",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-120febb378be625f.jpg",
+  "cards": [
+    {
+      "cardCode": 48229808,
+      "printingCode": "EEN-ENSE1",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61441708,
+      "printingCode": "EEN-ENSE3",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 74388798,
+      "printingCode": "EEN-ENSE4",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61505339,
+      "printingCode": "EEN-ENSE2",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

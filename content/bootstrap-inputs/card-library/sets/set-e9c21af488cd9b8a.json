@@ -1,0 +1,43 @@
+{
+  "id": "set-e9c21af488cd9b8a",
+  "name": "Yu-Gi-Oh! The Dawn of Destiny promotional cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-e9c21af488cd9b8a.jpg",
+  "cards": [
+    {
+      "cardCode": 48642904,
+      "printingCode": "DOD-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 77754944,
+      "printingCode": "DOD-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 77754944,
+      "printingCode": "DOD-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 92377303,
+      "printingCode": "DOD-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 92377303,
+      "printingCode": "DOD-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

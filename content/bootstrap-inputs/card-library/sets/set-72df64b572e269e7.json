@@ -1,0 +1,15 @@
+{
+  "id": "set-72df64b572e269e7",
+  "name": "Yu-Gi-Oh! 5D's Volume 6 promotional card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-72df64b572e269e7.jpg",
+  "cards": [
+    {
+      "cardCode": 39765958,
+      "printingCode": "YF06-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

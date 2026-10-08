@@ -1,0 +1,792 @@
+{
+  "id": "raging-battle",
+  "name": "Raging Battle",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/raging-battle.jpg",
+  "cards": [
+    {
+      "cardCode": 64952266,
+      "printingCode": "RGBT-EN050",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 15475415,
+      "printingCode": "RGBT-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84389640,
+      "printingCode": "RGBT-EN075",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58990631,
+      "printingCode": "RGBT-EN074",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69695704,
+      "printingCode": "RGBT-EN000",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21362970,
+      "printingCode": "RGBT-EN085",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 56535497,
+      "printingCode": "RGBT-EN089",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 91351370,
+      "printingCode": "RGBT-EN051",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22835145,
+      "printingCode": "RGBT-EN010",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 11613567,
+      "printingCode": "RGBT-EN013",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 11613567,
+      "printingCode": "RGBT-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 85215458,
+      "printingCode": "RGBT-EN012",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58820853,
+      "printingCode": "RGBT-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76913983,
+      "printingCode": "RGBT-EN041",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47778083,
+      "printingCode": "RGBT-EN077",
+      "rarity": "common",
+      "sourceRarity": "Short Print",
+      "sourceRarityCode": "(SP)"
+    },
+    {
+      "cardCode": 17313545,
+      "printingCode": "RGBT-EN027",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 51773900,
+      "printingCode": "RGBT-EN062",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 46609443,
+      "printingCode": "RGBT-EN092",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 24566654,
+      "printingCode": "RGBT-EN064",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50164989,
+      "printingCode": "RGBT-EN004",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RGBT-EN035",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 59839761,
+      "printingCode": "RGBT-EN068",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63730624,
+      "printingCode": "RGBT-EN053",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10875327,
+      "printingCode": "RGBT-EN019",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 10875327,
+      "printingCode": "RGBT-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 46263076,
+      "printingCode": "RGBT-EN020",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 46263076,
+      "printingCode": "RGBT-EN020",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 42685062,
+      "printingCode": "RGBT-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21672573,
+      "printingCode": "RGBT-EN099",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 85431040,
+      "printingCode": "RGBT-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40529384,
+      "printingCode": "RGBT-EN040",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 40529384,
+      "printingCode": "RGBT-EN040",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 22628574,
+      "printingCode": "RGBT-EN070",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25789292,
+      "printingCode": "RGBT-EN061",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 25789292,
+      "printingCode": "RGBT-EN061",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 4130270,
+      "printingCode": "RGBT-EN039",
+      "rarity": "common",
+      "sourceRarity": "Short Print",
+      "sourceRarityCode": "(SP)"
+    },
+    {
+      "cardCode": 47985614,
+      "printingCode": "RGBT-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79080761,
+      "printingCode": "RGBT-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RGBT-EN078",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RGBT-EN078",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 68473226,
+      "printingCode": "RGBT-EN083",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 59042331,
+      "printingCode": "RGBT-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32485518,
+      "printingCode": "RGBT-EN082",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 63018036,
+      "printingCode": "RGBT-EN056",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36623431,
+      "printingCode": "RGBT-EN055",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 37745919,
+      "printingCode": "RGBT-EN052",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67757079,
+      "printingCode": "RGBT-EN086",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 80925836,
+      "printingCode": "RGBT-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12435193,
+      "printingCode": "RGBT-EN024",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 12435193,
+      "printingCode": "RGBT-EN024",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 45041488,
+      "printingCode": "RGBT-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54520292,
+      "printingCode": "RGBT-EN025",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 19642889,
+      "printingCode": "RGBT-EN022",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72258771,
+      "printingCode": "RGBT-EN021",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 95090813,
+      "printingCode": "RGBT-EN081",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41741922,
+      "printingCode": "RGBT-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86223870,
+      "printingCode": "RGBT-EN069",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97385276,
+      "printingCode": "RGBT-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 25132288,
+      "printingCode": "RGBT-EN091",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 1073952,
+      "printingCode": "RGBT-EN048",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16191953,
+      "printingCode": "RGBT-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4252828,
+      "printingCode": "RGBT-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38680149,
+      "printingCode": "RGBT-EN046",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43708640,
+      "printingCode": "RGBT-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97168905,
+      "printingCode": "RGBT-EN063",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46656406,
+      "printingCode": "RGBT-EN080",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46656406,
+      "printingCode": "RGBT-EN080",
+      "rarity": "common",
+      "sourceRarity": "Short Print",
+      "sourceRarityCode": "(SP)"
+    },
+    {
+      "cardCode": 94878265,
+      "printingCode": "RGBT-EN084",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 85101228,
+      "printingCode": "RGBT-EN072",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57108202,
+      "printingCode": "RGBT-EN014",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 90239723,
+      "printingCode": "RGBT-EN054",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10591919,
+      "printingCode": "RGBT-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84592800,
+      "printingCode": "RGBT-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62896588,
+      "printingCode": "RGBT-EN059",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64627453,
+      "printingCode": "RGBT-EN097",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 90011152,
+      "printingCode": "RGBT-EN098",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 37132349,
+      "printingCode": "RGBT-EN096",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RGBT-EN045",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 87046457,
+      "printingCode": "RGBT-EN066",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20140382,
+      "printingCode": "RGBT-EN088",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 23558733,
+      "printingCode": "RGBT-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 96553688,
+      "printingCode": "RGBT-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2403771,
+      "printingCode": "RGBT-EN042",
+      "rarity": "ghost-rare",
+      "sourceRarity": "Ghost Rare",
+      "sourceRarityCode": "(GR)"
+    },
+    {
+      "cardCode": 2403771,
+      "printingCode": "RGBT-EN042",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 2403771,
+      "printingCode": "RGBT-EN042",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11373345,
+      "printingCode": "RGBT-EN076",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25401880,
+      "printingCode": "RGBT-EN058",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11596936,
+      "printingCode": "RGBT-EN073",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80102359,
+      "printingCode": "RGBT-EN029",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 51987571,
+      "printingCode": "RGBT-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41160533,
+      "printingCode": "RGBT-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76891401,
+      "printingCode": "RGBT-EN044",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 91133740,
+      "printingCode": "RGBT-EN094",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 76714458,
+      "printingCode": "RGBT-EN090",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 82693042,
+      "printingCode": "RGBT-EN093",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 42463414,
+      "printingCode": "RGBT-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23770284,
+      "printingCode": "RGBT-EN003",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 23770284,
+      "printingCode": "RGBT-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 98380593,
+      "printingCode": "RGBT-EN060",
+      "rarity": "common",
+      "sourceRarity": "Short Print",
+      "sourceRarityCode": "(SP)"
+    },
+    {
+      "cardCode": 10651797,
+      "printingCode": "RGBT-EN079",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 94145683,
+      "printingCode": "RGBT-EN087",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 65079854,
+      "printingCode": "RGBT-EN047",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 83370323,
+      "printingCode": "RGBT-EN018",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 59616123,
+      "printingCode": "RGBT-EN071",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71759912,
+      "printingCode": "RGBT-EN095",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 39402797,
+      "printingCode": "RGBT-EN043",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 39402797,
+      "printingCode": "RGBT-EN043",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 50951359,
+      "printingCode": "RGBT-EN065",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99002135,
+      "printingCode": "RGBT-EN057",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77135531,
+      "printingCode": "RGBT-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23440062,
+      "printingCode": "RGBT-EN067",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38568567,
+      "printingCode": "RGBT-EN049",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

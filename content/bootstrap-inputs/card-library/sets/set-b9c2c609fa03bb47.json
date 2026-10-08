@@ -1,0 +1,218 @@
+{
+  "id": "set-b9c2c609fa03bb47",
+  "name": "Duelist Pack: Crow",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-b9c2c609fa03bb47.jpg",
+  "cards": [
+    {
+      "cardCode": 64952266,
+      "printingCode": "DP11-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40279770,
+      "printingCode": "DP11-EN029",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72278479,
+      "printingCode": "DP11-EN030",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52833089,
+      "printingCode": "DP11-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9012916,
+      "printingCode": "DP11-EN016",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 67779172,
+      "printingCode": "DP11-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89040386,
+      "printingCode": "DP11-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22835145,
+      "printingCode": "DP11-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25435080,
+      "printingCode": "DP11-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49003716,
+      "printingCode": "DP11-EN002",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 11613567,
+      "printingCode": "DP11-EN005",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 9109991,
+      "printingCode": "DP11-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2009101,
+      "printingCode": "DP11-EN001",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 26775203,
+      "printingCode": "DP11-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52869807,
+      "printingCode": "DP11-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87390067,
+      "printingCode": "DP11-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 41902352,
+      "printingCode": "DP11-EN010",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 46710683,
+      "printingCode": "DP11-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58820853,
+      "printingCode": "DP11-EN004",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 33236860,
+      "printingCode": "DP11-EN015",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 14785765,
+      "printingCode": "DP11-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76913983,
+      "printingCode": "DP11-EN014",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 69031175,
+      "printingCode": "DP11-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 4168871,
+      "printingCode": "DP11-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59839761,
+      "printingCode": "DP11-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88341502,
+      "printingCode": "DP11-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22628574,
+      "printingCode": "DP11-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88928798,
+      "printingCode": "DP11-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86223870,
+      "printingCode": "DP11-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94681654,
+      "printingCode": "DP11-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

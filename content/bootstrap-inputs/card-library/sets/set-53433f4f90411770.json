@@ -1,0 +1,36 @@
+{
+  "id": "set-53433f4f90411770",
+  "name": "Limited Edition 1",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-53433f4f90411770.jpg",
+  "cards": [
+    {
+      "cardCode": 26302522,
+      "printingCode": "JUMP-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86871614,
+      "printingCode": "JUMP-EN022",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26376390,
+      "printingCode": "JUMP-EN020",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37507488,
+      "printingCode": "JUMP-EN021",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

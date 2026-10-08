@@ -1,0 +1,15 @@
+{
+  "id": "set-7608ae100d2ab6d6",
+  "name": "Fire Fists: Special Edition",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-7608ae100d2ab6d6.jpg",
+  "cards": [
+    {
+      "cardCode": 57103969,
+      "printingCode": "FFSE-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

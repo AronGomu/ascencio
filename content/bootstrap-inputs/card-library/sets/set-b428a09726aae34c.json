@@ -1,0 +1,15 @@
+{
+  "id": "set-b428a09726aae34c",
+  "name": "Kids WB Duel of Destiny promotional card",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-b428a09726aae34c.jpg",
+  "cards": [
+    {
+      "cardCode": 42664989,
+      "printingCode": "EP1-EN000",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

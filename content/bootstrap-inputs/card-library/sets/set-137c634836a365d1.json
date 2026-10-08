@@ -1,0 +1,148 @@
+{
+  "id": "set-137c634836a365d1",
+  "name": "Tournament Pack 5",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-137c634836a365d1.jpg",
+  "cards": [
+    {
+      "cardCode": 2204140,
+      "printingCode": "TP5-EN008",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 2926176,
+      "printingCode": "TP5-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3055837,
+      "printingCode": "TP5-EN009",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 5616412,
+      "printingCode": "TP5-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11091375,
+      "printingCode": "TP5-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30451366,
+      "printingCode": "TP5-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40133511,
+      "printingCode": "TP5-EN007",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41855169,
+      "printingCode": "TP5-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50259460,
+      "printingCode": "TP5-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53119267,
+      "printingCode": "TP5-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53493204,
+      "printingCode": "TP5-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57482479,
+      "printingCode": "TP5-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65240384,
+      "printingCode": "TP5-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 71283180,
+      "printingCode": "TP5-EN012",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77044671,
+      "printingCode": "TP5-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78053598,
+      "printingCode": "TP5-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81843628,
+      "printingCode": "TP5-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87523462,
+      "printingCode": "TP5-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88240808,
+      "printingCode": "TP5-EN006",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 99426834,
+      "printingCode": "TP5-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

@@ -1,0 +1,869 @@
+{
+  "id": "set-d4f1479933f0d8cf",
+  "name": "Burst Protocol",
+  "releaseYear": 2026,
+  "imageAssetPath": "sets/set-d4f1479933f0d8cf.jpg",
+  "cards": [
+    {
+      "cardCode": 48469380,
+      "printingCode": "BPRO-EN031",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 48469380,
+      "printingCode": "BPRO-EN031",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 87985506,
+      "printingCode": "BPRO-EN073",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90764871,
+      "printingCode": "BPRO-EN060",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 13379114,
+      "printingCode": "BPRO-EN074",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49652661,
+      "printingCode": "BPRO-EN078",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 74631897,
+      "printingCode": "BPRO-EN035",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 74631897,
+      "printingCode": "BPRO-EN035",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86098176,
+      "printingCode": "BPRO-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86762958,
+      "printingCode": "BPRO-EN076",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5121528,
+      "printingCode": "BPRO-EN021",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87607094,
+      "printingCode": "BPRO-EN070",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 84464389,
+      "printingCode": "BPRO-EN032",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 66452432,
+      "printingCode": "BPRO-EN047",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 66452432,
+      "printingCode": "BPRO-EN047",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 4909946,
+      "printingCode": "BPRO-EN064",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44839512,
+      "printingCode": "BPRO-EN099",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47247792,
+      "printingCode": "BPRO-EN034",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50604072,
+      "printingCode": "BPRO-EN008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 11852093,
+      "printingCode": "BPRO-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99941223,
+      "printingCode": "BPRO-EN063",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10426067,
+      "printingCode": "BPRO-EN019",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 10136446,
+      "printingCode": "BPRO-EN036",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 10136446,
+      "printingCode": "BPRO-EN036",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 84031359,
+      "printingCode": "BPRO-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46708514,
+      "printingCode": "BPRO-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38007649,
+      "printingCode": "BPRO-EN055",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38129297,
+      "printingCode": "BPRO-EN052",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42125140,
+      "printingCode": "BPRO-EN037",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 42125140,
+      "printingCode": "BPRO-EN037",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 91002901,
+      "printingCode": "BPRO-EN054",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85154941,
+      "printingCode": "BPRO-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78397661,
+      "printingCode": "BPRO-EN041",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 78397661,
+      "printingCode": "BPRO-EN041",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 85976588,
+      "printingCode": "BPRO-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 13597785,
+      "printingCode": "BPRO-EN010",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 13597785,
+      "printingCode": "BPRO-EN010",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 12375297,
+      "printingCode": "BPRO-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 42302563,
+      "printingCode": "BPRO-EN040",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 42302563,
+      "printingCode": "BPRO-EN040",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 59581480,
+      "printingCode": "BPRO-EN011",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 59581480,
+      "printingCode": "BPRO-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90880453,
+      "printingCode": "BPRO-EN057",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50590801,
+      "printingCode": "BPRO-EN071",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24092792,
+      "printingCode": "BPRO-EN072",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64491754,
+      "printingCode": "BPRO-EN056",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52335937,
+      "printingCode": "BPRO-EN066",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 77675029,
+      "printingCode": "BPRO-EN044",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 77675029,
+      "printingCode": "BPRO-EN044",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73819701,
+      "printingCode": "BPRO-EN024",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 73819701,
+      "printingCode": "BPRO-EN024",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 26162470,
+      "printingCode": "BPRO-EN061",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12975671,
+      "printingCode": "BPRO-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49181828,
+      "printingCode": "BPRO-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21861412,
+      "printingCode": "BPRO-EN087",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98829635,
+      "printingCode": "BPRO-EN067",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 98829635,
+      "printingCode": "BPRO-EN067",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 12157563,
+      "printingCode": "BPRO-EN077",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59374259,
+      "printingCode": "BPRO-EN075",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56311997,
+      "printingCode": "BPRO-EN094",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82706696,
+      "printingCode": "BPRO-EN095",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 18795635,
+      "printingCode": "BPRO-EN096",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 83528184,
+      "printingCode": "BPRO-EN092",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56034579,
+      "printingCode": "BPRO-EN091",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20049870,
+      "printingCode": "BPRO-EN090",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 4079728,
+      "printingCode": "BPRO-EN045",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11248645,
+      "printingCode": "BPRO-EN016",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 51548207,
+      "printingCode": "BPRO-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38423248,
+      "printingCode": "BPRO-EN100",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 38423248,
+      "printingCode": "BPRO-EN100",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 69191257,
+      "printingCode": "BPRO-EN082",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 23219323,
+      "printingCode": "BPRO-EN007",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 5914858,
+      "printingCode": "BPRO-EN039",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 31286915,
+      "printingCode": "BPRO-EN043",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 31286915,
+      "printingCode": "BPRO-EN043",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66736884,
+      "printingCode": "BPRO-EN050",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65514302,
+      "printingCode": "BPRO-EN053",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87814728,
+      "printingCode": "BPRO-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51826619,
+      "printingCode": "BPRO-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22106558,
+      "printingCode": "BPRO-EN081",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 95589901,
+      "printingCode": "BPRO-EN083",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25224340,
+      "printingCode": "BPRO-EN068",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 79519259,
+      "printingCode": "BPRO-EN038",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 66429798,
+      "printingCode": "BPRO-EN097",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25940932,
+      "printingCode": "BPRO-EN065",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39341885,
+      "printingCode": "BPRO-EN049",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 39341885,
+      "printingCode": "BPRO-EN049",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 94467314,
+      "printingCode": "BPRO-EN086",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2725599,
+      "printingCode": "BPRO-EN051",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 2725599,
+      "printingCode": "BPRO-EN051",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 47425162,
+      "printingCode": "BPRO-EN023",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 47425162,
+      "printingCode": "BPRO-EN023",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 29927283,
+      "printingCode": "BPRO-EN093",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47647354,
+      "printingCode": "BPRO-EN017",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 51612489,
+      "printingCode": "BPRO-EN069",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98937206,
+      "printingCode": "BPRO-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25554552,
+      "printingCode": "BPRO-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 25554552,
+      "printingCode": "BPRO-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 58769832,
+      "printingCode": "BPRO-EN014",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 58769832,
+      "printingCode": "BPRO-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11035075,
+      "printingCode": "BPRO-EN080",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12197223,
+      "printingCode": "BPRO-EN027",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 12197223,
+      "printingCode": "BPRO-EN027",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 57256127,
+      "printingCode": "BPRO-EN088",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42544773,
+      "printingCode": "BPRO-EN098",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 42544773,
+      "printingCode": "BPRO-EN098",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 61257789,
+      "printingCode": "BPRO-EN101",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 94641726,
+      "printingCode": "BPRO-EN089",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41516133,
+      "printingCode": "BPRO-EN022",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 24431911,
+      "printingCode": "BPRO-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 27285068,
+      "printingCode": "BPRO-EN058",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63679166,
+      "printingCode": "BPRO-EN059",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85640370,
+      "printingCode": "BPRO-EN079",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30064423,
+      "printingCode": "BPRO-EN046",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 30064423,
+      "printingCode": "BPRO-EN046",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 19304410,
+      "printingCode": "BPRO-EN025",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 19304410,
+      "printingCode": "BPRO-EN025",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 3957130,
+      "printingCode": "BPRO-EN048",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 78910832,
+      "printingCode": "BPRO-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 68378605,
+      "printingCode": "BPRO-EN085",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85586937,
+      "printingCode": "BPRO-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53557529,
+      "printingCode": "BPRO-EN062",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4891376,
+      "printingCode": "BPRO-EN042",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

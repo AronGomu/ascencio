@@ -1,0 +1,148 @@
+{
+  "id": "set-b5bc529639d36a3a",
+  "name": "Duelist League 2010 participation cards",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-b5bc529639d36a3a.jpg",
+  "cards": [
+    {
+      "cardCode": 65240384,
+      "printingCode": "DL09-EN004",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 49003716,
+      "printingCode": "DL09-EN011",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 39507162,
+      "printingCode": "DL09-EN007",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "DL09-EN001",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 23693634,
+      "printingCode": "DL09-EN012",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 94192409,
+      "printingCode": "DL09-EN019",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97017120,
+      "printingCode": "DL09-EN005",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 59575539,
+      "printingCode": "DL09-EN010",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 40640057,
+      "printingCode": "DL09-EN003",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25773409,
+      "printingCode": "DL09-EN008",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 83011278,
+      "printingCode": "DL09-EN006",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 5318639,
+      "printingCode": "DL09-EN014",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 93920745,
+      "printingCode": "DL09-EN002",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 56120475,
+      "printingCode": "DL09-EN018",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73915051,
+      "printingCode": "DL09-EN015",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 81510157,
+      "printingCode": "DL09-EN016",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 72302403,
+      "printingCode": "DL09-EN013",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 36361633,
+      "printingCode": "DL09-EN020",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 4206964,
+      "printingCode": "DL09-EN017",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 51945556,
+      "printingCode": "DL09-EN009",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    }
+  ]
+}

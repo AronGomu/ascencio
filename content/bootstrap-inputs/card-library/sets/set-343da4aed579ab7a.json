@@ -1,0 +1,15 @@
+{
+  "id": "set-343da4aed579ab7a",
+  "name": "Yu-Gi-Oh! GX Volume 5 promotional card",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-343da4aed579ab7a.jpg",
+  "cards": [
+    {
+      "cardCode": 55690251,
+      "printingCode": "YG05-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

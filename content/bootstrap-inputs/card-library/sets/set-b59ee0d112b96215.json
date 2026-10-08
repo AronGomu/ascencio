@@ -1,0 +1,15 @@
+{
+  "id": "set-b59ee0d112b96215",
+  "name": "Strike of Neos Sneak Peek Participation Card",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-b59ee0d112b96215.jpg",
+  "cards": [
+    {
+      "cardCode": 83039729,
+      "printingCode": "STON-ENSP1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

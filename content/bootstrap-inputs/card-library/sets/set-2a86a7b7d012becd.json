@@ -1,0 +1,1604 @@
+{
+  "id": "set-2a86a7b7d012becd",
+  "name": "Magnificent Monsters",
+  "releaseYear": 2026,
+  "imageAssetPath": "sets/set-2a86a7b7d012becd.jpg",
+  "cards": [
+    {
+      "cardCode": 4731783,
+      "printingCode": "MAMO-EN038",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 4731783,
+      "printingCode": "MAMO-EN038",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 4731783,
+      "printingCode": "MAMO-EN038",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65711558,
+      "printingCode": "MAMO-EN088",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78744660,
+      "printingCode": "MAMO-EN070",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74733322,
+      "printingCode": "MAMO-EN101",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44654994,
+      "printingCode": "MAMO-EN120",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 31114334,
+      "printingCode": "MAMO-EN026",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 31114334,
+      "printingCode": "MAMO-EN026",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 31114334,
+      "printingCode": "MAMO-EN026",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48171151,
+      "printingCode": "MAMO-EN015",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 48171151,
+      "printingCode": "MAMO-EN015",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 48171151,
+      "printingCode": "MAMO-EN015",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 48171151,
+      "printingCode": "MAMO-EN015",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78474168,
+      "printingCode": "MAMO-EN115",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 1769875,
+      "printingCode": "MAMO-EN074",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 57847269,
+      "printingCode": "MAMO-EN110",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 99398682,
+      "printingCode": "MAMO-EN109",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 875572,
+      "printingCode": "MAMO-EN059",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65400671,
+      "printingCode": "MAMO-EN126",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 65400671,
+      "printingCode": "MAMO-EN126",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 64865,
+      "printingCode": "MAMO-EN017",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 64865,
+      "printingCode": "MAMO-EN017",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 64865,
+      "printingCode": "MAMO-EN017",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 64865,
+      "printingCode": "MAMO-EN017",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37458564,
+      "printingCode": "MAMO-EN018",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 37458564,
+      "printingCode": "MAMO-EN018",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 37458564,
+      "printingCode": "MAMO-EN018",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 37458564,
+      "printingCode": "MAMO-EN018",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11852093,
+      "printingCode": "MAMO-EN079",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73452089,
+      "printingCode": "MAMO-EN072",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 64626565,
+      "printingCode": "MAMO-EN086",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 41350417,
+      "printingCode": "MAMO-EN003",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 41350417,
+      "printingCode": "MAMO-EN003",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 41350417,
+      "printingCode": "MAMO-EN003",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 41350417,
+      "printingCode": "MAMO-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 342673,
+      "printingCode": "MAMO-EN051",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 88570003,
+      "printingCode": "MAMO-EN001",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 88570003,
+      "printingCode": "MAMO-EN001",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 88570003,
+      "printingCode": "MAMO-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 88570003,
+      "printingCode": "MAMO-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 54693926,
+      "printingCode": "MAMO-EN040",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 54693926,
+      "printingCode": "MAMO-EN040",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 54693926,
+      "printingCode": "MAMO-EN040",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 84031359,
+      "printingCode": "MAMO-EN067",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66328392,
+      "printingCode": "MAMO-EN098",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74665150,
+      "printingCode": "MAMO-EN016",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 74665150,
+      "printingCode": "MAMO-EN016",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 74665150,
+      "printingCode": "MAMO-EN016",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 74665150,
+      "printingCode": "MAMO-EN016",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44763025,
+      "printingCode": "MAMO-EN093",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "MAMO-EN032",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "MAMO-EN032",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "MAMO-EN032",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90448279,
+      "printingCode": "MAMO-EN035",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90448279,
+      "printingCode": "MAMO-EN035",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 90448279,
+      "printingCode": "MAMO-EN035",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44698398,
+      "printingCode": "MAMO-EN085",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 38007649,
+      "printingCode": "MAMO-EN104",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 80320877,
+      "printingCode": "MAMO-EN117",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 75003700,
+      "printingCode": "MAMO-EN061",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 59392529,
+      "printingCode": "MAMO-EN047",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 61980241,
+      "printingCode": "MAMO-EN052",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 38648860,
+      "printingCode": "MAMO-EN054",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13708888,
+      "printingCode": "MAMO-EN076",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 59242457,
+      "printingCode": "MAMO-EN036",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 59242457,
+      "printingCode": "MAMO-EN036",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 59242457,
+      "printingCode": "MAMO-EN036",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26162470,
+      "printingCode": "MAMO-EN105",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13243124,
+      "printingCode": "MAMO-EN005",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 13243124,
+      "printingCode": "MAMO-EN005",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 13243124,
+      "printingCode": "MAMO-EN005",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 13243124,
+      "printingCode": "MAMO-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 87758525,
+      "printingCode": "MAMO-EN004",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 87758525,
+      "printingCode": "MAMO-EN004",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 87758525,
+      "printingCode": "MAMO-EN004",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 87758525,
+      "printingCode": "MAMO-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78293584,
+      "printingCode": "MAMO-EN100",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12975671,
+      "printingCode": "MAMO-EN068",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 22819092,
+      "printingCode": "MAMO-EN095",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 72413000,
+      "printingCode": "MAMO-EN044",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 56311997,
+      "printingCode": "MAMO-EN080",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 83528184,
+      "printingCode": "MAMO-EN069",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48393693,
+      "printingCode": "MAMO-EN012",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 48393693,
+      "printingCode": "MAMO-EN012",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 48393693,
+      "printingCode": "MAMO-EN012",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 48393693,
+      "printingCode": "MAMO-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12908094,
+      "printingCode": "MAMO-EN011",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 12908094,
+      "printingCode": "MAMO-EN011",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 12908094,
+      "printingCode": "MAMO-EN011",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 12908094,
+      "printingCode": "MAMO-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48835607,
+      "printingCode": "MAMO-EN090",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92517928,
+      "printingCode": "MAMO-EN124",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 92517928,
+      "printingCode": "MAMO-EN124",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 51831560,
+      "printingCode": "MAMO-EN057",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 75367227,
+      "printingCode": "MAMO-EN083",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 72246674,
+      "printingCode": "MAMO-EN089",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12067160,
+      "printingCode": "MAMO-EN091",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 15771991,
+      "printingCode": "MAMO-EN048",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 1186447,
+      "printingCode": "MAMO-EN014",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 1186447,
+      "printingCode": "MAMO-EN014",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 1186447,
+      "printingCode": "MAMO-EN014",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 1186447,
+      "printingCode": "MAMO-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65741786,
+      "printingCode": "MAMO-EN029",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 65741786,
+      "printingCode": "MAMO-EN029",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 65741786,
+      "printingCode": "MAMO-EN029",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 94677445,
+      "printingCode": "MAMO-EN034",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 94677445,
+      "printingCode": "MAMO-EN034",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 94677445,
+      "printingCode": "MAMO-EN034",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66122213,
+      "printingCode": "MAMO-EN123",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 66122213,
+      "printingCode": "MAMO-EN123",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 56209279,
+      "printingCode": "MAMO-EN041",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19974580,
+      "printingCode": "MAMO-EN081",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92248362,
+      "printingCode": "MAMO-EN062",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66736884,
+      "printingCode": "MAMO-EN092",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 17269895,
+      "printingCode": "MAMO-EN119",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14965712,
+      "printingCode": "MAMO-EN002",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 14965712,
+      "printingCode": "MAMO-EN002",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 14965712,
+      "printingCode": "MAMO-EN002",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 14965712,
+      "printingCode": "MAMO-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 10515412,
+      "printingCode": "MAMO-EN082",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 68721020,
+      "printingCode": "MAMO-EN024",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 68721020,
+      "printingCode": "MAMO-EN024",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 68721020,
+      "printingCode": "MAMO-EN024",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 5125629,
+      "printingCode": "MAMO-EN025",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 5125629,
+      "printingCode": "MAMO-EN025",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 5125629,
+      "printingCode": "MAMO-EN025",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 68508433,
+      "printingCode": "MAMO-EN027",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 68508433,
+      "printingCode": "MAMO-EN027",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 68508433,
+      "printingCode": "MAMO-EN027",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 85059922,
+      "printingCode": "MAMO-EN073",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 97556336,
+      "printingCode": "MAMO-EN063",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 21887175,
+      "printingCode": "MAMO-EN037",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21887175,
+      "printingCode": "MAMO-EN037",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 21887175,
+      "printingCode": "MAMO-EN037",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 95589901,
+      "printingCode": "MAMO-EN108",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14088859,
+      "printingCode": "MAMO-EN094",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93729896,
+      "printingCode": "MAMO-EN097",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 30138615,
+      "printingCode": "MAMO-EN122",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 30138615,
+      "printingCode": "MAMO-EN122",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 75046994,
+      "printingCode": "MAMO-EN058",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76504386,
+      "printingCode": "MAMO-EN010",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 76504386,
+      "printingCode": "MAMO-EN010",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 76504386,
+      "printingCode": "MAMO-EN010",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 76504386,
+      "printingCode": "MAMO-EN010",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 75787708,
+      "printingCode": "MAMO-EN013",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 75787708,
+      "printingCode": "MAMO-EN013",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 75787708,
+      "printingCode": "MAMO-EN013",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 75787708,
+      "printingCode": "MAMO-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 55088578,
+      "printingCode": "MAMO-EN064",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 847217,
+      "printingCode": "MAMO-EN022",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 847217,
+      "printingCode": "MAMO-EN022",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 847217,
+      "printingCode": "MAMO-EN022",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 35035481,
+      "printingCode": "MAMO-EN116",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 31292357,
+      "printingCode": "MAMO-EN042",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 7563579,
+      "printingCode": "MAMO-EN045",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 80453041,
+      "printingCode": "MAMO-EN075",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 99193444,
+      "printingCode": "MAMO-EN055",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25940932,
+      "printingCode": "MAMO-EN107",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53813120,
+      "printingCode": "MAMO-EN118",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 94103142,
+      "printingCode": "MAMO-EN102",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 32236916,
+      "printingCode": "MAMO-EN023",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 32236916,
+      "printingCode": "MAMO-EN023",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 32236916,
+      "printingCode": "MAMO-EN023",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 27657173,
+      "printingCode": "MAMO-EN049",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 95718355,
+      "printingCode": "MAMO-EN060",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 3739500,
+      "printingCode": "MAMO-EN121",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 3739500,
+      "printingCode": "MAMO-EN121",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "MAMO-EN030",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "MAMO-EN030",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "MAMO-EN030",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 85065943,
+      "printingCode": "MAMO-EN077",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 18294799,
+      "printingCode": "MAMO-EN053",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 96334243,
+      "printingCode": "MAMO-EN071",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89851827,
+      "printingCode": "MAMO-EN078",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 91140491,
+      "printingCode": "MAMO-EN087",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 79791878,
+      "printingCode": "MAMO-EN096",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 3496543,
+      "printingCode": "MAMO-EN099",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 3280747,
+      "printingCode": "MAMO-EN113",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 98338152,
+      "printingCode": "MAMO-EN019",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 98338152,
+      "printingCode": "MAMO-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "MAMO-EN039",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "MAMO-EN039",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "MAMO-EN039",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 9726840,
+      "printingCode": "MAMO-EN020",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 9726840,
+      "printingCode": "MAMO-EN020",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93481594,
+      "printingCode": "MAMO-EN103",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11688916,
+      "printingCode": "MAMO-EN066",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 84693918,
+      "printingCode": "MAMO-EN065",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76636978,
+      "printingCode": "MAMO-EN007",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 76636978,
+      "printingCode": "MAMO-EN007",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 76636978,
+      "printingCode": "MAMO-EN007",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 76636978,
+      "printingCode": "MAMO-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13021682,
+      "printingCode": "MAMO-EN008",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 13021682,
+      "printingCode": "MAMO-EN008",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 13021682,
+      "printingCode": "MAMO-EN008",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 13021682,
+      "printingCode": "MAMO-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89693655,
+      "printingCode": "MAMO-EN111",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 49415281,
+      "printingCode": "MAMO-EN009",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 49415281,
+      "printingCode": "MAMO-EN009",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 49415281,
+      "printingCode": "MAMO-EN009",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 49415281,
+      "printingCode": "MAMO-EN009",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 4928565,
+      "printingCode": "MAMO-EN050",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 52854600,
+      "printingCode": "MAMO-EN056",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48770333,
+      "printingCode": "MAMO-EN046",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 83629030,
+      "printingCode": "MAMO-EN043",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 99590524,
+      "printingCode": "MAMO-EN114",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73443672,
+      "printingCode": "MAMO-EN021",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 73443672,
+      "printingCode": "MAMO-EN021",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 73443672,
+      "printingCode": "MAMO-EN021",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 70636044,
+      "printingCode": "MAMO-EN084",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14391625,
+      "printingCode": "MAMO-EN033",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 14391625,
+      "printingCode": "MAMO-EN033",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 14391625,
+      "printingCode": "MAMO-EN033",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 4993187,
+      "printingCode": "MAMO-EN028",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 4993187,
+      "printingCode": "MAMO-EN028",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 4993187,
+      "printingCode": "MAMO-EN028",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12607053,
+      "printingCode": "MAMO-EN112",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53557529,
+      "printingCode": "MAMO-EN106",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 39016067,
+      "printingCode": "MAMO-EN125",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 39016067,
+      "printingCode": "MAMO-EN125",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 40237839,
+      "printingCode": "MAMO-EN006",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40237839,
+      "printingCode": "MAMO-EN006",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40237839,
+      "printingCode": "MAMO-EN006",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 40237839,
+      "printingCode": "MAMO-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 21522601,
+      "printingCode": "MAMO-EN031",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21522601,
+      "printingCode": "MAMO-EN031",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 21522601,
+      "printingCode": "MAMO-EN031",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

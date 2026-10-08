@@ -1,0 +1,246 @@
+{
+  "id": "set-6d30f011ee63b85c",
+  "name": "OTS Tournament Pack 7 (POR)",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-6d30f011ee63b85c.jpg",
+  "cards": [
+    {
+      "cardCode": 25551951,
+      "printingCode": "OP07-PT025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2204140,
+      "printingCode": "OP07-PT017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8267140,
+      "printingCode": "OP07-PT003",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 69937550,
+      "printingCode": "OP07-PT032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32933942,
+      "printingCode": "OP07-PT031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21698716,
+      "printingCode": "OP07-PT035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 68215963,
+      "printingCode": "OP07-PT033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 95600067,
+      "printingCode": "OP07-PT034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5560911,
+      "printingCode": "OP07-PT007",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 81066751,
+      "printingCode": "OP07-PT010",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47325505,
+      "printingCode": "OP07-PT009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87751584,
+      "printingCode": "OP07-PT026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17266660,
+      "printingCode": "OP07-PT001",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 37957847,
+      "printingCode": "OP07-PT015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98978921,
+      "printingCode": "OP07-PT002",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 96012004,
+      "printingCode": "OP07-PT024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39910367,
+      "printingCode": "OP07-PT008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 79335209,
+      "printingCode": "OP07-PT029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12482652,
+      "printingCode": "OP07-PT030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42941100,
+      "printingCode": "OP07-PT028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38761908,
+      "printingCode": "OP07-PT011",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 1154611,
+      "printingCode": "OP07-PT013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 64765016,
+      "printingCode": "OP07-PT012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 34029630,
+      "printingCode": "OP07-PT022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91559748,
+      "printingCode": "OP07-PT014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60876124,
+      "printingCode": "OP07-PT018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70791313,
+      "printingCode": "OP07-PT004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 20584712,
+      "printingCode": "OP07-PT005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 75014062,
+      "printingCode": "OP07-PT020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27125110,
+      "printingCode": "OP07-PT027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 83675475,
+      "printingCode": "OP07-PT023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 31222701,
+      "printingCode": "OP07-PT021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12171659,
+      "printingCode": "OP07-PT016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4064256,
+      "printingCode": "OP07-PT019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

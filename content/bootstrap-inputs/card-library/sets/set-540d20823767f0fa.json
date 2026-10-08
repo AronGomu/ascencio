@@ -1,0 +1,253 @@
+{
+  "id": "set-540d20823767f0fa",
+  "name": "OTS Tournament Pack 10 (POR)",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-540d20823767f0fa.jpg",
+  "cards": [
+    {
+      "cardCode": 40048324,
+      "printingCode": "OP10-PT031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14553285,
+      "printingCode": "OP10-PT029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3431737,
+      "printingCode": "OP10-PT014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76407432,
+      "printingCode": "OP10-PT036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80280737,
+      "printingCode": "OP10-PT025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29863101,
+      "printingCode": "OP10-PT035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44586426,
+      "printingCode": "OP10-PT005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 22923081,
+      "printingCode": "OP10-PT004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 71413901,
+      "printingCode": "OP10-PT013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23693634,
+      "printingCode": "OP10-PT034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38898779,
+      "printingCode": "OP10-PT030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6021033,
+      "printingCode": "OP10-PT033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1764972,
+      "printingCode": "OP10-PT028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71490127,
+      "printingCode": "OP10-PT022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33413279,
+      "printingCode": "OP10-PT017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "OP10-PT003",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 48815792,
+      "printingCode": "OP10-PT010",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63941210,
+      "printingCode": "OP10-PT007",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 69279219,
+      "printingCode": "OP10-PT021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38325384,
+      "printingCode": "OP10-PT024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49032236,
+      "printingCode": "OP10-PT019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90351981,
+      "printingCode": "OP10-PT012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 70902743,
+      "printingCode": "OP10-PT032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77336644,
+      "printingCode": "OP10-PT027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76136345,
+      "printingCode": "OP10-PT011",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 89484053,
+      "printingCode": "OP10-PT006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87871125,
+      "printingCode": "OP10-PT009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 59843383,
+      "printingCode": "OP10-PT008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 8491308,
+      "printingCode": "OP10-PT002",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 61257789,
+      "printingCode": "OP10-PT015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57031794,
+      "printingCode": "OP10-PT020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10424147,
+      "printingCode": "OP10-PT023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59975920,
+      "printingCode": "OP10-PT016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90953320,
+      "printingCode": "OP10-PT018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "OP10-PT001",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    }
+  ]
+}

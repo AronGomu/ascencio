@@ -1,0 +1,22 @@
+{
+  "id": "set-dad1003ea9d952a2",
+  "name": "Yu-Gi-Oh! Championship Series 2015 Prize Card",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-dad1003ea9d952a2.jpg",
+  "cards": [
+    {
+      "cardCode": 30100551,
+      "printingCode": "YCSW-EN008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30100551,
+      "printingCode": "YCSW-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

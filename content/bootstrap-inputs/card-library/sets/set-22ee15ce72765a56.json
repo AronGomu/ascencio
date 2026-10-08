@@ -1,0 +1,15 @@
+{
+  "id": "set-22ee15ce72765a56",
+  "name": "Starter Deck 2006: Special Edition",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-22ee15ce72765a56.jpg",
+  "cards": [
+    {
+      "cardCode": 20721928,
+      "printingCode": "YSD-ENS01",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

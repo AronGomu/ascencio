@@ -1,0 +1,36 @@
+{
+  "id": "set-f5dd141b067c1735",
+  "name": "Maximum Crisis: Special Edition",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-f5dd141b067c1735.jpg",
+  "cards": [
+    {
+      "cardCode": 96704974,
+      "printingCode": "MACR-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 97926515,
+      "printingCode": "MACR-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 69069911,
+      "printingCode": "MACR-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52653092,
+      "printingCode": "MACR-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

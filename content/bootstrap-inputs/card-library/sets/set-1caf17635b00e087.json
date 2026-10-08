@@ -1,0 +1,36 @@
+{
+  "id": "set-1caf17635b00e087",
+  "name": "Legendary Collection 3: Yugi's World",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-1caf17635b00e087.jpg",
+  "cards": [
+    {
+      "cardCode": 31829185,
+      "printingCode": "LC03-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 99267150,
+      "printingCode": "LC03-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 34022290,
+      "printingCode": "LC03-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48179391,
+      "printingCode": "LC03-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

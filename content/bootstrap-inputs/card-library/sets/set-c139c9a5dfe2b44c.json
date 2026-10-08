@@ -1,0 +1,15 @@
+{
+  "id": "set-c139c9a5dfe2b44c",
+  "name": "Yu-Gi-Oh! 5D's Volume 2 promotional card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-c139c9a5dfe2b44c.jpg",
+  "cards": [
+    {
+      "cardCode": 37474917,
+      "printingCode": "YF02-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

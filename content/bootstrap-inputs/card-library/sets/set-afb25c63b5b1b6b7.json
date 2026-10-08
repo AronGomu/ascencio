@@ -1,0 +1,22 @@
+{
+  "id": "set-afb25c63b5b1b6b7",
+  "name": "Yu-Gi-Oh! Championship Series 2014 Prize Card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-afb25c63b5b1b6b7.jpg",
+  "cards": [
+    {
+      "cardCode": 37910722,
+      "printingCode": "YCSW-EN007",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 37910722,
+      "printingCode": "YCSW-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

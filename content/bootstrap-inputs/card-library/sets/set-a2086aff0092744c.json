@@ -1,0 +1,519 @@
+{
+  "id": "set-a2086aff0092744c",
+  "name": "Tactical Masters",
+  "releaseYear": 2022,
+  "imageAssetPath": "sets/set-a2086aff0092744c.jpg",
+  "cards": [
+    {
+      "cardCode": 60990740,
+      "printingCode": "TAMA-EN048",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 58921041,
+      "printingCode": "TAMA-EN056",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 58921041,
+      "printingCode": "TAMA-EN056",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 5168381,
+      "printingCode": "TAMA-EN026",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 75730490,
+      "printingCode": "TAMA-EN016",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 75730490,
+      "printingCode": "TAMA-EN016",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 1225009,
+      "printingCode": "TAMA-EN017",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 1225009,
+      "printingCode": "TAMA-EN017",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76794549,
+      "printingCode": "TAMA-EN040",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 76794549,
+      "printingCode": "TAMA-EN040",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 80141055,
+      "printingCode": "TAMA-EN050",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 35480699,
+      "printingCode": "TAMA-EN041",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 94192409,
+      "printingCode": "TAMA-EN044",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 8267140,
+      "printingCode": "TAMA-EN053",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 8267140,
+      "printingCode": "TAMA-EN053",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 37469904,
+      "printingCode": "TAMA-EN055",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 32785578,
+      "printingCode": "TAMA-EN024",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 60743819,
+      "printingCode": "TAMA-EN059",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 28373620,
+      "printingCode": "TAMA-EN039",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 88919365,
+      "printingCode": "TAMA-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 55990317,
+      "printingCode": "TAMA-EN037",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 30459350,
+      "printingCode": "TAMA-EN058",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 56647086,
+      "printingCode": "TAMA-EN046",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 48745395,
+      "printingCode": "TAMA-EN015",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 68779682,
+      "printingCode": "TAMA-EN025",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 37629703,
+      "printingCode": "TAMA-EN018",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 2511,
+      "printingCode": "TAMA-EN020",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 33407125,
+      "printingCode": "TAMA-EN021",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 33407125,
+      "printingCode": "TAMA-EN021",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 69895264,
+      "printingCode": "TAMA-EN022",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 74018812,
+      "printingCode": "TAMA-EN019",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 23898021,
+      "printingCode": "TAMA-EN049",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 2347656,
+      "printingCode": "TAMA-EN014",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 2347656,
+      "printingCode": "TAMA-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25643346,
+      "printingCode": "TAMA-EN051",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 40680521,
+      "printingCode": "TAMA-EN009",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 40680521,
+      "printingCode": "TAMA-EN009",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92385016,
+      "printingCode": "TAMA-EN038",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41525660,
+      "printingCode": "TAMA-EN003",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 65646587,
+      "printingCode": "TAMA-EN054",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42378577,
+      "printingCode": "TAMA-EN060",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 45869829,
+      "printingCode": "TAMA-EN052",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 37576645,
+      "printingCode": "TAMA-EN057",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 29595202,
+      "printingCode": "TAMA-EN028",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 94445733,
+      "printingCode": "TAMA-EN031",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 66712905,
+      "printingCode": "TAMA-EN032",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 68957034,
+      "printingCode": "TAMA-EN030",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 92107604,
+      "printingCode": "TAMA-EN027",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 92107604,
+      "printingCode": "TAMA-EN027",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 30430448,
+      "printingCode": "TAMA-EN033",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 20618850,
+      "printingCode": "TAMA-EN035",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 67835547,
+      "printingCode": "TAMA-EN034",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 93229151,
+      "printingCode": "TAMA-EN036",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 31562086,
+      "printingCode": "TAMA-EN029",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 31562086,
+      "printingCode": "TAMA-EN029",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 15130912,
+      "printingCode": "TAMA-EN002",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73915051,
+      "printingCode": "TAMA-EN043",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 73915051,
+      "printingCode": "TAMA-EN043",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 63394872,
+      "printingCode": "TAMA-EN042",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 49131917,
+      "printingCode": "TAMA-EN001",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 49131917,
+      "printingCode": "TAMA-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "TAMA-EN045",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "TAMA-EN045",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 14418464,
+      "printingCode": "TAMA-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 13291886,
+      "printingCode": "TAMA-EN008",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 76075139,
+      "printingCode": "TAMA-EN010",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87897777,
+      "printingCode": "TAMA-EN007",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41802073,
+      "printingCode": "TAMA-EN006",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 13179234,
+      "printingCode": "TAMA-EN011",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 13179234,
+      "printingCode": "TAMA-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 75952542,
+      "printingCode": "TAMA-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 49568943,
+      "printingCode": "TAMA-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 5380979,
+      "printingCode": "TAMA-EN023",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

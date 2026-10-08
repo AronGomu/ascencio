@@ -1,0 +1,533 @@
+{
+  "id": "set-745730f9cc534de8",
+  "name": "Wild Survivors",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-745730f9cc534de8.jpg",
+  "cards": [
+    {
+      "cardCode": 1475311,
+      "printingCode": "WISU-EN054",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 98022050,
+      "printingCode": "WISU-EN050",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 98022050,
+      "printingCode": "WISU-EN050",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 36042004,
+      "printingCode": "WISU-EN013",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 88890658,
+      "printingCode": "WISU-EN034",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52495649,
+      "printingCode": "WISU-EN033",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 26223582,
+      "printingCode": "WISU-EN029",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 87955518,
+      "printingCode": "WISU-EN040",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 87955518,
+      "printingCode": "WISU-EN040",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53618197,
+      "printingCode": "WISU-EN030",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 35027493,
+      "printingCode": "WISU-EN058",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 38179121,
+      "printingCode": "WISU-EN053",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 98045062,
+      "printingCode": "WISU-EN052",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 54974237,
+      "printingCode": "WISU-EN059",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 18511599,
+      "printingCode": "WISU-EN015",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 57103969,
+      "printingCode": "WISU-EN028",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 57103969,
+      "printingCode": "WISU-EN028",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 15001940,
+      "printingCode": "WISU-EN032",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47325505,
+      "printingCode": "WISU-EN055",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 47325505,
+      "printingCode": "WISU-EN055",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 6631034,
+      "printingCode": "WISU-EN008",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 80280944,
+      "printingCode": "WISU-EN010",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 67523044,
+      "printingCode": "WISU-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 80811661,
+      "printingCode": "WISU-EN042",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 30243636,
+      "printingCode": "WISU-EN041",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 30243636,
+      "printingCode": "WISU-EN041",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 18474999,
+      "printingCode": "WISU-EN049",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53303460,
+      "printingCode": "WISU-EN043",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 65877963,
+      "printingCode": "WISU-EN051",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 82085295,
+      "printingCode": "WISU-EN048",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 80701178,
+      "printingCode": "WISU-EN044",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 17228908,
+      "printingCode": "WISU-EN057",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 95492061,
+      "printingCode": "WISU-EN046",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 38572779,
+      "printingCode": "WISU-EN011",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 15388353,
+      "printingCode": "WISU-EN035",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 15388353,
+      "printingCode": "WISU-EN035",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 82946847,
+      "printingCode": "WISU-EN014",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89016236,
+      "printingCode": "WISU-EN031",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 13048472,
+      "printingCode": "WISU-EN056",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 96729612,
+      "printingCode": "WISU-EN045",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 40551410,
+      "printingCode": "WISU-EN039",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 87778106,
+      "printingCode": "WISU-EN037",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 14166715,
+      "printingCode": "WISU-EN038",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 28168628,
+      "printingCode": "WISU-EN022",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44335251,
+      "printingCode": "WISU-EN012",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 44335251,
+      "printingCode": "WISU-EN012",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 54562327,
+      "printingCode": "WISU-EN023",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 54562327,
+      "printingCode": "WISU-EN023",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93918159,
+      "printingCode": "WISU-EN007",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 24207889,
+      "printingCode": "WISU-EN060",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 24207889,
+      "printingCode": "WISU-EN060",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 30128445,
+      "printingCode": "WISU-EN005",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 67745632,
+      "printingCode": "WISU-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 94130731,
+      "printingCode": "WISU-EN004",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 31241087,
+      "printingCode": "WISU-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30539496,
+      "printingCode": "WISU-EN047",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 18940556,
+      "printingCode": "WISU-EN009",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 18940556,
+      "printingCode": "WISU-EN009",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 27345070,
+      "printingCode": "WISU-EN025",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 91073013,
+      "printingCode": "WISU-EN021",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 91073013,
+      "printingCode": "WISU-EN021",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 80738884,
+      "printingCode": "WISU-EN027",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 29280200,
+      "printingCode": "WISU-EN019",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 29280200,
+      "printingCode": "WISU-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 91951471,
+      "printingCode": "WISU-EN024",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 92895501,
+      "printingCode": "WISU-EN018",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 92895501,
+      "printingCode": "WISU-EN018",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66401502,
+      "printingCode": "WISU-EN017",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 55688914,
+      "printingCode": "WISU-EN020",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 29302858,
+      "printingCode": "WISU-EN016",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 29302858,
+      "printingCode": "WISU-EN016",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53330789,
+      "printingCode": "WISU-EN026",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41773061,
+      "printingCode": "WISU-EN036",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 5852388,
+      "printingCode": "WISU-EN001",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 5852388,
+      "printingCode": "WISU-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

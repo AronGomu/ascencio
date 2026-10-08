@@ -1,0 +1,22 @@
+{
+  "id": "set-58a81c04ab757d0d",
+  "name": "Crossroads of Chaos: Special Edition",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-58a81c04ab757d0d.jpg",
+  "cards": [
+    {
+      "cardCode": 85399281,
+      "printingCode": "CSOC-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 70595331,
+      "printingCode": "CSOC-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

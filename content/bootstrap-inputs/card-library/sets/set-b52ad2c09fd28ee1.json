@@ -1,0 +1,29 @@
+{
+  "id": "set-b52ad2c09fd28ee1",
+  "name": "Yu-Gi-Oh! Capsule Monster Coliseum promotional cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-b52ad2c09fd28ee1.jpg",
+  "cards": [
+    {
+      "cardCode": 16469012,
+      "printingCode": "CMC-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 17185260,
+      "printingCode": "CMC-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 18318842,
+      "printingCode": "CMC-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-4572ec1cd18409ad",
+  "name": "Gladiator's Assault Sneak Peek Participation Card",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-4572ec1cd18409ad.jpg",
+  "cards": [
+    {
+      "cardCode": 29590752,
+      "printingCode": "GLAS-ENSP1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

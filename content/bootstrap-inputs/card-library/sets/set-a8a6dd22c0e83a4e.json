@@ -1,0 +1,15 @@
+{
+  "id": "set-a8a6dd22c0e83a4e",
+  "name": "Shonen Jump Championship 2008 Prize Card",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-a8a6dd22c0e83a4e.jpg",
+  "cards": [
+    {
+      "cardCode": 78700060,
+      "printingCode": "SJCS-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

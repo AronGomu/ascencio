@@ -1,0 +1,15 @@
+{
+  "id": "set-5bf65d9f031e6377",
+  "name": "Maximum Crisis Sneak Peek Participation Card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-5bf65d9f031e6377.jpg",
+  "cards": [
+    {
+      "cardCode": 42378577,
+      "printingCode": "MACR-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

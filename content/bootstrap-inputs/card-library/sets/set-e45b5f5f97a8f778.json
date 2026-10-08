@@ -1,0 +1,15 @@
+{
+  "id": "set-e45b5f5f97a8f778",
+  "name": "EFootball collaboration cards",
+  "releaseYear": null,
+  "imageAssetPath": "sets/set-e45b5f5f97a8f778.jpg",
+  "cards": [
+    {
+      "cardCode": 85138716,
+      "printingCode": "EFC1-EN001",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

@@ -1,5 +1,19 @@
 import { open, stat } from "node:fs/promises";
 
+/** Reviewed provider responses on 2026-10-08: PNG bodies at cropped JPEG URLs. */
+export function reviewedUnavailableCrop(
+  code: number,
+  bytes: Uint8Array,
+): boolean {
+  return (
+    [66664203, 84031360].includes(code) &&
+    bytes.length >= 8 &&
+    Buffer.from(bytes.subarray(0, 8)).equals(
+      Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    )
+  );
+}
+
 export function isJpeg(bytes: Uint8Array): boolean {
   return (
     bytes.length >= 4 &&

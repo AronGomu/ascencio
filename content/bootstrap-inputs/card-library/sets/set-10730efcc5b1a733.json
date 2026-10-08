@@ -1,0 +1,15 @@
+{
+  "id": "set-10730efcc5b1a733",
+  "name": "Duelist League Series 8 participation card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-10730efcc5b1a733.jpg",
+  "cards": [
+    {
+      "cardCode": 21323861,
+      "printingCode": "DL8-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

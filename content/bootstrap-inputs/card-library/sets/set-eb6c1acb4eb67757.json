@@ -1,0 +1,211 @@
+{
+  "id": "set-eb6c1acb4eb67757",
+  "name": "Dark Legion Starter Deck",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-eb6c1acb4eb67757.jpg",
+  "cards": [
+    {
+      "cardCode": 49881766,
+      "printingCode": "YS15-ENL02",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84914462,
+      "printingCode": "YS15-ENL06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40619825,
+      "printingCode": "YS15-ENL19",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10012614,
+      "printingCode": "YS15-ENL21",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11761845,
+      "printingCode": "YS15-ENL01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "YS15-ENL27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56619314,
+      "printingCode": "YS15-ENL00",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 53129443,
+      "printingCode": "YS15-ENL14",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 60082869,
+      "printingCode": "YS15-ENL25",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20586572,
+      "printingCode": "YS15-ENL12",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 12235475,
+      "printingCode": "YS15-ENL09",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85306040,
+      "printingCode": "YS15-ENL05",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48343627,
+      "printingCode": "YS15-ENL13",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9391354,
+      "printingCode": "YS15-ENL04",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11125718,
+      "printingCode": "YS15-ENL10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46272804,
+      "printingCode": "YS15-ENL07",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94664694,
+      "printingCode": "YS15-ENL08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62279055,
+      "printingCode": "YS15-ENL23",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 99597615,
+      "printingCode": "YS15-ENL20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57882509,
+      "printingCode": "YS15-ENL26",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44095762,
+      "printingCode": "YS15-ENL22",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 74848038,
+      "printingCode": "YS15-ENL16",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5318639,
+      "printingCode": "YS15-ENL17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14315573,
+      "printingCode": "YS15-ENL28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70046172,
+      "printingCode": "YS15-ENL18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97169186,
+      "printingCode": "YS15-ENL15",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 93346024,
+      "printingCode": "YS15-ENL03",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51838385,
+      "printingCode": "YS15-ENL11",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4206964,
+      "printingCode": "YS15-ENL24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

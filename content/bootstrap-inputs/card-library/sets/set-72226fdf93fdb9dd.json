@@ -1,0 +1,15 @@
+{
+  "id": "set-72226fdf93fdb9dd",
+  "name": "Yu-Gi-Oh! Advent Calendar",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-72226fdf93fdb9dd.jpg",
+  "cards": [
+    {
+      "cardCode": 69181753,
+      "printingCode": "AC19-EN024",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-e52b6fe915d517e7",
+  "name": "Raging Battle Sneak Peek Participation Card",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-e52b6fe915d517e7.jpg",
+  "cards": [
+    {
+      "cardCode": 69695704,
+      "printingCode": "RGBT-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

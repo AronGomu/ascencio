@@ -34,6 +34,8 @@ export default defineConfig((): UserConfig => {
         : {}),
       watch: {
         ignored: [
+          "**/.cache/**",
+          "**/assets/content/**",
           "**/.tmp/**",
           "**/generated/**",
           "**/artifacts/**",

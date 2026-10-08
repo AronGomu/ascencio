@@ -1,0 +1,1065 @@
+{
+  "id": "set-23255495305e2282",
+  "name": "Maximum Gold: El Dorado",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-23255495305e2282.jpg",
+  "cards": [
+    {
+      "cardCode": 86066372,
+      "printingCode": "MGED-EN037",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 52927340,
+      "printingCode": "MGED-EN094",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53143898,
+      "printingCode": "MGED-EN091",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25533642,
+      "printingCode": "MGED-EN093",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42790071,
+      "printingCode": "MGED-EN095",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89538537,
+      "printingCode": "MGED-EN092",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 64061284,
+      "printingCode": "MGED-EN147",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97661969,
+      "printingCode": "MGED-EN121",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 36042004,
+      "printingCode": "MGED-EN056",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 74752631,
+      "printingCode": "MGED-EN143",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 61901281,
+      "printingCode": "MGED-EN133",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73580471,
+      "printingCode": "MGED-EN026",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "MGED-EN001",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 14087893,
+      "printingCode": "MGED-EN039",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 88086137,
+      "printingCode": "MGED-EN151",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 32600024,
+      "printingCode": "MGED-EN022",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 53413628,
+      "printingCode": "MGED-EN104",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 45462149,
+      "printingCode": "MGED-EN106",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 20590515,
+      "printingCode": "MGED-EN054",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 38495396,
+      "printingCode": "MGED-EN139",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 31434645,
+      "printingCode": "MGED-EN048",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 645087,
+      "printingCode": "MGED-EN135",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "MGED-EN148",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "MGED-EN018",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 70711847,
+      "printingCode": "MGED-EN019",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "MGED-EN130",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 83965310,
+      "printingCode": "MGED-EN007",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "MGED-EN149",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 11969228,
+      "printingCode": "MGED-EN142",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 92379223,
+      "printingCode": "MGED-EN129",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 95440946,
+      "printingCode": "MGED-EN024",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 74889525,
+      "printingCode": "MGED-EN123",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 68829754,
+      "printingCode": "MGED-EN049",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 20612097,
+      "printingCode": "MGED-EN125",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 94224458,
+      "printingCode": "MGED-EN124",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89943723,
+      "printingCode": "MGED-EN004",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "MGED-EN122",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 40177746,
+      "printingCode": "MGED-EN136",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42752141,
+      "printingCode": "MGED-EN029",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 74294676,
+      "printingCode": "MGED-EN028",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 40669071,
+      "printingCode": "MGED-EN103",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 33396948,
+      "printingCode": "MGED-EN005",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 40542825,
+      "printingCode": "MGED-EN013",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 57103969,
+      "printingCode": "MGED-EN042",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 5043010,
+      "printingCode": "MGED-EN141",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 47325505,
+      "printingCode": "MGED-EN057",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42009836,
+      "printingCode": "MGED-EN008",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 52038441,
+      "printingCode": "MGED-EN023",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 80280944,
+      "printingCode": "MGED-EN055",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 75500286,
+      "printingCode": "MGED-EN041",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 56984514,
+      "printingCode": "MGED-EN128",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 67007102,
+      "printingCode": "MGED-EN126",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 48815792,
+      "printingCode": "MGED-EN119",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 39765958,
+      "printingCode": "MGED-EN067",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 9753964,
+      "printingCode": "MGED-EN068",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 36857073,
+      "printingCode": "MGED-EN069",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 62242678,
+      "printingCode": "MGED-EN070",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 93191801,
+      "printingCode": "MGED-EN127",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 65741786,
+      "printingCode": "MGED-EN035",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 74063034,
+      "printingCode": "MGED-EN044",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 75286621,
+      "printingCode": "MGED-EN025",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 19353570,
+      "printingCode": "MGED-EN131",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 38342335,
+      "printingCode": "MGED-EN034",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 17228908,
+      "printingCode": "MGED-EN058",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 28553439,
+      "printingCode": "MGED-EN040",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 33746252,
+      "printingCode": "MGED-EN134",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 2347477,
+      "printingCode": "MGED-EN102",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 76375976,
+      "printingCode": "MGED-EN047",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 15232745,
+      "printingCode": "MGED-EN083",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42230449,
+      "printingCode": "MGED-EN084",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 78625448,
+      "printingCode": "MGED-EN085",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 90590303,
+      "printingCode": "MGED-EN090",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 4019153,
+      "printingCode": "MGED-EN086",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 49032236,
+      "printingCode": "MGED-EN065",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 1992816,
+      "printingCode": "MGED-EN089",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89477759,
+      "printingCode": "MGED-EN031",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 79747096,
+      "printingCode": "MGED-EN082",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 15862758,
+      "printingCode": "MGED-EN032",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 77402960,
+      "printingCode": "MGED-EN088",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41850466,
+      "printingCode": "MGED-EN050",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 41418852,
+      "printingCode": "MGED-EN087",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 20936251,
+      "printingCode": "MGED-EN051",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 42352091,
+      "printingCode": "MGED-EN081",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 32354768,
+      "printingCode": "MGED-EN073",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 49036338,
+      "printingCode": "MGED-EN074",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 38814750,
+      "printingCode": "MGED-EN012",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 8802510,
+      "printingCode": "MGED-EN077",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 74586817,
+      "printingCode": "MGED-EN076",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 37192109,
+      "printingCode": "MGED-EN075",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 49238328,
+      "printingCode": "MGED-EN046",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 81997228,
+      "printingCode": "MGED-EN113",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 43886072,
+      "printingCode": "MGED-EN115",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 17382973,
+      "printingCode": "MGED-EN114",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55725117,
+      "printingCode": "MGED-EN108",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 81119816,
+      "printingCode": "MGED-EN109",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 18236002,
+      "printingCode": "MGED-EN107",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25725326,
+      "printingCode": "MGED-EN116",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 79059098,
+      "printingCode": "MGED-EN118",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 16269385,
+      "printingCode": "MGED-EN045",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 43664494,
+      "printingCode": "MGED-EN117",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 18514525,
+      "printingCode": "MGED-EN111",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 31440046,
+      "printingCode": "MGED-EN110",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 44509529,
+      "printingCode": "MGED-EN112",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 70369116,
+      "printingCode": "MGED-EN036",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 85692042,
+      "printingCode": "MGED-EN030",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 86221741,
+      "printingCode": "MGED-EN140",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 12580477,
+      "printingCode": "MGED-EN038",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 86346643,
+      "printingCode": "MGED-EN137",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "MGED-EN003",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 88264978,
+      "printingCode": "MGED-EN009",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 14878871,
+      "printingCode": "MGED-EN006",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 68464358,
+      "printingCode": "MGED-EN020",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 60303245,
+      "printingCode": "MGED-EN144",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 56746202,
+      "printingCode": "MGED-EN010",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 76774528,
+      "printingCode": "MGED-EN060",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 82012319,
+      "printingCode": "MGED-EN059",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 47363932,
+      "printingCode": "MGED-EN061",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 33897356,
+      "printingCode": "MGED-EN105",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 26077387,
+      "printingCode": "MGED-EN017",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 37351133,
+      "printingCode": "MGED-EN021",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 44335251,
+      "printingCode": "MGED-EN015",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 58120309,
+      "printingCode": "MGED-EN053",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 73539069,
+      "printingCode": "MGED-EN145",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 23516703,
+      "printingCode": "MGED-EN150",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 52481437,
+      "printingCode": "MGED-EN062",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 56910167,
+      "printingCode": "MGED-EN064",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "MGED-EN066",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "MGED-EN011",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 90432163,
+      "printingCode": "MGED-EN078",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 62709239,
+      "printingCode": "MGED-EN080",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 36426778,
+      "printingCode": "MGED-EN079",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53956001,
+      "printingCode": "MGED-EN099",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 92411493,
+      "printingCode": "MGED-EN096",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 54178659,
+      "printingCode": "MGED-EN033",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 65017789,
+      "printingCode": "MGED-EN016",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 91299846,
+      "printingCode": "MGED-EN097",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 74218258,
+      "printingCode": "MGED-EN101",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 80577258,
+      "printingCode": "MGED-EN098",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 16849715,
+      "printingCode": "MGED-EN100",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53582587,
+      "printingCode": "MGED-EN052",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "MGED-EN152",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 52687916,
+      "printingCode": "MGED-EN027",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 43898403,
+      "printingCode": "MGED-EN043",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 18940556,
+      "printingCode": "MGED-EN014",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 1686814,
+      "printingCode": "MGED-EN138",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 70368879,
+      "printingCode": "MGED-EN146",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25274141,
+      "printingCode": "MGED-EN063",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 99234526,
+      "printingCode": "MGED-EN132",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "MGED-EN120",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 58990362,
+      "printingCode": "MGED-EN072",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 21495657,
+      "printingCode": "MGED-EN071",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    }
+  ]
+}

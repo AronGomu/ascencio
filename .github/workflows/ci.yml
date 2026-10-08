@@ -23,6 +23,14 @@ jobs:
           node-version: 26
           cache: npm
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Free space for full artwork and conversion fixtures
+        run: |
+          # This ephemeral Linux runner does not use Android, .NET or Haskell.
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /usr/local/.ghcup
+          df -h .
+
       - name: Restore immutable source and generated-asset caches
         uses: actions/cache@v4
         with:
@@ -42,7 +50,7 @@ jobs:
 
       - run: npm ci
       - name: Regenerate and verify the pinned snapshot
-        run: npm run assets:bootstrap -- --concurrency 8 --requests-per-second 8
+        run: npm run setup
       - name: Acquire and verify pinned set images
         run: npm run assets:sets:download-images && npm run assets:sets:verify-images
       - name: Verify an isolated offline headless checkout

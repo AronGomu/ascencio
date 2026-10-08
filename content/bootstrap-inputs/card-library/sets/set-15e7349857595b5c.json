@@ -1,0 +1,36 @@
+{
+  "id": "set-15e7349857595b5c",
+  "name": "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack Special Edition",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-15e7349857595b5c.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "MVP1-ENSE4",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "MVP1-ENSE3",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 20137754,
+      "printingCode": "MVP1-ENSE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 77363314,
+      "printingCode": "MVP1-ENSE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

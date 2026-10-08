@@ -1,0 +1,22 @@
+{
+  "id": "set-291837b0366208c7",
+  "name": "Yu-Gi-Oh! Championship Series 2023 prize card",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-291837b0366208c7.jpg",
+  "cards": [
+    {
+      "cardCode": 86893702,
+      "printingCode": "YCSW-EN014",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 86893702,
+      "printingCode": "YCSW-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

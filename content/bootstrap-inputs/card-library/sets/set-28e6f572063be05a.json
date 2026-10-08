@@ -1,0 +1,15 @@
+{
+  "id": "set-28e6f572063be05a",
+  "name": "Duelist League Series 6 participation card",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-28e6f572063be05a.jpg",
+  "cards": [
+    {
+      "cardCode": 42386471,
+      "printingCode": "DL6-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

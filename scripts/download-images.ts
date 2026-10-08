@@ -3,7 +3,11 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readCappedResponseBody } from "./lib/capped-response-body.ts";
-import { isJpeg, validJpegFileSize } from "./lib/images.ts";
+import {
+  isJpeg,
+  validJpegFileSize,
+  reviewedUnavailableCrop,
+} from "./lib/images.ts";
 import { CATALOG_SHARD_COUNT, type ImageRecord } from "./lib/model.ts";
 import { resolveProjectSubpath } from "./lib/paths.ts";
 import { acquireAssetDeliveryLock } from "./lib/asset-delivery/local-lock.ts";
@@ -162,7 +166,7 @@ interface DownloadOptions {
 
 type DownloadResult =
   | { code: number; status: "downloaded" | "cached"; bytes: number }
-  | { code: number; status: "missing"; httpStatus: number }
+  | { code: number; status: "missing"; httpStatus: number; reason?: string }
   | { code: number; status: "failed"; error: string };
 
 function parseOptions(args: string[]): DownloadOptions {
@@ -307,6 +311,15 @@ async function downloadCardImage(
       }
       const bytes = body.bytes;
       if (!isJpeg(bytes)) {
+        if (kind === "cropped" && reviewedUnavailableCrop(record.code, bytes)) {
+          return {
+            code: record.code,
+            status: "missing",
+            httpStatus: response.status,
+            reason:
+              "Reviewed provider PNG at JPEG URL; use optional artwork placeholder",
+          };
+        }
         return {
           code: record.code,
           status: "failed",

@@ -190,7 +190,7 @@ it("reports entity path/pointer and rejects missing references before writing an
 
 it("normal export CLI preserves compiler source and pointer diagnostics", async () => {
   const { root, json, spec } = await setup();
-  const relative = path.relative(process.cwd(), root);
+  const relative = path.relative(process.cwd(), root).split(path.sep).join("/");
   await json("bad/boosters/bad.json", {
     ...commerceFixture().boosters[0],
     id: "bad",

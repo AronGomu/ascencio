@@ -1,0 +1,197 @@
+{
+  "id": "set-dc2da4d6a8b104fe",
+  "name": "OTS Tournament Pack 1",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-dc2da4d6a8b104fe.jpg",
+  "cards": [
+    {
+      "cardCode": 76224717,
+      "printingCode": "OP01-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "OP01-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58921041,
+      "printingCode": "OP01-EN011",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 55550921,
+      "printingCode": "OP01-EN015",
+      "rarity": "common",
+      "sourceRarity": "Short Print",
+      "sourceRarityCode": "(SP)"
+    },
+    {
+      "cardCode": 32296881,
+      "printingCode": "OP01-EN001",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 58069384,
+      "printingCode": "OP01-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22638495,
+      "printingCode": "OP01-EN010",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 94145021,
+      "printingCode": "OP01-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80978111,
+      "printingCode": "OP01-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30459350,
+      "printingCode": "OP01-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 89423971,
+      "printingCode": "OP01-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 83746708,
+      "printingCode": "OP01-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58481572,
+      "printingCode": "OP01-EN003",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 92826944,
+      "printingCode": "OP01-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4779823,
+      "printingCode": "OP01-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43040603,
+      "printingCode": "OP01-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19230408,
+      "printingCode": "OP01-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53724621,
+      "printingCode": "OP01-EN009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 73130445,
+      "printingCode": "OP01-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 17330916,
+      "printingCode": "OP01-EN008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 40318957,
+      "printingCode": "OP01-EN007",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 32274490,
+      "printingCode": "OP01-EN014",
+      "rarity": "common",
+      "sourceRarity": "Short Print",
+      "sourceRarityCode": "(SP)"
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "OP01-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79814787,
+      "printingCode": "OP01-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14883228,
+      "printingCode": "OP01-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47084486,
+      "printingCode": "OP01-EN002",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 31339260,
+      "printingCode": "OP01-EN019",
+      "rarity": "common",
+      "sourceRarity": "Short Print",
+      "sourceRarityCode": "(SP)"
+    }
+  ]
+}

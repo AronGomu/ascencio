@@ -1,0 +1,36 @@
+{
+  "id": "set-9c05c269d9e8c2c5",
+  "name": "Breakers of Shadow: Special Edition",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-9c05c269d9e8c2c5.jpg",
+  "cards": [
+    {
+      "cardCode": 50371210,
+      "printingCode": "BOSH-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72378329,
+      "printingCode": "BOSH-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87765315,
+      "printingCode": "BOSH-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 66547759,
+      "printingCode": "BOSH-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

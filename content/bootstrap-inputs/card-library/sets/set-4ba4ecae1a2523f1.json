@@ -1,0 +1,15 @@
+{
+  "id": "set-4ba4ecae1a2523f1",
+  "name": "Samurai Assault",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-4ba4ecae1a2523f1.jpg",
+  "cards": [
+    {
+      "cardCode": 61737116,
+      "printingCode": "SAAS-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

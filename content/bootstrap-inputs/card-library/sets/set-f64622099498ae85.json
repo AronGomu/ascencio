@@ -1,0 +1,15 @@
+{
+  "id": "set-f64622099498ae85",
+  "name": "Yu-Gi-Oh! 5D's Volume 4 promotional card",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-f64622099498ae85.jpg",
+  "cards": [
+    {
+      "cardCode": 17377751,
+      "printingCode": "YF04-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

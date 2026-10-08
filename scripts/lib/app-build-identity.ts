@@ -46,7 +46,7 @@ export function appBuildIdentity(
     const next = new Set(ancestors).add(real);
     return readdirSync(absolute)
       .sort()
-      .flatMap((entry) => filesUnder(path.join(relative, entry), next));
+      .flatMap((entry) => filesUnder(`${relative}/${entry}`, next));
   }
 
   const hash = createHash("sha256");

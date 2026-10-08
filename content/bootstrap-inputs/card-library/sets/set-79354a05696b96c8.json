@@ -1,0 +1,358 @@
+{
+  "id": "set-79354a05696b96c8",
+  "name": "Gold Series 2009",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-79354a05696b96c8.jpg",
+  "cards": [
+    {
+      "cardCode": 20374520,
+      "printingCode": "GLD2-EN047",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29401950,
+      "printingCode": "GLD2-EN045",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 9748752,
+      "printingCode": "GLD2-EN033",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 94192409,
+      "printingCode": "GLD2-EN046",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65192027,
+      "printingCode": "GLD2-EN031",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 81059524,
+      "printingCode": "GLD2-EN002",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 21007444,
+      "printingCode": "GLD2-EN050",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80908502,
+      "printingCode": "GLD2-EN025",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 69884162,
+      "printingCode": "GLD2-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26725158,
+      "printingCode": "GLD2-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77565204,
+      "printingCode": "GLD2-EN039",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 42703248,
+      "printingCode": "GLD2-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 75500286,
+      "printingCode": "GLD2-EN040",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 60229110,
+      "printingCode": "GLD2-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62543393,
+      "printingCode": "GLD2-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40320754,
+      "printingCode": "GLD2-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37520316,
+      "printingCode": "GLD2-EN037",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 4929256,
+      "printingCode": "GLD2-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4906301,
+      "printingCode": "GLD2-EN027",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 71181155,
+      "printingCode": "GLD2-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70969517,
+      "printingCode": "GLD2-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34961968,
+      "printingCode": "GLD2-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 7576264,
+      "printingCode": "GLD2-EN012",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63356631,
+      "printingCode": "GLD2-EN048",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 12298909,
+      "printingCode": "GLD2-EN032",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 73125233,
+      "printingCode": "GLD2-EN026",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 46874015,
+      "printingCode": "GLD2-EN049",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39180960,
+      "printingCode": "GLD2-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54040221,
+      "printingCode": "GLD2-EN030",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 26202165,
+      "printingCode": "GLD2-EN001",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 11102908,
+      "printingCode": "GLD2-EN041",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "GLD2-EN042",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63035430,
+      "printingCode": "GLD2-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84290642,
+      "printingCode": "GLD2-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41420027,
+      "printingCode": "GLD2-EN044",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 92373006,
+      "printingCode": "GLD2-EN029",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 27782503,
+      "printingCode": "GLD2-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90397998,
+      "printingCode": "GLD2-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 31904181,
+      "printingCode": "GLD2-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64398890,
+      "printingCode": "GLD2-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69025477,
+      "printingCode": "GLD2-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 95519486,
+      "printingCode": "GLD2-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26205777,
+      "printingCode": "GLD2-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12538374,
+      "printingCode": "GLD2-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90434926,
+      "printingCode": "GLD2-EN043",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 76459806,
+      "printingCode": "GLD2-EN023",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 33365932,
+      "printingCode": "GLD2-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90873992,
+      "printingCode": "GLD2-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18430390,
+      "printingCode": "GLD2-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51945556,
+      "printingCode": "GLD2-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

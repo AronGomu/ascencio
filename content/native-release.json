@@ -9,21 +9,21 @@
     },
     {
       "packageId": "card-library",
-      "version": "1.1.0",
-      "bytes": 2652917760,
-      "sha256": "f7a414830dcadf9ba373ca7833b659b712025335676e3a54b48650b317ade6f8"
+      "version": "1.1.1",
+      "bytes": 4607991808,
+      "sha256": "d8c13074cee034643d5a302ae15ee7cc6dd9c18ba84357c074d9d0aad5458786"
     },
     {
       "packageId": "freeplay",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "bytes": 49152,
-      "sha256": "cb0c35d6d0031a7e36b7524c64a4fb92bf7a8afbbe442b86456fe4732dd53c99"
+      "sha256": "fb89f7965d307761a1acac819f7ce525e5d742c8c5301e3acc2761dfc4252ce9"
     },
     {
       "packageId": "chapter-01",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "bytes": 196608,
-      "sha256": "72770ffe908c33559343b54f9f2c37cc9f2bdf89c5871688f49194f145326dbe"
+      "sha256": "539f444717204ece70d73c619bb837fec399b61dea5d1cb7fbd1cf6a1c19a75f"
     }
   ]
 }

@@ -1,0 +1,470 @@
+{
+  "id": "set-e211f1718dff81ce",
+  "name": "Magnificent Maestros",
+  "releaseYear": 2026,
+  "imageAssetPath": "sets/set-e211f1718dff81ce.jpg",
+  "cards": [
+    {
+      "cardCode": 53183600,
+      "printingCode": "MAMS-EN120",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 53183600,
+      "printingCode": "MAMS-EN120",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 30397786,
+      "printingCode": "MAMS-EN001",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30397786,
+      "printingCode": "MAMS-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 30397786,
+      "printingCode": "MAMS-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 27096833,
+      "printingCode": "MAMS-EN016",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27096833,
+      "printingCode": "MAMS-EN016",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 27096833,
+      "printingCode": "MAMS-EN016",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 54603525,
+      "printingCode": "MAMS-EN014",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54603525,
+      "printingCode": "MAMS-EN014",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 54603525,
+      "printingCode": "MAMS-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 29053656,
+      "printingCode": "MAMS-EN007",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29053656,
+      "printingCode": "MAMS-EN007",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 29053656,
+      "printingCode": "MAMS-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66664203,
+      "printingCode": "MAMS-EN005",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 66664203,
+      "printingCode": "MAMS-EN005",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 66664203,
+      "printingCode": "MAMS-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 30275298,
+      "printingCode": "MAMS-EN004",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30275298,
+      "printingCode": "MAMS-EN004",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 30275298,
+      "printingCode": "MAMS-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90091224,
+      "printingCode": "MAMS-EN015",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90091224,
+      "printingCode": "MAMS-EN015",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 90091224,
+      "printingCode": "MAMS-EN015",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 67886895,
+      "printingCode": "MAMS-EN002",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 67886895,
+      "printingCode": "MAMS-EN002",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 67886895,
+      "printingCode": "MAMS-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92058902,
+      "printingCode": "MAMS-EN006",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92058902,
+      "printingCode": "MAMS-EN006",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 92058902,
+      "printingCode": "MAMS-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 91714772,
+      "printingCode": "MAMS-EN012",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91714772,
+      "printingCode": "MAMS-EN012",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 91714772,
+      "printingCode": "MAMS-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 54725177,
+      "printingCode": "MAMS-EN011",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54725177,
+      "printingCode": "MAMS-EN011",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 54725177,
+      "printingCode": "MAMS-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 28331069,
+      "printingCode": "MAMS-EN010",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 28331069,
+      "printingCode": "MAMS-EN010",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 28331069,
+      "printingCode": "MAMS-EN010",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92936364,
+      "printingCode": "MAMS-EN009",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92936364,
+      "printingCode": "MAMS-EN009",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 92936364,
+      "printingCode": "MAMS-EN009",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65541655,
+      "printingCode": "MAMS-EN008",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 65541655,
+      "printingCode": "MAMS-EN008",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 65541655,
+      "printingCode": "MAMS-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53481938,
+      "printingCode": "MAMS-EN017",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53481938,
+      "printingCode": "MAMS-EN017",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 53481938,
+      "printingCode": "MAMS-EN017",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 27118421,
+      "printingCode": "MAMS-EN013",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27118421,
+      "printingCode": "MAMS-EN013",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 27118421,
+      "printingCode": "MAMS-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93871599,
+      "printingCode": "MAMS-EN003",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 93871599,
+      "printingCode": "MAMS-EN003",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 93871599,
+      "printingCode": "MAMS-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90960358,
+      "printingCode": "MAMS-EN121",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 90960358,
+      "printingCode": "MAMS-EN121",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89875646,
+      "printingCode": "MAMS-EN018",
+      "rarity": "common",
+      "sourceRarity": "Grand Master Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 89875646,
+      "printingCode": "MAMS-EN018",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 89875646,
+      "printingCode": "MAMS-EN018",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 29479265,
+      "printingCode": "MAMS-EN124",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 29479265,
+      "printingCode": "MAMS-EN124",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 24269961,
+      "printingCode": "MAMS-EN125",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 24269961,
+      "printingCode": "MAMS-EN125",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 21522601,
+      "printingCode": "MAMS-EN122",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 21522601,
+      "printingCode": "MAMS-EN122",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 9603252,
+      "printingCode": "MAMS-EN123",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 9603252,
+      "printingCode": "MAMS-EN123",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

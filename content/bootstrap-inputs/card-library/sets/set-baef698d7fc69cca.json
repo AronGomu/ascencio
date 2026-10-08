@@ -1,0 +1,15 @@
+{
+  "id": "set-baef698d7fc69cca",
+  "name": "Duelist Revolution Sneak Peek Participation Card",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-baef698d7fc69cca.jpg",
+  "cards": [
+    {
+      "cardCode": 45815891,
+      "printingCode": "DREV-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

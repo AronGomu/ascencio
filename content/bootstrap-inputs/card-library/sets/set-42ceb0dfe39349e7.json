@@ -1,0 +1,22 @@
+{
+  "id": "set-42ceb0dfe39349e7",
+  "name": "Shonen Jump March 2010 subscription bonus",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-42ceb0dfe39349e7.jpg",
+  "cards": [
+    {
+      "cardCode": 31038159,
+      "printingCode": "JUMP-EN034",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 7634581,
+      "printingCode": "JUMP-EN035",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

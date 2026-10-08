@@ -1,0 +1,22 @@
+{
+  "id": "set-28022fd40d30aaf3",
+  "name": "Collectible Tins 2009 Wave 2",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-28022fd40d30aaf3.jpg",
+  "cards": [
+    {
+      "cardCode": 41181774,
+      "printingCode": "CT06-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 7841112,
+      "printingCode": "CT06-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

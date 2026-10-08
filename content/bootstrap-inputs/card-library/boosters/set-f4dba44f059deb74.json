@@ -1,0 +1,48 @@
+{
+  "id": "set-f4dba44f059deb74",
+  "name": "Yu-Gi-Oh! Power of Chaos: Kaiba the Revenge promotional cards",
+  "setId": "set-f4dba44f059deb74",
+  "replacement": "with",
+  "slots": [
+    {
+      "count": 8,
+      "rarities": [
+        {
+          "rarity": "common",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    },
+    {
+      "count": 1,
+      "rarities": [
+        {
+          "rarity": "rare",
+          "weight": 1
+        },
+        {
+          "rarity": "super-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultra-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "secret-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultimate-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ghost-rare",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    }
+  ]
+}

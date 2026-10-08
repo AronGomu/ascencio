@@ -1,0 +1,148 @@
+{
+  "id": "set-657e1947168138d6",
+  "name": "World Championship 2011 Card Pack",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-657e1947168138d6.jpg",
+  "cards": [
+    {
+      "cardCode": 64428736,
+      "printingCode": "WP11-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 3366982,
+      "printingCode": "WP11-EN015",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 20101223,
+      "printingCode": "WP11-EN017",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16970158,
+      "printingCode": "WP11-EN018",
+      "rarity": "common",
+      "sourceRarity": "European & Oceanian debut",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97973387,
+      "printingCode": "WP11-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 14977074,
+      "printingCode": "WP11-EN009",
+      "rarity": "common",
+      "sourceRarity": "European & Oceanian debut",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58831685,
+      "printingCode": "WP11-EN008",
+      "rarity": "common",
+      "sourceRarity": "European & Oceanian debut",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4149689,
+      "printingCode": "WP11-EN019",
+      "rarity": "common",
+      "sourceRarity": "European & Oceanian debut",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 55691901,
+      "printingCode": "WP11-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 1929294,
+      "printingCode": "WP11-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 20541432,
+      "printingCode": "WP11-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 68540059,
+      "printingCode": "WP11-EN020",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50705071,
+      "printingCode": "WP11-EN014",
+      "rarity": "common",
+      "sourceRarity": "European & Oceanian debut",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 64271667,
+      "printingCode": "WP11-EN007",
+      "rarity": "common",
+      "sourceRarity": "European debut",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 84133008,
+      "printingCode": "WP11-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 58074572,
+      "printingCode": "WP11-EN016",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 56713552,
+      "printingCode": "WP11-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 62762898,
+      "printingCode": "WP11-EN010",
+      "rarity": "common",
+      "sourceRarity": "European & Oceanian debut",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92391084,
+      "printingCode": "WP11-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 24311372,
+      "printingCode": "WP11-EN011",
+      "rarity": "common",
+      "sourceRarity": "Oceanian debut",
+      "sourceRarityCode": ""
+    }
+  ]
+}

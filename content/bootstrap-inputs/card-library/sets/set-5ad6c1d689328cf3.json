@@ -1,0 +1,36 @@
+{
+  "id": "set-5ad6c1d689328cf3",
+  "name": "Shining Victories: Special Edition",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-5ad6c1d689328cf3.jpg",
+  "cards": [
+    {
+      "cardCode": 96471335,
+      "printingCode": "SHVI-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 95486586,
+      "printingCode": "SHVI-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 71696014,
+      "printingCode": "SHVI-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 67284107,
+      "printingCode": "SHVI-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

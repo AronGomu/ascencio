@@ -1,0 +1,15 @@
+{
+  "id": "set-6b6bbc3c062ddd94",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 4 promotional card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-6b6bbc3c062ddd94.jpg",
+  "cards": [
+    {
+      "cardCode": 31320433,
+      "printingCode": "YZ04-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

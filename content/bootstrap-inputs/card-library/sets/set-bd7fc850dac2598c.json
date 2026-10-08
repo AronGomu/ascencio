@@ -1,0 +1,36 @@
+{
+  "id": "set-bd7fc850dac2598c",
+  "name": "Dimension of Chaos: Special Edition",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-bd7fc850dac2598c.jpg",
+  "cards": [
+    {
+      "cardCode": 15155568,
+      "printingCode": "DOCS-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50078320,
+      "printingCode": "DOCS-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 464362,
+      "printingCode": "DOCS-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 1686814,
+      "printingCode": "DOCS-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

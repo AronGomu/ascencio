@@ -1,0 +1,36 @@
+{
+  "id": "set-3822695e378e47fe",
+  "name": "Movie Pack",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-3822695e378e47fe.jpg",
+  "cards": [
+    {
+      "cardCode": 53347303,
+      "printingCode": "MOV-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53569894,
+      "printingCode": "MOV-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87774234,
+      "printingCode": "MOV-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88619463,
+      "printingCode": "MOV-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

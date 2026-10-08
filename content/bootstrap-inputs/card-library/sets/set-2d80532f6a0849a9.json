@@ -1,0 +1,29 @@
+{
+  "id": "set-2d80532f6a0849a9",
+  "name": "Yu-Gi-Oh! Ultimate Masters: World Championship Tournament 2006 promotional cards",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-2d80532f6a0849a9.jpg",
+  "cards": [
+    {
+      "cardCode": 27408609,
+      "printingCode": "WC6-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 54493213,
+      "printingCode": "WC6-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80887952,
+      "printingCode": "WC6-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

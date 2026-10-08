@@ -1,0 +1,15 @@
+{
+  "id": "set-a7f0daffbbfc5348",
+  "name": "Order of Chaos Sneak Peek Participation Card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-a7f0daffbbfc5348.jpg",
+  "cards": [
+    {
+      "cardCode": 87973893,
+      "printingCode": "ORCS-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

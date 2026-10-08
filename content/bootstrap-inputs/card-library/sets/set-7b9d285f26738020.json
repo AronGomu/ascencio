@@ -1,0 +1,1898 @@
+{
+  "id": "set-7b9d285f26738020",
+  "name": "2019 Gold Sarcophagus Tin Mega Pack",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-7b9d285f26738020.jpg",
+  "cards": [
+    {
+      "cardCode": 2411269,
+      "printingCode": "MP19-EN191",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86885905,
+      "printingCode": "MP19-EN047",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76685519,
+      "printingCode": "MP19-EN024",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42790071,
+      "printingCode": "MP19-EN009",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 57769391,
+      "printingCode": "MP19-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27024795,
+      "printingCode": "MP19-EN151",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84976088,
+      "printingCode": "MP19-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97947705,
+      "printingCode": "MP19-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80584548,
+      "printingCode": "MP19-EN132",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80141055,
+      "printingCode": "MP19-EN175",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21984400,
+      "printingCode": "MP19-EN121",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93850652,
+      "printingCode": "MP19-EN247",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 6556178,
+      "printingCode": "MP19-EN115",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85289965,
+      "printingCode": "MP19-EN097",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 45025640,
+      "printingCode": "MP19-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66740005,
+      "printingCode": "MP19-EN249",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "MP19-EN043",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 67378104,
+      "printingCode": "MP19-EN122",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 47346782,
+      "printingCode": "MP19-EN094",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 4478086,
+      "printingCode": "MP19-EN185",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21830679,
+      "printingCode": "MP19-EN152",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94703021,
+      "printingCode": "MP19-EN073",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20501450,
+      "printingCode": "MP19-EN202",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63413494,
+      "printingCode": "MP19-EN216",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41933425,
+      "printingCode": "MP19-EN071",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85679527,
+      "printingCode": "MP19-EN089",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20862918,
+      "printingCode": "MP19-EN124",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 91646304,
+      "printingCode": "MP19-EN078",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 54525057,
+      "printingCode": "MP19-EN080",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 45002991,
+      "printingCode": "MP19-EN107",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 55838342,
+      "printingCode": "MP19-EN209",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28031913,
+      "printingCode": "MP19-EN079",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72228247,
+      "printingCode": "MP19-EN105",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 81524756,
+      "printingCode": "MP19-EN081",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 96434581,
+      "printingCode": "MP19-EN117",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55241609,
+      "printingCode": "MP19-EN077",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 9617996,
+      "printingCode": "MP19-EN106",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69039982,
+      "printingCode": "MP19-EN116",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 39528955,
+      "printingCode": "MP19-EN189",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55312487,
+      "printingCode": "MP19-EN128",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87259933,
+      "printingCode": "MP19-EN070",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14469229,
+      "printingCode": "MP19-EN066",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87475570,
+      "printingCode": "MP19-EN065",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11851647,
+      "printingCode": "MP19-EN093",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56364287,
+      "printingCode": "MP19-EN086",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 46724542,
+      "printingCode": "MP19-EN108",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 29975188,
+      "printingCode": "MP19-EN085",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33041277,
+      "printingCode": "MP19-EN118",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 82428674,
+      "printingCode": "MP19-EN129",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37007105,
+      "printingCode": "MP19-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42717221,
+      "printingCode": "MP19-EN180",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 24731391,
+      "printingCode": "MP19-EN095",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 11674673,
+      "printingCode": "MP19-EN098",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 65801012,
+      "printingCode": "MP19-EN193",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34767865,
+      "printingCode": "MP19-EN113",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16006416,
+      "printingCode": "MP19-EN229",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 84569886,
+      "printingCode": "MP19-EN230",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "MP19-EN136",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 16209941,
+      "printingCode": "MP19-EN138",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 26302107,
+      "printingCode": "MP19-EN218",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 52350806,
+      "printingCode": "MP19-EN219",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 70711847,
+      "printingCode": "MP19-EN137",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25140659,
+      "printingCode": "MP19-EN221",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 90807199,
+      "printingCode": "MP19-EN217",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 43694650,
+      "printingCode": "MP19-EN139",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 99745551,
+      "printingCode": "MP19-EN220",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89462956,
+      "printingCode": "MP19-EN135",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32302078,
+      "printingCode": "MP19-EN239",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17257342,
+      "printingCode": "MP19-EN174",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93507434,
+      "printingCode": "MP19-EN158",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29996433,
+      "printingCode": "MP19-EN157",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77967790,
+      "printingCode": "MP19-EN187",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82385847,
+      "printingCode": "MP19-EN160",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 56980148,
+      "printingCode": "MP19-EN159",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78084378,
+      "printingCode": "MP19-EN184",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94073244,
+      "printingCode": "MP19-EN244",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29253591,
+      "printingCode": "MP19-EN088",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28927782,
+      "printingCode": "MP19-EN130",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 92868896,
+      "printingCode": "MP19-EN087",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37880706,
+      "printingCode": "MP19-EN270",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 25123713,
+      "printingCode": "MP19-EN251",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73240432,
+      "printingCode": "MP19-EN227",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82162616,
+      "printingCode": "MP19-EN206",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6764709,
+      "printingCode": "MP19-EN060",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33158448,
+      "printingCode": "MP19-EN061",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 5641251,
+      "printingCode": "MP19-EN063",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32036866,
+      "printingCode": "MP19-EN064",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69553552,
+      "printingCode": "MP19-EN062",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64400161,
+      "printingCode": "MP19-EN254",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64514892,
+      "printingCode": "MP19-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66023650,
+      "printingCode": "MP19-EN190",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55168550,
+      "printingCode": "MP19-EN162",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28770951,
+      "printingCode": "MP19-EN161",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63956833,
+      "printingCode": "MP19-EN198",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3356494,
+      "printingCode": "MP19-EN188",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 58012707,
+      "printingCode": "MP19-EN200",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62000467,
+      "printingCode": "MP19-EN150",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17535764,
+      "printingCode": "MP19-EN176",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12097275,
+      "printingCode": "MP19-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26285557,
+      "printingCode": "MP19-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10552026,
+      "printingCode": "MP19-EN101",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20191720,
+      "printingCode": "MP19-EN074",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85008676,
+      "printingCode": "MP19-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93581434,
+      "printingCode": "MP19-EN076",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67586735,
+      "printingCode": "MP19-EN075",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 47946130,
+      "printingCode": "MP19-EN102",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21663205,
+      "printingCode": "MP19-EN163",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58657303,
+      "printingCode": "MP19-EN164",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79206925,
+      "printingCode": "MP19-EN181",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90512490,
+      "printingCode": "MP19-EN032",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47439573,
+      "printingCode": "MP19-EN051",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67466547,
+      "printingCode": "MP19-EN246",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94016752,
+      "printingCode": "MP19-EN201",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 51412776,
+      "printingCode": "MP19-EN224",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 7778726,
+      "printingCode": "MP19-EN112",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 18474999,
+      "printingCode": "MP19-EN172",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53303460,
+      "printingCode": "MP19-EN083",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 82085295,
+      "printingCode": "MP19-EN171",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80701178,
+      "printingCode": "MP19-EN084",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 2414168,
+      "printingCode": "MP19-EN149",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17722185,
+      "printingCode": "MP19-EN211",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97273514,
+      "printingCode": "MP19-EN067",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46247282,
+      "printingCode": "MP19-EN016",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 75452921,
+      "printingCode": "MP19-EN026",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 10158145,
+      "printingCode": "MP19-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65330383,
+      "printingCode": "MP19-EN029",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 3679218,
+      "printingCode": "MP19-EN025",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "MP19-EN027",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 38342335,
+      "printingCode": "MP19-EN028",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86607583,
+      "printingCode": "MP19-EN045",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48068378,
+      "printingCode": "MP19-EN099",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23331400,
+      "printingCode": "MP19-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55034079,
+      "printingCode": "MP19-EN127",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96150936,
+      "printingCode": "MP19-EN068",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 83828288,
+      "printingCode": "MP19-EN052",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11074235,
+      "printingCode": "MP19-EN090",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 91405870,
+      "printingCode": "MP19-EN255",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73341839,
+      "printingCode": "MP19-EN103",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29649320,
+      "printingCode": "MP19-EN126",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 50213848,
+      "printingCode": "MP19-EN044",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24027078,
+      "printingCode": "MP19-EN223",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 81263643,
+      "printingCode": "MP19-EN173",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94599451,
+      "printingCode": "MP19-EN120",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81223446,
+      "printingCode": "MP19-EN210",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56773577,
+      "printingCode": "MP19-EN205",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84640866,
+      "printingCode": "MP19-EN050",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41359411,
+      "printingCode": "MP19-EN144",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42472002,
+      "printingCode": "MP19-EN141",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 88923963,
+      "printingCode": "MP19-EN222",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 5361816,
+      "printingCode": "MP19-EN143",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "MP19-EN232",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86401517,
+      "printingCode": "MP19-EN096",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93394164,
+      "printingCode": "MP19-EN203",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81481818,
+      "printingCode": "MP19-EN226",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64207696,
+      "printingCode": "MP19-EN147",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55997110,
+      "printingCode": "MP19-EN145",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3752422,
+      "printingCode": "MP19-EN146",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69946549,
+      "printingCode": "MP19-EN228",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72129804,
+      "printingCode": "MP19-EN231",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50548657,
+      "printingCode": "MP19-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84453939,
+      "printingCode": "MP19-EN092",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38916526,
+      "printingCode": "MP19-EN253",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40854824,
+      "printingCode": "MP19-EN069",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79698395,
+      "printingCode": "MP19-EN140",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 31467949,
+      "printingCode": "MP19-EN245",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19636995,
+      "printingCode": "MP19-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23002292,
+      "printingCode": "MP19-EN046",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 34989413,
+      "printingCode": "MP19-EN110",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74163487,
+      "printingCode": "MP19-EN100",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98552723,
+      "printingCode": "MP19-EN040",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 7986397,
+      "printingCode": "MP19-EN057",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34093683,
+      "printingCode": "MP19-EN055",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 38784726,
+      "printingCode": "MP19-EN195",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67218327,
+      "printingCode": "MP19-EN072",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78876707,
+      "printingCode": "MP19-EN142",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 93738004,
+      "printingCode": "MP19-EN250",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16313112,
+      "printingCode": "MP19-EN179",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20618081,
+      "printingCode": "MP19-EN155",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94620082,
+      "printingCode": "MP19-EN154",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 20788863,
+      "printingCode": "MP19-EN204",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41463181,
+      "printingCode": "MP19-EN186",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 56003780,
+      "printingCode": "MP19-EN156",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67225377,
+      "printingCode": "MP19-EN153",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1295111,
+      "printingCode": "MP19-EN194",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20345391,
+      "printingCode": "MP19-EN248",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24940422,
+      "printingCode": "MP19-EN041",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 93655221,
+      "printingCode": "MP19-EN125",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8491308,
+      "printingCode": "MP19-EN109",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 63288573,
+      "printingCode": "MP19-EN257",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 26077387,
+      "printingCode": "MP19-EN259",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "MP19-EN258",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 50005218,
+      "printingCode": "MP19-EN269",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99550630,
+      "printingCode": "MP19-EN261",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 25955749,
+      "printingCode": "MP19-EN262",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25733157,
+      "printingCode": "MP19-EN265",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52340444,
+      "printingCode": "MP19-EN263",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51227866,
+      "printingCode": "MP19-EN266",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98338152,
+      "printingCode": "MP19-EN264",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 24010609,
+      "printingCode": "MP19-EN268",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97616504,
+      "printingCode": "MP19-EN267",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "MP19-EN260",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93377803,
+      "printingCode": "MP19-EN123",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38406364,
+      "printingCode": "MP19-EN192",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 4914353,
+      "printingCode": "MP19-EN020",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97729135,
+      "printingCode": "MP19-EN042",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 43994202,
+      "printingCode": "MP19-EN215",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8608979,
+      "printingCode": "MP19-EN054",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48468330,
+      "printingCode": "MP19-EN091",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17688543,
+      "printingCode": "MP19-EN133",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17509503,
+      "printingCode": "MP19-EN214",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43464884,
+      "printingCode": "MP19-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "MP19-EN183",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 18444733,
+      "printingCode": "MP19-EN208",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 95238394,
+      "printingCode": "MP19-EN199",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41685633,
+      "printingCode": "MP19-EN182",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "MP19-EN167",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 55591586,
+      "printingCode": "MP19-EN170",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 83107873,
+      "printingCode": "MP19-EN168",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 20318029,
+      "printingCode": "MP19-EN166",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29596581,
+      "printingCode": "MP19-EN169",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 82045034,
+      "printingCode": "MP19-EN207",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43534808,
+      "printingCode": "MP19-EN177",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44716890,
+      "printingCode": "MP19-EN212",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72529749,
+      "printingCode": "MP19-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 37890974,
+      "printingCode": "MP19-EN256",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 7969770,
+      "printingCode": "MP19-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "MP19-EN213",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 41302052,
+      "printingCode": "MP19-EN021",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 77307161,
+      "printingCode": "MP19-EN022",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 99890852,
+      "printingCode": "MP19-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3792766,
+      "printingCode": "MP19-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63492244,
+      "printingCode": "MP19-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22219822,
+      "printingCode": "MP19-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86825114,
+      "printingCode": "MP19-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89928517,
+      "printingCode": "MP19-EN178",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53077251,
+      "printingCode": "MP19-EN134",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87800375,
+      "printingCode": "MP19-EN225",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 31189536,
+      "printingCode": "MP19-EN242",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 68688135,
+      "printingCode": "MP19-EN243",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34250214,
+      "printingCode": "MP19-EN233",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6039967,
+      "printingCode": "MP19-EN235",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 33438666,
+      "printingCode": "MP19-EN236",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6917479,
+      "printingCode": "MP19-EN238",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70645913,
+      "printingCode": "MP19-EN234",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79523365,
+      "printingCode": "MP19-EN237",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37129797,
+      "printingCode": "MP19-EN030",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 69700783,
+      "printingCode": "MP19-EN240",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5795882,
+      "printingCode": "MP19-EN241",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70491682,
+      "printingCode": "MP19-EN056",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60375194,
+      "printingCode": "MP19-EN059",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33971095,
+      "printingCode": "MP19-EN058",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 739444,
+      "printingCode": "MP19-EN104",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10813327,
+      "printingCode": "MP19-EN053",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70975131,
+      "printingCode": "MP19-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71384012,
+      "printingCode": "MP19-EN111",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 49930315,
+      "printingCode": "MP19-EN148",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64178424,
+      "printingCode": "MP19-EN196",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1527418,
+      "printingCode": "MP19-EN252",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90173539,
+      "printingCode": "MP19-EN197",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27918365,
+      "printingCode": "MP19-EN082",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 46647144,
+      "printingCode": "MP19-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 93920420,
+      "printingCode": "MP19-EN165",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12989604,
+      "printingCode": "MP19-EN048",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58374719,
+      "printingCode": "MP19-EN049",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99674361,
+      "printingCode": "MP19-EN038",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 31706048,
+      "printingCode": "MP19-EN119",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 62279666,
+      "printingCode": "MP19-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27705190,
+      "printingCode": "MP19-EN131",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25163979,
+      "printingCode": "MP19-EN039",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60162470,
+      "printingCode": "MP19-EN114",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

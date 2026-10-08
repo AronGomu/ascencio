@@ -1,0 +1,22 @@
+{
+  "id": "set-6ce6d0184c09619e",
+  "name": "Shonen Jump December 2011 subscription bonus",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-6ce6d0184c09619e.jpg",
+  "cards": [
+    {
+      "cardCode": 8967776,
+      "printingCode": "JUMP-EN054",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 35952884,
+      "printingCode": "JUMP-EN055",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

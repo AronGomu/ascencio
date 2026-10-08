@@ -1,0 +1,15 @@
+{
+  "id": "set-36b6b3567f899462",
+  "name": "Yu-Gi-Oh! 5D's Volume 5 promotional card",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-36b6b3567f899462.jpg",
+  "cards": [
+    {
+      "cardCode": 83994433,
+      "printingCode": "YF05-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "id": "set-fea37fda1b4faa9c",
+  "name": "Yu-Gi-Oh! Destiny Board Traveler promotional cards",
+  "setId": "set-fea37fda1b4faa9c",
+  "replacement": "with",
+  "slots": [
+    {
+      "count": 8,
+      "rarities": [
+        {
+          "rarity": "common",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    },
+    {
+      "count": 1,
+      "rarities": [
+        {
+          "rarity": "rare",
+          "weight": 1
+        },
+        {
+          "rarity": "super-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultra-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "secret-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultimate-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ghost-rare",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    }
+  ]
+}

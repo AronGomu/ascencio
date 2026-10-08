@@ -1,0 +1,15 @@
+{
+  "id": "set-4862be11b116e1f8",
+  "name": "Shonen Jump Championship 2005 Prize Card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-4862be11b116e1f8.jpg",
+  "cards": [
+    {
+      "cardCode": 81059524,
+      "printingCode": "SJC-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

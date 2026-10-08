@@ -1,0 +1,15 @@
+{
+  "id": "set-5aea654c5a6d29e9",
+  "name": "Yu-Gi-Oh! The Dark Side of Dimensions Blu-ray & DVD promotional card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-5aea654c5a6d29e9.jpg",
+  "cards": [
+    {
+      "cardCode": 10000000,
+      "printingCode": "MVPC-EN001",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    }
+  ]
+}

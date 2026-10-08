@@ -59,6 +59,12 @@ export async function assertMigrationReady(
     fail("ASSET_RECOVERY_REQUIRED", MIGRATION_PENDING_PATH);
 }
 async function syncParent(root: string, relative: string): Promise<void> {
+  // Node cannot fsync directory handles on Windows. File contents are synced
+  // separately before publication; directory fsync is available on Unix.
+  if (process.platform === "win32") {
+    await assertSafeParents(root, relative);
+    return;
+  }
   const handle = await open(
     path.dirname(await assertSafeParents(root, relative)),
     "r",

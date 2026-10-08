@@ -1,0 +1,15 @@
+{
+  "id": "set-84593ca79cb66944",
+  "name": "Yu-Gi-Oh! TCG Remote Duel Extravaganza participation card",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-84593ca79cb66944.jpg",
+  "cards": [
+    {
+      "cardCode": 2139640,
+      "printingCode": "21CC-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

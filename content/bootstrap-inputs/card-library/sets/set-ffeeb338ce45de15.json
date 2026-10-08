@@ -1,0 +1,15 @@
+{
+  "id": "set-ffeeb338ce45de15",
+  "name": "Abyss Rising Sneak Peek Participation Card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-ffeeb338ce45de15.jpg",
+  "cards": [
+    {
+      "cardCode": 95772051,
+      "printingCode": "ABYR-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

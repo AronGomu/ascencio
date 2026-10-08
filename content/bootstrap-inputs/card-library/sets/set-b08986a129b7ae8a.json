@@ -1,0 +1,883 @@
+{
+  "id": "set-b08986a129b7ae8a",
+  "name": "Legacy of Destruction",
+  "releaseYear": 2024,
+  "imageAssetPath": "sets/set-b08986a129b7ae8a.jpg",
+  "cards": [
+    {
+      "cardCode": 63378869,
+      "printingCode": "LEDE-EN088",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4064925,
+      "printingCode": "LEDE-EN055",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27483935,
+      "printingCode": "LEDE-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64603182,
+      "printingCode": "LEDE-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53541822,
+      "printingCode": "LEDE-EN072",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91098230,
+      "printingCode": "LEDE-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34813443,
+      "printingCode": "LEDE-EN096",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56208713,
+      "printingCode": "LEDE-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 74213995,
+      "printingCode": "LEDE-EN082",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 39114494,
+      "printingCode": "LEDE-EN062",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 28279365,
+      "printingCode": "LEDE-EN068",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71858682,
+      "printingCode": "LEDE-EN042",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 71858682,
+      "printingCode": "LEDE-EN042",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 97698279,
+      "printingCode": "LEDE-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 74652966,
+      "printingCode": "LEDE-EN099",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 83819309,
+      "printingCode": "LEDE-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90276649,
+      "printingCode": "LEDE-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21036656,
+      "printingCode": "LEDE-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36629635,
+      "printingCode": "LEDE-EN097",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53765052,
+      "printingCode": "LEDE-EN012",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53765052,
+      "printingCode": "LEDE-EN012",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 84631951,
+      "printingCode": "LEDE-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1607603,
+      "printingCode": "LEDE-EN083",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35035985,
+      "printingCode": "LEDE-EN093",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 46186135,
+      "printingCode": "LEDE-EN038",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 98828338,
+      "printingCode": "LEDE-EN095",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57420265,
+      "printingCode": "LEDE-EN032",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 83793721,
+      "printingCode": "LEDE-EN036",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 78679226,
+      "printingCode": "LEDE-EN054",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78679226,
+      "printingCode": "LEDE-EN054",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 92110878,
+      "printingCode": "LEDE-EN004",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92110878,
+      "printingCode": "LEDE-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 2333466,
+      "printingCode": "LEDE-EN001",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2333466,
+      "printingCode": "LEDE-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90946420,
+      "printingCode": "LEDE-EN073",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44241999,
+      "printingCode": "LEDE-EN044",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 60203670,
+      "printingCode": "LEDE-EN020",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 45464587,
+      "printingCode": "LEDE-EN041",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 45464587,
+      "printingCode": "LEDE-EN041",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 59369430,
+      "printingCode": "LEDE-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24215921,
+      "printingCode": "LEDE-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9763474,
+      "printingCode": "LEDE-EN089",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91668078,
+      "printingCode": "LEDE-EN070",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73490417,
+      "printingCode": "LEDE-EN085",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37006702,
+      "printingCode": "LEDE-EN084",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25218587,
+      "printingCode": "LEDE-EN077",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59481082,
+      "printingCode": "LEDE-EN023",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 59481082,
+      "printingCode": "LEDE-EN023",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 15845914,
+      "printingCode": "LEDE-EN000",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 31458630,
+      "printingCode": "LEDE-EN056",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66518509,
+      "printingCode": "LEDE-EN063",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19181420,
+      "printingCode": "LEDE-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64664373,
+      "printingCode": "LEDE-EN069",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 85753549,
+      "printingCode": "LEDE-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18843291,
+      "printingCode": "LEDE-EN043",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 18843291,
+      "printingCode": "LEDE-EN043",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 52607696,
+      "printingCode": "LEDE-EN078",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 38505587,
+      "printingCode": "LEDE-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 885016,
+      "printingCode": "LEDE-EN086",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 58143852,
+      "printingCode": "LEDE-EN029",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58143852,
+      "printingCode": "LEDE-EN029",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 93729896,
+      "printingCode": "LEDE-EN061",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 93729896,
+      "printingCode": "LEDE-EN061",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 43502497,
+      "printingCode": "LEDE-EN098",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 48228390,
+      "printingCode": "LEDE-EN081",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52543404,
+      "printingCode": "LEDE-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4841383,
+      "printingCode": "LEDE-EN058",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4841383,
+      "printingCode": "LEDE-EN058",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 6908161,
+      "printingCode": "LEDE-EN049",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 89824842,
+      "printingCode": "LEDE-EN076",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70514456,
+      "printingCode": "LEDE-EN048",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26548709,
+      "printingCode": "LEDE-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43129357,
+      "printingCode": "LEDE-EN047",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42307760,
+      "printingCode": "LEDE-EN050",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 42307760,
+      "printingCode": "LEDE-EN050",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 99153051,
+      "printingCode": "LEDE-EN013",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 99153051,
+      "printingCode": "LEDE-EN013",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 64881644,
+      "printingCode": "LEDE-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 61434639,
+      "printingCode": "LEDE-EN094",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 10804018,
+      "printingCode": "LEDE-EN034",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10804018,
+      "printingCode": "LEDE-EN034",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66730191,
+      "printingCode": "LEDE-EN060",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30336082,
+      "printingCode": "LEDE-EN059",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82570174,
+      "printingCode": "LEDE-EN039",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18969888,
+      "printingCode": "LEDE-EN040",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 23093373,
+      "printingCode": "LEDE-EN022",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 23093373,
+      "printingCode": "LEDE-EN022",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 35151572,
+      "printingCode": "LEDE-EN090",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 79791878,
+      "printingCode": "LEDE-EN051",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79791878,
+      "printingCode": "LEDE-EN051",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 65726770,
+      "printingCode": "LEDE-EN003",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 65726770,
+      "printingCode": "LEDE-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 39321065,
+      "printingCode": "LEDE-EN002",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 39321065,
+      "printingCode": "LEDE-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25096909,
+      "printingCode": "LEDE-EN080",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67457739,
+      "printingCode": "LEDE-EN057",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26334139,
+      "printingCode": "LEDE-EN074",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53329234,
+      "printingCode": "LEDE-EN075",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27260347,
+      "printingCode": "LEDE-EN011",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27260347,
+      "printingCode": "LEDE-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 62156277,
+      "printingCode": "LEDE-EN091",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 27157727,
+      "printingCode": "LEDE-EN071",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48654267,
+      "printingCode": "LEDE-EN100",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 74150658,
+      "printingCode": "LEDE-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 7020743,
+      "printingCode": "LEDE-EN046",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91810826,
+      "printingCode": "LEDE-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65326118,
+      "printingCode": "LEDE-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39931513,
+      "printingCode": "LEDE-EN016",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 32270212,
+      "printingCode": "LEDE-EN053",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 32270212,
+      "printingCode": "LEDE-EN053",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 5786513,
+      "printingCode": "LEDE-EN052",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 65496951,
+      "printingCode": "LEDE-EN066",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38491852,
+      "printingCode": "LEDE-EN065",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70636044,
+      "printingCode": "LEDE-EN045",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70636044,
+      "printingCode": "LEDE-EN045",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 8540986,
+      "printingCode": "LEDE-EN092",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 8540986,
+      "printingCode": "LEDE-EN092",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 36974120,
+      "printingCode": "LEDE-EN087",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 36974120,
+      "printingCode": "LEDE-EN087",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92907248,
+      "printingCode": "LEDE-EN064",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92907248,
+      "printingCode": "LEDE-EN064",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 91880660,
+      "printingCode": "LEDE-EN067",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 96576187,
+      "printingCode": "LEDE-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22970795,
+      "printingCode": "LEDE-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88001391,
+      "printingCode": "LEDE-EN079",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

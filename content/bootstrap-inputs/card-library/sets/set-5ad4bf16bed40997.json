@@ -1,0 +1,15 @@
+{
+  "id": "set-5ad4bf16bed40997",
+  "name": "Light and Darkness Power Pack",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-5ad4bf16bed40997.jpg",
+  "cards": [
+    {
+      "cardCode": 47297616,
+      "printingCode": "LDPP-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

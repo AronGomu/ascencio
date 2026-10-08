@@ -1,0 +1,36 @@
+{
+  "id": "set-1f600142e8fd2d79",
+  "name": "Legacy of the Valiant: Deluxe Edition",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-1f600142e8fd2d79.jpg",
+  "cards": [
+    {
+      "cardCode": 55599882,
+      "printingCode": "LVAL-ENDE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 61318483,
+      "printingCode": "LVAL-ENDE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 10753491,
+      "printingCode": "LVAL-ENDE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63257623,
+      "printingCode": "LVAL-ENDE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

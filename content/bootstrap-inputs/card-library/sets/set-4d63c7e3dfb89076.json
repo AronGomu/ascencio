@@ -1,0 +1,15 @@
+{
+  "id": "set-4d63c7e3dfb89076",
+  "name": "Weekly Shonen Jump April 2016 membership promotional card",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-4d63c7e3dfb89076.jpg",
+  "cards": [
+    {
+      "cardCode": 50185950,
+      "printingCode": "JUMP-EN076",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

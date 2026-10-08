@@ -1,0 +1,36 @@
+{
+  "id": "set-6e2563cf7dc345ad",
+  "name": "The Lost Millennium: Special Edition",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-6e2563cf7dc345ad.jpg",
+  "cards": [
+    {
+      "cardCode": 82301904,
+      "printingCode": "TLM-ENSE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 56647086,
+      "printingCode": "TLM-ENSE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 6133894,
+      "printingCode": "TLM-ENSE3",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65403020,
+      "printingCode": "TLM-ENSE4",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

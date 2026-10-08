@@ -1,0 +1,78 @@
+{
+  "id": "set-3a42497e558f5593",
+  "name": "Advanced Demo Deck Extra Pack",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-3a42497e558f5593.jpg",
+  "cards": [
+    {
+      "cardCode": 10817524,
+      "printingCode": "DEM4-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17390179,
+      "printingCode": "DEM4-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43785278,
+      "printingCode": "DEM4-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97204936,
+      "printingCode": "DEM4-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11066358,
+      "printingCode": "DEM4-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71594310,
+      "printingCode": "DEM4-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48940337,
+      "printingCode": "DEM4-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98978921,
+      "printingCode": "DEM4-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19474136,
+      "printingCode": "DEM4-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "DEM4-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

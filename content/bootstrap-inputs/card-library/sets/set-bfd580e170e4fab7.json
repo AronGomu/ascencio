@@ -1,0 +1,15 @@
+{
+  "id": "set-bfd580e170e4fab7",
+  "name": "Flames of Destruction Sneak Peek Participation Card",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-bfd580e170e4fab7.jpg",
+  "cards": [
+    {
+      "cardCode": 50213848,
+      "printingCode": "FLOD-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

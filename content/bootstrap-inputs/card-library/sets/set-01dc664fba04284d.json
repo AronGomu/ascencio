@@ -1,0 +1,15 @@
+{
+  "id": "set-01dc664fba04284d",
+  "name": "Primal Origin Plus",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-01dc664fba04284d.jpg",
+  "cards": [
+    {
+      "cardCode": 47741109,
+      "printingCode": "PRIO-ENPL1",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    }
+  ]
+}

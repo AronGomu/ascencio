@@ -1,0 +1,22 @@
+{
+  "id": "set-13dd22ba01a94793",
+  "name": "Yu-Gi-Oh! Double Pack promotional cards",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-13dd22ba01a94793.jpg",
+  "cards": [
+    {
+      "cardCode": 50725996,
+      "printingCode": "ROD-EN001",
+      "rarity": "common",
+      "sourceRarity": "Super Parallel Rare",
+      "sourceRarityCode": "(SPR)"
+    },
+    {
+      "cardCode": 87210505,
+      "printingCode": "ROD-EN002",
+      "rarity": "common",
+      "sourceRarity": "Super Parallel Rare",
+      "sourceRarityCode": "(SPR)"
+    }
+  ]
+}

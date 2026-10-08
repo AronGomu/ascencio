@@ -1,0 +1,22 @@
+{
+  "id": "set-cf824dd4a6c099f3",
+  "name": "Raging Battle: Special Edition",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-cf824dd4a6c099f3.jpg",
+  "cards": [
+    {
+      "cardCode": 1475311,
+      "printingCode": "RGBT-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 92719314,
+      "printingCode": "RGBT-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

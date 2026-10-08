@@ -1,0 +1,50 @@
+{
+  "id": "set-5afa7a8880685a50",
+  "name": "Yu-Gi-Oh! Worldwide Edition: Stairway to the Destined Duel promotional cards",
+  "releaseYear": 2003,
+  "imageAssetPath": "sets/set-5afa7a8880685a50.jpg",
+  "cards": [
+    {
+      "cardCode": 6740720,
+      "printingCode": "SDD-E001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 8131171,
+      "printingCode": "SDD-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 18144507,
+      "printingCode": "SDD-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 32268901,
+      "printingCode": "SDD-E003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 41356845,
+      "printingCode": "SDD-E002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 75347539,
+      "printingCode": "SDD-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

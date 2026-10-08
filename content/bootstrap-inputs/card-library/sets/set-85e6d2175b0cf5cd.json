@@ -1,0 +1,29 @@
+{
+  "id": "set-85e6d2175b0cf5cd",
+  "name": "Yu-Gi-Oh! Reshef of Destruction promotional cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-85e6d2175b0cf5cd.jpg",
+  "cards": [
+    {
+      "cardCode": 13604200,
+      "printingCode": "ROD-EN003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 50725996,
+      "printingCode": "ROD-EN001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 87210505,
+      "printingCode": "ROD-EN002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

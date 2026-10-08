@@ -1,0 +1,22 @@
+{
+  "id": "set-779eeab2fa081b5b",
+  "name": "Pharaoh Tour 2006 promotional cards",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-779eeab2fa081b5b.jpg",
+  "cards": [
+    {
+      "cardCode": 55713623,
+      "printingCode": "PT02-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90960358,
+      "printingCode": "PT02-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

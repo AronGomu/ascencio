@@ -1,0 +1,22 @@
+{
+  "id": "set-a631d4d6fe3985a9",
+  "name": "Yu-Gi-Oh! Championship Series 2011 Prize Card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-a631d4d6fe3985a9.jpg",
+  "cards": [
+    {
+      "cardCode": 30757396,
+      "printingCode": "YCSW-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30757396,
+      "printingCode": "YCSW-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-141ac71379170e57",
+  "name": "Yu-Gi-Oh! 5D's volume 8 promotional card",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-141ac71379170e57.jpg",
+  "cards": [
+    {
+      "cardCode": 8763963,
+      "printingCode": "YF08-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

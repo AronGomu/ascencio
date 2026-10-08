@@ -1,0 +1,22 @@
+{
+  "id": "set-334dd5ea60ab11ef",
+  "name": "Shonen Jump May 2010 subscription bonus",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-334dd5ea60ab11ef.jpg",
+  "cards": [
+    {
+      "cardCode": 88071625,
+      "printingCode": "JUMP-EN041",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 66094973,
+      "printingCode": "JUMP-EN042",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

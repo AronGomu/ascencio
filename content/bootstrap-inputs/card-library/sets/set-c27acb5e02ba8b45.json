@@ -1,0 +1,15 @@
+{
+  "id": "set-c27acb5e02ba8b45",
+  "name": "Pharaoh's Servant (25th Anniversary Edition)",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-c27acb5e02ba8b45.jpg",
+  "cards": [
+    {
+      "cardCode": 2130625,
+      "printingCode": "PSV-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "set-667454ca9b08c0ae",
+  "name": "Duelist League Series 2 participation cards",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-667454ca9b08c0ae.jpg",
+  "cards": [
+    {
+      "cardCode": 31829185,
+      "printingCode": "DL2-002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 31829185,
+      "printingCode": "DL2-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 49064413,
+      "printingCode": "DL2-001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 49064413,
+      "printingCode": "DL2-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

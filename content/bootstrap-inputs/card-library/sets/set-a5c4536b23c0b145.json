@@ -1,0 +1,274 @@
+{
+  "id": "set-a5c4536b23c0b145",
+  "name": "Noble Knights of the Round Table Box Set",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-a5c4536b23c0b145.jpg",
+  "cards": [
+    {
+      "cardCode": 21223277,
+      "printingCode": "NKRT-EN037",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 82140600,
+      "printingCode": "NKRT-EN031",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 14087893,
+      "printingCode": "NKRT-EN027",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "NKRT-EN032",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 53129443,
+      "printingCode": "NKRT-EN024",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 6351548,
+      "printingCode": "NKRT-EN016",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 70342110,
+      "printingCode": "NKRT-EN034",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 81439173,
+      "printingCode": "NKRT-EN028",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 19748583,
+      "printingCode": "NKRT-EN012",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 37742478,
+      "printingCode": "NKRT-EN014",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 95772051,
+      "printingCode": "NKRT-EN005",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 83519853,
+      "printingCode": "NKRT-EN036",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 15767889,
+      "printingCode": "NKRT-EN015",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 10736540,
+      "printingCode": "NKRT-EN013",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 66970385,
+      "printingCode": "NKRT-EN017",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 1224927,
+      "printingCode": "NKRT-EN033",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 3580032,
+      "printingCode": "NKRT-EN001",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 83438826,
+      "printingCode": "NKRT-EN020",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 23562407,
+      "printingCode": "NKRT-EN021",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 46008667,
+      "printingCode": "NKRT-EN023",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 14745409,
+      "printingCode": "NKRT-EN019",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 7452945,
+      "printingCode": "NKRT-EN022",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 92125819,
+      "printingCode": "NKRT-EN003",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 30575681,
+      "printingCode": "NKRT-EN002",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 47120245,
+      "printingCode": "NKRT-EN009",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 53550467,
+      "printingCode": "NKRT-EN008",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 93085839,
+      "printingCode": "NKRT-EN011",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 19680539,
+      "printingCode": "NKRT-EN004",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 13391185,
+      "printingCode": "NKRT-EN007",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 59057152,
+      "printingCode": "NKRT-EN006",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 73359475,
+      "printingCode": "NKRT-EN010",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 55742055,
+      "printingCode": "NKRT-EN018",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 32807846,
+      "printingCode": "NKRT-EN026",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 98847704,
+      "printingCode": "NKRT-EN029",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 10613952,
+      "printingCode": "NKRT-EN038",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 84749824,
+      "printingCode": "NKRT-EN035",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 25067275,
+      "printingCode": "NKRT-EN030",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 72302403,
+      "printingCode": "NKRT-EN025",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    }
+  ]
+}

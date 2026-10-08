@@ -4,7 +4,9 @@ import {
   lstat,
   mkdir,
   readFile,
+  readdir,
   rename,
+  rmdir,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -21,6 +23,7 @@ import type {
   CriticalResource,
 } from "../src/storage/contracts/critical-snapshot.ts";
 import type { SourceManifest } from "./lib/json-content/source-manifest.ts";
+import { withWindowsRenameRetry } from "./lib/windows-rename-retry.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot = path.join(root, "generated/readable-content-v1");
@@ -51,6 +54,7 @@ if (!["manifest", "prepare", "verify-staged"].includes(command ?? "")) {
       const engine: CriticalResource[] = [];
       const manifests = [];
       for (const id of ids) {
+        console.log(`Compiling readable content: ${id}`);
         const directory = path.join(sourceRoot, id);
         const result = await compileSource(directory, directory);
         if (result.snapshot.manifest.packageId !== id)
@@ -99,28 +103,46 @@ if (!["manifest", "prepare", "verify-staged"].includes(command ?? "")) {
             path.join(temporary, ".ascencio-readable-stage"),
             "ascencio-readable-stage-v1\n",
           );
-          // Only a stage carrying our exact marker may be replaced.
+          let existing = null;
           try {
-            await lstat(stage);
-            if (
-              (await readFile(
-                path.join(stage, ".ascencio-readable-stage"),
-                "utf8",
-              )) !== "ascencio-readable-stage-v1\n"
-            )
-              throw new Error("RELEASE_STAGE_OWNERSHIP");
-            const previous = `${stage}-${crypto.randomUUID()}.previous`;
-            await rename(stage, previous);
-            try {
-              await rename(temporary, stage);
-            } catch (error) {
-              await rename(previous, stage);
-              throw error;
-            }
-            await rm(previous, { recursive: true });
+            existing = await lstat(stage);
           } catch (error) {
             if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-            await rename(temporary, stage);
+          }
+          if (existing === null) {
+            await withWindowsRenameRetry(() => rename(temporary, stage));
+          } else {
+            if (!existing.isDirectory() || existing.isSymbolicLink())
+              throw new Error("RELEASE_STAGE_OWNERSHIP");
+            let marker = null;
+            try {
+              marker = await readFile(
+                path.join(stage, ".ascencio-readable-stage"),
+                "utf8",
+              );
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT")
+                throw error;
+            }
+            if (marker === null && (await readdir(stage)).length === 0) {
+              // tauri_build creates this empty directory. Windows rename cannot
+              // replace it; rmdir fails safely if another writer adds a file.
+              await rmdir(stage);
+              await withWindowsRenameRetry(() => rename(temporary, stage));
+            } else {
+              // Only a nonempty stage carrying our exact marker may be replaced.
+              if (marker !== "ascencio-readable-stage-v1\n")
+                throw new Error("RELEASE_STAGE_OWNERSHIP");
+              const previous = `${stage}-${crypto.randomUUID()}.previous`;
+              await withWindowsRenameRetry(() => rename(stage, previous));
+              try {
+                await withWindowsRenameRetry(() => rename(temporary, stage));
+              } catch (error) {
+                await withWindowsRenameRetry(() => rename(previous, stage));
+                throw error;
+              }
+              await rm(previous, { recursive: true });
+            }
           }
           await verifyStaged();
         } finally {

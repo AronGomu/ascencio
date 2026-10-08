@@ -144,7 +144,7 @@ describe("asset source restructure", () => {
     ]);
     expect(planned.value.unknown).toEqual([]);
     const applied = await applyAssetRestructure(root, planned.value);
-    expect(applied.kind).toBe("ok");
+    expect(applied.kind, JSON.stringify(applied)).toBe("ok");
     if (applied.kind !== "ok") return;
     expect(applied.value.files).toEqual(planned.value.files);
     for (const file of planned.value.files) {

@@ -1,0 +1,1142 @@
+{
+  "id": "set-aea05c2e394d33b7",
+  "name": "Maximum Gold",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-aea05c2e394d33b7.jpg",
+  "cards": [
+    {
+      "cardCode": 86120751,
+      "printingCode": "MAGO-EN016",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 97120394,
+      "printingCode": "MAGO-EN043",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 4280258,
+      "printingCode": "MAGO-EN041",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 34267821,
+      "printingCode": "MAGO-EN008",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 14558127,
+      "printingCode": "MAGO-EN011",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 84478195,
+      "printingCode": "MAGO-EN111",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 19740112,
+      "printingCode": "MAGO-EN115",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 46145256,
+      "printingCode": "MAGO-EN116",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 47961808,
+      "printingCode": "MAGO-EN113",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73356503,
+      "printingCode": "MAGO-EN114",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 10963799,
+      "printingCode": "MAGO-EN112",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 27552504,
+      "printingCode": "MAGO-EN035",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "MAGO-EN001",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 85289965,
+      "printingCode": "MAGO-EN039",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 92572371,
+      "printingCode": "MAGO-EN071",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 49785720,
+      "printingCode": "MAGO-EN072",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 3428069,
+      "printingCode": "MAGO-EN100",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 86240887,
+      "printingCode": "MAGO-EN101",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 67692580,
+      "printingCode": "MAGO-EN102",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "MAGO-EN156",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55878038,
+      "printingCode": "MAGO-EN017",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 59388357,
+      "printingCode": "MAGO-EN149",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 3534077,
+      "printingCode": "MAGO-EN120",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 44656450,
+      "printingCode": "MAGO-EN129",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73964868,
+      "printingCode": "MAGO-EN031",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 23893227,
+      "printingCode": "MAGO-EN123",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 10443957,
+      "printingCode": "MAGO-EN033",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 7572887,
+      "printingCode": "MAGO-EN110",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "MAGO-EN002",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 16195942,
+      "printingCode": "MAGO-EN032",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 14517422,
+      "printingCode": "MAGO-EN108",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 52840267,
+      "printingCode": "MAGO-EN106",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25451652,
+      "printingCode": "MAGO-EN105",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25339070,
+      "printingCode": "MAGO-EN107",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 50501121,
+      "printingCode": "MAGO-EN109",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 70342110,
+      "printingCode": "MAGO-EN158",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 84171830,
+      "printingCode": "MAGO-EN090",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 71490127,
+      "printingCode": "MAGO-EN142",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 94145021,
+      "printingCode": "MAGO-EN006",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 47475363,
+      "printingCode": "MAGO-EN097",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 63845230,
+      "printingCode": "MAGO-EN126",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 80532587,
+      "printingCode": "MAGO-EN026",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 95440946,
+      "printingCode": "MAGO-EN024",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 40044918,
+      "printingCode": "MAGO-EN004",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 57995165,
+      "printingCode": "MAGO-EN055",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 78661338,
+      "printingCode": "MAGO-EN018",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 19059929,
+      "printingCode": "MAGO-EN073",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 80794697,
+      "printingCode": "MAGO-EN127",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 81439173,
+      "printingCode": "MAGO-EN053",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 35726888,
+      "printingCode": "MAGO-EN054",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25789292,
+      "printingCode": "MAGO-EN048",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 66889139,
+      "printingCode": "MAGO-EN025",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 28912357,
+      "printingCode": "MAGO-EN131",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73642296,
+      "printingCode": "MAGO-EN012",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 59438930,
+      "printingCode": "MAGO-EN009",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "MAGO-EN010",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "MAGO-EN013",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 19667590,
+      "printingCode": "MAGO-EN121",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 34230233,
+      "printingCode": "MAGO-EN118",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 18144507,
+      "printingCode": "MAGO-EN042",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 85909450,
+      "printingCode": "MAGO-EN132",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 79606837,
+      "printingCode": "MAGO-EN028",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 64697431,
+      "printingCode": "MAGO-EN155",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 70000776,
+      "printingCode": "MAGO-EN087",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "MAGO-EN027",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 90434657,
+      "printingCode": "MAGO-EN089",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 86197239,
+      "printingCode": "MAGO-EN005",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 10045474,
+      "printingCode": "MAGO-EN052",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 16960120,
+      "printingCode": "MAGO-EN022",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 55885348,
+      "printingCode": "MAGO-EN014",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 67237709,
+      "printingCode": "MAGO-EN050",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 16188701,
+      "printingCode": "MAGO-EN128",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 59160188,
+      "printingCode": "MAGO-EN157",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "MAGO-EN021",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 41999284,
+      "printingCode": "MAGO-EN135",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 24348804,
+      "printingCode": "MAGO-EN160",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 17228908,
+      "printingCode": "MAGO-EN154",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 63995093,
+      "printingCode": "MAGO-EN140",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 14001430,
+      "printingCode": "MAGO-EN069",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 91350799,
+      "printingCode": "MAGO-EN068",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 79759367,
+      "printingCode": "MAGO-EN070",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 83746708,
+      "printingCode": "MAGO-EN139",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 47679935,
+      "printingCode": "MAGO-EN152",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 81846453,
+      "printingCode": "MAGO-EN030",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 67489919,
+      "printingCode": "MAGO-EN064",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 94973028,
+      "printingCode": "MAGO-EN065",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "MAGO-EN067",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 26949946,
+      "printingCode": "MAGO-EN066",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 72006609,
+      "printingCode": "MAGO-EN137",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 37520316,
+      "printingCode": "MAGO-EN138",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 35255456,
+      "printingCode": "MAGO-EN148",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 38572779,
+      "printingCode": "MAGO-EN015",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 59305593,
+      "printingCode": "MAGO-EN077",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89883517,
+      "printingCode": "MAGO-EN081",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 4227096,
+      "printingCode": "MAGO-EN080",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "MAGO-EN045",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 37561138,
+      "printingCode": "MAGO-EN088",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 27204311,
+      "printingCode": "MAGO-EN019",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 89882100,
+      "printingCode": "MAGO-EN147",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 57690191,
+      "printingCode": "MAGO-EN083",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53550467,
+      "printingCode": "MAGO-EN082",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 93085839,
+      "printingCode": "MAGO-EN084",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 5361816,
+      "printingCode": "MAGO-EN085",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55742055,
+      "printingCode": "MAGO-EN086",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 48739166,
+      "printingCode": "MAGO-EN060",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 88177324,
+      "printingCode": "MAGO-EN062",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 88120966,
+      "printingCode": "MAGO-EN056",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 21521304,
+      "printingCode": "MAGO-EN057",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 16037007,
+      "printingCode": "MAGO-EN058",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89516305,
+      "printingCode": "MAGO-EN059",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 12744567,
+      "printingCode": "MAGO-EN061",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 68396121,
+      "printingCode": "MAGO-EN063",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 56832966,
+      "printingCode": "MAGO-EN034",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 40398073,
+      "printingCode": "MAGO-EN020",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 88453933,
+      "printingCode": "MAGO-EN023",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 97526666,
+      "printingCode": "MAGO-EN119",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "MAGO-EN044",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 96729612,
+      "printingCode": "MAGO-EN144",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 57734012,
+      "printingCode": "MAGO-EN049",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "MAGO-EN003",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 32807846,
+      "printingCode": "MAGO-EN046",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 45725480,
+      "printingCode": "MAGO-EN150",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 4334811,
+      "printingCode": "MAGO-EN117",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "MAGO-EN153",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 1372887,
+      "printingCode": "MAGO-EN079",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 90303176,
+      "printingCode": "MAGO-EN122",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 63288573,
+      "printingCode": "MAGO-EN038",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 3814632,
+      "printingCode": "MAGO-EN133",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41420027,
+      "printingCode": "MAGO-EN051",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 16725505,
+      "printingCode": "MAGO-EN099",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53932291,
+      "printingCode": "MAGO-EN098",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 64880894,
+      "printingCode": "MAGO-EN029",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 1003840,
+      "printingCode": "MAGO-EN095",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 5650082,
+      "printingCode": "MAGO-EN096",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 48130397,
+      "printingCode": "MAGO-EN047",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 66523544,
+      "printingCode": "MAGO-EN130",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 62125438,
+      "printingCode": "MAGO-EN094",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 8038143,
+      "printingCode": "MAGO-EN159",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53819808,
+      "printingCode": "MAGO-EN146",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 73628505,
+      "printingCode": "MAGO-EN141",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 8522996,
+      "printingCode": "MAGO-EN091",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 48716527,
+      "printingCode": "MAGO-EN092",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 26692769,
+      "printingCode": "MAGO-EN040",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 54241725,
+      "printingCode": "MAGO-EN093",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 71039903,
+      "printingCode": "MAGO-EN125",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 24207889,
+      "printingCode": "MAGO-EN162",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "MAGO-EN134",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89732524,
+      "printingCode": "MAGO-EN078",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 10802915,
+      "printingCode": "MAGO-EN007",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 38120068,
+      "printingCode": "MAGO-EN143",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 46947713,
+      "printingCode": "MAGO-EN136",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 45803070,
+      "printingCode": "MAGO-EN075",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 82738277,
+      "printingCode": "MAGO-EN076",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 91812341,
+      "printingCode": "MAGO-EN074",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 21076084,
+      "printingCode": "MAGO-EN161",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 96363153,
+      "printingCode": "MAGO-EN145",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 911883,
+      "printingCode": "MAGO-EN151",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 66399653,
+      "printingCode": "MAGO-EN103",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 39778366,
+      "printingCode": "MAGO-EN104",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 57473560,
+      "printingCode": "MAGO-EN124",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 41375811,
+      "printingCode": "MAGO-EN037",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    },
+    {
+      "cardCode": 48905153,
+      "printingCode": "MAGO-EN036",
+      "rarity": "common",
+      "sourceRarity": "Premium Gold Rare",
+      "sourceRarityCode": "(PG)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-b2cff66a264e6e5b",
+  "name": "Weekly Shonen Jump November 2014 membership promotional card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-b2cff66a264e6e5b.jpg",
+  "cards": [
+    {
+      "cardCode": 96471335,
+      "printingCode": "JUMP-EN070",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

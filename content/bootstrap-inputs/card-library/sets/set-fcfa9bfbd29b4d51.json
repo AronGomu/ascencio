@@ -1,0 +1,15 @@
+{
+  "id": "set-fcfa9bfbd29b4d51",
+  "name": "The Lost Art Promotion 2025 F",
+  "releaseYear": 2025,
+  "imageAssetPath": "sets/set-fcfa9bfbd29b4d51.jpg",
+  "cards": [
+    {
+      "cardCode": 70865988,
+      "printingCode": "LART-EN075",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

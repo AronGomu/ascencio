@@ -1,0 +1,78 @@
+{
+  "id": "set-6f4e08fa33571da0",
+  "name": "Speed Duel Demo Deck",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-6f4e08fa33571da0.jpg",
+  "cards": [
+    {
+      "cardCode": 88819587,
+      "printingCode": "DEM5-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5053103,
+      "printingCode": "DEM5-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26376390,
+      "printingCode": "DEM5-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99261403,
+      "printingCode": "DEM5-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41392891,
+      "printingCode": "DEM5-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63695531,
+      "printingCode": "DEM5-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64271667,
+      "printingCode": "DEM5-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34016756,
+      "printingCode": "DEM5-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98495314,
+      "printingCode": "DEM5-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "DEM5-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

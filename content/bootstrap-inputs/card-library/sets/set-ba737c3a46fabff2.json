@@ -1,0 +1,36 @@
+{
+  "id": "set-ba737c3a46fabff2",
+  "name": "San Diego Comic-Con promotional cards",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-ba737c3a46fabff2.jpg",
+  "cards": [
+    {
+      "cardCode": 73915052,
+      "printingCode": "TKN1-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73915052,
+      "printingCode": "TKN1-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73915052,
+      "printingCode": "TKN1-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73915052,
+      "printingCode": "TKN1-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "set-29cb6d0651fd9316",
+  "name": "Duelist Pack Collection Tin 2011",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-29cb6d0651fd9316.jpg",
+  "cards": [
+    {
+      "cardCode": 94515289,
+      "printingCode": "DPCT-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 95453143,
+      "printingCode": "DPC5-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63465535,
+      "printingCode": "DPC5-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 22858242,
+      "printingCode": "DPC5-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

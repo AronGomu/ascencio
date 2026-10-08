@@ -1,0 +1,15 @@
+{
+  "id": "set-000bd82c58e5c89f",
+  "name": "The Lost Art Promotion 2021 F",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-000bd82c58e5c89f.jpg",
+  "cards": [
+    {
+      "cardCode": 94381039,
+      "printingCode": "LART-EN036",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

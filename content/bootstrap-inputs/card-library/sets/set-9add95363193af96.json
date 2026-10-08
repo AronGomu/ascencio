@@ -1,0 +1,22 @@
+{
+  "id": "set-9add95363193af96",
+  "name": "Yu-Gi-Oh! Championship Series 2013 Prize Card",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-9add95363193af96.jpg",
+  "cards": [
+    {
+      "cardCode": 63746411,
+      "printingCode": "YCSW-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63746411,
+      "printingCode": "YCSW-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

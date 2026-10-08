@@ -1,0 +1,36 @@
+{
+  "id": "set-526c6e97556e9a0e",
+  "name": "Primal Origin: Deluxe Edition",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-526c6e97556e9a0e.jpg",
+  "cards": [
+    {
+      "cardCode": 47594939,
+      "printingCode": "PRIO-ENDE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 58695102,
+      "printingCode": "PRIO-ENDE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47741109,
+      "printingCode": "PRIO-ENDE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 97750534,
+      "printingCode": "PRIO-ENDE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-c45e8a5756b7046a",
+  "name": "Duelist League Series 5 participation card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-c45e8a5756b7046a.jpg",
+  "cards": [
+    {
+      "cardCode": 99518961,
+      "printingCode": "DL5-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

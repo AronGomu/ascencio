@@ -1,0 +1,22 @@
+{
+  "id": "set-91e3487b17478db5",
+  "name": "Shonen Jump June/July 2011 subscription bonus",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-91e3487b17478db5.jpg",
+  "cards": [
+    {
+      "cardCode": 63468625,
+      "printingCode": "JUMP-EN050",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90953320,
+      "printingCode": "JUMP-EN051",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

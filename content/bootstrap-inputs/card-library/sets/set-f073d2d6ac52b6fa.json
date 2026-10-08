@@ -1,0 +1,15 @@
+{
+  "id": "set-f073d2d6ac52b6fa",
+  "name": "Spellcaster's Command Structure Deck: Special Edition",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-f073d2d6ac52b6fa.jpg",
+  "cards": [
+    {
+      "cardCode": 80304126,
+      "printingCode": "SDSC-ENSE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

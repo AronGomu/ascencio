@@ -1,0 +1,15 @@
+{
+  "id": "set-12ab318d321c2007",
+  "name": "Yu-Gi-Oh! ARC-V Volume 7 promotional card",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-12ab318d321c2007.jpg",
+  "cards": [
+    {
+      "cardCode": 40227329,
+      "printingCode": "YA07-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

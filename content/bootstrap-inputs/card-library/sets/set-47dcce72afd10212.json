@@ -1,0 +1,22 @@
+{
+  "id": "set-47dcce72afd10212",
+  "name": "Nike collaboration cards",
+  "releaseYear": null,
+  "imageAssetPath": "sets/set-47dcce72afd10212.jpg",
+  "cards": [
+    {
+      "cardCode": 74677422,
+      "printingCode": "NKC1-EN002",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 37301660,
+      "printingCode": "NKC1-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

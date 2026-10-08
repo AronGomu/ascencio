@@ -1,0 +1,15 @@
+{
+  "id": "set-0aebeba7cedc7299",
+  "name": "The Lost Art Promotion 2020 L",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-0aebeba7cedc7299.jpg",
+  "cards": [
+    {
+      "cardCode": 60643553,
+      "printingCode": "LART-EN024",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

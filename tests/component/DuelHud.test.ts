@@ -85,8 +85,16 @@ describe("DuelHud", () => {
     expect(within(hud).getByText("Turn 4")).toBeTruthy();
     expect(within(hud).getByText("Opponent's turn")).toBeTruthy();
     expect(within(hud).getByText("battle step")).toBeTruthy();
-    expect(within(hud).getByText("6,200 LP")).toBeTruthy();
-    expect(within(hud).getByText("3,400 LP")).toBeTruthy();
+    expect(
+      within(hud).getByText(`${(6200).toLocaleString()} LP`, {
+        normalizer: (value) => value.trim(),
+      }),
+    ).toBeTruthy();
+    expect(
+      within(hud).getByText(`${(3400).toLocaleString()} LP`, {
+        normalizer: (value) => value.trim(),
+      }),
+    ).toBeTruthy();
 
     const chain = within(hud).getByRole("region", { name: "Active chain" });
     expect(within(chain).getByText(/Link 1 · You/)).toBeTruthy();

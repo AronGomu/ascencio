@@ -1,0 +1,15 @@
+{
+  "id": "set-ae62cd3067fb8d5e",
+  "name": "Extreme Victory Sneak Peek Participation Card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-ae62cd3067fb8d5e.jpg",
+  "cards": [
+    {
+      "cardCode": 10028593,
+      "printingCode": "EXVC-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

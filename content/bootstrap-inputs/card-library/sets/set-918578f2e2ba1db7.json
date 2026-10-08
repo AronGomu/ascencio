@@ -1,0 +1,36 @@
+{
+  "id": "set-918578f2e2ba1db7",
+  "name": "The Dark Illusion: Special Edition",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-918578f2e2ba1db7.jpg",
+  "cards": [
+    {
+      "cardCode": 17377751,
+      "printingCode": "TDIL-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 56832966,
+      "printingCode": "TDIL-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30979619,
+      "printingCode": "TDIL-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16719140,
+      "printingCode": "TDIL-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

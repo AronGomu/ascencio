@@ -1,0 +1,15 @@
+{
+  "id": "set-f3e0560f586ad437",
+  "name": "Yu-Gi-Oh! GX Special Edition",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-f3e0560f586ad437.jpg",
+  "cards": [
+    {
+      "cardCode": 86188410,
+      "printingCode": "GSE-EN001",
+      "rarity": "common",
+      "sourceRarity": "Ultra Secret Rare",
+      "sourceRarityCode": "(UScR)"
+    }
+  ]
+}

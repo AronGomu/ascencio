@@ -1,0 +1,15 @@
+{
+  "id": "set-2acb3ff687c55139",
+  "name": "GX Next Generation",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-2acb3ff687c55139.jpg",
+  "cards": [
+    {
+      "cardCode": 73891874,
+      "printingCode": "GXNG-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

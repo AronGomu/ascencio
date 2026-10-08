@@ -1,0 +1,15 @@
+{
+  "id": "set-50346a4d50c924b2",
+  "name": "Duelist Pack Collection Tin 2008",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-50346a4d50c924b2.jpg",
+  "cards": [
+    {
+      "cardCode": 26701483,
+      "printingCode": "DPCT-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

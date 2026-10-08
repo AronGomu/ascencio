@@ -1,0 +1,15 @@
+{
+  "id": "set-bf047b6b9c8221a3",
+  "name": "Ultimate Edition 2",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-bf047b6b9c8221a3.jpg",
+  "cards": [
+    {
+      "cardCode": 62873545,
+      "printingCode": "UE02-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "set-352312cbf66399c0",
+  "name": "Yu-Gi-Oh! Championship Series 2016 Prize Card",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-352312cbf66399c0.jpg",
+  "cards": [
+    {
+      "cardCode": 23187256,
+      "printingCode": "YCSW-EN009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 23187256,
+      "printingCode": "YCSW-EN009",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

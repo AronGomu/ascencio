@@ -1,0 +1,15 @@
+{
+  "id": "set-e70a8ddd80c40373",
+  "name": "Rising Rampage Sneak Peek Participation Card",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-e70a8ddd80c40373.jpg",
+  "cards": [
+    {
+      "cardCode": 82319644,
+      "printingCode": "RIRA-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-8dd65ff914a22acc",
+  "name": "Yu-Gi-Oh! R Volume 5 promotional card",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-8dd65ff914a22acc.jpg",
+  "cards": [
+    {
+      "cardCode": 17573739,
+      "printingCode": "YR05-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

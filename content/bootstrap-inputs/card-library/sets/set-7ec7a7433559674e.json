@@ -1,0 +1,15 @@
+{
+  "id": "set-7ec7a7433559674e",
+  "name": "Hobby League 7 participation card E",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-7ec7a7433559674e.jpg",
+  "cards": [
+    {
+      "cardCode": 57953380,
+      "printingCode": "HL07-EN005",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "set-7d128570503ac14e",
+  "name": "Yu-Gi-Oh! The Falsebound Kingdom promotional cards",
+  "releaseYear": 2003,
+  "imageAssetPath": "sets/set-7d128570503ac14e.jpg",
+  "cards": [
+    {
+      "cardCode": 4149689,
+      "printingCode": "TFK-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 24311372,
+      "printingCode": "TFK-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 45425051,
+      "printingCode": "TFK-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50705071,
+      "printingCode": "TFK-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 78636495,
+      "printingCode": "TFK-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 79853073,
+      "printingCode": "TFK-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

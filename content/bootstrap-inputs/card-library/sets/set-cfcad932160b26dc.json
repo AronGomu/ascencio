@@ -1,0 +1,15 @@
+{
+  "id": "set-cfcad932160b26dc",
+  "name": "Return of the Duelist Sneak Peek Participation Card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-cfcad932160b26dc.jpg",
+  "cards": [
+    {
+      "cardCode": 19680539,
+      "printingCode": "REDU-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

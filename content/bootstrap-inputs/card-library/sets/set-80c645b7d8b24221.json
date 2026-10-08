@@ -1,0 +1,36 @@
+{
+  "id": "set-80c645b7d8b24221",
+  "name": "Raging Tempest: Special Edition",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-80c645b7d8b24221.jpg",
+  "cards": [
+    {
+      "cardCode": 55705473,
+      "printingCode": "RATE-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 89870349,
+      "printingCode": "RATE-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 73445448,
+      "printingCode": "RATE-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 20155904,
+      "printingCode": "RATE-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "set-d93139ee70a9adf0",
+  "name": "Return of the Duelist: Special Edition",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-d93139ee70a9adf0.jpg",
+  "cards": [
+    {
+      "cardCode": 81330115,
+      "printingCode": "REDU-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 90953320,
+      "printingCode": "REDU-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

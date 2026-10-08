@@ -1,0 +1,29 @@
+{
+  "id": "set-88eeea412515ecf5",
+  "name": "Yu-Gi-Oh! 5D's Duel Transer promotional cards",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-88eeea412515ecf5.jpg",
+  "cards": [
+    {
+      "cardCode": 41098335,
+      "printingCode": "YDT1-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78082039,
+      "printingCode": "YDT1-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 4587638,
+      "printingCode": "YDT1-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

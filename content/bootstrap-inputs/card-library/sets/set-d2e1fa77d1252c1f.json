@@ -1,0 +1,15 @@
+{
+  "id": "set-d2e1fa77d1252c1f",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 1 promotional card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-d2e1fa77d1252c1f.jpg",
+  "cards": [
+    {
+      "cardCode": 69069911,
+      "printingCode": "YZ01-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

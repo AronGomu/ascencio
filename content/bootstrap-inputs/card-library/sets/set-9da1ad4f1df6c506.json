@@ -1,0 +1,876 @@
+{
+  "id": "set-9da1ad4f1df6c506",
+  "name": "Alliance Insight",
+  "releaseYear": 2025,
+  "imageAssetPath": "sets/set-9da1ad4f1df6c506.jpg",
+  "cards": [
+    {
+      "cardCode": 79015062,
+      "printingCode": "ALIN-EN054",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 21846145,
+      "printingCode": "ALIN-EN080",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 39138610,
+      "printingCode": "ALIN-EN051",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 39138610,
+      "printingCode": "ALIN-EN051",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 13332685,
+      "printingCode": "ALIN-EN092",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 43321985,
+      "printingCode": "ALIN-EN039",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 21050476,
+      "printingCode": "ALIN-EN020",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30964246,
+      "printingCode": "ALIN-EN062",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 12888461,
+      "printingCode": "ALIN-EN084",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17749468,
+      "printingCode": "ALIN-EN035",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30118811,
+      "printingCode": "ALIN-EN002",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30118811,
+      "printingCode": "ALIN-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 71750854,
+      "printingCode": "ALIN-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44265115,
+      "printingCode": "ALIN-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 92221402,
+      "printingCode": "ALIN-EN067",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4965193,
+      "printingCode": "ALIN-EN047",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4965193,
+      "printingCode": "ALIN-EN047",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 5088741,
+      "printingCode": "ALIN-EN044",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18861006,
+      "printingCode": "ALIN-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64998567,
+      "printingCode": "ALIN-EN072",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19715246,
+      "printingCode": "ALIN-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56100345,
+      "printingCode": "ALIN-EN027",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 56100345,
+      "printingCode": "ALIN-EN027",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 2501624,
+      "printingCode": "ALIN-EN004",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2501624,
+      "printingCode": "ALIN-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 12500059,
+      "printingCode": "ALIN-EN081",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23151193,
+      "printingCode": "ALIN-EN011",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 23151193,
+      "printingCode": "ALIN-EN011",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 60145298,
+      "printingCode": "ALIN-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 46533533,
+      "printingCode": "ALIN-EN097",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67359907,
+      "printingCode": "ALIN-EN049",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 67359907,
+      "printingCode": "ALIN-EN049",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 42021064,
+      "printingCode": "ALIN-EN053",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48705086,
+      "printingCode": "ALIN-EN100",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 58931850,
+      "printingCode": "ALIN-EN000",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 85442146,
+      "printingCode": "ALIN-EN079",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30350202,
+      "printingCode": "ALIN-EN048",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30350202,
+      "printingCode": "ALIN-EN048",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 22669793,
+      "printingCode": "ALIN-EN077",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 28903523,
+      "printingCode": "ALIN-EN071",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35095329,
+      "printingCode": "ALIN-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6636319,
+      "printingCode": "ALIN-EN052",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 43143567,
+      "printingCode": "ALIN-EN036",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43143567,
+      "printingCode": "ALIN-EN036",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 78293584,
+      "printingCode": "ALIN-EN057",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70538272,
+      "printingCode": "ALIN-EN037",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16926971,
+      "printingCode": "ALIN-EN038",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 74271714,
+      "printingCode": "ALIN-EN086",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 31809476,
+      "printingCode": "ALIN-EN056",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 8170654,
+      "printingCode": "ALIN-EN098",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66236707,
+      "printingCode": "ALIN-EN066",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 66236707,
+      "printingCode": "ALIN-EN066",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 60268386,
+      "printingCode": "ALIN-EN009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 97662494,
+      "printingCode": "ALIN-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4575541,
+      "printingCode": "ALIN-EN061",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49904658,
+      "printingCode": "ALIN-EN082",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78693036,
+      "printingCode": "ALIN-EN043",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78693036,
+      "printingCode": "ALIN-EN043",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 34873741,
+      "printingCode": "ALIN-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66102515,
+      "printingCode": "ALIN-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42209438,
+      "printingCode": "ALIN-EN042",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38625110,
+      "printingCode": "ALIN-EN068",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82699999,
+      "printingCode": "ALIN-EN028",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 82699999,
+      "printingCode": "ALIN-EN028",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 20938824,
+      "printingCode": "ALIN-EN023",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 20938824,
+      "printingCode": "ALIN-EN023",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 93453053,
+      "printingCode": "ALIN-EN064",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 66059345,
+      "printingCode": "ALIN-EN063",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76725398,
+      "printingCode": "ALIN-EN094",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 49721684,
+      "printingCode": "ALIN-EN093",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12210097,
+      "printingCode": "ALIN-EN095",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49604192,
+      "printingCode": "ALIN-EN096",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76948970,
+      "printingCode": "ALIN-EN091",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40543231,
+      "printingCode": "ALIN-EN090",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 19093698,
+      "printingCode": "ALIN-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 45488703,
+      "printingCode": "ALIN-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94655777,
+      "printingCode": "ALIN-EN019",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 94655777,
+      "printingCode": "ALIN-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 77571454,
+      "printingCode": "ALIN-EN046",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 77571454,
+      "printingCode": "ALIN-EN046",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 31086840,
+      "printingCode": "ALIN-EN045",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5800323,
+      "printingCode": "ALIN-EN041",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 57448410,
+      "printingCode": "ALIN-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 83711531,
+      "printingCode": "ALIN-EN025",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 31786838,
+      "printingCode": "ALIN-EN059",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 31786838,
+      "printingCode": "ALIN-EN059",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 95718355,
+      "printingCode": "ALIN-EN016",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 95718355,
+      "printingCode": "ALIN-EN016",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 27781371,
+      "printingCode": "ALIN-EN074",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67171933,
+      "printingCode": "ALIN-EN060",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 59323650,
+      "printingCode": "ALIN-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22812963,
+      "printingCode": "ALIN-EN017",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 22812963,
+      "printingCode": "ALIN-EN017",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 22938501,
+      "printingCode": "ALIN-EN014",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 22938501,
+      "printingCode": "ALIN-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 96540807,
+      "printingCode": "ALIN-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 61480937,
+      "printingCode": "ALIN-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1665819,
+      "printingCode": "ALIN-EN087",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 90664684,
+      "printingCode": "ALIN-EN076",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53276089,
+      "printingCode": "ALIN-EN075",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91509824,
+      "printingCode": "ALIN-EN070",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 47060528,
+      "printingCode": "ALIN-EN088",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 65114115,
+      "printingCode": "ALIN-EN069",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90386276,
+      "printingCode": "ALIN-EN073",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79415624,
+      "printingCode": "ALIN-EN040",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79415624,
+      "printingCode": "ALIN-EN040",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 58053438,
+      "printingCode": "ALIN-EN078",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58053438,
+      "printingCode": "ALIN-EN078",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 58201062,
+      "printingCode": "ALIN-EN018",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58201062,
+      "printingCode": "ALIN-EN018",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 98888032,
+      "printingCode": "ALIN-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84433129,
+      "printingCode": "ALIN-EN022",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 84433129,
+      "printingCode": "ALIN-EN022",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 3743515,
+      "printingCode": "ALIN-EN050",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56322832,
+      "printingCode": "ALIN-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14554127,
+      "printingCode": "ALIN-EN089",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48882106,
+      "printingCode": "ALIN-EN085",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 75493362,
+      "printingCode": "ALIN-EN083",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81476402,
+      "printingCode": "ALIN-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39848658,
+      "printingCode": "ALIN-EN065",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4398189,
+      "printingCode": "ALIN-EN058",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4398189,
+      "printingCode": "ALIN-EN058",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 3723262,
+      "printingCode": "ALIN-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 5414777,
+      "printingCode": "ALIN-EN055",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

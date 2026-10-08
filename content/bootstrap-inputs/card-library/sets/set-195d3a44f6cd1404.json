@@ -1,0 +1,50 @@
+{
+  "id": "set-195d3a44f6cd1404",
+  "name": "Yu-Gi-Oh! World Championship Tournament 2004 promotional cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-195d3a44f6cd1404.jpg",
+  "cards": [
+    {
+      "cardCode": 8131171,
+      "printingCode": "WC4-E002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 18144507,
+      "printingCode": "WC4-E003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 45425051,
+      "printingCode": "WC4-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 75347539,
+      "printingCode": "WC4-E001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 78636495,
+      "printingCode": "WC4-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 79853073,
+      "printingCode": "WC4-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

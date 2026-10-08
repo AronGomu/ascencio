@@ -1,0 +1,29 @@
+{
+  "id": "set-fea37fda1b4faa9c",
+  "name": "Yu-Gi-Oh! Destiny Board Traveler promotional cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-fea37fda1b4faa9c.jpg",
+  "cards": [
+    {
+      "cardCode": 43580269,
+      "printingCode": "DBT-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 70074904,
+      "printingCode": "DBT-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 82035781,
+      "printingCode": "DBT-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

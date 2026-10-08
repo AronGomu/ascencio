@@ -1,0 +1,813 @@
+{
+  "id": "set-9e483311376e35fd",
+  "name": "Legendary 5D&apos;s Decks",
+  "releaseYear": 2025,
+  "imageAssetPath": "sets/set-9e483311376e35fd.jpg",
+  "cards": [
+    {
+      "cardCode": 30983281,
+      "printingCode": "L5DD-ENY37",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54656950,
+      "printingCode": "L5DD-ENY02",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 14558127,
+      "printingCode": "L5DD-ENC09",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 14558127,
+      "printingCode": "L5DD-ENY17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77202120,
+      "printingCode": "L5DD-ENY12",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69167267,
+      "printingCode": "L5DD-ENA23",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69167267,
+      "printingCode": "L5DD-ENA23",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 7602800,
+      "printingCode": "L5DD-ENC22",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 71645242,
+      "printingCode": "L5DD-ENA18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71645242,
+      "printingCode": "L5DD-ENA18",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73580471,
+      "printingCode": "L5DD-ENA26",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73580471,
+      "printingCode": "L5DD-ENS02",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "L5DD-ENA28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91351370,
+      "printingCode": "L5DD-ENC19",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73218989,
+      "printingCode": "L5DD-ENC33",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9012916,
+      "printingCode": "L5DD-ENC30",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9012916,
+      "printingCode": "L5DD-ENS03",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 80254726,
+      "printingCode": "L5DD-ENC25",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 49003716,
+      "printingCode": "L5DD-ENC02",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10602628,
+      "printingCode": "L5DD-ENC34",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 34976176,
+      "printingCode": "L5DD-ENC14",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2009101,
+      "printingCode": "L5DD-ENC01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77152542,
+      "printingCode": "L5DD-ENC08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81105204,
+      "printingCode": "L5DD-ENC05",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 95040215,
+      "printingCode": "L5DD-ENC31",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73652465,
+      "printingCode": "L5DD-ENC07",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8571567,
+      "printingCode": "L5DD-ENC13",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54594017,
+      "printingCode": "L5DD-ENC06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33236860,
+      "printingCode": "L5DD-ENC29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81470373,
+      "printingCode": "L5DD-ENC10",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70465810,
+      "printingCode": "L5DD-ENC15",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69973414,
+      "printingCode": "L5DD-ENC26",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71187462,
+      "printingCode": "L5DD-ENC12",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72714392,
+      "printingCode": "L5DD-ENC03",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76913983,
+      "printingCode": "L5DD-ENC28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69031175,
+      "printingCode": "L5DD-ENC27",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 54082269,
+      "printingCode": "L5DD-ENC32",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99092624,
+      "printingCode": "L5DD-ENA25",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 98884569,
+      "printingCode": "L5DD-ENA05",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14087893,
+      "printingCode": "L5DD-ENC18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "L5DD-ENC21",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "L5DD-ENY27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57496978,
+      "printingCode": "L5DD-ENY23",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63436931,
+      "printingCode": "L5DD-ENY41",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65681983,
+      "printingCode": "L5DD-ENY28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80054655,
+      "printingCode": "L5DD-ENY03",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72218246,
+      "printingCode": "L5DD-ENA30",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 59839761,
+      "printingCode": "L5DD-ENC24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53855409,
+      "printingCode": "L5DD-ENY15",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94145021,
+      "printingCode": "L5DD-ENC04",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97474300,
+      "printingCode": "L5DD-ENY21",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97268402,
+      "printingCode": "L5DD-ENY16",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 25789292,
+      "printingCode": "L5DD-ENC20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24299458,
+      "printingCode": "L5DD-ENY29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50091196,
+      "printingCode": "L5DD-ENY38",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69584564,
+      "printingCode": "L5DD-ENA19",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53503015,
+      "printingCode": "L5DD-ENA21",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17201951,
+      "printingCode": "L5DD-ENY01",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76524506,
+      "printingCode": "L5DD-ENA33",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53325667,
+      "printingCode": "L5DD-ENA29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52038441,
+      "printingCode": "L5DD-ENC11",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59438930,
+      "printingCode": "L5DD-ENA06",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "L5DD-ENA09",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53567095,
+      "printingCode": "L5DD-ENC23",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 10045474,
+      "printingCode": "L5DD-ENA24",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10045474,
+      "printingCode": "L5DD-ENY31",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9742784,
+      "printingCode": "L5DD-ENY13",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11069680,
+      "printingCode": "L5DD-ENY14",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 77075360,
+      "printingCode": "L5DD-ENY35",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63977008,
+      "printingCode": "L5DD-ENY07",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 60800381,
+      "printingCode": "L5DD-ENY34",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16327715,
+      "printingCode": "L5DD-ENY32",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48686504,
+      "printingCode": "L5DD-ENA01",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44887817,
+      "printingCode": "L5DD-ENA17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44887817,
+      "printingCode": "L5DD-ENA17",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "L5DD-ENA15",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42141493,
+      "printingCode": "L5DD-ENC16",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87126721,
+      "printingCode": "L5DD-ENA14",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84192580,
+      "printingCode": "L5DD-ENY18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5318639,
+      "printingCode": "L5DD-ENC17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 31006879,
+      "printingCode": "L5DD-ENY19",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "L5DD-ENY25",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89932017,
+      "printingCode": "L5DD-ENY06",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72924435,
+      "printingCode": "L5DD-ENA31",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26118970,
+      "printingCode": "L5DD-ENA07",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97682931,
+      "printingCode": "L5DD-ENY10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29177818,
+      "printingCode": "L5DD-ENA11",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89252157,
+      "printingCode": "L5DD-ENA04",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58062306,
+      "printingCode": "L5DD-ENA10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93708824,
+      "printingCode": "L5DD-ENA12",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40139997,
+      "printingCode": "L5DD-ENA32",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29107423,
+      "printingCode": "L5DD-ENA13",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57458399,
+      "printingCode": "L5DD-ENY11",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8529136,
+      "printingCode": "L5DD-ENY24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16449363,
+      "printingCode": "L5DD-ENY04",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 42711820,
+      "printingCode": "L5DD-ENY33",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 1050684,
+      "printingCode": "L5DD-ENY26",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24696097,
+      "printingCode": "L5DD-ENY40",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4290468,
+      "printingCode": "L5DD-ENA27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11747708,
+      "printingCode": "L5DD-ENA03",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44508094,
+      "printingCode": "L5DD-ENS01",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 44508094,
+      "printingCode": "L5DD-ENY36",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37799519,
+      "printingCode": "L5DD-ENY09",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 74892653,
+      "printingCode": "L5DD-ENY39",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43834302,
+      "printingCode": "L5DD-ENY05",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 88901994,
+      "printingCode": "L5DD-ENY22",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60306277,
+      "printingCode": "L5DD-ENY30",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73628505,
+      "printingCode": "L5DD-ENA16",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65079854,
+      "printingCode": "L5DD-ENA20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96363153,
+      "printingCode": "L5DD-ENY20",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 96363153,
+      "printingCode": "L5DD-ENY20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60283232,
+      "printingCode": "L5DD-ENY08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84335863,
+      "printingCode": "L5DD-ENA22",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12213463,
+      "printingCode": "L5DD-ENA08",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 17720747,
+      "printingCode": "L5DD-ENA02",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

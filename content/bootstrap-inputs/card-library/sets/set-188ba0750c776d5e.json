@@ -1,0 +1,22 @@
+{
+  "id": "set-188ba0750c776d5e",
+  "name": "Duelist Revolution: Special Edition",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-188ba0750c776d5e.jpg",
+  "cards": [
+    {
+      "cardCode": 3429238,
+      "printingCode": "DREV-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 75500286,
+      "printingCode": "DREV-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

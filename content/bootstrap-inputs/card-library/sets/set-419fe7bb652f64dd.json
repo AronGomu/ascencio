@@ -1,0 +1,15 @@
+{
+  "id": "set-419fe7bb652f64dd",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 8 promotional card",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-419fe7bb652f64dd.jpg",
+  "cards": [
+    {
+      "cardCode": 56832966,
+      "printingCode": "YZ08-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

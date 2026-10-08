@@ -1,0 +1,15 @@
+{
+  "id": "set-187ad12bd76e9d70",
+  "name": "Hobby League 4 participation card C",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-187ad12bd76e9d70.jpg",
+  "cards": [
+    {
+      "cardCode": 2134346,
+      "printingCode": "HL04-EN003",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-d8071cb47468e658",
+  "name": "Stardust Overdrive Sneak Peek Participation Card",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-d8071cb47468e658.jpg",
+  "cards": [
+    {
+      "cardCode": 39037517,
+      "printingCode": "SOVR-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

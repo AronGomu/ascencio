@@ -1,0 +1,15 @@
+{
+  "id": "set-84b2e0fec1dfe872",
+  "name": "Hobby League 3 participation card C",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-84b2e0fec1dfe872.jpg",
+  "cards": [
+    {
+      "cardCode": 4206964,
+      "printingCode": "HL03-EN003",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

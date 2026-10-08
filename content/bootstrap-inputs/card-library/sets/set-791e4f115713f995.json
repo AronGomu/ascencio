@@ -1,0 +1,15 @@
+{
+  "id": "set-791e4f115713f995",
+  "name": "Lightning Overdrive Premiere! promotional card",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-791e4f115713f995.jpg",
+  "cards": [
+    {
+      "cardCode": 70389815,
+      "printingCode": "LIOV-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

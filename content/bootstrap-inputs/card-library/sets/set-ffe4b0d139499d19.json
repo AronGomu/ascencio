@@ -1,0 +1,36 @@
+{
+  "id": "set-ffe4b0d139499d19",
+  "name": "Rising Rampage Special Edition",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-ffe4b0d139499d19.jpg",
+  "cards": [
+    {
+      "cardCode": 91027843,
+      "printingCode": "RIRA-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30691817,
+      "printingCode": "RIRA-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 94207108,
+      "printingCode": "RIRA-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 71861848,
+      "printingCode": "RIRA-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

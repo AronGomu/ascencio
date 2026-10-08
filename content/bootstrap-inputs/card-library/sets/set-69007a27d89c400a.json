@@ -1,0 +1,22 @@
+{
+  "id": "set-69007a27d89c400a",
+  "name": "Stardust Overdrive: Special Edition",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-69007a27d89c400a.jpg",
+  "cards": [
+    {
+      "cardCode": 94886282,
+      "printingCode": "SOVR-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63101919,
+      "printingCode": "SOVR-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

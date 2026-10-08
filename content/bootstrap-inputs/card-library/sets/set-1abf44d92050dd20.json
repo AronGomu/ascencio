@@ -1,0 +1,78 @@
+{
+  "id": "set-1abf44d92050dd20",
+  "name": "Duelist Pack Collection Tin 2010",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-1abf44d92050dd20.jpg",
+  "cards": [
+    {
+      "cardCode": 51630558,
+      "printingCode": "DPCT-ENY06",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 56286179,
+      "printingCode": "DPCT-ENY04",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 63977008,
+      "printingCode": "DPCT-ENY01",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 57421866,
+      "printingCode": "DPCT-ENY07",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "DPCT-ENY08",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 23571046,
+      "printingCode": "DPCT-ENY02",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 98427577,
+      "printingCode": "DPCT-ENY09",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 9365703,
+      "printingCode": "DPCT-ENY05",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 58120309,
+      "printingCode": "DPCT-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 35537860,
+      "printingCode": "DPCT-ENY03",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

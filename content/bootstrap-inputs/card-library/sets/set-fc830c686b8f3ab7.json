@@ -1,0 +1,15 @@
+{
+  "id": "set-fc830c686b8f3ab7",
+  "name": "Yu-Gi-Oh! GX Volume 2 promotional card",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-fc830c686b8f3ab7.jpg",
+  "cards": [
+    {
+      "cardCode": 71564252,
+      "printingCode": "YG02-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

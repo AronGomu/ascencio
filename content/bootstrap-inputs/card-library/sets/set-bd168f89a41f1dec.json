@@ -1,0 +1,15 @@
+{
+  "id": "set-bd168f89a41f1dec",
+  "name": "Rise of the Duelist Premiere! promotional card",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-bd168f89a41f1dec.jpg",
+  "cards": [
+    {
+      "cardCode": 50354944,
+      "printingCode": "ROTD-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

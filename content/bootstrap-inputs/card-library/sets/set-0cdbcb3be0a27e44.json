@@ -1,0 +1,50 @@
+{
+  "id": "set-0cdbcb3be0a27e44",
+  "name": "Yu-Gi-Oh! Dark Duel Stories promotional cards",
+  "releaseYear": 2002,
+  "imageAssetPath": "sets/set-0cdbcb3be0a27e44.jpg",
+  "cards": [
+    {
+      "cardCode": 6740720,
+      "printingCode": "DDS-004",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 32268901,
+      "printingCode": "DDS-006",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 33396948,
+      "printingCode": "DDS-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 41356845,
+      "printingCode": "DDS-005",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "DDS-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "DDS-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

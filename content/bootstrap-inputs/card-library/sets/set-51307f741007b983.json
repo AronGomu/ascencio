@@ -1,0 +1,15 @@
+{
+  "id": "set-51307f741007b983",
+  "name": "Yu-Gi-Oh! GX Volume 3 promotional card",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-51307f741007b983.jpg",
+  "cards": [
+    {
+      "cardCode": 33776734,
+      "printingCode": "YG03-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

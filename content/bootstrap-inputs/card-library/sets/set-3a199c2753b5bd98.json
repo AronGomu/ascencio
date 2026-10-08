@@ -1,0 +1,29 @@
+{
+  "id": "set-3a199c2753b5bd98",
+  "name": "Collectible Tins 2006 Wave 2",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-3a199c2753b5bd98.jpg",
+  "cards": [
+    {
+      "cardCode": 25366484,
+      "printingCode": "CT03-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 32491822,
+      "printingCode": "CT03-EN006",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 6007213,
+      "printingCode": "CT03-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

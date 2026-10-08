@@ -1,0 +1,106 @@
+{
+  "id": "set-45ebd08ba22c2591",
+  "name": "Secrets of Eternity: Super Edition",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-45ebd08ba22c2591.jpg",
+  "cards": [
+    {
+      "cardCode": 74009824,
+      "printingCode": "SECE-ENS10",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 62835876,
+      "printingCode": "SECE-ENS14",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 26034577,
+      "printingCode": "SECE-ENS03",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 51916032,
+      "printingCode": "SECE-ENS06",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 40672993,
+      "printingCode": "SECE-ENS09",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87588741,
+      "printingCode": "SECE-ENS04",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 13851202,
+      "printingCode": "SECE-ENS05",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 88901771,
+      "printingCode": "SECE-ENS07",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 27978707,
+      "printingCode": "SECE-ENS01",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 64373401,
+      "printingCode": "SECE-ENS02",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 494922,
+      "printingCode": "SECE-ENS11",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 13683298,
+      "printingCode": "SECE-ENS08",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 94432298,
+      "printingCode": "SECE-ENS13",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 8437145,
+      "printingCode": "SECE-ENS12",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

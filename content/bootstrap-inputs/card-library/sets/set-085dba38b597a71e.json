@@ -1,0 +1,78 @@
+{
+  "id": "set-085dba38b597a71e",
+  "name": "Yu-Gi-Oh! Power of Chaos: Yugi the Destiny promotional cards",
+  "releaseYear": 2003,
+  "imageAssetPath": "sets/set-085dba38b597a71e.jpg",
+  "cards": [
+    {
+      "cardCode": 40640057,
+      "printingCode": "PCY-005",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 40640057,
+      "printingCode": "PCY-E005",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "PCY-004",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "PCY-E004",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 58921041,
+      "printingCode": "PCY-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 58921041,
+      "printingCode": "PCY-E002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "PCY-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "PCY-E001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 63391643,
+      "printingCode": "PCY-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 63391643,
+      "printingCode": "PCY-E003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

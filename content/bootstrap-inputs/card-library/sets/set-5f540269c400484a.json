@@ -1,0 +1,15 @@
+{
+  "id": "set-5f540269c400484a",
+  "name": "Duelist League Series 10 participation card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-5f540269c400484a.jpg",
+  "cards": [
+    {
+      "cardCode": 20101223,
+      "printingCode": "DL10-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "set-2e38eff6211e948d",
+  "name": "Invasion: Vengeance: Special Edition",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-2e38eff6211e948d.jpg",
+  "cards": [
+    {
+      "cardCode": 66938505,
+      "printingCode": "INOV-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52085072,
+      "printingCode": "INOV-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50185950,
+      "printingCode": "INOV-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 27750191,
+      "printingCode": "INOV-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

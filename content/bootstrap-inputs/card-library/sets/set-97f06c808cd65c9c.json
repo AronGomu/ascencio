@@ -1,0 +1,15 @@
+{
+  "id": "set-97f06c808cd65c9c",
+  "name": "Duelist League Series 4 participation card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-97f06c808cd65c9c.jpg",
+  "cards": [
+    {
+      "cardCode": 46700124,
+      "printingCode": "DL4-001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

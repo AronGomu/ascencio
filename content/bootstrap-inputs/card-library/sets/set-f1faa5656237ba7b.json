@@ -1,0 +1,43 @@
+{
+  "id": "set-f1faa5656237ba7b",
+  "name": "Speed Duel: Trials of the Kingdom Sneak Peek participation cards",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-f1faa5656237ba7b.jpg",
+  "cards": [
+    {
+      "cardCode": 90876561,
+      "printingCode": "SBTK-ENSP2",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17814387,
+      "printingCode": "SBTK-ENSP5",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34016756,
+      "printingCode": "SBTK-ENSP4",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33245030,
+      "printingCode": "SBTK-ENSP3",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94119974,
+      "printingCode": "SBTK-ENSP1",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

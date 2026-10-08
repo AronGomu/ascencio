@@ -1,0 +1,15 @@
+{
+  "id": "set-6adb045e3f25d075",
+  "name": "Mattel Action Figure promotional cards: Series 1",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-6adb045e3f25d075.jpg",
+  "cards": [
+    {
+      "cardCode": 61204971,
+      "printingCode": "MF01-EN001",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

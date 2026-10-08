@@ -1,0 +1,15 @@
+{
+  "id": "set-c8af7a40b6cb618b",
+  "name": "Weekly Shonen Jump March 2013 membership promotional card",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-c8af7a40b6cb618b.jpg",
+  "cards": [
+    {
+      "cardCode": 48995978,
+      "printingCode": "JUMP-EN064",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

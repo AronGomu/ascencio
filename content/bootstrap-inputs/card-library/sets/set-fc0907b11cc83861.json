@@ -1,0 +1,15 @@
+{
+  "id": "set-fc0907b11cc83861",
+  "name": "Shonen Jump Vol. 5, Issue 6 promotional card",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-fc0907b11cc83861.jpg",
+  "cards": [
+    {
+      "cardCode": 37195861,
+      "printingCode": "JUMP-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

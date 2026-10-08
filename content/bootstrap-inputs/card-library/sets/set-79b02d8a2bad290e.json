@@ -1,0 +1,694 @@
+{
+  "id": "set-79b02d8a2bad290e",
+  "name": "Star Pack ARC-V",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-79b02d8a2bad290e.jpg",
+  "cards": [
+    {
+      "cardCode": 40502912,
+      "printingCode": "SP15-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40502912,
+      "printingCode": "SP15-EN018",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 39389320,
+      "printingCode": "SP15-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39389320,
+      "printingCode": "SP15-EN020",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 78184733,
+      "printingCode": "SP15-EN046",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78184733,
+      "printingCode": "SP15-EN046",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 41269771,
+      "printingCode": "SP15-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41269771,
+      "printingCode": "SP15-EN007",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 70908596,
+      "printingCode": "SP15-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70908596,
+      "printingCode": "SP15-EN008",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 73964868,
+      "printingCode": "SP15-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73964868,
+      "printingCode": "SP15-EN035",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 16195942,
+      "printingCode": "SP15-EN036",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 30068120,
+      "printingCode": "SP15-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30068120,
+      "printingCode": "SP15-EN022",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 55416843,
+      "printingCode": "SP15-EN041",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55416843,
+      "printingCode": "SP15-EN041",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 3841833,
+      "printingCode": "SP15-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3841833,
+      "printingCode": "SP15-EN023",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 85545073,
+      "printingCode": "SP15-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85545073,
+      "printingCode": "SP15-EN031",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 1264319,
+      "printingCode": "SP15-EN039",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1264319,
+      "printingCode": "SP15-EN039",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 39512984,
+      "printingCode": "SP15-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39512984,
+      "printingCode": "SP15-EN030",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 54620698,
+      "printingCode": "SP15-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54620698,
+      "printingCode": "SP15-EN001",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 18027138,
+      "printingCode": "SP15-EN040",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18027138,
+      "printingCode": "SP15-EN040",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 62161698,
+      "printingCode": "SP15-EN044",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62161698,
+      "printingCode": "SP15-EN044",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 20394040,
+      "printingCode": "SP15-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20394040,
+      "printingCode": "SP15-EN003",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 4929256,
+      "printingCode": "SP15-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4929256,
+      "printingCode": "SP15-EN004",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 23689697,
+      "printingCode": "SP15-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23689697,
+      "printingCode": "SP15-EN009",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 3395226,
+      "printingCode": "SP15-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3395226,
+      "printingCode": "SP15-EN019",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 16178681,
+      "printingCode": "SP15-EN012",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 33823832,
+      "printingCode": "SP15-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33823832,
+      "printingCode": "SP15-EN024",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 96606246,
+      "printingCode": "SP15-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96606246,
+      "printingCode": "SP15-EN026",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 41440148,
+      "printingCode": "SP15-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41440148,
+      "printingCode": "SP15-EN015",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 78835747,
+      "printingCode": "SP15-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78835747,
+      "printingCode": "SP15-EN016",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 69211541,
+      "printingCode": "SP15-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69211541,
+      "printingCode": "SP15-EN025",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 5672432,
+      "printingCode": "SP15-EN047",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5672432,
+      "printingCode": "SP15-EN047",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 15452043,
+      "printingCode": "SP15-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15452043,
+      "printingCode": "SP15-EN014",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 43241495,
+      "printingCode": "SP15-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43241495,
+      "printingCode": "SP15-EN021",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 91584698,
+      "printingCode": "SP15-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91584698,
+      "printingCode": "SP15-EN027",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 79967395,
+      "printingCode": "SP15-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79967395,
+      "printingCode": "SP15-EN013",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "SP15-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "SP15-EN038",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 8559793,
+      "printingCode": "SP15-EN045",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8559793,
+      "printingCode": "SP15-EN045",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 21648584,
+      "printingCode": "SP15-EN050",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21648584,
+      "printingCode": "SP15-EN050",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 73887236,
+      "printingCode": "SP15-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73887236,
+      "printingCode": "SP15-EN037",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 53251824,
+      "printingCode": "SP15-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53251824,
+      "printingCode": "SP15-EN029",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 1516510,
+      "printingCode": "SP15-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1516510,
+      "printingCode": "SP15-EN032",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 94415058,
+      "printingCode": "SP15-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94415058,
+      "printingCode": "SP15-EN010",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 3117804,
+      "printingCode": "SP15-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3117804,
+      "printingCode": "SP15-EN017",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 64373401,
+      "printingCode": "SP15-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64373401,
+      "printingCode": "SP15-EN028",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 494922,
+      "printingCode": "SP15-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 494922,
+      "printingCode": "SP15-EN034",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 40453765,
+      "printingCode": "SP15-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40453765,
+      "printingCode": "SP15-EN002",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 77462146,
+      "printingCode": "SP15-EN048",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77462146,
+      "printingCode": "SP15-EN048",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 20409757,
+      "printingCode": "SP15-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20409757,
+      "printingCode": "SP15-EN011",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 70245411,
+      "printingCode": "SP15-EN043",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70245411,
+      "printingCode": "SP15-EN043",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 58169731,
+      "printingCode": "SP15-EN049",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58169731,
+      "printingCode": "SP15-EN049",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 78574395,
+      "printingCode": "SP15-EN042",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78574395,
+      "printingCode": "SP15-EN042",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 63612442,
+      "printingCode": "SP15-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63612442,
+      "printingCode": "SP15-EN033",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 5998840,
+      "printingCode": "SP15-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5998840,
+      "printingCode": "SP15-EN006",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    },
+    {
+      "cardCode": 78422252,
+      "printingCode": "SP15-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78422252,
+      "printingCode": "SP15-EN005",
+      "rarity": "common",
+      "sourceRarity": "Shatterfoil Rare",
+      "sourceRarityCode": "(SHR)"
+    }
+  ]
+}

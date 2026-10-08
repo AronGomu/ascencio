@@ -1,0 +1,43 @@
+{
+  "id": "set-fa103b7cacb9ca4c",
+  "name": "The Lost Art Promotion 2024",
+  "releaseYear": 2024,
+  "imageAssetPath": "sets/set-fa103b7cacb9ca4c.jpg",
+  "cards": [
+    {
+      "cardCode": 51976476,
+      "printingCode": "LART-EN067",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12600382,
+      "printingCode": "LART-EN072",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92418590,
+      "printingCode": "LART-EN069",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 80604092,
+      "printingCode": "LART-EN070",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76823930,
+      "printingCode": "LART-EN071",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

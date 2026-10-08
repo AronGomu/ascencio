@@ -1,0 +1,22 @@
+{
+  "id": "set-4fc9f686dda6df81",
+  "name": "Absolute Powerforce: Special Edition",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-4fc9f686dda6df81.jpg",
+  "cards": [
+    {
+      "cardCode": 15341821,
+      "printingCode": "ABPF-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 88264978,
+      "printingCode": "ABPF-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

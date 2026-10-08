@@ -1,0 +1,15 @@
+{
+  "id": "set-f1b63e23679dfc06",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 9 promotional card",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-f1b63e23679dfc06.jpg",
+  "cards": [
+    {
+      "cardCode": 67120578,
+      "printingCode": "YZ09-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

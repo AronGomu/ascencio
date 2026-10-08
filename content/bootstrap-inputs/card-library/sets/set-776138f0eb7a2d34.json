@@ -1,0 +1,15 @@
+{
+  "id": "set-776138f0eb7a2d34",
+  "name": "Hobby League 5 participation card D",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-776138f0eb7a2d34.jpg",
+  "cards": [
+    {
+      "cardCode": 87621407,
+      "printingCode": "HL05-EN004",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

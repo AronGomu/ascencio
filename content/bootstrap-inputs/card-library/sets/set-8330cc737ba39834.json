@@ -1,0 +1,50 @@
+{
+  "id": "set-8330cc737ba39834",
+  "name": "Yu-Gi-Oh! 5D's Tag Force 4 promotional cards",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-8330cc737ba39834.jpg",
+  "cards": [
+    {
+      "cardCode": 79544790,
+      "printingCode": "TF04-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 79544790,
+      "printingCode": "TF04-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 16751086,
+      "printingCode": "TF04-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16751086,
+      "printingCode": "TF04-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 43140791,
+      "printingCode": "TF04-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 43140791,
+      "printingCode": "TF04-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

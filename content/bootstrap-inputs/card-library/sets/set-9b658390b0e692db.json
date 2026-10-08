@@ -1,0 +1,29 @@
+{
+  "id": "set-9b658390b0e692db",
+  "name": "Yu-Gi-Oh! GX Duel Academy promotional cards",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-9b658390b0e692db.jpg",
+  "cards": [
+    {
+      "cardCode": 89252153,
+      "printingCode": "GX1-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 26647858,
+      "printingCode": "GX1-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 57116033,
+      "printingCode": "GX1-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

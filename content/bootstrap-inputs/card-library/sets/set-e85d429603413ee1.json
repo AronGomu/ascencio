@@ -1,0 +1,64 @@
+{
+  "id": "set-e85d429603413ee1",
+  "name": "25th Anniversary Tin: Dueling Heroes",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-e85d429603413ee1.jpg",
+  "cards": [
+    {
+      "cardCode": 73580471,
+      "printingCode": "TN23-EN014",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69031175,
+      "printingCode": "TN23-EN015",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "TN23-EN005",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 59123194,
+      "printingCode": "TN23-EN010",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 33396948,
+      "printingCode": "TN23-EN002",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 93717133,
+      "printingCode": "TN23-EN012",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79856792,
+      "printingCode": "TN23-EN004",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9608555,
+      "printingCode": "TN23-EN007",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

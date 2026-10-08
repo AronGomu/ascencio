@@ -1,0 +1,15 @@
+{
+  "id": "set-27a4c37261bbd5e5",
+  "name": "Duelist League Series 3 participation card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-27a4c37261bbd5e5.jpg",
+  "cards": [
+    {
+      "cardCode": 47355498,
+      "printingCode": "DL3-001",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-5bc56c875de0ac0d",
+  "name": "Hobby League 2 participation card D",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-5bc56c875de0ac0d.jpg",
+  "cards": [
+    {
+      "cardCode": 19613556,
+      "printingCode": "HL2-EN004",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

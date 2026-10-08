@@ -1,0 +1,57 @@
+{
+  "id": "set-5b08c886a1bfb3a0",
+  "name": "Duelist Alliance: Deluxe Edition",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-5b08c886a1bfb3a0.jpg",
+  "cards": [
+    {
+      "cardCode": 59368956,
+      "printingCode": "DUEA-ENDE5",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 70422863,
+      "printingCode": "DUEA-ENDE7",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41440148,
+      "printingCode": "DUEA-ENDE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 52551211,
+      "printingCode": "DUEA-ENDE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 4786063,
+      "printingCode": "DUEA-ENDE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 78574395,
+      "printingCode": "DUEA-ENDE6",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 77783947,
+      "printingCode": "DUEA-ENDE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

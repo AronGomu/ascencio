@@ -1,0 +1,15 @@
+{
+  "id": "set-1ca6fa9f50b2a3e8",
+  "name": "Duelist Pack Collection Tin: Jaden Yuki",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-1ca6fa9f50b2a3e8.jpg",
+  "cards": [
+    {
+      "cardCode": 89312388,
+      "printingCode": "DPCT-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

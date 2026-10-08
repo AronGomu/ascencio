@@ -1,0 +1,36 @@
+{
+  "id": "set-3ac143b201baff37",
+  "name": "Invasion of Chaos: Special Edition",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-3ac143b201baff37.jpg",
+  "cards": [
+    {
+      "cardCode": 102380,
+      "printingCode": "IOC-SE4",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 62279055,
+      "printingCode": "IOC-SE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 69140098,
+      "printingCode": "IOC-SE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 83555666,
+      "printingCode": "IOC-SE3",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

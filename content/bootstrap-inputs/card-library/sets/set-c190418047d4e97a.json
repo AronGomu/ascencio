@@ -1,0 +1,106 @@
+{
+  "id": "set-c190418047d4e97a",
+  "name": "Yu-Gi-Oh! Championship Series 2025 prize cards",
+  "releaseYear": 2025,
+  "imageAssetPath": "sets/set-c190418047d4e97a.jpg",
+  "cards": [
+    {
+      "cardCode": 10949074,
+      "printingCode": "25YC-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 10949074,
+      "printingCode": "25YC-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 2009101,
+      "printingCode": "25YC-ENP03",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "25YC-ENP01",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 85087012,
+      "printingCode": "25YC-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 94886282,
+      "printingCode": "25YC-ENP08",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "25YC-ENP02",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 79559912,
+      "printingCode": "25YC-ENP06",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 83531441,
+      "printingCode": "25YC-ENP05",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97268402,
+      "printingCode": "25YC-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26082117,
+      "printingCode": "25YC-ENP04",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 35261759,
+      "printingCode": "25YC-ENP10",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 44394295,
+      "printingCode": "25YC-ENP09",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 11738489,
+      "printingCode": "25YC-ENP07",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    }
+  ]
+}

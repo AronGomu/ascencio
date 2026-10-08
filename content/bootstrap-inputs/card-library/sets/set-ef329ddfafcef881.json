@@ -1,0 +1,15 @@
+{
+  "id": "set-ef329ddfafcef881",
+  "name": "Duelist League Series 7 participation card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-ef329ddfafcef881.jpg",
+  "cards": [
+    {
+      "cardCode": 15270885,
+      "printingCode": "DL7-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

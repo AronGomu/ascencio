@@ -1,0 +1,29 @@
+{
+  "id": "set-4392ae980b9e73a3",
+  "name": "Shonen Jump May 2006 subscription bonus",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-4392ae980b9e73a3.jpg",
+  "cards": [
+    {
+      "cardCode": 55948544,
+      "printingCode": "JUMP-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14731897,
+      "printingCode": "JUMP-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 81332143,
+      "printingCode": "JUMP-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

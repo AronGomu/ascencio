@@ -1,0 +1,29 @@
+{
+  "id": "set-3db20fc840038cb0",
+  "name": "Yu-Gi-Oh! World Championship 2007 promotional cards",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-3db20fc840038cb0.jpg",
+  "cards": [
+    {
+      "cardCode": 56570271,
+      "printingCode": "WC07-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 20586572,
+      "printingCode": "WC07-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 93187568,
+      "printingCode": "WC07-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

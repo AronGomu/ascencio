@@ -1,0 +1,15 @@
+{
+  "id": "set-78933e99a942d1d0",
+  "name": "Hobby League 4 participation card F",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-78933e99a942d1d0.jpg",
+  "cards": [
+    {
+      "cardCode": 53582587,
+      "printingCode": "HL04-EN006",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

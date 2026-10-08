@@ -1,0 +1,15 @@
+{
+  "id": "set-a40de2799894d23e",
+  "name": "The Lost Art Promotion O",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-a40de2799894d23e.jpg",
+  "cards": [
+    {
+      "cardCode": 30068120,
+      "printingCode": "LART-EN015",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

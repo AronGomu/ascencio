@@ -1,0 +1,22 @@
+{
+  "id": "set-78758b7a016e67fb",
+  "name": "Shonen Jump February 2009 subscription bonus",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-78758b7a016e67fb.jpg",
+  "cards": [
+    {
+      "cardCode": 15341821,
+      "printingCode": "JUMP-EN029",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 88264978,
+      "printingCode": "JUMP-EN030",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

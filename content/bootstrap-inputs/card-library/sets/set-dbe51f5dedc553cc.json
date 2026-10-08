@@ -1,0 +1,22 @@
+{
+  "id": "set-dbe51f5dedc553cc",
+  "name": "Yu-Gi-Oh! Championship Series 2022 prize card",
+  "releaseYear": 2022,
+  "imageAssetPath": "sets/set-dbe51f5dedc553cc.jpg",
+  "cards": [
+    {
+      "cardCode": 47484352,
+      "printingCode": "YCSW-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47484352,
+      "printingCode": "YCSW-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

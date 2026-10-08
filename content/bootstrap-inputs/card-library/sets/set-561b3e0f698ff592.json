@@ -1,0 +1,22 @@
+{
+  "id": "set-561b3e0f698ff592",
+  "name": "The Duelist Genesis: Special Edition",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-561b3e0f698ff592.jpg",
+  "cards": [
+    {
+      "cardCode": 54974237,
+      "printingCode": "TDGS-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 27346636,
+      "printingCode": "TDGS-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

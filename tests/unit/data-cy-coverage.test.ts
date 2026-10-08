@@ -213,6 +213,7 @@ function presenceViolations(source: string, relativePath: string): string[] {
 }
 
 function staticValues(source: string, relativePath: string): ScannedValue[] {
+  relativePath = relativePath.replaceAll("\\", "/");
   const constants = scriptStringConstants(source);
   const values: ScannedValue[] = [];
   for (const { attributes } of scanSvelteElements(source)) {

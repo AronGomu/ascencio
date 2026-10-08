@@ -1,0 +1,15 @@
+{
+  "id": "set-f338362bc22b265b",
+  "name": "Duel Master's Guide promotional cards",
+  "releaseYear": 2003,
+  "imageAssetPath": "sets/set-f338362bc22b265b.jpg",
+  "cards": [
+    {
+      "cardCode": 98502113,
+      "printingCode": "DMG-001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

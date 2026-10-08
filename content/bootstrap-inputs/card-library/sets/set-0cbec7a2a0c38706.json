@@ -1,0 +1,15 @@
+{
+  "id": "set-0cbec7a2a0c38706",
+  "name": "Yu-Gi-Oh! ARC-V Volume 1 promotional card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-0cbec7a2a0c38706.jpg",
+  "cards": [
+    {
+      "cardCode": 93149655,
+      "printingCode": "YA01-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

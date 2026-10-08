@@ -1,0 +1,15 @@
+{
+  "id": "set-f3e0983b5a932a03",
+  "name": "Shonen Jump Championship 2004 Prize Card",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-f3e0983b5a932a03.jpg",
+  "cards": [
+    {
+      "cardCode": 69015963,
+      "printingCode": "SJC-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

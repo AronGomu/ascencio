@@ -1,0 +1,50 @@
+{
+  "id": "set-30ace9d6115bfcdd",
+  "name": "Yu-Gi-Oh! 5D's World Championship 2010: Reverse of Arcadia promotional cards",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-30ace9d6115bfcdd.jpg",
+  "cards": [
+    {
+      "cardCode": 14344682,
+      "printingCode": "WC10-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 14344682,
+      "printingCode": "WC10-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 50732780,
+      "printingCode": "WC10-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50732780,
+      "printingCode": "WC10-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86137485,
+      "printingCode": "WC10-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 86137485,
+      "printingCode": "WC10-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

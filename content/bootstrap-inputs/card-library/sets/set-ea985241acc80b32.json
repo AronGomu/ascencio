@@ -1,0 +1,15 @@
+{
+  "id": "set-ea985241acc80b32",
+  "name": "Cyberdark Impact Sneak Peek Participation Card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-ea985241acc80b32.jpg",
+  "cards": [
+    {
+      "cardCode": 62271284,
+      "printingCode": "SP02-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

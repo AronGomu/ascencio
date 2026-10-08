@@ -1,0 +1,22 @@
+{
+  "id": "set-3b6cf512016ec075",
+  "name": "Ancient Prophecy: Special Edition",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-3b6cf512016ec075.jpg",
+  "cards": [
+    {
+      "cardCode": 67300516,
+      "printingCode": "ANPR-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 691925,
+      "printingCode": "ANPR-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

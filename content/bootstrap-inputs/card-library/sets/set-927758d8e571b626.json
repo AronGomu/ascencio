@@ -1,0 +1,22 @@
+{
+  "id": "set-927758d8e571b626",
+  "name": "Hidden Arsenal: Special Edition",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-927758d8e571b626.jpg",
+  "cards": [
+    {
+      "cardCode": 7304544,
+      "printingCode": "HASE-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 42737833,
+      "printingCode": "HASE-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

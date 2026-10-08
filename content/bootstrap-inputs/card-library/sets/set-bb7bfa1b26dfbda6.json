@@ -1,0 +1,15 @@
+{
+  "id": "set-bb7bfa1b26dfbda6",
+  "name": "The Duelist Genesis Sneak Peek Participation Card",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-bb7bfa1b26dfbda6.jpg",
+  "cards": [
+    {
+      "cardCode": 69514125,
+      "printingCode": "TDGS-ENSP1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

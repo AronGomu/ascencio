@@ -1,0 +1,15 @@
+{
+  "id": "set-038857e5abde8789",
+  "name": "Yu-Gi-Oh! GX Volume 4 promotional card",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-038857e5abde8789.jpg",
+  "cards": [
+    {
+      "cardCode": 40854197,
+      "printingCode": "YG04-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-e0a71848fb740879",
+  "name": "Shonen Jump Scholastic Edition Vol. 9, Issue 1 promotional card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-e0a71848fb740879.jpg",
+  "cards": [
+    {
+      "cardCode": 72144675,
+      "printingCode": "JMPS-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

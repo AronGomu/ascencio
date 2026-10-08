@@ -1,0 +1,15 @@
+{
+  "id": "set-ea7637cc4ac3150b",
+  "name": "Shonen Jump Championship 2009 Prize Card",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-ea7637cc4ac3150b.jpg",
+  "cards": [
+    {
+      "cardCode": 88643579,
+      "printingCode": "SJCS-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

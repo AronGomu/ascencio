@@ -1,0 +1,29 @@
+{
+  "id": "set-db648a3135646ce4",
+  "name": "Yu-Gi-Oh! The Eternal Duelist Soul promotional cards",
+  "releaseYear": 2002,
+  "imageAssetPath": "sets/set-db648a3135646ce4.jpg",
+  "cards": [
+    {
+      "cardCode": 126218,
+      "printingCode": "EDS-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 5556668,
+      "printingCode": "EDS-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 74137509,
+      "printingCode": "EDS-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

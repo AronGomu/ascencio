@@ -1,0 +1,29 @@
+{
+  "id": "set-318eeed59858c166",
+  "name": "Collectible Tins Exclusive 2008",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-318eeed59858c166.jpg",
+  "cards": [
+    {
+      "cardCode": 7391448,
+      "printingCode": "CT05-ENS03",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 23303072,
+      "printingCode": "CT05-ENS01",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 18013090,
+      "printingCode": "CT05-ENS02",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

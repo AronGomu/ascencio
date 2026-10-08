@@ -1,0 +1,48 @@
+{
+  "id": "set-b52ad2c09fd28ee1",
+  "name": "Yu-Gi-Oh! Capsule Monster Coliseum promotional cards",
+  "setId": "set-b52ad2c09fd28ee1",
+  "replacement": "with",
+  "slots": [
+    {
+      "count": 8,
+      "rarities": [
+        {
+          "rarity": "common",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    },
+    {
+      "count": 1,
+      "rarities": [
+        {
+          "rarity": "rare",
+          "weight": 1
+        },
+        {
+          "rarity": "super-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultra-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "secret-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultimate-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ghost-rare",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    }
+  ]
+}

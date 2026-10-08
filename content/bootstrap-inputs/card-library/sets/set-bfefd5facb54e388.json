@@ -1,0 +1,29 @@
+{
+  "id": "set-bfefd5facb54e388",
+  "name": "Forbidden Legacy",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-bfefd5facb54e388.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "FL1-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "FL1-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 40640057,
+      "printingCode": "FL1-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

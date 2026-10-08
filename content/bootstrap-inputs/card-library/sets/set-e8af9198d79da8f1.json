@@ -1,0 +1,15 @@
+{
+  "id": "set-e8af9198d79da8f1",
+  "name": "Trials of the Pharaoh - Trials of the Kingdom promotional card",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-e8af9198d79da8f1.jpg",
+  "cards": [
+    {
+      "cardCode": 69599136,
+      "printingCode": "OPTP-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

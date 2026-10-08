@@ -1,0 +1,29 @@
+{
+  "id": "set-16d632aa9973d67f",
+  "name": "Yu-Gi-Oh! Power of Chaos: Joey the Passion promotional cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-16d632aa9973d67f.jpg",
+  "cards": [
+    {
+      "cardCode": 22537443,
+      "printingCode": "PCJ-EN002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 61405855,
+      "printingCode": "PCJ-EN003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "PCJ-EN001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

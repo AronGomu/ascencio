@@ -1,0 +1,15 @@
+{
+  "id": "set-90dcd20820f17872",
+  "name": "WSJ Jump Pack Spring 2016 promotional card",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-90dcd20820f17872.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "JMPS-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

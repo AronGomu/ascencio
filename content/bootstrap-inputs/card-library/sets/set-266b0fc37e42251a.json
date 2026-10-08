@@ -1,0 +1,15 @@
+{
+  "id": "set-266b0fc37e42251a",
+  "name": "Shonen Jump Vol. 4, Issue 1 promotional card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-266b0fc37e42251a.jpg",
+  "cards": [
+    {
+      "cardCode": 23995346,
+      "printingCode": "JMP-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "set-08226c84d1777496",
+  "name": "Crossed Souls: Advance Edition",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-08226c84d1777496.jpg",
+  "cards": [
+    {
+      "cardCode": 98076754,
+      "printingCode": "CROS-ENAE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 39387565,
+      "printingCode": "CROS-ENAE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 31222701,
+      "printingCode": "CROS-ENAE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 20773176,
+      "printingCode": "CROS-ENAE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

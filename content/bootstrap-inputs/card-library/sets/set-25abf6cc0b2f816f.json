@@ -1,0 +1,36 @@
+{
+  "id": "set-25abf6cc0b2f816f",
+  "name": "Code of the Duelist Special Edition",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-25abf6cc0b2f816f.jpg",
+  "cards": [
+    {
+      "cardCode": 91269402,
+      "printingCode": "COTD-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 65170459,
+      "printingCode": "COTD-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 67750322,
+      "printingCode": "COTD-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 40605147,
+      "printingCode": "COTD-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

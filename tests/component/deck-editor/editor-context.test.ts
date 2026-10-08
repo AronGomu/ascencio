@@ -62,7 +62,7 @@ const storyLoaders: DomainLoaders = {
 /* Waiting on the deck editor's own chunk means waiting on a Vite transform of
    the module graph behind it, which the default one-second budget knows
    nothing about. */
-const REAL_IMPORT = { timeout: 15_000 };
+const REAL_IMPORT = { timeout: process.platform === "win32" ? 60_000 : 15_000 };
 
 // Real SQLite test backend; the fixture owns this injected connection.
 let repository: ReturnType<typeof createSqliteDeckRepository>;

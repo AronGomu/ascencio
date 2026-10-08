@@ -1,0 +1,15 @@
+{
+  "id": "set-fa5e8b6d86e7fd7e",
+  "name": "Dark Neostorm Sneak Peek Participation Card",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-fa5e8b6d86e7fd7e.jpg",
+  "cards": [
+    {
+      "cardCode": 20665527,
+      "printingCode": "DANE-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-2b42bd5b007268a8",
+  "name": "Hobby League 5 participation card F",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-2b42bd5b007268a8.jpg",
+  "cards": [
+    {
+      "cardCode": 73915051,
+      "printingCode": "HL05-EN006",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

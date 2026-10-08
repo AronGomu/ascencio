@@ -1,0 +1,15 @@
+{
+  "id": "set-d04180ac10dfe21c",
+  "name": "Ultimate Edition",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-d04180ac10dfe21c.jpg",
+  "cards": [
+    {
+      "cardCode": 23995346,
+      "printingCode": "JMP-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

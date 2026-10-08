@@ -1,0 +1,50 @@
+{
+  "id": "set-63772083da5aaa60",
+  "name": "Yu-Gi-Oh! The Duelists of the Roses promotional cards",
+  "releaseYear": 2003,
+  "imageAssetPath": "sets/set-63772083da5aaa60.jpg",
+  "cards": [
+    {
+      "cardCode": 11549357,
+      "printingCode": "DOR-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 11549357,
+      "printingCode": "DOR-E003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 39256679,
+      "printingCode": "DOR-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 39256679,
+      "printingCode": "DOR-E002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 99785935,
+      "printingCode": "DOR-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 99785935,
+      "printingCode": "DOR-E001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

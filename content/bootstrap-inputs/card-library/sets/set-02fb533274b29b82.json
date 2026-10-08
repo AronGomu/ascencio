@@ -1,0 +1,113 @@
+{
+  "id": "set-02fb533274b29b82",
+  "name": "The Pot Collection",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-02fb533274b29b82.jpg",
+  "cards": [
+    {
+      "cardCode": 22123627,
+      "printingCode": "TBC1-EN013",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 64014615,
+      "printingCode": "TBC1-EN006",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 67169062,
+      "printingCode": "TBC1-EN003",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 51790181,
+      "printingCode": "TBC1-EN004",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 35261759,
+      "printingCode": "TBC1-EN009",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 98672567,
+      "printingCode": "TBC1-EN008",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 98645731,
+      "printingCode": "TBC1-EN007",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 49238328,
+      "printingCode": "TBC1-EN010",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 70278545,
+      "printingCode": "TBC1-EN002",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 55144522,
+      "printingCode": "TBC1-EN001",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 55144522,
+      "printingCode": "TBC1-ENS01",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 84211599,
+      "printingCode": "TBC1-EN011",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 96598015,
+      "printingCode": "TBC1-EN005",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 33904024,
+      "printingCode": "TBC1-EN014",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    },
+    {
+      "cardCode": 4896788,
+      "printingCode": "TBC1-EN012",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

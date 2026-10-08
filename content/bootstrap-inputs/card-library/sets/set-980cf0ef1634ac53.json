@@ -1,0 +1,22 @@
+{
+  "id": "set-980cf0ef1634ac53",
+  "name": "Abyss Rising: Special Edition",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-980cf0ef1634ac53.jpg",
+  "cards": [
+    {
+      "cardCode": 41930553,
+      "printingCode": "ABYR-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 3606728,
+      "printingCode": "ABYR-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

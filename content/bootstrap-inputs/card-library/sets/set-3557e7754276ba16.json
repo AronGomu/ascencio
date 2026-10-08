@@ -1,0 +1,15 @@
+{
+  "id": "set-3557e7754276ba16",
+  "name": "Legacy of the Valiant Sneak Peek Participation Card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-3557e7754276ba16.jpg",
+  "cards": [
+    {
+      "cardCode": 11682713,
+      "printingCode": "LVAL-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

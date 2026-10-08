@@ -51,6 +51,24 @@ afterEach(async () => {
 });
 
 describe("immutable SQLite package export", () => {
+  it("can omit the legacy ZIP while producing verified conversion fixtures", async () => {
+    const root = await workspace();
+    const spec = JSON.parse(
+      await readFile(
+        path.join(root, "tests/fixtures/sqlite/packages.json"),
+        "utf8",
+      ),
+    );
+    const result = await exportPackages(root, spec, { archive: false });
+    expect(result.kind).toBe("ok");
+    expect(
+      await readdir(path.join(root, "generated/content-packages")),
+    ).not.toContain("content-packages.zip");
+    if (result.kind === "ok") {
+      for (const receipt of result.value)
+        expect((await verifyPackageFile(root, receipt.path)).kind).toBe("ok");
+    }
+  });
   it("exports tracked duel-core and Free Play sources with the frozen vendor engine", async () => {
     const root = await workspace();
     const spec = JSON.parse(
@@ -380,7 +398,9 @@ describe("immutable SQLite package export", () => {
       const actual = fsSync.statSync;
       vi.spyOn(fsSync, "statSync").mockImplementation(
         (...args: Parameters<typeof actual>) => {
-          if (String(args[0]).endsWith("cards/full/1.jpg"))
+          if (
+            String(args[0]).replaceAll("\\", "/").endsWith("cards/full/1.jpg")
+          )
             throw Object.assign(new Error("fixture stat failure"), { code });
           return actual(...args);
         },
@@ -402,7 +422,9 @@ describe("immutable SQLite package export", () => {
       const actual = fsSync.readFileSync;
       vi.spyOn(fsSync, "readFileSync").mockImplementation(
         (...args: Parameters<typeof actual>) => {
-          if (String(args[0]).endsWith("cards/full/1.jpg"))
+          if (
+            String(args[0]).replaceAll("\\", "/").endsWith("cards/full/1.jpg")
+          )
             throw Object.assign(new Error("fixture read failure"), { code });
           return actual(...args);
         },

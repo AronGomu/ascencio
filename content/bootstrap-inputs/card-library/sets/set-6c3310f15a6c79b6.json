@@ -1,0 +1,22 @@
+{
+  "id": "set-6c3310f15a6c79b6",
+  "name": "Crimson Crisis: Special Edition",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-6c3310f15a6c79b6.jpg",
+  "cards": [
+    {
+      "cardCode": 63665875,
+      "printingCode": "CRMS-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 28297833,
+      "printingCode": "CRMS-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

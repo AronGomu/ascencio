@@ -1,0 +1,15 @@
+{
+  "id": "set-89e8f13929790863",
+  "name": "The Lost Art Promotion 2023 I",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-89e8f13929790863.jpg",
+  "cards": [
+    {
+      "cardCode": 38430673,
+      "printingCode": "LART-EN062",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

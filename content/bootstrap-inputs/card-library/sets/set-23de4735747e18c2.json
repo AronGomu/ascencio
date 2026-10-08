@@ -1,0 +1,22 @@
+{
+  "id": "set-23de4735747e18c2",
+  "name": "Strike of Neos: Special Edition",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-23de4735747e18c2.jpg",
+  "cards": [
+    {
+      "cardCode": 1546123,
+      "printingCode": "STON-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 55713623,
+      "printingCode": "STON-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

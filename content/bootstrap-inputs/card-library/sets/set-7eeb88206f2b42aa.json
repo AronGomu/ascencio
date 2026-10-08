@@ -1,0 +1,15 @@
+{
+  "id": "set-7eeb88206f2b42aa",
+  "name": "Duel Disk - Yusei Version",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-7eeb88206f2b42aa.jpg",
+  "cards": [
+    {
+      "cardCode": 54343893,
+      "printingCode": "DDY1-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

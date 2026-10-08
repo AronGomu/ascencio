@@ -1,0 +1,29 @@
+{
+  "id": "set-4ee88828ad53c3ab",
+  "name": "Yu-Gi-Oh! GX Tag Force 3 promotional cards",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-4ee88828ad53c3ab.jpg",
+  "cards": [
+    {
+      "cardCode": 93709215,
+      "printingCode": "GX06-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30915572,
+      "printingCode": "GX06-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 67300516,
+      "printingCode": "GX06-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

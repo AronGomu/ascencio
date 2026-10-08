@@ -1,0 +1,15 @@
+{
+  "id": "set-a3be06b591daa77d",
+  "name": "Hobby League 6 participation card A",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-a3be06b591daa77d.jpg",
+  "cards": [
+    {
+      "cardCode": 71044499,
+      "printingCode": "HL06-EN001",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "set-0dfe0d4ee030b4a1",
+  "name": "Yu-Gi-Oh! Championship Series 2019 prize card",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-0dfe0d4ee030b4a1.jpg",
+  "cards": [
+    {
+      "cardCode": 60025883,
+      "printingCode": "YCSW-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 60025883,
+      "printingCode": "YCSW-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

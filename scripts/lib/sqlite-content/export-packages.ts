@@ -150,6 +150,7 @@ class ExpectedFailure extends Error {
 export async function exportPackages(
   root: string,
   input: PackageBuildSpec,
+  options: { archive?: boolean } = {},
 ): Promise<StorageResult<readonly ExportReceipt[]>> {
   try {
     if (
@@ -270,7 +271,7 @@ export async function exportPackages(
     const receipts: ExportReceipt[] = [];
     for (const source of sources)
       receipts.push(await writePackage(root, source));
-    await writePackageArchive(root, receipts);
+    if (options.archive !== false) await writePackageArchive(root, receipts);
     return { kind: "ok", value: Object.freeze(receipts) };
   } catch (error) {
     if (error instanceof ExpectedFailure) return error.result;

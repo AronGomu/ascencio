@@ -1,0 +1,43 @@
+{
+  "id": "set-cb8b9de7ce8c207d",
+  "name": "Legendary Collection Kaiba",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-cb8b9de7ce8c207d.jpg",
+  "cards": [
+    {
+      "cardCode": 44373896,
+      "printingCode": "LC06-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 71867500,
+      "printingCode": "LC06-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 72589042,
+      "printingCode": "LC06-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 7852509,
+      "printingCode": "LC06-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 8978197,
+      "printingCode": "LC06-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

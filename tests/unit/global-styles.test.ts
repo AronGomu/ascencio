@@ -960,7 +960,7 @@ describe("deck editor sizing", () => {
 
   const editorComponentPaths = (dir = "src/deck-editor"): string[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-      const fullPath = join(dir, entry.name);
+      const fullPath = join(dir, entry.name).replaceAll("\\", "/");
       if (entry.isDirectory()) return editorComponentPaths(fullPath);
       return entry.isFile() && entry.name.endsWith(".svelte") ? [fullPath] : [];
     });

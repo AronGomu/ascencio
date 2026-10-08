@@ -1,0 +1,15 @@
+{
+  "id": "set-39da6cb95ff3edcd",
+  "name": "Twilight Edition",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-39da6cb95ff3edcd.jpg",
+  "cards": [
+    {
+      "cardCode": 37742478,
+      "printingCode": "TWED-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

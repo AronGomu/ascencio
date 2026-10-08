@@ -1,0 +1,15 @@
+{
+  "id": "set-352ecb94507ea808",
+  "name": "The New Challengers Sneak Peek Participation Card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-352ecb94507ea808.jpg",
+  "cards": [
+    {
+      "cardCode": 48940337,
+      "printingCode": "NECH-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

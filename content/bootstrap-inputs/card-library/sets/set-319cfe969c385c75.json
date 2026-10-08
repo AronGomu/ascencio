@@ -1,0 +1,6560 @@
+{
+  "id": "set-319cfe969c385c75",
+  "name": "Quarter Century Bonanza",
+  "releaseYear": 2024,
+  "imageAssetPath": "sets/set-319cfe969c385c75.jpg",
+  "cards": [
+    {
+      "cardCode": 61496006,
+      "printingCode": "RA03-EN030",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 61496006,
+      "printingCode": "RA03-EN030",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 61496006,
+      "printingCode": "RA03-EN030",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61496006,
+      "printingCode": "RA03-EN030",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61496006,
+      "printingCode": "RA03-EN030",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 61496006,
+      "printingCode": "RA03-EN030",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 61496006,
+      "printingCode": "RA03-EN030",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "RA03-EN055",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "RA03-EN055",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "RA03-EN055",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "RA03-EN055",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "RA03-EN055",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "RA03-EN055",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 1475311,
+      "printingCode": "RA03-EN055",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26593852,
+      "printingCode": "RA03-EN222",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 26593852,
+      "printingCode": "RA03-EN222",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 34487429,
+      "printingCode": "RA03-EN181",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 34487429,
+      "printingCode": "RA03-EN181",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10547580,
+      "printingCode": "RA03-EN046",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 10547580,
+      "printingCode": "RA03-EN046",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 10547580,
+      "printingCode": "RA03-EN046",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10547580,
+      "printingCode": "RA03-EN046",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 10547580,
+      "printingCode": "RA03-EN046",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 10547580,
+      "printingCode": "RA03-EN046",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 10547580,
+      "printingCode": "RA03-EN046",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 70147689,
+      "printingCode": "RA03-EN062",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 70147689,
+      "printingCode": "RA03-EN062",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70147689,
+      "printingCode": "RA03-EN062",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70147689,
+      "printingCode": "RA03-EN062",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 70147689,
+      "printingCode": "RA03-EN062",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 70147689,
+      "printingCode": "RA03-EN062",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 70147689,
+      "printingCode": "RA03-EN062",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 83104731,
+      "printingCode": "RA03-EN151",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 83104731,
+      "printingCode": "RA03-EN151",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 87182127,
+      "printingCode": "RA03-EN035",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 87182127,
+      "printingCode": "RA03-EN035",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 87182127,
+      "printingCode": "RA03-EN035",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 87182127,
+      "printingCode": "RA03-EN035",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 87182127,
+      "printingCode": "RA03-EN035",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87182127,
+      "printingCode": "RA03-EN035",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 87182127,
+      "printingCode": "RA03-EN035",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 97120394,
+      "printingCode": "RA03-EN264",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 97120394,
+      "printingCode": "RA03-EN264",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9156135,
+      "printingCode": "RA03-EN124",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 9156135,
+      "printingCode": "RA03-EN124",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 6728559,
+      "printingCode": "RA03-EN023",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 6728559,
+      "printingCode": "RA03-EN023",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 6728559,
+      "printingCode": "RA03-EN023",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 6728559,
+      "printingCode": "RA03-EN023",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 6728559,
+      "printingCode": "RA03-EN023",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 6728559,
+      "printingCode": "RA03-EN023",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 6728559,
+      "printingCode": "RA03-EN023",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 28985331,
+      "printingCode": "RA03-EN002",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 28985331,
+      "printingCode": "RA03-EN002",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 28985331,
+      "printingCode": "RA03-EN002",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 28985331,
+      "printingCode": "RA03-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 28985331,
+      "printingCode": "RA03-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 28985331,
+      "printingCode": "RA03-EN002",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 28985331,
+      "printingCode": "RA03-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 29071332,
+      "printingCode": "RA03-EN213",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 29071332,
+      "printingCode": "RA03-EN213",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 74311226,
+      "printingCode": "RA03-EN006",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 74311226,
+      "printingCode": "RA03-EN006",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 74311226,
+      "printingCode": "RA03-EN006",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 74311226,
+      "printingCode": "RA03-EN006",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 74311226,
+      "printingCode": "RA03-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 74311226,
+      "printingCode": "RA03-EN006",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 74311226,
+      "printingCode": "RA03-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 40133511,
+      "printingCode": "RA03-EN111",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 40133511,
+      "printingCode": "RA03-EN111",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72989439,
+      "printingCode": "RA03-EN132",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 72989439,
+      "printingCode": "RA03-EN132",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "RA03-EN038",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "RA03-EN038",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "RA03-EN038",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "RA03-EN038",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "RA03-EN038",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "RA03-EN038",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "RA03-EN038",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 91351370,
+      "printingCode": "RA03-EN219",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 91351370,
+      "printingCode": "RA03-EN219",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2009101,
+      "printingCode": "RA03-EN215",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 2009101,
+      "printingCode": "RA03-EN215",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 85215458,
+      "printingCode": "RA03-EN217",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 85215458,
+      "printingCode": "RA03-EN217",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72714392,
+      "printingCode": "RA03-EN224",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 72714392,
+      "printingCode": "RA03-EN224",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "RA03-EN010",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "RA03-EN010",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "RA03-EN010",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "RA03-EN010",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "RA03-EN010",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "RA03-EN010",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 53804307,
+      "printingCode": "RA03-EN010",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25551951,
+      "printingCode": "RA03-EN138",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 25551951,
+      "printingCode": "RA03-EN138",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 23995346,
+      "printingCode": "RA03-EN178",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 23995346,
+      "printingCode": "RA03-EN178",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "RA03-EN079",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "RA03-EN079",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 85106525,
+      "printingCode": "RA03-EN073",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 85106525,
+      "printingCode": "RA03-EN073",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 85106525,
+      "printingCode": "RA03-EN073",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 85106525,
+      "printingCode": "RA03-EN073",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 85106525,
+      "printingCode": "RA03-EN073",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 85106525,
+      "printingCode": "RA03-EN073",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 85106525,
+      "printingCode": "RA03-EN073",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 87910978,
+      "printingCode": "RA03-EN154",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 87910978,
+      "printingCode": "RA03-EN154",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 36637374,
+      "printingCode": "RA03-EN070",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 36637374,
+      "printingCode": "RA03-EN070",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 36637374,
+      "printingCode": "RA03-EN070",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 36637374,
+      "printingCode": "RA03-EN070",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 36637374,
+      "printingCode": "RA03-EN070",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 36637374,
+      "printingCode": "RA03-EN070",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 36637374,
+      "printingCode": "RA03-EN070",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 71413901,
+      "printingCode": "RA03-EN125",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 71413901,
+      "printingCode": "RA03-EN125",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 50321796,
+      "printingCode": "RA03-EN227",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 50321796,
+      "printingCode": "RA03-EN227",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53797637,
+      "printingCode": "RA03-EN256",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 53797637,
+      "printingCode": "RA03-EN256",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9748752,
+      "printingCode": "RA03-EN194",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 9748752,
+      "printingCode": "RA03-EN194",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "RA03-EN108",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "RA03-EN108",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 85087012,
+      "printingCode": "RA03-EN172",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 85087012,
+      "printingCode": "RA03-EN172",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 59750328,
+      "printingCode": "RA03-EN265",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 59750328,
+      "printingCode": "RA03-EN265",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57953380,
+      "printingCode": "RA03-EN114",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 57953380,
+      "printingCode": "RA03-EN114",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 36468556,
+      "printingCode": "RA03-EN105",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 36468556,
+      "printingCode": "RA03-EN105",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 82301904,
+      "printingCode": "RA03-EN133",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 82301904,
+      "printingCode": "RA03-EN133",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 64599569,
+      "printingCode": "RA03-EN166",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 64599569,
+      "printingCode": "RA03-EN166",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 84797028,
+      "printingCode": "RA03-EN071",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 84797028,
+      "printingCode": "RA03-EN071",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 84797028,
+      "printingCode": "RA03-EN071",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 84797028,
+      "printingCode": "RA03-EN071",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 84797028,
+      "printingCode": "RA03-EN071",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 84797028,
+      "printingCode": "RA03-EN071",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 84797028,
+      "printingCode": "RA03-EN071",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 60682203,
+      "printingCode": "RA03-EN104",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 60682203,
+      "printingCode": "RA03-EN104",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 23693634,
+      "printingCode": "RA03-EN200",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 23693634,
+      "printingCode": "RA03-EN200",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 31036355,
+      "printingCode": "RA03-EN120",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 31036355,
+      "printingCode": "RA03-EN120",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 7093411,
+      "printingCode": "RA03-EN179",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 7093411,
+      "printingCode": "RA03-EN179",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98881700,
+      "printingCode": "RA03-EN031",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 98881700,
+      "printingCode": "RA03-EN031",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 98881700,
+      "printingCode": "RA03-EN031",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98881700,
+      "printingCode": "RA03-EN031",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 98881700,
+      "printingCode": "RA03-EN031",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 98881700,
+      "printingCode": "RA03-EN031",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 98881700,
+      "printingCode": "RA03-EN031",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 58851034,
+      "printingCode": "RA03-EN076",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 58851034,
+      "printingCode": "RA03-EN076",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 58851034,
+      "printingCode": "RA03-EN076",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58851034,
+      "printingCode": "RA03-EN076",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 58851034,
+      "printingCode": "RA03-EN076",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 58851034,
+      "printingCode": "RA03-EN076",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 58851034,
+      "printingCode": "RA03-EN076",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "RA03-EN155",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "RA03-EN155",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 1546123,
+      "printingCode": "RA03-EN156",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 1546123,
+      "printingCode": "RA03-EN156",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 34124316,
+      "printingCode": "RA03-EN095",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 34124316,
+      "printingCode": "RA03-EN095",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 3657444,
+      "printingCode": "RA03-EN192",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 3657444,
+      "printingCode": "RA03-EN192",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69015963,
+      "printingCode": "RA03-EN146",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 69015963,
+      "printingCode": "RA03-EN146",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "RA03-EN067",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "RA03-EN067",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "RA03-EN067",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "RA03-EN067",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "RA03-EN067",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "RA03-EN067",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 57160136,
+      "printingCode": "RA03-EN067",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 70074904,
+      "printingCode": "RA03-EN141",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70074904,
+      "printingCode": "RA03-EN141",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 7572887,
+      "printingCode": "RA03-EN129",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 7572887,
+      "printingCode": "RA03-EN129",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 15341821,
+      "printingCode": "RA03-EN211",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 15341821,
+      "printingCode": "RA03-EN211",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "RA03-EN019",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "RA03-EN019",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "RA03-EN019",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "RA03-EN019",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "RA03-EN019",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "RA03-EN019",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 43316238,
+      "printingCode": "RA03-EN019",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 81034083,
+      "printingCode": "RA03-EN027",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 81034083,
+      "printingCode": "RA03-EN027",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 81034083,
+      "printingCode": "RA03-EN027",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 81034083,
+      "printingCode": "RA03-EN027",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 81034083,
+      "printingCode": "RA03-EN027",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 81034083,
+      "printingCode": "RA03-EN027",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 81034083,
+      "printingCode": "RA03-EN027",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 77538567,
+      "printingCode": "RA03-EN187",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 77538567,
+      "printingCode": "RA03-EN187",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 88643579,
+      "printingCode": "RA03-EN216",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 88643579,
+      "printingCode": "RA03-EN216",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "RA03-EN080",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "RA03-EN080",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 38033121,
+      "printingCode": "RA03-EN123",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 38033121,
+      "printingCode": "RA03-EN123",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43892408,
+      "printingCode": "RA03-EN258",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 43892408,
+      "printingCode": "RA03-EN258",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40737112,
+      "printingCode": "RA03-EN134",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 40737112,
+      "printingCode": "RA03-EN134",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 41721210,
+      "printingCode": "RA03-EN268",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 41721210,
+      "printingCode": "RA03-EN268",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98502113,
+      "printingCode": "RA03-EN126",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 98502113,
+      "printingCode": "RA03-EN126",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 14943837,
+      "printingCode": "RA03-EN214",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 14943837,
+      "printingCode": "RA03-EN214",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35027493,
+      "printingCode": "RA03-EN150",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 35027493,
+      "printingCode": "RA03-EN150",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RA03-EN004",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RA03-EN004",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RA03-EN004",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RA03-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RA03-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RA03-EN004",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 78868119,
+      "printingCode": "RA03-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 87621407,
+      "printingCode": "RA03-EN144",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 87621407,
+      "printingCode": "RA03-EN144",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 45809008,
+      "printingCode": "RA03-EN173",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 45809008,
+      "printingCode": "RA03-EN173",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 56570271,
+      "printingCode": "RA03-EN176",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 56570271,
+      "printingCode": "RA03-EN176",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9411399,
+      "printingCode": "RA03-EN001",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 9411399,
+      "printingCode": "RA03-EN001",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 9411399,
+      "printingCode": "RA03-EN001",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9411399,
+      "printingCode": "RA03-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 9411399,
+      "printingCode": "RA03-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 9411399,
+      "printingCode": "RA03-EN001",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 9411399,
+      "printingCode": "RA03-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "RA03-EN048",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "RA03-EN048",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "RA03-EN048",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "RA03-EN048",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "RA03-EN048",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "RA03-EN048",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "RA03-EN048",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "RA03-EN032",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "RA03-EN032",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "RA03-EN032",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "RA03-EN032",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "RA03-EN032",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 72270339,
+      "printingCode": "RA03-EN032",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 23557835,
+      "printingCode": "RA03-EN136",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 23557835,
+      "printingCode": "RA03-EN136",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 81674782,
+      "printingCode": "RA03-EN163",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 81674782,
+      "printingCode": "RA03-EN163",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 62265044,
+      "printingCode": "RA03-EN248",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 62265044,
+      "printingCode": "RA03-EN248",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "RA03-EN068",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "RA03-EN068",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "RA03-EN068",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "RA03-EN068",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "RA03-EN068",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "RA03-EN068",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 78231355,
+      "printingCode": "RA03-EN068",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "RA03-EN022",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "RA03-EN022",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "RA03-EN022",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "RA03-EN022",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "RA03-EN022",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "RA03-EN022",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 15848542,
+      "printingCode": "RA03-EN022",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 3429238,
+      "printingCode": "RA03-EN232",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 3429238,
+      "printingCode": "RA03-EN232",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 5833312,
+      "printingCode": "RA03-EN275",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 5833312,
+      "printingCode": "RA03-EN275",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 43940008,
+      "printingCode": "RA03-EN273",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 43940008,
+      "printingCode": "RA03-EN273",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40854197,
+      "printingCode": "RA03-EN231",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 40854197,
+      "printingCode": "RA03-EN231",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35809262,
+      "printingCode": "RA03-EN152",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 35809262,
+      "printingCode": "RA03-EN152",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69884162,
+      "printingCode": "RA03-EN184",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 69884162,
+      "printingCode": "RA03-EN184",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 89312388,
+      "printingCode": "RA03-EN193",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 89312388,
+      "printingCode": "RA03-EN193",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40044918,
+      "printingCode": "RA03-EN177",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 40044918,
+      "printingCode": "RA03-EN177",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61204971,
+      "printingCode": "RA03-EN153",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 61204971,
+      "printingCode": "RA03-EN153",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 86188410,
+      "printingCode": "RA03-EN157",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 86188410,
+      "printingCode": "RA03-EN157",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54974237,
+      "printingCode": "RA03-EN183",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 54974237,
+      "printingCode": "RA03-EN183",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "RA03-EN047",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "RA03-EN047",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "RA03-EN047",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "RA03-EN047",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "RA03-EN047",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "RA03-EN047",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 73309655,
+      "printingCode": "RA03-EN047",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74131780,
+      "printingCode": "RA03-EN119",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 74131780,
+      "printingCode": "RA03-EN119",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "RA03-EN003",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "RA03-EN003",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "RA03-EN003",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "RA03-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "RA03-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "RA03-EN003",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 97651498,
+      "printingCode": "RA03-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 47217354,
+      "printingCode": "RA03-EN239",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 47217354,
+      "printingCode": "RA03-EN239",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57554544,
+      "printingCode": "RA03-EN059",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 57554544,
+      "printingCode": "RA03-EN059",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 57554544,
+      "printingCode": "RA03-EN059",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57554544,
+      "printingCode": "RA03-EN059",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 57554544,
+      "printingCode": "RA03-EN059",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 57554544,
+      "printingCode": "RA03-EN059",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 57554544,
+      "printingCode": "RA03-EN059",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 93369354,
+      "printingCode": "RA03-EN225",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 93369354,
+      "printingCode": "RA03-EN225",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 66788016,
+      "printingCode": "RA03-EN084",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 66788016,
+      "printingCode": "RA03-EN084",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 42009836,
+      "printingCode": "RA03-EN195",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 42009836,
+      "printingCode": "RA03-EN195",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4931121,
+      "printingCode": "RA03-EN267",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 4931121,
+      "printingCode": "RA03-EN267",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 52947044,
+      "printingCode": "RA03-EN270",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 52947044,
+      "printingCode": "RA03-EN270",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 77565204,
+      "printingCode": "RA03-EN168",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 77565204,
+      "printingCode": "RA03-EN168",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "RA03-EN044",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "RA03-EN044",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "RA03-EN044",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "RA03-EN044",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "RA03-EN044",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "RA03-EN044",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 30741503,
+      "printingCode": "RA03-EN044",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 27970830,
+      "printingCode": "RA03-EN229",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 27970830,
+      "printingCode": "RA03-EN229",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 37694547,
+      "printingCode": "RA03-EN203",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 37694547,
+      "printingCode": "RA03-EN203",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69140098,
+      "printingCode": "RA03-EN109",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 69140098,
+      "printingCode": "RA03-EN109",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 64034255,
+      "printingCode": "RA03-EN247",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 64034255,
+      "printingCode": "RA03-EN247",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "RA03-EN014",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "RA03-EN014",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "RA03-EN014",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "RA03-EN014",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "RA03-EN014",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "RA03-EN014",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 62015408,
+      "printingCode": "RA03-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "RA03-EN020",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "RA03-EN020",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "RA03-EN020",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "RA03-EN020",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "RA03-EN020",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "RA03-EN020",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 60643553,
+      "printingCode": "RA03-EN020",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 42703248,
+      "printingCode": "RA03-EN097",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 42703248,
+      "printingCode": "RA03-EN097",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "RA03-EN026",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "RA03-EN026",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "RA03-EN026",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "RA03-EN026",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "RA03-EN026",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "RA03-EN026",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 69811710,
+      "printingCode": "RA03-EN026",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48156348,
+      "printingCode": "RA03-EN198",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 48156348,
+      "printingCode": "RA03-EN198",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 67441435,
+      "printingCode": "RA03-EN245",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 67441435,
+      "printingCode": "RA03-EN245",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78658564,
+      "printingCode": "RA03-EN101",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 78658564,
+      "printingCode": "RA03-EN101",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78004197,
+      "printingCode": "RA03-EN159",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 78004197,
+      "printingCode": "RA03-EN159",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44330098,
+      "printingCode": "RA03-EN210",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 44330098,
+      "printingCode": "RA03-EN210",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 7391448,
+      "printingCode": "RA03-EN202",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 7391448,
+      "printingCode": "RA03-EN202",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79571449,
+      "printingCode": "RA03-EN116",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 79571449,
+      "printingCode": "RA03-EN116",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 83039729,
+      "printingCode": "RA03-EN174",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 83039729,
+      "printingCode": "RA03-EN174",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RA03-EN077",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RA03-EN077",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RA03-EN077",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RA03-EN077",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RA03-EN077",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RA03-EN077",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 83266092,
+      "printingCode": "RA03-EN077",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 24317029,
+      "printingCode": "RA03-EN121",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 24317029,
+      "printingCode": "RA03-EN121",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 45141013,
+      "printingCode": "RA03-EN058",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 45141013,
+      "printingCode": "RA03-EN058",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 45141013,
+      "printingCode": "RA03-EN058",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 45141013,
+      "printingCode": "RA03-EN058",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 45141013,
+      "printingCode": "RA03-EN058",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 45141013,
+      "printingCode": "RA03-EN058",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 45141013,
+      "printingCode": "RA03-EN058",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19613556,
+      "printingCode": "RA03-EN092",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 19613556,
+      "printingCode": "RA03-EN092",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44665365,
+      "printingCode": "RA03-EN237",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 44665365,
+      "printingCode": "RA03-EN237",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 21350571,
+      "printingCode": "RA03-EN241",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 21350571,
+      "printingCode": "RA03-EN241",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "RA03-EN037",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "RA03-EN037",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "RA03-EN037",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "RA03-EN037",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "RA03-EN037",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "RA03-EN037",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 41232647,
+      "printingCode": "RA03-EN037",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53567095,
+      "printingCode": "RA03-EN165",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 53567095,
+      "printingCode": "RA03-EN165",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70595331,
+      "printingCode": "RA03-EN186",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70595331,
+      "printingCode": "RA03-EN186",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61740673,
+      "printingCode": "RA03-EN106",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 61740673,
+      "printingCode": "RA03-EN106",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 99177923,
+      "printingCode": "RA03-EN220",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 99177923,
+      "printingCode": "RA03-EN220",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79575620,
+      "printingCode": "RA03-EN117",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 79575620,
+      "printingCode": "RA03-EN117",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 1845204,
+      "printingCode": "RA03-EN171",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 1845204,
+      "printingCode": "RA03-EN171",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 77585513,
+      "printingCode": "RA03-EN099",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 77585513,
+      "printingCode": "RA03-EN099",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57774843,
+      "printingCode": "RA03-EN196",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 57774843,
+      "printingCode": "RA03-EN196",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63977008,
+      "printingCode": "RA03-EN199",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 63977008,
+      "printingCode": "RA03-EN199",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 11012887,
+      "printingCode": "RA03-EN242",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 11012887,
+      "printingCode": "RA03-EN242",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "RA03-EN042",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "RA03-EN042",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "RA03-EN042",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "RA03-EN042",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "RA03-EN042",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "RA03-EN042",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 2857636,
+      "printingCode": "RA03-EN042",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12435193,
+      "printingCode": "RA03-EN218",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 12435193,
+      "printingCode": "RA03-EN218",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 59575539,
+      "printingCode": "RA03-EN201",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 59575539,
+      "printingCode": "RA03-EN201",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 37390589,
+      "printingCode": "RA03-EN204",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 37390589,
+      "printingCode": "RA03-EN204",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 88240808,
+      "printingCode": "RA03-EN110",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 88240808,
+      "printingCode": "RA03-EN110",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "RA03-EN021",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "RA03-EN021",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "RA03-EN021",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "RA03-EN021",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "RA03-EN021",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "RA03-EN021",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 13171876,
+      "printingCode": "RA03-EN021",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 49721904,
+      "printingCode": "RA03-EN249",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 49721904,
+      "printingCode": "RA03-EN249",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29981921,
+      "printingCode": "RA03-EN250",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 29981921,
+      "printingCode": "RA03-EN250",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69162969,
+      "printingCode": "RA03-EN148",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 69162969,
+      "printingCode": "RA03-EN148",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 89185742,
+      "printingCode": "RA03-EN257",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 89185742,
+      "printingCode": "RA03-EN257",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "RA03-EN029",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "RA03-EN029",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "RA03-EN029",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "RA03-EN029",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "RA03-EN029",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "RA03-EN029",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 9822220,
+      "printingCode": "RA03-EN029",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 5556499,
+      "printingCode": "RA03-EN233",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 5556499,
+      "printingCode": "RA03-EN233",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 42940404,
+      "printingCode": "RA03-EN234",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 42940404,
+      "printingCode": "RA03-EN234",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63995093,
+      "printingCode": "RA03-EN145",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 63995093,
+      "printingCode": "RA03-EN145",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30241314,
+      "printingCode": "RA03-EN164",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 30241314,
+      "printingCode": "RA03-EN164",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 71348837,
+      "printingCode": "RA03-EN069",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 71348837,
+      "printingCode": "RA03-EN069",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 71348837,
+      "printingCode": "RA03-EN069",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 71348837,
+      "printingCode": "RA03-EN069",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 71348837,
+      "printingCode": "RA03-EN069",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 71348837,
+      "printingCode": "RA03-EN069",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 71348837,
+      "printingCode": "RA03-EN069",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 83746708,
+      "printingCode": "RA03-EN113",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 83746708,
+      "printingCode": "RA03-EN113",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 62279055,
+      "printingCode": "RA03-EN115",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 62279055,
+      "printingCode": "RA03-EN115",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 81210420,
+      "printingCode": "RA03-EN107",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 81210420,
+      "printingCode": "RA03-EN107",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 31560081,
+      "printingCode": "RA03-EN090",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 31560081,
+      "printingCode": "RA03-EN090",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54652250,
+      "printingCode": "RA03-EN082",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 54652250,
+      "printingCode": "RA03-EN082",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2460565,
+      "printingCode": "RA03-EN118",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 2460565,
+      "printingCode": "RA03-EN118",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 55794644,
+      "printingCode": "RA03-EN252",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 55794644,
+      "printingCode": "RA03-EN252",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 80921533,
+      "printingCode": "RA03-EN167",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 80921533,
+      "printingCode": "RA03-EN167",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "RA03-EN039",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "RA03-EN039",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "RA03-EN039",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "RA03-EN039",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "RA03-EN039",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "RA03-EN039",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 22110647,
+      "printingCode": "RA03-EN039",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 7359741,
+      "printingCode": "RA03-EN094",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 7359741,
+      "printingCode": "RA03-EN094",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 22446869,
+      "printingCode": "RA03-EN007",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 22446869,
+      "printingCode": "RA03-EN007",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 22446869,
+      "printingCode": "RA03-EN007",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 22446869,
+      "printingCode": "RA03-EN007",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 22446869,
+      "printingCode": "RA03-EN007",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 22446869,
+      "printingCode": "RA03-EN007",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 22446869,
+      "printingCode": "RA03-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 35255456,
+      "printingCode": "RA03-EN253",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 35255456,
+      "printingCode": "RA03-EN253",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44095762,
+      "printingCode": "RA03-EN093",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 44095762,
+      "printingCode": "RA03-EN093",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4929256,
+      "printingCode": "RA03-EN142",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 4929256,
+      "printingCode": "RA03-EN142",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "RA03-EN052",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "RA03-EN052",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "RA03-EN052",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "RA03-EN052",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "RA03-EN052",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "RA03-EN052",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "RA03-EN052",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 33508719,
+      "printingCode": "RA03-EN098",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 33508719,
+      "printingCode": "RA03-EN098",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79106360,
+      "printingCode": "RA03-EN100",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 79106360,
+      "printingCode": "RA03-EN100",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2956282,
+      "printingCode": "RA03-EN243",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 2956282,
+      "printingCode": "RA03-EN243",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 33198837,
+      "printingCode": "RA03-EN238",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 33198837,
+      "printingCode": "RA03-EN238",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 26674724,
+      "printingCode": "RA03-EN260",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 26674724,
+      "printingCode": "RA03-EN260",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 52068432,
+      "printingCode": "RA03-EN261",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 52068432,
+      "printingCode": "RA03-EN261",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 89463537,
+      "printingCode": "RA03-EN262",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 89463537,
+      "printingCode": "RA03-EN262",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 25857246,
+      "printingCode": "RA03-EN263",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 25857246,
+      "printingCode": "RA03-EN263",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72090076,
+      "printingCode": "RA03-EN025",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 72090076,
+      "printingCode": "RA03-EN025",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 72090076,
+      "printingCode": "RA03-EN025",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72090076,
+      "printingCode": "RA03-EN025",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 72090076,
+      "printingCode": "RA03-EN025",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72090076,
+      "printingCode": "RA03-EN025",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 72090076,
+      "printingCode": "RA03-EN025",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19211362,
+      "printingCode": "RA03-EN024",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 19211362,
+      "printingCode": "RA03-EN024",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 19211362,
+      "printingCode": "RA03-EN024",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 19211362,
+      "printingCode": "RA03-EN024",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 19211362,
+      "printingCode": "RA03-EN024",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 19211362,
+      "printingCode": "RA03-EN024",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 19211362,
+      "printingCode": "RA03-EN024",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 21565445,
+      "printingCode": "RA03-EN013",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 21565445,
+      "printingCode": "RA03-EN013",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 21565445,
+      "printingCode": "RA03-EN013",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 21565445,
+      "printingCode": "RA03-EN013",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 21565445,
+      "printingCode": "RA03-EN013",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 21565445,
+      "printingCode": "RA03-EN013",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 21565445,
+      "printingCode": "RA03-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 16226786,
+      "printingCode": "RA03-EN139",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 16226786,
+      "printingCode": "RA03-EN139",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 71044499,
+      "printingCode": "RA03-EN102",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 71044499,
+      "printingCode": "RA03-EN102",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10000000,
+      "printingCode": "RA03-EN230",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 10000000,
+      "printingCode": "RA03-EN230",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 31006879,
+      "printingCode": "RA03-EN276",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 31006879,
+      "printingCode": "RA03-EN276",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RA03-EN056",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RA03-EN056",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RA03-EN056",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RA03-EN056",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RA03-EN056",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RA03-EN056",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 2295440,
+      "printingCode": "RA03-EN056",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "RA03-EN064",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "RA03-EN064",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "RA03-EN064",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "RA03-EN064",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "RA03-EN064",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "RA03-EN064",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 9113513,
+      "printingCode": "RA03-EN064",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 3659803,
+      "printingCode": "RA03-EN169",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 3659803,
+      "printingCode": "RA03-EN169",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 71703785,
+      "printingCode": "RA03-EN266",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 71703785,
+      "printingCode": "RA03-EN266",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63356631,
+      "printingCode": "RA03-EN149",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 63356631,
+      "printingCode": "RA03-EN149",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 33420078,
+      "printingCode": "RA03-EN207",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 33420078,
+      "printingCode": "RA03-EN207",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "RA03-EN051",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "RA03-EN051",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "RA03-EN051",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "RA03-EN051",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "RA03-EN051",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "RA03-EN051",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "RA03-EN051",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 67169062,
+      "printingCode": "RA03-EN160",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 67169062,
+      "printingCode": "RA03-EN160",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70828912,
+      "printingCode": "RA03-EN103",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70828912,
+      "printingCode": "RA03-EN103",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2772337,
+      "printingCode": "RA03-EN050",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 2772337,
+      "printingCode": "RA03-EN050",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 2772337,
+      "printingCode": "RA03-EN050",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 2772337,
+      "printingCode": "RA03-EN050",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 2772337,
+      "printingCode": "RA03-EN050",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 2772337,
+      "printingCode": "RA03-EN050",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19959563,
+      "printingCode": "RA03-EN015",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 19959563,
+      "printingCode": "RA03-EN015",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 19959563,
+      "printingCode": "RA03-EN015",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 19959563,
+      "printingCode": "RA03-EN015",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 19959563,
+      "printingCode": "RA03-EN015",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 19959563,
+      "printingCode": "RA03-EN015",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 19959563,
+      "printingCode": "RA03-EN015",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 20932152,
+      "printingCode": "RA03-EN228",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 20932152,
+      "printingCode": "RA03-EN228",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 12580477,
+      "printingCode": "RA03-EN083",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 12580477,
+      "printingCode": "RA03-EN083",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73125233,
+      "printingCode": "RA03-EN180",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 73125233,
+      "printingCode": "RA03-EN180",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 60876124,
+      "printingCode": "RA03-EN182",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 60876124,
+      "printingCode": "RA03-EN182",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91020571,
+      "printingCode": "RA03-EN254",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 91020571,
+      "printingCode": "RA03-EN254",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10028593,
+      "printingCode": "RA03-EN251",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 10028593,
+      "printingCode": "RA03-EN251",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "RA03-EN081",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "RA03-EN081",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 88264978,
+      "printingCode": "RA03-EN212",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 88264978,
+      "printingCode": "RA03-EN212",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92353449,
+      "printingCode": "RA03-EN061",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 92353449,
+      "printingCode": "RA03-EN061",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 92353449,
+      "printingCode": "RA03-EN061",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92353449,
+      "printingCode": "RA03-EN061",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 92353449,
+      "printingCode": "RA03-EN061",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 92353449,
+      "printingCode": "RA03-EN061",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 92353449,
+      "printingCode": "RA03-EN061",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "RA03-EN008",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "RA03-EN008",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "RA03-EN008",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "RA03-EN008",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "RA03-EN008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "RA03-EN008",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 90411554,
+      "printingCode": "RA03-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 27174286,
+      "printingCode": "RA03-EN140",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 27174286,
+      "printingCode": "RA03-EN140",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 6853254,
+      "printingCode": "RA03-EN060",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 6853254,
+      "printingCode": "RA03-EN060",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 6853254,
+      "printingCode": "RA03-EN060",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 6853254,
+      "printingCode": "RA03-EN060",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 6853254,
+      "printingCode": "RA03-EN060",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 6853254,
+      "printingCode": "RA03-EN060",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 6853254,
+      "printingCode": "RA03-EN060",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 18319762,
+      "printingCode": "RA03-EN028",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 18319762,
+      "printingCode": "RA03-EN028",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 18319762,
+      "printingCode": "RA03-EN028",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 18319762,
+      "printingCode": "RA03-EN028",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 18319762,
+      "printingCode": "RA03-EN028",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 18319762,
+      "printingCode": "RA03-EN028",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 18319762,
+      "printingCode": "RA03-EN028",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14513016,
+      "printingCode": "RA03-EN012",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 14513016,
+      "printingCode": "RA03-EN012",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 14513016,
+      "printingCode": "RA03-EN012",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 14513016,
+      "printingCode": "RA03-EN012",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 14513016,
+      "printingCode": "RA03-EN012",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 14513016,
+      "printingCode": "RA03-EN012",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 14513016,
+      "printingCode": "RA03-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90846359,
+      "printingCode": "RA03-EN075",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 90846359,
+      "printingCode": "RA03-EN075",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 90846359,
+      "printingCode": "RA03-EN075",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90846359,
+      "printingCode": "RA03-EN075",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90846359,
+      "printingCode": "RA03-EN075",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 90846359,
+      "printingCode": "RA03-EN075",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 90846359,
+      "printingCode": "RA03-EN075",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 1357146,
+      "printingCode": "RA03-EN236",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 1357146,
+      "printingCode": "RA03-EN236",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "RA03-EN049",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "RA03-EN049",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "RA03-EN049",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "RA03-EN049",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "RA03-EN049",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "RA03-EN049",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 61441708,
+      "printingCode": "RA03-EN147",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 61441708,
+      "printingCode": "RA03-EN147",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 56120475,
+      "printingCode": "RA03-EN130",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 56120475,
+      "printingCode": "RA03-EN130",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 52155219,
+      "printingCode": "RA03-EN066",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 52155219,
+      "printingCode": "RA03-EN066",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 52155219,
+      "printingCode": "RA03-EN066",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 52155219,
+      "printingCode": "RA03-EN066",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 52155219,
+      "printingCode": "RA03-EN066",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 52155219,
+      "printingCode": "RA03-EN066",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 52155219,
+      "printingCode": "RA03-EN066",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26202165,
+      "printingCode": "RA03-EN089",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 26202165,
+      "printingCode": "RA03-EN089",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57594700,
+      "printingCode": "RA03-EN034",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 57594700,
+      "printingCode": "RA03-EN034",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 57594700,
+      "printingCode": "RA03-EN034",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 57594700,
+      "printingCode": "RA03-EN034",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 57594700,
+      "printingCode": "RA03-EN034",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 57594700,
+      "printingCode": "RA03-EN034",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 57594700,
+      "printingCode": "RA03-EN034",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76774528,
+      "printingCode": "RA03-EN240",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 76774528,
+      "printingCode": "RA03-EN240",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44686185,
+      "printingCode": "RA03-EN016",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 44686185,
+      "printingCode": "RA03-EN016",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 44686185,
+      "printingCode": "RA03-EN016",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 44686185,
+      "printingCode": "RA03-EN016",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 44686185,
+      "printingCode": "RA03-EN016",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 44686185,
+      "printingCode": "RA03-EN016",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 44686185,
+      "printingCode": "RA03-EN016",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 6579928,
+      "printingCode": "RA03-EN017",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 6579928,
+      "printingCode": "RA03-EN017",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 6579928,
+      "printingCode": "RA03-EN017",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 6579928,
+      "printingCode": "RA03-EN017",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 6579928,
+      "printingCode": "RA03-EN017",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 6579928,
+      "printingCode": "RA03-EN017",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 6579928,
+      "printingCode": "RA03-EN017",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 68462976,
+      "printingCode": "RA03-EN209",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 68462976,
+      "printingCode": "RA03-EN209",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "RA03-EN065",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "RA03-EN065",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "RA03-EN065",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "RA03-EN065",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "RA03-EN065",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "RA03-EN065",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 73468603,
+      "printingCode": "RA03-EN065",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 55713623,
+      "printingCode": "RA03-EN162",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 55713623,
+      "printingCode": "RA03-EN162",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90307777,
+      "printingCode": "RA03-EN259",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 90307777,
+      "printingCode": "RA03-EN259",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 32619583,
+      "printingCode": "RA03-EN158",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 32619583,
+      "printingCode": "RA03-EN158",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "RA03-EN054",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "RA03-EN054",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "RA03-EN054",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "RA03-EN054",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "RA03-EN054",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "RA03-EN054",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 72345736,
+      "printingCode": "RA03-EN054",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "RA03-EN043",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "RA03-EN043",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "RA03-EN043",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "RA03-EN043",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "RA03-EN043",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "RA03-EN043",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "RA03-EN043",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "RA03-EN269",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "RA03-EN269",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9726840,
+      "printingCode": "RA03-EN274",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 9726840,
+      "printingCode": "RA03-EN274",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 47596607,
+      "printingCode": "RA03-EN175",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 47596607,
+      "printingCode": "RA03-EN175",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10000020,
+      "printingCode": "RA03-EN244",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 10000020,
+      "printingCode": "RA03-EN244",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97169186,
+      "printingCode": "RA03-EN135",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 97169186,
+      "printingCode": "RA03-EN135",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 48452496,
+      "printingCode": "RA03-EN033",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 48452496,
+      "printingCode": "RA03-EN033",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 48452496,
+      "printingCode": "RA03-EN033",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 48452496,
+      "printingCode": "RA03-EN033",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 48452496,
+      "printingCode": "RA03-EN033",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 48452496,
+      "printingCode": "RA03-EN033",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 84290642,
+      "printingCode": "RA03-EN170",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 84290642,
+      "printingCode": "RA03-EN170",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 23020408,
+      "printingCode": "RA03-EN271",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 23020408,
+      "printingCode": "RA03-EN271",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 23205979,
+      "printingCode": "RA03-EN122",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 23205979,
+      "printingCode": "RA03-EN122",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58120309,
+      "printingCode": "RA03-EN235",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 58120309,
+      "printingCode": "RA03-EN235",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27415516,
+      "printingCode": "RA03-EN255",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 27415516,
+      "printingCode": "RA03-EN255",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 41006930,
+      "printingCode": "RA03-EN131",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 41006930,
+      "printingCode": "RA03-EN131",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 20663556,
+      "printingCode": "RA03-EN197",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 20663556,
+      "printingCode": "RA03-EN197",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70781052,
+      "printingCode": "RA03-EN086",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70781052,
+      "printingCode": "RA03-EN086",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "RA03-EN057",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "RA03-EN057",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "RA03-EN057",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "RA03-EN057",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "RA03-EN057",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "RA03-EN057",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 61650133,
+      "printingCode": "RA03-EN057",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 48130397,
+      "printingCode": "RA03-EN053",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 48130397,
+      "printingCode": "RA03-EN053",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 48130397,
+      "printingCode": "RA03-EN053",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 48130397,
+      "printingCode": "RA03-EN053",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 48130397,
+      "printingCode": "RA03-EN053",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 48130397,
+      "printingCode": "RA03-EN053",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "RA03-EN041",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "RA03-EN041",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "RA03-EN041",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "RA03-EN041",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "RA03-EN041",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "RA03-EN041",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 26096328,
+      "printingCode": "RA03-EN041",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 9126351,
+      "printingCode": "RA03-EN005",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 9126351,
+      "printingCode": "RA03-EN005",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 9126351,
+      "printingCode": "RA03-EN005",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9126351,
+      "printingCode": "RA03-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 9126351,
+      "printingCode": "RA03-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 9126351,
+      "printingCode": "RA03-EN005",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 9126351,
+      "printingCode": "RA03-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "RA03-EN011",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "RA03-EN011",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "RA03-EN011",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "RA03-EN011",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "RA03-EN011",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "RA03-EN011",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 89399912,
+      "printingCode": "RA03-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 92373006,
+      "printingCode": "RA03-EN189",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 92373006,
+      "printingCode": "RA03-EN189",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 11110587,
+      "printingCode": "RA03-EN063",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 11110587,
+      "printingCode": "RA03-EN063",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 11110587,
+      "printingCode": "RA03-EN063",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 11110587,
+      "printingCode": "RA03-EN063",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 11110587,
+      "printingCode": "RA03-EN063",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 11110587,
+      "printingCode": "RA03-EN063",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 11110587,
+      "printingCode": "RA03-EN063",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 43973174,
+      "printingCode": "RA03-EN087",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 43973174,
+      "printingCode": "RA03-EN087",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79814787,
+      "printingCode": "RA03-EN208",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 79814787,
+      "printingCode": "RA03-EN208",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10000010,
+      "printingCode": "RA03-EN137",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 10000010,
+      "printingCode": "RA03-EN137",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 26205777,
+      "printingCode": "RA03-EN143",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 26205777,
+      "printingCode": "RA03-EN143",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "RA03-EN036",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "RA03-EN036",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "RA03-EN036",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "RA03-EN036",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "RA03-EN036",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "RA03-EN036",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 15291624,
+      "printingCode": "RA03-EN036",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "RA03-EN018",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "RA03-EN018",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "RA03-EN018",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "RA03-EN018",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "RA03-EN018",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "RA03-EN018",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 56713174,
+      "printingCode": "RA03-EN018",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 71564252,
+      "printingCode": "RA03-EN206",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 71564252,
+      "printingCode": "RA03-EN206",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "RA03-EN009",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "RA03-EN009",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "RA03-EN009",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "RA03-EN009",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "RA03-EN009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "RA03-EN009",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 26400609,
+      "printingCode": "RA03-EN009",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "RA03-EN040",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "RA03-EN040",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "RA03-EN040",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "RA03-EN040",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "RA03-EN040",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "RA03-EN040",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 90809975,
+      "printingCode": "RA03-EN040",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 28711704,
+      "printingCode": "RA03-EN272",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 28711704,
+      "printingCode": "RA03-EN272",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 38120068,
+      "printingCode": "RA03-EN188",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 38120068,
+      "printingCode": "RA03-EN188",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98777036,
+      "printingCode": "RA03-EN223",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 98777036,
+      "printingCode": "RA03-EN223",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4206964,
+      "printingCode": "RA03-EN085",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 4206964,
+      "printingCode": "RA03-EN085",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "RA03-EN078",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "RA03-EN078",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "RA03-EN078",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "RA03-EN078",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "RA03-EN078",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "RA03-EN078",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 80101899,
+      "printingCode": "RA03-EN078",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12538374,
+      "printingCode": "RA03-EN161",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 12538374,
+      "printingCode": "RA03-EN161",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "RA03-EN072",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "RA03-EN072",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "RA03-EN072",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "RA03-EN072",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "RA03-EN072",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "RA03-EN072",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "RA03-EN072",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 80604092,
+      "printingCode": "RA03-EN088",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 80604092,
+      "printingCode": "RA03-EN088",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 56747793,
+      "printingCode": "RA03-EN112",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 56747793,
+      "printingCode": "RA03-EN112",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70368879,
+      "printingCode": "RA03-EN096",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70368879,
+      "printingCode": "RA03-EN096",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53839837,
+      "printingCode": "RA03-EN128",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 53839837,
+      "printingCode": "RA03-EN128",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 5851097,
+      "printingCode": "RA03-EN246",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 5851097,
+      "printingCode": "RA03-EN246",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 80845034,
+      "printingCode": "RA03-EN074",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 80845034,
+      "printingCode": "RA03-EN074",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 80845034,
+      "printingCode": "RA03-EN074",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 80845034,
+      "printingCode": "RA03-EN074",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80845034,
+      "printingCode": "RA03-EN074",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 80845034,
+      "printingCode": "RA03-EN074",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 38992735,
+      "printingCode": "RA03-EN127",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 38992735,
+      "printingCode": "RA03-EN127",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78010363,
+      "printingCode": "RA03-EN091",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 78010363,
+      "printingCode": "RA03-EN091",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "RA03-EN045",
+      "rarity": "common",
+      "sourceRarity": "Collector's Rare",
+      "sourceRarityCode": "(CR)"
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "RA03-EN045",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "RA03-EN045",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "RA03-EN045",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "RA03-EN045",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "RA03-EN045",
+      "rarity": "ultimate-rare",
+      "sourceRarity": "Ultimate Rare",
+      "sourceRarityCode": "(UtR)"
+    },
+    {
+      "cardCode": 30674956,
+      "printingCode": "RA03-EN045",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 90508760,
+      "printingCode": "RA03-EN221",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 90508760,
+      "printingCode": "RA03-EN221",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 52352005,
+      "printingCode": "RA03-EN226",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 52352005,
+      "printingCode": "RA03-EN226",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4779091,
+      "printingCode": "RA03-EN190",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 4779091,
+      "printingCode": "RA03-EN190",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 31764700,
+      "printingCode": "RA03-EN191",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 31764700,
+      "printingCode": "RA03-EN191",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 17259470,
+      "printingCode": "RA03-EN185",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 17259470,
+      "printingCode": "RA03-EN185",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4064256,
+      "printingCode": "RA03-EN205",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 4064256,
+      "printingCode": "RA03-EN205",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

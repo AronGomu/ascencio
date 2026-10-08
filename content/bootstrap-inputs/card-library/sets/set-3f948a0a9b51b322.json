@@ -1,0 +1,29 @@
+{
+  "id": "set-3f948a0a9b51b322",
+  "name": "Yu-Gi-Oh! Forbidden Memories promotional cards",
+  "releaseYear": 2002,
+  "imageAssetPath": "sets/set-3f948a0a9b51b322.jpg",
+  "cards": [
+    {
+      "cardCode": 52040216,
+      "printingCode": "FMR-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 64335805,
+      "printingCode": "FMR-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 68540059,
+      "printingCode": "FMR-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

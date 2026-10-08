@@ -1,0 +1,15 @@
+{
+  "id": "set-a07aaf372fbb2fd0",
+  "name": "Weekly Shonen Jump Alpha April 2012 membership promotional card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-a07aaf372fbb2fd0.jpg",
+  "cards": [
+    {
+      "cardCode": 54719828,
+      "printingCode": "JUMP-EN060",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

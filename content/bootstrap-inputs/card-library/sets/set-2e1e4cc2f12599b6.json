@@ -1,0 +1,15 @@
+{
+  "id": "set-2e1e4cc2f12599b6",
+  "name": "Yu-Gi-Oh! World Championship 2004 prize cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-2e1e4cc2f12599b6.jpg",
+  "cards": [
+    {
+      "cardCode": 76232340,
+      "printingCode": "WCS-EN403",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

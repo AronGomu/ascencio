@@ -1,0 +1,15 @@
+{
+  "id": "set-1daaa8ae27e94b2a",
+  "name": "Shonen Jump Vol. 5, Issue 4 promotional card",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-1daaa8ae27e94b2a.jpg",
+  "cards": [
+    {
+      "cardCode": 40044918,
+      "printingCode": "JUMP-EN012",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

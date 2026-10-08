@@ -1,0 +1,50 @@
+{
+  "id": "set-b22e632635ee7f4c",
+  "name": "Master Collection Volume 2",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-b22e632635ee7f4c.jpg",
+  "cards": [
+    {
+      "cardCode": 72989439,
+      "printingCode": "MC2-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 25551951,
+      "printingCode": "MC2-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 71413901,
+      "printingCode": "MC2-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 12600382,
+      "printingCode": "MC2-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 40659562,
+      "printingCode": "MC2-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 87997872,
+      "printingCode": "MC2-EN006",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

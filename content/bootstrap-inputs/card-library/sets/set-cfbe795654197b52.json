@@ -1,0 +1,43 @@
+{
+  "id": "set-cfbe795654197b52",
+  "name": "Duelist League Demo 2010",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-cfbe795654197b52.jpg",
+  "cards": [
+    {
+      "cardCode": 40619825,
+      "printingCode": "DLDI-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98045062,
+      "printingCode": "DLDI-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69162969,
+      "printingCode": "DLDI-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 54652250,
+      "printingCode": "DLDI-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22567609,
+      "printingCode": "DLDI-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

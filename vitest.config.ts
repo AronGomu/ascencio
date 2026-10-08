@@ -10,8 +10,10 @@ export default defineConfig({
     execArgv: ["--no-experimental-webstorage"],
     include: ["tests/{unit,integration,component}/**/*.test.ts"],
     setupFiles: ["tests/fixtures/runtime-build-constants.ts"],
-    testTimeout: 30_000,
-    hookTimeout: 30_000,
+    // Filesystem-heavy fixtures take longer on Windows; bound worker pressure.
+    ...(process.platform === "win32" ? { maxWorkers: 2 } : {}),
+    testTimeout: process.platform === "win32" ? 120_000 : 30_000,
+    hookTimeout: process.platform === "win32" ? 120_000 : 30_000,
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],

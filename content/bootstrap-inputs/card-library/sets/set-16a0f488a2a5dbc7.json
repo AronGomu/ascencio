@@ -1,0 +1,29 @@
+{
+  "id": "set-16a0f488a2a5dbc7",
+  "name": "2020 Tin of Lost Memories",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-16a0f488a2a5dbc7.jpg",
+  "cards": [
+    {
+      "cardCode": 22634473,
+      "printingCode": "MP20-EN248",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 96239878,
+      "printingCode": "MP20-EN247",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 69145169,
+      "printingCode": "MP20-EN246",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

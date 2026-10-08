@@ -1,0 +1,15 @@
+{
+  "id": "set-4cda25d3073efa2c",
+  "name": "Legendary Collection: 25th Anniversary Edition",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-4cda25d3073efa2c.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "LC01-EN004",
+      "rarity": "common",
+      "sourceRarity": "Quarter Century Secret Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

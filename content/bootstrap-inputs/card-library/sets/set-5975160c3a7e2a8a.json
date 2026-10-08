@@ -1,0 +1,15 @@
+{
+  "id": "set-5975160c3a7e2a8a",
+  "name": "Structure Deck: Dinosaur's Rage Special Set",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-5975160c3a7e2a8a.jpg",
+  "cards": [
+    {
+      "cardCode": 99267150,
+      "printingCode": "SD09-ENSS1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "set-fa4329f121f00418",
+  "name": "Yu-Gi-Oh! GX Tag Force 2 promotional cards",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-fa4329f121f00418.jpg",
+  "cards": [
+    {
+      "cardCode": 4923662,
+      "printingCode": "GX04-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 77538567,
+      "printingCode": "GX04-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 31034919,
+      "printingCode": "GX04-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

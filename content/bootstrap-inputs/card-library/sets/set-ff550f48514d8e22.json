@@ -1,0 +1,36 @@
+{
+  "id": "set-ff550f48514d8e22",
+  "name": "Cybernetic Horizon Special Edition",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-ff550f48514d8e22.jpg",
+  "cards": [
+    {
+      "cardCode": 82162616,
+      "printingCode": "CYHO-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 81223446,
+      "printingCode": "CYHO-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63767246,
+      "printingCode": "CYHO-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 41091257,
+      "printingCode": "CYHO-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

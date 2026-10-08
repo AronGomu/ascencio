@@ -1,0 +1,15 @@
+{
+  "id": "set-03c515c7e719f0aa",
+  "name": "KC Grand Tournament prize card",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-03c515c7e719f0aa.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "2020-EN001",
+      "rarity": "common",
+      "sourceRarity": "Extra Secret Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "set-903da71d791a57ff",
+  "name": "Shadow Specters: Special Edition",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-903da71d791a57ff.jpg",
+  "cards": [
+    {
+      "cardCode": 44508094,
+      "printingCode": "SHSP-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 96363153,
+      "printingCode": "SHSP-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

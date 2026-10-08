@@ -1,0 +1,15 @@
+{
+  "id": "set-43d3fdc9496040d6",
+  "name": "Cosmo Blazer Sneak Peek Participation Card",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-43d3fdc9496040d6.jpg",
+  "cards": [
+    {
+      "cardCode": 23562407,
+      "printingCode": "CBLZ-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

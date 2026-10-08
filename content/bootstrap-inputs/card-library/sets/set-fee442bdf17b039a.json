@@ -1,0 +1,43 @@
+{
+  "id": "set-fee442bdf17b039a",
+  "name": "Yu-Gi-Oh! GX Ultimate Beginner's Pack",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-fee442bdf17b039a.jpg",
+  "cards": [
+    {
+      "cardCode": 33396948,
+      "printingCode": "UBP1-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 7902349,
+      "printingCode": "UBP1-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 44519536,
+      "printingCode": "UBP1-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 70903634,
+      "printingCode": "UBP1-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 8124921,
+      "printingCode": "UBP1-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

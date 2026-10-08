@@ -1,0 +1,50 @@
+{
+  "id": "set-0c0a60b84d005d47",
+  "name": "2015 Mega-Tins",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-0c0a60b84d005d47.jpg",
+  "cards": [
+    {
+      "cardCode": 82633039,
+      "printingCode": "CT12-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16195942,
+      "printingCode": "CT12-EN002",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 17412721,
+      "printingCode": "CT12-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 33746252,
+      "printingCode": "CT12-EN004",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16178681,
+      "printingCode": "CT12-EN001",
+      "rarity": "common",
+      "sourceRarity": "Platinum Secret Rare",
+      "sourceRarityCode": "(PS)"
+    },
+    {
+      "cardCode": 70913714,
+      "printingCode": "CT12-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

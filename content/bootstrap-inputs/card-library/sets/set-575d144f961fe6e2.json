@@ -1,0 +1,36 @@
+{
+  "id": "set-575d144f961fe6e2",
+  "name": "Judgment of the Light: Deluxe Edition",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-575d144f961fe6e2.jpg",
+  "cards": [
+    {
+      "cardCode": 28423537,
+      "printingCode": "JOTL-ENDE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 63300440,
+      "printingCode": "JOTL-ENDE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80978111,
+      "printingCode": "JOTL-ENDE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 62188962,
+      "printingCode": "JOTL-ENDE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-caa72d2cb0491440",
+  "name": "Yu-Gi-Oh! GX Volume 7 promotional card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-caa72d2cb0491440.jpg",
+  "cards": [
+    {
+      "cardCode": 28348537,
+      "printingCode": "YG07-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

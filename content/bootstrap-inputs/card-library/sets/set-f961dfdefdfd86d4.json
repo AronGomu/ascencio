@@ -1,0 +1,15 @@
+{
+  "id": "set-f961dfdefdfd86d4",
+  "name": "Shonen Jump Vol. 4, Issue 11 promotional card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-f961dfdefdfd86d4.jpg",
+  "cards": [
+    {
+      "cardCode": 80304126,
+      "printingCode": "JUMP-EN009",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

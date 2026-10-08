@@ -1,0 +1,36 @@
+{
+  "id": "set-c2492a5b4505ee21",
+  "name": "Dark Neostorm Special Edition",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-c2492a5b4505ee21.jpg",
+  "cards": [
+    {
+      "cardCode": 46924949,
+      "printingCode": "DANE-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 92345028,
+      "printingCode": "DANE-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 11827244,
+      "printingCode": "DANE-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 68431965,
+      "printingCode": "DANE-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

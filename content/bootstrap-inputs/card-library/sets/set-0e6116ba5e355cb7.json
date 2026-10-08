@@ -1,0 +1,43 @@
+{
+  "id": "set-0e6116ba5e355cb7",
+  "name": "Event Pack Speed Duel",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-0e6116ba5e355cb7.jpg",
+  "cards": [
+    {
+      "cardCode": 38033121,
+      "printingCode": "EVSD-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91939608,
+      "printingCode": "EVSD-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33904024,
+      "printingCode": "EVSD-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 126218,
+      "printingCode": "EVSD-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "EVSD-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

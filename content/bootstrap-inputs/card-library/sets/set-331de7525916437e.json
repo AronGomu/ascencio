@@ -1,0 +1,22 @@
+{
+  "id": "set-331de7525916437e",
+  "name": "WCS 2025 Limited Pack",
+  "releaseYear": 2025,
+  "imageAssetPath": "sets/set-331de7525916437e.jpg",
+  "cards": [
+    {
+      "cardCode": 33396948,
+      "printingCode": "25LP-EN000",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 33396948,
+      "printingCode": "25LP-EN000",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

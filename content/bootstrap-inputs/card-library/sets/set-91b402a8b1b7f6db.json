@@ -1,0 +1,15 @@
+{
+  "id": "set-91b402a8b1b7f6db",
+  "name": "Yu-Gi-Oh! 5D's Volume 7 promotional card",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-91b402a8b1b7f6db.jpg",
+  "cards": [
+    {
+      "cardCode": 33698022,
+      "printingCode": "YF07-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

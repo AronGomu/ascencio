@@ -1,0 +1,15 @@
+{
+  "id": "set-764c8ef5ea019e5a",
+  "name": "Duelist Alliance Sneak Peek Participation Card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-764c8ef5ea019e5a.jpg",
+  "cards": [
+    {
+      "cardCode": 21970285,
+      "printingCode": "DUEA-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

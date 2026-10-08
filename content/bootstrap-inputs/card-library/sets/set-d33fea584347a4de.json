@@ -1,0 +1,22 @@
+{
+  "id": "set-d33fea584347a4de",
+  "name": "Hidden Arsenal 5: Steelswarm Invasion: Special Edition",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-d33fea584347a4de.jpg",
+  "cards": [
+    {
+      "cardCode": 50321796,
+      "printingCode": "H5SE-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 65749035,
+      "printingCode": "H5SE-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

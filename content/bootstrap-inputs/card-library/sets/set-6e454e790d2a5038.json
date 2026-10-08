@@ -1,0 +1,22 @@
+{
+  "id": "set-6e454e790d2a5038",
+  "name": "Gladiator's Assault: Special Edition",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-6e454e790d2a5038.jpg",
+  "cards": [
+    {
+      "cardCode": 30312361,
+      "printingCode": "GLAS-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 7736719,
+      "printingCode": "GLAS-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

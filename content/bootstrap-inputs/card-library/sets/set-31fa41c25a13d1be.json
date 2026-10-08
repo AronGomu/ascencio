@@ -1,0 +1,15 @@
+{
+  "id": "set-31fa41c25a13d1be",
+  "name": "Yu-Gi-Oh! 3D Bonds Beyond Time DVD promotional card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-31fa41c25a13d1be.jpg",
+  "cards": [
+    {
+      "cardCode": 55343236,
+      "printingCode": "MOV2-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

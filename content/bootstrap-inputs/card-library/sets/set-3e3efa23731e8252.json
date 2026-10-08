@@ -1,0 +1,15 @@
+{
+  "id": "set-3e3efa23731e8252",
+  "name": "Raging Tempest Sneak Peek Participation Card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-3e3efa23731e8252.jpg",
+  "cards": [
+    {
+      "cardCode": 22829942,
+      "printingCode": "RATE-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

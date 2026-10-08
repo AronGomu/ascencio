@@ -1,0 +1,15 @@
+{
+  "id": "set-999ae45f5a5c84e1",
+  "name": "Yu-Gi-Oh! GX Volume 6 promotional card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-999ae45f5a5c84e1.jpg",
+  "cards": [
+    {
+      "cardCode": 22061412,
+      "printingCode": "YG06-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

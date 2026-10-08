@@ -1,0 +1,50 @@
+{
+  "id": "set-e48358c8e8203661",
+  "name": "Collectible Tins 2003",
+  "releaseYear": 2003,
+  "imageAssetPath": "sets/set-e48358c8e8203661.jpg",
+  "cards": [
+    {
+      "cardCode": 423705,
+      "printingCode": "BPT-012",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "BPT-007",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 77585513,
+      "printingCode": "BPT-011",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 78193831,
+      "printingCode": "BPT-008",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "BPT-009",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 91998119,
+      "printingCode": "BPT-010",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

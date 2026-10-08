@@ -1,0 +1,15 @@
+{
+  "id": "set-043f10005bb8b2ae",
+  "name": "Shonen Jump Vol. 8, Issue 3 promotional card",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-043f10005bb8b2ae.jpg",
+  "cards": [
+    {
+      "cardCode": 33093439,
+      "printingCode": "JUMP-EN038",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

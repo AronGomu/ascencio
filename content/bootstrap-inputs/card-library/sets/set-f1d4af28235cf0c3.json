@@ -1,0 +1,148 @@
+{
+  "id": "set-f1d4af28235cf0c3",
+  "name": "Battle Pack Tournament Prize Cards",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-f1d4af28235cf0c3.jpg",
+  "cards": [
+    {
+      "cardCode": 34487429,
+      "printingCode": "BATT-EN006",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 9156135,
+      "printingCode": "BATT-EN002",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 69031175,
+      "printingCode": "BATT-EN009",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 23995346,
+      "printingCode": "BATT-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 79229522,
+      "printingCode": "BATT-EN015",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 23693634,
+      "printingCode": "BATT-EN018",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 80316585,
+      "printingCode": "BATT-EN012",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 24725825,
+      "printingCode": "BATT-EN005",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 48156348,
+      "printingCode": "BATT-EN008",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 14464864,
+      "printingCode": "BATT-EN011",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 83039729,
+      "printingCode": "BATT-EN016",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 30213599,
+      "printingCode": "BATT-EN010",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 53567095,
+      "printingCode": "BATT-EN004",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 57774843,
+      "printingCode": "BATT-EN017",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 11012887,
+      "printingCode": "BATT-EN019",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 39552864,
+      "printingCode": "BATT-EN014",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 23205979,
+      "printingCode": "BATT-EN013",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 41006930,
+      "printingCode": "BATT-EN003",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 88307361,
+      "printingCode": "BATT-EN007",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 36687247,
+      "printingCode": "BATT-EN020",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    }
+  ]
+}

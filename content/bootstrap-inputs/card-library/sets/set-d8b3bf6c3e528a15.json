@@ -1,0 +1,15 @@
+{
+  "id": "set-d8b3bf6c3e528a15",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 5 promotional card",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-d8b3bf6c3e528a15.jpg",
+  "cards": [
+    {
+      "cardCode": 75253697,
+      "printingCode": "YZ05-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

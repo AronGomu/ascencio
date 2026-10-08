@@ -1,0 +1,50 @@
+{
+  "id": "set-f4dba44f059deb74",
+  "name": "Yu-Gi-Oh! Power of Chaos: Kaiba the Revenge promotional cards",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-f4dba44f059deb74.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "PCK-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "PCK-E001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 95132338,
+      "printingCode": "PCK-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 95132338,
+      "printingCode": "PCK-E002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 97809599,
+      "printingCode": "PCK-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 97809599,
+      "printingCode": "PCK-E003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

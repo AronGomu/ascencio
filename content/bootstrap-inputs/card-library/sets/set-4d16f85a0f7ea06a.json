@@ -1,0 +1,15 @@
+{
+  "id": "set-4d16f85a0f7ea06a",
+  "name": "Palladium Oracle Mahad Sweepstakes",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-4d16f85a0f7ea06a.jpg",
+  "cards": [
+    {
+      "cardCode": 71703785,
+      "printingCode": "SBPR-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-ceb1e9f37e41dff6",
+  "name": "Weekly Shonen Jump Alpha July 2012 membership promotional card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-ceb1e9f37e41dff6.jpg",
+  "cards": [
+    {
+      "cardCode": 10000020,
+      "printingCode": "JUMP-EN061",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

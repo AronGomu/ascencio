@@ -1,0 +1,36 @@
+{
+  "id": "set-b8b7df6ada3f99bf",
+  "name": "Circuit Break Special Edition",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-b8b7df6ada3f99bf.jpg",
+  "cards": [
+    {
+      "cardCode": 37310367,
+      "printingCode": "CIBR-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 879958,
+      "printingCode": "CIBR-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 89474727,
+      "printingCode": "CIBR-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 10000080,
+      "printingCode": "CIBR-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

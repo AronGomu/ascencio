@@ -1,0 +1,15 @@
+{
+  "id": "set-ad609acd76a1d7bd",
+  "name": "Invasion: Vengeance Sneak Peek Participation Card",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-ad609acd76a1d7bd.jpg",
+  "cards": [
+    {
+      "cardCode": 92092092,
+      "printingCode": "INOV-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

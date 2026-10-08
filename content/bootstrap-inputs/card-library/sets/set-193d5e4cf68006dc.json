@@ -1,0 +1,36 @@
+{
+  "id": "set-193d5e4cf68006dc",
+  "name": "Chaos Impact Special Edition",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-193d5e4cf68006dc.jpg",
+  "cards": [
+    {
+      "cardCode": 38960450,
+      "printingCode": "CHIM-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 74752631,
+      "printingCode": "CHIM-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 15754711,
+      "printingCode": "CHIM-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47363932,
+      "printingCode": "CHIM-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

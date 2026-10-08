@@ -1,0 +1,134 @@
+{
+  "id": "set-1794a40a070ae2e8",
+  "name": "Duel Terminal - Preview Wave 2",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-1794a40a070ae2e8.jpg",
+  "cards": [
+    {
+      "cardCode": 26593852,
+      "printingCode": "DTP1-EN031",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 25247218,
+      "printingCode": "DTP1-EN023",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "DTP1-EN001",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Super Parallel Rare",
+      "sourceRarityCode": "(DSPR)"
+    },
+    {
+      "cardCode": 17655904,
+      "printingCode": "DTP1-EN013",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 7093411,
+      "printingCode": "DTP1-EN028",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "DTP1-EN009",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "DTP1-EN002",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 97021916,
+      "printingCode": "DTP1-EN024",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    },
+    {
+      "cardCode": 89943723,
+      "printingCode": "DTP1-EN005",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 59965151,
+      "printingCode": "DTP1-EN022",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    },
+    {
+      "cardCode": 7391448,
+      "printingCode": "DTP1-EN030",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Super Parallel Rare",
+      "sourceRarityCode": "(DSPR)"
+    },
+    {
+      "cardCode": 97904474,
+      "printingCode": "DTP1-EN025",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    },
+    {
+      "cardCode": 91932350,
+      "printingCode": "DTP1-EN027",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    },
+    {
+      "cardCode": 52684508,
+      "printingCode": "DTP1-EN015",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 96182448,
+      "printingCode": "DTP1-EN021",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 18013090,
+      "printingCode": "DTP1-EN029",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Super Parallel Rare",
+      "sourceRarityCode": "(DSPR)"
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "DTP1-EN003",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    },
+    {
+      "cardCode": 16589042,
+      "printingCode": "DTP1-EN026",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    }
+  ]
+}

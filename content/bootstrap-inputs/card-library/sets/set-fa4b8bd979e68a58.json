@@ -1,0 +1,15 @@
+{
+  "id": "set-fa4b8bd979e68a58",
+  "name": "The Lost Millennium Sneak Peek Participation Card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-fa4b8bd979e68a58.jpg",
+  "cards": [
+    {
+      "cardCode": 29654737,
+      "printingCode": "SP1-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-6ba81ac82c8854ee",
+  "name": "Starstrike Blast Sneak Peek Participation Card",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-6ba81ac82c8854ee.jpg",
+  "cards": [
+    {
+      "cardCode": 31766317,
+      "printingCode": "STBL-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

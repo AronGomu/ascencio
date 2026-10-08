@@ -1,0 +1,29 @@
+{
+  "id": "set-2ad8d043930b0a37",
+  "name": "Duelist Pack: Special Edition",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-2ad8d043930b0a37.jpg",
+  "cards": [
+    {
+      "cardCode": 48115277,
+      "printingCode": "DPK-ENSE1",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 81167171,
+      "printingCode": "DPK-ENSE3",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 54762426,
+      "printingCode": "DPK-ENSE2",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

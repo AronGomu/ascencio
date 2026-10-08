@@ -15,6 +15,7 @@ import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { canonicalBytes } from "../scripts/lib/asset-delivery/canonical-json.ts";
+import { assertNoPathCollisions } from "../scripts/lib/asset-delivery/path-guards.ts";
 import { acquireAssetDeliveryLock } from "../scripts/lib/asset-delivery/local-lock.ts";
 import {
   scanAssets,
@@ -298,16 +299,24 @@ test("Unsafe input: credential names, links, case and Unicode collisions rejecte
     ["A/x", "a/y"],
     ["é.svg", "é.svg"],
   ]) {
+    if (process.platform === "win32" && names[0] === "A/x") {
+      // NTFS merges these directory spellings before a scanner can observe them.
+      assert.throws(() => assertNoPathCollisions(names), {
+        message: "ASSET_PATH_UNSAFE",
+      });
+      continue;
+    }
     const root = await fixture(t);
     for (const name of names) await put(root, `assets/story/${name}`, "x");
     await assert.rejects(scan(root), { message: "ASSET_PATH_UNSAFE" });
   }
   const root = await fixture(t);
-  await put(root, "outside", "x");
+  await put(root, "outside/file", "x");
   await mkdir(path.join(root, "assets/story"), { recursive: true });
   await symlink(
     path.join(root, "outside"),
     path.join(root, "assets/story/link"),
+    process.platform === "win32" ? "junction" : "dir",
   );
   await assert.rejects(scan(root), { message: "ASSET_PATH_UNSAFE" });
 });
@@ -542,14 +551,14 @@ test("Migration crash before/after link and before receipt is retryable after ex
       const open=fs.open;
       fs.open=async(...args)=>{
         const handle=await open(...args);
-        if(phase==='copy' && args[1]==='wx' && /\\/\\.m-[^/]+$/.test(String(args[0]))) {
+        if(phase==='copy' && args[1]==='wx' && /\\/\\.m-[^/]+$/.test(String(args[0]).replaceAll('\\\\','/'))) {
           const write=handle.write.bind(handle);
           handle.write=async(...values)=>{ await write(...values); process.exit(73); };
         }
         return handle;
       };
       const method=phase==='link'?'link':'rename', original=fs[method];
-      fs[method]=async(...args)=>{ if(phase!=='link') { if(phase==='receipt' && String(args[1]).endsWith('/migration-receipt.json')) process.exit(73); return original(...args); } await original(...args); process.exit(73); };
+      fs[method]=async(...args)=>{ if(phase!=='link') { if(phase==='receipt' && String(args[1]).replaceAll('\\\\','/').endsWith('/migration-receipt.json')) process.exit(73); return original(...args); } await original(...args); process.exit(73); };
       syncBuiltinESMExports();
       await applyMigration(${JSON.stringify(root)},${JSON.stringify(plan)});
     `;
@@ -842,7 +851,7 @@ test("Observed root disappearance and enumerated file disappearance fail ASSET_S
     try {
       await assert.rejects(scan(root), {
         message: "ASSET_SOURCE_CHANGED",
-        path: path.relative(root, target),
+        path: path.relative(root, target).split(path.sep).join("/"),
       });
       assert.equal(observations, phase === "root" ? 1 : 2);
     } finally {
@@ -1028,7 +1037,7 @@ test("Migration recovery leaves partial, replaced-inode and unknown temps untouc
       const open=fs.open;
       fs.open=async(...args)=>{
         const handle=await open(...args);
-        if(args[1]==='wx' && /\\/\\.m-[^/]+$/.test(String(args[0]))) {
+        if(args[1]==='wx' && /\\/\\.m-[^/]+$/.test(String(args[0]).replaceAll('\\\\','/'))) {
           if(phase==='unknown') process.exit(73);
           const write=handle.write.bind(handle);
           handle.write=async(buffer,offset,length,position)=>{

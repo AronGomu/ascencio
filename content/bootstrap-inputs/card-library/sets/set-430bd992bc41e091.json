@@ -1,0 +1,50 @@
+{
+  "id": "set-430bd992bc41e091",
+  "name": "Yu-Gi-Oh! The Sacred Cards promotional cards",
+  "releaseYear": 2003,
+  "imageAssetPath": "sets/set-430bd992bc41e091.jpg",
+  "cards": [
+    {
+      "cardCode": 126218,
+      "printingCode": "TSC-E003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 5556668,
+      "printingCode": "TSC-E001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 14315573,
+      "printingCode": "TSC-003",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 34016756,
+      "printingCode": "TSC-002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 48579379,
+      "printingCode": "TSC-001",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    },
+    {
+      "cardCode": 74137509,
+      "printingCode": "TSC-E002",
+      "rarity": "common",
+      "sourceRarity": "Prismatic Secret Rare",
+      "sourceRarityCode": "(PScR)"
+    }
+  ]
+}

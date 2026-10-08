@@ -1,0 +1,50 @@
+{
+  "id": "set-9ec54fa05018718e",
+  "name": "Collectible Tins 2004",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-9ec54fa05018718e.jpg",
+  "cards": [
+    {
+      "cardCode": 10375182,
+      "printingCode": "CT1-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 16589042,
+      "printingCode": "CT1-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 39507162,
+      "printingCode": "CT1-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 52077741,
+      "printingCode": "CT1-EN006",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 75372290,
+      "printingCode": "CT1-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 91512835,
+      "printingCode": "CT1-EN005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

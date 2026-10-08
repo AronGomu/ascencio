@@ -1,0 +1,1044 @@
+{
+  "id": "set-f08e42588f941fad",
+  "name": "Legendary Modern Decks 2026",
+  "releaseYear": 2026,
+  "imageAssetPath": "sets/set-f08e42588f941fad.jpg",
+  "cards": [
+    {
+      "cardCode": 13332685,
+      "printingCode": "L26D-ENM10",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 13332685,
+      "printingCode": "L26D-ENM10",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 13332685,
+      "printingCode": "L26D-ENM10",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19899073,
+      "printingCode": "L26D-ENM08",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 19899073,
+      "printingCode": "L26D-ENM08",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 19899073,
+      "printingCode": "L26D-ENM08",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 14558127,
+      "printingCode": "L26D-ENM02",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73580471,
+      "printingCode": "L26D-ENX31",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33698022,
+      "printingCode": "L26D-ENX39",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "L26D-ENS09",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "L26D-ENX20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9348522,
+      "printingCode": "L26D-ENX38",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17217034,
+      "printingCode": "L26D-ENS33",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 17217034,
+      "printingCode": "L26D-ENS33",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 72867001,
+      "printingCode": "L26D-ENX42",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 72867001,
+      "printingCode": "L26D-ENX42",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 30748475,
+      "printingCode": "L26D-ENX28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8264361,
+      "printingCode": "L26D-ENM30",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 73898890,
+      "printingCode": "L26D-ENM31",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 67723438,
+      "printingCode": "L26D-ENX16",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46772449,
+      "printingCode": "L26D-ENM22",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57103969,
+      "printingCode": "L26D-ENX18",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 24299458,
+      "printingCode": "L26D-ENM13",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 55397172,
+      "printingCode": "L26D-ENM09",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13504844,
+      "printingCode": "L26D-ENX26",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 13504844,
+      "printingCode": "L26D-ENX26",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61948106,
+      "printingCode": "L26D-ENX19",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61948106,
+      "printingCode": "L26D-ENX19",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 18144507,
+      "printingCode": "L26D-ENS06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65741786,
+      "printingCode": "L26D-ENM29",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 10045474,
+      "printingCode": "L26D-ENM19",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61399402,
+      "printingCode": "L26D-ENM27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14532163,
+      "printingCode": "L26D-ENS20",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 95492061,
+      "printingCode": "L26D-ENM01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27315304,
+      "printingCode": "L26D-ENX29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27315304,
+      "printingCode": "L26D-ENX29",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 27315304,
+      "printingCode": "L26D-ENX29",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 17954937,
+      "printingCode": "L26D-ENM20",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76725398,
+      "printingCode": "L26D-ENM17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49721684,
+      "printingCode": "L26D-ENM16",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 45171524,
+      "printingCode": "L26D-ENM14",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 45171524,
+      "printingCode": "L26D-ENM14",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 45171524,
+      "printingCode": "L26D-ENM14",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 45171524,
+      "printingCode": "L26D-ENM14",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 81560239,
+      "printingCode": "L26D-ENM15",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 81560239,
+      "printingCode": "L26D-ENM15",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 81560239,
+      "printingCode": "L26D-ENM15",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 12210097,
+      "printingCode": "L26D-ENM18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49604192,
+      "printingCode": "L26D-ENM21",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 76948970,
+      "printingCode": "L26D-ENM07",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40543231,
+      "printingCode": "L26D-ENM06",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40543231,
+      "printingCode": "L26D-ENM06",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 40543231,
+      "printingCode": "L26D-ENM06",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 82782870,
+      "printingCode": "L26D-ENM04",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 18176525,
+      "printingCode": "L26D-ENM05",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 18176525,
+      "printingCode": "L26D-ENM05",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 18176525,
+      "printingCode": "L26D-ENM05",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 42141493,
+      "printingCode": "L26D-ENX12",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87126721,
+      "printingCode": "L26D-ENX13",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84192580,
+      "printingCode": "L26D-ENX11",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2956282,
+      "printingCode": "L26D-ENX33",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33198837,
+      "printingCode": "L26D-ENX32",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27204311,
+      "printingCode": "L26D-ENS02",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 20295753,
+      "printingCode": "L26D-ENM03",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90590303,
+      "printingCode": "L26D-ENM24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66011101,
+      "printingCode": "L26D-ENM26",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8165596,
+      "printingCode": "L26D-ENM25",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49238328,
+      "printingCode": "L26D-ENM12",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 84211599,
+      "printingCode": "L26D-ENX22",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 13048472,
+      "printingCode": "L26D-ENM11",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 25072579,
+      "printingCode": "L26D-ENS35",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 12580477,
+      "printingCode": "L26D-ENS05",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 87188910,
+      "printingCode": "L26D-ENX40",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32807846,
+      "printingCode": "L26D-ENS08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32807846,
+      "printingCode": "L26D-ENS08",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 32807846,
+      "printingCode": "L26D-ENS08",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "L26D-ENM32",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35240714,
+      "printingCode": "L26D-ENX25",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35240714,
+      "printingCode": "L26D-ENX25",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 44901281,
+      "printingCode": "L26D-ENX27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11052544,
+      "printingCode": "L26D-ENX17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98462037,
+      "printingCode": "L26D-ENS30",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63013339,
+      "printingCode": "L26D-ENS31",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63013339,
+      "printingCode": "L26D-ENS31",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 8491308,
+      "printingCode": "L26D-ENS27",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63288573,
+      "printingCode": "L26D-ENS25",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12421694,
+      "printingCode": "L26D-ENS28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26077387,
+      "printingCode": "L26D-ENS01",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 26077387,
+      "printingCode": "L26D-ENS01",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 26077387,
+      "printingCode": "L26D-ENS01",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 37351133,
+      "printingCode": "L26D-ENS03",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "L26D-ENS26",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "L26D-ENS26",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90673288,
+      "printingCode": "L26D-ENS26",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 75147529,
+      "printingCode": "L26D-ENS29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76072561,
+      "printingCode": "L26D-ENS34",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52340445,
+      "printingCode": "L26D-ENS36",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50005218,
+      "printingCode": "L26D-ENS19",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99550630,
+      "printingCode": "L26D-ENS11",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 25955749,
+      "printingCode": "L26D-ENS12",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 61151074,
+      "printingCode": "L26D-ENS04",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 25733157,
+      "printingCode": "L26D-ENS15",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52340444,
+      "printingCode": "L26D-ENS13",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 51227866,
+      "printingCode": "L26D-ENS16",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98338152,
+      "printingCode": "L26D-ENS14",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 24010609,
+      "printingCode": "L26D-ENS18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97616504,
+      "printingCode": "L26D-ENS17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "L26D-ENS10",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "L26D-ENS10",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 63166095,
+      "printingCode": "L26D-ENS10",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 9726840,
+      "printingCode": "L26D-ENS22",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9726840,
+      "printingCode": "L26D-ENS22",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 34433770,
+      "printingCode": "L26D-ENS24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89558743,
+      "printingCode": "L26D-ENX23",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93039339,
+      "printingCode": "L26D-ENM28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23530726,
+      "printingCode": "L26D-ENS32",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 96633955,
+      "printingCode": "L26D-ENX41",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6983839,
+      "printingCode": "L26D-ENM23",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25311006,
+      "printingCode": "L26D-ENS21",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25311006,
+      "printingCode": "L26D-ENX21",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "L26D-ENS23",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "L26D-ENX24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52687916,
+      "printingCode": "L26D-ENX36",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70368879,
+      "printingCode": "L26D-ENS07",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 90508760,
+      "printingCode": "L26D-ENX01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 45462306,
+      "printingCode": "L26D-ENX15",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 45462306,
+      "printingCode": "L26D-ENX15",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 8252010,
+      "printingCode": "L26D-ENX43",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 8252010,
+      "printingCode": "L26D-ENX43",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 96099959,
+      "printingCode": "L26D-ENX02",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23093604,
+      "printingCode": "L26D-ENX03",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9978697,
+      "printingCode": "L26D-ENX14",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9978697,
+      "printingCode": "L26D-ENX14",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 63612442,
+      "printingCode": "L26D-ENX37",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80108118,
+      "printingCode": "L26D-ENX30",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5998840,
+      "printingCode": "L26D-ENX09",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 31383545,
+      "printingCode": "L26D-ENX10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42737833,
+      "printingCode": "L26D-ENX08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 51808422,
+      "printingCode": "L26D-ENX04",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 51808422,
+      "printingCode": "L26D-ENX04",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 51808422,
+      "printingCode": "L26D-ENX04",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 78422252,
+      "printingCode": "L26D-ENX06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77330185,
+      "printingCode": "L26D-ENX07",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 52352005,
+      "printingCode": "L26D-ENX34",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2203790,
+      "printingCode": "L26D-ENX35",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2203790,
+      "printingCode": "L26D-ENX35",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 2203790,
+      "printingCode": "L26D-ENX35",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 87292536,
+      "printingCode": "L26D-ENX05",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

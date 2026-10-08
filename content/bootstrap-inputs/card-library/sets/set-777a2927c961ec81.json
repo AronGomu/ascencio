@@ -1,0 +1,15 @@
+{
+  "id": "set-777a2927c961ec81",
+  "name": "Extreme Force Sneak Peek Participation Card",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-777a2927c961ec81.jpg",
+  "cards": [
+    {
+      "cardCode": 35546670,
+      "printingCode": "EXFO-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

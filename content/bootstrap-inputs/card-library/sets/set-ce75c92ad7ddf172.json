@@ -1,0 +1,22 @@
+{
+  "id": "set-ce75c92ad7ddf172",
+  "name": "Light of Destruction: Special Edition",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-ce75c92ad7ddf172.jpg",
+  "cards": [
+    {
+      "cardCode": 57666212,
+      "printingCode": "LODT-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 37383714,
+      "printingCode": "LODT-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

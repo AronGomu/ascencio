@@ -2,6 +2,8 @@
 
 This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
 
+[`desktop-setup.md`](desktop-setup.md) covers fresh clones, native prerequisites and headless checks on Windows, macOS and Linux.
+
 [`development-commands.md`](development-commands.md) lists every current npm command, standalone native launch instructions, and the explicit coverage limits of aggregate checks.
 
 [`startup-loading-messages.md`](startup-loading-messages.md) maps each startup heading to its work and explains how to review wording in a paused visual preview.

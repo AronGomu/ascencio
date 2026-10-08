@@ -1,0 +1,2997 @@
+{
+  "id": "set-7872e0385e0eacbf",
+  "name": "Battle Pack 2: War of the Giants",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-7872e0385e0eacbf.jpg",
+  "cards": [
+    {
+      "cardCode": 21597117,
+      "printingCode": "BP02-EN179",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21597117,
+      "printingCode": "BP02-EN179",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 18036057,
+      "printingCode": "BP02-EN016",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 18036057,
+      "printingCode": "BP02-EN016",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 43096270,
+      "printingCode": "BP02-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43096270,
+      "printingCode": "BP02-EN004",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 18988391,
+      "printingCode": "BP02-EN120",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18988391,
+      "printingCode": "BP02-EN120",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 58324930,
+      "printingCode": "BP02-EN092",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58324930,
+      "printingCode": "BP02-EN092",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 83104731,
+      "printingCode": "BP02-EN035",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 83104731,
+      "printingCode": "BP02-EN035",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 39303359,
+      "printingCode": "BP02-EN056",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 39303359,
+      "printingCode": "BP02-EN056",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 41098335,
+      "printingCode": "BP02-EN093",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 41098335,
+      "printingCode": "BP02-EN093",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 71453557,
+      "printingCode": "BP02-EN140",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71453557,
+      "printingCode": "BP02-EN140",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 84914462,
+      "printingCode": "BP02-EN096",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84914462,
+      "printingCode": "BP02-EN096",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 40619825,
+      "printingCode": "BP02-EN131",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40619825,
+      "printingCode": "BP02-EN131",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 19578592,
+      "printingCode": "BP02-EN161",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19578592,
+      "printingCode": "BP02-EN161",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 42969214,
+      "printingCode": "BP02-EN123",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42969214,
+      "printingCode": "BP02-EN123",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 82593786,
+      "printingCode": "BP02-EN119",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82593786,
+      "printingCode": "BP02-EN119",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 19665973,
+      "printingCode": "BP02-EN086",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19665973,
+      "printingCode": "BP02-EN086",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 40133511,
+      "printingCode": "BP02-EN012",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40133511,
+      "printingCode": "BP02-EN012",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 78651105,
+      "printingCode": "BP02-EN080",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 78651105,
+      "printingCode": "BP02-EN080",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 19028307,
+      "printingCode": "BP02-EN084",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 19028307,
+      "printingCode": "BP02-EN084",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 33655493,
+      "printingCode": "BP02-EN061",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 33655493,
+      "printingCode": "BP02-EN061",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 61127349,
+      "printingCode": "BP02-EN141",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 61127349,
+      "printingCode": "BP02-EN141",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 65240384,
+      "printingCode": "BP02-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65240384,
+      "printingCode": "BP02-EN032",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 14785765,
+      "printingCode": "BP02-EN098",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14785765,
+      "printingCode": "BP02-EN098",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 61802346,
+      "printingCode": "BP02-EN075",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 61802346,
+      "printingCode": "BP02-EN075",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 48115277,
+      "printingCode": "BP02-EN049",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 48115277,
+      "printingCode": "BP02-EN049",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 22346472,
+      "printingCode": "BP02-EN163",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22346472,
+      "printingCode": "BP02-EN163",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 14087893,
+      "printingCode": "BP02-EN138",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14087893,
+      "printingCode": "BP02-EN138",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 20546916,
+      "printingCode": "BP02-EN074",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 20546916,
+      "printingCode": "BP02-EN074",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 81919143,
+      "printingCode": "BP02-EN047",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 81919143,
+      "printingCode": "BP02-EN047",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 78474168,
+      "printingCode": "BP02-EN215",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78474168,
+      "printingCode": "BP02-EN215",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 36088082,
+      "printingCode": "BP02-EN115",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 36088082,
+      "printingCode": "BP02-EN115",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "BP02-EN171",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 97077563,
+      "printingCode": "BP02-EN171",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 4694209,
+      "printingCode": "BP02-EN082",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4694209,
+      "printingCode": "BP02-EN082",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 48712195,
+      "printingCode": "BP02-EN150",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 48712195,
+      "printingCode": "BP02-EN150",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 85087012,
+      "printingCode": "BP02-EN048",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85087012,
+      "printingCode": "BP02-EN048",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 45812361,
+      "printingCode": "BP02-EN112",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 45812361,
+      "printingCode": "BP02-EN112",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97940434,
+      "printingCode": "BP02-EN095",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 97940434,
+      "printingCode": "BP02-EN095",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 16956455,
+      "printingCode": "BP02-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16956455,
+      "printingCode": "BP02-EN034",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 86871614,
+      "printingCode": "BP02-EN191",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86871614,
+      "printingCode": "BP02-EN191",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 26376390,
+      "printingCode": "BP02-EN058",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26376390,
+      "printingCode": "BP02-EN058",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66742250,
+      "printingCode": "BP02-EN182",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66742250,
+      "printingCode": "BP02-EN182",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 98867329,
+      "printingCode": "BP02-EN159",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98867329,
+      "printingCode": "BP02-EN159",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "BP02-EN039",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "BP02-EN039",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 34124316,
+      "printingCode": "BP02-EN007",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 34124316,
+      "printingCode": "BP02-EN007",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 3657444,
+      "printingCode": "BP02-EN059",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 3657444,
+      "printingCode": "BP02-EN059",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 70074904,
+      "printingCode": "BP02-EN028",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 70074904,
+      "printingCode": "BP02-EN028",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 7572887,
+      "printingCode": "BP02-EN021",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 7572887,
+      "printingCode": "BP02-EN021",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 87106146,
+      "printingCode": "BP02-EN205",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87106146,
+      "printingCode": "BP02-EN205",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 15341821,
+      "printingCode": "BP02-EN077",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15341821,
+      "printingCode": "BP02-EN077",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 40737112,
+      "printingCode": "BP02-EN023",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 40737112,
+      "printingCode": "BP02-EN023",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 97021916,
+      "printingCode": "BP02-EN067",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97021916,
+      "printingCode": "BP02-EN067",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 83269557,
+      "printingCode": "BP02-EN064",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 83269557,
+      "printingCode": "BP02-EN064",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55690251,
+      "printingCode": "BP02-EN090",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 55690251,
+      "printingCode": "BP02-EN090",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 40921744,
+      "printingCode": "BP02-EN060",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 40921744,
+      "printingCode": "BP02-EN060",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 33695750,
+      "printingCode": "BP02-EN076",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33695750,
+      "printingCode": "BP02-EN076",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 44046281,
+      "printingCode": "BP02-EN213",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44046281,
+      "printingCode": "BP02-EN213",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 19700943,
+      "printingCode": "BP02-EN118",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 19700943,
+      "printingCode": "BP02-EN118",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 78700060,
+      "printingCode": "BP02-EN062",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78700060,
+      "printingCode": "BP02-EN062",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 64262809,
+      "printingCode": "BP02-EN057",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64262809,
+      "printingCode": "BP02-EN057",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 43250041,
+      "printingCode": "BP02-EN181",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43250041,
+      "printingCode": "BP02-EN181",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 71218746,
+      "printingCode": "BP02-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71218746,
+      "printingCode": "BP02-EN038",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 82828051,
+      "printingCode": "BP02-EN145",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82828051,
+      "printingCode": "BP02-EN145",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 73178098,
+      "printingCode": "BP02-EN164",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73178098,
+      "printingCode": "BP02-EN164",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 28649820,
+      "printingCode": "BP02-EN180",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28649820,
+      "printingCode": "BP02-EN180",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 98045062,
+      "printingCode": "BP02-EN144",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98045062,
+      "printingCode": "BP02-EN144",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 58554959,
+      "printingCode": "BP02-EN054",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 58554959,
+      "printingCode": "BP02-EN054",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 96872283,
+      "printingCode": "BP02-EN085",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96872283,
+      "printingCode": "BP02-EN085",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 63749102,
+      "printingCode": "BP02-EN041",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63749102,
+      "printingCode": "BP02-EN041",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 13893596,
+      "printingCode": "BP02-EN063",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 13893596,
+      "printingCode": "BP02-EN063",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 24874630,
+      "printingCode": "BP02-EN151",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24874630,
+      "printingCode": "BP02-EN151",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 6178850,
+      "printingCode": "BP02-EN153",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6178850,
+      "printingCode": "BP02-EN153",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66499018,
+      "printingCode": "BP02-EN113",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66499018,
+      "printingCode": "BP02-EN113",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 25789292,
+      "printingCode": "BP02-EN155",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25789292,
+      "printingCode": "BP02-EN155",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 96864811,
+      "printingCode": "BP02-EN168",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96864811,
+      "printingCode": "BP02-EN168",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 27243130,
+      "printingCode": "BP02-EN162",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27243130,
+      "printingCode": "BP02-EN162",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66288028,
+      "printingCode": "BP02-EN078",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66288028,
+      "printingCode": "BP02-EN078",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 6631034,
+      "printingCode": "BP02-EN003",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 6631034,
+      "printingCode": "BP02-EN003",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 81000306,
+      "printingCode": "BP02-EN166",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 81000306,
+      "printingCode": "BP02-EN166",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 12423762,
+      "printingCode": "BP02-EN111",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12423762,
+      "printingCode": "BP02-EN111",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 69247929,
+      "printingCode": "BP02-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 69247929,
+      "printingCode": "BP02-EN002",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 45894482,
+      "printingCode": "BP02-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 45894482,
+      "printingCode": "BP02-EN013",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 78658564,
+      "printingCode": "BP02-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78658564,
+      "printingCode": "BP02-EN008",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 85306040,
+      "printingCode": "BP02-EN040",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 85306040,
+      "printingCode": "BP02-EN040",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 62476815,
+      "printingCode": "BP02-EN100",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62476815,
+      "printingCode": "BP02-EN100",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 79571449,
+      "printingCode": "BP02-EN137",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 79571449,
+      "printingCode": "BP02-EN137",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 32022366,
+      "printingCode": "BP02-EN143",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 32022366,
+      "printingCode": "BP02-EN143",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 68007326,
+      "printingCode": "BP02-EN026",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 68007326,
+      "printingCode": "BP02-EN026",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 18325492,
+      "printingCode": "BP02-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18325492,
+      "printingCode": "BP02-EN036",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 6799227,
+      "printingCode": "BP02-EN207",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 6799227,
+      "printingCode": "BP02-EN207",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 73048641,
+      "printingCode": "BP02-EN158",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73048641,
+      "printingCode": "BP02-EN158",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 15552258,
+      "printingCode": "BP02-EN201",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15552258,
+      "printingCode": "BP02-EN201",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 59042331,
+      "printingCode": "BP02-EN081",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59042331,
+      "printingCode": "BP02-EN081",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 47025270,
+      "printingCode": "BP02-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 47025270,
+      "printingCode": "BP02-EN019",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66337215,
+      "printingCode": "BP02-EN053",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66337215,
+      "printingCode": "BP02-EN053",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 64047146,
+      "printingCode": "BP02-EN134",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64047146,
+      "printingCode": "BP02-EN134",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 2671330,
+      "printingCode": "BP02-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2671330,
+      "printingCode": "BP02-EN024",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 10532969,
+      "printingCode": "BP02-EN121",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 10532969,
+      "printingCode": "BP02-EN121",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 86778566,
+      "printingCode": "BP02-EN211",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86778566,
+      "printingCode": "BP02-EN211",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 79575620,
+      "printingCode": "BP02-EN018",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 79575620,
+      "printingCode": "BP02-EN018",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 25206027,
+      "printingCode": "BP02-EN104",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25206027,
+      "printingCode": "BP02-EN104",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 85028288,
+      "printingCode": "BP02-EN089",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 85028288,
+      "printingCode": "BP02-EN089",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 59575539,
+      "printingCode": "BP02-EN068",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 59575539,
+      "printingCode": "BP02-EN068",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 37390589,
+      "printingCode": "BP02-EN198",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 37390589,
+      "printingCode": "BP02-EN198",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 88240808,
+      "printingCode": "BP02-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88240808,
+      "printingCode": "BP02-EN011",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66526672,
+      "printingCode": "BP02-EN183",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66526672,
+      "printingCode": "BP02-EN183",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 90790253,
+      "printingCode": "BP02-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90790253,
+      "printingCode": "BP02-EN020",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 11091375,
+      "printingCode": "BP02-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 11091375,
+      "printingCode": "BP02-EN001",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 96938777,
+      "printingCode": "BP02-EN072",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96938777,
+      "printingCode": "BP02-EN072",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 96008713,
+      "printingCode": "BP02-EN186",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96008713,
+      "printingCode": "BP02-EN186",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 31560081,
+      "printingCode": "BP02-EN005",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 31560081,
+      "printingCode": "BP02-EN005",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 93013676,
+      "printingCode": "BP02-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93013676,
+      "printingCode": "BP02-EN006",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 99597615,
+      "printingCode": "BP02-EN132",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99597615,
+      "printingCode": "BP02-EN132",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 57882509,
+      "printingCode": "BP02-EN174",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 57882509,
+      "printingCode": "BP02-EN174",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 22609617,
+      "printingCode": "BP02-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22609617,
+      "printingCode": "BP02-EN025",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 80921533,
+      "printingCode": "BP02-EN149",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80921533,
+      "printingCode": "BP02-EN149",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66200210,
+      "printingCode": "BP02-EN124",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66200210,
+      "printingCode": "BP02-EN124",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 60080151,
+      "printingCode": "BP02-EN212",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 60080151,
+      "printingCode": "BP02-EN212",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 21954587,
+      "printingCode": "BP02-EN117",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 21954587,
+      "printingCode": "BP02-EN117",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 26905245,
+      "printingCode": "BP02-EN193",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 26905245,
+      "printingCode": "BP02-EN193",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 68540059,
+      "printingCode": "BP02-EN173",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 68540059,
+      "printingCode": "BP02-EN173",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 34815282,
+      "printingCode": "BP02-EN195",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34815282,
+      "printingCode": "BP02-EN195",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 97168905,
+      "printingCode": "BP02-EN202",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97168905,
+      "printingCode": "BP02-EN202",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 21636650,
+      "printingCode": "BP02-EN206",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21636650,
+      "printingCode": "BP02-EN206",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 15960641,
+      "printingCode": "BP02-EN031",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15960641,
+      "printingCode": "BP02-EN031",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 22359980,
+      "printingCode": "BP02-EN172",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22359980,
+      "printingCode": "BP02-EN172",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "BP02-EN128",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 83764719,
+      "printingCode": "BP02-EN128",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 8483333,
+      "printingCode": "BP02-EN073",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 8483333,
+      "printingCode": "BP02-EN073",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55424270,
+      "printingCode": "BP02-EN042",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55424270,
+      "printingCode": "BP02-EN042",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 4906301,
+      "printingCode": "BP02-EN052",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4906301,
+      "printingCode": "BP02-EN052",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 56223084,
+      "printingCode": "BP02-EN101",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 56223084,
+      "printingCode": "BP02-EN101",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 58775978,
+      "printingCode": "BP02-EN148",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58775978,
+      "printingCode": "BP02-EN148",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 4041838,
+      "printingCode": "BP02-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4041838,
+      "printingCode": "BP02-EN029",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 60306104,
+      "printingCode": "BP02-EN190",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60306104,
+      "printingCode": "BP02-EN190",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 10000000,
+      "printingCode": "BP02-EN125",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 42280216,
+      "printingCode": "BP02-EN087",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42280216,
+      "printingCode": "BP02-EN087",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 71272951,
+      "printingCode": "BP02-EN197",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71272951,
+      "printingCode": "BP02-EN197",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 49879995,
+      "printingCode": "BP02-EN065",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 49879995,
+      "printingCode": "BP02-EN065",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 17418744,
+      "printingCode": "BP02-EN167",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17418744,
+      "printingCode": "BP02-EN167",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 65367484,
+      "printingCode": "BP02-EN103",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65367484,
+      "printingCode": "BP02-EN103",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 55758589,
+      "printingCode": "BP02-EN109",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 55758589,
+      "printingCode": "BP02-EN109",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 88975532,
+      "printingCode": "BP02-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88975532,
+      "printingCode": "BP02-EN030",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 33420078,
+      "printingCode": "BP02-EN071",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33420078,
+      "printingCode": "BP02-EN071",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 98645731,
+      "printingCode": "BP02-EN160",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 98645731,
+      "printingCode": "BP02-EN160",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55144522,
+      "printingCode": "BP02-EN129",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 55144522,
+      "printingCode": "BP02-EN129",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 53656677,
+      "printingCode": "BP02-EN204",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53656677,
+      "printingCode": "BP02-EN204",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 7025445,
+      "printingCode": "BP02-EN091",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 7025445,
+      "printingCode": "BP02-EN091",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 70828912,
+      "printingCode": "BP02-EN135",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 70828912,
+      "printingCode": "BP02-EN135",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 66518841,
+      "printingCode": "BP02-EN199",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66518841,
+      "printingCode": "BP02-EN199",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 61231400,
+      "printingCode": "BP02-EN122",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 61231400,
+      "printingCode": "BP02-EN122",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 58577036,
+      "printingCode": "BP02-EN139",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58577036,
+      "printingCode": "BP02-EN139",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 37576645,
+      "printingCode": "BP02-EN175",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 37576645,
+      "printingCode": "BP02-EN175",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 91580102,
+      "printingCode": "BP02-EN156",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91580102,
+      "printingCode": "BP02-EN156",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 77622396,
+      "printingCode": "BP02-EN169",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 77622396,
+      "printingCode": "BP02-EN169",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 31709826,
+      "printingCode": "BP02-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 31709826,
+      "printingCode": "BP02-EN010",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 34016756,
+      "printingCode": "BP02-EN142",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34016756,
+      "printingCode": "BP02-EN142",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 78211862,
+      "printingCode": "BP02-EN185",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78211862,
+      "printingCode": "BP02-EN185",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 27863269,
+      "printingCode": "BP02-EN157",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27863269,
+      "printingCode": "BP02-EN157",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 93382620,
+      "printingCode": "BP02-EN176",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93382620,
+      "printingCode": "BP02-EN176",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 70046172,
+      "printingCode": "BP02-EN133",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 70046172,
+      "printingCode": "BP02-EN133",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 64926005,
+      "printingCode": "BP02-EN088",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64926005,
+      "printingCode": "BP02-EN088",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 73915051,
+      "printingCode": "BP02-EN136",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73915051,
+      "printingCode": "BP02-EN136",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 33904024,
+      "printingCode": "BP02-EN165",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 33904024,
+      "printingCode": "BP02-EN165",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 12117532,
+      "printingCode": "BP02-EN187",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12117532,
+      "printingCode": "BP02-EN187",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 52097679,
+      "printingCode": "BP02-EN130",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52097679,
+      "printingCode": "BP02-EN130",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 95360850,
+      "printingCode": "BP02-EN066",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 95360850,
+      "printingCode": "BP02-EN066",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 2584136,
+      "printingCode": "BP02-EN102",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 2584136,
+      "printingCode": "BP02-EN102",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 55713623,
+      "printingCode": "BP02-EN146",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55713623,
+      "printingCode": "BP02-EN146",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 60406591,
+      "printingCode": "BP02-EN192",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60406591,
+      "printingCode": "BP02-EN192",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 8131171,
+      "printingCode": "BP02-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8131171,
+      "printingCode": "BP02-EN015",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 73729209,
+      "printingCode": "BP02-EN203",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 73729209,
+      "printingCode": "BP02-EN203",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 78636495,
+      "printingCode": "BP02-EN027",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 78636495,
+      "printingCode": "BP02-EN027",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 10000020,
+      "printingCode": "BP02-EN127",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 33911264,
+      "printingCode": "BP02-EN116",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 33911264,
+      "printingCode": "BP02-EN116",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 97151365,
+      "printingCode": "BP02-EN196",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97151365,
+      "printingCode": "BP02-EN196",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 93187568,
+      "printingCode": "BP02-EN050",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93187568,
+      "printingCode": "BP02-EN050",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 6691855,
+      "printingCode": "BP02-EN214",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 6691855,
+      "printingCode": "BP02-EN214",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 5645210,
+      "printingCode": "BP02-EN070",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 5645210,
+      "printingCode": "BP02-EN070",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 67196946,
+      "printingCode": "BP02-EN154",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67196946,
+      "printingCode": "BP02-EN154",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 44729197,
+      "printingCode": "BP02-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 44729197,
+      "printingCode": "BP02-EN037",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 30643162,
+      "printingCode": "BP02-EN189",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30643162,
+      "printingCode": "BP02-EN189",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 13955608,
+      "printingCode": "BP02-EN188",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 13955608,
+      "printingCode": "BP02-EN188",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 99861526,
+      "printingCode": "BP02-EN044",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 99861526,
+      "printingCode": "BP02-EN044",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 85520851,
+      "printingCode": "BP02-EN046",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 85520851,
+      "printingCode": "BP02-EN046",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 12923641,
+      "printingCode": "BP02-EN147",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12923641,
+      "printingCode": "BP02-EN147",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 15394083,
+      "printingCode": "BP02-EN094",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 15394083,
+      "printingCode": "BP02-EN094",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 64892035,
+      "printingCode": "BP02-EN114",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64892035,
+      "printingCode": "BP02-EN114",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 86039057,
+      "printingCode": "BP02-EN110",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86039057,
+      "printingCode": "BP02-EN110",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66362965,
+      "printingCode": "BP02-EN009",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 66362965,
+      "printingCode": "BP02-EN009",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 42671151,
+      "printingCode": "BP02-EN208",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 42671151,
+      "printingCode": "BP02-EN208",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 14778250,
+      "printingCode": "BP02-EN069",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14778250,
+      "printingCode": "BP02-EN069",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 10000010,
+      "printingCode": "BP02-EN126",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 36361633,
+      "printingCode": "BP02-EN184",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36361633,
+      "printingCode": "BP02-EN184",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 3129635,
+      "printingCode": "BP02-EN209",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 3129635,
+      "printingCode": "BP02-EN209",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 49514333,
+      "printingCode": "BP02-EN210",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 49514333,
+      "printingCode": "BP02-EN210",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 80987696,
+      "printingCode": "BP02-EN200",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80987696,
+      "printingCode": "BP02-EN200",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 42386471,
+      "printingCode": "BP02-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42386471,
+      "printingCode": "BP02-EN033",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 52823314,
+      "printingCode": "BP02-EN105",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52823314,
+      "printingCode": "BP02-EN105",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 12538374,
+      "printingCode": "BP02-EN043",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12538374,
+      "printingCode": "BP02-EN043",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 61538782,
+      "printingCode": "BP02-EN055",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 61538782,
+      "printingCode": "BP02-EN055",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 43586926,
+      "printingCode": "BP02-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 43586926,
+      "printingCode": "BP02-EN017",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 40225398,
+      "printingCode": "BP02-EN079",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40225398,
+      "printingCode": "BP02-EN079",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 15894048,
+      "printingCode": "BP02-EN045",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 15894048,
+      "printingCode": "BP02-EN045",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 60399954,
+      "printingCode": "BP02-EN152",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60399954,
+      "printingCode": "BP02-EN152",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 74064212,
+      "printingCode": "BP02-EN108",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 74064212,
+      "printingCode": "BP02-EN108",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 40619741,
+      "printingCode": "BP02-EN097",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40619741,
+      "printingCode": "BP02-EN097",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 38679204,
+      "printingCode": "BP02-EN107",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 38679204,
+      "printingCode": "BP02-EN107",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 1281505,
+      "printingCode": "BP02-EN106",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 1281505,
+      "printingCode": "BP02-EN106",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 12607053,
+      "printingCode": "BP02-EN170",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12607053,
+      "printingCode": "BP02-EN170",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 79473793,
+      "printingCode": "BP02-EN083",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 79473793,
+      "printingCode": "BP02-EN083",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "BP02-EN177",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59744639,
+      "printingCode": "BP02-EN177",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 18430390,
+      "printingCode": "BP02-EN051",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18430390,
+      "printingCode": "BP02-EN051",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 83133491,
+      "printingCode": "BP02-EN178",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 83133491,
+      "printingCode": "BP02-EN178",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 16268841,
+      "printingCode": "BP02-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16268841,
+      "printingCode": "BP02-EN022",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 79852326,
+      "printingCode": "BP02-EN194",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79852326,
+      "printingCode": "BP02-EN194",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 88472456,
+      "printingCode": "BP02-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 88472456,
+      "printingCode": "BP02-EN014",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    },
+    {
+      "cardCode": 97896503,
+      "printingCode": "BP02-EN099",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97896503,
+      "printingCode": "BP02-EN099",
+      "rarity": "common",
+      "sourceRarity": "Mosaic Rare",
+      "sourceRarityCode": "(MSR)"
+    }
+  ]
+}

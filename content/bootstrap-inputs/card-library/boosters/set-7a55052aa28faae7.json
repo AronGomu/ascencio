@@ -1,0 +1,48 @@
+{
+  "id": "set-7a55052aa28faae7",
+  "name": "Starter Deck: Yugi",
+  "setId": "set-7a55052aa28faae7",
+  "replacement": "with",
+  "slots": [
+    {
+      "count": 8,
+      "rarities": [
+        {
+          "rarity": "common",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    },
+    {
+      "count": 1,
+      "rarities": [
+        {
+          "rarity": "rare",
+          "weight": 1
+        },
+        {
+          "rarity": "super-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultra-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "secret-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ultimate-rare",
+          "weight": 1
+        },
+        {
+          "rarity": "ghost-rare",
+          "weight": 1
+        }
+      ],
+      "fallback": "all"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-1d729b747704c59d",
+  "name": "Shonen Jump Vol. 4, Issue 12 promotional card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-1d729b747704c59d.jpg",
+  "cards": [
+    {
+      "cardCode": 90960358,
+      "printingCode": "JUMP-EN010",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

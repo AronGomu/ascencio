@@ -1,0 +1,22 @@
+{
+  "id": "set-5a3599a58c6b0751",
+  "name": "Generation Force: Special Edition",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-5a3599a58c6b0751.jpg",
+  "cards": [
+    {
+      "cardCode": 40854197,
+      "printingCode": "GENF-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 11747708,
+      "printingCode": "GENF-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

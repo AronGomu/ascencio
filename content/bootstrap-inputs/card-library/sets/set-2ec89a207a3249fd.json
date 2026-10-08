@@ -1,0 +1,22 @@
+{
+  "id": "set-2ec89a207a3249fd",
+  "name": "Yu-Gi-Oh! Championship Series 2012 Prize Card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-2ec89a207a3249fd.jpg",
+  "cards": [
+    {
+      "cardCode": 29515122,
+      "printingCode": "YCSW-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 29515122,
+      "printingCode": "YCSW-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

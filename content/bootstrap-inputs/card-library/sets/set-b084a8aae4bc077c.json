@@ -1,0 +1,22 @@
+{
+  "id": "set-b084a8aae4bc077c",
+  "name": "Hobby League 1 participation cards C",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-b084a8aae4bc077c.jpg",
+  "cards": [
+    {
+      "cardCode": 33550694,
+      "printingCode": "HL1-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 79109599,
+      "printingCode": "HL1-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

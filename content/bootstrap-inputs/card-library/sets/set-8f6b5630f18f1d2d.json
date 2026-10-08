@@ -1,0 +1,64 @@
+{
+  "id": "set-8f6b5630f18f1d2d",
+  "name": "2017 Mega-Tins",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-8f6b5630f18f1d2d.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "CT14-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "CT14-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 26920296,
+      "printingCode": "CT14-EN006",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 80532587,
+      "printingCode": "CT14-EN009",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 23085002,
+      "printingCode": "CT14-EN008",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 59479050,
+      "printingCode": "CT14-EN005",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 35261759,
+      "printingCode": "CT14-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 22862454,
+      "printingCode": "CT14-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

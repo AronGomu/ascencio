@@ -1,0 +1,1037 @@
+{
+  "id": "set-042697c228a54dbd",
+  "name": "Legendary Arc-V Decks",
+  "releaseYear": 2026,
+  "imageAssetPath": "sets/set-042697c228a54dbd.jpg",
+  "cards": [
+    {
+      "cardCode": 86066372,
+      "printingCode": "LAVD-ENO34",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 64276752,
+      "printingCode": "LAVD-ENO32",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14558127,
+      "printingCode": "LAVD-ENL06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14558127,
+      "printingCode": "LAVD-ENO08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14558127,
+      "printingCode": "LAVD-ENS08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 76794549,
+      "printingCode": "LAVD-ENO07",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22125101,
+      "printingCode": "LAVD-ENO35",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22125101,
+      "printingCode": "LAVD-ENO35",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 22125101,
+      "printingCode": "LAVD-ENO35",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 96381979,
+      "printingCode": "LAVD-ENL36",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "LAVD-ENL19",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "LAVD-ENO20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24224830,
+      "printingCode": "LAVD-ENS17",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 22850702,
+      "printingCode": "LAVD-ENO25",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 90036274,
+      "printingCode": "LAVD-ENS29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82044280,
+      "printingCode": "LAVD-ENS24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50277355,
+      "printingCode": "LAVD-ENL40",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 65681983,
+      "printingCode": "LAVD-ENL21",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84343351,
+      "printingCode": "LAVD-ENS34",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 59765225,
+      "printingCode": "LAVD-ENS32",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 94145021,
+      "printingCode": "LAVD-ENO01",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 94145021,
+      "printingCode": "LAVD-ENS02",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97268402,
+      "printingCode": "LAVD-ENL01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97268402,
+      "printingCode": "LAVD-ENS01",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 92812851,
+      "printingCode": "LAVD-ENO36",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 57103969,
+      "printingCode": "LAVD-ENL16",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 81439173,
+      "printingCode": "LAVD-ENL15",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35726888,
+      "printingCode": "LAVD-ENL18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58570206,
+      "printingCode": "LAVD-ENL25",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 42110604,
+      "printingCode": "LAVD-ENS25",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86154370,
+      "printingCode": "LAVD-ENS33",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86154370,
+      "printingCode": "LAVD-ENS33",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 86154370,
+      "printingCode": "LAVD-ENS33",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 23361526,
+      "printingCode": "LAVD-ENS31",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23361526,
+      "printingCode": "LAVD-ENS31",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 23361526,
+      "printingCode": "LAVD-ENS31",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 10732060,
+      "printingCode": "LAVD-ENS35",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10732060,
+      "printingCode": "LAVD-ENS35",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 21516908,
+      "printingCode": "LAVD-ENS26",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 5772618,
+      "printingCode": "LAVD-ENS30",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86943389,
+      "printingCode": "LAVD-ENS28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72813401,
+      "printingCode": "LAVD-ENS36",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 72813401,
+      "printingCode": "LAVD-ENS36",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 65741786,
+      "printingCode": "LAVD-ENO33",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10045474,
+      "printingCode": "LAVD-ENL27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 10045474,
+      "printingCode": "LAVD-ENS21",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 48444114,
+      "printingCode": "LAVD-ENL17",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 11317977,
+      "printingCode": "LAVD-ENL02",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 11317977,
+      "printingCode": "LAVD-ENL02",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 11317977,
+      "printingCode": "LAVD-ENL02",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 11317977,
+      "printingCode": "LAVD-ENL02",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 51777272,
+      "printingCode": "LAVD-ENL30",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 14152693,
+      "printingCode": "LAVD-ENL07",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 87931906,
+      "printingCode": "LAVD-ENL20",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 8379983,
+      "printingCode": "LAVD-ENL11",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35618217,
+      "printingCode": "LAVD-ENL05",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 24550676,
+      "printingCode": "LAVD-ENL32",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54701958,
+      "printingCode": "LAVD-ENL34",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 54701958,
+      "printingCode": "LAVD-ENL34",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 54701958,
+      "printingCode": "LAVD-ENL34",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 2344618,
+      "printingCode": "LAVD-ENL26",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2344618,
+      "printingCode": "LAVD-ENL26",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 2344618,
+      "printingCode": "LAVD-ENL26",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 97165977,
+      "printingCode": "LAVD-ENL31",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 81196066,
+      "printingCode": "LAVD-ENL35",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 81196066,
+      "printingCode": "LAVD-ENL35",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 81196066,
+      "printingCode": "LAVD-ENL35",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 88753594,
+      "printingCode": "LAVD-ENL33",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 13935001,
+      "printingCode": "LAVD-ENL28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35763582,
+      "printingCode": "LAVD-ENL12",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 83190280,
+      "printingCode": "LAVD-ENL04",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 47705572,
+      "printingCode": "LAVD-ENL03",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 50546208,
+      "printingCode": "LAVD-ENL08",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 50546208,
+      "printingCode": "LAVD-ENL08",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 50546208,
+      "printingCode": "LAVD-ENL08",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 42141493,
+      "printingCode": "LAVD-ENS13",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87126721,
+      "printingCode": "LAVD-ENL10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84192580,
+      "printingCode": "LAVD-ENO18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27204311,
+      "printingCode": "LAVD-ENS10",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 16691074,
+      "printingCode": "LAVD-ENO28",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 14105623,
+      "printingCode": "LAVD-ENO11",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 67754901,
+      "printingCode": "LAVD-ENO06",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 21250202,
+      "printingCode": "LAVD-ENO05",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 86238081,
+      "printingCode": "LAVD-ENO29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 45627618,
+      "printingCode": "LAVD-ENO27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98452268,
+      "printingCode": "LAVD-ENO30",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 16306932,
+      "printingCode": "LAVD-ENO12",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29325276,
+      "printingCode": "LAVD-ENO26",
+      "rarity": "common",
+      "sourceRarity": "New",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29325276,
+      "printingCode": "LAVD-ENO26",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53262004,
+      "printingCode": "LAVD-ENO24",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 8809344,
+      "printingCode": "LAVD-ENL37",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 21949879,
+      "printingCode": "LAVD-ENO15",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58938528,
+      "printingCode": "LAVD-ENO16",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 17330916,
+      "printingCode": "LAVD-ENO04",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 17330916,
+      "printingCode": "LAVD-ENO04",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 17330916,
+      "printingCode": "LAVD-ENO04",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 56677752,
+      "printingCode": "LAVD-ENO13",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 46136942,
+      "printingCode": "LAVD-ENO09",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 4836680,
+      "printingCode": "LAVD-ENO17",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 4836680,
+      "printingCode": "LAVD-ENO17",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 4836680,
+      "printingCode": "LAVD-ENO17",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 82224646,
+      "printingCode": "LAVD-ENO10",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 82661461,
+      "printingCode": "LAVD-ENO14",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 47075569,
+      "printingCode": "LAVD-ENO02",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 40318957,
+      "printingCode": "LAVD-ENO03",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 40318957,
+      "printingCode": "LAVD-ENO03",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 24094653,
+      "printingCode": "LAVD-ENL14",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 84211599,
+      "printingCode": "LAVD-ENL23",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29095457,
+      "printingCode": "LAVD-ENO23",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 56506740,
+      "printingCode": "LAVD-ENO21",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92501449,
+      "printingCode": "LAVD-ENO22",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 28781003,
+      "printingCode": "LAVD-ENO31",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "LAVD-ENL41",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29301450,
+      "printingCode": "LAVD-ENO37",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60303245,
+      "printingCode": "LAVD-ENL39",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27813661,
+      "printingCode": "LAVD-ENO19",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27813661,
+      "printingCode": "LAVD-ENO19",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 27813661,
+      "printingCode": "LAVD-ENO19",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 88204302,
+      "printingCode": "LAVD-ENS16",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 96945958,
+      "printingCode": "LAVD-ENS11",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 66002986,
+      "printingCode": "LAVD-ENS23",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 59640711,
+      "printingCode": "LAVD-ENS07",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53054833,
+      "printingCode": "LAVD-ENS04",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58543073,
+      "printingCode": "LAVD-ENS22",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 96708940,
+      "printingCode": "LAVD-ENS09",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 16725505,
+      "printingCode": "LAVD-ENS06",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29114773,
+      "printingCode": "LAVD-ENS20",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53932291,
+      "printingCode": "LAVD-ENS05",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53932291,
+      "printingCode": "LAVD-ENS05",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 53932291,
+      "printingCode": "LAVD-ENS05",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 53932291,
+      "printingCode": "LAVD-ENS05",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 81275020,
+      "printingCode": "LAVD-ENS03",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 81275020,
+      "printingCode": "LAVD-ENS03",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 81275020,
+      "printingCode": "LAVD-ENS03",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 81275020,
+      "printingCode": "LAVD-ENS03",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86976918,
+      "printingCode": "LAVD-ENS12",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 12148078,
+      "printingCode": "LAVD-ENS19",
+      "rarity": "common",
+      "sourceRarity": "3",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 2254222,
+      "printingCode": "LAVD-ENS14",
+      "rarity": "common",
+      "sourceRarity": "2",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 64880894,
+      "printingCode": "LAVD-ENS27",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 64880894,
+      "printingCode": "LAVD-ENS27",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 64880894,
+      "printingCode": "LAVD-ENS27",
+      "rarity": "common",
+      "sourceRarity": "Starlight Rare",
+      "sourceRarityCode": "(StR)"
+    },
+    {
+      "cardCode": 49299410,
+      "printingCode": "LAVD-ENL29",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 55285840,
+      "printingCode": "LAVD-ENL38",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 87209160,
+      "printingCode": "LAVD-ENL09",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25311006,
+      "printingCode": "LAVD-ENL22",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 25311006,
+      "printingCode": "LAVD-ENS18",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35269904,
+      "printingCode": "LAVD-ENL24",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

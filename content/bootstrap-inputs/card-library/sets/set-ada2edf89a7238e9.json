@@ -1,0 +1,15 @@
+{
+  "id": "set-ada2edf89a7238e9",
+  "name": "Shonen Jump Vol. 7, Issue 3 promotional card",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-ada2edf89a7238e9.jpg",
+  "cards": [
+    {
+      "cardCode": 79229522,
+      "printingCode": "JUMP-EN031",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

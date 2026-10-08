@@ -1,0 +1,29 @@
+{
+  "id": "set-2410bee0b0bbd039",
+  "name": "Yu-Gi-Oh! World Championship Qualifier National Championships 2011 prize cards",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-2410bee0b0bbd039.jpg",
+  "cards": [
+    {
+      "cardCode": 63468625,
+      "printingCode": "WQ11-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 4545683,
+      "printingCode": "WQ11-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 90953320,
+      "printingCode": "WQ11-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

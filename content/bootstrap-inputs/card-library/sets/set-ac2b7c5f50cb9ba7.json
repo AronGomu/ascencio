@@ -1,0 +1,29 @@
+{
+  "id": "set-ac2b7c5f50cb9ba7",
+  "name": "Yu-Gi-Oh! GX Tag Force Evolution promotional cards",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-ac2b7c5f50cb9ba7.jpg",
+  "cards": [
+    {
+      "cardCode": 30155789,
+      "printingCode": "GX05-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 3701074,
+      "printingCode": "GX05-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 67316075,
+      "printingCode": "GX05-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

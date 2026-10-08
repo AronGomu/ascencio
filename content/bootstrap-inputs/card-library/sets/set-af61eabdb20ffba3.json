@@ -1,0 +1,15 @@
+{
+  "id": "set-af61eabdb20ffba3",
+  "name": "The Lost Art Promotion 2022 K",
+  "releaseYear": 2022,
+  "imageAssetPath": "sets/set-af61eabdb20ffba3.jpg",
+  "cards": [
+    {
+      "cardCode": 80230510,
+      "printingCode": "LART-EN053",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

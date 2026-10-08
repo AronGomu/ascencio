@@ -1,0 +1,15 @@
+{
+  "id": "set-9389e74df643d651",
+  "name": "Yu-Gi-Oh! GX Volume 8 promotional card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-9389e74df643d651.jpg",
+  "cards": [
+    {
+      "cardCode": 54702678,
+      "printingCode": "YG08-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

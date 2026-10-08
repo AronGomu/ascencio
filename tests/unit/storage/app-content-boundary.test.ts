@@ -88,12 +88,25 @@ async function request(port: number, requestPath: string) {
           );
           response.on("error", reject);
         })
-        .on("error", reject);
+        .on("error", (error) => {
+          error.message += ` (${requestPath})`;
+          reject(error);
+        });
       req.setTimeout(10_000, () => {
         req.destroy(new Error("HTTP boundary request timed out"));
       });
     },
   );
+}
+
+async function requestRoutes<T>(
+  routes: string[],
+  run: (route: string) => Promise<T>,
+): Promise<T[]> {
+  const results: T[] = [];
+  // Keep the HTTP matrix below the listener backlog on Windows.
+  for (const route of routes) results.push(await run(route));
+  return results;
 }
 
 describe("app/content build boundary", () => {
@@ -134,11 +147,13 @@ describe("app/content build boundary", () => {
         "generated-alias/content-packages/not-created/deep",
         "loop/child",
         // Root users bypass mode bits; ELOOP still covers non-missing errors.
-        ...(process.getuid?.() === 0 ? [] : ["locked/child"]),
+        ...(process.platform === "win32" || process.getuid?.() === 0
+          ? []
+          : ["locked/child"]),
       ])
         for (const route of [
           `/${file}?import`,
-          `/@id/${target}/${file}?import`,
+          `/@id/${target.replaceAll("\\", "/")}/${file}?import`,
         ])
           expect((await request(address.port, route)).status, route).toBe(403);
       const missing = await request(
@@ -364,10 +379,10 @@ describe("app/content build boundary", () => {
         ];
         const aliasRoutes = (file: string) => [
           `${file}?import`,
-          `@id/${target}/${file}?import`,
+          `@id/${target.replaceAll("\\", "/")}/${file}?import`,
         ];
         const encodedAliases = [
-          "query?alias.json",
+          ...(process.platform === "win32" ? [] : ["query?alias.json"]),
           "hash#alias.json",
           "encoded%2Falias.json",
         ];
@@ -426,15 +441,15 @@ describe("app/content build boundary", () => {
           ].flatMap(fileUrlRoutes),
           ...privateJson.flatMap((file) => [
             `@id/file:////${target.slice(1)}/${file}?import`,
-            `@id/file://127.0.0.1${target}/${file}?import`,
-            `@id/file://remote.invalid${target}/${file}?import`,
-            `@id/file://user@localhost${target}/${file}?import`,
-            `@id/file://localhost:80${target}/${file}?import`,
-            `@id/file://${target}%2F${file}?import`,
-            `@id/file://${target}/${file}%ZZ?import`,
-            `@id/file://${target}/${file}%00?import`,
-            `@id/file:${target}/${file}?import`,
-            `@id/FILE://${target}/${file}?import`,
+            `@id/file://127.0.0.1${target.replaceAll("\\", "/")}/${file}?import`,
+            `@id/file://remote.invalid${target.replaceAll("\\", "/")}/${file}?import`,
+            `@id/file://user@localhost${target.replaceAll("\\", "/")}/${file}?import`,
+            `@id/file://localhost:80${target.replaceAll("\\", "/")}/${file}?import`,
+            `@id/file://${target.replaceAll("\\", "/")}%2F${file}?import`,
+            `@id/file://${target.replaceAll("\\", "/")}/${file}%ZZ?import`,
+            `@id/file://${target.replaceAll("\\", "/")}/${file}%00?import`,
+            `@id/file:${target.replaceAll("\\", "/")}/${file}?import`,
+            `@id/FILE://${target.replaceAll("\\", "/")}/${file}?import`,
           ]),
           "@id/file://[broken/private.json?import",
           "@id/file://localhost/%C0%AF?import",
@@ -445,12 +460,12 @@ describe("app/content build boundary", () => {
               encoded,
               `${encoded}?import`,
               `${encoded}.map`,
-              `@id/${target}/${encoded}?import`,
-              `@fs/${target}/${encoded}`,
+              `@id/${target.replaceAll("\\", "/")}/${encoded}?import`,
+              `@fs/${target.replaceAll("\\", "/")}/${encoded}`,
             ];
           }),
           ...privateJson.flatMap((file) => {
-            const absolute = `${target}/${file}`;
+            const absolute = `${target.replaceAll("\\", "/")}/${file}`;
             const id = `@id/${absolute}`;
             return [
               file,
@@ -483,9 +498,9 @@ describe("app/content build boundary", () => {
           ].flatMap((file) => [
             `${file}?import`,
             `${file}.map`,
-            `@id/${target}/${file}?import`,
-            `@id/${target}/${file}.map`,
-            `@fs/${target}/${file}?raw`,
+            `@id/${target.replaceAll("\\", "/")}/${file}?import`,
+            `@id/${target.replaceAll("\\", "/")}/${file}.map`,
+            `@fs/${target.replaceAll("\\", "/")}/${file}?raw`,
           ]),
           "@id/__x00__/unknown/absolute.json?import",
           "@id/foo__x00__bar?import",
@@ -495,7 +510,7 @@ describe("app/content build boundary", () => {
           "@id/%ZZ?import",
           "@id/%C0%AFassets/content/file.json?import",
           `assets/${"%25" + "25".repeat(9)}63ontent/file.json?import`,
-          `${"@id/".repeat(10)}${target}/assets/content/file.json?import`,
+          `${"@id/".repeat(10)}${target.replaceAll("\\", "/")}/assets/content/file.json?import`,
           "assets%5Ccontent%5Cfile.json?import",
           "/assets/content/chapter-01/secret.txt",
           "assets/%2e%2e/assets/content/chapter-01/secret.txt",
@@ -506,9 +521,9 @@ describe("app/content build boundary", () => {
           "assets/%63ontent/chapter-01/secret.txt",
           "assets/app/%2e%2e/content/chapter-01/secret.txt",
           "source-alias/chapter-01/secret.txt",
-          `@fs/${target}/assets/content/chapter-01/secret.txt`,
-          `@fs/${target}/generated/content-packages/duel-core-1.0.0.sqlite`,
-          `@fs/${target}/source-alias/chapter-01/secret.txt`,
+          `@fs/${target.replaceAll("\\", "/")}/assets/content/chapter-01/secret.txt`,
+          `@fs/${target.replaceAll("\\", "/")}/generated/content-packages/duel-core-1.0.0.sqlite`,
+          `@fs/${target.replaceAll("\\", "/")}/source-alias/chapter-01/secret.txt`,
         ];
         for (const kind of ["dev", "preview"] as const) {
           const config = {
@@ -542,7 +557,7 @@ describe("app/content build boundary", () => {
             if ("transformRequest" in server)
               for (const file of resolverAliases)
                 await server.transformRequest(`/${file}`);
-            const results = await Promise.all(
+            const results = await requestRoutes(
               [
                 ...denied,
                 ...(kind === "dev"
@@ -550,30 +565,35 @@ describe("app/content build boundary", () => {
                   : [
                       "preview-alias/chapter-01/secret.txt",
                       "preview-alias/private?import",
-                      `@id/${target}/${APP_BUILD_OUTPUT}/preview-alias/private?import`,
+                      `@id/${target.replaceAll("\\", "/")}/${APP_BUILD_OUTPUT}/preview-alias/private?import`,
                     ]),
-              ].map(async (route) => {
+              ],
+              async (route) => {
                 const response = await request(address.port, `${base}${route}`);
                 return {
                   route,
                   status: response.status,
                   leaked: response.body.includes("private source sentinel"),
                 };
-              }),
+              },
             );
-            const allowed = await Promise.all(
+            const allowed = await requestRoutes(
               [
                 "index.html",
                 ...(kind === "dev"
                   ? [
                       "src/main.ts",
                       "public-control?import",
-                      `@id/${target}/public-control?import`,
+                      `@id/${target.replaceAll("\\", "/")}/public-control?import`,
                       "public-index?import",
-                      `@id/${target}/public-index?import`,
+                      `@id/${target.replaceAll("\\", "/")}/public-index?import`,
                       `@id/${pathToFileURL(path.join(target, "public-control.ts")).href}?import`,
-                      `@id/file://localhost${target}/public-control.ts?import`,
-                      `@id/file:////${target.slice(1)}/public-control.ts?import`,
+                      `@id/${pathToFileURL(path.join(target, "public-control.ts")).href.replace("file://", "file://localhost")}?import`,
+                      ...(process.platform === "win32"
+                        ? []
+                        : [
+                            `@id/file:////${target.slice(1)}/public-control.ts?import`,
+                          ]),
                       "@vite/client",
                       "@vite/env",
                       "@id/__x00__vite/modulepreload-polyfill.js",
@@ -582,7 +602,8 @@ describe("app/content build boundary", () => {
                       "assets/app/fonts/forum-latin.woff2",
                     ]
                   : []),
-              ].map(async (route) => {
+              ],
+              async (route) => {
                 const response = await request(address.port, `${base}${route}`);
                 return {
                   route,
@@ -594,7 +615,7 @@ describe("app/content build boundary", () => {
                     (response.body.includes("boundaryControl = 42") &&
                       !response.body.includes(": number")),
                 };
-              }),
+              },
             );
             if (process.env.T8C_EVIDENCE_DIRECTORY)
               await writeFile(

@@ -1,0 +1,36 @@
+{
+  "id": "set-c33d09176d5bf797",
+  "name": "Yu-Gi-Oh! Elemental Hero Collection 1",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-c33d09176d5bf797.jpg",
+  "cards": [
+    {
+      "cardCode": 21844576,
+      "printingCode": "EHC1-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 79979666,
+      "printingCode": "EHC1-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 58932615,
+      "printingCode": "EHC1-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 35809262,
+      "printingCode": "EHC1-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

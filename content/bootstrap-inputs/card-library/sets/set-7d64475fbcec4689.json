@@ -1,0 +1,15 @@
+{
+  "id": "set-7d64475fbcec4689",
+  "name": "Power of the Duelist Sneak Peek Participation Card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-7d64475fbcec4689.jpg",
+  "cards": [
+    {
+      "cardCode": 2047519,
+      "printingCode": "SP02-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

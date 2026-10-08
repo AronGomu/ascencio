@@ -1,0 +1,15 @@
+{
+  "id": "set-8a2459cb3c6d4acd",
+  "name": "Shonen Jump Championship 2007 Prize Card A",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-8a2459cb3c6d4acd.jpg",
+  "cards": [
+    {
+      "cardCode": 57728570,
+      "printingCode": "SJCS-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

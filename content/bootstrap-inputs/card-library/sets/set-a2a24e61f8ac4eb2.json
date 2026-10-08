@@ -1,0 +1,15 @@
+{
+  "id": "set-a2a24e61f8ac4eb2",
+  "name": "Yu-Gi-Oh! The Dark Side of Dimensions Theater distribution cards",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-a2a24e61f8ac4eb2.jpg",
+  "cards": [
+    {
+      "cardCode": 10000000,
+      "printingCode": "MVPC-EN001",
+      "rarity": "common",
+      "sourceRarity": "Gold Secret Rare",
+      "sourceRarityCode": "(GScR)"
+    }
+  ]
+}

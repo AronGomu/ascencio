@@ -1,0 +1,15 @@
+{
+  "id": "set-a5cc9b53ea6c0dd8",
+  "name": "Yu-Gi-Oh! R Volume 1 promotional card",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-a5cc9b53ea6c0dd8.jpg",
+  "cards": [
+    {
+      "cardCode": 24857466,
+      "printingCode": "YR01-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-01add2a3d9ce0068",
+  "name": "Weekly Shonen Jump October 2015 membership promotional card",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-01add2a3d9ce0068.jpg",
+  "cards": [
+    {
+      "cardCode": 72378329,
+      "printingCode": "JUMP-EN074",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

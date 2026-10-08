@@ -1,0 +1,15 @@
+{
+  "id": "set-b90fbf51765e5f2e",
+  "name": "Duel Terminal 7",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-b90fbf51765e5f2e.jpg",
+  "cards": [
+    {
+      "cardCode": 99177923,
+      "printingCode": "DT07-EN060",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-888caba0ca0c9b9a",
+  "name": "Yu-Gi-Oh! R Volume 4 promotional card",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-888caba0ca0c9b9a.jpg",
+  "cards": [
+    {
+      "cardCode": 56784842,
+      "printingCode": "YR04-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

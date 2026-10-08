@@ -1,0 +1,15 @@
+{
+  "id": "set-fb4c6bb88e1960e7",
+  "name": "Tactical Evolution Sneak Peek Participation Card",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-fb4c6bb88e1960e7.jpg",
+  "cards": [
+    {
+      "cardCode": 19041767,
+      "printingCode": "TAEV-ENSP1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-fa8807bd9b3f4591",
+  "name": "Hobby League 4 participation card B",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-fa8807bd9b3f4591.jpg",
+  "cards": [
+    {
+      "cardCode": 72302403,
+      "printingCode": "HL04-EN002",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

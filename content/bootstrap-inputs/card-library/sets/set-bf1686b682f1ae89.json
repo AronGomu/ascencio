@@ -1,0 +1,15 @@
+{
+  "id": "set-bf1686b682f1ae89",
+  "name": "Shonen Jump May 2008 subscription bonus",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-bf1686b682f1ae89.jpg",
+  "cards": [
+    {
+      "cardCode": 13893596,
+      "printingCode": "JUMP-EN025",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

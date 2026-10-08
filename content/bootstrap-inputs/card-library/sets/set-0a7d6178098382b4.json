@@ -1,0 +1,15 @@
+{
+  "id": "set-0a7d6178098382b4",
+  "name": "Generation Force Sneak Peek Participation Card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-0a7d6178098382b4.jpg",
+  "cards": [
+    {
+      "cardCode": 96457619,
+      "printingCode": "GENF-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

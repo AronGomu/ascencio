@@ -1,0 +1,15 @@
+{
+  "id": "set-e6fb0f42d108bb8e",
+  "name": "Remote Duel at Home Sweepstakes",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-e6fb0f42d108bb8e.jpg",
+  "cards": [
+    {
+      "cardCode": 56747793,
+      "printingCode": "SBPR-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

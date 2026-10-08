@@ -1,0 +1,15 @@
+{
+  "id": "set-94cdf107bf3113ed",
+  "name": "Ra Yellow Mega Pack: Special Edition",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-94cdf107bf3113ed.jpg",
+  "cards": [
+    {
+      "cardCode": 29981921,
+      "printingCode": "RYMP-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

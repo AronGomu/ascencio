@@ -1,0 +1,50 @@
+{
+  "id": "set-6afc96ca32f10ce9",
+  "name": "Legendary Collection 4: Joey's World",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-6afc96ca32f10ce9.jpg",
+  "cards": [
+    {
+      "cardCode": 50903514,
+      "printingCode": "LC04-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 86308219,
+      "printingCode": "LC04-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73915052,
+      "printingCode": "LC04-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73915052,
+      "printingCode": "LC04-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73915052,
+      "printingCode": "LC04-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 73915052,
+      "printingCode": "LC04-EN007",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

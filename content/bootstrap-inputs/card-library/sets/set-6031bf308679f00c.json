@@ -1,0 +1,36 @@
+{
+  "id": "set-6031bf308679f00c",
+  "name": "Yu-Gi-Oh! 5D's Tag Force 5 Promotional Cards",
+  "releaseYear": null,
+  "imageAssetPath": "sets/set-6031bf308679f00c.jpg",
+  "cards": [
+    {
+      "cardCode": 45037489,
+      "printingCode": "TF05-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 19642774,
+      "printingCode": "TF05-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 72022087,
+      "printingCode": "TF05-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72022087,
+      "printingCode": "TF05-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

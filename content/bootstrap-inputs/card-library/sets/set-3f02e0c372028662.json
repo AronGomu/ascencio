@@ -1,0 +1,36 @@
+{
+  "id": "set-3f02e0c372028662",
+  "name": "Soul Fusion Special Edition",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-3f02e0c372028662.jpg",
+  "cards": [
+    {
+      "cardCode": 59934749,
+      "printingCode": "SOFU-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 85840608,
+      "printingCode": "SOFU-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 31440046,
+      "printingCode": "SOFU-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 61665245,
+      "printingCode": "SOFU-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

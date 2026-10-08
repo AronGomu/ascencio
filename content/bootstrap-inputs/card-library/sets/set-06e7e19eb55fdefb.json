@@ -1,0 +1,36 @@
+{
+  "id": "set-06e7e19eb55fdefb",
+  "name": "Savage Strike Special Edition",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-06e7e19eb55fdefb.jpg",
+  "cards": [
+    {
+      "cardCode": 13090893,
+      "printingCode": "SAST-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 51011872,
+      "printingCode": "SAST-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 12213463,
+      "printingCode": "SAST-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72700231,
+      "printingCode": "SAST-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-70fa03fe865fa6ba",
+  "name": "WSJ Jump Pack Fall 2017 promotional card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-70fa03fe865fa6ba.jpg",
+  "cards": [
+    {
+      "cardCode": 10000020,
+      "printingCode": "JMPS-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

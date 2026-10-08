@@ -60,13 +60,16 @@
     "content:stage:verify-native": "node scripts/readable-content-release.ts verify-staged",
     "content:stage:cleanup": "node scripts/clean-native-content.ts",
     "native:desktop:dev": "tauri dev",
-    "native:build-and-start:linux": "npm run native:desktop:build -- --no-bundle && ./src-tauri/target/release/ascencio",
+    "native:build-and-start:linux": "node scripts/start-desktop.ts",
     "native:desktop:build": "tauri build",
     "native:android:dev": "tauri android dev",
     "native:android:build": "tauri android build",
     "native:ios:dev": "tauri ios dev",
     "native:ios:build": "tauri ios build",
-    "test:native:rust": "cargo test --manifest-path src-tauri/Cargo.toml"
+    "test:native:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "setup": "node scripts/setup-desktop.ts",
+    "build": "tauri build --no-bundle",
+    "start": "node scripts/start-desktop.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

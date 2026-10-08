@@ -1,0 +1,15 @@
+{
+  "id": "set-9496de0f7748493f",
+  "name": "The Lost Art Promotion 2025 E",
+  "releaseYear": 2025,
+  "imageAssetPath": "sets/set-9496de0f7748493f.jpg",
+  "cards": [
+    {
+      "cardCode": 30118811,
+      "printingCode": "LART-EN080",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

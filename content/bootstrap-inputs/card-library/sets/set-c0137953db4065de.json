@@ -1,0 +1,15 @@
+{
+  "id": "set-c0137953db4065de",
+  "name": "Flaming Eternity Sneak Peek Participation Card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-c0137953db4065de.jpg",
+  "cards": [
+    {
+      "cardCode": 80316585,
+      "printingCode": "SP1-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

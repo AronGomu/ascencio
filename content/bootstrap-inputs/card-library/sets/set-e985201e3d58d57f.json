@@ -1,0 +1,36 @@
+{
+  "id": "set-e985201e3d58d57f",
+  "name": "Clash of Rebellions: Special Edition",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-e985201e3d58d57f.jpg",
+  "cards": [
+    {
+      "cardCode": 15155568,
+      "printingCode": "CORE-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 50078320,
+      "printingCode": "CORE-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 464362,
+      "printingCode": "CORE-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 1686814,
+      "printingCode": "CORE-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

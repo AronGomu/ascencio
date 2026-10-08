@@ -1,0 +1,15 @@
+{
+  "id": "set-7987fe148a293553",
+  "name": "Eternity Code Premiere! promotional card",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-7987fe148a293553.jpg",
+  "cards": [
+    {
+      "cardCode": 25643346,
+      "printingCode": "ETCO-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

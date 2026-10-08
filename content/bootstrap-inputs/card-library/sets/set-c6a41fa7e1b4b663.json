@@ -1,0 +1,43 @@
+{
+  "id": "set-c6a41fa7e1b4b663",
+  "name": "Legendary Collection 5D's",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-c6a41fa7e1b4b663.jpg",
+  "cards": [
+    {
+      "cardCode": 73580471,
+      "printingCode": "LC05-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 91697229,
+      "printingCode": "LC05-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 64203620,
+      "printingCode": "LC05-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 35952884,
+      "printingCode": "LC05-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 27196937,
+      "printingCode": "LC05-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

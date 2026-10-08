@@ -1,0 +1,29 @@
+{
+  "id": "set-15b75e7e225eec10",
+  "name": "Yu-Gi-Oh! ZEXAL World Duel Carnival promotional cards",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-15b75e7e225eec10.jpg",
+  "cards": [
+    {
+      "cardCode": 51126152,
+      "printingCode": "ZDC1-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 24731453,
+      "printingCode": "ZDC1-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 97520701,
+      "printingCode": "ZDC1-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "set-c8a152e1a3ca0d58",
+  "name": "Flames of Destruction Special Edition",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-c8a152e1a3ca0d58.jpg",
+  "cards": [
+    {
+      "cardCode": 61468779,
+      "printingCode": "FLOD-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 13959634,
+      "printingCode": "FLOD-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 53077251,
+      "printingCode": "FLOD-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 68191756,
+      "printingCode": "FLOD-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "set-79168bb3cc4b4b91",
+  "name": "Yu-Gi-Oh! 5D's World Championship 2011: Over the Nexus promotional cards",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-79168bb3cc4b4b91.jpg",
+  "cards": [
+    {
+      "cardCode": 99000151,
+      "printingCode": "WC11-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 99000151,
+      "printingCode": "WC11-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 36405256,
+      "printingCode": "WC11-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 36405256,
+      "printingCode": "WC11-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 62499965,
+      "printingCode": "WC11-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 62499965,
+      "printingCode": "WC11-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

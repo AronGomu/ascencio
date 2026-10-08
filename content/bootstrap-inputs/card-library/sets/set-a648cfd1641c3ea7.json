@@ -1,0 +1,15 @@
+{
+  "id": "set-a648cfd1641c3ea7",
+  "name": "Yu-Gi-Oh! 5D's Volume 1 promotional card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-a648cfd1641c3ea7.jpg",
+  "cards": [
+    {
+      "cardCode": 75326861,
+      "printingCode": "YF01-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "set-b59623163fec5ed0",
+  "name": "Cosmo Blazer: Special Edition",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-b59623163fec5ed0.jpg",
+  "cards": [
+    {
+      "cardCode": 82944432,
+      "printingCode": "CBLZ-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 25484449,
+      "printingCode": "CBLZ-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

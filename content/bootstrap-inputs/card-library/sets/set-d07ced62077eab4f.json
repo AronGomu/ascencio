@@ -1,0 +1,15 @@
+{
+  "id": "set-d07ced62077eab4f",
+  "name": "Code of the Duelist Sneak Peek Participation Card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-d07ced62077eab4f.jpg",
+  "cards": [
+    {
+      "cardCode": 67267333,
+      "printingCode": "COTD-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-bd2a80f042ac85e0",
+  "name": "Yu-Gi-Oh! at Home Sweepstakes",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-bd2a80f042ac85e0.jpg",
+  "cards": [
+    {
+      "cardCode": 68007326,
+      "printingCode": "SBPR-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

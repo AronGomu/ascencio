@@ -1,0 +1,435 @@
+{
+  "id": "set-3934e18e9fc4822d",
+  "name": "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack: Gold Edition",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-3934e18e9fc4822d.jpg",
+  "cards": [
+    {
+      "cardCode": 56132807,
+      "printingCode": "MVP1-ENG15",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 29311166,
+      "printingCode": "MVP1-ENG03",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 20747792,
+      "printingCode": "MVP1-ENG14",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 78509901,
+      "printingCode": "MVP1-ENG34",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 38517737,
+      "printingCode": "MVP1-ENG46",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 55410871,
+      "printingCode": "MVP1-ENG04",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "MVP1-ENG55",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "MVP1-ENGV4",
+      "rarity": "common",
+      "sourceRarity": "Gold Secret Rare",
+      "sourceRarityCode": "(GScR)"
+    },
+    {
+      "cardCode": 4998619,
+      "printingCode": "MVP1-ENG35",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 45531624,
+      "printingCode": "MVP1-ENG48",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 21082832,
+      "printingCode": "MVP1-ENG08",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 7198399,
+      "printingCode": "MVP1-ENG52",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 46613515,
+      "printingCode": "MVP1-ENG47",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 94561645,
+      "printingCode": "MVP1-ENG10",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 72664875,
+      "printingCode": "MVP1-ENG40",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 30270176,
+      "printingCode": "MVP1-ENG39",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 9659580,
+      "printingCode": "MVP1-ENG41",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 8837932,
+      "printingCode": "MVP1-ENG44",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 71442223,
+      "printingCode": "MVP1-ENG43",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 35058588,
+      "printingCode": "MVP1-ENG42",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 41114306,
+      "printingCode": "MVP1-ENG33",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 16964437,
+      "printingCode": "MVP1-ENG26",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 82404868,
+      "printingCode": "MVP1-ENG19",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "MVP1-ENG54",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "MVP1-ENGV3",
+      "rarity": "common",
+      "sourceRarity": "Gold Secret Rare",
+      "sourceRarityCode": "(GScR)"
+    },
+    {
+      "cardCode": 38033121,
+      "printingCode": "MVP1-ENG56",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 22804410,
+      "printingCode": "MVP1-ENG05",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 81782376,
+      "printingCode": "MVP1-ENG22",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 54175023,
+      "printingCode": "MVP1-ENG24",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 80560728,
+      "printingCode": "MVP1-ENG25",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 54297661,
+      "printingCode": "MVP1-ENG21",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 17787975,
+      "printingCode": "MVP1-ENG23",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 95697223,
+      "printingCode": "MVP1-ENG07",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 20137754,
+      "printingCode": "MVP1-ENGV1",
+      "rarity": "common",
+      "sourceRarity": "Gold Secret Rare",
+      "sourceRarityCode": "(GScR)"
+    },
+    {
+      "cardCode": 16832845,
+      "printingCode": "MVP1-ENG29",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 71525232,
+      "printingCode": "MVP1-ENG49",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 40392714,
+      "printingCode": "MVP1-ENG36",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 55010259,
+      "printingCode": "MVP1-ENG18",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 3775068,
+      "printingCode": "MVP1-ENG38",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 68077936,
+      "printingCode": "MVP1-ENG09",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 93927067,
+      "printingCode": "MVP1-ENG02",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 82627406,
+      "printingCode": "MVP1-ENG16",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 20960340,
+      "printingCode": "MVP1-ENG11",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 77363314,
+      "printingCode": "MVP1-ENGV2",
+      "rarity": "common",
+      "sourceRarity": "Gold Secret Rare",
+      "sourceRarityCode": "(GScR)"
+    },
+    {
+      "cardCode": 34318086,
+      "printingCode": "MVP1-ENG51",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 8910971,
+      "printingCode": "MVP1-ENG50",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 18809562,
+      "printingCode": "MVP1-ENG20",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 89448140,
+      "printingCode": "MVP1-ENG28",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 93749093,
+      "printingCode": "MVP1-ENG13",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 42237854,
+      "printingCode": "MVP1-ENG30",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 43959432,
+      "printingCode": "MVP1-ENG27",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 56532353,
+      "printingCode": "MVP1-ENG01",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 71703785,
+      "printingCode": "MVP1-ENG53",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 68299524,
+      "printingCode": "MVP1-ENG06",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 57354389,
+      "printingCode": "MVP1-ENG12",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 29021114,
+      "printingCode": "MVP1-ENG17",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 10000020,
+      "printingCode": "MVP1-ENG57",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 78625592,
+      "printingCode": "MVP1-ENG31",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 34325937,
+      "printingCode": "MVP1-ENG45",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 15610297,
+      "printingCode": "MVP1-ENG32",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    },
+    {
+      "cardCode": 77387463,
+      "printingCode": "MVP1-ENG37",
+      "rarity": "common",
+      "sourceRarity": "Gold Rare",
+      "sourceRarityCode": "(GUR)"
+    }
+  ]
+}

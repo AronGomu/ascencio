@@ -1,0 +1,15 @@
+{
+  "id": "set-3a5c3721fe20b487",
+  "name": "Photon Shockwave Sneak Peek Participation Card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-3a5c3721fe20b487.jpg",
+  "cards": [
+    {
+      "cardCode": 43096270,
+      "printingCode": "PHSW-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

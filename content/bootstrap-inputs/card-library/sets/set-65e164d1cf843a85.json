@@ -1,0 +1,15 @@
+{
+  "id": "set-65e164d1cf843a85",
+  "name": "Swedish Shonen Jump 2005, Issue 12 promotional card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-65e164d1cf843a85.jpg",
+  "cards": [
+    {
+      "cardCode": 74677422,
+      "printingCode": "JMP-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -428,8 +428,8 @@ async function readState(
     const info = await lstat(file);
     if (
       !info.isFile() ||
-      info.uid !== process.getuid?.() ||
-      (info.mode & 0o077) !== 0
+      (process.getuid !== undefined && info.uid !== process.getuid()) ||
+      (process.platform !== "win32" && (info.mode & 0o077) !== 0)
     )
       throw new Error("unowned receipt");
     const bytes = await readFile(file);
@@ -557,7 +557,7 @@ function parsePending(
     !/^[0-9]+$/.test(value.dev) ||
     typeof value.ino !== "string" ||
     !/^[1-9][0-9]*$/.test(value.ino) ||
-    value.uid !== process.getuid?.()
+    (process.getuid !== undefined && value.uid !== process.getuid())
   )
     throw new Error("invalid pending receipt");
   const file = plan.files.find((entry) => entry.source === value.source);
@@ -584,7 +584,7 @@ async function pendingInfo(
     if (
       !info.isFile() ||
       !sameIdentity(identity(info), pending) ||
-      (info.mode & 0o077) !== 0
+      (process.platform !== "win32" && (info.mode & 0o077) !== 0)
     )
       throw new Error("copy ownership mismatch");
     return info;

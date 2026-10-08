@@ -1,0 +1,22 @@
+{
+  "id": "set-d009cc20eccaaccd",
+  "name": "Tactical Evolution: Special Edition",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-d009cc20eccaaccd.jpg",
+  "cards": [
+    {
+      "cardCode": 48948935,
+      "printingCode": "TAEV-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 22610082,
+      "printingCode": "TAEV-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

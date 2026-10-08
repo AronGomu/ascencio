@@ -1,0 +1,22 @@
+{
+  "id": "set-68e5b36cd6fffa35",
+  "name": "Duel Terminal 5",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-68e5b36cd6fffa35.jpg",
+  "cards": [
+    {
+      "cardCode": 52786469,
+      "printingCode": "DT05-EN024",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    },
+    {
+      "cardCode": 13220032,
+      "printingCode": "DT05-EN032",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    }
+  ]
+}

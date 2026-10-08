@@ -1,0 +1,15 @@
+{
+  "id": "set-b6d06e973ff37d42",
+  "name": "Savage Strike Sneak Peek Participation Card",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-b6d06e973ff37d42.jpg",
+  "cards": [
+    {
+      "cardCode": 52711246,
+      "printingCode": "SAST-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

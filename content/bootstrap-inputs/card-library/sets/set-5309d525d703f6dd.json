@@ -1,0 +1,15 @@
+{
+  "id": "set-5309d525d703f6dd",
+  "name": "The Lost Art Promotion M",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-5309d525d703f6dd.jpg",
+  "cards": [
+    {
+      "cardCode": 27770341,
+      "printingCode": "LART-EN013",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

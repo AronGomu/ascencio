@@ -1,0 +1,50 @@
+{
+  "id": "set-08c0660fe3bbd83f",
+  "name": "Noble Knights of the Round Table Power-Up Pack",
+  "releaseYear": 2014,
+  "imageAssetPath": "sets/set-08c0660fe3bbd83f.jpg",
+  "cards": [
+    {
+      "cardCode": 94192409,
+      "printingCode": "NKRT-EN044",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 97268402,
+      "printingCode": "NKRT-EN039",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 27243130,
+      "printingCode": "NKRT-EN042",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 75500286,
+      "printingCode": "NKRT-EN041",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 5318639,
+      "printingCode": "NKRT-EN040",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    },
+    {
+      "cardCode": 53582587,
+      "printingCode": "NKRT-EN043",
+      "rarity": "common",
+      "sourceRarity": "Platinum Rare",
+      "sourceRarityCode": "(PIR)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "set-4ddb21cc6ac3ea2c",
+  "name": "Extreme Force Special Edition",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-4ddb21cc6ac3ea2c.jpg",
+  "cards": [
+    {
+      "cardCode": 24224830,
+      "printingCode": "EXFO-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 2530830,
+      "printingCode": "EXFO-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 84754430,
+      "printingCode": "EXFO-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 38814750,
+      "printingCode": "EXFO-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

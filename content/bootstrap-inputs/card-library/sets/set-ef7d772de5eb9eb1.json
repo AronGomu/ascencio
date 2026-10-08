@@ -1,0 +1,15 @@
+{
+  "id": "set-ef7d772de5eb9eb1",
+  "name": "Shonen Jump Vol. 3, Issue 1 promotional card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-ef7d772de5eb9eb1.jpg",
+  "cards": [
+    {
+      "cardCode": 50287060,
+      "printingCode": "JMP-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

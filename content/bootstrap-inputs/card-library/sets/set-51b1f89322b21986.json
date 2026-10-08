@@ -1,0 +1,1044 @@
+{
+  "id": "set-51b1f89322b21986",
+  "name": "Star Pack VRAINS",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-51b1f89322b21986.jpg",
+  "cards": [
+    {
+      "cardCode": 98864751,
+      "printingCode": "SP18-EN042",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98864751,
+      "printingCode": "SP18-EN042",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98864751,
+      "printingCode": "SP18-EN042",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 80143954,
+      "printingCode": "SP18-EN047",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 80143954,
+      "printingCode": "SP18-EN047",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 80143954,
+      "printingCode": "SP18-EN047",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 52927340,
+      "printingCode": "SP18-EN029",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 52927340,
+      "printingCode": "SP18-EN029",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 52927340,
+      "printingCode": "SP18-EN029",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 53143898,
+      "printingCode": "SP18-EN028",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53143898,
+      "printingCode": "SP18-EN028",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53143898,
+      "printingCode": "SP18-EN028",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 93503294,
+      "printingCode": "SP18-EN037",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 93503294,
+      "printingCode": "SP18-EN037",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 93503294,
+      "printingCode": "SP18-EN037",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 27541563,
+      "printingCode": "SP18-EN048",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27541563,
+      "printingCode": "SP18-EN048",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27541563,
+      "printingCode": "SP18-EN048",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 89538537,
+      "printingCode": "SP18-EN030",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 89538537,
+      "printingCode": "SP18-EN030",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 89538537,
+      "printingCode": "SP18-EN030",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 71172240,
+      "printingCode": "SP18-EN010",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 71172240,
+      "printingCode": "SP18-EN010",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 71172240,
+      "printingCode": "SP18-EN010",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 63528891,
+      "printingCode": "SP18-EN002",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63528891,
+      "printingCode": "SP18-EN002",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63528891,
+      "printingCode": "SP18-EN002",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 36211150,
+      "printingCode": "SP18-EN001",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36211150,
+      "printingCode": "SP18-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 36211150,
+      "printingCode": "SP18-EN001",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 29716911,
+      "printingCode": "SP18-EN007",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 29716911,
+      "printingCode": "SP18-EN007",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29716911,
+      "printingCode": "SP18-EN007",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 60349525,
+      "printingCode": "SP18-EN014",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60349525,
+      "printingCode": "SP18-EN014",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 60349525,
+      "printingCode": "SP18-EN014",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 91269402,
+      "printingCode": "SP18-EN044",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91269402,
+      "printingCode": "SP18-EN044",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91269402,
+      "printingCode": "SP18-EN044",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 36033786,
+      "printingCode": "SP18-EN003",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 36033786,
+      "printingCode": "SP18-EN003",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 36033786,
+      "printingCode": "SP18-EN003",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 28593329,
+      "printingCode": "SP18-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28593329,
+      "printingCode": "SP18-EN024",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 28593329,
+      "printingCode": "SP18-EN024",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 1861629,
+      "printingCode": "SP18-EN031",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 92327802,
+      "printingCode": "SP18-EN008",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 92327802,
+      "printingCode": "SP18-EN008",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92327802,
+      "printingCode": "SP18-EN008",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 18789533,
+      "printingCode": "SP18-EN011",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 18789533,
+      "printingCode": "SP18-EN011",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 18789533,
+      "printingCode": "SP18-EN011",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 62706865,
+      "printingCode": "SP18-EN006",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62706865,
+      "printingCode": "SP18-EN006",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 62706865,
+      "printingCode": "SP18-EN006",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 28053763,
+      "printingCode": "SP18-EN041",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 28053763,
+      "printingCode": "SP18-EN041",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 28053763,
+      "printingCode": "SP18-EN041",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 7445307,
+      "printingCode": "SP18-EN012",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 7445307,
+      "printingCode": "SP18-EN012",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 7445307,
+      "printingCode": "SP18-EN012",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 269510,
+      "printingCode": "SP18-EN043",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 269510,
+      "printingCode": "SP18-EN043",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 269510,
+      "printingCode": "SP18-EN043",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 209710,
+      "printingCode": "SP18-EN013",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 209710,
+      "printingCode": "SP18-EN013",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 209710,
+      "printingCode": "SP18-EN013",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 91482773,
+      "printingCode": "SP18-EN025",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91482773,
+      "printingCode": "SP18-EN025",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91482773,
+      "printingCode": "SP18-EN025",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 62376646,
+      "printingCode": "SP18-EN039",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62376646,
+      "printingCode": "SP18-EN039",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 62376646,
+      "printingCode": "SP18-EN039",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 60461077,
+      "printingCode": "SP18-EN017",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 60461077,
+      "printingCode": "SP18-EN017",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 60461077,
+      "printingCode": "SP18-EN017",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 24073068,
+      "printingCode": "SP18-EN018",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 24073068,
+      "printingCode": "SP18-EN018",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 24073068,
+      "printingCode": "SP18-EN018",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 78437364,
+      "printingCode": "SP18-EN034",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 78437364,
+      "printingCode": "SP18-EN034",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 78437364,
+      "printingCode": "SP18-EN034",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 30010480,
+      "printingCode": "SP18-EN035",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 30010480,
+      "printingCode": "SP18-EN035",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 30010480,
+      "printingCode": "SP18-EN035",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 97688360,
+      "printingCode": "SP18-EN019",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97688360,
+      "printingCode": "SP18-EN019",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97688360,
+      "printingCode": "SP18-EN019",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 97466712,
+      "printingCode": "SP18-EN015",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 97466712,
+      "printingCode": "SP18-EN015",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97466712,
+      "printingCode": "SP18-EN015",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 34472920,
+      "printingCode": "SP18-EN033",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 34472920,
+      "printingCode": "SP18-EN033",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 34472920,
+      "printingCode": "SP18-EN033",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 23850421,
+      "printingCode": "SP18-EN016",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 23850421,
+      "printingCode": "SP18-EN016",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 23850421,
+      "printingCode": "SP18-EN016",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 67231737,
+      "printingCode": "SP18-EN032",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 67231737,
+      "printingCode": "SP18-EN032",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 67231737,
+      "printingCode": "SP18-EN032",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 27664101,
+      "printingCode": "SP18-EN050",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27664101,
+      "printingCode": "SP18-EN050",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27664101,
+      "printingCode": "SP18-EN050",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 63092423,
+      "printingCode": "SP18-EN027",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 63092423,
+      "printingCode": "SP18-EN027",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 63092423,
+      "printingCode": "SP18-EN027",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 35595518,
+      "printingCode": "SP18-EN009",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35595518,
+      "printingCode": "SP18-EN009",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35595518,
+      "printingCode": "SP18-EN009",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 53936268,
+      "printingCode": "SP18-EN049",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 53936268,
+      "printingCode": "SP18-EN049",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 53936268,
+      "printingCode": "SP18-EN049",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 58464739,
+      "printingCode": "SP18-EN046",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 58464739,
+      "printingCode": "SP18-EN046",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58464739,
+      "printingCode": "SP18-EN046",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 62306203,
+      "printingCode": "SP18-EN004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 62306203,
+      "printingCode": "SP18-EN004",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 62306203,
+      "printingCode": "SP18-EN004",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 91665064,
+      "printingCode": "SP18-EN038",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91665064,
+      "printingCode": "SP18-EN038",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91665064,
+      "printingCode": "SP18-EN038",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 27877771,
+      "printingCode": "SP18-EN026",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 27877771,
+      "printingCode": "SP18-EN026",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 27877771,
+      "printingCode": "SP18-EN026",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 9523599,
+      "printingCode": "SP18-EN005",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 9523599,
+      "printingCode": "SP18-EN005",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 9523599,
+      "printingCode": "SP18-EN005",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 95081386,
+      "printingCode": "SP18-EN045",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 95081386,
+      "printingCode": "SP18-EN045",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 95081386,
+      "printingCode": "SP18-EN045",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 61283655,
+      "printingCode": "SP18-EN020",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 61283655,
+      "printingCode": "SP18-EN020",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 61283655,
+      "printingCode": "SP18-EN020",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 35371948,
+      "printingCode": "SP18-EN040",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35371948,
+      "printingCode": "SP18-EN040",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35371948,
+      "printingCode": "SP18-EN040",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 98700941,
+      "printingCode": "SP18-EN021",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 98700941,
+      "printingCode": "SP18-EN021",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98700941,
+      "printingCode": "SP18-EN021",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 35199656,
+      "printingCode": "SP18-EN022",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 35199656,
+      "printingCode": "SP18-EN022",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35199656,
+      "printingCode": "SP18-EN022",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 91505214,
+      "printingCode": "SP18-EN023",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 91505214,
+      "printingCode": "SP18-EN023",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 91505214,
+      "printingCode": "SP18-EN023",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    },
+    {
+      "cardCode": 66015185,
+      "printingCode": "SP18-EN036",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    },
+    {
+      "cardCode": 66015185,
+      "printingCode": "SP18-EN036",
+      "rarity": "common",
+      "sourceRarity": "Starfoil",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 66015185,
+      "printingCode": "SP18-EN036",
+      "rarity": "common",
+      "sourceRarity": "Starfoil Rare",
+      "sourceRarityCode": "(SFR)"
+    }
+  ]
+}

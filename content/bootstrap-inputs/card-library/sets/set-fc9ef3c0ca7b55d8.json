@@ -1,0 +1,22 @@
+{
+  "id": "set-fc9ef3c0ca7b55d8",
+  "name": "Collectible Tins 2008 Wave 2",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-fc9ef3c0ca7b55d8.jpg",
+  "cards": [
+    {
+      "cardCode": 73580471,
+      "printingCode": "CT05-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 46195773,
+      "printingCode": "CT05-EN004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

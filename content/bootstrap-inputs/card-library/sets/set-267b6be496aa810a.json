@@ -1,0 +1,15 @@
+{
+  "id": "set-267b6be496aa810a",
+  "name": "Yu-Gi-Oh! 3D Bonds Beyond Time Theater distribution card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-267b6be496aa810a.jpg",
+  "cards": [
+    {
+      "cardCode": 55343236,
+      "printingCode": "MOV2-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

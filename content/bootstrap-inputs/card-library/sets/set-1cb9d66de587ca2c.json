@@ -1,0 +1,15 @@
+{
+  "id": "set-1cb9d66de587ca2c",
+  "name": "Shonen Jump Vol. 2, Issue 1 promotional card",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-1cb9d66de587ca2c.jpg",
+  "cards": [
+    {
+      "cardCode": 74677422,
+      "printingCode": "JMP-002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

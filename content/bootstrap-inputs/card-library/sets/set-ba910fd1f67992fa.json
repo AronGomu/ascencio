@@ -1,0 +1,15 @@
+{
+  "id": "set-ba910fd1f67992fa",
+  "name": "X-Saber Power-Up",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-ba910fd1f67992fa.jpg",
+  "cards": [
+    {
+      "cardCode": 78422252,
+      "printingCode": "XSPU-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

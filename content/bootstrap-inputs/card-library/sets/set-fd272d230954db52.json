@@ -1,0 +1,22 @@
+{
+  "id": "set-fd272d230954db52",
+  "name": "Force of the Breaker: Special Edition",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-fd272d230954db52.jpg",
+  "cards": [
+    {
+      "cardCode": 70969517,
+      "printingCode": "FOTB-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 18430390,
+      "printingCode": "FOTB-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "deckId": "chapter-one-practice",
+    "id": "blaze-circuit",
+    "line": "A Chapter 1 practice duel with Blaze Circuit.",
+    "name": "Blaze Circuit",
+    "policyId": "basic"
+  },
+  {
+    "deckId": "chapter-one-practice",
+    "id": "practice-bot",
+    "line": "Practice with the Chapter 1 deck. No story save needed.",
+    "name": "Practice Bot",
+    "policyId": "basic"
+  },
+  {
+    "deckId": "chapter-one-practice",
+    "id": "vault-warden",
+    "line": "A Chapter 1 practice duel with Vault Warden.",
+    "name": "Vault Warden",
+    "policyId": "basic"
+  }
+]

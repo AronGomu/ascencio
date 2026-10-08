@@ -1,0 +1,50 @@
+{
+  "id": "set-57a8f9e40af1f995",
+  "name": "Yu-Gi-Oh! 5D's Wheelie Breakers Promotional Cards",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-57a8f9e40af1f995.jpg",
+  "cards": [
+    {
+      "cardCode": 26293219,
+      "printingCode": "WB01-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 26293219,
+      "printingCode": "WB01-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 99899504,
+      "printingCode": "WB01-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 99899504,
+      "printingCode": "WB01-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 63804806,
+      "printingCode": "WB01-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 63804806,
+      "printingCode": "WB01-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

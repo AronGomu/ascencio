@@ -1,0 +1,15 @@
+{
+  "id": "set-50e445af8d441e87",
+  "name": "Yu-Gi-Oh! Trading Card Game Tour 2004 promotional card",
+  "releaseYear": 2004,
+  "imageAssetPath": "sets/set-50e445af8d441e87.jpg",
+  "cards": [
+    {
+      "cardCode": 46700124,
+      "printingCode": "EM1-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-63e3a74667c4cfff",
+  "name": "Crimson Crisis Sneak Peek Participation Card",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-63e3a74667c4cfff.jpg",
+  "cards": [
+    {
+      "cardCode": 38898779,
+      "printingCode": "CRMS-ENSP1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

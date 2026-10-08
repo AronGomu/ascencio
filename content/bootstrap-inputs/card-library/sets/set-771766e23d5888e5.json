@@ -1,0 +1,36 @@
+{
+  "id": "set-771766e23d5888e5",
+  "name": "Weekly Shonen Jump December 2018 membership promotional cards",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-771766e23d5888e5.jpg",
+  "cards": [
+    {
+      "cardCode": 78144171,
+      "printingCode": "JUMP-EN090",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 79266769,
+      "printingCode": "JUMP-EN087",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 41659072,
+      "printingCode": "JUMP-EN089",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 15661378,
+      "printingCode": "JUMP-EN088",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

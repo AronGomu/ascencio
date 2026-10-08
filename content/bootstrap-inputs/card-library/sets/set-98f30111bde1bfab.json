@@ -1,0 +1,15 @@
+{
+  "id": "set-98f30111bde1bfab",
+  "name": "Hobby League 6 participation card E",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-98f30111bde1bfab.jpg",
+  "cards": [
+    {
+      "cardCode": 97077563,
+      "printingCode": "HL06-EN005",
+      "rarity": "common",
+      "sourceRarity": "Ultra Parallel Rare",
+      "sourceRarityCode": "(UPR)"
+    }
+  ]
+}

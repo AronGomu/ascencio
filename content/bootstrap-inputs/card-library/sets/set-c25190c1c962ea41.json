@@ -1,0 +1,15 @@
+{
+  "id": "set-c25190c1c962ea41",
+  "name": "Weekly Shonen Jump January 2017 membership promotional card",
+  "releaseYear": 2017,
+  "imageAssetPath": "sets/set-c25190c1c962ea41.jpg",
+  "cards": [
+    {
+      "cardCode": 21250202,
+      "printingCode": "JUMP-EN079",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

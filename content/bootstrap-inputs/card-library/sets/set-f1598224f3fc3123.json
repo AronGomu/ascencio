@@ -1,0 +1,22 @@
+{
+  "id": "set-f1598224f3fc3123",
+  "name": "Phantom Darkness: Special Edition",
+  "releaseYear": 2008,
+  "imageAssetPath": "sets/set-f1598224f3fc3123.jpg",
+  "cards": [
+    {
+      "cardCode": 5640330,
+      "printingCode": "PTDN-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 11508758,
+      "printingCode": "PTDN-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "id": "set-4d2cd29597eb709e",
+  "name": "Duelist Pack Collection Tin 2009",
+  "releaseYear": 2009,
+  "imageAssetPath": "sets/set-4d2cd29597eb709e.jpg",
+  "cards": [
+    {
+      "cardCode": 58820853,
+      "printingCode": "RGBT-ENPP2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 36623431,
+      "printingCode": "RGBT-ENPP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 45041488,
+      "printingCode": "RGBT-ENPP3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 86223870,
+      "printingCode": "RGBT-ENPP6",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 16191953,
+      "printingCode": "RGBT-ENPP5",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 94878265,
+      "printingCode": "RGBT-ENPP4",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 61257789,
+      "printingCode": "DPCT-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 61257789,
+      "printingCode": "DPCT-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

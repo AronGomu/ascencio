@@ -1,0 +1,22 @@
+{
+  "id": "set-79b5b64b6163611b",
+  "name": "Storm of Ragnarok: Special Edition",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-79b5b64b6163611b.jpg",
+  "cards": [
+    {
+      "cardCode": 78792195,
+      "printingCode": "STOR-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47297616,
+      "printingCode": "STOR-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

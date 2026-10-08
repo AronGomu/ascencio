@@ -1,0 +1,15 @@
+{
+  "id": "set-bee7253bee677d20",
+  "name": "Blazing Vortex Premiere! promotional card",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-bee7253bee677d20.jpg",
+  "cards": [
+    {
+      "cardCode": 34611551,
+      "printingCode": "BLVO-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

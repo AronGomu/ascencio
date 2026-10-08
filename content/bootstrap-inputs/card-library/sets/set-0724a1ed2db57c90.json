@@ -1,0 +1,15 @@
+{
+  "id": "set-0724a1ed2db57c90",
+  "name": "Make-A-Wish Foundation promotional card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-0724a1ed2db57c90.jpg",
+  "cards": [
+    {
+      "cardCode": 68811206,
+      "printingCode": "TYL-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

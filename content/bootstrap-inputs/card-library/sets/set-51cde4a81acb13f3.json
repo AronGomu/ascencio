@@ -1,0 +1,15 @@
+{
+  "id": "set-51cde4a81acb13f3",
+  "name": "Shonen Jump Vol. 9, Issue 6 promotional card",
+  "releaseYear": 2011,
+  "imageAssetPath": "sets/set-51cde4a81acb13f3.jpg",
+  "cards": [
+    {
+      "cardCode": 4545683,
+      "printingCode": "JUMP-EN052",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

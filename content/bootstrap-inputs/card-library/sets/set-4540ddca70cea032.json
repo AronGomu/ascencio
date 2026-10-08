@@ -1,0 +1,15 @@
+{
+  "id": "set-4540ddca70cea032",
+  "name": "Shonen Jump Vol. 10, Issue 3 promotional card",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-4540ddca70cea032.jpg",
+  "cards": [
+    {
+      "cardCode": 63612442,
+      "printingCode": "JUMP-EN058",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

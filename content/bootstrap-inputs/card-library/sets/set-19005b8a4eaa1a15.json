@@ -1,0 +1,22 @@
+{
+  "id": "set-19005b8a4eaa1a15",
+  "name": "Order of Chaos: Special Edition",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-19005b8a4eaa1a15.jpg",
+  "cards": [
+    {
+      "cardCode": 97268402,
+      "printingCode": "ORCS-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 10000010,
+      "printingCode": "ORCS-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

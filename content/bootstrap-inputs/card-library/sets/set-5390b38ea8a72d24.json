@@ -1,0 +1,36 @@
+{
+  "id": "set-5390b38ea8a72d24",
+  "name": "Ignition Assault Special Edition",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-5390b38ea8a72d24.jpg",
+  "cards": [
+    {
+      "cardCode": 89238128,
+      "printingCode": "IGAS-ENSE1",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 88406570,
+      "printingCode": "IGAS-ENSE2",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 7540107,
+      "printingCode": "IGAS-ENSE3",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 31588572,
+      "printingCode": "IGAS-ENSE4",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

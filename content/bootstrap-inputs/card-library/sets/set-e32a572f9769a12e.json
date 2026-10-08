@@ -1,0 +1,15 @@
+{
+  "id": "set-e32a572f9769a12e",
+  "name": "Dawn of Majesty Premiere! promotional card",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-e32a572f9769a12e.jpg",
+  "cards": [
+    {
+      "cardCode": 2656842,
+      "printingCode": "DAMA-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

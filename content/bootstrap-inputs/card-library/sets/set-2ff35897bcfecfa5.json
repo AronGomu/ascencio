@@ -1,0 +1,15 @@
+{
+  "id": "set-2ff35897bcfecfa5",
+  "name": "WSJ Jump Pack Spring 2019 promotional card",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-2ff35897bcfecfa5.jpg",
+  "cards": [
+    {
+      "cardCode": 40044918,
+      "printingCode": "JMPS-EN008",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "set-aa9a096f7f2ae420",
+  "name": "Collectible Tins 2007 Wave 1",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-aa9a096f7f2ae420.jpg",
+  "cards": [
+    {
+      "cardCode": 7093411,
+      "printingCode": "CT04-EN002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 83965310,
+      "printingCode": "CT04-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 48996569,
+      "printingCode": "CT04-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

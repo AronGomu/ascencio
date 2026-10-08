@@ -4,7 +4,7 @@ This file is the single context initialisation file for all AI agents working on
 
 ## Opening the application
 
-When the owner asks to open/start the application on this Linux workspace, use `npm run native:build-and-start:linux` with Node 26 or newer. It builds through the Tauri CLI before launching the standalone native application; no development server is required. Keep acceptance/recovery instrumentation environment variables unset for ordinary owner launches.
+When the owner asks to open/start the application, use `npm start` with Node 26 or newer on Windows, macOS or Linux. It builds through the Tauri CLI before launching the standalone native application; no development server is required. Use `npm start -- --headless --debug` when the owner requests headless operation; it builds without opening a window. Browser/native IPC fixtures and Rust tests provide headless validation. Keep acceptance/recovery instrumentation environment variables unset for ordinary owner launches. See [desktop setup](docs/desktop-setup.md) for fresh clones.
 
 Do not launch an arbitrary existing `src-tauri/target/release/ascencio` binary without establishing how it was built. Plain `cargo build --release` can still use `devUrl` and show `Could not connect to 127.0.0.1: Connection refused`. Standalone builds require Tauri's `custom-protocol` feature, enabled automatically by `tauri build`; a direct Cargo build must explicitly use `--features tauri/custom-protocol` and have current frontend/resources already prepared. Use `npm run native:desktop:dev` only when development mode is requested.
 
@@ -88,7 +88,7 @@ Commit a plan before retiring it and that SHA stays a real address: `git show <s
 
 | Area        | Technology                                                                                              | Role                                                                                                                        |
 | ----------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Language    | TypeScript (strict), Node.js 24+                                                                        | Application, contracts, tooling, tests, and opponent policy                                                                 |
+| Language    | TypeScript (strict), Node.js 26+                                                                        | Application, contracts, tooling, tests, and opponent policy                                                                 |
 | Build       | Vite                                                                                                    | Dev server, Worker/WASM handling, and static build                                                                          |
 | UI          | Svelte                                                                                                  | Application layout, semantic DOM field, prompts, logs, errors, and results                                                  |
 | Duel field  | Svelte DOM + CSS/SVG                                                                                    | Native controls, typed physical layout, highlights, and non-authoritative feedback                                          |

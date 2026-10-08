@@ -28,7 +28,7 @@ There is no online mode ! This is an experience tailored for solo play experienc
 
 ## Thanks to [find names]
 
-This project is browser-first and designed to run on any OS and machines.
+This project is a Tauri native application for Windows, macOS and Linux.
 If you encounter any performance issue, do not hesitate to send feedback.
 I want to design an experience that can be accessed by everyone.
 
@@ -63,20 +63,22 @@ Generated data, downloaded images, caches, and `node_modules/` are intentionally
 - [Git](https://git-scm.com/)
 - npm, included with Node.js
 - Network access for the initial asset download
-- Approximately 2.5 GB of free disk space for the current image archive
+- Stable Rust and the native prerequisites for your operating system
+- At least 35 GB of free disk space for assets, conversion and native builds
 
 ## Setup
 
 ```bash
-git clone git@github.com:AronGomu/ascencio.git
+git -c core.longpaths=true clone -c core.longpaths=true -c core.autocrlf=false https://github.com/aronGomu/ascencio.git
 cd ascencio
 npm ci
-npm run assets:bootstrap
-npm run check
-npm run frontend:dev
+npm run setup
+npm run build
+npm test
+npm start
 ```
 
-`npm run assets:bootstrap` is resumable. Existing Git caches and valid JPEGs are reused, so rerun the same command after a temporary network failure. The development server prints its local URL and serves the same trusted runtime files used by production packaging.
+See [desktop setup](docs/desktop-setup.md) for platform prerequisites, offline recovery and headless validation. Setup and build open no windows. `npm start -- --headless --debug` builds without launching the GUI. Downloads reuse existing Git caches and valid images.
 
 ## Public asset delivery setup
 
@@ -105,28 +107,28 @@ Both launchers accept the same options as `npm run assets:bootstrap` and can be 
 
 Use Node 26 or newer. [Complete command reference](docs/development-commands.md) describes every command and the coverage of the aggregate checks.
 
-| ID | Command | Description |
-| --- | --- | --- |
-| C1 | `npm run native:build-and-start:linux` | Build the standalone desktop application and launch it on Linux. No development server required. |
-| C2 | `npm run native:desktop:dev` | Launch the native desktop application with its development server. |
-| C3 | `npm run native:desktop:build` | Prepare content, build the frontend, then build/package the native desktop application. |
-| C4 | `npm run frontend:dev` | Start Vite only; ordinary browser navigation does not provide native IPC. |
-| C5 | `npm run frontend:build` | Verify frozen vendor files, bundle application code to `generated/build/app/`, and check frontend boundaries/budgets. |
-| C6 | `npm run frontend:preview` | Serve built frontend files for inspection and browser fixtures; does not launch Tauri. |
-| C7 | `npm run assets:bootstrap` | Acquire/verify the pinned engine, upstream source data and card images; generate/verify the source manifest. Set artwork and JSON release staging are separate. |
-| C8 | `npm run assets:upstream:sync -- --offline` | Regenerate source data from existing Git caches without fetching. |
-| C9 | `npm run content:convert:sqlite-to-json -- <input.sqlite> <new-source-directory>` | Convert verified historical content into readable sources and media. |
-| C10 | `npm run content:compile:json -- <source-directory> <output-directory>` | Compile readable sources into critical snapshots and source maps. |
-| C11 | `npm run content:release:pin` | Review and pin the tracked critical-release manifest. |
-| C12 | `npm run content:stage:native` | Check pinned inputs and atomically stage native content resources. |
-| C13 | `npm run content:stage:verify-native` | Verify staged content and frozen engine buffers. |
-| C14 | `npm run mods:bundle -- <mod-directory> <new-bundle.json>` | Create a declared-file JSON mod import bundle. |
-| C15 | `npm test` | Run tooling, unit/performance, component and integration suites; excludes browser and Rust tests. |
-| C16 | `npm run test:browser:native-bridge` | Run Playwright browser/native-IPC fixtures, not the desktop executable. |
-| C17 | `npm run test:native:rust` | Run native Rust tests. |
-| C18 | `npm run check` | Run headless quality/assets plus component, frontend-build and browser gates; excludes Rust, JSON parity and actual native/physical acceptance. |
-| C19 | `npm run content:verify:sqlite-json-parity` | Compare historical SQLite queries with JSON snapshots and check deterministic compilation. |
-| C20 | `npm run legacy:assets:inventory -- --check` | Check retained legacy source/profile ownership without mutation. |
+| ID  | Command                                                                           | Description                                                                                                                                                     |
+| --- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | `npm run native:build-and-start:linux`                                            | Build the standalone desktop application and launch it on Linux. No development server required.                                                                |
+| C2  | `npm run native:desktop:dev`                                                      | Launch the native desktop application with its development server.                                                                                              |
+| C3  | `npm run native:desktop:build`                                                    | Prepare content, build the frontend, then build/package the native desktop application.                                                                         |
+| C4  | `npm run frontend:dev`                                                            | Start Vite only; ordinary browser navigation does not provide native IPC.                                                                                       |
+| C5  | `npm run frontend:build`                                                          | Verify frozen vendor files, bundle application code to `generated/build/app/`, and check frontend boundaries/budgets.                                           |
+| C6  | `npm run frontend:preview`                                                        | Serve built frontend files for inspection and browser fixtures; does not launch Tauri.                                                                          |
+| C7  | `npm run assets:bootstrap`                                                        | Acquire/verify the pinned engine, upstream source data and card images; generate/verify the source manifest. Set artwork and JSON release staging are separate. |
+| C8  | `npm run assets:upstream:sync -- --offline`                                       | Regenerate source data from existing Git caches without fetching.                                                                                               |
+| C9  | `npm run content:convert:sqlite-to-json -- <input.sqlite> <new-source-directory>` | Convert verified historical content into readable sources and media.                                                                                            |
+| C10 | `npm run content:compile:json -- <source-directory> <output-directory>`           | Compile readable sources into critical snapshots and source maps.                                                                                               |
+| C11 | `npm run content:release:pin`                                                     | Review and pin the tracked critical-release manifest.                                                                                                           |
+| C12 | `npm run content:stage:native`                                                    | Check pinned inputs and atomically stage native content resources.                                                                                              |
+| C13 | `npm run content:stage:verify-native`                                             | Verify staged content and frozen engine buffers.                                                                                                                |
+| C14 | `npm run mods:bundle -- <mod-directory> <new-bundle.json>`                        | Create a declared-file JSON mod import bundle.                                                                                                                  |
+| C15 | `npm test`                                                                        | Run tooling, unit/performance, component and integration suites; excludes browser and Rust tests.                                                               |
+| C16 | `npm run test:browser:native-bridge`                                              | Run Playwright browser/native-IPC fixtures, not the desktop executable.                                                                                         |
+| C17 | `npm run test:native:rust`                                                        | Run native Rust tests.                                                                                                                                          |
+| C18 | `npm run check`                                                                   | Run headless quality/assets plus component, frontend-build and browser gates; excludes Rust, JSON parity and actual native/physical acceptance.                 |
+| C19 | `npm run content:verify:sqlite-json-parity`                                       | Compare historical SQLite queries with JSON snapshots and check deterministic compilation.                                                                      |
+| C20 | `npm run legacy:assets:inventory -- --check`                                      | Check retained legacy source/profile ownership without mutation.                                                                                                |
 
 To display the unified downloader help:
 
@@ -188,14 +190,14 @@ node scripts/verify-engine.ts
 node scripts/sync-assets.ts [options]
 ```
 
-| Option                     |                    Default | Description                                              |
-| -------------------------- | -------------------------: | -------------------------------------------------------- |
-| `--offline`                |                   disabled | Use existing source repositories without fetching.       |
-| `--cache-dir <directory>`  |          `.cache/upstream` | Set the Git source cache directory inside the project.   |
+| Option                     |                      Default | Description                                              |
+| -------------------------- | ---------------------------: | -------------------------------------------------------- |
+| `--offline`                |                     disabled | Use existing source repositories without fetching.       |
+| `--cache-dir <directory>`  |            `.cache/upstream` | Set the Git source cache directory inside the project.   |
 | `--output <directory>`     | `assets/shared/data/current` | Set the generated snapshot output directory.             |
-| `--babel-ref <ref>`        |                   `master` | Pin a BabelCDB branch, tag, or commit.                   |
-| `--scripts-ref <ref>`      |                   `master` | Pin a CardScripts branch, tag, or commit.                |
-| `--distribution-ref <ref>` |                   `master` | Pin a Project Ignis Distribution branch, tag, or commit. |
+| `--babel-ref <ref>`        |                     `master` | Pin a BabelCDB branch, tag, or commit.                   |
+| `--scripts-ref <ref>`      |                     `master` | Pin a CardScripts branch, tag, or commit.                |
+| `--distribution-ref <ref>` |                     `master` | Pin a Project Ignis Distribution branch, tag, or commit. |
 
 Example:
 
@@ -219,14 +221,14 @@ node scripts/verify-assets.ts --output <directory>
 node scripts/download-images.ts [options]
 ```
 
-| Option                          |                         Default | Description                                                         |
-| ------------------------------- | ------------------------------: | ------------------------------------------------------------------- |
-| `--assets <directory>`          |      `assets/shared/data/current` | Set the source image-manifest snapshot.                             |
-| `--output <directory>`          | `assets/shared/card-images` | Set the local image archive directory.                              |
-| `--concurrency <count>`         |                            `18` | Set simultaneous download workers.                                  |
-| `--requests-per-second <count>` |                            `18` | Set request rate; cannot exceed `20`.                               |
-| `--limit <count>`               |                     all records | Process only the first number of image records, useful for testing. |
-| `--force`                       |                        disabled | Redownload valid cached images.                                     |
+| Option                          |                      Default | Description                                                         |
+| ------------------------------- | ---------------------------: | ------------------------------------------------------------------- |
+| `--assets <directory>`          | `assets/shared/data/current` | Set the source image-manifest snapshot.                             |
+| `--output <directory>`          |  `assets/shared/card-images` | Set the local image archive directory.                              |
+| `--concurrency <count>`         |                         `18` | Set simultaneous download workers.                                  |
+| `--requests-per-second <count>` |                         `18` | Set request rate; cannot exceed `20`.                               |
+| `--limit <count>`               |                  all records | Process only the first number of image records, useful for testing. |
+| `--force`                       |                     disabled | Redownload valid cached images.                                     |
 
 Examples:
 

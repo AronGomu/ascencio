@@ -1,0 +1,15 @@
+{
+  "id": "set-d0bd8546492096d4",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 7 promotional card",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-d0bd8546492096d4.jpg",
+  "cards": [
+    {
+      "cardCode": 66547759,
+      "printingCode": "YZ07-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-b41d44da71351364",
+  "name": "KC Grand Tournament 2021 prize card",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-b41d44da71351364.jpg",
+  "cards": [
+    {
+      "cardCode": 46986414,
+      "printingCode": "2021-EN001",
+      "rarity": "common",
+      "sourceRarity": "Extra Secret Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

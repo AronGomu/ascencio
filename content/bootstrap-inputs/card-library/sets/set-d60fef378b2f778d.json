@@ -1,0 +1,15 @@
+{
+  "id": "set-d60fef378b2f778d",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 3 promotional card",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-d60fef378b2f778d.jpg",
+  "cards": [
+    {
+      "cardCode": 73445448,
+      "printingCode": "YZ03-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

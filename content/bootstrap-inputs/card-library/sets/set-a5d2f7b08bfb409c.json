@@ -1,0 +1,22 @@
+{
+  "id": "set-a5d2f7b08bfb409c",
+  "name": "Shonen Jump 2007 subscription bonus",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-a5d2f7b08bfb409c.jpg",
+  "cards": [
+    {
+      "cardCode": 66973070,
+      "printingCode": "JUMP-EN015",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 46668237,
+      "printingCode": "JUMP-EN014",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-02a956a9947beca7",
+  "name": "Yu-Gi-Oh! ZEXAL Volume 6 promotional card",
+  "releaseYear": 2015,
+  "imageAssetPath": "sets/set-02a956a9947beca7.jpg",
+  "cards": [
+    {
+      "cardCode": 7194917,
+      "printingCode": "YZ06-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

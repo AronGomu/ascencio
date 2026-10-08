@@ -1,0 +1,22 @@
+{
+  "id": "set-ab59cb52711726c4",
+  "name": "Yu-Gi-Oh! Championship Series 2018 prize card",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-ab59cb52711726c4.jpg",
+  "cards": [
+    {
+      "cardCode": 4538826,
+      "printingCode": "YCSW-EN011",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 4538826,
+      "printingCode": "YCSW-EN011",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

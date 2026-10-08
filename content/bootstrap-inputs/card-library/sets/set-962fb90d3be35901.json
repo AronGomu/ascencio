@@ -1,0 +1,43 @@
+{
+  "id": "set-962fb90d3be35901",
+  "name": "Collectible Tins 2012 Wave 2.5",
+  "releaseYear": 2013,
+  "imageAssetPath": "sets/set-962fb90d3be35901.jpg",
+  "cards": [
+    {
+      "cardCode": 7845138,
+      "printingCode": "CT09-EN020",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 9059700,
+      "printingCode": "CT09-EN023",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 92661479,
+      "printingCode": "CT09-EN022",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 56174248,
+      "printingCode": "CT09-EN019",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 37926346,
+      "printingCode": "CT09-EN021",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

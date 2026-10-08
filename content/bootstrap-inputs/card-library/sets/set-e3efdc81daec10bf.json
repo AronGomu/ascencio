@@ -1,0 +1,15 @@
+{
+  "id": "set-e3efdc81daec10bf",
+  "name": "Chaos Impact Sneak Peek Participation Card",
+  "releaseYear": 2019,
+  "imageAssetPath": "sets/set-e3efdc81daec10bf.jpg",
+  "cards": [
+    {
+      "cardCode": 88996322,
+      "printingCode": "CHIM-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

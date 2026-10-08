@@ -1,0 +1,85 @@
+{
+  "id": "set-6e15b9bec8026e47",
+  "name": "Mattel Action Figure promotional cards: Series 3",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-6e15b9bec8026e47.jpg",
+  "cards": [
+    {
+      "cardCode": 83104731,
+      "printingCode": "MF03-EN008",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 50916353,
+      "printingCode": "MF03-EN011",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 70095154,
+      "printingCode": "MF03-EN009",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 21844576,
+      "printingCode": "MF03-EN001",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 59793705,
+      "printingCode": "MF03-EN005",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 79979666,
+      "printingCode": "MF03-EN007",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 58932615,
+      "printingCode": "MF03-EN002",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 84327329,
+      "printingCode": "MF03-EN003",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 35809262,
+      "printingCode": "MF03-EN006",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 20721928,
+      "printingCode": "MF03-EN004",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 98585345,
+      "printingCode": "MF03-EN0??",
+      "rarity": "common",
+      "sourceRarity": "Normal Parallel Rare",
+      "sourceRarityCode": ""
+    }
+  ]
+}

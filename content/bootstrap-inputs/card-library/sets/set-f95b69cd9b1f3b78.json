@@ -1,0 +1,15 @@
+{
+  "id": "set-f95b69cd9b1f3b78",
+  "name": "Blue-Eyes Alternative White Dragon Sweepstakes",
+  "releaseYear": 2021,
+  "imageAssetPath": "sets/set-f95b69cd9b1f3b78.jpg",
+  "cards": [
+    {
+      "cardCode": 38517737,
+      "printingCode": "SBPR-EN003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

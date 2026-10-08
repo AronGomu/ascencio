@@ -1,0 +1,29 @@
+{
+  "id": "set-f509aa4eb5e6647a",
+  "name": "Yu-Gi-Oh! Nightmare Troubadour promotional cards",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-f509aa4eb5e6647a.jpg",
+  "cards": [
+    {
+      "cardCode": 50755,
+      "printingCode": "NTR-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 73665146,
+      "printingCode": "NTR-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 72443568,
+      "printingCode": "NTR-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

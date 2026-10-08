@@ -1,0 +1,29 @@
+{
+  "id": "set-e8ef2c45b08a71e1",
+  "name": "Yu-Gi-Oh! GX Spirit Caller promotional cards",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-e8ef2c45b08a71e1.jpg",
+  "cards": [
+    {
+      "cardCode": 81919143,
+      "printingCode": "GX03-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 51962254,
+      "printingCode": "GX03-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 87350908,
+      "printingCode": "GX03-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

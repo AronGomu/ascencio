@@ -94,6 +94,7 @@ fn import(root: &Path, source: &str) -> Result<String, String> {
             .write_all(&serde_json::to_vec_pretty(&bundle.manifest).map_err(|e| e.to_string())?)
             .and_then(|_| manifest.sync_all())
             .map_err(|e| e.to_string())?;
+        drop(manifest);
         fs::rename(&temporary, root.join(id)).map_err(|e| e.to_string())?;
         Ok(id.to_string())
     })();

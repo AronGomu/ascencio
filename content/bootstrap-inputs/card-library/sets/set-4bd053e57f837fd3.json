@@ -1,0 +1,50 @@
+{
+  "id": "set-4bd053e57f837fd3",
+  "name": "Booster Pack Collectors Tins 2002",
+  "releaseYear": 2002,
+  "imageAssetPath": "sets/set-4bd053e57f837fd3.jpg",
+  "cards": [
+    {
+      "cardCode": 11901678,
+      "printingCode": "BPT-006",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 17985575,
+      "printingCode": "BPT-004",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "BPT-001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 70781052,
+      "printingCode": "BPT-002",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "BPT-005",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 89631139,
+      "printingCode": "BPT-003",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "set-efc3605154e66e14",
+  "name": "Elemental Energy Sneak Peek Participation Card",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-efc3605154e66e14.jpg",
+  "cards": [
+    {
+      "cardCode": 17484499,
+      "printingCode": "SP1-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

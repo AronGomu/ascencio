@@ -1,0 +1,50 @@
+{
+  "id": "set-d5eff3cc86c14e44",
+  "name": "Yu-Gi-Oh! Championship Series 2010 Prize Cards",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-d5eff3cc86c14e44.jpg",
+  "cards": [
+    {
+      "cardCode": 85771019,
+      "printingCode": "YCSW-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 85771019,
+      "printingCode": "YCSW-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 47664723,
+      "printingCode": "YCSW-EN003",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 47664723,
+      "printingCode": "YCSW-EN003",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 11260714,
+      "printingCode": "YCSW-EN002",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    },
+    {
+      "cardCode": 11260714,
+      "printingCode": "YCSW-EN002",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

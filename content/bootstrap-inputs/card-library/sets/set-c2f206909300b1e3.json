@@ -1,0 +1,22 @@
+{
+  "id": "set-c2f206909300b1e3",
+  "name": "Duel Terminal 6",
+  "releaseYear": 2012,
+  "imageAssetPath": "sets/set-c2f206909300b1e3.jpg",
+  "cards": [
+    {
+      "cardCode": 69884162,
+      "printingCode": "DT06-EN052",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Normal Parallel Rare",
+      "sourceRarityCode": "(DNPR)"
+    },
+    {
+      "cardCode": 9837195,
+      "printingCode": "DT06-EN081",
+      "rarity": "common",
+      "sourceRarity": "Duel Terminal Rare Parallel Rare",
+      "sourceRarityCode": "(DRPR)"
+    }
+  ]
+}

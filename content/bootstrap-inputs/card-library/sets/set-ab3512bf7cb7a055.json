@@ -1,0 +1,15 @@
+{
+  "id": "set-ab3512bf7cb7a055",
+  "name": "Shining Victories Sneak Peek Participation Card",
+  "releaseYear": 2016,
+  "imageAssetPath": "sets/set-ab3512bf7cb7a055.jpg",
+  "cards": [
+    {
+      "cardCode": 23220863,
+      "printingCode": "SHVI-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

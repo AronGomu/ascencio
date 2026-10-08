@@ -1,0 +1,15 @@
+{
+  "id": "set-df644b75343b02a1",
+  "name": "Ignition Assault Sneak Peek Participation Card",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-df644b75343b02a1.jpg",
+  "cards": [
+    {
+      "cardCode": 46271408,
+      "printingCode": "IGAS-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

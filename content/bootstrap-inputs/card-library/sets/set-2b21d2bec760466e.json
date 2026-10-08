@@ -1,0 +1,15 @@
+{
+  "id": "set-2b21d2bec760466e",
+  "name": "Duelist League Series 9 participation card",
+  "releaseYear": 2006,
+  "imageAssetPath": "sets/set-2b21d2bec760466e.jpg",
+  "cards": [
+    {
+      "cardCode": 90330453,
+      "printingCode": "DL9-EN001",
+      "rarity": "super-rare",
+      "sourceRarity": "Super Rare",
+      "sourceRarityCode": "(SR)"
+    }
+  ]
+}

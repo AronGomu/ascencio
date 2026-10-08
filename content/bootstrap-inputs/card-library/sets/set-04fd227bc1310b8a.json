@@ -1,0 +1,36 @@
+{
+  "id": "set-04fd227bc1310b8a",
+  "name": "Rise of Destiny: Special Edition",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-04fd227bc1310b8a.jpg",
+  "cards": [
+    {
+      "cardCode": 38033121,
+      "printingCode": "RDS-ENSE2",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 53839837,
+      "printingCode": "RDS-ENSE4",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 55256016,
+      "printingCode": "RDS-ENSE3",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 87880531,
+      "printingCode": "RDS-ENSE1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

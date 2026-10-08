@@ -1,0 +1,15 @@
+{
+  "id": "set-9a6f100a666f73d9",
+  "name": "Phantom Rage Premiere! promotional card",
+  "releaseYear": 2020,
+  "imageAssetPath": "sets/set-9a6f100a666f73d9.jpg",
+  "cards": [
+    {
+      "cardCode": 51097887,
+      "printingCode": "PHRA-ENSP1",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

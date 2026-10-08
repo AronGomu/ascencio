@@ -1,0 +1,22 @@
+{
+  "id": "set-36f0eb80234e4855",
+  "name": "Structure Deck: Deluxe Edition",
+  "releaseYear": 2005,
+  "imageAssetPath": "sets/set-36f0eb80234e4855.jpg",
+  "cards": [
+    {
+      "cardCode": 73879377,
+      "printingCode": "SD1-ENDE1",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    },
+    {
+      "cardCode": 93382620,
+      "printingCode": "SD2-ENDE1",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

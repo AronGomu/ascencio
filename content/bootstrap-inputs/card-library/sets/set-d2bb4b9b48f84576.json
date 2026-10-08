@@ -1,0 +1,15 @@
+{
+  "id": "set-d2bb4b9b48f84576",
+  "name": "Summoned Skull Sample promotional card",
+  "releaseYear": 2001,
+  "imageAssetPath": "sets/set-d2bb4b9b48f84576.jpg",
+  "cards": [
+    {
+      "cardCode": 70781052,
+      "printingCode": "SDY-004",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

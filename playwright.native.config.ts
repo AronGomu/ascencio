@@ -24,6 +24,6 @@ export default defineConfig({
       "npm run frontend:dev -- --mode native --host 127.0.0.1 --port 4402",
     url: "http://127.0.0.1:4402",
     reuseExistingServer: false,
-    timeout: 30_000,
+    timeout: process.platform === "win32" ? 120_000 : 30_000,
   },
 });

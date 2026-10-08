@@ -1,0 +1,218 @@
+{
+  "id": "set-e4d863a256c35622",
+  "name": "World Championship 2010 Card Pack",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-e4d863a256c35622.jpg",
+  "cards": [
+    {
+      "cardCode": 64428736,
+      "printingCode": "WCPP-EN007",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 3366982,
+      "printingCode": "WCPP-EN019",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 50933533,
+      "printingCode": "WCPP-EN018",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 50933533,
+      "printingCode": "WCPP-EN018",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 29436665,
+      "printingCode": "WCPP-EN014",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 29436665,
+      "printingCode": "WCPP-EN014",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 97973387,
+      "printingCode": "WCPP-EN001",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55737443,
+      "printingCode": "WCPP-EN015",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 55737443,
+      "printingCode": "WCPP-EN015",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 69933858,
+      "printingCode": "WCPP-EN013",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 69933858,
+      "printingCode": "WCPP-EN013",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 55691901,
+      "printingCode": "WCPP-EN006",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 19847532,
+      "printingCode": "WCPP-EN011",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 19847532,
+      "printingCode": "WCPP-EN011",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 1929294,
+      "printingCode": "WCPP-EN002",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 20541432,
+      "printingCode": "WCPP-EN005",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 84133008,
+      "printingCode": "WCPP-EN008",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 58074572,
+      "printingCode": "WCPP-EN020",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 56713552,
+      "printingCode": "WCPP-EN003",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 10485110,
+      "printingCode": "WCPP-EN012",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 10485110,
+      "printingCode": "WCPP-EN012",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 96561011,
+      "printingCode": "WCPP-EN009",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 96561011,
+      "printingCode": "WCPP-EN009",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 14989021,
+      "printingCode": "WCPP-EN016",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 14989021,
+      "printingCode": "WCPP-EN016",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 85520851,
+      "printingCode": "WCPP-EN017",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 85520851,
+      "printingCode": "WCPP-EN017",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 22056710,
+      "printingCode": "WCPP-EN010",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    },
+    {
+      "cardCode": 22056710,
+      "printingCode": "WCPP-EN010",
+      "rarity": "common",
+      "sourceRarity": "Reprint",
+      "sourceRarityCode": ""
+    },
+    {
+      "cardCode": 92391084,
+      "printingCode": "WCPP-EN004",
+      "rarity": "rare",
+      "sourceRarity": "Rare",
+      "sourceRarityCode": "(R)"
+    }
+  ]
+}

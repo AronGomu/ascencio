@@ -1,0 +1,15 @@
+{
+  "id": "set-5e7d56c139e89bed",
+  "name": "Yugi & Kaiba Collector Box",
+  "releaseYear": 2018,
+  "imageAssetPath": "sets/set-5e7d56c139e89bed.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "KACB-EN001",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

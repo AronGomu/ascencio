@@ -1,0 +1,15 @@
+{
+  "id": "set-8e11ea99da23e185",
+  "name": "Yu-Gi-Oh! GX Volume 1 promotional card",
+  "releaseYear": 2007,
+  "imageAssetPath": "sets/set-8e11ea99da23e185.jpg",
+  "cards": [
+    {
+      "cardCode": 47297616,
+      "printingCode": "YG01-EN001",
+      "rarity": "secret-rare",
+      "sourceRarity": "Secret Rare",
+      "sourceRarityCode": "(ScR)"
+    }
+  ]
+}

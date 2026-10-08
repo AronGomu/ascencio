@@ -1,0 +1,29 @@
+{
+  "id": "set-e5ac216f8c45289c",
+  "name": "Legendary Collection",
+  "releaseYear": 2010,
+  "imageAssetPath": "sets/set-e5ac216f8c45289c.jpg",
+  "cards": [
+    {
+      "cardCode": 89631139,
+      "printingCode": "LC01-EN004",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 46986414,
+      "printingCode": "LC01-EN005",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    },
+    {
+      "cardCode": 74677422,
+      "printingCode": "LC01-EN006",
+      "rarity": "ultra-rare",
+      "sourceRarity": "Ultra Rare",
+      "sourceRarityCode": "(UR)"
+    }
+  ]
+}

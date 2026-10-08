@@ -1,0 +1,15 @@
+{
+  "id": "set-742242142c1a8d3d",
+  "name": "Dark Crisis (25th Anniversary Edition)",
+  "releaseYear": 2023,
+  "imageAssetPath": "sets/set-742242142c1a8d3d.jpg",
+  "cards": [
+    {
+      "cardCode": 8794435,
+      "printingCode": "DCR-EN024",
+      "rarity": "common",
+      "sourceRarity": "Common",
+      "sourceRarityCode": "(C)"
+    }
+  ]
+}

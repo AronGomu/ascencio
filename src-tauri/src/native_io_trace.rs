@@ -28,11 +28,14 @@ pub(crate) enum Category {
 #[derive(Clone, Copy, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub(crate) enum Operation {
+    #[cfg(test)]
     Command,
     Read,
     Metadata,
     Write,
+    #[cfg(test)]
     SqliteOpen,
+    #[cfg(test)]
     SqlQuery,
     Hash,
     Parse,
@@ -245,6 +248,7 @@ pub(crate) fn start(
     trace().start(category, operation, label)
 }
 
+#[cfg(test)]
 pub(crate) fn read(path: &Path, category: Category, label: &'static str) -> io::Result<Vec<u8>> {
     let mut span = start(category, Operation::Read, label);
     let result = fs::read(path);

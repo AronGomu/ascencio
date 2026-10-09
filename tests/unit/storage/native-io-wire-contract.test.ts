@@ -14,6 +14,7 @@ it("keeps native and frontend startup/I/O enum vocabularies identical", () => {
     )?.[1];
     expect(body).toBeDefined();
     return body!
+      .replace(/#\[[^\]]+\]\s*/g, "")
       .split(",")
       .map((value) => value.trim())
       .filter(Boolean)

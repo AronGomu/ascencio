@@ -2288,14 +2288,20 @@ button.duel-field-zone,
   position: relative;
   flex: 0 0 144px;
   width: 144px;
-  transition: transform 120ms ease-out;
-  transform-origin: center 42%;
 }
 
-.zone-list-entry.is-first {
+.zone-list-entry > img {
+  position: relative;
+  z-index: 1;
+  transition: transform 120ms ease-out;
+  transform-origin: center 42%;
+  pointer-events: none;
+}
+
+.zone-list-entry.is-first > img {
   transform-origin: left 42%;
 }
-.zone-list-entry.is-last {
+.zone-list-entry.is-last > img {
   transform-origin: right 42%;
 }
 .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
@@ -2331,11 +2337,18 @@ button.duel-field-zone,
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 65%, transparent);
 }
 
-.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+    .is-hover-suppressed
+  )
+  > img {
   transform: scale(1.6);
 }
 
 .zone-list-entry.is-hover-suppressed {
+  z-index: auto;
+}
+
+.zone-list-entry.is-hover-suppressed > img {
   transition: none;
   transform: none;
 }
@@ -2365,6 +2378,24 @@ button.duel-field-zone,
 .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open)
   .zone-list-entry__name {
   opacity: 0;
+}
+
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+    .is-hover-suppressed
+  )
+  .card-action-chips,
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+    .is-hover-suppressed
+  )
+  .projected-choice-menu {
+  top: calc(144px * 614 / 421 * 1.35 - 2px);
+}
+
+.zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+    .is-hover-suppressed
+  )
+  .zone-list-entry__zone {
+  bottom: calc(100% + 4px + 144px * 614 / 421 * 0.6 * 0.42);
 }
 
 .zone-list-entry:hover .card-action-chips,
@@ -3100,7 +3131,7 @@ button.card-action-chip:disabled {
    is never touched here and stays oriented. */
 @media (prefers-reduced-motion: reduce) {
   .duel-field-card,
-  .zone-list-entry {
+  .zone-list-entry > img {
     transition: none;
   }
 
@@ -3111,8 +3142,29 @@ button.card-action-chip:disabled {
     transform: translate(-50%, -50%);
   }
 
-  .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open) {
+  .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+      .is-hover-suppressed
+    )
+    > img {
     transform: none;
+  }
+
+  .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+      .is-hover-suppressed
+    )
+    .zone-list-entry__zone {
+    bottom: calc(100% + 4px);
+  }
+
+  .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+      .is-hover-suppressed
+    )
+    .card-action-chips,
+  .zone-list-entry:is(:hover, :focus-within, .is-selected, .is-menu-open):not(
+      .is-hover-suppressed
+    )
+    .projected-choice-menu {
+    top: calc(144px * 614 / 421 - 2px);
   }
 
   .duel-field-card.is-identity-known.is-hand-item:not(.is-pinned):focus-within {

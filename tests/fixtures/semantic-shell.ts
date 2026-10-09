@@ -1,4 +1,3 @@
-import { loadNormalizedCatalog } from "../../scripts/lib/sqlite-content/normalized-package-source.ts";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, unlinkSync, rmdirSync } from "node:fs";
 import { vi } from "vitest";
@@ -25,6 +24,7 @@ import {
 } from "./installed-gameplay.ts";
 import { storyReleaseFixture } from "./story-release.ts";
 import { storyUserRuntime } from "./story-session.ts";
+import { normalizedCatalogSource } from "./normalized-content-source.ts";
 
 const disposals: (() => Promise<void>)[] = [];
 export async function disposeSemanticShells(): Promise<void> {
@@ -53,10 +53,7 @@ export async function semanticShellStartup(
     ]),
   );
   if ([...required].some((code) => !byCode.has(code))) {
-    const normalized = await loadNormalizedCatalog(
-      "assets/content/card-library",
-      ["en"],
-    );
+    const normalized = await normalizedCatalogSource();
     for (const code of required) {
       if (byCode.has(code)) continue;
       const record = normalized.cards.find((row) => row.code === code);

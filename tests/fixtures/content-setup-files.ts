@@ -1,9 +1,40 @@
 import { PACKAGE_ASSET_SOURCES as ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { buildRuntimeSnapshotManifest } from "../../src/battle/worker/assets/runtime-snapshot-node.ts";
 import { contentDigest, contentSetupFixture } from "./content-setup.ts";
 import { DECK_CATALOG } from "../../src/battle/duel/presets/deck-catalog.ts";
+
+const vendorRoot = "vendor/ocgcore-wasm/0.1.2";
+let vendorSnapshot:
+  | Promise<readonly { readonly path: string; readonly bytes: Buffer }[]>
+  | undefined;
+
+function immutableVendorSnapshot() {
+  return (vendorSnapshot ??= (async () => {
+    const manifestBytes = await readFile(`${vendorRoot}/vendor-manifest.json`);
+    const manifest = JSON.parse(manifestBytes.toString("utf8"));
+    const files = await Promise.all(
+      manifest.files.map(async (file: { path: string }) => ({
+        path: file.path,
+        bytes: await readFile(`${vendorRoot}/${file.path}`),
+      })),
+    );
+    for (const [index, entry] of manifest.files.entries()) {
+      const bytes = files[index]!.bytes;
+      if (
+        bytes.length !== entry.bytes ||
+        createHash("sha256").update(bytes).digest("hex") !== entry.sha256
+      )
+        throw new Error(`Invalid frozen vendor fixture input: ${entry.path}`);
+    }
+    return Object.freeze([
+      { path: "vendor-manifest.json", bytes: manifestBytes },
+      ...files,
+    ]);
+  })());
+}
 
 /** Complete lawful runtime inputs; caller owns scratch root cleanup. */
 export async function contentSetupFilesFixture(root: string) {
@@ -35,15 +66,8 @@ export async function contentSetupFilesFixture(root: string) {
     await putJson("content/distribution-evidence.json", input.distribution);
   };
   await persistInputs();
-  const vendorRoot = "vendor/ocgcore-wasm/0.1.2";
-  const vendorBytes = await readFile(`${vendorRoot}/vendor-manifest.json`);
-  const vendor = JSON.parse(vendorBytes.toString("utf8"));
-  await put(`${vendorRoot}/vendor-manifest.json`, vendorBytes);
-  for (const file of vendor.files)
-    await put(
-      `${vendorRoot}/${file.path}`,
-      await readFile(`${vendorRoot}/${file.path}`),
-    );
+  for (const file of await immutableVendorSnapshot())
+    await put(`${vendorRoot}/${file.path}`, file.bytes);
   const files: { path: string; bytes: number; sha256: string }[] = [];
   const putAsset = async (relative: string, value: unknown) => {
     const bytes = JSON.stringify(value);

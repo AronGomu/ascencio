@@ -78,6 +78,8 @@ try {
       run("verify-engine.ts");
       run("sync-assets.ts", offline);
       run("verify-assets.ts");
+      run("generate-runtime-snapshot.ts");
+      run("verify-runtime-snapshot.ts");
       console.log(
         "Source inputs verified. Artwork and native release staging still require full setup.",
       );

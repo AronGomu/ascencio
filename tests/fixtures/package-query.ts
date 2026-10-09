@@ -6,9 +6,11 @@ import {
   mkdtempSync,
   mkdirSync,
 } from "node:fs";
-import { loadNormalizedCatalog } from "../../scripts/lib/sqlite-content/normalized-package-source.ts";
-import { loadChapterOneContentSource } from "../../scripts/lib/chapter-content-source.ts";
 import { seedDomainRows } from "./package-domain-rows.ts";
+import {
+  chapterOneSource,
+  normalizedCatalogSource,
+} from "./normalized-content-source.ts";
 import { queryContent } from "../../src/storage/runtime/content-query-runtime.ts";
 import type {
   ActivePackage,
@@ -26,11 +28,10 @@ import {
 
 /** Test-owned normalized SQLite content. No package importer/exporter. */
 export async function packageQueryFixture() {
-  const normalized = await loadNormalizedCatalog(
-    "assets/content/card-library",
-    ["en"],
-  );
-  const chapter = await loadChapterOneContentSource(process.cwd());
+  const [normalized, chapter] = await Promise.all([
+    normalizedCatalogSource(),
+    chapterOneSource(),
+  ]);
   const json = (path: string): unknown =>
     JSON.parse(readFileSync(path, "utf8"));
   const core = json("content/duel-core/config.json") as DuelCoreConfig;

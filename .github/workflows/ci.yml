@@ -53,6 +53,8 @@ jobs:
         run: npm run setup
       - name: Acquire and verify pinned set images
         run: npm run assets:sets:download-images && npm run assets:sets:verify-images
+      - name: Verify checkout content readiness
+        run: npm run test:release:readiness
       - name: Verify an isolated offline headless checkout
         shell: bash
         run: |
@@ -71,8 +73,8 @@ jobs:
           npm run check:headless
       - name: Install supported browser engines
         run: npx playwright install --with-deps chromium firefox webkit
-      - name: Run protocol, asset, Worker, build, and browser gates
-        run: npm run check
+      - name: Run component, build, and browser gates
+        run: npm run check:frontend-and-browser
 
       - name: Archive verified private release candidate and revision manifests
         if: success() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main')

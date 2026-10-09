@@ -36,6 +36,10 @@ Reference desktop: AMD Ryzen 7 7700, Linux x86_64. Optimized native release with
 - [ ] P6. Measure fresh/warm launch, route/search p95, frame stalls, resident/peak memory and enabled-mod scaling. Verify: documented conditions and device budgets; browser viewports do not count as physical acceptance.
 - [ ] P7. Background, force-stop and reopen during accepted writes. Verify: durable complete JSON and explicit failure/unknown-outcome recovery without legacy migration.
 
+## Duel card-list interaction
+
+- [ ] Open a multi-target card list, select a card near either edge, then select its neighbor by mouse and keyboard. Verify the zoomed art can overlap nearby cards while both target controls remain reachable and the focused control stays visible. Repeat with reduced motion enabled and verify the art does not zoom.
+
 ## Automated regression commands
 
 - [x] A1. `npm run content:verify:sqlite-json-parity`: 207 semantic queries, 14,794 cards, 13,549 scripts and identical repeated snapshot bytes.

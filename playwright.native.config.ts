@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
+  forbidOnly: true,
   testDir: "./e2e/e2e-native",
   outputDir: "generated/tests/native-webview",
   workers: 1,

@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { expectEmittedFonts } from "../../tests/fixtures/emitted-font-contract.ts";
+import { installNativeContentBridge } from "../e2e-native/native-content-bridge.ts";
 
 test("canonical source relocation retains emitted font URLs and exact bytes", async ({
   page,
   baseURL,
 }) => {
-  await expectEmittedFonts(page, baseURL!);
+  await installNativeContentBridge(page);
+  await expectEmittedFonts(page, new URL("/", baseURL).href);
   // Gameplay sources are no longer public CORE URLs. A SPA fallback must not
   // be mistaken for a successful runtime, image, WASM or authoring response.
   for (const logical of [

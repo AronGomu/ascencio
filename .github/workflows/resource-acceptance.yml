@@ -1,0 +1,38 @@
+name: Chromium resource acceptance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resources:
+    runs-on: ubuntu-24.04
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26.4.0
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .cache/upstream
+            assets/content/card-library/data
+            assets/content/card-library/images
+            generated/content-inputs
+          key: resource-inputs-${{ hashFiles('assets-source-lock.json', 'image-content-lock.json', 'package-lock.json') }}
+      - run: npm ci
+      - run: npm run setup
+      - run: npm run test:browser:collection
+      - run: npm run test:browser:resources
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chromium-resource-evidence-${{ github.sha }}
+          path: generated/tests/resource/
+          if-no-files-found: error

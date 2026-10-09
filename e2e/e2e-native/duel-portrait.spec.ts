@@ -1,22 +1,14 @@
-import { test } from "./selected-content-fixture.ts";
-import { expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { installNativeContentBridge } from "./native-content-bridge.ts";
+test.beforeEach(async ({ page }) => {
+  await installNativeContentBridge(page);
+});
 
 declare global {
   interface Window {
     __portraitTapTarget: string | null;
   }
 }
-
-/* T15: below the 1024px breakpoint a *portrait* viewport plays the duel on a
-   stage turned a quarter turn clockwise, so the 16:9 board runs down the long
-   axis of the phone instead of being squeezed across its short one. Landscape
-   under the breakpoint, and every desktop size, keep the upright stage — those
-   are pinned by `duel-smoke.spec.ts` and the acceptance matrix, so this file
-   only ever asserts that they did *not* rotate.
-
-   The rows that matter most are the pointer ones. A CSS `transform` is not
-   enough on its own to call a rotated stage playable: what has to be true is
-   that the pixel the player touches resolves to the element drawn under it. */
 
 const PHONE = { width: 390, height: 844 } as const;
 const PHONE_LANDSCAPE = { width: 844, height: 390 } as const;
@@ -108,8 +100,9 @@ test("a portrait phone turns the duel stage a quarter turn and never scrolls the
   expect(overflow.scrollHeight).toBeLessThanOrEqual(overflow.innerHeight + 1);
 });
 
-test("a tap on the rotated board lands on the element drawn under it", async ({
+test("a pointer press on the rotated board lands on the element drawn under it", async ({
   page,
+  isMobile,
 }) => {
   await page.setViewportSize(PHONE);
   await openDuel(page);
@@ -199,7 +192,8 @@ test("a tap on the rotated board lands on the element drawn under it", async ({
       { once: true, capture: true },
     );
   });
-  await page.mouse.click(pressPoint.x, pressPoint.y);
+  if (isMobile) await page.touchscreen.tap(pressPoint.x, pressPoint.y);
+  else await page.mouse.click(pressPoint.x, pressPoint.y);
   expect(
     await page.evaluate(() => window.__portraitTapTarget),
     "a real press at a zone's visual centre must be delivered to that zone",

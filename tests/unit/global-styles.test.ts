@@ -96,6 +96,19 @@ describe("design tokens", () => {
 });
 
 describe("global styles", () => {
+  /* Behavior coverage map:
+     - scrollbar paint/forced-colors behavior -> native-style-matrix.spec.ts;
+       token registration and hiding only inside named overlay hosts stay here
+       because they are source ownership contracts.
+     - field board, zone spacing, hand overflow, and phase control geometry ->
+       full-height-field.spec.ts exercises the rendered acceptance field.
+     - preview text bounds and scrolling -> its `preview bounds text` case in
+       full-height-field.spec.ts; rendered deck-editor preview sizing and art
+       bounds -> native-editor-layout.spec.ts.
+     - target size, focus visibility, forced colors, and reduced motion ->
+       rendered-style-contracts.spec.ts exercises the real card-list scenario.
+     - drag-ghost reduced-motion transform and non-rendering token/import rules
+       remain source-checked because no acceptance scenario renders a drag ghost. */
   it("declares Basilica Slate tokens for every native scrollbar state", () => {
     const tokens = readFileSync("src/styles/tokens.css", "utf8");
     for (const token of SCROLLBAR_TOKENS) {
@@ -108,33 +121,6 @@ describe("global styles", () => {
     expect(tokens).toContain("--scrollbar-thumb-hover: var(--border-light);");
     expect(tokens).toContain("--scrollbar-thumb-active: var(--accent-strong);");
     expect(tokens).toContain("--scrollbar-border: var(--border);");
-  });
-
-  it("brands visible native scrollbars globally without changing overlay hosts", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const universal = ruleBlock(css, "* {");
-    expect(universal).toContain(
-      "scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track)",
-    );
-    expect(universal).toContain("scrollbar-width: thin");
-    for (const selector of [
-      "*::-webkit-scrollbar {",
-      "*::-webkit-scrollbar-track {",
-      "*::-webkit-scrollbar-thumb {",
-      "*::-webkit-scrollbar-thumb:hover {",
-      "*::-webkit-scrollbar-thumb:active {",
-    ]) {
-      expect(css, `${selector} missing`).toContain(selector);
-    }
-    expect(css).toContain("@media (forced-colors: active)");
-    const forcedColorsStart = css.indexOf("@media (forced-colors: active)");
-    expect(forcedColorsStart).toBeGreaterThan(-1);
-    const forcedColors = css.slice(
-      forcedColorsStart,
-      css.indexOf("\nbody {", forcedColorsStart),
-    );
-    expect(forcedColors).toContain("scrollbar-color: auto");
-    expect(forcedColors).not.toContain("display: none");
   });
 
   it("scopes native-hide declarations to every custom overlay host", () => {
@@ -154,66 +140,6 @@ describe("global styles", () => {
         `${file} ${selector}`,
       ).toContain("display: none");
     }
-  });
-
-  it("keeps zone-list native chrome on shared scrollbar tokens", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const entries = ruleBlock(css, ".zone-list-dialog__entries {", 0);
-    expect(entries).toContain(
-      "scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track)",
-    );
-    expect(css).toContain(
-      ".zone-list-dialog__entries::-webkit-scrollbar-thumb:hover {",
-    );
-    expect(css).toContain(
-      ".zone-list-dialog__entries::-webkit-scrollbar-thumb:active {",
-    );
-
-    const forcedColorsStart = css.indexOf(
-      "@media (forced-colors: active)",
-      css.indexOf("@media (forced-colors: active)") + 1,
-    );
-    expect(forcedColorsStart).toBeGreaterThan(-1);
-    expect(
-      ruleBlock(css, ".zone-list-dialog__entries {", forcedColorsStart),
-    ).toContain("scrollbar-color: auto");
-    expect(
-      ruleBlock(css, ".zone-list-dialog__entries {", forcedColorsStart),
-    ).toContain("scrollbar-width: auto");
-    expect(
-      ruleBlock(
-        css,
-        ".zone-list-dialog__entries::-webkit-scrollbar {",
-        forcedColorsStart,
-      ),
-    ).toContain("height: auto");
-    expect(
-      ruleBlock(
-        css,
-        ".zone-list-dialog__entries::-webkit-scrollbar-thumb {",
-        forcedColorsStart,
-      ),
-    ).toContain("background: CanvasText");
-  });
-
-  it("gives custom overlay thumbs visible forced-color system styling", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const forcedColorsStart = css.indexOf(
-      "@media (forced-colors: active)",
-      css.indexOf("@media (forced-colors: active)") + 1,
-    );
-    expect(forcedColorsStart).toBeGreaterThan(-1);
-    const overlayForcedColorsStart = css.lastIndexOf(
-      ".overlay-scrollbar__thumb {",
-    );
-    expect(overlayForcedColorsStart).toBeGreaterThan(forcedColorsStart);
-    const overlayThumb = ruleBlock(
-      css,
-      ".overlay-scrollbar__thumb {",
-      overlayForcedColorsStart,
-    );
-    expect(overlayThumb).toContain("background: CanvasText");
-    expect(overlayThumb).toContain("forced-color-adjust: none");
   });
 
   it("declares a global .visually-hidden clip utility", () => {
@@ -403,38 +329,11 @@ describe("global styles", () => {
     );
   });
 
-  it("board is explicit geometry without width-only stretch", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const block = ruleBlock(css, ".duel-field-board {");
-    expect(block).toContain("width: 100%");
-    expect(block).toContain("height: 100%");
-    expect(block).not.toContain("aspect-ratio");
-  });
-
-  it("board uses explicit geometry while interaction controls keep 44px floors", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, ".duel-field-board {")).toContain("height: 100%");
-    expect(ruleBlock(css, ".duel-field-card__target {")).toContain(
-      "min-width: max(100%, 2.75rem)",
-    );
-    expect(ruleBlock(css, ".duel-field-scroll-region {")).toContain(
-      "overflow: hidden",
-    );
-  });
-
-  it("the duel field root never scrolls, so windows cannot be panned away", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const block = duelFieldBlock(css);
-    expect(block).toContain("overflow: hidden");
-    expect(block).toContain("position: relative");
-  });
-
-  it("declares concentric px zone slots six pixels wider than cards", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const slot = ruleBlock(css, ".duel-field-zone__slot {");
-    expect(slot).toContain("+ 6px");
-    expect(slot).toContain("translate(-50%, -50%)");
-  });
+  /* Rendered replacements: `full-height-field.spec.ts` checks that the board
+     and its projected content fill their live slot, retain the board ratio,
+     keep zone gaps/slot insets, and leave the document axes non-scrollable.
+     `rendered-style-contracts.spec.ts` checks the real 44px target and visible
+     keyboard focus under accessibility media. */
 
   /* Item 2 (2026-09-02, owner): an empty pile must not read as a covered
      card — no purple pile gradient, no purple border. It wears the same
@@ -513,44 +412,6 @@ describe("global styles", () => {
       /background: color-mix\(in srgb, var\(--legal\) \d+%, transparent\)/,
     );
     expect(block).toContain("box-shadow");
-  });
-
-  it("keyboard focus is a neutral outline, independent of legal/selected colours", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const block = ruleBlock(
-      css,
-      ".duel-field-zone.is-navigation-active:focus-visible,",
-    );
-    expect(block).toContain("outline: 3px solid var(--ink)");
-    expect(block).toContain("outline-offset: 2px");
-    expect(block).not.toContain("var(--success)");
-    expect(block).not.toContain("var(--warning)");
-  });
-
-  it("reduced motion disables card/list zoom transform and transition", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const blocks = [
-      ...css.matchAll(
-        /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}\n/g,
-      ),
-    ].map((match) => match[0]);
-    const zoomBlock = blocks.find((block) =>
-      block.includes(".duel-field-card,"),
-    );
-    expect(zoomBlock).toBeDefined();
-    expect(zoomBlock).toContain("transition: none");
-    expect(zoomBlock).toContain("transform: none");
-  });
-
-  /* T16: a target answer button is the only control on a list entry in target
-     mode, so it carries the field-wide 44px minimum itself. */
-  it("off-field target buttons keep the 44px minimum and a single choice fills its tile", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const button = ruleBlock(css, ".zone-list-entry__target {");
-    expect(button).toContain("min-width: 2.75rem");
-    expect(button).toContain("min-height: 2.75rem");
-    const single = ruleBlock(css, ".zone-list-entry__targets.is-single {");
-    expect(single).toContain("inset: 0");
   });
 
   it("hovered/focused/pinned card parent rises above normal card/stack/zone siblings", () => {
@@ -657,11 +518,6 @@ describe("global styles", () => {
   it("phase chips never wrap their labels", () => {
     const css = readFileSync("src/styles/app.css", "utf8");
     expect(ruleBlock(css, "\n.phase-chip {")).toContain("white-space: nowrap");
-  });
-
-  it("phase chips keep the 44px control minimum", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    expect(ruleBlock(css, "\n.phase-chip {")).toContain("min-block-size: 44px");
   });
 
   /* Both bands centre their cluster with an `auto` margin on the *outer* side
@@ -851,20 +707,6 @@ describe("primitives.css (T16)", () => {
 });
 
 describe("deck editor sizing", () => {
-  it("the shared preview width is card sized", () => {
-    const css = readFileSync("src/styles/app.css", "utf8");
-    const rootMatches = css.match(/--preview-w:\s*15\.5rem;/g);
-    expect(
-      rootMatches,
-      "root --preview-w should be 15.5rem exactly once",
-    ).toHaveLength(1);
-    const subMatches = css.match(/--preview-w:\s*13\.5rem;/g);
-    expect(
-      subMatches,
-      "sub-breakpoint --preview-w should be 13.5rem exactly once",
-    ).toHaveLength(1);
-  });
-
   const editorComponentPaths = (dir = "src/deck-editor"): string[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
       const fullPath = join(dir, entry.name).replaceAll("\\", "/");

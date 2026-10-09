@@ -34,7 +34,7 @@ beforeEach(() => vi.stubGlobal("__APP_BUILD_ID__", "core-gate-fixture"));
 afterEach(() => vi.unstubAllGlobals());
 
 describe("CORE startup gate", () => {
-  it("missing Tauri storage blocks before network", async () => {
+  it("returns storage-unavailable when native storage is unavailable", async () => {
     expect((await loadCoreStartup()).gate).toEqual({
       kind: "locked",
       reason: "storage-unavailable",

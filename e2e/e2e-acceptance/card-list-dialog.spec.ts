@@ -164,6 +164,8 @@ test("approved browse metrics cover checks 1-16", async ({
   ).toBe(true);
   const scrollerBox = await rect(scroller);
   const firstBase = await rect(tiles.first());
+  const firstImage = tiles.first().locator("img");
+  const firstImageBase = await rect(firstImage);
   const lastBase = await rect(tiles.last());
   const rowCenter = (firstBase.x + lastBase.right) / 2;
   const scrollerCenter = (scrollerBox.x + scrollerBox.right) / 2;
@@ -175,9 +177,9 @@ test("approved browse metrics cover checks 1-16", async ({
 
   await tiles.first().hover();
   await page.waitForTimeout(150);
-  const zoomed = await rect(tiles.first());
-  expect(zoomed.width / firstBase.width).toBeGreaterThanOrEqual(1.58);
-  expect(zoomed.width / firstBase.width).toBeLessThanOrEqual(1.62);
+  const zoomed = await rect(firstImage);
+  expect(zoomed.width / firstImageBase.width).toBeGreaterThanOrEqual(1.58);
+  expect(zoomed.width / firstImageBase.width).toBeLessThanOrEqual(1.62);
   expect(
     Number.parseFloat(
       await computed(
@@ -187,7 +189,7 @@ test("approved browse metrics cover checks 1-16", async ({
     ),
   ).toBe(0);
 
-  const imageBox = await rect(tiles.first().locator("img"));
+  const imageBox = await rect(firstImage);
   const menu = tiles.first().locator(".card-action-chips");
   const sort = page.locator(
     '[data-cy="zone-list-dialog-alphabetical-checkbox"]',
@@ -202,10 +204,7 @@ test("approved browse metrics cover checks 1-16", async ({
     page.locator('[data-cy="acceptance-card-list-scenario"]'),
   ).toHaveAttribute("data-last-action", "acceptance-activate-first");
   expect(await selectedIds(page)).toEqual([]);
-  await tiles
-    .first()
-    .locator("img")
-    .click({ position: { x: 70, y: 100 } });
+  await tiles.first().click({ position: { x: 70, y: 100 } });
   expect(await selectedIds(page)).toEqual([]);
 
   await page.mouse.move(0, 0);
@@ -215,7 +214,7 @@ test("approved browse metrics cover checks 1-16", async ({
       .evaluate((element) => element.contains(document.activeElement)),
   ).toBe(true);
   expect(
-    (await rect(tiles.first())).width / firstBase.width,
+    (await rect(firstImage)).width / firstImageBase.width,
   ).toBeGreaterThanOrEqual(1.58);
   expect(
     Number.parseFloat(
@@ -229,7 +228,7 @@ test("approved browse metrics cover checks 1-16", async ({
   await sort.focus();
   await expect(sort).toBeFocused();
   await page.waitForTimeout(150);
-  expect(await computed(tiles.first(), "transform")).toBe("none");
+  expect(await computed(firstImage, "transform")).toBe("none");
   expect(
     Number.parseFloat(
       await computed(
@@ -303,7 +302,14 @@ test("exact target modes cover checks 17-21 and 29-32", async ({
   const confirm = page.locator('[data-cy="zone-list-dialog-confirm-button"]');
   await expect(count).toHaveText("0 / 1 selected");
   await expect(confirm).toBeDisabled();
-  await clickTarget(page, (await targetButtons(page)).first());
+  const singleTarget = (await targetButtons(page)).first();
+  const singleTargetBox = await rect(singleTarget);
+  const singleTileBox = await rect(page.locator(tileSelector).first());
+  expectPx(singleTargetBox.x, singleTileBox.x);
+  expectPx(singleTargetBox.y, singleTileBox.y);
+  expectPx(singleTargetBox.width, singleTileBox.width);
+  expectPx(singleTargetBox.height, singleTileBox.height);
+  await clickTarget(page, singleTarget);
   await expect(count).toHaveText("1 / 1 selected");
   await expect(confirm).toBeEnabled();
   await expect(
@@ -665,4 +671,86 @@ test("a selected entry stays orange even while hovered", async ({ page }) => {
   expect(await computed(selectedTile.locator("img"), "border-color")).toBe(
     "rgb(255, 213, 128)",
   );
+});
+
+test("a selected card does not intercept the next target click", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "card-list-range");
+  const buttons = await targetButtons(page);
+  await buttons.nth(0).click();
+  await expect(page.locator(tileSelector).nth(0)).toHaveClass(/is-selected/);
+  await buttons.nth(1).click({ position: { x: 2, y: 22 } });
+  await expect(
+    page.locator('[data-cy="zone-list-dialog-selection-count"]'),
+  ).toHaveText("2 selected · choose 1–3");
+
+  await open(page, "card-list-range");
+  const reverseButtons = await targetButtons(page);
+  await reverseButtons.nth(1).click();
+  await expect(page.locator(tileSelector).nth(1)).toHaveClass(/is-selected/);
+  await reverseButtons.nth(0).click({
+    position: { x: 140, y: 22 },
+  });
+  await expect(
+    page.locator('[data-cy="zone-list-dialog-selection-count"]'),
+  ).toHaveText("2 selected · choose 1–3");
+});
+
+test("card targets remain visible, bounded, and usable with accessibility media", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 820, height: 600 });
+  await page.emulateMedia({ forcedColors: "active", reducedMotion: "reduce" });
+  const dialog = await open(page, "card-list-target-chrome");
+  const dialogBox = await rect(dialog);
+  expect(dialogBox.x).toBeGreaterThanOrEqual(0);
+  expect(dialogBox.y).toBeGreaterThanOrEqual(0);
+  expect(dialogBox.right).toBeLessThanOrEqual(820);
+  expect(dialogBox.bottom).toBeLessThanOrEqual(600);
+
+  const firstTile = page.locator(tileSelector).first();
+  await firstTile.hover({ position: { x: 72, y: 50 } });
+  const firstImage = firstTile.locator("img");
+  await expect.poll(() => computed(firstImage, "transform")).toBe("none");
+  await expect
+    .poll(async () =>
+      Number.parseFloat(await computed(firstImage, "transition-duration")),
+    )
+    .toBeLessThanOrEqual(0.00001);
+
+  const badge = firstTile.locator(".zone-list-entry__zone");
+  if ((await badge.count()) > 0) {
+    await expect
+      .poll(async () => {
+        const badgeBox = await rect(badge);
+        const artBox = await rect(firstImage);
+        return Math.abs(artBox.y - badgeBox.bottom - 5);
+      })
+      .toBeLessThanOrEqual(1.5);
+  }
+  const chip = firstTile
+    .locator(".card-action-chips, .projected-choice-menu")
+    .first();
+  if ((await chip.count()) > 0) {
+    await expect(chip).toBeVisible();
+    const chipBox = await rect(chip);
+    const artBox = await rect(firstImage);
+    expect(Math.abs(chipBox.y - artBox.bottom + 2)).toBeLessThanOrEqual(1.5);
+  }
+
+  const firstTarget = (await targetButtons(page)).first();
+  await firstTarget.focus();
+  await expect(firstTarget).toBeFocused();
+  expect(
+    Number.parseFloat(await computed(firstTarget, "outline-width")),
+  ).toBeGreaterThan(0);
+  const buttonBox = await rect(firstTarget);
+  expect(buttonBox.width).toBeGreaterThanOrEqual(44);
+  expect(buttonBox.height).toBeGreaterThanOrEqual(44);
+  await page.keyboard.press("Enter");
+  await expect(
+    page.locator('[data-cy="zone-list-dialog-selection-count"]'),
+  ).toContainText("1 selected");
 });

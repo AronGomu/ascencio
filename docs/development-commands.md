@@ -78,3 +78,21 @@ Pass command arguments after `--`. Conversion and compilation accept `--help`. L
 `npm test` is equivalent to `npm run test`. Aggregate checks intentionally retain their existing coverage; a successful `check` is not native Rust, actual desktop, external-opener or physical-device acceptance.
 
 Actual desktop recovery uses `node scripts/verify-native-startup-recovery.ts <new-report.json>` with the isolated opt-in native-acceptance build. See [startup I/O evidence](architecture/06-quality/startup-io-evidence.md) for instrumentation and capture limits.
+
+## Test collection and separate acceptance gates
+
+CI runs `check:headless` once in an isolated offline checkout, then runs `check:frontend-and-browser` in the original checkout. `npm run check` still runs both groups locally.
+
+| Command | Evidence |
+| --- | --- |
+| `npm run test:browser:collection` | Runs Playwright collection for native, visual acceptance, and resource configurations. Fails for omitted active specs, skipped collected cases, and unaccounted browser files. Writes `generated/tests/browser-collection.json`, including the explicit legacy exclusions. |
+| `npm run test:release:readiness` | Checks the real checkout's acquired content. Ordinary readiness unit tests use complete and incomplete temporary roots. |
+| `npm run test:native:io-acceptance` | Sets `ASCENCIO_IO_TRACE=1` and runs the two ignored native writer I/O tests serially. Fails if either test is missing. Ordinary Cargo success does not establish this acceptance. |
+| `npm run test:browser:resources` | Uses a production frontend build and the native IPC fixture. Measures actual Worker lifetimes, object URLs, main-thread heap after garbage collection, and field focus feedback. Writes browser results and budget evidence under `generated/tests/resource/`. |
+| `npm run test:runner-timing -- tests/unit/content-tooling-gates.test.ts` | Records environment creation, worker preparation, setup-file imports, collection/imports, and tests/hooks separately in `generated/tests/runner-timing.json`. Set `TEST_TIMING_OUTPUT` to retain multiple runs. |
+
+The resource workflow runs on Ubuntu 24.04 in the Playwright 1.61.1 Noble image with Node 26.4.0, one browser worker, a 1280 by 720 viewport, and fourfold Chromium CPU throttling. It is an explicit workflow-dispatch acceptance gate. The VM hardware is not fixed. Local results record their actual operating system and browser version and do not substitute for a run in that workflow. The heap budget permits at most 8 MiB of growth over five measured teardown cycles after one warm-up cycle. Workers and image URLs must return to zero after every exit. Focus feedback uses the existing 100 ms p95 budget and ends after two animation frames; it does not measure engine-update latency or native handles.
+
+Runner timing preserves Vitest's worker isolation. Per-file worker durations can overlap and must not be summed as wall time. Tests/hooks include fixture work inside hooks; collection includes module imports and suite callbacks. Use repeated alternating runs before claiming that consolidation or fixture caching improves performance.
+
+Nine specs in `e2e/e2e-global` retain the retired browser fixture and remain explicitly uncollected. Their presence is not evidence of native browser coverage. Portrait, admin, scrollbar, and emitted-font specs now run in the native or production resource configurations. Current native journeys and visual acceptance cases protect additional ported behavior. The collection report lists collected cases and remaining legacy files separately.

@@ -45,7 +45,7 @@ export async function expectEmittedFonts(page: Page, appUrl: string) {
     expect(bytes.subarray(0, 4).toString()).toBe("wOF2");
     expect(createHash("sha256").update(bytes).digest("hex")).toBe(
       createHash("sha256")
-        .update(await readFile(`src/assets/fonts/${filename}.woff2`))
+        .update(await readFile(`assets/app/fonts/${filename}.woff2`))
         .digest("hex"),
     );
     expect(

@@ -71,7 +71,7 @@ async function files(directory: string): Promise<string[]> {
     .flat()
     .sort();
 }
-async function request(port: number, requestPath: string) {
+async function request(port: number, requestPath: string, timeoutMs = 10_000) {
   return new Promise<{ status: number; body: string; contentType: string }>(
     (resolve, reject) => {
       const req = http
@@ -92,8 +92,12 @@ async function request(port: number, requestPath: string) {
           error.message += ` (${requestPath})`;
           reject(error);
         });
-      req.setTimeout(10_000, () => {
-        req.destroy(new Error("HTTP boundary request timed out"));
+      req.setTimeout(timeoutMs, () => {
+        req.destroy(
+          new Error(
+            `HTTP request timed out after ${timeoutMs}ms for ${requestPath}`,
+          ),
+        );
       });
     },
   );
@@ -142,6 +146,8 @@ describe("app/content build boundary", () => {
       const address = server.httpServer!.address();
       if (address === null || typeof address === "string")
         throw new Error("No HTTP listener");
+      const client = await request(address.port, "/@vite/client", 60_000);
+      expect(client.status, "Vite client readiness/compilation").toBe(200);
       for (const file of [
         "assets-alias/content/not-created/deep",
         "generated-alias/content-packages/not-created/deep",
@@ -162,7 +168,6 @@ describe("app/content build boundary", () => {
       );
       expect(missing.status).toBe(200);
       expect(missing.contentType).toContain("text/html");
-      expect((await request(address.port, "/@vite/client")).status).toBe(200);
     } finally {
       await server?.close();
       await chmod(path.join(target, "locked"), 0o700);

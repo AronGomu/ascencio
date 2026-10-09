@@ -11,6 +11,7 @@ it("launch, build and browser hooks resolve every referenced npm command", () =>
     readFileSync("src-tauri/tauri.conf.json", "utf8"),
     readFileSync("playwright.native.config.ts", "utf8"),
     readFileSync("playwright.acceptance.config.ts", "utf8"),
+    readFileSync("playwright.resource.config.ts", "utf8"),
     readFileSync(".github/workflows/ci.yml", "utf8"),
   ];
   for (const hook of hooks)
@@ -42,7 +43,9 @@ it("app-only browser sources remain in standard format, lint, typecheck and CI g
   expect(pkg.scripts["check:headless"]).toContain("npm run lint");
   expect(pkg.scripts["check:headless"]).toContain("npm run typecheck");
   expect(pkg.scripts.check).toContain("npm run check:headless");
-  expect(readFileSync(".github/workflows/ci.yml", "utf8")).toMatch(
-    /^\s+run: npm run check$/m,
+  const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
+  const commands = [...workflow.matchAll(/npm run (check[\w:-]*)/g)].map(
+    ([, name]) => name,
   );
+  expect(commands).toEqual(["check:headless", "check:frontend-and-browser"]);
 });

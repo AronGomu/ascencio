@@ -6,6 +6,16 @@ import type {
   CriticalSnapshot,
 } from "../../src/storage/contracts/critical-snapshot.ts";
 
+export interface NativeTestControl {
+  failNextUserCommitContaining(fragment: string): Promise<void>;
+}
+
+declare global {
+  interface Window {
+    nativeTestControl: NativeTestControl;
+  }
+}
+
 /** Readable resource bridge only. Actual Rust filesystem/decoder acceptance is separate. */
 export async function installNativeContentBridge(page: Page): Promise<void> {
   const folder = path.resolve(
@@ -31,6 +41,7 @@ export async function installNativeContentBridge(page: Page): Promise<void> {
   );
   let userJson: string | null = null;
   let userRevision = 0;
+  let failNextUserCommitContaining: string | null = null;
   const log = {
     sessionId: "fixture",
     path: null,
@@ -69,13 +80,26 @@ export async function installNativeContentBridge(page: Page): Promise<void> {
         case "native_user_json_open":
           return { sessionId: "fixture-writer", source: userJson };
         case "native_user_json_commit": {
+          const source = String(args.source);
+          if (
+            failNextUserCommitContaining !== null &&
+            source.includes(failNextUserCommitContaining)
+          ) {
+            failNextUserCommitContaining = null;
+            return { kind: "failed", error: { code: "STORAGE_CONFLICT" } };
+          }
           if (args.expectedRevision !== userRevision)
             return { kind: "failed", error: { code: "STORAGE_CONFLICT" } };
-          userJson = String(args.source);
+          userJson = source;
           userRevision = (JSON.parse(userJson) as { revision: number })
             .revision;
           return { kind: "ok", value: null };
         }
+        case "native_test_fail_next_user_commit":
+          if (typeof args.fragment !== "string" || args.fragment.length === 0)
+            throw new Error("A non-empty commit fragment is required");
+          failNextUserCommitContaining = args.fragment;
+          return;
         case "native_live_media_revision":
         case "native_live_media_read": {
           const snapshot = snapshots.find(
@@ -143,5 +167,14 @@ export async function installNativeContentBridge(page: Page): Promise<void> {
         return value;
       },
     };
+    Object.defineProperty(globalThis, "nativeTestControl", {
+      value: Object.freeze({
+        failNextUserCommitContaining: async (fragment: string) => {
+          await runtime.nativeTestInvoke("native_test_fail_next_user_commit", {
+            fragment,
+          });
+        },
+      }),
+    });
   });
 }

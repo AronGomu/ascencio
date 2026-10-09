@@ -6,6 +6,7 @@ import {
 import { unlinkSync, rmdirSync, existsSync } from "node:fs";
 import { expect, it, vi } from "vitest";
 import { packageQueryFixture } from "../fixtures/package-query.ts";
+import { normalizedCatalogSource } from "../fixtures/normalized-content-source.ts";
 import { loadFreeplayInputs } from "../../src/shell/adapters/sqlite-freeplay-inputs.ts";
 import { loadStoryInputs } from "../../src/shell/adapters/sqlite-story-inputs.ts";
 import { createSqliteUserServices } from "../../src/shell/adapters/sqlite-user-services.ts";
@@ -18,6 +19,13 @@ import {
 import type { LocalStorageClient } from "../../src/storage/index.ts";
 
 it("domain fixture loads current Freeplay and Story semantic adapters from normalized SQLite", async () => {
+  const firstCatalog = await normalizedCatalogSource();
+  const originalCardCount = firstCatalog.cards.length;
+  firstCatalog.cards.pop();
+  expect((await normalizedCatalogSource()).cards).toHaveLength(
+    originalCardCount,
+  );
+
   const expected = domainCorpusExpectations();
   const fixture = await packageQueryFixture();
   const db = createUserDataFixture();

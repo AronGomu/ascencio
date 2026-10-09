@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { readBounded } from "../../scripts/lib/content-setup-io.ts";
+import { PACKAGE_ASSET_SOURCES } from "../../scripts/lib/asset-roots.ts";
 import { inspectContentSetup } from "../../scripts/lib/content-setup-files.ts";
 import {
   parseChapterSelections,
@@ -10,6 +13,7 @@ import {
   normalizeChapterSource,
   type ChapterSourceCorrections,
 } from "../../scripts/lib/chapter-source-policy.ts";
+import { contentSetupFilesFixture } from "../fixtures/content-setup-files.ts";
 
 const sourceSha256 =
   "b3ac778e5f1b9927554ef8e66185a596c0c35d71ab642b448c952c6c9050496d";
@@ -217,26 +221,53 @@ describe("Chapter 1 authoring scope", () => {
         .map(({ name }) => name),
     ).toContain(emptySetName);
   });
-  it("real readiness accepts verified media plus approved null images without later chronology or orphan blockers", async () => {
-    const report = await inspectContentSetup(process.cwd(), {});
-    expect(report).toMatchObject({ codeReady: true, publishReady: false });
-    expect(
-      report.blockers.some(({ code }) => code === "OWNER_MAPPING_REQUIRED"),
-    ).toBe(false);
-    expect(
-      report.blockers.some(({ detail }) =>
-        detail.includes("empty selected sets"),
-      ),
-    ).toBe(false);
-    for (const obsolete of [
-      "5 undated sets",
-      "509 orphan cards",
-      "1 unassigned in-scope",
-      "six ordered",
-      "Era-date evidence",
-    ])
+  it("accepts complete explicit readiness inputs and rejects an incomplete root", async () => {
+    await mkdir(".tmp", { recursive: true });
+    const completeRoot = await mkdtemp(
+      path.resolve(".tmp/content-authoring-complete-"),
+    );
+    const incompleteRoot = await mkdtemp(
+      path.resolve(".tmp/content-authoring-incomplete-"),
+    );
+    try {
+      await contentSetupFilesFixture(completeRoot);
+      const ready = await inspectContentSetup(completeRoot, {});
+      expect(ready.codeReady).toBe(true);
+      const wasmPath = path.join(
+        completeRoot,
+        "vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm",
+      );
+      const vendorWasm = await readFile(wasmPath);
+      const changedWasm = Buffer.from(vendorWasm);
+      changedWasm[0] = (changedWasm[0] ?? 0) ^ 0xff;
+      await writeFile(wasmPath, changedWasm);
+
+      await contentSetupFilesFixture(incompleteRoot);
       expect(
-        report.blockers.some(({ detail }) => detail.includes(obsolete)),
-      ).toBe(false);
+        await readFile(
+          path.join(
+            incompleteRoot,
+            "vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm",
+          ),
+        ),
+      ).toEqual(vendorWasm);
+      const missing = path.join(
+        incompleteRoot,
+        PACKAGE_ASSET_SOURCES.data.source,
+        "catalog/cards/00.json",
+      );
+      await rm(missing);
+
+      const incomplete = await inspectContentSetup(incompleteRoot, {});
+      expect(incomplete.codeReady).toBe(false);
+      expect(incomplete.blockers).toContainEqual(
+        expect.objectContaining({ code: "SOURCE_COVERAGE_REQUIRED" }),
+      );
+    } finally {
+      await Promise.all([
+        rm(completeRoot, { recursive: true, force: true }),
+        rm(incompleteRoot, { recursive: true, force: true }),
+      ]);
+    }
   });
 });

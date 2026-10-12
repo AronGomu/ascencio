@@ -8,6 +8,7 @@ const PRIVATE_ROOTS = [
   "content/duel-core",
   "content/freeplay",
   "generated/content-packages",
+  "src-tauri/resources",
 ] as const;
 function within(candidate: string, root: string): boolean {
   const relative = path.relative(root, candidate);

@@ -9,10 +9,12 @@ import {
 } from "./scripts/lib/vite-app-assets.ts";
 import { contentSourceDenyPlugin } from "./scripts/lib/vite-content-deny.ts";
 import { syncOnlyVendoredCorePlugin } from "./scripts/lib/vite-sync-core.ts";
+import { browserGameContentPlugin } from "./scripts/lib/vite-game-content.ts";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig((): UserConfig => {
+export default defineConfig(({ command, mode }): UserConfig => {
+  const browserDevelopment = command === "serve" && mode === "browser-dev";
   const developmentPort = Number(process.env.DEV_PORT ?? "4204");
   if (!Number.isSafeInteger(developmentPort) || developmentPort <= 0)
     throw new Error("DEV_PORT must be a positive integer");
@@ -50,11 +52,13 @@ export default defineConfig((): UserConfig => {
     },
     plugins: [
       syncOnlyVendoredCorePlugin(projectRoot),
-      svelte(),
+      svelte(browserDevelopment ? { compilerOptions: { hmr: false } } : {}),
       contentSourceDenyPlugin(projectRoot),
+      browserGameContentPlugin(projectRoot),
       appAssetsPlugin(projectRoot, appBuildId, coreContentApiVersion, boundary),
     ],
     define: {
+      __BROWSER_DEVELOPMENT__: JSON.stringify(browserDevelopment),
       __RUNTIME_MANIFEST_SHA256__: "null",
       __RUNTIME_SNAPSHOT_ID__: "null",
       __ACTIVATION_SNAPSHOT_ID__: "null",

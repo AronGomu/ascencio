@@ -295,6 +295,17 @@ pub fn run() {
         }
     });
     builder
+        .register_asynchronous_uri_scheme_protocol("game-content", |context, request, responder| {
+            let handle = context.app_handle().clone();
+            let webview_label = context.webview_label().to_owned();
+            tauri::async_runtime::spawn_blocking(move || {
+                responder.respond(native_startup::resources::respond(
+                    &handle,
+                    &webview_label,
+                    request,
+                ));
+            });
+        })
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -317,8 +328,6 @@ pub fn run() {
             native_startup::acceptance::native_io_trace_chapter_fixture,
             native_io_trace::native_io_trace_maintenance,
             native_startup::native_startup_load,
-            native_startup::native_startup_metadata,
-            native_startup::native_startup_engine,
             native_startup::native_startup_cancel,
             native_startup::native_startup_close,
             native_startup::native_live_media_read,

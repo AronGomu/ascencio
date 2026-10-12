@@ -1,5 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import type { CriticalSnapshot } from "../contracts/critical-snapshot.ts";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import type {
   LocalStorageClient,
   MediaWarning,
@@ -7,7 +7,6 @@ import type {
   RemovePackageResult,
 } from "../contracts/storage-client.ts";
 import type { StorageResult } from "../contracts/package.ts";
-import { orderPackages } from "../schema/package-manifest.ts";
 import { JsonUserDataStore } from "../json/user-data-store.ts";
 import { createSnapshotCatalog } from "../snapshot/snapshot-catalog.ts";
 import { invokeNative, nativeIoTrace } from "./invoke.ts";
@@ -23,25 +22,15 @@ import type {
 } from "../mods/mod-contracts.ts";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
+import { GameContentReader } from "../transport/game-content-reader.ts";
+import { parseContentDescriptor } from "../transport/content-descriptor.ts";
+import { loadGameContent } from "../transport/load-game-content.ts";
 
 export interface StartupProgress {
   readonly sessionId: string;
   readonly phase: string;
   readonly completed: number;
   readonly total: number;
-}
-interface Descriptor {
-  readonly sessionId: string;
-  readonly generation: number;
-  readonly metadataBytes: number;
-  readonly engineBytes: number;
-  readonly vendorManifest: string;
-  readonly packages: readonly {
-    readonly packageId: string;
-    readonly version: string;
-    readonly bytes: number;
-    readonly sha256: string;
-  }[];
 }
 let prepared: Promise<LocalStorageClient> | null = null;
 
@@ -128,61 +117,19 @@ async function prepare(
   );
   try {
     signal.throwIfAborted();
-    const descriptor = await invokeNative<Descriptor>("native_startup_load", {
-      sessionId,
-    });
+    const descriptor = parseContentDescriptor(
+      await invokeNative<unknown>("native_startup_load", { sessionId }),
+    );
     nativeLoading = false;
     signal.throwIfAborted();
-    if (
-      descriptor.sessionId !== sessionId ||
-      descriptor.metadataBytes > 256 * 1024 * 1024 ||
-      descriptor.engineBytes > 16 * 1024 * 1024
-    )
+    if (descriptor.sessionId !== sessionId)
       throw new Error("STARTUP_TRANSFER_INVALID");
-    const [raw, wasm] = await Promise.all([
-      invokeNative<ArrayBuffer>("native_startup_metadata", { sessionId }),
-      invokeNative<ArrayBuffer>("native_startup_engine", { sessionId }),
-    ]);
-    signal.throwIfAborted();
-    if (
-      !(raw instanceof ArrayBuffer) ||
-      raw.byteLength !== descriptor.metadataBytes ||
-      !(wasm instanceof ArrayBuffer) ||
-      wasm.byteLength !== descriptor.engineBytes
-    )
-      throw new Error("STARTUP_TRANSFER_INVALID");
-    let snapshots = JSON.parse(
-      new TextDecoder("utf-8", { fatal: true }).decode(raw),
-    ) as CriticalSnapshot[];
-    if (
-      !Array.isArray(snapshots) ||
-      snapshots.length !== descriptor.packages.length ||
-      snapshots.length > 64
-    )
-      throw new Error("BASE_ENVELOPE_INVALID");
-    const graph = orderPackages(
-      snapshots.map((s) => s.manifest),
-      [],
+    const reader = new GameContentReader(
+      `${convertFileSrc("", "game-content")}game-content/${sessionId}/`,
     );
-    if (graph.kind === "failed") throw new Error(graph.error.code);
-    let stack: PackageStack = Object.freeze({
-      generation: descriptor.generation,
-      packages: Object.freeze(
-        snapshots.map((snapshot) => {
-          const receipt = descriptor.packages.find(
-            (p) => p.packageId === snapshot.manifest.packageId,
-          );
-          if (!receipt || receipt.version !== snapshot.manifest.version)
-            throw new Error("BASE_ENVELOPE_INVALID");
-          return Object.freeze({
-            ...snapshot.manifest,
-            fileKey: `snapshot:${receipt.packageId}`,
-            bytes: receipt.bytes,
-            sha256: receipt.sha256,
-          });
-        }),
-      ),
-    });
+    const loaded = await loadGameContent(reader, descriptor, signal);
+    let snapshots = loaded.snapshots;
+    let stack: PackageStack = loaded.stack;
     progress({ sessionId, phase: "user-state", completed: 0, total: 1 });
     userData = new JsonUserDataStore(nativeUserJsonBackend());
     const initialized = await userData.initialize();
@@ -200,12 +147,7 @@ async function prepare(
       (p) => `${p.packageId}:${p.version}:${p.sha256}`,
     );
     progress({ sessionId, phase: "user-state", completed: 1, total: 1 });
-    let composition: ContentComposition = {
-      identity: bytesToHex(
-        sha256(new TextEncoder().encode(JSON.stringify(baseIdentities.sort()))),
-      ),
-      requiredMods: [],
-    };
+    let composition: ContentComposition = loaded.composition;
     if (mods.mode === "modded") {
       progress({
         sessionId,
@@ -267,19 +209,6 @@ async function prepare(
     }
     const listeners = new Set<(warning: MediaWarning) => void>();
     const warnings = new Set<string>();
-    const executable = new Map([
-      [
-        "duel-core:engine/ocgcore.sync.wasm",
-        { mime: "application/wasm", bytes: new Uint8Array(wasm) },
-      ],
-      [
-        "duel-core:engine/vendor-manifest.json",
-        {
-          mime: "application/json",
-          bytes: new TextEncoder().encode(descriptor.vendorManifest),
-        },
-      ],
-    ]);
     progress({
       sessionId,
       phase: "domain-projections",
@@ -291,17 +220,10 @@ async function prepare(
       async (packageId, mapping, accessSignal) => {
         accessSignal.throwIfAborted();
         try {
-          const bytes = await invokeNative<ArrayBuffer>(
-            "native_live_media_read",
-            { sessionId, packageId, logicalId: mapping.id },
-          );
+          const asset = await reader.media(packageId, mapping, accessSignal);
           accessSignal.throwIfAborted();
-          if (
-            !(bytes instanceof ArrayBuffer) ||
-            bytes.byteLength > 64 * 1024 * 1024
-          )
-            return null;
-          return { mime: mapping.mime, bytes: new Uint8Array(bytes) };
+          if (asset) return asset;
+          throw new Error("MEDIA_UNREADABLE");
         } catch (error) {
           if (accessSignal.aborted) throw error;
           const key = `${packageId}:${mapping.id}`;
@@ -313,12 +235,13 @@ async function prepare(
           return null;
         }
       },
-      executable,
+      loaded.executable,
       async (packageId, mapping, accessSignal) => {
         accessSignal.throwIfAborted();
-        const revision = await invokeNative<string | null>(
-          "native_live_media_revision",
-          { sessionId, packageId, logicalId: mapping.id },
+        const revision = await reader.revision(
+          packageId,
+          mapping,
+          accessSignal,
         );
         accessSignal.throwIfAborted();
         return revision;

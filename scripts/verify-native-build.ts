@@ -91,6 +91,7 @@ const forbidden = [
   "indexedDB.open",
   "sqlite3-opfs",
   "ascencio:user-data:v1",
+  "ascencio:browser-development:user-data:v1",
   "duel.worker-node",
   "mvp-preset-node",
   "node_modules/ocgcore-wasm",

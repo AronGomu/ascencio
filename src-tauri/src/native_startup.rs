@@ -23,6 +23,7 @@ const TRUSTED_RELEASE: &str = include_str!(concat!(env!("OUT_DIR"), "/critical-r
 #[cfg(any(debug_assertions, feature = "native-acceptance"))]
 pub(crate) mod acceptance;
 pub(crate) mod maintenance;
+pub(crate) mod resources;
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -70,7 +71,9 @@ pub(crate) struct Prepared {
     generation: u64,
     packages: Vec<PackResource>,
     metadata_bytes: usize,
+    metadata_sha256: String,
     engine_bytes: usize,
+    engine_sha256: String,
     vendor_manifest: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     io_trace_session_id: Option<String>,
@@ -441,7 +444,9 @@ fn load(handle: tauri::AppHandle, session: Arc<Session>) -> Result<Prepared, Str
         generation: maintenance::generation(&selected),
         packages: release.packages,
         metadata_bytes: metadata.len(),
+        metadata_sha256: digest(&metadata),
         engine_bytes: engine.len(),
+        engine_sha256: digest(&engine),
         vendor_manifest: vendor_manifest.ok_or("ENGINE_MANIFEST_MISSING")?,
         io_trace_session_id: native_io_trace::session_id(),
     };
@@ -569,38 +574,6 @@ pub(crate) async fn native_startup_load(
         }
     }
     result
-}
-#[tauri::command]
-pub(crate) fn native_startup_metadata(
-    state: tauri::State<'_, StartupState>,
-    session_id: String,
-) -> Result<tauri::ipc::Response, String> {
-    let current = session(&state, &session_id)?;
-    cancelled(&current)?;
-    let bytes = current
-        .data
-        .lock()
-        .map_err(|e| e.to_string())?
-        .metadata
-        .take()
-        .ok_or("STARTUP_TRANSFER_CONSUMED")?;
-    Ok(tauri::ipc::Response::new(bytes))
-}
-#[tauri::command]
-pub(crate) fn native_startup_engine(
-    state: tauri::State<'_, StartupState>,
-    session_id: String,
-) -> Result<tauri::ipc::Response, String> {
-    let current = session(&state, &session_id)?;
-    cancelled(&current)?;
-    let bytes = current
-        .data
-        .lock()
-        .map_err(|e| e.to_string())?
-        .engine
-        .take()
-        .ok_or("STARTUP_TRANSFER_CONSUMED")?;
-    Ok(tauri::ipc::Response::new(bytes))
 }
 #[tauri::command]
 pub(crate) fn native_startup_cancel(

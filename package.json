@@ -29,6 +29,8 @@
     "content:source-manifest:verify": "node scripts/verify-runtime-snapshot.ts",
     "content:shop-sets:fetch-and-generate": "node scripts/generate-shop-sets.ts",
     "frontend:dev": "vite",
+    "prebrowser:dev": "node scripts/prepare-browser-content.ts",
+    "browser:dev": "vite --mode browser-dev",
     "frontend:build": "npm run vendor:verify && npm run frontend:bundle && npm run frontend:verify",
     "frontend:bundle": "vite build --mode native",
     "frontend:verify": "node scripts/verify-native-build.ts",

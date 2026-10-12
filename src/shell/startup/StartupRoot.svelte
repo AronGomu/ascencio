@@ -6,9 +6,10 @@
   import { isNativeApp } from "../native/content.ts";
   import {
     invokeNative,
-    prepareNativeStorage,
-    closePreparedNativeStorage,
-    flushPreparedNativeStorage,
+    prepareApplicationStorage,
+    closePreparedApplicationStorage,
+    flushPreparedApplicationStorage,
+    resetBrowserDevelopmentSaves,
     type StartupLogStatus,
   } from "../../storage/index.ts";
   import {
@@ -42,11 +43,12 @@
   let exiting = false;
   let maintenance = false;
   let maintenanceBusy = true;
+  const browserDevelopment = __BROWSER_DEVELOPMENT__ && !isNativeApp();
   async function restart() {
-    await flushPreparedNativeStorage();
+    await flushPreparedApplicationStorage();
     ready = false;
     await closeCoreStartup();
-    await closePreparedNativeStorage();
+    await closePreparedApplicationStorage();
     maintenance = false;
     await retry();
   }
@@ -55,10 +57,10 @@
     exiting = true;
     controller.abort();
     try {
-      await flushPreparedNativeStorage();
+      await flushPreparedApplicationStorage();
       ready = false;
       await closeCoreStartup();
-      await closePreparedNativeStorage();
+      await closePreparedApplicationStorage();
       await invokeNative("native_startup_quit");
     } catch (error) {
       exitError = error instanceof Error ? error.message : String(error);
@@ -72,7 +74,7 @@
     percentage = 0;
     try {
       await closeCoreStartup();
-      await closePreparedNativeStorage();
+      await closePreparedApplicationStorage();
       await invokeNative("native_startup_repair");
     } finally {
       running = false;
@@ -87,20 +89,24 @@
     phase = "Preparing application…";
     percentage = 0;
     try {
-      if (!isNativeApp())
+      if (!isNativeApp() && !browserDevelopment)
         throw new Error("Open this application through Tauri.");
-      try {
-        log = { ...(await readStartupLog()), diagnostics: [] };
-      } catch (error) {
-        log = { ...emptyStartupLog, loggingError: String(error) };
+      if (isNativeApp()) {
+        try {
+          log = { ...(await readStartupLog()), diagnostics: [] };
+        } catch (error) {
+          log = { ...emptyStartupLog, loggingError: String(error) };
+        }
       }
-      phase = "Verifying installed content…";
+      phase = browserDevelopment
+        ? "Loading development content…"
+        : "Verifying installed content…";
       percentage = startupPercentage({
         phase: "startup",
         completed: 1,
         total: 1,
       });
-      await prepareNativeStorage(controller.signal, (progress) => {
+      await prepareApplicationStorage(controller.signal, (progress) => {
         if (!alive) return;
         percentage = Math.max(percentage, startupPercentage(progress));
         phase = `${progress.phase.replaceAll("-", " ")}${progress.total > 0 ? ` (${progress.completed}/${progress.total})` : progress.completed > 0 ? ` (${progress.completed} files)` : ""}…`;
@@ -142,7 +148,9 @@
       for (const diagnostic of startupDiagnostics(error)) {
         try {
           const diagnostics = [...log.diagnostics, diagnostic].slice(0, 256);
-          log = { ...(await recordStartupDiagnostic(diagnostic)), diagnostics };
+          log = isNativeApp()
+            ? { ...(await recordStartupDiagnostic(diagnostic)), diagnostics }
+            : { ...log, diagnostics };
         } catch (loggingError) {
           log = {
             ...log,
@@ -163,7 +171,7 @@
   async function retry() {
     controller.abort();
     await closeCoreStartup();
-    await closePreparedNativeStorage();
+    await closePreparedApplicationStorage();
     controller = new AbortController();
     log = emptyStartupLog;
     await attempt();
@@ -176,6 +184,20 @@
       actionMessage = error instanceof Error ? error.message : String(error);
       queueMicrotask(() => heading?.focus());
     }
+  }
+  async function resetBrowserSaves() {
+    controller.abort();
+    ready = false;
+    for (const close of [closeCoreStartup, closePreparedApplicationStorage]) {
+      try {
+        await close();
+      } catch (error) {
+        // Explicit reset discards development saves even if their final write failed.
+        console.warn("Browser save reset: session shutdown failed", error);
+      }
+    }
+    await resetBrowserDevelopmentSaves();
+    await retry();
   }
   async function copyError() {
     const details = {
@@ -255,6 +277,23 @@
   });
 </script>
 
+{#if browserDevelopment}
+  <aside
+    data-cy="browser-development-tools"
+    class="browser-development-tools"
+    aria-label="Browser development"
+  >
+    <button
+      data-cy="browser-reset-saves"
+      disabled={running}
+      on:click={() => action(resetBrowserSaves)}>Reset browser saves</button
+    >
+    {#if actionMessage}<p data-cy="browser-reset-error" role="alert">
+        {actionMessage}
+      </p>{/if}
+  </aside>
+{/if}
+
 {#if ready && exitError}<p
     data-cy="startup-exit-error"
     class="exit-error"
@@ -299,27 +338,32 @@
         <div data-cy="startup-actions" class="actions">
           <button
             data-cy="startup-repair-content"
-            disabled={!canRestore || exiting}
-            title={canRestore
-              ? "Restore bundled critical content and retry startup"
-              : "This error cannot be repaired by restoring bundled content"}
-            on:click={() => action(repairContent)}>Restore</button
+            disabled={!browserDevelopment && (!canRestore || exiting)}
+            title={browserDevelopment
+              ? "Retry development startup"
+              : canRestore
+                ? "Restore bundled critical content and retry startup"
+                : "This error cannot be repaired by restoring bundled content"}
+            on:click={() => action(browserDevelopment ? retry : repairContent)}
+            >{browserDevelopment ? "Retry" : "Restore"}</button
           >
-          <button
-            data-cy="startup-open-log"
-            disabled={!log.path || exiting}
-            on:click={() => action(() => openStartupLog())}>Open Log</button
-          >
+          {#if isNativeApp()}
+            <button
+              data-cy="startup-open-log"
+              disabled={!log.path || exiting}
+              on:click={() => action(() => openStartupLog())}>Open Log</button
+            >
+          {/if}
           <button
             data-cy="startup-copy-details"
             disabled={exiting}
             on:click={copyError}>Copy Error</button
           >
-          <button
-            data-cy="startup-quit"
-            disabled={exiting}
-            on:click={() => action(quit)}>Close</button
-          >
+          {#if isNativeApp()}<button
+              data-cy="startup-quit"
+              disabled={exiting}
+              on:click={() => action(quit)}>Close</button
+            >{/if}
         </div>
       {:else}
         <p data-cy="startup-status" role="status" aria-live="polite">
@@ -333,6 +377,17 @@
 {/if}
 
 <style>
+  .browser-development-tools {
+    position: fixed;
+    z-index: 10000;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    max-width: 24rem;
+  }
+  .browser-development-tools button {
+    background: var(--panel);
+    font-size: 0.75rem;
+  }
   .exit-error {
     position: fixed;
     z-index: 10000;

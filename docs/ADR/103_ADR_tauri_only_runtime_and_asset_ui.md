@@ -2,6 +2,8 @@
 
 Status: accepted, implemented 2026-10-01.
 
+[ADR-105](105_ADR_browser_development_and_shared_content_transport.md) adds a development-only browser mode with fixed content and isolated saves. It supersedes this ADR's prohibition on browser development adapters. Production remains Tauri.
+
 [ADR-104](104_ADR_startup_memory_content_and_mod_overrides.md) records the implemented content/persistence/media architecture: verified startup snapshots, readable JSON/mod overrides, memory-only critical reads after startup, live optional media and early diagnostic logs. This ADR continues to own the implemented Tauri-only platform and presentation baseline.
 
 ## Decision

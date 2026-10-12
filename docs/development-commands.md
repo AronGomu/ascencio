@@ -4,13 +4,16 @@ Use Node 26 or newer. `package.json` is the executable command registry. Names d
 
 For an ordinary desktop launch on Linux, macOS or Windows, use `npm start`. For unattended builds use `npm start -- --headless --debug`; this opens no desktop window. Fresh clones first run `npm ci` and `npm run setup`; see [desktop setup](desktop-setup.md). Preserve an already-running owner session. Unset acceptance/recovery instrumentation variables for ordinary launches. A plain Cargo release build can still target the development URL; standalone launches require Tauri custom-protocol support.
 
-| Command         | Scope                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `npm run setup` | Restore tracked source inputs, acquire assets and verify native content staging. `-- --offline` uses complete caches. |
-| `npm run build` | Build the standalone native app without opening a window or packaging an installer.                                   |
-| `npm start`     | Build through Tauri and launch the appropriate Windows or Unix executable. `-- --headless` stops after building.      |
+| Command               | Scope                                                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run setup`       | Restore tracked source inputs, acquire assets and verify native content staging. `-- --offline` uses complete caches.            |
+| `npm run build`       | Build the standalone native app without opening a window or packaging an installer.                                              |
+| `npm start`           | Build through Tauri and launch the appropriate Windows or Unix executable. `-- --headless` stops after building.                 |
+| `npm run browser:dev` | Verify/reuse staged content, prepare it if needed, and serve the real game in development-only browser mode with isolated saves. |
 
 Pass command arguments after `--`. Conversion and compilation accept `--help`. Legacy commands remain available for historical recovery; they do not define the current gameplay content authority.
+
+`prebrowser:dev` runs automatically before `browser:dev`. It does not change the tracked release or acquire missing upstream sources. See [browser development boundaries](ADR/105_ADR_browser_development_and_shared_content_transport.md).
 
 | ID  | Command                                               | Scope                                                                                                                                                                                                                                         |
 | --- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -83,13 +86,13 @@ Actual desktop recovery uses `node scripts/verify-native-startup-recovery.ts <ne
 
 CI runs `check:headless` once in an isolated offline checkout, then runs `check:frontend-and-browser` in the original checkout. `npm run check` still runs both groups locally.
 
-| Command | Evidence |
-| --- | --- |
-| `npm run test:browser:collection` | Runs Playwright collection for native, visual acceptance, and resource configurations. Fails for omitted active specs, skipped collected cases, and unaccounted browser files. Writes `generated/tests/browser-collection.json`, including the explicit legacy exclusions. |
-| `npm run test:release:readiness` | Checks the real checkout's acquired content. Ordinary readiness unit tests use complete and incomplete temporary roots. |
-| `npm run test:native:io-acceptance` | Sets `ASCENCIO_IO_TRACE=1` and runs the two ignored native writer I/O tests serially. Fails if either test is missing. Ordinary Cargo success does not establish this acceptance. |
-| `npm run test:browser:resources` | Uses a production frontend build and the native IPC fixture. Measures actual Worker lifetimes, object URLs, main-thread heap after garbage collection, and field focus feedback. Writes browser results and budget evidence under `generated/tests/resource/`. |
-| `npm run test:runner-timing -- tests/unit/content-tooling-gates.test.ts` | Records environment creation, worker preparation, setup-file imports, collection/imports, and tests/hooks separately in `generated/tests/runner-timing.json`. Set `TEST_TIMING_OUTPUT` to retain multiple runs. |
+| Command                                                                  | Evidence                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run test:browser:collection`                                        | Runs Playwright collection for native, visual acceptance, and resource configurations. Fails for omitted active specs, skipped collected cases, and unaccounted browser files. Writes `generated/tests/browser-collection.json`, including the explicit legacy exclusions. |
+| `npm run test:release:readiness`                                         | Checks the real checkout's acquired content. Ordinary readiness unit tests use complete and incomplete temporary roots.                                                                                                                                                    |
+| `npm run test:native:io-acceptance`                                      | Sets `ASCENCIO_IO_TRACE=1` and runs the two ignored native writer I/O tests serially. Fails if either test is missing. Ordinary Cargo success does not establish this acceptance.                                                                                          |
+| `npm run test:browser:resources`                                         | Uses a production frontend build and the native IPC fixture. Measures actual Worker lifetimes, object URLs, main-thread heap after garbage collection, and field focus feedback. Writes browser results and budget evidence under `generated/tests/resource/`.             |
+| `npm run test:runner-timing -- tests/unit/content-tooling-gates.test.ts` | Records environment creation, worker preparation, setup-file imports, collection/imports, and tests/hooks separately in `generated/tests/runner-timing.json`. Set `TEST_TIMING_OUTPUT` to retain multiple runs.                                                            |
 
 The resource workflow runs on Ubuntu 24.04 in the Playwright 1.61.1 Noble image with Node 26.4.0, one browser worker, a 1280 by 720 viewport, and fourfold Chromium CPU throttling. It is an explicit workflow-dispatch acceptance gate. The VM hardware is not fixed. Local results record their actual operating system and browser version and do not substitute for a run in that workflow. The heap budget permits at most 8 MiB of growth over five measured teardown cycles after one warm-up cycle. Workers and image URLs must return to zero after every exit. Focus feedback uses the existing 100 ms p95 budget and ends after two animation frames; it does not measure engine-update latency or native handles.
 

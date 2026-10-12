@@ -57,6 +57,12 @@ export {
 } from "./schema/package-manifest.ts";
 export { openLocalStorage } from "./create-storage-client.ts";
 export {
+  prepareApplicationStorage,
+  closePreparedApplicationStorage,
+  flushPreparedApplicationStorage,
+  resetBrowserDevelopmentSaves,
+} from "./startup-storage.ts";
+export {
   prepareNativeStorage,
   closePreparedNativeStorage,
   flushPreparedNativeStorage,

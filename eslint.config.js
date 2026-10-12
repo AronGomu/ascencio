@@ -189,6 +189,7 @@ export default tseslint.config(
         __RUNTIME_SNAPSHOT_ID__: "readonly",
         __ACTIVATION_SNAPSHOT_ID__: "readonly",
         __APP_BUILD_ID__: "readonly",
+        __BROWSER_DEVELOPMENT__: "readonly",
         __ACTIVE_IMAGE_MANIFEST_SHA256__: "readonly",
         __ACTIVE_IMAGE_MANIFEST__: "readonly",
         __ACTIVE_CARD_TEXTS__: "readonly",

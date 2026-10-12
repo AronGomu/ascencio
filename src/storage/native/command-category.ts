@@ -23,7 +23,6 @@ export function nativeCommandCategory(
 ): IoCategory {
   if (command.startsWith("native_startup_log_")) return "diagnostics";
   if (command.startsWith("native_live_media_")) return "media";
-  if (command === "native_startup_engine") return "engine";
   if (
     [
       "native_startup_close",

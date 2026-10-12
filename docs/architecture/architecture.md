@@ -6,6 +6,10 @@
 
 This is the canonical architecture entry point. Detailed decisions are intentionally atomic and grouped by concern so humans and AI can load only the context needed for a task.
 
+## Browser development and content transport
+
+[ADR-105](../ADR/105_ADR_browser_development_and_shared_content_transport.md) adds fixed-content browser development for real Freeplay and Chapter 1 player flows. Browser Vite and the native `game-content` protocol expose one JavaScript fetch reader. Browser saves use an isolated development key. Production remains Tauri, with native installation, mods, and atomic saves.
+
 ## Startup memory content architecture
 
 [ADR-104](../ADR/104_ADR_startup_memory_content_and_mod_overrides.md) defines the implemented startup-memory architecture: readable per-card/set/deck/story JSON sources compiled into trusted base snapshots; enabled mods validated and composed through explicit overrides; all critical and user data resident after startup; one ordered native writer without disk rereads; live noncritical media with nonfatal fallbacks; and early structured diagnostics with direct log access. It replaces conflicting content-transport/read-lifetime clauses, while retaining native-only runtime, domain boundaries and frozen Worker engine ownership. Production SQL handlers and user read-before-write paths are removed. Physical mobile acceptance and a pre-change native baseline remain pending.

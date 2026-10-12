@@ -63,6 +63,24 @@ the standalone executable and opens no window. The desktop GUI itself has no
 headless gameplay service. Use browser fixtures and Rust tests for unattended
 validation. `npm run native:desktop:dev` explicitly opens development mode.
 
+## Open the browser development preview
+
+After setup, run:
+
+```sh
+npm run browser:dev
+```
+
+Open the local URL printed by Vite. The command verifies existing staged content
+and prepares it when necessary. Browser mode uses the supplied Freeplay and
+Chapter 1 content, the real Worker engine, and separate saves that survive reload.
+Use **Reset browser saves** to start a fresh development session.
+
+Content installation and mods require Tauri. Browser mode is a development tool
+for player flows; it does not establish native packaging or device acceptance.
+See [ADR-105](ADR/105_ADR_browser_development_and_shared_content_transport.md)
+for the shared content reader and environment boundaries.
+
 ## Source inputs
 
 `content/bootstrap-inputs/` preserves the original authoring documents, normalized

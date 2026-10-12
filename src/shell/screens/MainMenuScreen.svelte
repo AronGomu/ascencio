@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
   import { INSTALL_CONTENT_ROUTE } from "../routes.ts";
+  import { isNativeApp } from "../native/content.ts";
   import type { ShellStore } from "../shell-store.ts";
   import ShellSettingsDialog from "./ShellSettingsDialog.svelte";
   import type { GenerationSaveRepository } from "../../story/saves/index.ts";
@@ -26,6 +27,7 @@
      legacy database nor loads the story domain. */
   let hasSave = false;
   let settingsOpen = false;
+  const contentManagementAvailable = isNativeApp();
 
   onMount(() => {
     if (!resumeAvailable || coreGate.kind !== "ready") return;
@@ -112,6 +114,10 @@
       type="button"
       class="secondary"
       data-cy="main-menu-install-content"
+      disabled={!contentManagementAvailable}
+      title={!contentManagementAvailable
+        ? "Content installation and mods are available in Tauri."
+        : undefined}
       onclick={() => store.navigate(INSTALL_CONTENT_ROUTE)}>Content</button
     >
     <button

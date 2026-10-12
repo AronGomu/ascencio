@@ -12,6 +12,10 @@ This directory contains current project documentation and historical context. Ro
 
 [ADR-104](ADR/104_ADR_startup_memory_content_and_mod_overrides.md) records the implemented move to readable per-entity JSON, verified startup snapshots, app-lifetime memory for critical data and user records, explicit mod overrides, live optional media, and compiler-style startup errors with directly accessible logs. Use [startup content and mod authoring](assets/startup-memory-content.md) for current installation, maintenance, overrides, media and diagnostics. Older SQLite pages below are migration history. Physical mobile acceptance remains pending.
 
+## Browser development preview
+
+Run `npm run browser:dev` after setup to play the supplied Freeplay and Chapter 1 content in a browser. [ADR-105](ADR/105_ADR_browser_development_and_shared_content_transport.md) defines this development-only mode, isolated saves, and the shared browser/native content reader. The product remains Tauri desktop/mobile. See [desktop setup](desktop-setup.md#open-the-browser-development-preview) for launch instructions.
+
 ## Current native runtime
 
 [`TAURI_MIGRATION_SPECIFICATION.md`](TAURI_MIGRATION_SPECIFICATION.md) records the requested desktop/mobile target: bundled offline game content, Free Play entry from the main menu and Visual Novel, accessible manual asset updates, a local build-content cleanup script, and a private Google Drive asset backup. [ADR-100](ADR/100_ADR_tauri_native_sqlite_storage.md) records the native code path and its pending content/device release gates. [ADR-103](ADR/103_ADR_tauri_only_runtime_and_asset_ui.md) retires the browser runtime and records native asset presentation.

@@ -47,3 +47,13 @@ Reference desktop: AMD Ryzen 7 7700, Linux x86_64. Optimized native release with
 - [x] A3. `node scripts/verify-startup-io.ts artifacts/STARTUP_MEMORY_DESKTOP_IO.json`: independent native/frontend no-read gate.
 - [x] A4. Final headless, component, Chromium native bridge, native/default build and frontend reproducibility commands. Verify: recovery continuation logs; 3,005 unit + 9 performance, 58 integration, 1,416 component and 1 native bridge pass; earlier cropped-only visual acceptance passes 41 tests. Rebuilt actual native recovery passes six scenarios in `STARTUP_MEMORY_RECOVERY_COMPLETE_ACCEPTANCE.json`.
 - [ ] A5. Run all three WebKit native bridge projects after matching runtime dependencies are available. Verify: prior launch error `libicudata.so.74` is resolved and all projects execute; no cross-engine green claim before then.
+
+## Browser development and shared content transport (ADR-105)
+
+- [x] B1. Run `npm run browser:dev` after setup. Open the printed URL without a Tauri bridge. Verify: the real main menu appears and Content is disabled. Observed on Windows in the Codex browser, 2026-10-12.
+- [x] B2. Start Freeplay, advance to the opponent turn, and reach a chain response. Verify: real engine actions, card artwork, and legal prompts. Observed 2026-10-12; complete duel progression remains separate.
+- [x] B3. Start New Game, advance to Beat 2, save to manual slot 1, reload, and load that slot. Verify: the saved dialogue returns. Observed 2026-10-12.
+- [ ] B4. Complete the supplied story paths, including choices, chapter duels, shop, deck editing, results, and Continue after reopening the browser.
+- [ ] B5. Click Reset browser saves. Verify: only development progress disappears, the game restarts, and native saves remain unchanged. Repeat after a corrupt development save and a rejected write.
+- [ ] B6. Open two browser tabs. Save conflicting changes. Verify: one write fails visibly instead of replacing newer progress.
+- [ ] B7. In actual Tauri development and a packaged release, exercise metadata, engine, missing media, mod artwork, media replacement, cancelled startup, and restart through the native protocol. Repeat across supported desktop platforms and physical mobile devices. Browser success does not establish this acceptance.

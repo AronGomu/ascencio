@@ -8,6 +8,8 @@ The application prepares all gameplay-critical content and user records at start
 
 ## Relationship to existing decisions
 
+[ADR-105](105_ADR_browser_development_and_shared_content_transport.md) adds fixed-content browser development and a shared fetch transport for base snapshots, engine bytes, and media. Its separate localStorage adapter is development-only. This ADR continues to own native content trust, startup lifetimes, mods, and persistence.
+
 This decision replaces the target runtime's SQLite content transport and repeated content/user-data reads from ADR-099/100/101. It extends ADR-102 with explicit overrides and startup discovery, while preserving dependencies, stable identities, campaign facts, and separation of installed files from save prerequisites. It completes the filesystem-media direction left open by ADR-103. ADR-103's Tauri-only platform, Svelte UI, public domain boundaries, and native app-data storage remain.
 
 The checked-in production runtime now loads digest-pinned JSON snapshots, retains prepared gameplay and user records in memory, and uses scoped live optional media. Rust SQL modules compile only for historical tests; production IPC exposes no SQL queries. Source conversion parity covers 14,794 cards, 13,549 scripts and 207 semantic queries. Desktop release webview acceptance exercises routes, a duel restart and save/continue with zero critical reads after ready. Physical mobile acceptance and a genuine pre-change native performance baseline remain unverified. Browser storage and legacy user-data migration remain retired. The frozen engine, loader resolution, and vendor manifest must not change.

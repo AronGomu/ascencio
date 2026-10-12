@@ -70,7 +70,10 @@ name = "ascencio"
 version = "0.1.0"
 dependencies = [
  "cap-std",
+ "jni",
  "mlua",
+ "ndk",
+ "ndk-sys",
  "rusqlite",
  "serde",
  "serde_json",

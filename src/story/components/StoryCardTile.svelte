@@ -1,4 +1,10 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
+  import { cardCode } from "../../cards/index.ts";
+  import type {
+    CardImageLease,
+    CardImageSource,
+  } from "../../cards/images/index.ts";
   /** One card's art, for every story surface that shows cards: the set list and
       its preview, the sell screen, both reveal screens and the collection. The
       deck editor's tile is the reference, so a card here looks like the same
@@ -11,19 +17,71 @@
       surfaces are mounted at once. */
   export let name: string;
   export let imageUrl: string | null;
+  export let code: number | null = null;
+  export let imageSource: CardImageSource | null = null;
   export let dataCyPrefix: string;
   export let dataCyId: string | number;
 
-  /* Art is a URL by convention for every code, so a card this build packages no
-     image for is the normal case rather than an error: the tile keeps the glyph
+  /* Optional art may be absent, so the tile keeps the glyph
      instead of a broken-image icon. The failure is remembered as the URL that
      failed rather than as a flag, so a tile recycled onto another card is not
      still hiding art because the card before it had none. */
   let failedArtUrl: string | null = null;
-  $: artUrl = imageUrl === failedArtUrl ? null : imageUrl;
+  let leasedUrl: string | null = null;
+  let activeSource: CardImageSource | null = null;
+  let activeCode: number | null = null;
+  let activeAbort: AbortController | null = null;
+  let activeLease: CardImageLease | null = null;
+  let unsubscribeImage: (() => void) | undefined;
+
+  $: synchronize(imageUrl === null ? imageSource : null, code);
+  $: suppliedArtUrl = imageUrl ?? leasedUrl;
+  $: artUrl = suppliedArtUrl === failedArtUrl ? null : suppliedArtUrl;
   /* The card is named in text beside every tile, so the image is decorative
      rather than a second announcement of the same name. */
   $: glyph = name.slice(0, 1).toUpperCase();
+
+  onDestroy(release);
+
+  function release(): void {
+    activeAbort?.abort();
+    activeAbort = null;
+    unsubscribeImage?.();
+    unsubscribeImage = undefined;
+    activeLease?.release();
+    activeLease = null;
+    leasedUrl = null;
+  }
+
+  function synchronize(
+    source: CardImageSource | null,
+    nextCode: number | null,
+  ): void {
+    if (source === activeSource && nextCode === activeCode) return;
+    release();
+    activeSource = source;
+    activeCode = nextCode;
+    if (source === null || nextCode === null) return;
+    const controller = new AbortController();
+    activeAbort = controller;
+    void source.acquire(cardCode(nextCode), "full", controller.signal).then(
+      (lease) => {
+        if (controller.signal.aborted || activeAbort !== controller) {
+          lease?.release();
+          return;
+        }
+        activeLease = lease;
+        leasedUrl = lease?.url || null;
+        unsubscribeImage = lease?.subscribe?.((url) => {
+          leasedUrl = url || null;
+        });
+      },
+      (error: unknown) => {
+        if (!controller.signal.aborted)
+          console.error({ event: "story.card-tile.image.failed", err: error });
+      },
+    );
+  }
 </script>
 
 {#if artUrl !== null}

@@ -57,3 +57,10 @@ Reference desktop: AMD Ryzen 7 7700, Linux x86_64. Optimized native release with
 - [ ] B5. Click Reset browser saves. Verify: only development progress disappears, the game restarts, and native saves remain unchanged. Repeat after a corrupt development save and a rejected write.
 - [ ] B6. Open two browser tabs. Save conflicting changes. Verify: one write fails visibly instead of replacing newer progress.
 - [ ] B7. In actual Tauri development and a packaged release, exercise metadata, engine, missing media, mod artwork, media replacement, cancelled startup, and restart through the native protocol. Repeat across supported desktop platforms and physical mobile devices. Browser success does not establish this acceptance.
+
+## Local and remote test workflow integration
+
+- [ ] T1. Run `npm test -- --tests tests/run-tests.test.ts --list`. Verify: only the requested test file is selected and no test command executes during the preview.
+- [ ] T2. When explicitly requesting the original complete test sequence, run `npm run test:all`. Verify: tooling, unit/performance, component and integration groups run in that order, stopping at the first failed command.
+- [ ] T3. Run `npm test -- --full --list`. Verify: the complete `check` pipeline is previewed, including content, frontend and browser gates; actual full-pipeline execution remains an explicit owner choice.
+- [ ] T4. Open the Freeplay collection with native media available. Verify: optional card artwork loads, unavailable artwork keeps its placeholder, and leaving the collection releases its image resources. Repeat in browser development and with a replaced media file.

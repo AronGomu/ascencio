@@ -9,3 +9,4 @@ test-results/
 vendor/
 dist/
 generated/
+artifacts/codebase-audit-2026-10-09/

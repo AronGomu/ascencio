@@ -29,6 +29,8 @@ Run `npm run test:context` to gather branch-change context and suggested tests f
 
 `npm test -- --full` runs the complete `npm run check` pipeline and requires that explicit full-suite request. Existing CI gates remain the full validation authority; targeted local results must be described as targeted validation.
 
+`npm run test:all` preserves the original tooling, unit/performance, component and integration test sequence. It stops at the first failing command and requires an explicit request for that complete four-part suite.
+
 ## Knowledge graph (graphify) — use first
 
 `graphify-out/` holds a built knowledge graph of this repository (14111 nodes, 39077 edges, 531 labelled communities).
@@ -217,3 +219,7 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 ```
 
 Generated assets, caches, and `node_modules/` are not source and remain ignored. Story systems, deck editing, progression, and multiplayer are outside the MVP.
+
+## Task management
+
+This project uses a CLI ticket system for task management. Tickets live in `tickets/`. The `tk` CLI defaults to `.tickets/`, so prefix each command with `TICKETS_DIR="$PWD/tickets"` (for example, `TICKETS_DIR="$PWD/tickets" tk help`).

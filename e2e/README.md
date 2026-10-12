@@ -1,13 +1,14 @@
-# End-to-end browser suites
+# Browser fixture suites
 
-All Playwright suites live under this root.
+Product runtime is Tauri desktop/mobile. Browser suites exercise controlled fixtures; they do not launch the packaged native application or establish physical-device acceptance.
 
-| Directory | Configuration | Purpose |
-|---|---|---|
-| `e2e-global/` | `playwright.config.ts` | Production-build tests for the complete application shell and its domains |
-| `e2e-acceptance/` | `playwright.acceptance.config.ts` | Isolated Chromium visual and interaction scenarios served through `acceptance.html` |
-| `e2e-core/` | `playwright.core.config.ts` | Chromium PWA, offline shell, core-source and update-consent lifecycle tests |
+| ID  | Directory         | Configuration / command                                                     | Current role                                                                                |
+| --- | ----------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| E1  | `e2e-native/`     | `playwright.native.config.ts`; `npm run test:browser:native-bridge`         | Native IPC bridge: Chromium desktop plus WebKit compact, desktop and mobile viewports       |
+| E2  | `e2e-acceptance/` | `playwright.acceptance.config.ts`; `npm run test:browser:visual-acceptance` | Isolated Chromium visual fixtures                                                           |
+| E3  | `e2e-global/`     | No active configuration                                                     | Retained historical browser/static/PWA scenarios; not evidence from current aggregate gates |
+| E4  | `e2e-resource/`   | `playwright.resource.config.ts`; `npm run test:browser:resources`             | Production-build resource lifetime, heap and focus-feedback acceptance fixtures             |
 
-The acceptance suite is intentionally separate from the global suite because it enables the build-time `ACCEPTANCE_SCENARIOS=1` harness and targets the dedicated acceptance entry point. It is a populated active suite, not a placeholder directory.
+Root `playwright.config.ts` delegates to the native configuration. The removed `playwright.core.config.ts` and CORE browser lifecycle suite are historical. Native fixtures require prepared test content; inspect [the bridge specification](e2e-native/native-content-bridge.ts) for its resource fixture contract. Generated results are under `generated/tests/`; paths are configured per suite.
 
-Ordinary Playwright results and HTML reports are written beneath `generated/tests/`, grouped by suite. The core suite keeps its repair evidence beneath `artifacts/T10-EVIDENCE/` because that evidence is an explicit review deliverable.
+`npm run check:frontend-and-browser` verifies browser test collection, then runs component tests, frontend build/verification/reproducibility and the native and visual acceptance suites. The resource suite remains a separate acceptance command. `npm run check` also runs headless gates. Rust, SQLite/JSON parity and actual native/device acceptance remain separate; see [testing](../docs/architecture/06-quality/testing.md). Installing Firefox for CI does not configure a Firefox test project.

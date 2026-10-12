@@ -80,12 +80,11 @@ npm start
 
 See [desktop setup](docs/desktop-setup.md) for platform prerequisites, offline recovery and headless validation. Setup and build open no windows. `npm start -- --headless --debug` builds without launching the GUI. Downloads reuse existing Git caches and valid images.
 
-## Public asset delivery setup
+## Native content preparation
 
-- A1. Developer downloads need **no publisher credentials**. Current acquisition remains `assets:bootstrap`; the single anonymous `assets:download` command is planned, not implemented by the setup slice.
-- A2. `npm run assets:setup -- --help` explains read-only preflight. After owner supplies public config, `npm run assets:setup -- --check` validates syntax and reports pending publisher prerequisites without requiring credentials. Optional `--remote --origin <exact-origin>` performs read-only public/S3 probes; repeat `--origin` for actual dev/prod origins. Never provisions or publishes.
-- A3. [Owner setup](docs/assets/asset-delivery-setup.md) frontloads R2/account/domain/CORS/budget/rights/device prerequisites and explicit empty-index bootstrap. Public originals and unreleased bytes require explicit eligibility approval; public availability does not establish rights.
-- A4. Dev metadata truth means matching archive membership and bytes, **not** exhaustive upstream availability or gameplay readiness. Existing `content:setup:verify` remains separate. [Root inventory](docs/assets/asset-root-inventory.md) records the pre-migration mapping; no assets moved in this slice.
+`npm run setup` acquires pinned inputs, prepares readable JSON sources and stages the verified native release. Current transport and authoring are described in [startup content and mods](docs/assets/startup-memory-content.md). [Native release staging](docs/assets/native-content-release.md) documents explicit compile, pin review, staging and verification. Setup does not approve changed pins or public distribution rights.
+
+`npm run assets:bootstrap` is the lower-level acquisition command. Set artwork uses `npm run assets:sets:download-images` and `npm run assets:sets:verify-images`; provider bytes must match the tracked image lock before publication. Unknown or unselected existing set files require review and are preserved on refusal. Hosted/R2 delivery documents describe historical designs, not prerequisites for native launch.
 
 ## Quick asset launchers
 
@@ -109,7 +108,7 @@ Use Node 26 or newer. [Complete command reference](docs/development-commands.md)
 
 | ID  | Command                                                                           | Description                                                                                                                                                     |
 | --- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1  | `npm run native:build-and-start:linux`                                            | Build the standalone desktop application and launch it on Linux. No development server required.                                                                |
+| C1  | `npm start`                                            | Build the standalone desktop application and launch it on Windows, macOS or Linux. No development server required.                                                                |
 | C2  | `npm run native:desktop:dev`                                                      | Launch the native desktop application with its development server.                                                                                              |
 | C3  | `npm run native:desktop:build`                                                    | Prepare content, build the frontend, then build/package the native desktop application.                                                                         |
 | C4  | `npm run frontend:dev`                                                            | Start Vite only; ordinary browser navigation does not provide native IPC.                                                                                       |
@@ -194,18 +193,18 @@ node scripts/sync-assets.ts [options]
 | -------------------------- | ---------------------------: | -------------------------------------------------------- |
 | `--offline`                |                     disabled | Use existing source repositories without fetching.       |
 | `--cache-dir <directory>`  |            `.cache/upstream` | Set the Git source cache directory inside the project.   |
-| `--output <directory>`     | `assets/shared/data/current` | Set the generated snapshot output directory.             |
-| `--babel-ref <ref>`        |                     `master` | Pin a BabelCDB branch, tag, or commit.                   |
-| `--scripts-ref <ref>`      |                     `master` | Pin a CardScripts branch, tag, or commit.                |
-| `--distribution-ref <ref>` |                     `master` | Pin a Project Ignis Distribution branch, tag, or commit. |
+| `--output <directory>`     | `assets/content/card-library/data` | Set the generated snapshot output directory.             |
+| `--babel-ref <ref>`        |                     `assets-source-lock.json` | Require the reviewed BabelCDB lock revision.                   |
+| `--scripts-ref <ref>`      |                     `assets-source-lock.json` | Require the reviewed CardScripts lock revision.                |
+| `--distribution-ref <ref>` |                     `assets-source-lock.json` | Require the reviewed Distribution lock revision. |
 
-Example:
+Explicit revision arguments must equal the reviewed lock; they cannot override it:
 
 ```bash
 node scripts/sync-assets.ts \
-  --babel-ref <commit-or-ref> \
-  --scripts-ref <commit-or-ref> \
-  --distribution-ref <commit-or-ref>
+  --babel-ref <locked-commit> \
+  --scripts-ref <locked-commit> \
+  --distribution-ref <locked-commit>
 ```
 
 Verify the default or a custom generated snapshot:
@@ -223,8 +222,8 @@ node scripts/download-images.ts [options]
 
 | Option                          |                      Default | Description                                                         |
 | ------------------------------- | ---------------------------: | ------------------------------------------------------------------- |
-| `--assets <directory>`          | `assets/shared/data/current` | Set the source image-manifest snapshot.                             |
-| `--output <directory>`          |  `assets/shared/card-images` | Set the local image archive directory.                              |
+| `--assets <directory>`          | `assets/content/card-library/data` | Set the source image-manifest snapshot.                             |
+| `--output <directory>`          |  `assets/content/card-library/images/full` | Set the local image archive directory.                              |
 | `--concurrency <count>`         |                         `18` | Set simultaneous download workers.                                  |
 | `--requests-per-second <count>` |                         `18` | Set request rate; cannot exceed `20`.                               |
 | `--limit <count>`               |                  all records | Process only the first number of image records, useful for testing. |
@@ -242,19 +241,14 @@ node scripts/verify-images.ts
 ## Asset sources and operational output
 
 ```text
-assets/
-├── battle/engine/current/       # Explicit legacy acquisition; vendor stays authoritative
-├── deck-editor/
-├── story/
-└── shared/
-    ├── data/current/           # Catalog, scripts, strings, image metadata
-    ├── runtime/current/
-    ├── card-images/{full,cropped}/
-    ├── card-back.jpg
-    ├── set-images/
-    └── fonts/
-asset-profiles/                 # Tracked ownership rules + nightly selection
-generated/                     # Status, download reports, delivery receipts/outputs
+assets/content/
+├── card-library/data/          # Catalog, scripts and image metadata
+├── card-library/images/       # full/, cropped/, sets/ and card-back.jpg
+└── chapter-01/media/           # Optional story media
+content/                       # Tracked package declarations and authoring inputs
+vendor/ocgcore-wasm/0.1.2/      # Frozen authoritative engine
+src-tauri/resources/           # Verified native release staging
+generated/                    # Ignored conversion, build, reports and test output
 ```
 
 A successful unified run writes `status: "ready"` to `generated/mvp-assets-status.json`. Do not consume a snapshot marked `in-progress` or `failed`.
@@ -274,31 +268,37 @@ Per-duel bounded traces record revisions, process/message ordering, public event
 ## Documentation
 
 - [`AGENTS.md`](AGENTS.md) — concise project context and target architecture
-- [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) — current TDD ticket/dependency plan
+- [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) — completed semantic DOM-field migration history
 - [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) — completed MVP/Phaser baseline plan
 - [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) — asset sources, transformations, integrity guarantees, and observed counts
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`docs/architecture/architecture.md`](docs/architecture/architecture.md) — canonical architecture map and granular decisions
 - [`docs/archive/`](docs/archive/) — superseded technical research and decisions
 
-## Production build and static hosting
+## Native production build
 
 ```bash
-npm run frontend:build
-npm run frontend:preview -- --host 127.0.0.1
+npm run build
+npm start
 ```
 
-Deploy the contents of `dist/` as immutable static files. For a subpath, set Vite's base while building (for example `BASE_PATH=/duel/ npm run frontend:build` on POSIX or `$env:BASE_PATH='/duel/'; npm run frontend:build` in PowerShell). The Worker, WASM, runtime closure, card images, and licenses are emitted beneath that base. `npm run frontend:verify` rejects missing/extra artifacts, hash drift, Node-only imports, disabled engine fallbacks, missing third-party licenses, and size-budget regressions. `npm run frontend:bundle` deliberately uses Vite's `private` mode; an ordinary production-mode build refuses to package artwork while redistribution remains unapproved and every private artifact includes `PRIVATE_DEPLOYMENT_ONLY.txt`.
+Tauri builds the standalone application with verified resources. `npm start` launches the artifact reported by the successful build, including custom Cargo output directories; it does not guess an existing binary. Use `npm start -- --headless --debug` for a build without a window. See [desktop setup](docs/desktop-setup.md) for prerequisites and platform packaging.
 
-Keep the deployment private. The generated active-image manifest records `redistributionApproved: false`, and the documented BabelCDB, Project Ignis, artwork, trademark, AGPL source-availability, and other content obligations still require an authorized distribution review.
+`npm run frontend:build` emits application code under `generated/build/app/`. `npm run frontend:verify` checks its exact boundary and budgets: no SQLite executable, OCG WASM, package databases or card/chapter media in the webview build. Rust prepares digest-pinned critical JSON and executable buffers; the dedicated Duel Worker alone runs the engine. Optional media uses scoped native filesystem leases. Serving the frontend alone does not provide native IPC or a supported browser deployment.
+
+For browser development, `npm run browser:dev` serves verified Freeplay and Chapter 1 content with isolated saves. [ADR-105](docs/ADR/105_ADR_browser_development_and_shared_content_transport.md) defines this development-only mode and its shared browser/native content transport.
+
+`npm test` selects tests related to changed files. `npm run test:all` runs the original tooling, unit/performance, component and integration sequence. `npm test -- --full` runs the complete `check` pipeline, including formatting, lint, types, content verification, builds and browser fixtures. Request the desired complete suite explicitly; ordinary local validation uses related tests.
+
+Distribution rights remain separate from local build readiness; see [third-party licensing](docs/architecture/07-governance/licensing-and-distribution.md).
 
 ## Updating the pinned snapshot
 
-1. Update upstream inputs on an isolated branch with `npm run assets:upstream:sync` (or `assets:upstream:sync -- --offline`).
-2. Refresh/verify images with `npm run assets:cards:download-full` and `npm run assets:cards:verify-full`.
-3. Run `npm run content:source-manifest:generate` and `npm run content:source-manifest:verify`.
-4. Review revision, count, protocol, trace, and active-dependency changes.
-5. Run `npm run check`; activate/publish only if every gate passes. Keep the previous snapshot available for rollback.
+1. U1. Review any intended source-lock change first; `npm run assets:upstream:sync` (or `npm run assets:upstream:sync -- --offline`) acquires only the locked revisions.
+2. U2. Refresh/verify images with `npm run assets:cards:download-full` and `npm run assets:cards:verify-full`.
+3. U3. Run `npm run content:source-manifest:generate` and `npm run content:source-manifest:verify`.
+4. U4. Review revision, count, protocol, trace, and active-dependency changes.
+5. U5. Follow the explicit JSON compile/pin/stage review in the native release guide. Run `npm run check`, `npm run test:native:rust` and `npm run content:verify:sqlite-json-parity`; native/device acceptance and distribution approval remain separate. Preserve the previous release for recovery.
 
 ## Contribution
 

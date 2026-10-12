@@ -240,6 +240,8 @@
                 <StoryCardTile
                   name={entry.name}
                   imageUrl={entry.card.imageUrl}
+                  code={entry.card.code}
+                  {imageSource}
                   dataCyPrefix="collection"
                   dataCyId={entry.card.code}
                 />

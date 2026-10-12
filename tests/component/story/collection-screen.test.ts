@@ -8,6 +8,10 @@ import {
   type CardOwnership,
 } from "../../../src/decks/validation/index.ts";
 import type { DeckBuilderCardView } from "../../../src/decks/catalog/index.ts";
+import type {
+  CardImageLease,
+  CardImageSource,
+} from "../../../src/cards/images/index.ts";
 import { storyCardOwnership } from "../../../src/story/decks/card-ownership.ts";
 import {
   createInitialStoryState,
@@ -68,6 +72,7 @@ function mount(props: {
   ownership: CardOwnership;
   cards?: readonly DeckBuilderCardView[];
   rarityByCode?: ReadonlyMap<number, ShopRarity>;
+  imageSource?: CardImageSource | null;
   onback?: () => void;
 }) {
   return render(CollectionScreen, {
@@ -93,6 +98,132 @@ function names(container: HTMLElement): string[] {
 }
 
 describe("CollectionScreen", () => {
+  it("uses native art for URL-free tiles and releases live leases on teardown", async () => {
+    const release = vi.fn();
+    const unsubscribe = vi.fn();
+    let update: ((url: string) => void) | undefined;
+    const acquire = vi.fn<CardImageSource["acquire"]>().mockResolvedValue({
+      url: "blob:initial",
+      release,
+      subscribe: (listener) => {
+        update = listener;
+        return unsubscribe;
+      },
+    });
+    const view = mount({
+      ownership: unlimitedCardOwnership(),
+      cards: [{ ...card(4007, "Dark Magician"), imageUrl: null }],
+      imageSource: { acquire },
+    });
+    const art = () =>
+      view.container.querySelector('[data-cy="collection-art-4007"]');
+    await vi.waitFor(() =>
+      expect(art()?.getAttribute("src")).toBe("blob:initial"),
+    );
+    expect(acquire).toHaveBeenCalledWith(4007, "full", expect.any(AbortSignal));
+    update!("blob:replacement");
+    await vi.waitFor(() =>
+      expect(art()?.getAttribute("src")).toBe("blob:replacement"),
+    );
+    view.unmount();
+    expect(acquire.mock.calls[0]![2].aborted).toBe(true);
+    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(release).toHaveBeenCalledOnce();
+  });
+
+  it("preserves catalog art without acquiring a native tile lease", () => {
+    const acquire = vi.fn<CardImageSource["acquire"]>();
+    const { container } = mount({
+      ownership: unlimitedCardOwnership(),
+      cards: [card(4007, "Dark Magician")],
+      imageSource: { acquire },
+    });
+    expect(
+      container
+        .querySelector('[data-cy="collection-art-4007"]')
+        ?.getAttribute("src"),
+    ).toBe("/art/4007.jpg");
+    expect(acquire).not.toHaveBeenCalled();
+  });
+
+  it("acquires optional art only for the rendered collection window", async () => {
+    const acquire = vi.fn<CardImageSource["acquire"]>().mockResolvedValue(null);
+    const { container } = mount({
+      ownership: unlimitedCardOwnership(),
+      cards: Array.from({ length: 250 }, (_, index) => ({
+        ...card(index + 1, `Card ${index + 1}`),
+        imageUrl: null,
+      })),
+      imageSource: { acquire },
+    });
+    await vi.waitFor(() => expect(acquire).toHaveBeenCalledTimes(200));
+    expect(
+      acquire.mock.calls.map(([code]) => code).sort((a, b) => a - b),
+    ).toEqual(tileCodes(container).sort((a, b) => a - b));
+  });
+
+  it("releases stale art when the source changes or its tile leaves the collection", async () => {
+    const pending = Promise.withResolvers<CardImageLease | null>();
+    const oldAcquire = vi
+      .fn<CardImageSource["acquire"]>()
+      .mockReturnValue(pending.promise);
+    const release = vi.fn();
+    const acquire = vi.fn<CardImageSource["acquire"]>().mockResolvedValue({
+      url: "blob:current",
+      release,
+    });
+    const view = mount({
+      ownership: unlimitedCardOwnership(),
+      cards: [{ ...card(4007, "Dark Magician"), imageUrl: null }],
+      imageSource: { acquire: oldAcquire },
+    });
+    await vi.waitFor(() => expect(oldAcquire).toHaveBeenCalledOnce());
+    await view.rerender({ imageSource: { acquire } });
+    expect(oldAcquire.mock.calls[0]![2].aborted).toBe(true);
+    await vi.waitFor(() =>
+      expect(
+        view.container
+          .querySelector('[data-cy="collection-art-4007"]')
+          ?.getAttribute("src"),
+      ).toBe("blob:current"),
+    );
+    const releaseLate = vi.fn();
+    pending.resolve({ url: "blob:late", release: releaseLate });
+    await vi.waitFor(() => expect(releaseLate).toHaveBeenCalledOnce());
+    expect(
+      view.container
+        .querySelector('[data-cy="collection-art-4007"]')
+        ?.getAttribute("src"),
+    ).toBe("blob:current");
+    await view.rerender({ cards: [] });
+    expect(acquire.mock.calls[0]![2].aborted).toBe(true);
+    expect(release).toHaveBeenCalledOnce();
+    expect(
+      view.container.querySelector('[data-cy="collection-art-4007"]'),
+    ).toBeNull();
+  });
+
+  it("aborts removed tiles and releases art that completes after teardown", async () => {
+    const pending = Promise.withResolvers<CardImageLease | null>();
+    const acquire = vi
+      .fn<CardImageSource["acquire"]>()
+      .mockReturnValue(pending.promise);
+    const view = mount({
+      ownership: unlimitedCardOwnership(),
+      cards: [{ ...card(4007, "Dark Magician"), imageUrl: null }],
+      imageSource: { acquire },
+    });
+    await vi.waitFor(() => expect(acquire).toHaveBeenCalledOnce());
+    view.unmount();
+    expect(acquire.mock.calls[0]![2].aborted).toBe(true);
+    const release = vi.fn();
+    pending.resolve({ url: "blob:late", release });
+    await vi.waitFor(() => expect(release).toHaveBeenCalledOnce());
+    expect(
+      document.querySelector('[data-cy="collection-art-4007"]'),
+    ).toBeNull();
+  });
+
   it("story collection lists owned cards with counts", () => {
     const { container } = mount({ ownership: OWNS_TWO });
     expect(tileCodes(container).sort()).toEqual([4007, 4008]);

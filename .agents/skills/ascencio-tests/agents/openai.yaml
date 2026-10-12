@@ -1,0 +1,6 @@
+interface:
+  display_name: "Ascencio tests"
+  short_description: "Run tests related to Ascencio changes locally"
+  default_prompt: "Use $ascencio-tests to select and run tests related to the current changes."
+policy:
+  allow_implicit_invocation: true

@@ -2,12 +2,15 @@ import { isTauri } from "@tauri-apps/api/core";
 import type { LocalStorageClient } from "./contracts/storage-client.ts";
 import type { StorageResult } from "./contracts/package.ts";
 
+const browserDevelopment =
+  typeof __BROWSER_DEVELOPMENT__ !== "undefined" && __BROWSER_DEVELOPMENT__;
+
 /** Production storage is owned by the Tauri process on desktop and mobile. */
 export async function openLocalStorage(): Promise<
   StorageResult<LocalStorageClient>
 > {
   if (!isTauri()) {
-    if (__BROWSER_DEVELOPMENT__) {
+    if (browserDevelopment) {
       const { prepareBrowserStorage } =
         await import("./browser-dev/prepared-storage.ts");
       return {

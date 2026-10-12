@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeStageBox,
+  selectLayoutMode,
   selectStageMode,
   STAGE_BREAKPOINT_PX,
 } from "../../src/shell/stage-layout.ts";
@@ -13,6 +14,7 @@ describe("computeStageBox", () => {
       offsetX: 14,
       offsetY: 8,
       mode: "stage",
+      layoutMode: "horizontal",
       rotated: false,
     });
   });
@@ -51,6 +53,7 @@ describe("computeStageBox", () => {
       offsetX: 8,
       offsetY: 8,
       mode: "mobile-portrait",
+      layoutMode: "vertical",
       rotated: true,
     });
   });
@@ -59,6 +62,13 @@ describe("computeStageBox", () => {
     expect(computeStageBox(STAGE_BREAKPOINT_PX, 768).mode).toBe("stage");
     expect(selectStageMode(1024, 768)).toBe("stage");
     expect(selectStageMode(1023, 768)).toBe("mobile-landscape");
+  });
+
+  it("selects horizontal and vertical layout by viewport ratio", () => {
+    expect(selectLayoutMode(1920, 1080)).toBe("horizontal");
+    expect(selectLayoutMode(1024, 768)).toBe("horizontal");
+    expect(selectLayoutMode(700, 900)).toBe("vertical");
+    expect(selectLayoutMode(900, 900)).toBe("vertical");
   });
 
   it("invalid input is a frozen zero box", () => {
@@ -76,6 +86,7 @@ describe("computeStageBox", () => {
         offsetX: 0,
         offsetY: 0,
         mode: "stage",
+        layoutMode: "vertical",
         rotated: false,
       });
       expect(Object.isFrozen(box)).toBe(true);

@@ -19,6 +19,16 @@ Verify the actual window reaches startup or Main Menu before reporting that it o
 - `artifacts/manual_test_checklist.md` : Durable. The human test steps for every shipped slice, kept current, never retired with a plan.
 - `ai-artifact/manual_test_checklist.md` : Divergent sibling (221 lines vs 3887). Owner decides merge vs archive.
 
+## Local test execution
+
+Use the project skill [ascencio-tests](.agents/skills/ascencio-tests/SKILL.md) whenever selecting or running tests locally.
+
+An owner's request to "run tests", "run the test pipeline", "validate", or "test and merge" means tests related to the changes. Run the full application suite locally only when the owner very explicitly asks for the full suite. A merge request does not authorize it.
+
+Run `npm run test:context` to gather branch-change context and suggested tests for the agent. For task-specific changes or coverage that static selection cannot establish, supply exact files with `npm test -- --tests <test-files>`. The runner has no file limit or time budget, continues after failures, and streams progress. On failure the main agent continues the selected tests and delegates diagnosis and fixes to a subagent as described in the skill. Detailed reports default to false; use `--report` only when the owner asks for one.
+
+`npm test -- --full` runs the complete `npm run check` pipeline and requires that explicit full-suite request. Existing CI gates remain the full validation authority; targeted local results must be described as targeted validation.
+
 ## Knowledge graph (graphify) — use first
 
 `graphify-out/` holds a built knowledge graph of this repository (14111 nodes, 39077 edges, 531 labelled communities).

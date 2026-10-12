@@ -199,6 +199,15 @@
     await resetBrowserDevelopmentSaves();
     await retry();
   }
+  async function resetBrowserSavesFromSettings() {
+    actionMessage = "";
+    try {
+      await resetBrowserSaves();
+    } catch (error) {
+      actionMessage = error instanceof Error ? error.message : String(error);
+      throw error;
+    }
+  }
   async function copyError() {
     const details = {
       ...log,
@@ -277,23 +286,6 @@
   });
 </script>
 
-{#if browserDevelopment}
-  <aside
-    data-cy="browser-development-tools"
-    class="browser-development-tools"
-    aria-label="Browser development"
-  >
-    <button
-      data-cy="browser-reset-saves"
-      disabled={running}
-      on:click={() => action(resetBrowserSaves)}>Reset browser saves</button
-    >
-    {#if actionMessage}<p data-cy="browser-reset-error" role="alert">
-        {actionMessage}
-      </p>{/if}
-  </aside>
-{/if}
-
 {#if ready && exitError}<p
     data-cy="startup-exit-error"
     class="exit-error"
@@ -319,7 +311,12 @@
           {actionMessage}
         </p>{/if}
     </aside>{/if}
-  {#if AppShellComponent}<svelte:component this={AppShellComponent} />{/if}
+  {#if AppShellComponent}<svelte:component
+      this={AppShellComponent}
+      onresetbrowsersaves={browserDevelopment
+        ? resetBrowserSavesFromSettings
+        : null}
+    />{/if}
 {:else}
   <main data-cy="startup-surface" class="startup" aria-busy={running}>
     <section data-cy="startup-panel" class="panel">
@@ -377,17 +374,6 @@
 {/if}
 
 <style>
-  .browser-development-tools {
-    position: fixed;
-    z-index: 10000;
-    right: 0.75rem;
-    bottom: 0.75rem;
-    max-width: 24rem;
-  }
-  .browser-development-tools button {
-    background: var(--panel);
-    font-size: 0.75rem;
-  }
   .exit-error {
     position: fixed;
     z-index: 10000;

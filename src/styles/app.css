@@ -122,6 +122,16 @@ body {
   overflow: hidden;
 }
 
+/* The main menu is a document-like screen, not a game board. Let it use the
+   browser's full viewport instead of inheriting the duel's 16:9 stage. */
+.app-stage[data-stage-route="home"] {
+  --stage-w: 100vw;
+  --stage-h: 100svh;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  margin: 0;
+}
+
 /* Persistent Shell notices consume stage space; domains receive the remainder. */
 .app-stage > .shell-region {
   flex: 1 1 0;
@@ -168,6 +178,16 @@ body {
       var(--duel-field-inset)
     );
   }
+}
+
+/* Match setup is a full-height selection screen. Once the duel starts, the
+   screen attribute clears and the established duel stage geometry takes over. */
+.app-stage[data-stage-screen="free-play-setup"] {
+  --stage-w: 100vw;
+  --stage-h: 100svh;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  margin: 0;
 }
 
 .shell-region--duel {
@@ -248,13 +268,14 @@ body {
    authorings of one look, and only the shell's half is allowed to be eager —
    so neither can reach for the other's stylesheet. */
 .main-menu {
+  position: relative;
   display: grid;
   align-content: center;
   justify-items: center;
   gap: var(--space-2);
   width: 100%;
   height: 100%;
-  padding: clamp(var(--space-4), 8vw, var(--space-6));
+  padding: clamp(var(--space-4), 6vw, var(--space-6));
   overflow: auto;
   text-align: center;
   background:
@@ -276,22 +297,17 @@ body {
     );
 }
 
-.main-menu__eyebrow {
-  margin: 0;
-  color: var(--muted);
-  font-size: var(--text-xs);
-  letter-spacing: 0.14em;
-}
-
 .main-menu__title {
+  width: min(26rem, 100%);
   margin: 0;
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(2.6rem, 8vw, 4.5rem);
+  font-size: clamp(2rem, 8vw, 4rem);
   line-height: 1;
   letter-spacing: 0.26em;
   text-indent: 0.26em;
   text-shadow: 0 1px 26px color-mix(in srgb, var(--accent) 30%, transparent);
+  text-align: center;
 }
 
 .main-menu__title b {
@@ -299,16 +315,10 @@ body {
   color: var(--accent);
 }
 
-.main-menu__tagline {
-  margin: 0;
-  color: var(--muted);
-  font-style: italic;
-}
-
 .main-menu__entries {
   display: grid;
   gap: var(--space-3);
-  width: min(20rem, 100%);
+  width: min(26rem, 100%);
   margin-block-start: var(--space-5);
 }
 
@@ -363,10 +373,15 @@ body {
   border-color: var(--gold-line);
 }
 
-.main-menu__hint {
-  margin-block: var(--space-4) 0;
+.main-menu__footer {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: var(--space-3);
+  margin: 0;
   color: var(--muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-align: center;
 }
 
 /* Desktop deck panes own their necessary overflow. The shell region stays a

@@ -9,6 +9,7 @@ export const STAGE_ASPECT_HEIGHT = 9;
 const STAGE_MARGIN_PX = 8;
 
 export type StageMode = "stage" | "mobile-portrait" | "mobile-landscape";
+export type LayoutMode = "horizontal" | "vertical";
 
 export interface StageBox {
   readonly width: number;
@@ -16,6 +17,8 @@ export interface StageBox {
   readonly offsetX: number;
   readonly offsetY: number;
   readonly mode: StageMode;
+  /** Shared content layout name, based only on the viewport's width/height ratio. */
+  readonly layoutMode: LayoutMode;
   /** True only in `mobile-portrait`: a phone held vertically plays the duel on
       a stage the stylesheet turns a quarter turn clockwise, rather than on a
       16:9 board squeezed into a tall viewport. Presentation only — legality,
@@ -32,6 +35,7 @@ const EMPTY_BOX: StageBox = Object.freeze({
   offsetX: 0,
   offsetY: 0,
   mode: "stage",
+  layoutMode: "vertical",
   rotated: false,
 });
 
@@ -49,6 +53,15 @@ export function selectStageMode(
     : "mobile-landscape";
 }
 
+export function selectLayoutMode(
+  viewportWidth: number,
+  viewportHeight: number,
+): LayoutMode {
+  // A square viewport uses the vertical layout because it offers no horizontal
+  // space beyond the height for the side-by-side composition.
+  return viewportWidth > viewportHeight ? "horizontal" : "vertical";
+}
+
 export function computeStageBox(
   viewportWidth: number,
   viewportHeight: number,
@@ -56,6 +69,7 @@ export function computeStageBox(
   if (!isUsable(viewportWidth) || !isUsable(viewportHeight)) return EMPTY_BOX;
 
   const mode = selectStageMode(viewportWidth, viewportHeight);
+  const layoutMode = selectLayoutMode(viewportWidth, viewportHeight);
   const availableWidth = viewportWidth - STAGE_MARGIN_PX * 2;
   const availableHeight = viewportHeight - STAGE_MARGIN_PX * 2;
   if (!isUsable(availableWidth) || !isUsable(availableHeight)) return EMPTY_BOX;
@@ -66,6 +80,7 @@ export function computeStageBox(
       offsetX: STAGE_MARGIN_PX,
       offsetY: STAGE_MARGIN_PX,
       mode,
+      layoutMode,
       rotated: true,
     });
   }
@@ -86,6 +101,7 @@ export function computeStageBox(
     offsetX: Math.floor((viewportWidth - width) / 2),
     offsetY: Math.floor((viewportHeight - height) / 2),
     mode,
+    layoutMode,
     rotated: false,
   });
 }

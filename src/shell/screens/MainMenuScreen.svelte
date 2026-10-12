@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { coreGateMessage, type CoreGate } from "../core/core-gate.ts";
   import { INSTALL_CONTENT_ROUTE } from "../routes.ts";
-  import { isNativeApp } from "../native/content.ts";
   import type { ShellStore } from "../shell-store.ts";
   import ShellSettingsDialog from "./ShellSettingsDialog.svelte";
   import type { GenerationSaveRepository } from "../../story/saves/index.ts";
@@ -14,6 +13,7 @@
   export let storyAvailable = coreGate.kind === "ready";
   export let freeplayAvailable = coreGate.kind === "ready";
   export let resumeAvailable = storyAvailable;
+  export let onresetbrowsersaves: (() => Promise<void>) | null = null;
   /* Free play opens on a deck list, and reading that list means the whole
      packaged card database. Reported the moment a player reaches for the
      entry — pointer over it, or focus on it — so the read happens while they
@@ -27,7 +27,7 @@
      legacy database nor loads the story domain. */
   let hasSave = false;
   let settingsOpen = false;
-  const contentManagementAvailable = isNativeApp();
+  const gameVersion = `v${__APP_BUILD_ID__.slice(0, __APP_BUILD_ID__.indexOf("+"))}`;
 
   onMount(() => {
     if (!resumeAvailable || coreGate.kind !== "ready") return;
@@ -69,15 +69,9 @@
   {#if saveError !== null}<p role="alert" data-cy="main-menu-save-error">
       {saveError}
     </p>{/if}
-  <p class="main-menu__eyebrow" data-cy="main-menu-eyebrow">
-    Private prototype · v0.1
-  </p>
   <h1 class="main-menu__title" data-cy="main-menu-title">
     ASCEN<b data-cy="main-menu-title-accent">CIO</b>
   </h1>
-  <p class="main-menu__tagline" data-cy="main-menu-tagline">
-    One signal. One duel. More than one way forward.
-  </p>
 
   <nav
     class="main-menu__entries"
@@ -113,24 +107,6 @@
     <button
       type="button"
       class="secondary"
-      data-cy="main-menu-install-content"
-      disabled={!contentManagementAvailable}
-      title={!contentManagementAvailable
-        ? "Content installation and mods are available in Tauri."
-        : undefined}
-      onclick={() => store.navigate(INSTALL_CONTENT_ROUTE)}>Content</button
-    >
-    <button
-      type="button"
-      class="secondary"
-      data-cy="main-menu-settings"
-      onclick={() => (settingsOpen = true)}>Settings</button
-    >
-    <!-- Last on purpose: the game's front door is the story, and free play is
-         the developer's and the practising player's way past it (ADR-051). -->
-    <button
-      type="button"
-      class="secondary"
       data-cy="main-menu-free-play"
       disabled={!freeplayAvailable}
       title={!freeplayAvailable ? freeplayReason() : undefined}
@@ -142,16 +118,21 @@
       }}
       onclick={() => store.navigate({ kind: "free-play" })}>Free Play</button
     >
+    <button
+      type="button"
+      class="secondary"
+      data-cy="main-menu-settings"
+      onclick={() => (settingsOpen = true)}>Settings</button
+    >
   </nav>
 
-  <p class="main-menu__hint" role="status" data-cy="core-gate-status">
-    {coreGateMessage(coreGate)}
-  </p>
-  <p class="main-menu__hint" data-cy="main-menu-fullscreen-hint">
-    Press F11 for fullscreen.
-  </p>
+  <p class="main-menu__footer" data-cy="main-menu-version">{gameVersion}</p>
 </main>
 
 {#if settingsOpen}
-  <ShellSettingsDialog {coreGate} onclose={() => (settingsOpen = false)} />
+  <ShellSettingsDialog
+    onopencontent={() => store.navigate(INSTALL_CONTENT_ROUTE)}
+    {onresetbrowsersaves}
+    onclose={() => (settingsOpen = false)}
+  />
 {/if}

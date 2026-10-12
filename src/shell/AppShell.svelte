@@ -85,6 +85,7 @@
     globalThis.location.hash,
     writeLocationHash,
   );
+  export let onresetbrowsersaves: (() => Promise<void>) | null = null;
   export let loaders: DomainLoaders = DEFAULT_DOMAIN_LOADERS;
   export let settings: ShellSettingsStore | null = null;
   let activeSettings: ShellSettingsStore =
@@ -1057,8 +1058,12 @@
   class="app-stage"
   data-cy="app-stage"
   data-stage-mode={box.mode}
+  data-layout-mode={box.layoutMode}
   data-stage-rotated={box.rotated ? "true" : undefined}
   data-stage-route={route.kind}
+  data-stage-screen={route.kind === "free-play" && matchRequest === null
+    ? "free-play-setup"
+    : undefined}
   bind:this={stage}
 >
   <svelte:boundary
@@ -1098,6 +1103,7 @@
             freeplayAvailable={coreGate.kind === "ready"}
             resumeAvailable={coreGate.kind === "ready"}
             onfreeplaywarm={warmFreePlay}
+            {onresetbrowsersaves}
           />
         {/key}
       </div>

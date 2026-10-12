@@ -1426,21 +1426,27 @@
   }
 
   .grid {
+    --deck-tile-size: 14rem;
+
     display: grid;
-    overflow-y: auto;
+    overflow: auto;
     min-height: 0;
     align-content: start;
+    justify-content: center;
     justify-items: center;
     gap: var(--space-2);
     grid-auto-rows: max-content;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(var(--deck-tile-size), var(--deck-tile-size))
+    );
     padding-right: var(--space-2);
     scrollbar-gutter: stable;
   }
 
   .grid > :global(*) {
-    width: 100%;
-    max-width: 420px;
+    width: var(--deck-tile-size);
+    max-width: none;
   }
 
   /* Stuck to the bottom of whatever scrolls this screen, so the way out and
@@ -1628,7 +1634,13 @@
   }
 
   .screen.paneled:not(.library) {
-    grid-template-columns: minmax(0, 73fr) 38rem;
+    grid-template-columns: minmax(0, 1fr) 40rem;
+  }
+
+  :global(.app-stage[data-layout-mode="horizontal"])
+    .screen.paneled:not(.library)
+    .titlebar {
+    flex-wrap: wrap;
   }
 
   .seat-panel,
@@ -1659,44 +1671,34 @@
     border-left: 1px solid var(--border);
   }
 
-  /* The design's 62rem breakpoint, measured on the viewport rather than on a
-     container: this screen fills the stage, and the collapse stacks the panel
-     above the grid it belongs to. */
-  @media (max-width: 62rem) {
-    .screen.paneled,
+  /* The global ratio mode chooses the page structure. Vertical puts the seat
+     panel above its deck grid; horizontal keeps it in the side column. */
+  :global(.app-stage[data-layout-mode="vertical"]) .screen.paneled,
+  :global(.app-stage[data-layout-mode="vertical"])
     .screen.paneled:not(.library) {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto auto minmax(0, 1fr) auto;
-    }
-
-    .seat-panel,
-    .dock {
-      grid-row: 1;
-      grid-column: 1;
-    }
-
-    .seat-panel {
-      border-left-color: var(--line-soft);
-      border-bottom-color: var(--gold-line);
-    }
-
-    .dock {
-      padding-bottom: var(--space-2);
-      padding-left: 0;
-      border-bottom: 1px solid var(--border);
-      border-left: 0;
-    }
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
   }
 
-  /* A stacked desktop panel must leave room for the deck illustrations.
-     Its lists scroll within the measured seat rows instead of consuming the
-     entire window at Tauri's minimum width. */
-  @media (min-width: 40.001rem) and (max-width: 62rem) {
-    .seat-panel {
-      height: min(45dvh, 28rem);
-      --p: 4rem;
-      min-height: 0;
-    }
+  :global(.app-stage[data-layout-mode="vertical"]) .seat-panel,
+  :global(.app-stage[data-layout-mode="vertical"]) .dock {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  :global(.app-stage[data-layout-mode="vertical"]) .seat-panel {
+    height: min(45dvh, 28rem);
+    --p: 4rem;
+    min-height: 0;
+    border-left-color: var(--line-soft);
+    border-bottom-color: var(--gold-line);
+  }
+
+  :global(.app-stage[data-layout-mode="vertical"]) .dock {
+    padding-bottom: var(--space-2);
+    padding-left: 0;
+    border-bottom: 1px solid var(--border);
+    border-left: 0;
   }
 
   /* The phone layout, at the design's 430px frame. Title bar, opponent, one
@@ -1716,15 +1718,13 @@
     /* Row 1 is the title bar here rather than the panel: the phone says which
        screen you are on before who it is seating. The other three rows
        auto-place around this one in document order. */
-    .screen.paneled .seat-panel {
+    :global(.app-stage[data-layout-mode="vertical"])
+      .screen.paneled
+      .seat-panel {
       grid-row: 2;
     }
 
     .screen .seats {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .grid {
       grid-template-columns: minmax(0, 1fr);
     }
 

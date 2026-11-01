@@ -1,0 +1,33 @@
+entries:
+- id: current-visual-selection
+  status: selected
+  affectedPart: appearance.yaml
+  decision: Use the owner-selected Zomb current design. Narrative unknowns are not approved by the image selection.
+  source: 'Owner instruction: save those designs as the currently used.'
+- id: modular-dossier
+  status: approved
+  affectedPart: character.yaml
+  decision: Use a main character.yaml, focused YAML parts and direct links to local assets/.
+  source: Owner approved all proposed YAML parts and structure.
+- id: retain-name
+  status: selected
+  affectedPart: identity.yaml
+  decision: Keep Blaise name with the short-haired design temporarily called Yuna.
+  source: 'Owner: Keep blaise name with yuna design.'
+- id: black-blush-clip
+  status: selected
+  affectedPart: fashion.yaml
+  decision: Round 3 option 20, black fill, ivory eyes, pink blush and pink bow. Remove pendant; remove spider fashion
+    from academic clothes.
+  source: Owner accessory and outfit decisions.
+- id: 40cm-bust
+  status: selected
+  affectedPart: appearance.yaml
+  decision: Literal bust circumference 40 cm; supersedes earlier 80 cm and stylized-scale interpretations.
+  source: Owner selected 40 and explicitly requested literal circumference.
+migrationSources:
+- path: assets/provenance/narrative-before-migration.md
+  status: historical snapshot; current facts live in YAML parts
+  sha256: 18a1e626c21ead8c79fda9588fcfe14a1b53f67b3270ec7b876c028db964bf6f
+- path: assets/provenance/visual-input-v2.yaml
+  status: historical generation metadata; exact original prompt text preserved

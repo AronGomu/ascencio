@@ -1,0 +1,39 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: Noticeably shorter and thinner than Finn during Chapter 1
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: blue-black
+  style: disordered
+eyes: intelligent; color undecided
+face: Young narrow face; reserved without appearing insignificant.
+distinguishingFeatures:
+- Slightly closed shoulders
+- Hand near face
+- Notebook, file or deck-case holding habit
+- Chapter 2 growth spurt eventually makes him taller than Finn
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+narrative:
+- Sirius has disordered blue-black hair, a young narrow face and intelligent eyes. His slightly closed shoulders,
+  hand near his face and habit of holding notebooks, files or a deck case communicate hesitation and observation.
+  He must look reserved without appearing insignificant; sustained attention reveals concentration and hidden competence.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult man, visibly short and slender, disordered blue-black hair, young narrow face, intelligent eyes.
+  Slightly inward shoulders, thoughtful hesitant expression, holding a notebook close and one hand near chin. Simple
+  muted Yellow academy blazer with small embroidered violet crest, white shirt, dark trousers, simple low shoes.
+  No elaborate coat.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/sirius.png
+  prompt: assets/zomb-v2/sirius-prompt.txt
+  sha256: 85c2d4e2cb90b7e0b3742be3a0027ff7ced42e7c7cd5dc954f07b54a80b57096
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/sirius.png

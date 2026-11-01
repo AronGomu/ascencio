@@ -1,0 +1,10 @@
+questions:
+- id: alexis-bully-a-q01
+  question: Name, personality and deck.
+  status: open
+- id: alexis-bully-a-q02
+  question: Information about the missing student.
+  status: open
+- id: alexis-bully-a-q03
+  question: Duel stake and future Free Duel role.
+  status: open

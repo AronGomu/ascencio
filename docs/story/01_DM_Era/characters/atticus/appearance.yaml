@@ -1,0 +1,38 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: Athletic, relaxed golden-boy presence
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: blond
+  style: medium-length, stopping above the shoulders
+eyes: color undecided
+face: Square masculine face; clean-shaven; handsome and charming.
+distinguishingFeatures:
+- Normal appearance is warm, open and socially relaxed
+- Controlled state must contrast with this warmth; exact mask remains undecided
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+narrative:
+- 'Atticus is a handsome adult blond man with a square masculine face and medium-length hair stopping above the
+  shoulders. He is clean-shaven. His normal presence is that of an American golden boy: bright, athletic, relaxed,
+  charming and naturally comfortable in a group.'
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Handsome adult blond man, athletic build, square masculine clean-shaven face, medium length blond hair
+  stopping above shoulders, relaxed golden-boy smile. Easy posture, one hand in pocket, other behind head. Simple
+  dark academy blazer worn open, loose white shirt and rolled sleeves, dark trousers and low black shoes. Small
+  embroidered violet crest. No mask, no controlled Darkness persona, no long fantasy coat, chains or straps; rank
+  color undecided.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/atticus.png
+  prompt: assets/zomb-v2/atticus-prompt.txt
+  sha256: 3c435a6903e4c2184e77e3a919909afa9fe79adafb394a1830f9473f5e34c044
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/atticus.png

@@ -1,0 +1,39 @@
+id: atticus
+name: Atticus
+subject: Handsome adult blond man, athletic build, square masculine clean-shaven face, medium length blond
+  hair stopping above shoulders, relaxed golden-boy smile. Easy posture, one hand in pocket, other behind
+  head. Simple dark academy blazer worn open, loose white shirt and rolled sleeves, dark trousers and
+  low black shoes. Small embroidered violet crest. No mask, no controlled Darkness persona, no long fantasy
+  coat, chains or straps; rank color undecided.
+ref: docs/story/themes/characters/atticus/face-and-build-exploration.jpg
+group: main
+previous: atticus.png
+prompt: 'Use case: identity-preserve. Asset: character design study, Zomb rendering revision 2.
+
+  Input image: the existing Atticus design; use it as the identity and pose reference.
+
+  Primary request: regenerate this one character while removing EVERY background star and decorative background
+  motif. Place the character on a completely plain, uniform light cool-gray background with no scenery,
+  star shapes, lights, patterns, gradients, floor, horizon, or cast shadow. This neutral review background
+  is a separate presentation choice, NOT part of Zomb style.
+
+  Preserve: the same character''s face, skin tone, hair color and hairstyle, clothing design, garment
+  colors, silhouette, proportions, adult age, expression, accessories, and pose. The clothing''s small
+  academy crest, if present, is part of the outfit and should stay. Character identity brief: Handsome
+  adult blond man, athletic build, square masculine clean-shaven face, medium length blond hair stopping
+  above shoulders, relaxed golden-boy smile. Easy posture, one hand in pocket, other behind head. Simple
+  dark academy blazer worn open, loose white shirt and rolled sleeves, dark trousers and low black shoes.
+  Small embroidered violet crest. No mask, no controlled Darkness persona, no long fantasy coat, chains
+  or straps; rank color undecided.
+
+  Rendering on the CHARACTER ONLY: simplified retro 2D anime cel drawing, thin muted gray contours, broad
+  light shapes, restrained interior detail, soft analog blur, fine horizontal CRT scanlines, subtle red/cyan
+  contour ghosts and faint phosphor grain. Nearly flat matte cloth, sparse low-contrast folds, faint pink
+  surface shading, soft even diffuse light, flattened shadows and restrained character highlights. Keep
+  individual palette and skin tone. No photorealistic shading or glossy new-anime finish. CRT treatment
+  ends at the silhouette; background stays clean and uniform.
+
+  Composition: single full figure, all existing hair, hands, feet and outfit comfortably in frame. No
+  additional characters, no text, no watermark. Preserve the previous pose, including seated pose if present.'
+designStatus: current
+proposal: false

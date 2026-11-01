@@ -1,0 +1,9 @@
+speechStyle: TBD
+vocabulary: []
+mannerisms: []
+dialogueReferences: []
+audioDirection: TBD
+canonLines: []
+sceneReferences:
+- path: ../../arcs/Girl_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.

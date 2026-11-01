@@ -1,0 +1,32 @@
+id: style-reference
+name: Style reference
+group: reference
+proposal: true
+role: Original iteration-6 reference, separate from the story cast.
+subject: 'Adult woman from iteration 6: short pale ivory bob, small skull clip, red eyes, reserved little
+  smile, black off-shoulder modest gothic dress, lace-up choker, fishnet stockings, seated pose.'
+previous: ../crt-stars-2026-10-28/image_6.png
+prompt: 'Use case: identity-preserve. Asset: character design study, Zomb rendering revision 2.
+
+  Input image: the existing Style reference design; use it as the identity and pose reference.
+
+  Primary request: regenerate this one character while removing EVERY background star and decorative background
+  motif. Place the character on a completely plain, uniform light cool-gray background with no scenery,
+  star shapes, lights, patterns, gradients, floor, horizon, or cast shadow. This neutral review background
+  is a separate presentation choice, NOT part of Zomb style.
+
+  Preserve: the same character''s face, skin tone, hair color and hairstyle, clothing design, garment
+  colors, silhouette, proportions, adult age, expression, accessories, and pose. The clothing''s small
+  academy crest, if present, is part of the outfit and should stay. Character identity brief: Adult woman
+  from iteration 6: short pale ivory bob, small skull clip, red eyes, reserved little smile, black off-shoulder
+  modest gothic dress, lace-up choker, fishnet stockings, seated pose.
+
+  Rendering on the CHARACTER ONLY: simplified retro 2D anime cel drawing, thin muted gray contours, broad
+  light shapes, restrained interior detail, soft analog blur, fine horizontal CRT scanlines, subtle red/cyan
+  contour ghosts and faint phosphor grain. Nearly flat matte cloth, sparse low-contrast folds, faint pink
+  surface shading, soft even diffuse light, flattened shadows and restrained character highlights. Keep
+  individual palette and skin tone. No photorealistic shading or glossy new-anime finish. CRT treatment
+  ends at the silhouette; background stays clean and uniform.
+
+  Composition: single full figure, all existing hair, hands, feet and outfit comfortably in frame. No
+  additional characters, no text, no watermark. Preserve the previous pose, including seated pose if present.'

@@ -1,0 +1,16 @@
+questions:
+- id: darkness-agent-q01
+  question: Name, identity, rank and relationship to Darkness.
+  status: open
+- id: darkness-agent-q02
+  question: Connection to Atticus.
+  status: open
+- id: darkness-agent-q03
+  question: Duel stake and exact objective after defeating Alexis.
+  status: open
+- id: darkness-agent-q04
+  question: Exact manifestation of the Ténèbres.
+  status: open
+- id: darkness-agent-q05
+  question: Whether he expected or feared his own absorption.
+  status: open

@@ -1,0 +1,51 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: slim adult silhouette
+measurements:
+  heightCm: null
+  bustCircumferenceCm: 40
+hair:
+  color: pale ivory with faint pink/silver shading
+  style: chin-length bob with long bangs
+eyes: red
+face: Slightly feline eyes and a restrained mischievous smile.
+distinguishingFeatures:
+- Selected cute black blushing spider hair clip
+- Ivory dot eyes, pink cheeks and dusty-pink bow on the clip
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+- Keep the selected short-haired appearance despite the superseded Yuna name.
+narrative:
+- 'Blaise is an adult woman with a slim adult silhouette with the owner-selected literal bust circumference of 40
+  cm. Her design uses the original CRT-study character: a chin-length pale ivory bob with faint pink or silver shading,
+  long bangs, red eyes and the selected black blushing spider hair clip (round 3, option 20), with ivory dot eyes,
+  pink cheeks and a pink bow. Her slightly feline eyes and restrained mischievous smile contrast with her energetic
+  personality.'
+- heading: Scale comparison
+  text: '[Twenty casual/academic circumference comparisons](assets/zomb-v2/blaise-scale-round5/comparison-standalone.html)
+    show 30–120 cm in 10 cm steps, with one horizontally scrollable row per outfit. Blaise’s selected literal bust
+    circumference is **40 cm**. All twenty use the selected black blush clip, omit spider pendants, and use plain
+    academic clothing. The 40 cm casual and winter images are the current references; older dress and summer images
+    predate the cleanup.
+
+
+    The [YAML circumference reference](../../../themes/bust-circumference-reference.yaml) defines the measurement
+    and links both outfit references for each value. Original generation prompts remain historical records.'
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Blaise is an adult woman with a slim silhouette and selected 40 cm bust circumference, a short ivory/pink-tinted
+  bob with bangs, red eyes and a mischievous gentle expression. Her selected clip is the black blushing spider (round
+  3 option 20), with ivory dot eyes, pink cheeks and a pink bow. No outfit has a spider pendant. Her casual outfit
+  retains gothic web details; academic outfits are plain Red uniforms with no spider/web fashion motifs. The hair
+  clip remains on all outfits.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/blaise-scale-round5/40-casual.png
+  prompt: assets/zomb-v2/blaise-scale-round5/40-casual-prompt.txt
+  sha256: 5b2fdd1dbd01fd6970676e170690d157fcc249d3cd2bfa159d9ab688081b1c58
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v2/blaise-scale-round5/80-casual.png

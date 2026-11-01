@@ -1,14 +1,3 @@
-# PE Teacher — academy staff
+# Moved: PE Teacher
 
-> Status: needs definition
-
-## Role
-
-Physical education teacher in the Chapter 1 academy staff. Exact appearance and arc participation are TBD.
-
-## Open details
-
-- [ ] Name and personality.
-- [ ] Teaching philosophy.
-- [ ] Duel identity.
-- [ ] Arc appearances.
+The canonical dossier is [PE Teacher](pe-teacher/character.yaml). Start there for identity, appearance, fashion, story and direct asset links.

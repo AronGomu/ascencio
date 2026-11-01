@@ -1,0 +1,7 @@
+developments: []
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: Nerd_Arc
+  status: largely defined
+  path: ../../arcs/Nerd_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

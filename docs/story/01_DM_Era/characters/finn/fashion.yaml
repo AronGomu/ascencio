@@ -1,0 +1,19 @@
+direction: Simple canonical Red academy uniform; approachable athletic presentation.
+outfits:
+- id: current-design
+  status: current
+  image: assets/zomb-v2/finn.png
+  prompt: assets/zomb-v2/finn-prompt.txt
+  description: Clothing shown in the owner-selected current design. See exact prompt for the complete rendering
+    brief.
+accessories: []
+requiredElements: []
+excludedElements:
+- Elaborate long coat and fantasy accessories from early experiments
+narrative:
+- Finn has dark auburn, slightly disordered hair; a softened square face; frank expressive eyes; relatively thick
+  eyebrows; and a warm, confident expression. His open posture suggests someone ready to step in. He wears the simple
+  canonical Red uniform described in [`../visual-direction.md`](../../visual-direction.md), not the elaborate long
+  coat from early visual experiments.
+uniformReference: ../../visual-direction.md
+studies: []

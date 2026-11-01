@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult androgynous faculty member in their thirties, medium build, straight black hair in low ponytail,
+  medium-brown skin, long oval face and quietly attentive neutral expression. Simple dark tailored faculty jacket
+  over an ivory collarless shirt, straight charcoal trousers and low black shoes, small violet academy pin. Carries
+  a plain closed folder at side. No props implying a particular teaching subject.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/third-teacher.png
+  prompt: assets/zomb-v2/third-teacher-prompt.txt
+  sha256: eb96682d5f1fa94e4a9a11c2775fed860fbff8e720dff69795907f067f6bf9d9
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/third-teacher.png

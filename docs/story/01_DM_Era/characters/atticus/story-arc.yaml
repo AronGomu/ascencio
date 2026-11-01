@@ -1,0 +1,27 @@
+developments:
+- startingState: Gifted former academy student unable to tolerate repeated losses to Zen.
+  pressurePoint: Jealousy and impatience lead him through occult experiments toward Darkness.
+  revelation: His apparent willing affiliation conceals present captivity after absorption.
+  endState: Finn, Sirius and Alexis defeat him to break control and genuinely rescue him.
+  era: 01_DM_Era
+  chapter: 1
+  status: Existing canon summary; arc order remains provisional
+narrative:
+- heading: Chapter development
+  text: Alexis first believes he may still be found. A Darkness contact later convinces the trio that he is permanently
+    lost. Near the end of the chapter, they discover him alive but conditioned or controlled. Finn, Sirius and Alexis
+    defeat him in a duel whose purpose is liberation, and genuinely rescue him.
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: Girl_Arc
+  status: largely defined
+  path: ../../arcs/Girl_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Missing_Brother_Arc
+  status: planned; current position after Chaz's second arc
+  path: ../../arcs/Missing_Brother_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Atticus_Liberation_Arc
+  status: planned; late Chapter 1
+  path: ../../arcs/Atticus_Liberation_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

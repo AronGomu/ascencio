@@ -1,0 +1,4 @@
+Art style : Softly outlined 2D anime illustration with fine sketch-like contours, softly blended shading and a hazy CRT finish; dense horizontal scanlines, colored grain and subtle red/cyan contour ghosts.
+Fashion / material rendering : Matte dark surfaces modeled with subdued gray folds, fine mesh linework, pale smooth surfaces with pink shading.
+Color palette : Black, ivory, pale rose and muted red, with bright white and cyan/red luminous accents.
+Lighting : Diffuse frontal illumination and gently blooming highlights; deep dark surroundings.

@@ -1,0 +1,7 @@
+connections:
+- characterId: alexis
+  dynamic: Younger sister who enrolls to investigate his disappearance and helps rescue him.
+  status: established
+- characterId: zen
+  dynamic: Benchmark Atticus cannot surpass; repeated losses provoke his search for a shortcut.
+  status: established

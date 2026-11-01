@@ -1,0 +1,21 @@
+id: blaise
+name: Blaise
+aliases:
+- name: Yuna
+  status: superseded temporary name
+era: 01_DM_Era
+age: null
+role: Finn’s childhood friend and new adult Red student arriving around December.
+firstAppearance: Transfer Student / Blaise Arc, around December
+group: main
+nameStatus: selected
+definitionStatus: name Blaise retained by the owner; short-haired gothic appearance selected
+academicRank: Red
+ageCategory: adult
+narrative:
+- heading: Identity
+  text: '- Role: Finn''s childhood friend and December arrival.
+
+    - History: knew Finn before Violet Academy.
+
+    - Rank: Red in the current visual direction.'

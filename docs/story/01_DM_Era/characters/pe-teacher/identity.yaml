@@ -1,0 +1,16 @@
+id: pe-teacher
+name: PE Teacher
+aliases: []
+era: 01_DM_Era
+age: null
+role: Physical education teacher; appearance and arc participation remain open.
+firstAppearance: TBD
+group: supporting
+nameStatus: role label; personal name undecided
+definitionStatus: needs definition
+academicRank: TBD
+ageCategory: adult
+narrative:
+- heading: Role
+  text: Physical education teacher in the Chapter 1 academy staff. The selected image below defines the current
+    appearance; arc participation remains TBD.

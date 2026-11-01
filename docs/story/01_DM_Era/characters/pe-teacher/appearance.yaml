@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult woman in her forties, tall athletic muscular build, short dark brown hair swept back, strong
+  square jaw, sun-brown skin and confident encouraging expression. Simple nearly black athletic tracksuit with pale
+  ivory piping and small violet academy crest, practical dark trainers. Holds a plain whistle on a cord in one hand,
+  other hand resting at hip. Not student uniform.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/pe-teacher.png
+  prompt: assets/zomb-v2/pe-teacher-prompt.txt
+  sha256: e5502593029cf55ff704ec987474d38b501596f18d340b1da3d4edf62d1bc6eb
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/pe-teacher.png

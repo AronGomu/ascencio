@@ -1,0 +1,11 @@
+speechStyle: TBD
+vocabulary: []
+mannerisms: []
+dialogueReferences: []
+audioDirection: TBD
+canonLines: []
+sceneReferences:
+- path: ../../arcs/Rival_Introduction_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Rival_Returns_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.

@@ -1,0 +1,37 @@
+id: sirius
+name: Sirius
+subject: Adult man, visibly short and slender, disordered blue-black hair, young narrow face, intelligent
+  eyes. Slightly inward shoulders, thoughtful hesitant expression, holding a notebook close and one hand
+  near chin. Simple muted Yellow academy blazer with small embroidered violet crest, white shirt, dark
+  trousers, simple low shoes. No elaborate coat.
+ref: docs/story/themes/shared-cast/elaborate-outfit-exploration.jpg
+group: main
+previous: sirius.png
+prompt: 'Use case: identity-preserve. Asset: character design study, Zomb rendering revision 2.
+
+  Input image: the existing Sirius design; use it as the identity and pose reference.
+
+  Primary request: regenerate this one character while removing EVERY background star and decorative background
+  motif. Place the character on a completely plain, uniform light cool-gray background with no scenery,
+  star shapes, lights, patterns, gradients, floor, horizon, or cast shadow. This neutral review background
+  is a separate presentation choice, NOT part of Zomb style.
+
+  Preserve: the same character''s face, skin tone, hair color and hairstyle, clothing design, garment
+  colors, silhouette, proportions, adult age, expression, accessories, and pose. The clothing''s small
+  academy crest, if present, is part of the outfit and should stay. Character identity brief: Adult man,
+  visibly short and slender, disordered blue-black hair, young narrow face, intelligent eyes. Slightly
+  inward shoulders, thoughtful hesitant expression, holding a notebook close and one hand near chin. Simple
+  muted Yellow academy blazer with small embroidered violet crest, white shirt, dark trousers, simple
+  low shoes. No elaborate coat.
+
+  Rendering on the CHARACTER ONLY: simplified retro 2D anime cel drawing, thin muted gray contours, broad
+  light shapes, restrained interior detail, soft analog blur, fine horizontal CRT scanlines, subtle red/cyan
+  contour ghosts and faint phosphor grain. Nearly flat matte cloth, sparse low-contrast folds, faint pink
+  surface shading, soft even diffuse light, flattened shadows and restrained character highlights. Keep
+  individual palette and skin tone. No photorealistic shading or glossy new-anime finish. CRT treatment
+  ends at the silhouette; background stays clean and uniform.
+
+  Composition: single full figure, all existing hair, hands, feet and outfit comfortably in frame. No
+  additional characters, no text, no watermark. Preserve the previous pose, including seated pose if present.'
+designStatus: current
+proposal: false

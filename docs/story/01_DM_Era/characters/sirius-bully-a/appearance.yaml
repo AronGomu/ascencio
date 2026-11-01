@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult male university student, muscular compact build, close-cropped dark hair, warm brown complexion,
+  square jaw and confrontational direct eyes. Simple neutral charcoal academy blazer and small violet crest, white
+  shirt, dark trousers and low shoes. Firm squared stance, one hand resting at hip, the other at side. Distinct
+  from the other bullies; no weapons, rank not assigned.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/sirius-bully-a.png
+  prompt: assets/zomb-v2/sirius-bully-a-prompt.txt
+  sha256: 78f42b3d18157e8b92ebc4c1c99e1b785820e9c4fde462c36e1da6f3747cb299
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/sirius-bully-a.png

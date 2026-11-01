@@ -1,0 +1,7 @@
+connections:
+- characterId: chaz
+  dynamic: Status-based follower; abandons him after the second public defeat.
+  status: established
+- characterId: finn
+  dynamic: Early single-game opponent whose duel accepts either result.
+  status: established

@@ -1,0 +1,22 @@
+developments:
+- startingState: Established as the academy’s benchmark, introduced subtly during qualification.
+  pressurePoint: Finn reaches the end of a year of friendship, rivalry and investigation.
+  revelation: Final duel demonstrates Finn’s progress; exact philosophy and stakes remain open.
+  endState: June finale need not resolve the supernatural mystery; duel outcome remains undecided.
+  era: 01_DM_Era
+  chapter: 1
+  status: Existing canon summary; arc order remains provisional
+narrative:
+- heading: Chapter development
+  text: Zen appears subtly during Qualification so his later importance is established early. The June finale demonstrates
+    how far Finn has progressed. It does not have to resolve the supernatural mystery.
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: 00_Qualification_Arc
+  status: defined
+  path: ../../arcs/00_Qualification_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Senior_Finale_Arc
+  status: planned; June
+  path: ../../arcs/Senior_Finale_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

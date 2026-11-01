@@ -1,0 +1,31 @@
+temperament: Studious; Analytical; Factual; Disciplined; Observant; Persistent; Emotionally contained; Reserved
+  without timidity
+intelligence: Evidence-led analysis; narrows possibilities toward verifiable facts.
+values:
+- Verifiable facts
+- Disciplined investigation
+fearOrShame: TBD
+actionTriggers:
+- Credible leads about Atticus
+avoidances: []
+habits: []
+contradictions:
+- Emotionally contained but not cold; rational control prevents grief from overwhelming her.
+narrative:
+- heading: Personality
+  text: 'Alexis is studious, analytical, factual, disciplined, observant, persistent and emotionally contained.
+    She is reserved without being timid. She gathers information, verifies testimony, looks for contradictions,
+    builds hypotheses and follows the most credible lead.
+
+
+    She is not cold. Rational control helps her avoid being overwhelmed by Atticus''s disappearance. Where Sirius
+    explores systems and possibilities, Alexis narrows possibilities toward verifiable facts.'
+traits:
+- Studious
+- Analytical
+- Factual
+- Disciplined
+- Observant
+- Persistent
+- Emotionally contained
+- Reserved without timidity

@@ -1,0 +1,37 @@
+developments:
+- startingState: Identity depends on rank, recognition and presumed superiority.
+  pressurePoint: Two public defeats destroy his rationalizations and cause his followers to leave.
+  revelation: He had followers, not friends; honest examination of defeat is necessary.
+  endState: Returns after training and accepts either result, still proud, competitive and abrasive.
+  era: 01_DM_Era
+  chapter: 1
+  status: Existing canon summary; arc order remains provisional
+narrative:
+- heading: Chapter development
+  text: '1. Finn defeats Chaz after a public injustice, wounding his ego.
+
+    2. A second public defeat destroys his rationalizations, status and follower relationships.
+
+    3. Chaz withdraws, trains and returns for a result-flexible duel that he finally judges honestly.
+
+
+    His transformation is from “I am superior, so I should not lose” to “I lost, so I must become better.” He remains
+    proud, abrasive and ambitious.'
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: 00_Qualification_Arc
+  status: defined
+  path: ../../arcs/00_Qualification_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Rival_Introduction_Arc
+  status: defined at high level; order undecided
+  path: ../../arcs/Rival_Introduction_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Rival_Returns_Arc
+  status: planned; placement undecided
+  path: ../../arcs/Rival_Returns_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Rival_Reconstruction_Arc
+  status: planned; placement undecided
+  path: ../../arcs/Rival_Reconstruction_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

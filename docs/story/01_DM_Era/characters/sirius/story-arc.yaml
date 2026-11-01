@@ -1,0 +1,40 @@
+developments:
+- startingState: Insecure analyst living in Zen’s shadow and avoiding confrontation.
+  pressurePoint: Bullies take a meaningful card; he withdraws from class and hides in his room.
+  revelation: Finn’s Best of 3 challenge forces a first step toward action.
+  endState: Returns to class and becomes Finn’s friend without instantly becoming confident.
+  era: 01_DM_Era
+  chapter: 1
+  status: Existing canon summary; arc order remains provisional
+narrative:
+- heading: Chapter development
+  text: 'Three students take a meaningful card after defeating Sirius. Finn intervenes. Sirius later hides in his
+    room after missing class, and Finn forces him to act through a Best of 3 duel. He returns to class and becomes
+    Finn''s friend without becoming confident overnight.
+
+
+    Long-term development: a Chapter 2 growth spurt makes him taller than Finn while his internal identity remains
+    small. Later he becomes a better duelist and values theory, construction and analysis without measuring himself
+    against Zen.'
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: 00_Qualification_Arc
+  status: defined
+  path: ../../arcs/00_Qualification_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Nerd_Arc
+  status: largely defined
+  path: ../../arcs/Nerd_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Girl_Arc
+  status: largely defined
+  path: ../../arcs/Girl_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Missing_Brother_Arc
+  status: planned; current position after Chaz's second arc
+  path: ../../arcs/Missing_Brother_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Atticus_Liberation_Arc
+  status: planned; late Chapter 1
+  path: ../../arcs/Atticus_Liberation_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

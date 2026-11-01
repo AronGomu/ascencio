@@ -1,0 +1,337 @@
+direction: Selected character-specific clothing follows the visual design; shared academy uniform constraints apply
+  where relevant.
+outfits:
+- id: casual
+  name: Casual spider-gothic
+  image: assets/zomb-v2/blaise-scale-round5/40-casual.png
+  status: current selected 40 cm outfit reference
+  prompt: assets/zomb-v2/blaise-scale-round5/40-casual-prompt.txt
+  description: Black off-shoulder knit top with web-patterned sleeves/neckline, dark pleated skirt with web trim,
+    opaque tights and ankle boots.
+- id: winter
+  name: Plain winter Red uniform
+  image: assets/zomb-v2/blaise-scale-round5/40-winter.png
+  status: current selected 40 cm outfit reference
+  prompt: assets/zomb-v2/blaise-scale-round5/40-winter-prompt.txt
+  description: Plain Red blazer, white shirt, plain black ribbon, unadorned lapels/cuffs, plain pleated skirt with
+    Red stripe, opaque tights and low shoes.
+accessories:
+- id: spider-hair-clip
+  status: selected on all outfits
+  round: 3
+  option: '20'
+  name: Blushing charm
+  bodyFill: black
+  eyeMarks: ivory
+  cheekMarks: dusty pink
+  bow: dusty pink
+  source: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-casual-black.png
+- id: choker
+  status: allowed
+  description: Plain choker; no pendant.
+requiredElements:
+- Selected black blushing spider clip retained on all outfits
+- Plain Red academic tailoring and academy crest
+excludedElements:
+- Spider pendant on every outfit
+- Spider/web embroidery, lace, pins or ribbon charms on academic clothes
+narrative:
+- Her current casual design wears a black off-shoulder knit top, a dark pleated skirt with web trim, opaque tights
+  and ankle boots. Casual fabric may retain spiderweb styling. All outfits omit the spider pendant; the choker is
+  plain. Her academic Red uniforms have plain tailoring and trim without spider/web motifs, pins or necklace charms;
+  the selected spider hair clip remains. The owner selected this design in place of the former long-pink-haired
+  academy-uniform studies. Her academy rank remains Red; summer and winter academy-uniform adaptations are available
+  as the outfit studies below.
+- heading: Spider-gothic outfit studies
+  text: 'Current design rules retain the short bob, selected black blush spider clip and Zomb rendering. No outfit
+    has a spider pendant. Casual clothes may retain web details; academic clothes use the plain Red uniform without
+    spider or web motifs. Backgrounds stay separate. Earlier linked studies may predate this cleanup.
+
+
+    - [Casual](assets/zomb-v2/blaise-scale-round5/40-casual.png): black off-shoulder knit top, web-patterned sleeves
+    and neckline, pleated web-trim skirt, opaque tights and ankle boots.
+
+    - Historical summer study (predates the motif cleanup): [Summer Red uniform](assets/zomb-v2/blaise-proportions-80cm/summer.png):
+    Red polo with white collar and trim, academy crest, plain collar and trim, dark skirt with Red stripe, opaque
+    tights and low shoes.
+
+    - [Winter Red uniform](assets/zomb-v2/blaise-scale-round5/40-winter.png): Red blazer, white shirt, plain black
+    ribbon, unadorned lapels and cuffs, plain pleated skirt with Red stripe, opaque tights and low shoes.'
+- heading: Hair-clip options
+  text: 'The owner selected **round 3, option 20: Blushing charm, black fill**. The clip uses ivory eyes, small
+    pink cheeks and a dusty-pink bow. This selection applies across outfits. The selected bust circumference is
+    40 cm; other circumferences are comparison studies only.
+
+
+    - [Round 3: twenty outline refinements](assets/zomb-v2/blaise-hairclips/outline-round3/comparison-standalone.html):
+    body shapes 01–08, bow treatments 09–14, expressions 15–20.
+
+    - [Round 2: five flat ribbon-spider icons](assets/zomb-v2/blaise-hairclips/ribbon-icons/comparison-standalone.html).
+
+    - [Round 1: ten cute spider hair clips](assets/zomb-v2/blaise-hairclips/comparison-standalone.html).
+
+
+    The [round-4 application comparison](assets/zomb-v2/blaise-hairclips/application-round4/comparison-standalone.html)
+    applies shortlisted clips 17, 19 and 20 to casual wear and the winter Red uniform, each with white and black
+    spider fill: exactly twelve comparison renders. Clothing colors and the 80 cm reference proportions are retained.'
+uniformReference: ../../visual-direction.md
+comparisonStudy:
+  path: assets/zomb-v2/blaise-scale-round5/comparison-standalone.html
+  bustCircumferencesCm:
+  - 30
+  - 40
+  - 50
+  - 60
+  - 70
+  - 80
+  - 90
+  - 100
+  - 110
+  - 120
+  outfits:
+  - casual
+  - winter
+  layout: one horizontally scrollable row per outfit
+  imageCount: 20
+  selectionReference: appearance.yaml#measurements.bustCircumferenceCm
+accessoryStudies:
+- status: historical comparison
+  path: assets/zomb-v2/blaise-hairclips/comparison-standalone.html
+- status: historical comparison
+  path: assets/zomb-v2/blaise-hairclips/ribbon-icons/comparison-standalone.html
+- status: historical comparison
+  path: assets/zomb-v2/blaise-hairclips/outline-round3/comparison-standalone.html
+- status: historical comparison
+  path: assets/zomb-v2/blaise-hairclips/application-round4/comparison-standalone.html
+studies:
+- image: assets/zomb-v1/blaise.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v1/blaise-prompt.txt
+- image: assets/zomb-v2/yuna.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/yuna-prompt.txt
+- image: assets/zomb-v2/blaise-spider-v3.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-spider-v3-prompt.txt
+- image: assets/zomb-v2/blaise-spider-v4.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-spider-v4-prompt.txt
+- image: assets/zomb-v2/blaise-wardrobe/casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-wardrobe/casual-prompt.txt
+- image: assets/zomb-v2/blaise-wardrobe/winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-wardrobe/winter-prompt.txt
+- image: assets/zomb-v2/blaise-wardrobe/summer.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-wardrobe/summer-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/08.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/08-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/09.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/09-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/03.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/03-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/04.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/04-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/01.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/01-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/05.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/05-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/06.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/06-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/02.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/02-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/07.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/07-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/10.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/10-prompt.txt
+- image: assets/zomb-v2/blaise-proportions-80cm/dress.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-proportions-80cm/dress-prompt.txt
+- image: assets/zomb-v2/blaise-proportions-80cm/casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-proportions-80cm/casual-prompt.txt
+- image: assets/zomb-v2/blaise-proportions-80cm/summer.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-proportions-80cm/summer-prompt.txt
+- image: assets/zomb-v2/blaise-proportions-80cm/winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-proportions-80cm/winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/100-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/100-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/100-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/100-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/110-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/110-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/110-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/110-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/120-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/120-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/80-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/80-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/90-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/90-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/90-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/90-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/120-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/120-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/70-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/70-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/60-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/60-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/60-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/60-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/70-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/70-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/30-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/30-winter-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/50-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/50-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/30-casual.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/30-casual-prompt.txt
+- image: assets/zomb-v2/blaise-scale-round5/50-winter.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-scale-round5/50-winter-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/ribbon-icons/03.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/ribbon-icons/03-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/ribbon-icons/01.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/ribbon-icons/01-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/ribbon-icons/05.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/ribbon-icons/05-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/ribbon-icons/02.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/ribbon-icons/02-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/ribbon-icons/04.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/ribbon-icons/04-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/09.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/09-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/10.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/10-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/12.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/12-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/11.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/11-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/14.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/14-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/15.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/15-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/16.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/16-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/17.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/17-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/18.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/18-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/19.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/19-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/20.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/20-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/03.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/03-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/05.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/05-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/07.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/07-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/06.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/06-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/08.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/08-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/04.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/04-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/02.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/02-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/01.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/01-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/outline-round3/13.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/outline-round3/13-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-casual-white.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-casual-white-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-casual-white.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-casual-white-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-casual-black.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-casual-black-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-casual-black.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-casual-black-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-winter-white.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-winter-white-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-winter-black.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-17-winter-black-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-casual-black.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-casual-black-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-winter-white.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-winter-white-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-casual-white.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-casual-white-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-winter-black.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-winter-black-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-winter-white.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-20-winter-white-prompt.txt
+- image: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-winter-black.png
+  status: historical study; does not override the selected design
+  prompt: assets/zomb-v2/blaise-hairclips/application-round4/clip-19-winter-black-prompt.txt
+- image: assets/references/elaborate-gothic-exploration.jpg
+  status: historical study; does not override the selected design
+- image: assets/references/summer-uniform.jpg
+  status: historical study; does not override the selected design
+- image: assets/references/winter-uniform.jpg
+  status: historical study; does not override the selected design

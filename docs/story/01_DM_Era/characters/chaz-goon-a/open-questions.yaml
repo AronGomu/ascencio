@@ -1,0 +1,10 @@
+questions:
+- id: chaz-goon-a-q01
+  question: Name, personality and deck.
+  status: open
+- id: chaz-goon-a-q02
+  question: Reason for following Chaz.
+  status: open
+- id: chaz-goon-a-q03
+  question: Reaction to Chaz's later public collapse.
+  status: open

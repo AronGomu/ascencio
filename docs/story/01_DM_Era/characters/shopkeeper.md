@@ -1,14 +1,3 @@
-# Shopkeeper — vendor
+# Moved: Shopkeeper
 
-> Status: needs definition
-
-## Role
-
-The Shopkeeper runs a card shop or similar vendor location. The role may connect the academy map to card access and may become the character who gives Finn his iconic spirit card.
-
-## Open details
-
-- [ ] Name and personality.
-- [ ] Whether he gives Finn the spirit card.
-- [ ] Shop location and story role.
-- [ ] Relationship to academy students.
+The canonical dossier is [Shopkeeper](shopkeeper/character.yaml). Start there for identity, appearance, fashion, story and direct asset links.

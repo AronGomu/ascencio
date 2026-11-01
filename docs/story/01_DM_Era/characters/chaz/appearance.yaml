@@ -1,0 +1,39 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: Long angular visual rhythm; exact height undecided
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: black
+  style: as selected in the current design
+eyes: narrow, half-lidded; color undecided
+face: Long narrow angular face, pointed chin, high cheekbones, thin eyebrows, long straight nose and subtly asymmetrical
+  mouth.
+distinguishingFeatures:
+- Pale coloring
+- Raised chin and aristocratic disdain
+- Asymmetrical stance; hand in pocket
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+narrative:
+- Chaz is an adult man with black hair, pale coloring and a long, narrow, angular face. His pointed chin, high cheekbones,
+  narrow half-lidded eyes, thin eyebrows, straight nose and slight asymmetry of the mouth create calm aristocratic
+  disdain.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult man with black hair, pale complexion, long narrow angular face, pointed chin, high cheekbones,
+  half-lidded narrow eyes, thin raised eyebrows, long straight nose and restrained asymmetrical smirk. Chin raised
+  with aristocratic disdain. Clean simple Blue academy blazer worn open, loosened collar and relaxed tie, white
+  shirt, dark trousers and low black shoes. One hand in pocket. Small embroidered violet crest.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/chaz.png
+  prompt: assets/zomb-v2/chaz-prompt.txt
+  sha256: 01f28d6cda8282110a672f2f0be51482eb7cef04a3e03994047626f3c4155bdd
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/chaz.png

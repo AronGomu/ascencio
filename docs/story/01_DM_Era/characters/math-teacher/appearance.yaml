@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult man in his late forties, very slim build, receding silver-gray hair neatly parted, narrow long
+  face, round wire glasses, contemplative gentle expression. Ivory shirt, charcoal knitted vest, dark tie, charcoal
+  tailored trousers and low shoes, tiny violet academy pin. Holds a closed mathematical notebook and a short piece
+  of chalk, no writing or equations in image.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/math-teacher.png
+  prompt: assets/zomb-v2/math-teacher-prompt.txt
+  sha256: 5411cf9def20d24ccbe88622aa54ad2384aa27b191e10df772835d19f695f0e8
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/math-teacher.png

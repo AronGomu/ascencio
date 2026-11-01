@@ -1,0 +1,13 @@
+questions:
+- id: chaz-q01
+  question: Definitive name and family background.
+  status: open
+- id: chaz-q02
+  question: Deck identity.
+  status: open
+- id: chaz-q03
+  question: Followers' personalities.
+  status: open
+- id: chaz-q04
+  question: Reconstruction training.
+  status: open

@@ -1,13 +1,3 @@
-# Sirius Arc Bully A
+# Moved: Sirius Arc Bully A
 
-> Status: needs definition
-
-## Role
-
-One of three classmates who defeat Sirius and take his meaningful card. Finn later duels all three and unlocks them as repeatable Free Duel opponents.
-
-## Open details
-
-- [ ] Name, personality and deck.
-- [ ] Wager and loss handling.
-- [ ] Relationship with Sirius and Finn.
+The canonical dossier is [Sirius Arc Bully A](sirius-bully-a/character.yaml). Start there for identity, appearance, fashion, story and direct asset links.

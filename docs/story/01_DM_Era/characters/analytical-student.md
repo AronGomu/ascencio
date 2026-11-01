@@ -1,14 +1,3 @@
-# Analytical Student — early academy cast
+# Moved: Analytical Student
 
-> Status: needs definition
-
-## Role
-
-A Bastion-type analytical student may observe the Qualification Duel and introduce academy strategy culture. The role is provisional and has no fixed Chapter 1 arc yet.
-
-## Open details
-
-- [ ] Name, personality and function.
-- [ ] Deck identity.
-- [ ] Qualification Arc dialogue.
-- [ ] Later Chapter 1 appearances.
+The canonical dossier is [Analytical Student](analytical-student/character.yaml). Start there for identity, appearance, fashion, story and direct asset links.

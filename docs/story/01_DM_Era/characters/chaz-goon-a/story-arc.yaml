@@ -1,0 +1,11 @@
+developments: []
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: Rival_Introduction_Arc
+  status: defined at high level; order undecided
+  path: ../../arcs/Rival_Introduction_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Rival_Returns_Arc
+  status: planned; placement undecided
+  path: ../../arcs/Rival_Returns_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

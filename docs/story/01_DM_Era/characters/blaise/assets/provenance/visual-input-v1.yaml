@@ -1,0 +1,30 @@
+id: blaise
+name: Blaise
+subject: Blaise is an adult woman with a slim silhouette with an 40 cm bust circumference, a chin-length
+  pale ivory bob with faint pink/silver shading and long bangs, red eyes, the selected cute black blushing
+  spider clip (round 3 option 20), with ivory eyes, pink cheeks and pink bow, and a slightly mischievous
+  reserved smile. She wears a simple black off-shoulder gothic dress with fitted corset-laced front, modest
+  covered torso, opaque skirt, long flared sleeves, a black lace-up choker, and diamond fishnet stockings.
+  Her canonical role remains Finn's energetic childhood friend, secretly in love with him. No spider pendant.
+  Spiderweb details are casual-only; academic clothes have no spider or web motifs.
+ref: docs/assets/style-studies/zomb/regenerated-v2/blaise-scale-round5/40-casual.png
+group: main
+designStatus: current
+proposal: false
+bustCircumferenceCm: 40
+proportionReference: docs/story/themes/bust-circumference-reference.yaml
+proportionReferenceOption: 40 cm literal bust circumference
+proportionsPendingOutfitRevision: false
+selectedHairClip:
+  round: 3
+  option: '20'
+  name: Blushing charm
+  bodyFill: black
+  eyeMarks: ivory
+  cheekMarks: dusty pink
+  bow: dusty pink
+  source: blaise-hairclips/application-round4/clip-20-casual-black.png
+appearanceRules:
+  spiderPendant: false
+  academicClothingSpiderTheme: false
+  selectedSpiderHairClipOnAllOutfits: true

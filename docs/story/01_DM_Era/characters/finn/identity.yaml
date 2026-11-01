@@ -1,0 +1,25 @@
+id: finn
+name: Finn
+aliases: []
+era: 01_DM_Era
+age: null
+role: Protagonist and player-controlled duelist; adult first-year Violet Academy student.
+firstAppearance: Qualification Arc
+group: main
+nameStatus: selected
+definitionStatus: mostly defined for Chapter 1
+academicRank: Red
+ageCategory: adult
+narrative:
+- heading: Identity
+  text: '- Name: Finn.
+
+    - Role: protagonist and player-controlled duelist.
+
+    - Academic stage: adult first-year Violet Academy student.
+
+    - Rank: Red at the beginning of Chapter 1.
+
+    - Family: present but off-screen in Chapter 1.
+
+    - Physique: athletic but approachable.'

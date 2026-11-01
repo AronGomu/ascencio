@@ -1,0 +1,10 @@
+questions:
+- id: sirius-bully-b-q01
+  question: Name, personality and deck.
+  status: open
+- id: sirius-bully-b-q02
+  question: Wager and loss handling.
+  status: open
+- id: sirius-bully-b-q03
+  question: Relationship with Sirius and Finn.
+  status: open

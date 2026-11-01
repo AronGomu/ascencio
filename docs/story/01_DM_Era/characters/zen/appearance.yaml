@@ -1,0 +1,38 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: Selected design is taller and more solidly built than Sirius
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: blue-black
+  style: neatly swept; broad clear forehead
+eyes: steady and alert; color undecided
+face: Composed angular face and calm assured expression.
+distinguishingFeatures:
+- Upright balanced posture
+- Visual contrast with Sirius’s hesitation
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+narrative:
+- Zen's current design is the owner-selected image linked below. It must express confidence, technical mastery,
+  reliability under pressure and his status as Violet Academy's absolute benchmark while creating a clear physical
+  and psychological contrast with Sirius.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: 'Proposed original design for an adult male academy champion: taller and more solidly built than Sirius,
+  neatly swept blue-black hair with broad clear forehead, composed angular face, steady alert eyes, calm assured
+  expression. Upright balanced posture, hands relaxed by sides. Simple dark academy blazer with small embroidered
+  violet crest, white shirt, restrained dark tie, dark trousers and low shoes. Rank is undecided: do not assign
+  bright rank color.'
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/zen.png
+  prompt: assets/zomb-v2/zen-prompt.txt
+  sha256: 88cc29b25d6bbe96fd520636802091f507112e3068b752d7acaff0ebb6394ab1
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/zen.png

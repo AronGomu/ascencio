@@ -1,0 +1,13 @@
+questions:
+- id: shopkeeper-q01
+  question: Name and personality.
+  status: open
+- id: shopkeeper-q02
+  question: Whether he gives Finn the spirit card.
+  status: open
+- id: shopkeeper-q03
+  question: Shop location and story role.
+  status: open
+- id: shopkeeper-q04
+  question: Relationship to academy students.
+  status: open

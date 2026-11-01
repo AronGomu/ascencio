@@ -1,0 +1,147 @@
+{
+  "clipNames": {
+    "17": "Sleepy eyes",
+    "19": "Little wink",
+    "20": "Blushing charm"
+  },
+  "description": "Clips 17 (sleepy), 19 (wink) and 20 (blush), each applied to Blaise’s casual outfit and Red winter blazer uniform. White/black changes only the spider hair clip’s body and leg fill; the pink bow and clothing colors stay unchanged.",
+  "colorTarget": "hair clip body and leg fill",
+  "studentOutfit": "winter blazer uniform",
+  "bustCircumferenceCm": 80,
+  "images": [
+    {
+      "id": "clip-17-casual-white",
+      "clip": "17",
+      "clipName": "Sleepy eyes",
+      "outfit": "casual",
+      "color": "white",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Casual · White clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing casual spider-gothic outfit illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 17 (Sleepy eyes).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two gently curved CLOSED sleepy eye strokes and NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: IVORY-WHITE fill for the spider's body AND all eight legs, charcoal outlines and charcoal eye marks.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Sleepy eyes face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The black casual top, skirt, opaque tights and boots must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "9820e80d05945b7618d4bceab5deb6accad7dbbeb6811049a2fbd67f85220dc0"
+    },
+    {
+      "id": "clip-17-casual-black",
+      "clip": "17",
+      "clipName": "Sleepy eyes",
+      "outfit": "casual",
+      "color": "black",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Casual · Black clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing casual spider-gothic outfit illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 17 (Sleepy eyes).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two gently curved CLOSED sleepy eye strokes and NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: CHARCOAL-BLACK fill for the spider's body AND all eight legs; a thin ivory outline separates its silhouette and leg loops, and IVORY eye marks preserve the expression. The bow remains dusty pink. Do not leave ivory fill inside the black spider body or legs.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Sleepy eyes face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The black casual top, skirt, opaque tights and boots must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "23ff2eba1199c13a63bd598ef0235cdace3a8e81deda8a98af56795a913494d5"
+    },
+    {
+      "id": "clip-17-winter-white",
+      "clip": "17",
+      "clipName": "Sleepy eyes",
+      "outfit": "winter",
+      "color": "white",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Winter uniform · White clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing RED winter academy blazer uniform illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 17 (Sleepy eyes).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two gently curved CLOSED sleepy eye strokes and NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: IVORY-WHITE fill for the spider's body AND all eight legs, charcoal outlines and charcoal eye marks.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Sleepy eyes face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The RED blazer, white shirt, black ribbon, dark pleated skirt with Red stripe, opaque tights and loafers must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "ddd6f3f2091339a1762052ad7e7a1facd1b2b3406c85d25e85fd0ab788b5d86a"
+    },
+    {
+      "id": "clip-17-winter-black",
+      "clip": "17",
+      "clipName": "Sleepy eyes",
+      "outfit": "winter",
+      "color": "black",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Winter uniform · Black clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing RED winter academy blazer uniform illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 17 (Sleepy eyes).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two gently curved CLOSED sleepy eye strokes and NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: CHARCOAL-BLACK fill for the spider's body AND all eight legs; a thin ivory outline separates its silhouette and leg loops, and IVORY eye marks preserve the expression. The bow remains dusty pink. Do not leave ivory fill inside the black spider body or legs.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Sleepy eyes face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The RED blazer, white shirt, black ribbon, dark pleated skirt with Red stripe, opaque tights and loafers must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "0e060ef72ff674cb2b8b6a37ca30e0f5c65ad2817da9fa904292fb50cf9b69a9"
+    },
+    {
+      "id": "clip-19-casual-white",
+      "clip": "19",
+      "clipName": "Little wink",
+      "outfit": "casual",
+      "color": "white",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Casual · White clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing casual spider-gothic outfit illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 19 (Little wink).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be one round open eye at viewer-left and one curved WINKING eye at viewer-right, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: IVORY-WHITE fill for the spider's body AND all eight legs, charcoal outlines and charcoal eye marks.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Little wink face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The black casual top, skirt, opaque tights and boots must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "59188040d53785e3fe422e5b550faa4ac95d109a42efc1ce73f5898f3dc96cfd"
+    },
+    {
+      "id": "clip-19-casual-black",
+      "clip": "19",
+      "clipName": "Little wink",
+      "outfit": "casual",
+      "color": "black",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Casual · Black clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing casual spider-gothic outfit illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 19 (Little wink).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be one round open eye at viewer-left and one curved WINKING eye at viewer-right, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: CHARCOAL-BLACK fill for the spider's body AND all eight legs; a thin ivory outline separates its silhouette and leg loops, and IVORY eye marks preserve the expression. The bow remains dusty pink. Do not leave ivory fill inside the black spider body or legs.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Little wink face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The black casual top, skirt, opaque tights and boots must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "d7e5cc850a56d54fd8bc04f9a526c0dd48fa74905fcd82e9555704383b1af11f"
+    },
+    {
+      "id": "clip-19-winter-white",
+      "clip": "19",
+      "clipName": "Little wink",
+      "outfit": "winter",
+      "color": "white",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Winter uniform · White clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing RED winter academy blazer uniform illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 19 (Little wink).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be one round open eye at viewer-left and one curved WINKING eye at viewer-right, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: IVORY-WHITE fill for the spider's body AND all eight legs, charcoal outlines and charcoal eye marks.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Little wink face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The RED blazer, white shirt, black ribbon, dark pleated skirt with Red stripe, opaque tights and loafers must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "6dae929900e63ab108efea36affb70f1c2fee445f3836b47ed8b210f8c4a4512"
+    },
+    {
+      "id": "clip-19-winter-black",
+      "clip": "19",
+      "clipName": "Little wink",
+      "outfit": "winter",
+      "color": "black",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Winter uniform · Black clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing RED winter academy blazer uniform illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 19 (Little wink).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be one round open eye at viewer-left and one curved WINKING eye at viewer-right, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: CHARCOAL-BLACK fill for the spider's body AND all eight legs; a thin ivory outline separates its silhouette and leg loops, and IVORY eye marks preserve the expression. The bow remains dusty pink. Do not leave ivory fill inside the black spider body or legs.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Little wink face and pink ribbon. \nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The RED blazer, white shirt, black ribbon, dark pleated skirt with Red stripe, opaque tights and loafers must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "235f0eeede840c2878838f661d50dcbfb0c06e1cddde468ed3a1bb022097096a"
+    },
+    {
+      "id": "clip-20-casual-white",
+      "clip": "20",
+      "clipName": "Blushing charm",
+      "outfit": "casual",
+      "color": "white",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Casual · White clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing casual spider-gothic outfit illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 20 (Blushing charm).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two ordinary round open dot eyes, two tiny flat dusty-pink cheek marks below them, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: IVORY-WHITE fill for the spider's body AND all eight legs, charcoal outlines and charcoal eye marks.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Blushing charm face and pink ribbon. Keep the tiny pink cheek marks in BOTH white and black versions.\nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The black casual top, skirt, opaque tights and boots must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "4c44494bc726cfd4c471cbe058faf2149e8638e361d7cd000e1f3b97f8975e72"
+    },
+    {
+      "id": "clip-20-casual-black",
+      "clip": "20",
+      "clipName": "Blushing charm",
+      "outfit": "casual",
+      "color": "black",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Casual · Black clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing casual spider-gothic outfit illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 20 (Blushing charm).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two ordinary round open dot eyes, two tiny flat dusty-pink cheek marks below them, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: CHARCOAL-BLACK fill for the spider's body AND all eight legs; a thin ivory outline separates its silhouette and leg loops, and IVORY eye marks preserve the expression. The bow remains dusty pink. Do not leave ivory fill inside the black spider body or legs.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Blushing charm face and pink ribbon. Keep the tiny pink cheek marks in BOTH white and black versions.\nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The black casual top, skirt, opaque tights and boots must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "76768b130a458165f2a0333c0fba1aa498b230593b1aff9a624500e416085c82"
+    },
+    {
+      "id": "clip-20-winter-white",
+      "clip": "20",
+      "clipName": "Blushing charm",
+      "outfit": "winter",
+      "color": "white",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Winter uniform · White clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing RED winter academy blazer uniform illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 20 (Blushing charm).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two ordinary round open dot eyes, two tiny flat dusty-pink cheek marks below them, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: IVORY-WHITE fill for the spider's body AND all eight legs, charcoal outlines and charcoal eye marks.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Blushing charm face and pink ribbon. Keep the tiny pink cheek marks in BOTH white and black versions.\nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The RED blazer, white shirt, black ribbon, dark pleated skirt with Red stripe, opaque tights and loafers must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "42445a8094a3056c9f772593c18eee42b4a088431b82a1652d4c39ae9cd598fe"
+    },
+    {
+      "id": "clip-20-winter-black",
+      "clip": "20",
+      "clipName": "Blushing charm",
+      "outfit": "winter",
+      "color": "black",
+      "colorTarget": "hair clip body and leg fill",
+      "label": "Winter uniform · Black clip",
+      "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the existing RED winter academy blazer uniform illustration of Blaise, an ADULT woman. Image 2 is the EXACT cute flat spider HAIR CLIP design to apply, round-3 option 20 (Blushing charm).\nChange ONLY THE HAIR CLIP on Blaise's existing temple (viewer-right): replace the existing clip with the emblem from image 2, preserving its round body, eight short outlined loop legs, and small pink bow at upper right. The hair clip expression must be two ordinary round open dot eyes, two tiny flat dusty-pink cheek marks below them, NO MOUTH. This expression belongs ONLY to the accessory: do NOT change Blaise's own eyes, face or expression.\nColor variant: CHARCOAL-BLACK fill for the spider's body AND all eight legs; a thin ivory outline separates its silhouette and leg loops, and IVORY eye marks preserve the expression. The bow remains dusty pink. Do not leave ivory fill inside the black spider body or legs.\nKeep the clip as a compact visible hair accessory at its current scale, about a quarter of the face width, never a large animal or headpiece. It is flat icon/enamel art, no realistic anatomy, metal volume, cast shadow, glossy shine or furry texture. Preserve the clearly readable Blushing charm face and pink ribbon. Keep the tiny pink cheek marks in BOTH white and black versions.\nPRESERVE EVERYTHING ELSE from image 1: exact face, short ivory/pink-tinted bob and bangs, red eyes, current smile, adult age, slim 80 cm reference bust/body proportions, pose, full-body framing, fingers, footwear, clothing, spiderweb fabric motifs, pendant/neck ribbon and any academy crest. The RED blazer, white shirt, black ribbon, dark pleated skirt with Red stripe, opaque tights and loafers must retain their original colors. White/black applies ONLY to the spider charm, NOT hair, clothes, skin, eyes, background, or the pendant.\nKeep Zomb cel rendering, thin muted contours, restrained matte shading, fine character CRT lines and subtle red/cyan contour ghosting. Neutral gray review backdrop unchanged, no scene decoration, no stars, no text, labels or watermark. Output one full-body character image, not a collage or accessory-only icon.",
+      "sha256": "770b02432ded32bb80d69bbd974f9f928d7f6b221e13f1a6430a4d7fca8a1b80"
+    }
+  ],
+  "status": "complete",
+  "originalImageCount": 12
+}

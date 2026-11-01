@@ -1,0 +1,39 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: Strongly defined waist, long slender legs and normally proportioned arms
+measurements:
+  heightCm: null
+  bustCircumferenceCm: 110
+hair:
+  color: blonde
+  style: long, carefully maintained
+eyes: pale blue
+face: Calm, exact, slightly distant expression.
+distinguishingFeatures:
+- Oval glasses
+- Notebook or file
+- Adjusts glasses while thinking
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+narrative:
+- Alexis is an adult blonde woman with long, carefully maintained hair, oval glasses and pale blue eyes. Her expression
+  is calm, exact and slightly distant. Her structured, practical office-preppy presentation supports her habit of
+  carrying a notebook or file and adjusting her glasses while thinking.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult woman, very long maintained blonde hair, oval glasses, pale blue eyes, calm analytical expression.
+  Defined waist, long slender legs and full bust, properly fitted closed non-provocative uniform. Simple Blue academy
+  blazer, white shirt, restrained blue tie, dark pleated skirt with blue stripe, opaque black tights, low black
+  loafers. Small embroidered violet crest. Holding black notebook and adjusting glasses.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/alexis.png
+  prompt: assets/zomb-v2/alexis-prompt.txt
+  sha256: 7af12a25e73f1b97718ad0deda7eb9d4a65f34c6f46cefdf4e19a90e4ddcfbbe
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/alexis.png
+measurementNotes: Approximately 110 cm in current narrative canon; other numerical measurements are undecided.

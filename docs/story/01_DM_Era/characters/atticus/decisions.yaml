@@ -1,0 +1,17 @@
+entries:
+- id: current-visual-selection
+  status: selected
+  affectedPart: appearance.yaml
+  decision: Use the owner-selected Zomb current design. Narrative unknowns are not approved by the image selection.
+  source: 'Owner instruction: save those designs as the currently used.'
+- id: modular-dossier
+  status: approved
+  affectedPart: character.yaml
+  decision: Use a main character.yaml, focused YAML parts and direct links to local assets/.
+  source: Owner approved all proposed YAML parts and structure.
+migrationSources:
+- path: assets/provenance/narrative-before-migration.md
+  status: historical snapshot; current facts live in YAML parts
+  sha256: 9041b3e2a42e0ccb1a2a03b6038c10d7d584a4f485e278aba3e3ad146f99adc5
+- path: assets/provenance/visual-input-v2.yaml
+  status: historical generation metadata; exact original prompt text preserved

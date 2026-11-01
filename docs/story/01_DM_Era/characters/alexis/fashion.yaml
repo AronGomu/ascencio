@@ -1,0 +1,28 @@
+direction: Practical structured office-preppy appearance; canonical Blue summer/winter uniforms worn precisely,
+  with closed properly fitted clothing.
+outfits:
+- id: current-design
+  status: current
+  image: assets/zomb-v2/alexis.png
+  prompt: assets/zomb-v2/alexis-prompt.txt
+  description: Clothing shown in the owner-selected current design. See exact prompt for the complete rendering
+    brief.
+accessories: []
+requiredElements:
+- Oval glasses
+- Notebook/file presentation where relevant
+excludedElements:
+- Provocative clothing
+- Casual uniform alterations
+narrative:
+- Her established silhouette has a strongly defined waist, long slender legs, normally proportioned arms and a visually
+  large bust currently described as approximately 110 cm. Clothing remains properly fitted, closed and non-provocative.
+  She wears the canonical Blue summer and winter uniforms without casual alterations.
+uniformReference: ../../visual-direction.md
+studies:
+- image: assets/references/proportion-study.jpg
+  status: historical study; does not override the selected design
+- image: assets/references/summer-uniform.jpg
+  status: historical study; does not override the selected design
+- image: assets/references/winter-uniform.jpg
+  status: historical study; does not override the selected design

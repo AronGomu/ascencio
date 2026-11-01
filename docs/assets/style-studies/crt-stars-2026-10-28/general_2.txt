@@ -1,0 +1,4 @@
+Art style : Clean flat 2D anime drawing, fine contours and simplified shapes, filtered by uniform horizontal CRT scanlines and fine screen grain, cyan/red contour offset.
+Fashion / material rendering : Broad matte dark shapes with minimal fold shading, fine regular mesh, softly shaded pale surfaces.
+Color palette : Black and off-white with restrained pale rose, tiny deep-red accents and bright cyan/red fringes.
+Lighting : Soft even frontal light with low-detail shading and luminous dotted accents against black.

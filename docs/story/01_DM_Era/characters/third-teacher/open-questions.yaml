@@ -1,0 +1,13 @@
+questions:
+- id: third-teacher-q01
+  question: Subject.
+  status: open
+- id: third-teacher-q02
+  question: Name and personality.
+  status: open
+- id: third-teacher-q03
+  question: Teaching philosophy.
+  status: open
+- id: third-teacher-q04
+  question: Duel identity and arc appearances.
+  status: open

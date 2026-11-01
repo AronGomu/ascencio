@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult female university student, medium height, softly rounded build, honey-brown wavy shoulder-length
+  hair, dark brown skin, rounded cheeks and a small conspiratorial smirk. Simple neutral charcoal academy blazer
+  with small violet crest, ivory shirt, restrained dark ribbon, dark knee-length pleated skirt with neutral stripe,
+  opaque tights and simple low shoes. One hand at hip, other making small gossiping gesture. Rank unconfirmed.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/alexis-bully-b.png
+  prompt: assets/zomb-v2/alexis-bully-b-prompt.txt
+  sha256: fb8216d16af048dd075a90edac363859fc87ac1428e53a1a1de96dff58542723
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/alexis-bully-b.png

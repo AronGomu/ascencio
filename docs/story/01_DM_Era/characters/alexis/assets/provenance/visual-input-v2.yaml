@@ -1,0 +1,38 @@
+id: alexis
+name: Alexis
+subject: Adult woman, very long maintained blonde hair, oval glasses, pale blue eyes, calm analytical
+  expression. Defined waist, long slender legs and full bust, properly fitted closed non-provocative uniform.
+  Simple Blue academy blazer, white shirt, restrained blue tie, dark pleated skirt with blue stripe, opaque
+  black tights, low black loafers. Small embroidered violet crest. Holding black notebook and adjusting
+  glasses.
+ref: docs/story/themes/characters/alexis/winter-uniform.jpg
+group: main
+previous: alexis.png
+prompt: 'Use case: identity-preserve. Asset: character design study, Zomb rendering revision 2.
+
+  Input image: the existing Alexis design; use it as the identity and pose reference.
+
+  Primary request: regenerate this one character while removing EVERY background star and decorative background
+  motif. Place the character on a completely plain, uniform light cool-gray background with no scenery,
+  star shapes, lights, patterns, gradients, floor, horizon, or cast shadow. This neutral review background
+  is a separate presentation choice, NOT part of Zomb style.
+
+  Preserve: the same character''s face, skin tone, hair color and hairstyle, clothing design, garment
+  colors, silhouette, proportions, adult age, expression, accessories, and pose. The clothing''s small
+  academy crest, if present, is part of the outfit and should stay. Character identity brief: Adult woman,
+  very long maintained blonde hair, oval glasses, pale blue eyes, calm analytical expression. Defined
+  waist, long slender legs and full bust, properly fitted closed non-provocative uniform. Simple Blue
+  academy blazer, white shirt, restrained blue tie, dark pleated skirt with blue stripe, opaque black
+  tights, low black loafers. Small embroidered violet crest. Holding black notebook and adjusting glasses.
+
+  Rendering on the CHARACTER ONLY: simplified retro 2D anime cel drawing, thin muted gray contours, broad
+  light shapes, restrained interior detail, soft analog blur, fine horizontal CRT scanlines, subtle red/cyan
+  contour ghosts and faint phosphor grain. Nearly flat matte cloth, sparse low-contrast folds, faint pink
+  surface shading, soft even diffuse light, flattened shadows and restrained character highlights. Keep
+  individual palette and skin tone. No photorealistic shading or glossy new-anime finish. CRT treatment
+  ends at the silhouette; background stays clean and uniform.
+
+  Composition: single full figure, all existing hair, hands, feet and outfit comfortably in frame. No
+  additional characters, no text, no watermark. Preserve the previous pose, including seated pose if present.'
+designStatus: current
+proposal: false

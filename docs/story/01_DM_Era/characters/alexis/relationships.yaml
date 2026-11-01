@@ -1,0 +1,22 @@
+connections:
+- characterId: atticus
+  dynamic: Missing older brother; they were extremely close and his disappearance drives her enrollment.
+  status: established
+- characterId: finn
+  dynamic: Initially distant; accepts his help and becomes an investigation partner.
+  status: established
+- characterId: sirius
+  dynamic: Complementary analyst and investigation partner.
+  status: established
+- characterId: darkness-agent
+  dynamic: Defeats Alexis before Finn and Sirius intervene.
+  status: established
+narrative:
+- heading: Relationships
+  text: '- Finn: initially distant; later investigation partner.
+
+    - Sirius: complementary analyst and investigation partner.
+
+    - Atticus: missing older brother and central motivation.
+
+    - Darkness agents: sources, adversaries and obstacles to recovering Atticus.'

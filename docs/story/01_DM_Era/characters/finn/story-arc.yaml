@@ -1,0 +1,51 @@
+developments:
+- startingState: Hot-headed first-year who follows immediate interests.
+  pressurePoint: Friendship, injustice, investigation and competitive defeat require chosen effort.
+  revelation: Chosen discipline can serve his own values rather than repeat parental constraint.
+  endState: Begins taking responsibility for the work required by his long-term dueling ambition; June duel measures
+    progress.
+  era: 01_DM_Era
+  chapter: 1
+  status: Existing canon summary; arc order remains provisional
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: 00_Qualification_Arc
+  status: defined
+  path: ../../arcs/00_Qualification_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Nerd_Arc
+  status: largely defined
+  path: ../../arcs/Nerd_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Rival_Introduction_Arc
+  status: defined at high level; order undecided
+  path: ../../arcs/Rival_Introduction_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Girl_Arc
+  status: largely defined
+  path: ../../arcs/Girl_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Transfer_Student_Arc
+  status: planned; around December
+  path: ../../arcs/Transfer_Student_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Rival_Returns_Arc
+  status: planned; placement undecided
+  path: ../../arcs/Rival_Returns_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Missing_Brother_Arc
+  status: planned; current position after Chaz's second arc
+  path: ../../arcs/Missing_Brother_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Rival_Reconstruction_Arc
+  status: planned; placement undecided
+  path: ../../arcs/Rival_Reconstruction_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Atticus_Liberation_Arc
+  status: planned; late Chapter 1
+  path: ../../arcs/Atticus_Liberation_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Senior_Finale_Arc
+  status: planned; June
+  path: ../../arcs/Senior_Finale_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

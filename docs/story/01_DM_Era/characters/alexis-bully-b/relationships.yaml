@@ -1,0 +1,7 @@
+connections:
+- characterId: alexis
+  dynamic: One of two students targeting her through jealousy, rumor and family-related cruelty.
+  status: established
+- characterId: finn
+  dynamic: Confronts the pair through duels to learn what they know.
+  status: established

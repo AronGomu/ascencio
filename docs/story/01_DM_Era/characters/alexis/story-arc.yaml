@@ -1,0 +1,35 @@
+developments:
+- startingState: Investigates Atticus’s disappearance alone against her parents’ wishes.
+  pressurePoint: Defeat by a Darkness agent, followed later by a credible report that Atticus is irrecoverably lost.
+  revelation: Accepts Finn and Sirius’s help; later discovers Atticus alive but captive.
+  endState: The trio genuinely rescues Atticus; exact liberation mechanism remains open.
+  era: 01_DM_Era
+  chapter: 1
+  status: Existing canon summary; arc order remains provisional
+narrative:
+- heading: Chapter development
+  text: 'Alexis begins her investigation alone. A Darkness agent defeats her, Finn and Sirius intervene, and the
+    Ténèbres absorb the defeated agent before questioning. Alexis then tells them the truth and accepts their help.
+
+
+    A later lead produces the false conclusion that Atticus is irrecoverably lost, sending her into grief. Near
+    the end of the chapter, the trio discovers him alive under the Ténèbres'' control and defeats him in a duel
+    intended to liberate him.'
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: 00_Qualification_Arc
+  status: defined
+  path: ../../arcs/00_Qualification_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Girl_Arc
+  status: largely defined
+  path: ../../arcs/Girl_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Missing_Brother_Arc
+  status: planned; current position after Chaz's second arc
+  path: ../../arcs/Missing_Brother_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.
+- arc: Atticus_Liberation_Arc
+  status: planned; late Chapter 1
+  path: ../../arcs/Atticus_Liberation_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

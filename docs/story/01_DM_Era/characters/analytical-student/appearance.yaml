@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult male university student, average height and medium build, neatly slicked deep green-black hair,
+  broad forehead, dark attentive eyes behind small round glasses, calm precise expression. Simple neutral charcoal
+  academy blazer with violet crest, ivory shirt, neat dark tie, dark trousers and low shoes. Holds open plain notebook,
+  pencil poised above blank paper. Rank unconfirmed, not Sirius, no resemblance to an existing anime character.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/analytical-student.png
+  prompt: assets/zomb-v2/analytical-student-prompt.txt
+  sha256: 0e7b049cf7b9f38ae6d3f6a2b83cad139ef2918923ee7a2604e7787908c67535
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/analytical-student.png

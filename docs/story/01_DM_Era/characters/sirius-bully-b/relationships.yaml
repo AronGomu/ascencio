@@ -1,0 +1,7 @@
+connections:
+- characterId: sirius
+  dynamic: One of three classmates involved in taking his meaningful card after a duel.
+  status: established
+- characterId: finn
+  dynamic: Challenges the group while staking his own favorite card.
+  status: established

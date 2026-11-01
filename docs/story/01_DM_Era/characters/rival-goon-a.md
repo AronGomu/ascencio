@@ -1,13 +1,3 @@
-# Chaz Goon A — early rival opponent
+# Moved: Chaz Goon A
 
-> Status: needs definition
-
-## Role
-
-The first Goon challenges Finn in Chaz Introduction Arc. The duel is a single game and accepts either result. If Finn wins, the Goon reports the defeat to Chaz.
-
-## Open details
-
-- [ ] Name, personality and deck.
-- [ ] Reason for following Chaz.
-- [ ] Reaction to Chaz's later public collapse.
+The canonical dossier is [Chaz Goon A](chaz-goon-a/character.yaml). Start there for identity, appearance, fashion, story and direct asset links.

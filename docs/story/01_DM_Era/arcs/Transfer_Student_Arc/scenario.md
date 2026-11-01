@@ -18,4 +18,4 @@ Bring Finn's energetic childhood friend into Violet Academy and establish the ga
 
 ## Open continuity
 
-Her definitive name, public explanation, deck, exact relationships with Alexis and Sirius, and place in the investigation remain open.
+Her public explanation, deck, exact relationships with Alexis and Sirius, and place in the investigation remain open.

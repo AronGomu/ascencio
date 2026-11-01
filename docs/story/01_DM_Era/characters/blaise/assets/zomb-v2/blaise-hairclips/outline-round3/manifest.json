@@ -1,0 +1,149 @@
+{
+  "parentStudy": "../ribbon-icons/options.json",
+  "preferredBaseOption": "04",
+  "preferredBaseName": "Outline charm",
+  "round": 3,
+  "status": "twenty options generated; final variation awaiting owner selection",
+  "options": [
+    {
+      "id": "01",
+      "name": "Classic fine outline",
+      "image": "01.png",
+      "prompt": "01-prompt.txt",
+      "sha256": "3dfd54e9bca388716217eb60ecbc77fb165109e5554bb4637e74632639f1dcb1"
+    },
+    {
+      "id": "02",
+      "name": "Tall oval",
+      "image": "02.png",
+      "prompt": "02-prompt.txt",
+      "sha256": "6083cb367c62ca45f20a29bd220118b92172087e50cb75eeff59fad5b6a00556"
+    },
+    {
+      "id": "03",
+      "name": "Wide oval",
+      "image": "03.png",
+      "prompt": "03-prompt.txt",
+      "sha256": "96a84a6256313ead1cdee0b9b2f9ad1a0b00a83eb12a6f678c91f02369a46d38"
+    },
+    {
+      "id": "04",
+      "name": "Squishy bean",
+      "image": "04.png",
+      "prompt": "04-prompt.txt",
+      "sha256": "b202700abeccab5f7ff4e80944712ece3f51b0bd0bc06d8bfee8def08ff08a1d"
+    },
+    {
+      "id": "05",
+      "name": "Soft heart",
+      "image": "05.png",
+      "prompt": "05-prompt.txt",
+      "sha256": "3f7ff97f58d44088a8ffe731986cc25c2d775a468ad4a0cea7a9bc022c0f7c05"
+    },
+    {
+      "id": "06",
+      "name": "Pill shape",
+      "image": "06.png",
+      "prompt": "06-prompt.txt",
+      "sha256": "54ddefffe76688cd5c2919d6327f702858f48b7d9707a59978c8b8ebec7cf61f"
+    },
+    {
+      "id": "07",
+      "name": "Rounded diamond",
+      "image": "07.png",
+      "prompt": "07-prompt.txt",
+      "sha256": "8eece632ed6c04c223ccdfebae3bfe4f27a021fceff7b368b34e9b4830067a91"
+    },
+    {
+      "id": "08",
+      "name": "Cloud body",
+      "image": "08.png",
+      "prompt": "08-prompt.txt",
+      "sha256": "9136e25a31265357e75794a1b5f47408afa62dc2a79bc86741d43afcd567e259"
+    },
+    {
+      "id": "09",
+      "name": "Centered bow",
+      "image": "09.png",
+      "prompt": "09-prompt.txt",
+      "sha256": "4316f3a854d3b1870ecb3563f9127fe11375ff40f2201c04eb06d4d1327e2f9d"
+    },
+    {
+      "id": "10",
+      "name": "Left bow",
+      "image": "10.png",
+      "prompt": "10-prompt.txt",
+      "sha256": "64b844e0866b1206dabdf7f09507fdf73ae3269e201893973add865ba0b54e28"
+    },
+    {
+      "id": "11",
+      "name": "Tiny side bow",
+      "image": "11.png",
+      "prompt": "11-prompt.txt",
+      "sha256": "3752dff262b4813ba03f094f257a030118f6f07444c7f2686244c2d28df7d0ab"
+    },
+    {
+      "id": "12",
+      "name": "Oversized soft bow",
+      "image": "12.png",
+      "prompt": "12-prompt.txt",
+      "sha256": "e5a97eef010adfb879da0dc7daa4e6d284ca400e86f04c68296d54d62209b8e6"
+    },
+    {
+      "id": "13",
+      "name": "Ribbon tails",
+      "image": "13.png",
+      "prompt": "13-prompt.txt",
+      "sha256": "998e85c88c95be88109beafb09277e01cfdd1bbdf4555261bc6299f8f7eeb139"
+    },
+    {
+      "id": "14",
+      "name": "Diagonal ribbon",
+      "image": "14.png",
+      "prompt": "14-prompt.txt",
+      "sha256": "8d7dda1e9bac3d92ff0281bcd6e8cc81278abb02a9d814ede046dd9761005fd4"
+    },
+    {
+      "id": "15",
+      "name": "Close-set eyes",
+      "image": "15.png",
+      "prompt": "15-prompt.txt",
+      "sha256": "422b098fe4a18b02221f97fb9bb127c0996ec723472f9c76beb7b086e62ce07e"
+    },
+    {
+      "id": "16",
+      "name": "Wide-set eyes",
+      "image": "16.png",
+      "prompt": "16-prompt.txt",
+      "sha256": "74c9ff85527c9b567cb99ac13f170f8cb06c392c8e10eefb6c2182007e8970d0"
+    },
+    {
+      "id": "17",
+      "name": "Sleepy eyes",
+      "image": "17.png",
+      "prompt": "17-prompt.txt",
+      "sha256": "87419e561102c744bd928e32c1edf09ae4bc5bb4dba0b6f2ffdb8e792a6bb8e6"
+    },
+    {
+      "id": "18",
+      "name": "Happy eyes",
+      "image": "18.png",
+      "prompt": "18-prompt.txt",
+      "sha256": "9cfa722df477ef3d09faac5d253763b9616891e3d0590ed72620ffa6add42c2f"
+    },
+    {
+      "id": "19",
+      "name": "Little wink",
+      "image": "19.png",
+      "prompt": "19-prompt.txt",
+      "sha256": "dbfb789cd0781a5dfb660175084355e79ea29ffb3f5eecf409540cd046d73763"
+    },
+    {
+      "id": "20",
+      "name": "Blushing charm",
+      "image": "20.png",
+      "prompt": "20-prompt.txt",
+      "sha256": "ef63f6ba1067af57d42aecd232841eade5acbf3d0322bf9602a8b91f0093fcaa"
+    }
+  ]
+}

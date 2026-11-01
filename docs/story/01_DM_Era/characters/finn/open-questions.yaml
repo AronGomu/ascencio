@@ -1,0 +1,10 @@
+questions:
+- id: finn-q01
+  question: Name and nature of iconic spirit card.
+  status: open
+- id: finn-q02
+  question: Exact study and discipline progression.
+  status: open
+- id: finn-q03
+  question: Exact final duel structure with Zen.
+  status: open

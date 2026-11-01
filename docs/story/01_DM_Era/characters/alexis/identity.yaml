@@ -1,0 +1,21 @@
+id: alexis
+name: Alexis
+aliases: []
+era: 01_DM_Era
+age: null
+role: Central-trio investigator seeking her missing older brother Atticus.
+firstAppearance: TBD
+group: main
+nameStatus: provisional
+definitionStatus: provisional name; strongly defined for Chapter 1
+academicRank: Blue
+ageCategory: adult
+narrative:
+- heading: Identity
+  text: '- Role: central trio member and investigator.
+
+    - Family: older brother Atticus, missing before Chapter 1.
+
+    - University reason: investigate Atticus''s disappearance.
+
+    - Rank: Blue in the current visual direction.'

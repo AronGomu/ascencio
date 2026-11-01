@@ -1,0 +1,16 @@
+id: chaz-goon-a
+name: Chaz Goon A
+aliases: []
+era: 01_DM_Era
+age: null
+role: First follower to challenge Finn and report a loss to Chaz.
+firstAppearance: TBD
+group: supporting
+nameStatus: role label; personal name undecided
+definitionStatus: needs definition
+academicRank: TBD
+ageCategory: adult
+narrative:
+- heading: Role
+  text: The first Goon challenges Finn in Chaz Introduction Arc. The duel is a single game and accepts either result.
+    If Finn wins, the Goon reports the defeat to Chaz.

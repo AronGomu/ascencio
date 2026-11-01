@@ -1,14 +1,3 @@
-# Mathematics / Statistics Teacher — academy staff
+# Moved: Mathematics / Statistics Teacher
 
-> Status: needs definition
-
-## Role
-
-Mathematics or statistics teacher on the Chapter 1 university staff. The subject may connect to duel analysis and Sirius's strengths.
-
-## Open details
-
-- [ ] Name and personality.
-- [ ] Teaching philosophy.
-- [ ] Duel identity.
-- [ ] Arc appearances.
+The canonical dossier is [Mathematics / Statistics Teacher](math-teacher/character.yaml). Start there for identity, appearance, fashion, story and direct asset links.

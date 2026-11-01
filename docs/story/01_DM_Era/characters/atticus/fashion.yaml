@@ -1,0 +1,27 @@
+direction: 'Loosely worn academy uniform: open blazer or loose polo, relaxed collar, rolled sleeves and hands in
+  pockets. Temperament, not status display.'
+outfits:
+- id: current-design
+  status: current
+  image: assets/zomb-v2/atticus.png
+  prompt: assets/zomb-v2/atticus-prompt.txt
+  description: Clothing shown in the owner-selected current design. See exact prompt for the complete rendering
+    brief.
+- id: darkness-controlled
+  status: unresolved design
+  description: Entirely black clothing, face/head partly or fully masked, rigid closed threatening silhouette. Exact
+    mask and outfit remain undecided.
+  image: null
+accessories: []
+requiredElements: []
+excludedElements: []
+narrative:
+- He wears the university uniform much more loosely than other students, with an open blazer or loose polo, relaxed
+  collar, rolled sleeves and hands in pockets. This comes from temperament rather than status display.
+- Under the Ténèbres' control, a mask covers all or part of his face or head. His clothing becomes entirely black
+  and his silhouette rigid, closed and threatening. The exact mask and outfit remain undecided. The design must
+  contrast his ordinary warmth with a dehumanized absence of openness.
+uniformReference: ../../visual-direction.md
+studies:
+- image: assets/references/face-and-build-exploration.jpg
+  status: historical study; does not override the selected design

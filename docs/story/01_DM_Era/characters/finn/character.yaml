@@ -1,0 +1,15 @@
+schemaVersion: 1
+parts:
+  identity: identity.yaml
+  appearance: appearance.yaml
+  fashion: fashion.yaml
+  backstory: backstory.yaml
+  personality: personality.yaml
+  motivations: motivations.yaml
+  relationships: relationships.yaml
+  story-arc: story-arc.yaml
+  duel: duel.yaml
+  voice: voice.yaml
+  abilities: abilities.yaml
+  decisions: decisions.yaml
+  open-questions: open-questions.yaml

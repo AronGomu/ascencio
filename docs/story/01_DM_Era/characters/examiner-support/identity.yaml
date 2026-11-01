@@ -1,0 +1,25 @@
+id: examiner-support
+name: Teacher / examiner support
+aliases: []
+era: 01_DM_Era
+age: null
+role: Teacher / examiner support visual concept from the staff overview; distinct personal identity remains undecided.
+firstAppearance: TBD
+group: supporting
+nameStatus: role label; personal name undecided
+definitionStatus: needs definition
+academicRank: TBD
+narrative:
+- heading: Role
+  text: Teachers establish academy life, curriculum and duel-training expectations. Qualification Arc may include
+    a relevant teacher as observer or examiner support.
+- heading: Current staff concepts
+  text: '- Teacher / examiner support.
+
+    - Physical education teacher.
+
+    - Mathematics or statistics teacher.
+
+    - Third teacher, subject TBD.'
+sourceContext: The historical teachers.md also describes the staff collectively; those notes do not give this individual
+  every staff subject.

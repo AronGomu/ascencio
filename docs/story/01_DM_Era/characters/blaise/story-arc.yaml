@@ -1,0 +1,14 @@
+developments:
+- startingState: Prevented by parents from following Finn into academy/duelist education.
+  pressurePoint: Separation makes her unhappy and she challenges their decision.
+  revelation: Changes education to rejoin Finn around December while concealing her romantic motive.
+  endState: Joins training and social plans with practical excuses; exact investigation role remains open.
+  era: 01_DM_Era
+  chapter: 1
+  status: Existing canon summary; arc order remains provisional
+chapter: 'Chapter 1: one adult university year, approximately September–June; arc ordering remains provisional.'
+scenarioReferences:
+- arc: Transfer_Student_Arc
+  status: planned; around December
+  path: ../../arcs/Transfer_Student_Arc/scenario.md
+  participation: See the owning scenario for participation, outcome and continuity.

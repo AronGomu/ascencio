@@ -1,0 +1,13 @@
+questions:
+- id: pe-teacher-q01
+  question: Name and personality.
+  status: open
+- id: pe-teacher-q02
+  question: Teaching philosophy.
+  status: open
+- id: pe-teacher-q03
+  question: Duel identity.
+  status: open
+- id: pe-teacher-q04
+  question: Arc appearances.
+  status: open

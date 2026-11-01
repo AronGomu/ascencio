@@ -1,0 +1,27 @@
+connections:
+- characterId: sirius
+  dynamic: First official academy friend after the Sirius Arc.
+  status: established
+- characterId: alexis
+  dynamic: Investigation partner after the first Alexis arc.
+  status: established
+- characterId: blaise
+  dynamic: Childhood friend; Finn does not recognize her concealed romantic motive.
+  status: established
+- characterId: chaz
+  dynamic: Competitive opponent whose status-based mistreatment provokes Finn.
+  status: established
+- characterId: zen
+  dynamic: Academy benchmark and likely final opponent.
+  status: established
+narrative:
+- heading: Relationships
+  text: '- Sirius: first official friend after Sirius''s arc.
+
+    - Alexis: investigation partner after her first arc.
+
+    - Blaise: childhood friend whose romantic motive he does not recognize.
+
+    - Chaz: status-based competitive opponent.
+
+    - Zen: Violet Academy benchmark and likely final opponent.'

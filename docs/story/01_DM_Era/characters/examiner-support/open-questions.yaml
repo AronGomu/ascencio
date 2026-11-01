@@ -1,0 +1,13 @@
+questions:
+- id: examiner-support-q01
+  question: Individual names and sheets.
+  status: open
+- id: examiner-support-q02
+  question: Subjects and teaching philosophies.
+  status: open
+- id: examiner-support-q03
+  question: Relationship to duel-based careers.
+  status: open
+- id: examiner-support-q04
+  question: Arc appearances.
+  status: open

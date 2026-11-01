@@ -1,0 +1,18 @@
+speechStyle: Early rank-based disdain; later accepts results honestly while remaining proud and abrasive.
+vocabulary: []
+mannerisms: []
+dialogueReferences:
+- ../../arcs/Rival_Reconstruction_Arc/scenario.md
+audioDirection: TBD
+canonLines:
+- Damn. I really got better. I proved myself.
+- Fine. I'll get better for next time.
+sceneReferences:
+- path: ../../arcs/00_Qualification_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Rival_Introduction_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Rival_Returns_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Rival_Reconstruction_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.

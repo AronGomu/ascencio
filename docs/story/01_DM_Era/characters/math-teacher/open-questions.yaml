@@ -1,0 +1,13 @@
+questions:
+- id: math-teacher-q01
+  question: Name and personality.
+  status: open
+- id: math-teacher-q02
+  question: Teaching philosophy.
+  status: open
+- id: math-teacher-q03
+  question: Duel identity.
+  status: open
+- id: math-teacher-q04
+  question: Arc appearances.
+  status: open

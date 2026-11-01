@@ -1,0 +1,23 @@
+id: darkness-agent
+name: First Darkness agent
+aliases: []
+era: 01_DM_Era
+age: null
+role: Defeats Alexis, then loses to Finn; consumed by the Ténèbres before questioning.
+firstAppearance: TBD
+group: supporting
+nameStatus: role label; personal name undecided
+definitionStatus: identity and name undefined
+academicRank: TBD
+narrative:
+- heading: Role
+  text: 'The agent is connected to a lead in Alexis''s investigation. She eventually meets and duels him alone.
+    He defeats her before Finn and Sirius intervene.
+
+
+    Finn then defeats him in a mandatory Best of 3. Before the group can question him or obtain more information,
+    the Ténèbres absorb or consume him. His disappearance proves that the threat can act materially while preserving
+    the mystery around Atticus.
+
+
+    The agent belongs to or works with Darkness, the human organization described in [`../../00_Global_Scenario/darkness.md`](../../../00_Global_Scenario/darkness.md).'

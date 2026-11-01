@@ -1,0 +1,34 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: Athletic but approachable
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: dark auburn
+  style: slightly disordered
+eyes: frank and expressive; color undecided
+face: Softened square face, wider rounded jaw, thick relatively straight eyebrows, shorter nose and broad expressive
+  mouth.
+distinguishingFeatures:
+- Warm confident expression
+- Open posture; ready to intervene
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult athletic approachable man, tousled dark auburn hair, softened square jaw, thick straight brows,
+  open expressive eyes, warm confident smile, relaxed open posture, one hand reaching slightly forward. Simple crimson
+  Red academy blazer with small embroidered violet crest, white shirt, dark trousers and low black shoes. No long
+  coat or fantasy accessories.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/finn.png
+  prompt: assets/zomb-v2/finn-prompt.txt
+  sha256: 86b5ec3efdc013918ee0ad7e72192189661fb0bf94133e6bd89c473c0eccf698
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/finn.png

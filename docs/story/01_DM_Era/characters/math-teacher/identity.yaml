@@ -1,0 +1,15 @@
+id: math-teacher
+name: Mathematics / Statistics Teacher
+aliases: []
+era: 01_DM_Era
+age: null
+role: Teaches mathematics or statistics, potentially connected to Sirius's duel analysis.
+firstAppearance: TBD
+group: supporting
+nameStatus: role label; personal name undecided
+definitionStatus: needs definition
+academicRank: TBD
+narrative:
+- heading: Role
+  text: Mathematics or statistics teacher on the Chapter 1 university staff. The subject may connect to duel analysis
+    and Sirius's strengths.

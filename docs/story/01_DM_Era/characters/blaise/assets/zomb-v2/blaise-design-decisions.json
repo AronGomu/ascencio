@@ -1,0 +1,40 @@
+{
+  "character": "Blaise",
+  "selectedHairClip": {
+    "round": 3,
+    "option": "20",
+    "name": "Blushing charm",
+    "bodyFill": "black",
+    "eyeMarks": "ivory",
+    "cheekMarks": "dusty pink",
+    "bow": "dusty pink",
+    "source": "blaise-hairclips/application-round4/clip-20-casual-black.png"
+  },
+  "accessoryRules": {
+    "spiderPendant": false,
+    "plainChokerAllowed": true
+  },
+  "academicClothingRules": {
+    "spiderMotifs": false,
+    "spiderwebMotifs": false,
+    "spiderBroochesOrRibbonCharms": false,
+    "plainUniformAndAcademyCrest": true,
+    "selectedHairClipRetained": true
+  },
+  "selectedBustCircumferenceCm": 40,
+  "comparisonBustCircumferencesCm": [
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    110,
+    120
+  ],
+  "academicComparisonOutfit": "winter Red blazer uniform",
+  "selectedCasualReference": "blaise-scale-round5/40-casual.png",
+  "selectedAcademicReference": "blaise-scale-round5/40-winter.png"
+}

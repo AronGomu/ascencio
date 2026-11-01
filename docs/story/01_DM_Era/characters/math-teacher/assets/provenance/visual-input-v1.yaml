@@ -1,0 +1,12 @@
+id: math-teacher
+name: Mathematics / Statistics Teacher
+source: math-statistics-teacher
+role: Teaches mathematics or statistics, potentially connected to Sirius's duel analysis.
+subject: Adult man in his late forties, very slim build, receding silver-gray hair neatly parted, narrow
+  long face, round wire glasses, contemplative gentle expression. Ivory shirt, charcoal knitted vest,
+  dark tie, charcoal tailored trousers and low shoes, tiny violet academy pin. Holds a closed mathematical
+  notebook and a short piece of chalk, no writing or equations in image.
+ref: docs/assets/style-studies/zomb/regenerated-v2/math-teacher.png
+proposal: false
+group: supporting
+designStatus: current

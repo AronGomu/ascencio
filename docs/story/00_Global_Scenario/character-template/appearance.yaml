@@ -1,0 +1,14 @@
+description: TBD
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: docs/story/themes/bust-circumference-reference.yaml
+invariants: []

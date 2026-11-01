@@ -1,0 +1,13 @@
+connections:
+- characterId: alexis
+  dynamic: Investigation contact who defeats her alone.
+  status: established
+- characterId: finn
+  dynamic: Defeated by Finn in a mandatory Best of 3.
+  status: established
+- characterId: sirius
+  dynamic: Intervenes alongside Finn before the agent completes his objective.
+  status: established
+- characterId: atticus
+  dynamic: Exact connection remains undecided.
+  status: undecided

@@ -1,0 +1,9 @@
+speechStyle: TBD
+vocabulary: []
+mannerisms: []
+dialogueReferences: []
+audioDirection: TBD
+canonLines: []
+sceneReferences:
+- path: ../../arcs/00_Qualification_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.

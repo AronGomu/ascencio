@@ -1,0 +1,17 @@
+# Alexis Arc Bully A
+
+> Status: needs definition
+
+## Role
+
+One of two students who bully Alexis through jealousy, rumors, appearance-based cruelty and her family connection to the disappeared student. Finn later duels both to learn what they know.
+
+## Open details
+
+- [ ] Name, personality and deck.
+- [ ] Information about the missing student.
+- [ ] Duel stake and future Free Duel role.
+
+## Current character design
+
+The owner selected the [current Zomb character design](../../../assets/style-studies/zomb/regenerated-v2/alexis-bully-a.png). This image is the current visual reference; names, decks and story details still marked open remain undecided. Backgrounds are separate presentation choices.

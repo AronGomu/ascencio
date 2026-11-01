@@ -1,0 +1,16 @@
+questions:
+- id: atticus-q01
+  question: Definitive name and adult age.
+  status: open
+- id: atticus-q02
+  question: Exact conditioning and degree of suppressed will.
+  status: open
+- id: atticus-q03
+  question: Mask and controlled outfit.
+  status: open
+- id: atticus-q04
+  question: Exact duel mechanism that breaks the control.
+  status: open
+- id: atticus-q05
+  question: Precise relationship with Zen before his disappearance.
+  status: open

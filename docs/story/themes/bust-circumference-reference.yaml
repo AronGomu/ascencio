@@ -1,0 +1,40 @@
+measurement: bust circumference
+unit: cm
+definition: Literal circumference around the fullest part of the bust.
+selectedCharacter: Blaise
+selectedBustCircumferenceCm: 40
+comparison: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/comparison-standalone.html
+references:
+- bustCircumferenceCm: 30
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/30-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/30-winter.png
+- bustCircumferenceCm: 40
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/40-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/40-winter.png
+- bustCircumferenceCm: 50
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/50-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/50-winter.png
+- bustCircumferenceCm: 60
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/60-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/60-winter.png
+- bustCircumferenceCm: 70
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/70-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/70-winter.png
+- bustCircumferenceCm: 80
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/80-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/80-winter.png
+- bustCircumferenceCm: 90
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/90-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/90-winter.png
+- bustCircumferenceCm: 100
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/100-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/100-winter.png
+- bustCircumferenceCm: 110
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/110-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/110-winter.png
+- bustCircumferenceCm: 120
+  casual: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/120-casual.png
+  academic: docs/story/01_DM_Era/characters/blaise/assets/zomb-v2/blaise-scale-round5/120-winter.png
+genericSheet: docs/story/themes/generic-bust-reference-30-120.png
+genericComparison: docs/story/themes/bust-circumference-reference.html
+previousGenericSheet: docs/story/themes/boobz_size.png

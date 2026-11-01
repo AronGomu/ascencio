@@ -1,0 +1,10 @@
+connections:
+- characterId: finn
+  dynamic: Childhood friend and concealed romantic interest; she reorganizes her education to rejoin him.
+  status: established
+- characterId: alexis
+  dynamic: Exact relationship remains undecided.
+  status: undecided
+- characterId: sirius
+  dynamic: Exact relationship remains undecided.
+  status: undecided

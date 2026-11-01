@@ -1,0 +1,30 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult woman in her thirties, warm brown skin, short rounded dark curls, softly squared face, alert
+  approachable eyes. Practical charcoal faculty jacket over muted ivory blouse, dark straight trousers and flat
+  shoes, small violet academy crest pin. Carries a narrow folder under one arm and a simple pen in the other hand.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/examiner-support.png
+  prompt: assets/zomb-v2/examiner-support-prompt.txt
+  sha256: 8391de9561dcf772dbfbb4c5d550db4d23240aae1d78d5f225897fb6f11935b3
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/examiner-support.png

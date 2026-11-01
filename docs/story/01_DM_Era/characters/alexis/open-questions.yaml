@@ -1,0 +1,10 @@
+questions:
+- id: alexis-q01
+  question: Definitive name and adult age.
+  status: open
+- id: alexis-q02
+  question: Deck identity.
+  status: open
+- id: alexis-q03
+  question: Exact trigger and location of her early emotional breakdown.
+  status: open

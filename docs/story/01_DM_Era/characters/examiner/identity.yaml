@@ -1,0 +1,15 @@
+id: examiner
+name: Examiner
+aliases: []
+era: 01_DM_Era
+age: null
+role: Conducts Finn's entrance qualification duel.
+firstAppearance: Qualification Arc
+group: supporting
+nameStatus: role label; personal name undecided
+definitionStatus: needs definition
+academicRank: TBD
+narrative:
+- heading: Role
+  text: The Examiner conducts Finn's entrance qualification duel during Qualification Arc. The duel is a fully playable
+    single game. Either result is valid; losing does not cause game over or block admission.

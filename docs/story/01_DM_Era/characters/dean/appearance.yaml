@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Older adult woman in her sixties, silver hair in a smooth low bun, strong cheekbones, level brows,
+  dignified composed gaze, average broad-shouldered build. Long charcoal tailored jacket, ivory blouse, dark ankle-length
+  trousers, low formal shoes, small violet academy crest brooch. Hands gently folded at waist. No ceremonial fantasy
+  robes.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/dean.png
+  prompt: assets/zomb-v2/dean-prompt.txt
+  sha256: e6eff07ce533aafd1b21e61878b9cca4112350bd1665abd176f7727a1dd46327
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/dean.png

@@ -12,7 +12,7 @@
 - [ ] Exact manifestation that follows Alexis's loss.
 - [ ] Atticus's definitive name, conditioning, mask, black outfit and liberation mechanism.
 - [ ] Chaz's definitive name, background, followers and reconstruction training.
-- [ ] Blaise's definitive name, public reason for joining, deck and place in the group.
+- [ ] Blaise's public reason for joining, deck and place in the group.
 - [ ] Sirius's definitive name, meaningful card and deck.
 - [ ] Alexis's definitive name and deck.
 - [ ] Zen's definitive name, design, rank, philosophy, deck and final-arc details.

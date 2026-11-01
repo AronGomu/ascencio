@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: 'Adult male university student, broad sturdy build, short copper-brown cropped hair, broad rounded
+  jaw, heavy eyebrows, overconfident grin. Simple dark academy blazer with violet embroidered crest, ivory shirt,
+  dark tie, straight trousers, low black shoes. Feet apart, arms folded, slightly forward shoulders. Rank unconfirmed:
+  use neutral charcoal blazer.'
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/chaz-goon-a.png
+  prompt: assets/zomb-v2/chaz-goon-a-prompt.txt
+  sha256: 831204cc5d16b96a022ecbb52d023c14b095f050046e916a3260b5730cfcc820
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/chaz-goon-a.png

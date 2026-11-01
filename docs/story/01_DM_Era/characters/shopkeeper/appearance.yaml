@@ -1,0 +1,31 @@
+description: Physical design is established by the selected reference and designBrief below. Exact unknown measurements
+  remain unset.
+build: TBD
+measurements:
+  heightCm: null
+  bustCircumferenceCm: null
+hair:
+  color: TBD
+  style: TBD
+eyes: TBD
+face: TBD
+distinguishingFeatures: []
+referenceSheets:
+  bustCircumference: ../../../themes/bust-circumference-reference.yaml
+invariants:
+- Preserve the selected character identity and adult appearance.
+- Apply Zomb rendering to characters only; background stars are not a style requirement.
+style: ../../../../assets/style-studies/zomb/Zomb-style.md
+designBrief: Adult man in his fifties, stocky relaxed build, short salt-and-pepper hair, short neat beard, kind
+  heavy-lidded eyes and small welcoming smile. Plain dark cardigan with sleeves pushed up over ivory shirt, dark
+  practical apron, charcoal trousers and simple low shoes. Holds one closed unmarked trading-card box, other hand
+  relaxed at side. No shop scenery or readable labels.
+backgroundPolicy: Review backdrops do not define the character style or environment art.
+currentDesign:
+  status: current owner-selected visual reference
+  image: assets/zomb-v2/shopkeeper.png
+  prompt: assets/zomb-v2/shopkeeper-prompt.txt
+  sha256: 91f89bbd1311a74ba8dc0a5a3f325004d0d6ad5f5960aef8077b8a541901e64c
+previousDesign:
+  status: historical; superseded
+  image: assets/zomb-v1/shopkeeper.png

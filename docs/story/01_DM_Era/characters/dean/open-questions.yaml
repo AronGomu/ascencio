@@ -1,0 +1,13 @@
+questions:
+- id: dean-q01
+  question: Name, personality and philosophy.
+  status: open
+- id: dean-q02
+  question: Qualification Arc presence.
+  status: open
+- id: dean-q03
+  question: Relationship to academy class status.
+  status: open
+- id: dean-q04
+  question: Chapter 1 arc involvement.
+  status: open

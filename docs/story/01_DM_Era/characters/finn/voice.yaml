@@ -1,0 +1,27 @@
+speechStyle: TBD
+vocabulary: []
+mannerisms: []
+dialogueReferences: []
+audioDirection: TBD
+canonLines: []
+sceneReferences:
+- path: ../../arcs/00_Qualification_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Nerd_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Rival_Introduction_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Girl_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Transfer_Student_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Rival_Returns_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Missing_Brother_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Rival_Reconstruction_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Atticus_Liberation_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Senior_Finale_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.

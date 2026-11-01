@@ -1,0 +1,16 @@
+questions:
+- id: zen-q01
+  question: Definitive name, adult age and rank.
+  status: open
+- id: zen-q03
+  question: Philosophy and deck identity.
+  status: open
+- id: zen-q04
+  question: Relationship with Sirius beyond capability and comparison.
+  status: open
+- id: zen-q05
+  question: Relationship with Atticus before the disappearance.
+  status: open
+- id: zen-q06
+  question: Final duel stakes and outcome.
+  status: open

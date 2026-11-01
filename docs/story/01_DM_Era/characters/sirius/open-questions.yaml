@@ -1,0 +1,10 @@
+questions:
+- id: sirius-q01
+  question: Definitive name.
+  status: open
+- id: sirius-q02
+  question: Meaningful card and deck identity.
+  status: open
+- id: sirius-q03
+  question: Exact relationship with Zen beyond comparison.
+  status: open

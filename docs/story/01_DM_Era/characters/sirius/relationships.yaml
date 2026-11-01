@@ -1,0 +1,10 @@
+connections:
+- characterId: zen
+  dynamic: Older brother by two years; constant comparison undermines Sirius’s confidence without deep resentment.
+  status: established
+- characterId: finn
+  dynamic: Intervenes over the lost card, challenges Sirius to act, and becomes his friend.
+  status: established
+- characterId: alexis
+  dynamic: Complementary analyst and central-trio investigation partner.
+  status: established

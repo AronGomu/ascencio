@@ -1,0 +1,10 @@
+questions:
+- id: examiner-q01
+  question: Name, position and personality.
+  status: open
+- id: examiner-q02
+  question: Deck identity.
+  status: open
+- id: examiner-q03
+  question: Qualification rules and admission dialogue.
+  status: open

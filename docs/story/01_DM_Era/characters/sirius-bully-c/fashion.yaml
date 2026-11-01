@@ -1,0 +1,14 @@
+direction: Selected character-specific clothing follows the visual design; shared academy uniform constraints apply
+  where relevant.
+outfits:
+- id: current-design
+  status: current
+  image: assets/zomb-v2/sirius-bully-c.png
+  prompt: assets/zomb-v2/sirius-bully-c-prompt.txt
+  description: Clothing shown in the owner-selected current design. See exact prompt for the complete rendering
+    brief.
+accessories: []
+requiredElements: []
+excludedElements: []
+uniformReference: ../../visual-direction.md
+studies: []

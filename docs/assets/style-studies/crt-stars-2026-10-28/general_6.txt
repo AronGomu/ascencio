@@ -1,0 +1,4 @@
+Art style : Simplified retro 2D anime cel drawing with thin muted gray contours, broad light shapes, restrained interior detail and soft analog blur; strong fine horizontal CRT scanlines with red/cyan ghost edges and faint phosphor grain.
+Fashion / material rendering : Nearly flat matte dark surfaces with sparse low-contrast folds, fine mesh strokes and smooth pale surfaces shaded with faint pink.
+Color palette : Luminous cool ivory and pale blush against near-pure black, tiny muted crimson accents and white highlights with cyan, green and red fringes.
+Lighting : Soft even diffuse light, flattened shadow modeling, high light-dark contrast and restrained phosphor glow.

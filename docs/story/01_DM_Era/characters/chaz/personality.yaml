@@ -1,0 +1,30 @@
+temperament: High-handed; Narcissistic; Competitive; Status-conscious; Proud; Abrasive; Ambitious; Genuinely capable
+intelligence: TBD
+values:
+- Rank
+- Recognition
+- Dueling superiority
+fearOrShame: Public defeat that disproves his presumed superiority.
+actionTriggers: []
+avoidances: []
+habits: []
+contradictions:
+- Real skill supports his confidence, but status dependence initially prevents honest self-assessment.
+narrative:
+- heading: Personality
+  text: 'Chaz is high-handed, narcissistic, competitive and intensely conscious of rank and recognition. He carries
+    himself with near-aristocratic certainty and assumes he belongs at the top. He respects status symbols while
+    believing he is important enough to personalize their rules.
+
+
+    His confidence is supported by real ability. He must feel like someone whose identity and social world depend
+    on being seen as superior, rather than a generic bully.'
+traits:
+- High-handed
+- Narcissistic
+- Competitive
+- Status-conscious
+- Proud
+- Abrasive
+- Ambitious
+- Genuinely capable

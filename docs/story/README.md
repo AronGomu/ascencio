@@ -22,7 +22,7 @@ Gameplay structures and asset rules are not story canon. They live in [`../game/
 - Arc folders do not receive numeric prefixes until their order is approved.
 - Each arc owns `scenario.md` and `dialog.md`.
 - Dialogue revisions use explicit suffixes such as `dialog.v2.md` or `dialog.alt-a.md`.
-- Character files live inside the era where the character appears.
+- Each character owns a folder inside the era where they first appear, with `character.yaml` linking focused YAML parts and local `assets/`. The [Chapter 1 cast index](01_DM_Era/characters/characters.yaml) is links-only. Legacy individual Markdown files redirect to dossiers.
 
 ## Canon rules
 

@@ -1,0 +1,4 @@
+Art style : Delicate sketch-fine anime illustration with softly hazed edges, dense fine hair strokes, soft modeled shading and retro CRT scanlines, phosphor grain and red/cyan channel ghosts.
+Fashion / material rendering : Matte black surfaces with soft charcoal folds, precise dark mesh, luminous smooth pale surfaces.
+Color palette : Near-black and soft ivory with subdued warm pink shadows and small red accents; bright white, cyan and red phosphor accents.
+Lighting : Gentle diffuse illumination with soft highlight bloom and deep shadow fields.

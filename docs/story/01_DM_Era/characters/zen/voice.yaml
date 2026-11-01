@@ -1,0 +1,13 @@
+speechStyle: TBD
+vocabulary: []
+mannerisms: []
+dialogueReferences:
+- ../sirius/duel.yaml
+audioDirection: TBD
+canonLines:
+- Give me a deck and I'll pilot it better than you.
+sceneReferences:
+- path: ../../arcs/00_Qualification_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.
+- path: ../../arcs/Senior_Finale_Arc/dialog.md
+  status: Dialogue planning file; approved dialogue is not implied.

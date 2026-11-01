@@ -1,13 +1,3 @@
-# Examiner — qualification opponent
+# Moved: Examiner
 
-> Status: needs definition
-
-## Role
-
-The Examiner conducts Finn's entrance qualification duel during Qualification Arc. The duel is a fully playable single game. Either result is valid; losing does not cause game over or block admission.
-
-## Open details
-
-- [ ] Name, position and personality.
-- [ ] Deck identity.
-- [ ] Qualification rules and admission dialogue.
+The canonical dossier is [Examiner](examiner/character.yaml). Start there for identity, appearance, fashion, story and direct asset links.

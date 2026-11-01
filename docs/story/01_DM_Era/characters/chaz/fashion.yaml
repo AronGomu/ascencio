@@ -1,0 +1,19 @@
+direction: 'Clean coordinated expensive-looking Blue uniform with calculated informality: open blazer, loosened
+  collar/tie, asymmetrical posture, one hand in pocket.'
+outfits:
+- id: current-design
+  status: current
+  image: assets/zomb-v2/chaz.png
+  prompt: assets/zomb-v2/chaz-prompt.txt
+  description: Clothing shown in the owner-selected current design. See exact prompt for the complete rendering
+    brief.
+accessories: []
+requiredElements: []
+excludedElements:
+- Dirty or street-gang appearance
+narrative:
+- 'He wears the Blue uniform with controlled informality: loosened collar, open blazer, relaxed tie, asymmetrical
+  posture and one hand in a pocket. His clothes remain clean, coordinated and expensive-looking. He never appears
+  dirty or like a street-gang member.'
+uniformReference: ../../visual-direction.md
+studies: []

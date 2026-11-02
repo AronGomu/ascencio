@@ -39,6 +39,10 @@ the command reports its exact path. Release hash mismatch requires investigating
 source/provider drift and preparing a new reviewed package version. Setup never
 silently repins a release.
 
+Readable snapshot compilation normalizes Lua CRLF line endings to LF before hashing, so Windows and Unix checkouts produce the same script bytes.
+
+Content revision 1.1.2 records this normalized output and refreshed media mappings; the frozen engine bytes remain unchanged.
+
 The historical SQLite conversion fixtures exceed ZIP32 with the complete image
 catalog, so setup deliberately omits the legacy combined archive. The native app
 uses JSON snapshots and live media, and does not need that archive.

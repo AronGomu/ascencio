@@ -25,7 +25,12 @@ export function compileSnapshot(value: unknown) {
         ...c,
         texts: [...c.texts].sort((a, b) => compare(a.locale, b.locale)),
       })),
-    scripts: [...snapshot.scripts].sort((a, b) => compare(a.name, b.name)),
+    scripts: [...snapshot.scripts]
+      .sort((a, b) => compare(a.name, b.name))
+      .map((script) => ({
+        ...script,
+        source: script.source.replace(/\r\n/g, "\n"),
+      })),
     sets: [...snapshot.sets].sort((a, b) => compare(a.id, b.id)),
     decks: [...snapshot.decks].sort((a, b) => compare(a.id, b.id)),
     opponents: [...snapshot.opponents].sort((a, b) => compare(a.id, b.id)),

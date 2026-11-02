@@ -1,6 +1,7 @@
 node_modules/
 .cache/
 generated/
+dist/
 .pi/artifacts/
 # Downloaded/generated source bytes; delivery scans ignore Git ignore rules.
 assets/battle/engine/

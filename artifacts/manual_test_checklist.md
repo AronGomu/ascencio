@@ -71,3 +71,13 @@ Reference desktop: AMD Ryzen 7 7700, Linux x86_64. Optimized native release with
 - Run a declared batch with paired starting players. Inspect manifest, player reports, and summary: bot source/configuration identities and decision reasons must be retained; wins divided by all completed games (including draws) must be at least 60%, with zero failed/skipped games.
 - Instantiate `createGeneralistBotPolicy(dependencies)` through the duel controller's opponentPolicy seam and verify legal automatic turns and normal terminal cleanup. The existing default and UI do not change.
 - Inspect random decisions over multiple games: pass/activate, yes/no, targets, subset counts, orderings and constrained allocations must vary where legal. No concealed opponent identity may appear in either actor's observations.
+
+
+## Bounded bot improvement loop
+
+- Prepare a verified evaluator snapshot and initial strategy using `scripts/bot-improvement/prepare-strategy.ts`. Follow `docs/architecture/06-quality/bot-improvement-loop.md` with a one-match smoke configuration.
+- Use a coding-agent adapter that writes a proposal and response. Confirm agent logs, trusted checks, XML match reports and `decision.json` are retained. Confirm all matches have four games and both starting positions.
+- Check an inconclusive proposal leaves `state.json` incumbent equal to baseline and keeps the rejected strategy archive.
+- Interrupt during an attempt, resume with identical configuration, and confirm the abandoned attempt and game reservations remain while the next attempt begins from the incumbent.
+- Change a runtime/input identity and confirm resume refuses it. Exercise `CANCEL`, agent timeout and a small game budget; confirm explicit stop reasons without promotion.
+- Import the accepted `bot.mjs` factory using permitted card metadata and adapt its BotModule with the shared simulator policy adapter. No automatic gameplay selection is implied.

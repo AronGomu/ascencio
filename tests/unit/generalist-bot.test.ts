@@ -224,3 +224,46 @@ describe("generalist and random shared response machinery", () => {
     expect(seen).not.toContain(999);
   });
 });
+
+it("specializations can prefer optional counts and cancellation through shared legality", () => {
+  const many = createGeneralistBotModule(
+    { cards: new Map() },
+    undefined,
+    (_input, counts) => [...counts].sort((a, b) => b - a),
+  ).create({});
+  const optional = { ...base, minimum: 0 };
+  expect(many.decide({ prompt: optional, observation }).choiceIds).toHaveLength(
+    2,
+  );
+  const cancel = createGeneralistBotModule(
+    { cards: new Map() },
+    undefined,
+    (_input, counts) => [...counts].sort((a, b) => a - b),
+  ).create({});
+  expect(
+    cancel.decide({ prompt: { ...base, cancelable: true }, observation })
+      .choiceIds,
+  ).toEqual([]);
+  const constrained: PlayerPrompt = {
+    ...base,
+    kind: "selectSum",
+    minimum: 1,
+    maximum: 3,
+    requiredTotal: 3,
+  };
+  const decision = many.decide({ prompt: constrained, observation });
+  expect(decision.choiceIds).toHaveLength(2);
+  expect(() => validateBotDecision(constrained, decision)).not.toThrow();
+});
+it("rejects count strategies that bypass offered bounds or remove fallback counts", () => {
+  for (const counts of [[99], [1, 1], [1], [0, 1, 2]]) {
+    const bot = createGeneralistBotModule(
+      { cards: new Map() },
+      undefined,
+      () => counts,
+    ).create({});
+    expect(() => bot.decide({ prompt: base, observation })).toThrow(
+      "permutation",
+    );
+  }
+});

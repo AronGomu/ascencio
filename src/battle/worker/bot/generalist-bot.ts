@@ -5,12 +5,14 @@ import {
   baselineStrategy,
   type GeneralistStrategy,
 } from "./generalist-strategy.ts";
+import type { GeneralistSelectionStrategy } from "./generalist-selection-strategy.ts";
 import { legalSelection, selectionCounts } from "./legal-selection.ts";
 import { validateBotDecision } from "./validate-bot-decision.ts";
 
 export function createGeneralistBotModule(
   dependencies: Pick<ActiveDuelDependencies, "cards">,
   strategy: GeneralistStrategy = baselineStrategy(dependencies),
+  preferCounts: GeneralistSelectionStrategy = (_input, counts) => counts,
 ): BotModule {
   return {
     contractVersion: 1,
@@ -53,10 +55,20 @@ export function createGeneralistBotModule(
               };
             })
             .sort((a, b) => b.score - a.score);
+          const availableCounts = Object.freeze(selectionCounts(prompt));
+          const counts = preferCounts(input, availableCounts);
+          if (
+            counts.length !== availableCounts.length ||
+            new Set(counts).size !== counts.length ||
+            counts.some((count) => !availableCounts.includes(count))
+          )
+            throw new Error(
+              "Count strategy must return a permutation of offered counts",
+            );
           const choiceIds = legalSelection(
             prompt,
             ranked.map((r) => r.choice),
-            selectionCounts(prompt),
+            counts,
           );
           const first = ranked.find((r) => choiceIds.includes(r.choice.id));
           const decision = {

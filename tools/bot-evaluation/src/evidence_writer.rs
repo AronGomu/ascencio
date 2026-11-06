@@ -1,4 +1,4 @@
-//! Three persistent, bounded XML/IO lanes for one match commit. They never own
+//! Four persistent, bounded XML/IO lanes for one match/progress commit. They never own
 //! engines or schedule games. Each lane retains its own compiled XSD context.
 use crate::xml::{self, Result};
 use std::{cell::RefCell, fs, io::Write, path::PathBuf, sync::mpsc, thread, time::Instant};
@@ -58,15 +58,16 @@ impl Drop for Lane {
         }
     }
 }
-thread_local! { static LANES:RefCell<Option<[Lane;3]>>=const {RefCell::new(None)}; }
+thread_local! { static LANES:RefCell<Option<[Lane;4]>>=const {RefCell::new(None)}; }
 /// All writes must finish before the caller publishes match.xml as commit marker.
 pub fn flush(files: Vec<(PathBuf, String, Vec<u8>)>) -> Result<[f64; 2]> {
-    if files.len() != 3 {
-        return Err("Expected exactly two perspectives and one match".into());
+    if !(3..=4).contains(&files.len()) {
+        return Err("Expected two perspectives, one match, and optional progress".into());
     }
     LANES.with(|pool| {
         let mut pool = pool.borrow_mut();
         let lanes = pool.get_or_insert_with(|| std::array::from_fn(|_| Lane::new()));
+        let count = files.len();
         for (lane, (path, root, bytes)) in lanes.iter().zip(files) {
             lane.input
                 .as_ref()
@@ -76,7 +77,7 @@ pub fn flush(files: Vec<(PathBuf, String, Vec<u8>)>) -> Result<[f64; 2]> {
         let mut costs = [0.0; 2];
         let mut error = None;
         // Drain every lane even on error: no write may outlive its match commit.
-        for lane in lanes {
+        for lane in lanes.iter().take(count) {
             match lane.output.recv() {
                 Ok(Ok(c)) => {
                     costs[0] += c[0];

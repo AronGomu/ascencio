@@ -115,6 +115,29 @@ mod tests {
         std::fs::remove_dir(base.join("player-a.xml.tmp")).unwrap();
         crate::match_evidence::save_match(&root, &record, &reports).unwrap();
         assert_ne!(std::fs::read(base.join("match.xml")).unwrap(), before);
+        let progress = serde_json::json!({"run_id":"run","status":"running","updated_at":"2026-11-06T00:00:00Z","last_finalized_match":0,"active_match":1,"active_game":1,"next_unstarted_match":2,"completed_game_ids":{},"incomplete_match_ids":{},"bug_ids":{}});
+        crate::match_evidence::save_match_progress(&root, &record, &reports, Some(&progress))
+            .unwrap();
+        let before_match = std::fs::read(base.join("match.xml")).unwrap();
+        let before_progress = std::fs::read(root.join("progress.xml")).unwrap();
+        std::fs::create_dir(root.join("progress.xml.tmp")).unwrap();
+        record["games"]["game"][0]["skip_reason"] = serde_json::json!("progress-write-failed");
+        assert!(crate::match_evidence::save_match_progress(
+            &root,
+            &record,
+            &reports,
+            Some(&progress)
+        )
+        .is_err());
+        assert_eq!(std::fs::read(base.join("match.xml")).unwrap(), before_match);
+        assert_eq!(
+            std::fs::read(root.join("progress.xml")).unwrap(),
+            before_progress
+        );
+        std::fs::remove_dir(root.join("progress.xml.tmp")).unwrap();
+        crate::match_evidence::save_match_progress(&root, &record, &reports, Some(&progress))
+            .unwrap();
+        xml::read(&root.join("progress.xml"), "progress").unwrap();
         crate::evidence_writer::shutdown();
         std::fs::remove_dir_all(root).unwrap();
     }

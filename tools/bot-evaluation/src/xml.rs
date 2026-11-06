@@ -177,8 +177,10 @@ fn emit(writer: &mut Writer<Vec<u8>>, name: &str, value: &Value) -> Result<()> {
         }
     } else {
         let text = match value {
-            Value::String(s) => s.clone(),
-            _ => value.to_string(),
+            Value::String(s) => std::borrow::Cow::Borrowed(s.as_str()),
+            Value::Bool(true) => std::borrow::Cow::Borrowed("true"),
+            Value::Bool(false) => std::borrow::Cow::Borrowed("false"),
+            _ => std::borrow::Cow::Owned(value.to_string()),
         };
         if text
             .chars()
@@ -322,8 +324,9 @@ pub fn write(path: &Path, root: &str, value: &Value) -> Result<()> {
     cost(2, start);
     Ok(())
 }
-/// One durable match commit. Evidence files are flushed concurrently, then
-/// renamed in order with match.xml last, followed by one directory fsync.
+/// One durable match commit. Files are flushed concurrently, then the two
+/// perspectives and match marker are published and directory-synced. Optional
+/// progress is published only after that evidence commit is durable.
 /// This is bounded filesystem concurrency, never parallel game execution.
 pub fn write_match(files: &[(std::path::PathBuf, &str, &Value)]) -> Result<()> {
     let _timer = WriteTimer::start();
@@ -332,9 +335,14 @@ pub fn write_match(files: &[(std::path::PathBuf, &str, &Value)]) -> Result<()> {
         .and_then(|f| f.0.parent())
         .ok_or("Empty match write")?;
     let mut prepared = Vec::with_capacity(files.len());
-    for (path, root, value) in files {
-        if path.parent() != Some(parent) {
-            return Err("Match files must share one directory".into());
+    for (index, (path, root, value)) in files.iter().enumerate() {
+        let expected_parent = if index < 3 {
+            Some(parent)
+        } else {
+            parent.parent().and_then(Path::parent)
+        };
+        if path.parent() != expected_parent || (index == 3 && *root != "progress") {
+            return Err("Invalid match commit directory/root".into());
         }
         let start = std::time::Instant::now();
         semantics(root, value)?;
@@ -351,11 +359,18 @@ pub fn write_match(files: &[(std::path::PathBuf, &str, &Value)]) -> Result<()> {
         v.set(c);
     });
     let start = std::time::Instant::now();
-    for (path, _, _) in files {
+    for (path, _, _) in files.iter().take(3) {
         fs::rename(path.with_extension("xml.tmp"), path)?;
     }
     #[cfg(unix)]
     fs::File::open(parent)?.sync_all()?;
+    // The progress data was flushed in parallel, but its name is published
+    // only after the referenced evidence files and their directory are durable.
+    if let Some((path, _, _)) = files.get(3) {
+        fs::rename(path.with_extension("xml.tmp"), path)?;
+        #[cfg(unix)]
+        fs::File::open(path.parent().unwrap())?.sync_all()?;
+    }
     cost(2, start);
     Ok(())
 }

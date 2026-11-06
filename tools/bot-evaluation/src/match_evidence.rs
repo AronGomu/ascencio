@@ -24,12 +24,24 @@ pub(crate) fn new_match(run: &str, id: &str, manifest: &Value) -> (Value, [Value
 }
 
 pub(crate) fn save_match(dir: &Path, record: &Value, reports: &[Value; 2]) -> Result<()> {
+    save_match_progress(dir, record, reports, None)
+}
+pub(crate) fn save_match_progress(
+    dir: &Path,
+    record: &Value,
+    reports: &[Value; 2],
+    progress: Option<&Value>,
+) -> Result<()> {
     let base = dir.join("matches").join(xml::text(&record["match_id"])?);
-    xml::write_match(&[
+    let mut files = vec![
         (base.join("player-a.xml"), "player-report", &reports[0]),
         (base.join("player-b.xml"), "player-report", &reports[1]),
         (base.join("match.xml"), "match", record),
-    ])
+    ];
+    if let Some(progress) = progress {
+        files.push((dir.join("progress.xml"), "progress", progress));
+    }
+    xml::write_match(&files)
 }
 
 #[derive(Default)]
@@ -70,8 +82,20 @@ pub(crate) fn progress(
     xml::write(
         &dir.join("progress.xml"),
         "progress",
-        &json!({"run_id":run,"status":status,"updated_at":now(),"last_finalized_match":last,"active_match":active,"active_game":game,"next_unstarted_match":next,"completed_game_ids":{"game_id":ledger.completed},"incomplete_match_ids":{"match_id":ledger.incomplete},"bug_ids":{"bug_id":bugs.ids}}),
+        &progress_document(run, status, last, active, game, next, ledger, bugs),
     )
+}
+pub(crate) fn progress_document(
+    run: &str,
+    status: &str,
+    last: u64,
+    active: Option<u64>,
+    game: Option<u64>,
+    next: u64,
+    ledger: &ProgressLedger,
+    bugs: &BugStore,
+) -> Value {
+    json!({"run_id":run,"status":status,"updated_at":now(),"last_finalized_match":last,"active_match":active,"active_game":game,"next_unstarted_match":next,"completed_game_ids":{"game_id":ledger.completed},"incomplete_match_ids":{"match_id":ledger.incomplete},"bug_ids":{"bug_id":bugs.ids}})
 }
 
 pub(crate) fn map_players(value: &mut Value, swapped: bool) {

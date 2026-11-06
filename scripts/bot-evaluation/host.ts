@@ -48,16 +48,36 @@ let ipcTime = 0;
 let measuring = false;
 let handlesCreated = 0,
   handlesDestroyed = 0;
-function send(value: unknown) {
+let outputBuffer = "";
+function flushOutput() {
+  if (!outputBuffer) return;
   const start = performance.now();
-  writeSync(
-    1,
-    JSON.stringify(value, (_k, v) =>
-      typeof v === "bigint" ? v.toString() : v,
-    ) + "\n",
-  );
+  const bytes = Buffer.from(outputBuffer, "utf8");
+  outputBuffer = "";
+  let offset = 0;
+  while (offset < bytes.length) offset += writeSync(1, bytes, offset);
   if (measuring) ipcTime += performance.now() - start;
 }
+function send(value: unknown) {
+  const start = performance.now();
+  const event = (value as { type?: string }).type === "event";
+  outputBuffer +=
+    (event
+      ? JSON.stringify(value)
+      : JSON.stringify(value, (_k, v) =>
+          typeof v === "bigint" ? v.toString() : v,
+        )) + "\n";
+  if (measuring) ipcTime += performance.now() - start;
+  // Only observed events may be grouped. Every checkpoint, prompt, response,
+  // result and cleanup flushes immediately. No buffered evidence crosses an
+  // engine call that could hang; the supervisor retains the confirmed prefix.
+  if (
+    outputBuffer.length >= 16 * 1024 ||
+    (value as { type?: string }).type !== "event"
+  )
+    flushOutput();
+}
+
 const names = new Map<number, string>(
   Object.entries(EngineMessageType).map(([name, n]) => [n, name.toLowerCase()]),
 );
@@ -126,6 +146,7 @@ async function game(command: Command) {
     let sequence = 0;
     let lastDecision: string | null = null;
     while (true) {
+      flushOutput();
       const processStart = performance.now();
       const boundary = session.processUntilBoundary();
       engineTime += performance.now() - processStart;
@@ -310,7 +331,7 @@ async function game(command: Command) {
             actor,
             turn: state.turn,
             phase: state.phase,
-            prompt: promptRecord(prompt),
+            // Rust attaches the already captured decision_started prompt.
             selected_choice_ids: { choice_id: [...decision.choiceIds] },
             reason: decision.reason,
             duration_ms: duration,

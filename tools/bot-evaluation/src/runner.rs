@@ -5,7 +5,8 @@ use crate::{
     host::Host,
     identity,
     match_evidence::{
-        finish, new_match, perspective_skip, progress, save_match, verify_evidence, ProgressLedger,
+        finish, new_match, perspective_skip, progress, progress_document, save_match,
+        save_match_progress, verify_evidence, ProgressLedger,
     },
     metrics::Metrics,
     runtime_identity::{init, manifest, now, rss},
@@ -202,17 +203,20 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
         }
         let id = format!("match-{m:06}");
         let (mut record, mut reports) = new_match(&run, &id, &saved_manifest);
-        save_match(&directory, &record, &reports)?;
-        progress(
+        save_match_progress(
             &directory,
-            &run,
-            "running",
-            last,
-            Some(m),
-            Some(1),
-            m + 1,
-            &ledger,
-            &bugs,
+            &record,
+            &reports,
+            Some(&progress_document(
+                &run,
+                "running",
+                last,
+                Some(m),
+                Some(1),
+                m + 1,
+                &ledger,
+                &bugs,
+            )),
         )?;
         let mut decks = [c.deck.clone(), c.deck.clone()];
         let mut failed = false;
@@ -308,8 +312,27 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
                 report["games"]["game"][index] = result.records[i].clone();
             }
             finish(&mut record);
+            if result.neutral["status"] == "completed" {
+                ledger
+                    .completed
+                    .push(result.neutral["game_id"].as_str().unwrap().to_owned());
+            }
             let write_start = Instant::now();
-            save_match(&directory, &record, &reports)?;
+            save_match_progress(
+                &directory,
+                &record,
+                &reports,
+                Some(&progress_document(
+                    &run,
+                    "running",
+                    last,
+                    Some(m),
+                    Some(n as u64),
+                    m + 1,
+                    &ledger,
+                    &bugs,
+                )),
+            )?;
             let write_ms = write_start.elapsed().as_secs_f64() * 1000.0;
 
             // This full-path latency includes mandatory XML serialization, XSD validation and durable writes.
@@ -320,22 +343,6 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
                 report["games"]["game"][index]["result"]["duration_ms"] =
                     json!(result.elapsed + write_ms);
             }
-            if result.neutral["status"] == "completed" {
-                ledger
-                    .completed
-                    .push(result.neutral["game_id"].as_str().unwrap().to_owned());
-            }
-            progress(
-                &directory,
-                &run,
-                "running",
-                last,
-                Some(m),
-                Some(n as u64),
-                m + 1,
-                &ledger,
-                &bugs,
-            )?;
             record["games"]["game"][index]["duration_ms"] =
                 json!(full_path_start.elapsed().as_secs_f64() * 1000.0);
             let costs = xml::costs();

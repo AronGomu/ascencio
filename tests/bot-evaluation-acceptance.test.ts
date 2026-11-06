@@ -144,6 +144,26 @@ test(
     assert.equal(read(run, "summary.xml"), summary);
     // Saved orders are accepted only as an explicit fixture, never implicit production seeding.
     const reports = [report, read(run, "matches/match-000001/player-b.xml")];
+    for (const [i, perspective] of reports.entries()) {
+      for (const entry of perspective.matchAll(/<entry>(.*?)<\/entry>/g)) {
+        if (field(entry[1]!, "kind") !== "decision") continue;
+        const prompt = entry[1]!.match(/<prompt>(.*?)<\/prompt>/)![1]!;
+        assert.equal(field(entry[1]!, "actor"), i === 0 ? "a" : "b");
+        assert.equal(field(prompt, "player"), i === 0 ? "a" : "b");
+        const legal = new Set(
+          [...prompt.matchAll(/<choice>.*?<id>(.*?)<\/id>.*?<\/choice>/g)].map(
+            (m) => m[1],
+          ),
+        );
+        const selected = entry[1]!.match(
+          /<selected_choice_ids>(.*?)<\/selected_choice_ids>/,
+        )![1]!;
+        for (const choice of selected.matchAll(
+          /<choice_id>(.*?)<\/choice_id>/g,
+        ))
+          assert.ok(legal.has(choice[1]));
+      }
+    }
     const orders = reports.map((r) =>
       [...r.matchAll(/<own_starting_order>(.*?)<\/own_starting_order>/g)].map(
         (m) => m[1],

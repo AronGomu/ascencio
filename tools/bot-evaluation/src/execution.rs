@@ -113,6 +113,10 @@ pub(crate) fn play(
                     break;
                 }
                 let mut entry = frame["entry"].clone();
+                if frame["type"] == "decision" {
+                    // Reuse the pre-invocation checkpoint in engine-seat coordinates.
+                    entry["prompt"] = checkpoint["pending_prompt"].clone();
+                }
                 map_players(&mut entry, swapped);
                 if frame["type"] == "decision" {
                     deadline = wall;

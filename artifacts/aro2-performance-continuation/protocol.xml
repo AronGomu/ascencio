@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='utf-8'?>
+<performance-loop-protocol version="2" prior_miss_streak="10" stop_after_consecutive_misses="100"><workload>24 distinct starting-order fixtures captured from historical production-shuffle games, first 12 screening and second 12 independent confirmation; four pre/post-side games each. Engine RNG remains production behavior; no fixed engine seeds. Differences in actual work retained and reported.</workload><sampling>12 paired one-match runs per arm (48 games each); random balanced AB/BA order per fixture; all samples retained. Independent second 12-pair confirmation required before any retain.</sampling><test>Exact paired one-sided sign-flip permutation test on run-mean differences, 4096 permutations. Retain only when both screening and independent confirmation p &lt;= 0.005 and candidate average lower in both. This accounts for run clustering and fixture workload; two-stage gate reduces chance findings across many attempts. No optional early termination of samples.</test><scope>Full mandatory game evidence/hash/XML/schema/fsync/progress. Sequential real-core games. No soak. Same isolated worktree, power configuration and filesystem. Frozen engine untouched.</scope><profile>Use existing per-game engine/setup/projection/IPC/hash/XML/validation/filesystem timers before selecting each candidate; record observed phase means in every iteration.</profile><historical>Prior artifacts/aro2-performance-loop preserved unchanged. Initial streak 10. Statistically supported retained improvement resets to zero. Aspirational 50ms does not stop the loop.</historical><environment captured_at="1793974619.5089142"><platform>Linux-7.1.9-arch1-2-x86_64-with-glibc2.44</platform><cpu>model name	: AMD Ryzen 7 7700 8-Core Processor</cpu><storage>SOURCE                   FSTYPE OPTIONS
+/dev/mapper/root[/@home] btrfs  rw,relatime,compress=zstd:3,ssd,space_cache=v2,subvolid=257,subvol=/@home
+</storage><load>3.44 4.20 2.78 5/5655 1306415
+</load><governor path="/sys/devices/system/cpu/cpufreq/policy11/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy8/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy6/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy4/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy2/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy14/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy0/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy12/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy9/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy10/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy7/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy5/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy3/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy15/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy1/scaling_governor">performance</governor><governor path="/sys/devices/system/cpu/cpufreq/policy13/scaling_governor">performance</governor></environment><rust_compiler>rustc 1.98.0 (88d9e12ae 2026-08-18) (Arch Linux rust 1:1.98.0-1)
+binary: rustc
+commit-hash: 88d9e12ae178fab0fb5cc050a94da85685d449ea
+commit-date: 2026-08-18
+host: x86_64-unknown-linux-gnu
+release: 1.98.0
+LLVM version: 22.1.8
+</rust_compiler><harness_source language="python">import os,sys,json,time,random,hashlib,itertools,statistics as T,subprocess as S,shutil,copy
+from pathlib import Path as P
+import xml.etree.ElementTree as E
+root=P.cwd(); work=root/'generated/performance-continuation'; out=root/'artifacts/aro2-performance-continuation'
+os.environ['PATH']='/home/aron/.local/share/mise/installs/node/26.7.0/bin:'+os.environ['PATH'];os.environ['ARO2_NODE']='/home/aron/.local/share/mise/installs/node/26.7.0/bin/node'
+manifest='tools/bot-evaluation/Cargo.toml';exe=root/'tools/bot-evaluation/target/release/ascencio-bot-evaluation'
+def cmd(args):
+ r=S.run(args,stdout=S.PIPE,stderr=S.PIPE,text=True)
+ if r.returncode: raise RuntimeError(str(args)+'\n'+r.stdout+'\n'+r.stderr)
+ return r
+
+def save(tree,path):
+ data=E.tostring(tree,encoding='utf-8',xml_declaration=True)
+ with open(str(path)+'.tmp','wb') as f:f.write(data);f.flush();os.fsync(f.fileno())
+ os.replace(str(path)+'.tmp',path)
+
+def permutation(d):
+ observed=sum(d)
+ return sum(sum(a*b for a,b in zip(d,signs))&gt;=observed-1e-10 for signs in itertools.product([-1,1],repeat=len(d)))/2**len(d)
+
+def experiment(node,phase,old,new,paths):
+ trials=E.SubElement(node,'phase',name=phase);base=0 if phase=='screen' else 12
+ orders=['baseline','candidate']*6;random.SystemRandom().shuffle(orders)
+ means={a:[] for a in ['baseline','candidate']};values={a:[] for a in means}
+ for i,first in enumerate(orders):
+  for arm in [first, 'candidate' if first=='baseline' else 'baseline']:
+   for p in paths:P(p).write_bytes((old if arm=='baseline' else new)[p])
+   load_before=P('/proc/loadavg').read_text().strip()
+   r=cmd([str(work/arm),'benchmark','--config',str(work/f'config-{base+i:02}.xml')]);directory=P(r.stdout.strip());summary=E.parse(directory/'summary.xml').getroot();perf=summary.find('performance')
+   assert summary.findtext('counts/games_completed')=='4' and summary.findtext('counts/games_failed')=='0'
+   samples=[float(g.findtext('duration_ms')) for g in perf.findall('game_samples/game')];assert len(samples)==4
+   means[arm].append(T.mean(samples));values[arm]+=samples
+   n=E.SubElement(trials,'observation',arm=arm,pair=str(i),fixture=f'orders-{base+i:02}.xml',run_id=directory.name,path=str(directory));n.append(perf);E.SubElement(n,'stderr').text=r.stderr;E.SubElement(n,'load_before').text=load_before;E.SubElement(n,'load_after').text=P('/proc/loadavg').read_text().strip()
+   inv=E.SubElement(n,'evidence')
+   for f in sorted(directory.rglob('*.xml')):E.SubElement(inv,'file',path=str(f.relative_to(directory)),sha256=hashlib.sha256(f.read_bytes()).hexdigest(),bytes=str(f.stat().st_size))
+   # Workload counts are recorded, not used to discard slow games.
+   for a in ['a','b']:
+    rep=E.parse(directory/f'matches/match-000001/player-{a}.xml').getroot()
+    for j,g in enumerate(rep.findall('games/game')):E.SubElement(n,'workload',actor=a,game=str(j+1),entries=str(len(g.findall('timeline/entry'))),turns=g.findtext('result/turns',''),evidence_sha256=g.findtext('result/evidence_sha256',''))
+   save(node,out/f"iteration-{node.get('number')}.xml")
+ d=[a-b for a,b in zip(means['baseline'],means['candidate'])];p=permutation(d)
+ for a,v in values.items():E.SubElement(trials,'statistics',arm=a,n=str(len(v)),mean_ms=str(T.mean(v)),variance_ms2=str(T.variance(v)),minimum_ms=str(min(v)),maximum_ms=str(max(v)))
+ improvement=100*T.mean(d)/T.mean(means['baseline']);passed=p&lt;=.005 and improvement&gt;0
+ E.SubElement(trials,'test',name='exact paired one-sided sign-flip',p=str(p),improvement_percent=str(improvement),passed=str(passed).lower())
+ E.SubElement(trials,'profile').text=json.dumps({k:T.mean(float(x.text) for o in trials.findall('observation') if o.get('arm')=='baseline' for x in o.findall('performance/game_samples/game/costs/'+k)) for k in ['engine_time_ms','host_setup_ms','projection_ms','ipc_ms','evidence_hash_ms','serialization_ms','schema_validation_ms','filesystem_ms']})
+ save(node,out/f"iteration-{node.get('number')}.xml")
+ print(node.get('number'),phase,'baseline',T.mean(values['baseline']),'candidate',T.mean(values['candidate']),'p',p,'gain%',improvement,flush=True)
+ return passed
+statefile=work/'state.xml'
+state=E.parse(statefile).getroot() if statefile.exists() else E.Element('state',next='11',streak='10',cursor='0',retained='0')
+catalog=json.loads((work/'catalog.json').read_text())
+head=cmd(['git','rev-parse','HEAD']).stdout.strip()
+if not (work/'baseline-head').exists() or (work/'baseline-head').read_text()!=head:
+ cmd(['cargo','build','--release','--manifest-path',manifest]);shutil.copy2(exe,work/'baseline');(work/'baseline-head').write_text(head)
+for index in range(int(state.get('cursor')),len(catalog)):
+ if int(state.get('streak'))&gt;=100:break
+ c=catalog[index];number=state.get('next');paths=list(c['edits']);old={p:P(p).read_bytes() for p in paths};new={}
+ for p,replacements in c['edits'].items():
+  text=old[p].decode()
+  for a,b in replacements:
+   if a not in text:raise RuntimeError('Patch no longer applies: '+c['name']+' '+p+' '+a[:100])
+   text=text.replace(a,b)
+  new[p]=text.encode()
+ if old==new:raise RuntimeError('No-op candidate '+c['name'])
+ node=E.Element('optimization-iteration',number=number,name=c['name'],base_commit=head,prior_streak=state.get('streak'));E.SubElement(node,'rationale').text=c['rationale'];E.SubElement(node,'phase_basis').text='Historical and preceding per-game profiles show IPC/serialization/hash/validation allocations on measured path; candidate targets '+c['area']
+ print('START',number,c['name'],'streak',state.get('streak'),flush=True)
+ keep=False
+ try:
+  for p,b in new.items():P(p).write_bytes(b)
+  E.SubElement(node,'patch').text=cmd(['git','diff','--',*paths]).stdout
+  build=cmd(['cargo','build','--release','--manifest-path',manifest]);E.SubElement(node,'build').text=build.stderr
+  shutil.copy2(exe,work/'candidate');E.SubElement(node,'binary',arm='baseline',sha256=hashlib.sha256((work/'baseline').read_bytes()).hexdigest());E.SubElement(node,'binary',arm='candidate',sha256=hashlib.sha256((work/'candidate').read_bytes()).hexdigest())
+  context=cmd(['npm','run','test:context']);E.SubElement(node,'test_selection_context').text=context.stdout+context.stderr
+  test=cmd(['npm','test','--','--tests','tests/bot-evaluation-tooling.test.ts']);E.SubElement(node,'regression_validation').text=test.stdout+test.stderr
+  if any(p.endswith('.ts') for p in paths):
+   test=cmd(['npm','test','--','--tests','tests/unit/bot-evaluation-events.test.ts','tests/unit/bot-contract.test.ts','tests/unit/card-visibility.test.ts','tests/unit/prompt-registry-visibility.test.ts']);E.SubElement(node,'visibility_validation').text=test.stdout+test.stderr
+  if experiment(node,'screen',old,new,paths):keep=experiment(node,'confirmation',old,new,paths)
+  if keep:
+   for p,b in new.items():P(p).write_bytes(b)
+   os.environ['ARO2_ACCEPTANCE_SNAPSHOT']=str(root/'generated/performance-loop/verified')
+   test=cmd(['npm','test','--','--tests','tests/bot-evaluation-acceptance.test.ts','tests/bot-evaluation-tooling.test.ts','tests/unit/bot-contract.test.ts','tests/unit/bot-evaluation-events.test.ts','tests/unit/card-visibility.test.ts','tests/unit/prompt-registry-visibility.test.ts']);E.SubElement(node,'retention_validation').text=test.stdout+test.stderr
+  state.set('streak','0' if keep else str(int(state.get('streak'))+1));state.set('next',str(int(number)+1));state.set('cursor',str(index+1))
+  if keep:state.set('retained',str(int(state.get('retained'))+1))
+  E.SubElement(node,'decision',retain=str(keep).lower(),streak=state.get('streak'))
+  save(node,out/f'iteration-{number}.xml');save(state,statefile)
+ except Exception as e:
+  keep=False;E.SubElement(node,'incomplete_error').text=str(e);save(node,out/f'iteration-{number}-incomplete.xml');raise
+ finally:
+  for p,b in (new if keep else old).items():P(p).write_bytes(b)
+ if keep:
+  print('RETAIN_PENDING_COMMIT_AND_PUSH',number,c['name'],flush=True);sys.exit(10)
+print('STOP',E.tostring(state,encoding='unicode'),flush=True)
+</harness_source><normal_sample_harness language="python">from pathlib import Path as P
+import xml.etree.ElementTree as E,subprocess as S,os,statistics as T,hashlib
+os.environ['PATH']='/home/aron/.local/share/mise/installs/node/26.7.0/bin:'+os.environ['PATH'];os.environ['ARO2_NODE']='/home/aron/.local/share/mise/installs/node/26.7.0/bin/node'
+w=P('generated/performance-continuation').resolve();out=P('artifacts/aro2-performance-continuation');cfg=E.parse(w/'config-00.xml');c=cfg.getroot();c.find('starting_orders/mode').text='normal';n=c.find('starting_orders/fixture_path');n.text=None;n.set('{http://www.w3.org/2001/XMLSchema-instance}nil','true');c.find('output/directory').text=str(w/'final-runs');cfg.write(w/'normal.xml',encoding='utf-8',xml_declaration=True)
+r=E.Element('final-normal-shuffle-validation',source_commit=S.check_output(['git','rev-parse','HEAD'],text=True).strip(),binary_sha256=hashlib.sha256((w/'baseline').read_bytes()).hexdigest());values=[]
+for i in range(16):
+ p=S.run([str(w/'baseline'),'benchmark','--config',str(w/'normal.xml')],capture_output=True,text=True);assert p.returncode==0,p.stdout+p.stderr
+ directory=P(p.stdout.strip());summary=E.parse(directory/'summary.xml').getroot();assert summary.findtext('counts/games_completed')=='4'
+ node=E.SubElement(r,'observation',run_id=directory.name,path=str(directory));node.append(summary.find('performance'));E.SubElement(node,'stderr').text=p.stderr
+ values.extend(float(x.text) for x in node.findall('performance/game_samples/game/duration_ms'))
+ for f in sorted(directory.rglob('*.xml')):E.SubElement(node,'file',path=str(f.relative_to(directory)),sha256=hashlib.sha256(f.read_bytes()).hexdigest(),bytes=str(f.stat().st_size))
+ E.ElementTree(r).write(out/'final-normal.xml',encoding='utf-8',xml_declaration=True)
+E.SubElement(r,'statistics',n=str(len(values)),mean_ms=str(T.mean(values)),variance_ms2=str(T.variance(values)),stdev_ms=str(T.stdev(values)),minimum_ms=str(min(values)),maximum_ms=str(max(values)),target_met=str(T.mean(values)&lt;50).lower())
+E.ElementTree(r).write(out/'final-normal.xml',encoding='utf-8',xml_declaration=True)
+print(r.find('statistics').attrib,flush=True)
+</normal_sample_harness><test_selection_note>Continuation iterations 11–48 ran the relevant cargo test target directly after the initial project test:context. Subsequent iterations used npm test with the exact bot-evaluation-tooling test file; TS changes additionally ran the four exact contract/event/visibility files. The final retained code receives all six targeted files, including real-core acceptance. No full application suite.</test_selection_note><graphify_note>Graph query attempted first; isolated worktree has no graphify-out/graph.json. Targeted source inspection used after recording this limitation.</graphify_note></performance-loop-protocol>

@@ -80,6 +80,36 @@ pub fn agent(argv: &[String], workspace: &Path) -> Result<Command> {
     .args(argv);
     Ok(cmd)
 }
+pub fn agent_with_state(argv: &[String], workspace: &Path, state: &Path) -> Result<Command> {
+    let mut cmd = Command::new("bwrap");
+    cmd.args([
+        "--die-with-parent",
+        "--unshare-pid",
+        "--ro-bind",
+        "/",
+        "/",
+        "--dev",
+        "/dev",
+        "--proc",
+        "/proc",
+        "--tmpfs",
+        "/tmp",
+        "--bind",
+    ])
+    .arg(workspace)
+    .arg(workspace)
+    .arg("--bind")
+    .arg(state)
+    .arg(state)
+    .arg("--ro-bind")
+    .arg(workspace.join("request.json"))
+    .arg(workspace.join("request.json"))
+    .arg("--chdir")
+    .arg(workspace)
+    .arg("--")
+    .args(argv);
+    Ok(cmd)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -156,6 +186,100 @@ mod isolation_tests {
             "request"
         );
         assert!(workspace.join("strategy.mjs").exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
+}
+
+/// A deck agent sees a filtered campaign tree. Only its own reports, package
+/// sources and handoff/session directory are re-mounted after hiding the archive.
+pub fn deck_agent(
+    argv: &[String],
+    workspace: &Path,
+    state: &Path,
+    campaign: &Path,
+    permitted: &[std::path::PathBuf],
+) -> Result<Command> {
+    let campaign = campaign.canonicalize()?;
+    let mut cmd = Command::new("bwrap");
+    cmd.args([
+        "--die-with-parent",
+        "--unshare-pid",
+        "--ro-bind",
+        "/",
+        "/",
+        "--dev",
+        "/dev",
+        "--proc",
+        "/proc",
+        "--tmpfs",
+        "/tmp",
+        "--tmpfs",
+    ])
+    .arg(&campaign);
+    for path in permitted {
+        let path = path.canonicalize()?;
+        if !path.starts_with(&campaign) || !std::fs::symlink_metadata(&path)?.is_file() {
+            return Err("Invalid permitted evidence path".into());
+        }
+        cmd.arg("--ro-bind").arg(&path).arg(&path);
+    }
+    cmd.arg("--bind")
+        .arg(workspace)
+        .arg(workspace)
+        .arg("--bind")
+        .arg(state)
+        .arg(state)
+        .arg("--ro-bind")
+        .arg(workspace.join("request.json"))
+        .arg(workspace.join("request.json"))
+        .arg("--chdir")
+        .arg(workspace)
+        .arg("--")
+        .args(argv);
+    Ok(cmd)
+}
+#[cfg(test)]
+mod filtered_evidence_tests {
+    use super::*;
+    #[test]
+    fn deck_agent_cannot_read_opposing_reports_or_sessions() {
+        let root = std::env::temp_dir().join(format!("campaign-view-{}", std::process::id()));
+        let workspace = root.join("proposal");
+        let state = root.join("agents/a");
+        for dir in [
+            &workspace,
+            &state,
+            &root.join("agents/b"),
+            &root.join("reports"),
+        ] {
+            std::fs::create_dir_all(dir).unwrap();
+        }
+        std::fs::write(workspace.join("request.json"), "request").unwrap();
+        std::fs::write(root.join("reports/a.xml"), "permitted").unwrap();
+        std::fs::write(root.join("reports/b.xml"), "private").unwrap();
+        std::fs::write(root.join("agents/b/session.json"), "private conversation").unwrap();
+        let script=format!("cat '{}/reports/a.xml'; test ! -e '{}/reports/b.xml'; test ! -e '{}/agents/b/session.json'; echo ok > result",root.display(),root.display(),root.display());
+        let cmd = deck_agent(
+            &["sh".into(), "-ec".into(), script],
+            &workspace,
+            &state,
+            &root,
+            &[root.join("reports/a.xml")],
+        )
+        .unwrap();
+        execute(
+            cmd,
+            &root,
+            &root.join("agent.log"),
+            3000,
+            100000,
+            &Arc::new(AtomicBool::new(false)),
+        )
+        .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(workspace.join("result")).unwrap(),
+            "ok\n"
+        );
         std::fs::remove_dir_all(root).unwrap();
     }
 }

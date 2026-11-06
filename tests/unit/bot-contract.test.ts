@@ -9,6 +9,7 @@ import type {
   BotDecision,
   BotSideboardDecision,
 } from "../../src/battle/worker/bot/bot-contract.ts";
+import { sideboardBots } from "../../src/battle/worker/bot/bot-match.ts";
 import { validateBotDecision } from "../../src/battle/worker/bot/validate-bot-decision.ts";
 import {
   validateSideboard,
@@ -154,6 +155,61 @@ describe("sideboard transactions", () => {
       validateSideboardPair(deck, [exchange, invalid], () => {}),
     ).toThrow();
     expect(deck.main).toEqual([1, 2]);
+  });
+  it("gives each cross-deck hook its own original and validates both distinct multisets", () => {
+    const other = {
+      main: [cardCode(4), cardCode(5)],
+      extra: [],
+      side: [cardCode(6)],
+    };
+    const otherExchange: BotSideboardDecision = {
+      reason,
+      exchanges: [
+        { from: "main", to: "side", cardCode: "4", copies: 1, reason },
+        { from: "side", to: "main", cardCode: "6", copies: 1, reason },
+      ],
+    };
+    const histories = [
+      [
+        { gameId: "a1", decisions: [] },
+        { gameId: "a2", decisions: [] },
+      ],
+      [
+        { gameId: "b1", decisions: [] },
+        { gameId: "b2", decisions: [] },
+      ],
+    ] as const;
+    const result = sideboardBots(
+      [deck, other],
+      [
+        {
+          decide: () => decision(0),
+          sideboard(input) {
+            expect(input.deck).toEqual(deck);
+            expect(input.preSideGames).toEqual(histories[0]);
+            (input.deck.main as unknown as number[]).splice(0);
+            return exchange;
+          },
+        },
+        {
+          decide: () => decision(0),
+          sideboard(input) {
+            expect(input.deck).toEqual(other);
+            expect(input.preSideGames).toEqual(histories[1]);
+            return otherExchange;
+          },
+        },
+      ],
+      histories,
+      () => {},
+    );
+    expect(result.decks[0]).toEqual({ main: [2, 3], extra: [], side: [1] });
+    expect(result.decks[1]).toEqual({ main: [5, 6], extra: [], side: [4] });
+    expect(deck.main).toEqual([1, 2]);
+    expect(other.main).toEqual([4, 5]);
+    expect(() =>
+      validateSideboardPair([deck, other], [exchange, exchange], () => {}),
+    ).toThrow("unavailable");
   });
   it("does not allow incoming cards to fund further outgoing exchanges", () => {
     const recycled: BotSideboardDecision = {

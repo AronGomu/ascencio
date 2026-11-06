@@ -2,7 +2,7 @@ use crate::{
     identity,
     xml::{self, Result},
 };
-use serde_json::json;
+use serde_json::{json, Value};
 use std::{fs, path::Path};
 pub fn compare(baseline: &Path, candidate: &Path, out: &Path) -> Result<i32> {
     let baseline = baseline.canonicalize()?;
@@ -14,7 +14,9 @@ pub fn compare(baseline: &Path, candidate: &Path, out: &Path) -> Result<i32> {
     let cm = xml::read(&candidate.join("manifest.xml"), "manifest")?;
     let bs = xml::read(&baseline.join("summary.xml"), "summary")?;
     let cs = xml::read(&candidate.join("summary.xml"), "summary")?;
-    let same_deck = bm["deck"]["sha256"] == cm["deck"]["sha256"];
+    let opponent = |m: &Value| m.get("opponent_deck").unwrap_or(&m["deck"]).clone();
+    let same_deck = bm["deck"]["sha256"] == cm["deck"]["sha256"]
+        && opponent(&bm)["sha256"] == opponent(&cm)["sha256"];
     let same_rules = bm["rules"] == cm["rules"];
     let same_content = bm["content"] == cm["content"] && bm["engine"] == cm["engine"];
     let same_bot = |actor: &str| {

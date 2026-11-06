@@ -47,11 +47,9 @@ pub(crate) fn rss(pid: u32) -> u64 {
 }
 
 pub(crate) fn init(host: &mut Host, c: &Config) -> Result<Value> {
-    let codes = c
-        .deck
-        .as_object()
-        .unwrap()
-        .values()
+    let codes = [&c.deck, &c.deck_b]
+        .into_iter()
+        .flat_map(|deck| deck.as_object().unwrap().values())
         .flat_map(|v| v.as_array().unwrap().iter().cloned())
         .collect::<Vec<_>>();
     host.send(&json!({"type":"initialize","snapshot":c.snapshot,"codes":codes,"bots":c.bots}))?;
@@ -60,6 +58,7 @@ pub(crate) fn init(host: &mut Host, c: &Config) -> Result<Value> {
         match value["type"].as_str() {
             Some("ready") => {
                 config::validate_deck(&c.deck, &value["cards"], &c.rules)?;
+                config::validate_deck(&c.deck_b, &value["cards"], &c.rules)?;
                 return Ok(value);
             }
             Some("diagnostic") => (),
@@ -101,13 +100,14 @@ pub(crate) fn manifest(c: &Config, ready: &Value, run: &str) -> Result<Value> {
     let mut saved_configuration = c.doc.clone();
     saved_configuration["starting_orders"]["fixture"] = json!(c.fixture);
     let deck = config::deck_doc(&c.deck);
+    let opponent_deck = config::deck_doc(&c.deck_b);
     let engine = identity::sha(fs::read("vendor/ocgcore-wasm/0.1.2/lib/ocgcore.sync.wasm")?);
     let content = identity::digest(&ready["manifest"]);
     let banlist = identity::sha(fs::read(&c.banlist)?);
     let identity_hash = identity::digest(
-        &json!({"configuration":normalized,"deck":deck,"bots":bots,"engine":engine,"content":content,"banlist":banlist,"fixture":c.fixture,"revision":revision,"runtime":runtime_identity}),
+        &json!({"configuration":normalized,"deck":deck,"opponent_deck":opponent_deck,"bots":bots,"engine":engine,"content":content,"banlist":banlist,"fixture":c.fixture,"revision":revision,"runtime":runtime_identity}),
     );
     Ok(
-        json!({"run_id":run,"created_at":now(),"application_revision":revision,"runtime_sha256":runtime_identity,"runtime":{ "node":ready["node"], "node_flags":ready["node_flags"], "os":hardware()["os"], "cpu":hardware()["cpu"], "memory_bytes":hardware()["memory_bytes"] },"engine":{"version":"ocgcore-wasm-0.1.2","sha256":engine},"content":{"snapshot_id":ready["manifest"]["snapshotId"],"sha256":content},"rules":{"profile":c.profile,"banlist_sha256":banlist},"deck":{"sha256":identity::digest(&deck),"main":deck["main"],"extra":deck["extra"],"side":deck["side"]},"bots":bots,"configuration":saved_configuration,"identity_sha256":identity_hash}),
+        json!({"run_id":run,"created_at":now(),"application_revision":revision,"runtime_sha256":runtime_identity,"runtime":{ "node":ready["node"], "node_flags":ready["node_flags"], "os":hardware()["os"], "cpu":hardware()["cpu"], "memory_bytes":hardware()["memory_bytes"] },"engine":{"version":"ocgcore-wasm-0.1.2","sha256":engine},"content":{"snapshot_id":ready["manifest"]["snapshotId"],"sha256":content},"rules":{"profile":c.profile,"banlist_sha256":banlist},"deck":{"sha256":identity::digest(&deck),"main":deck["main"],"extra":deck["extra"],"side":deck["side"]},"opponent_deck":{"sha256":identity::digest(&opponent_deck),"main":opponent_deck["main"],"extra":opponent_deck["extra"],"side":opponent_deck["side"]},"bots":bots,"configuration":saved_configuration,"identity_sha256":identity_hash}),
     )
 }

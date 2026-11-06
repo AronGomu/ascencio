@@ -81,3 +81,12 @@ Reference desktop: AMD Ryzen 7 7700, Linux x86_64. Optimized native release with
 - Interrupt during an attempt, resume with identical configuration, and confirm the abandoned attempt and game reservations remain while the next attempt begins from the incumbent.
 - Change a runtime/input identity and confirm resume refuses it. Exercise `CANCEL`, agent timeout and a small game budget; confirm explicit stop reasons without promotion.
 - Import the accepted `bot.mjs` factory using permitted card metadata and adapt its BotModule with the shared simulator policy adapter. No automatic gameplay selection is implied.
+
+## ARO2-3 — Multi-deck campaign
+
+- Run a two-deck smoke configuration through `npm run bot:campaign -- --config <absolute JSON>`. Inspect both manifest deck hashes, each perspective's own configuration, and pre/post-side A/B starting order.
+- Confirm only one evaluator child runs at a time. Inspect frozen pool/exclusions in round JSON, same candidate/control opponents and match counts, and rejection when the confidence lower bound is not positive.
+- Confirm one persistent logical agent/session per deck across rounds, immutable rejected packages, and final-round proposal resolution before completion. Inspect `report.md` links back to round/ranking/XML evidence.
+- Interrupt and resume. Confirm reservations are not reset, finalized jobs are reused, incomplete attempts are preserved and superseded explicitly. Exhaust a small game budget and confirm status `incomplete`; raise only that resource ceiling, resume, and inspect the retained extension record.
+- Exercise a recoverable shared scoring-policy failure. Confirm a dedicated Sol 6.1 high identity, retained quarantine/patch/regression evidence, a new epoch for shared behavior changes, ranking refresh and invalidated-work reruns before promotion.
+- A smoke or partial run is not the acceptance campaign. Verify exactly 100 completed round records, final ranking, and simulator-compatible final packages before claiming 100-round completion. Do not use remote CI.

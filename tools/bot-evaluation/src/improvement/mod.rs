@@ -1,11 +1,11 @@
 //! Bounded strategy improvement atop the existing Rust evaluator; Linux isolation.
-mod command_identity;
+pub(crate) mod command_identity;
 mod config;
 mod decision;
-mod process;
-mod references;
+pub(crate) mod process;
+pub(crate) mod references;
 mod statistics;
-mod storage;
+pub(crate) mod storage;
 use crate::{
     identity,
     xml::{self, Result},
@@ -97,6 +97,9 @@ fn batch(
             .join(xml::text(&doc[parts[0]][parts[1]])?)
             .canonicalize()?);
     }
+    if !doc["opponent_deck"].is_null() {
+        doc["opponent_deck"]["path"] = doc["deck"]["path"].clone();
+    }
     doc["batch"]["matches"] = json!(matches);
     doc["output"]["directory"] = json!(dir.join(label));
     let cfg = dir.join(format!("{label}.xml"));
@@ -138,6 +141,12 @@ pub fn run(file: &Path, resume: bool) -> Result<i32> {
         return Err("Loop already running".into());
     }
     let evaluation = crate::config::read(&c.evaluation)?;
+    if evaluation.deck != evaluation.deck_b {
+        return Err(
+            "The bounded mirror loop requires identical decks; use campaign for independent decks"
+                .into(),
+        );
+    }
     if evaluation.fixture.is_some() {
         return Err("This loop uses fresh production shuffles; fixtures are not supported".into());
     }

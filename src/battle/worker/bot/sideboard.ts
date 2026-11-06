@@ -68,12 +68,14 @@ export function validateSideboard(
 
 /** Neither configuration escapes until both submissions pass the same legality rules. */
 export function validateSideboardPair(
-  original: ParsedDeck,
+  original: ParsedDeck | readonly [ParsedDeck, ParsedDeck],
   decisions: readonly [BotSideboardDecision, BotSideboardDecision],
   validateLegality: (deck: ParsedDeck) => void,
 ): readonly [ParsedDeck, ParsedDeck] {
+  const originals =
+    "main" in original ? ([original, original] as const) : original;
   return Object.freeze([
-    validateSideboard(original, decisions[0], validateLegality),
-    validateSideboard(original, decisions[1], validateLegality),
+    validateSideboard(originals[0], decisions[0], validateLegality),
+    validateSideboard(originals[1], decisions[1], validateLegality),
   ]);
 }

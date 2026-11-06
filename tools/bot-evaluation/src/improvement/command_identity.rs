@@ -61,9 +61,20 @@ fn executable(name: &str) -> Result<PathBuf> {
     Err(format!("Command executable not found: {name}").into())
 }
 pub fn digest(c: &Config) -> Result<String> {
+    commands(
+        &std::iter::once(c.agent.clone())
+            .chain(c.checks.clone())
+            .collect::<Vec<_>>(),
+        &c.command_inputs,
+    )
+}
+pub fn commands(argvs: &[Vec<String>], inputs: &[PathBuf]) -> Result<String> {
     let mut records = BTreeMap::new();
     visit(Path::new("scripts/bot-improvement"), &mut records)?;
-    for argv in std::iter::once(&c.agent).chain(c.checks.iter()) {
+    if Path::new("scripts/bot-campaign").exists() {
+        visit(Path::new("scripts/bot-campaign"), &mut records)?;
+    }
+    for argv in argvs {
         visit(&executable(&argv[0])?, &mut records)?;
         for argument in &argv[1..] {
             let path = Path::new(argument);
@@ -72,7 +83,7 @@ pub fn digest(c: &Config) -> Result<String> {
             }
         }
     }
-    for path in &c.command_inputs {
+    for path in inputs {
         visit(path, &mut records)?;
     }
     Ok(identity::digest(&json!(records)))

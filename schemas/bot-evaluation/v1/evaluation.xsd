@@ -275,6 +275,7 @@
 <xs:element name="occurrence_count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="occurrence_id" type="xs:string" nillable="true"/>
 <xs:element name="occurrences" type="record" nillable="true"/>
+<xs:element name="opponent_deck" type="record" nillable="true"/>
 <xs:element name="opponent_deck_count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="opponent_hand_count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="opportunities_declined" type="xs:nonNegativeInteger" nillable="true"/>
@@ -433,6 +434,7 @@
 <xs:element name="starting_orders" type="evalOrders" nillable="false"/>
 <xs:element name="limits" type="evalLimits" nillable="false"/>
 <xs:element name="output" type="evalOutput" nillable="false"/>
+<xs:element name="opponent_deck" type="evalDeck" minOccurs="0"/>
 <xs:element name="performance_target" type="evalTarget" minOccurs="0"/>
 </xs:all><xs:attribute name="schema_version" type="xs:positiveInteger" use="required" fixed="1"/></xs:complexType></xs:element>
 <xs:simpleType name="fixtureGameNumber"><xs:restriction base="xs:positiveInteger"><xs:maxInclusive value="4"/></xs:restriction></xs:simpleType>

@@ -8,6 +8,7 @@ use std::{
 pub struct Config {
     pub doc: Value,
     pub deck: Value,
+    pub deck_b: Value,
     pub bots: Value,
     pub snapshot: PathBuf,
     pub banlist: PathBuf,
@@ -41,11 +42,22 @@ pub fn read(file: &Path) -> Result<Config> {
     }
     let deck_file = resolve(base, &doc["deck"]["path"])?;
     let deck = parse_deck(&fs::read_to_string(deck_file)?)?;
+    let deck_b = if doc.get("opponent_deck").is_some() {
+        parse_deck(&fs::read_to_string(resolve(
+            base,
+            &doc["opponent_deck"]["path"],
+        )?)?)?
+    } else {
+        deck.clone()
+    };
     let mut bots = vec![];
     for actor in ["a", "b"] {
         let b = &doc["bots"][actor];
         let module = xml::text(&b["module"])?;
-        let module = if matches!(module, "builtin:basic" | "builtin:generalist" | "builtin:random") {
+        let module = if matches!(
+            module,
+            "builtin:basic" | "builtin:generalist" | "builtin:random"
+        ) {
             module.to_string()
         } else {
             resolve(base, &b["module"])?.to_string_lossy().into_owned()
@@ -112,6 +124,7 @@ pub fn read(file: &Path) -> Result<Config> {
     Ok(Config {
         doc,
         deck,
+        deck_b,
         bots: json!(bots),
         snapshot,
         banlist,

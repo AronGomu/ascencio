@@ -7,7 +7,7 @@ import type {
 import { validateSideboardPair } from "./sideboard.ts";
 /** Shared runtime/evaluator transaction. Neither player's proposal reaches the other hook. */
 export function sideboardBots(
-  original: ParsedDeck,
+  original: ParsedDeck | readonly [ParsedDeck, ParsedDeck],
   bots: readonly [BotInstance, BotInstance],
   histories: readonly [
     readonly [BotGameObservation, BotGameObservation],
@@ -24,17 +24,19 @@ export function sideboardBots(
   decisions: readonly [BotSideboardDecision, BotSideboardDecision];
   durations: readonly [number, number];
 } {
+  const originals =
+    "main" in original ? ([original, original] as const) : original;
   const times: number[] = [];
   const decisions = bots.map((bot, i) => {
     onHook?.(i as 0 | 1, "start");
     const start = performance.now();
     const result = bot.sideboard(
-      structuredClone({ deck: original, preSideGames: histories[i]! }),
+      structuredClone({ deck: originals[i]!, preSideGames: histories[i]! }),
     );
     times.push(performance.now() - start);
     onHook?.(i as 0 | 1, "end", result);
     return structuredClone(result);
   }) as [BotSideboardDecision, BotSideboardDecision];
-  const decks = validateSideboardPair(original, decisions, validate);
+  const decks = validateSideboardPair(originals, decisions, validate);
   return { decks, decisions, durations: [times[0]!, times[1]!] };
 }

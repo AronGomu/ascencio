@@ -218,7 +218,7 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
                 &bugs,
             )),
         )?;
-        let mut decks = [c.deck.clone(), c.deck.clone()];
+        let mut decks = [c.deck.clone(), c.deck_b.clone()];
         let mut failed = false;
         for index in 0..4 {
             let n = index + 1;

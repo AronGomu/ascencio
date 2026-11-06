@@ -275,6 +275,7 @@
 <xs:element name="occurrence_count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="occurrence_id" type="xs:string" nillable="true"/>
 <xs:element name="occurrences" type="record" nillable="true"/>
+<xs:element name="opponent_deck" type="record" nillable="true"/>
 <xs:element name="opponent_deck_count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="opponent_hand_count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="opportunities_declined" type="xs:nonNegativeInteger" nillable="true"/>

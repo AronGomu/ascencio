@@ -8,6 +8,8 @@ This directory contains current project documentation and historical context. Ro
 
 [`startup-loading-messages.md`](startup-loading-messages.md) maps each startup heading to its work and explains how to review wording in a paused visual preview.
 
+[Bounded bot improvement](architecture/06-quality/bot-improvement-loop.md) documents the fixed-deck coding-agent loop, configuration, isolation, promotion and recovery.
+
 ## Accepted next content architecture
 
 [ADR-104](ADR/104_ADR_startup_memory_content_and_mod_overrides.md) records the implemented move to readable per-entity JSON, verified startup snapshots, app-lifetime memory for critical data and user records, explicit mod overrides, live optional media, and compiler-style startup errors with directly accessible logs. Use [startup content and mod authoring](assets/startup-memory-content.md) for current installation, maintenance, overrides, media and diagnostics. Older SQLite pages below are migration history. Physical mobile acceptance remains pending.

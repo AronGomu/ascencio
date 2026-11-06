@@ -91,6 +91,10 @@ export async function instantiate(
   });
   await module.evaluate();
   const ns = module.namespace as unknown as {
+    createBotModule?: (d: Pick<ActiveDuelDependencies, "cards">) => {
+      contractVersion: number;
+      create: (c: BotConfiguration) => BotInstance;
+    };
     createGeneralistBotModule?: (d: ActiveDuelDependencies) => {
       create: (c: BotConfiguration) => BotInstance;
     };
@@ -115,7 +119,15 @@ export async function instantiate(
     basicFactories.set(artifact, factory);
     return factory.create(artifact.config);
   }
-  const factory = ns.default ?? ns;
+  const factory =
+    ns.createBotModule?.(
+      vm.runInContext(
+        `({ cards: new Map(JSON.parse(${JSON.stringify(JSON.stringify([...dependencies.cards], (_key, value: unknown) => (typeof value === "bigint" ? { $bigint: String(value) } : value)))}, (_key, value) => value && typeof value === "object" && "$bigint" in value ? BigInt(value.$bigint) : value)) })`,
+        context,
+      ),
+    ) ??
+    ns.default ??
+    ns;
   if (factory.contractVersion !== 1 || typeof factory.create !== "function")
     throw new Error("Unsupported bot contract");
   const instance = factory.create(structuredClone(artifact.config));

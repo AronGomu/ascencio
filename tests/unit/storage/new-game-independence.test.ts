@@ -29,30 +29,24 @@ import { AtomicPackageRuntime } from "../../../src/storage/runtime/atomic-packag
 import type { RuntimeFileStore } from "../../../src/storage/runtime/runtime-ports.ts";
 import { createStoryInputsHarness } from "../../fixtures/sqlite/story-inputs-runtime.ts";
 import { databaseAdapter } from "./runtime-fixtures.ts";
+import { verifyPackageFile } from "../../../scripts/lib/sqlite-content/index.ts";
+import type { PackageBuildSpec } from "../../../src/storage/contracts/package-build.ts";
 
-const nativeRelease = JSON.parse(
-  readFileSync("content/native-release.json", "utf8"),
-) as {
-  schemaVersion: 1;
-  packages: {
-    packageId: PackageId;
-    version: string;
-    bytes: number;
-    sha256: string;
-  }[];
-};
-const AUTHORITATIVE_PACKAGES = nativeRelease.packages.map((source) => ({
-  ...source,
-  path: `generated/content-packages/${source.packageId}-${source.version}.sqlite`,
+// SQLite is retained as a conversion/test fixture, not the startup release.
+// Current native startup is pinned by content/critical-release.json.
+const recipe = JSON.parse(
+  readFileSync("content/packages.json", "utf8"),
+) as PackageBuildSpec;
+const CONVERSION_PACKAGES = recipe.packages.map(({ manifest }) => ({
+  manifest,
+  packageId: manifest.packageId,
+  path: `generated/content-packages/${manifest.packageId}-${manifest.version}.sqlite`,
 }));
 
-async function verifyPinnedPackage(
-  source: (typeof AUTHORITATIVE_PACKAGES)[number],
-) {
-  expect(statSync(source.path).size).toBe(source.bytes);
+async function packageFingerprint(file: string) {
   const hash = createHash("sha256");
-  for await (const chunk of createReadStream(source.path)) hash.update(chunk);
-  expect(hash.digest("hex")).toBe(source.sha256);
+  for await (const chunk of createReadStream(file)) hash.update(chunk);
+  return { bytes: statSync(file).size, sha256: hash.digest("hex") };
 }
 
 function ok<T>(value: T): StorageResult<T> {
@@ -129,9 +123,9 @@ describe("New Game independence", () => {
     await harness.close();
   }, 120_000);
 
-  it("loads authoritative accepted packages read-only under an acquired generation lease", async () => {
-    expect(nativeRelease.schemaVersion).toBe(1);
-    expect(AUTHORITATIVE_PACKAGES.map(({ packageId }) => packageId)).toEqual([
+  it("loads current conversion fixtures read-only under an acquired generation lease", async () => {
+    expect(recipe.schemaVersion).toBe(1);
+    expect(CONVERSION_PACKAGES.map(({ packageId }) => packageId)).toEqual([
       "duel-core",
       "card-library",
       "freeplay",
@@ -144,8 +138,16 @@ describe("New Game independence", () => {
       .run();
     const paths = new Map<string, string>();
     const manifests = new Map<PackageId, PackageManifest>();
-    for (const source of AUTHORITATIVE_PACKAGES) {
-      await verifyPinnedPackage(source);
+    const fingerprints = new Map<string, { bytes: number; sha256: string }>();
+    for (const source of CONVERSION_PACKAGES) {
+      const verified = await verifyPackageFile(process.cwd(), source.path);
+      expect(verified.kind, JSON.stringify(verified)).toBe("ok");
+      if (verified.kind === "failed") throw new Error(verified.error.code);
+      expect(verified.value.packageId).toBe(source.packageId);
+      fingerprints.set(source.path, {
+        bytes: verified.value.bytes,
+        sha256: verified.value.sha256,
+      });
       const { packageId } = source;
       const absolute = path.resolve(source.path);
       const packageDatabase = new DatabaseSync(absolute, { readOnly: true });
@@ -161,7 +163,7 @@ describe("New Game independence", () => {
       };
       packageDatabase.close();
       expect(row.package_id).toBe(packageId);
-      expect(row.version).toBe(source.version);
+      expect(row.version).toBe(source.manifest.version);
       const manifest: PackageManifest = {
         packageId: row.package_id,
         packageType: row.package_type,
@@ -172,6 +174,7 @@ describe("New Game independence", () => {
         ) as PackageManifest["dependencies"],
         createdAt: row.created_at,
       };
+      expect(manifest).toEqual(source.manifest);
       const fileKey = `/accepted/${packageId}.sqlite`;
       paths.set(fileKey, absolute);
       manifests.set(packageId, manifest);
@@ -182,7 +185,7 @@ describe("New Game independence", () => {
           JSON.stringify(manifest),
           fileKey,
           statSync(absolute).size,
-          source.sha256,
+          verified.value.sha256,
           "2026-09-24T00:00:00.000Z",
         );
     }
@@ -298,16 +301,21 @@ describe("New Game independence", () => {
     await lease.value.release();
     await storage.close();
     expect(openedHandles).toBe(closedHandles);
-    for (const source of AUTHORITATIVE_PACKAGES)
-      await verifyPinnedPackage(source);
+    for (const source of CONVERSION_PACKAGES)
+      expect(await packageFingerprint(source.path)).toEqual(
+        fingerprints.get(source.path),
+      );
     console.info(
-      "T6B_AUTHORITATIVE_PROBE",
+      "T6B_CONVERSION_READ_ONLY_PROBE",
       JSON.stringify({
         generation: 41,
         packages: Object.fromEntries(
-          AUTHORITATIVE_PACKAGES.map((source) => [
+          CONVERSION_PACKAGES.map((source) => [
             source.packageId,
-            { path: path.resolve(source.path), sha256: source.sha256 },
+            {
+              path: path.resolve(source.path),
+              ...fingerprints.get(source.path),
+            },
           ]),
         ),
         counts: {

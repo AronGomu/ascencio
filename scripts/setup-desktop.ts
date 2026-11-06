@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { PackageBuildSpec } from "../src/storage/contracts/package-build.ts";
 import { exportPackages } from "./lib/sqlite-content/index.ts";
 import { exportSqliteSource } from "./lib/json-content/export-sqlite-source.ts";
+import { readableOutputCurrent } from "./lib/json-content/readable-output-current.ts";
 import { acquireRunLock } from "./lib/run-lock.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -97,19 +98,11 @@ try {
       await mkdir(readableRoot, { recursive: true });
       const missing = [];
       for (const entry of recipe.packages) {
-        if (
-          !(await exists(
-            path.join(readableRoot, entry.manifest.packageId, "pack.json"),
-          ))
-        ) {
-          const output = path.join(readableRoot, entry.manifest.packageId);
-          if (await exists(output))
-            throw new Error(
-              `Incomplete conversion at ${output}. Move that directory aside before retrying.`,
-            );
+        const output = path.join(readableRoot, entry.manifest.packageId);
+        if (!(await readableOutputCurrent(output, entry.manifest)))
           missing.push(entry);
-        }
       }
+
       if (missing.length) {
         console.log(
           "Generating historical conversion fixtures (several GB; allow time for filesystem verification).",

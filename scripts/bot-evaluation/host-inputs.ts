@@ -36,8 +36,10 @@ export async function loadInputs(
   const artifacts = await Promise.all(
     bots.map(async (bot) => {
       const entry =
-        bot.module === "builtin:basic"
-          ? path.resolve("src/battle/worker/bot/basic-bot.ts")
+        bot.module === "builtin:basic" ||
+        bot.module === "builtin:generalist" ||
+        bot.module === "builtin:random"
+          ? path.resolve(`src/battle/worker/bot/${bot.module.slice(8)}-bot.ts`)
           : bot.module;
       const built = await build({
         entryPoints: [entry],
@@ -89,6 +91,9 @@ export async function instantiate(
   });
   await module.evaluate();
   const ns = module.namespace as unknown as {
+    createGeneralistBotModule?: (d: ActiveDuelDependencies) => {
+      create: (c: BotConfiguration) => BotInstance;
+    };
     createBasicBotModule?: (d: ActiveDuelDependencies) => {
       create: (c: BotConfiguration) => BotInstance;
     };
@@ -99,8 +104,14 @@ export async function instantiate(
     contractVersion?: number;
     create?: (c: BotConfiguration) => BotInstance;
   };
-  if (artifact.module === "builtin:basic") {
-    const factory = ns.createBasicBotModule!(dependencies);
+  if (
+    artifact.module === "builtin:basic" ||
+    artifact.module === "builtin:generalist"
+  ) {
+    const factory =
+      artifact.module === "builtin:basic"
+        ? ns.createBasicBotModule!(dependencies)
+        : ns.createGeneralistBotModule!(dependencies);
     basicFactories.set(artifact, factory);
     return factory.create(artifact.config);
   }

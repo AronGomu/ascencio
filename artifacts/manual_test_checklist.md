@@ -64,3 +64,10 @@ Reference desktop: AMD Ryzen 7 7700, Linux x86_64. Optimized native release with
 - [ ] T2. When explicitly requesting the original complete test sequence, run `npm run test:all`. Verify: tooling, unit/performance, component and integration groups run in that order, stopping at the first failed command.
 - [ ] T3. Run `npm test -- --full --list`. Verify: the complete `check` pipeline is previewed, including content, frontend and browser gates; actual full-pipeline execution remains an explicit owner choice.
 - [ ] T4. Open the Freeplay collection with native media available. Verify: optional card artwork loads, unavailable artwork keeps its placeholder, and leaving the collection releases its image resources. Repeat in browser development and with a replaced media file.
+
+## ARO2-2 — Generalist baseline and random comparator
+
+- Configure the existing Rust evaluator with `builtin:generalist` in seat A and `builtin:random` in seat B, empty bot configurations, the same declared deck, and normal engine shuffle.
+- Run a declared batch with paired starting players. Inspect manifest, player reports, and summary: bot source/configuration identities and decision reasons must be retained; wins divided by all completed games (including draws) must be at least 60%, with zero failed/skipped games.
+- Instantiate `createGeneralistBotPolicy(dependencies)` through the duel controller's opponentPolicy seam and verify legal automatic turns and normal terminal cleanup. The existing default and UI do not change.
+- Inspect random decisions over multiple games: pass/activate, yes/no, targets, subset counts, orderings and constrained allocations must vary where legal. No concealed opponent identity may appear in either actor's observations.

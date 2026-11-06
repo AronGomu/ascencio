@@ -1,3 +1,4 @@
+import { createBasicBotPolicy } from "./bot/basic-bot.ts";
 import {
   DuelOperationError,
   duelOperationError,
@@ -23,7 +24,6 @@ import {
   EngineQueryFlag,
 } from "./engine/engine-constants.ts";
 import {
-  BasicOpponentPolicy,
   toOpponentVisibleState,
   type OpponentPolicy,
 } from "./opponent/OpponentPolicy.ts";
@@ -95,7 +95,7 @@ export class HeadlessDuelController {
         }),
     );
     this.#opponent =
-      options.opponentPolicy ?? new BasicOpponentPolicy(options.dependencies);
+      options.opponentPolicy ?? createBasicBotPolicy(options.dependencies);
     this.#maximumAutomaticResponses =
       options.maximumAutomaticResponses ?? 1_000;
   }
@@ -232,6 +232,9 @@ export class HeadlessDuelController {
             choiceIds: decision.choiceIds,
             player: 1,
             opponentReason: decision.reason,
+            ...(decision.explanation === undefined
+              ? {}
+              : { detail: decision.explanation }),
           });
           answeredOpponent = true;
         }

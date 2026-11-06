@@ -28,7 +28,8 @@ export type OpponentDecisionReason =
 
 export interface OpponentDecision {
   readonly choiceIds: readonly ChoiceId[];
-  readonly reason: OpponentDecisionReason;
+  readonly reason: string;
+  readonly explanation?: string;
 }
 
 export interface OpponentVisiblePlayerSummary {

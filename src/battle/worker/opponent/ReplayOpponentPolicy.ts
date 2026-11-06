@@ -2,7 +2,6 @@ import type { ChoiceId, PromptId } from "../../duel/contracts/ids.ts";
 import type { PlayerPrompt } from "../../duel/contracts/player-prompt.ts";
 import type {
   OpponentDecision,
-  OpponentDecisionReason,
   OpponentPolicy,
   OpponentVisibleDuelState,
 } from "./OpponentPolicy.ts";
@@ -11,7 +10,7 @@ import type {
 export interface RecordedOpponentResponse {
   readonly promptId: PromptId;
   readonly choiceIds: readonly ChoiceId[];
-  readonly reason: OpponentDecisionReason;
+  readonly reason: string;
 }
 
 /** A rebuilt duel that asked a different question than the one the recorded

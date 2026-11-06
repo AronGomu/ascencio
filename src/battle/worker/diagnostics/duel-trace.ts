@@ -5,7 +5,6 @@ import type {
 } from "../../duel/contracts/ids.ts";
 import type { PlayerIndex } from "../../duel/contracts/public-duel-state.ts";
 import type { DuelSeed } from "../engine/duel-seed.ts";
-import type { OpponentDecisionReason } from "../opponent/OpponentPolicy.ts";
 
 export interface DuelTraceEntry {
   readonly sequence: number;
@@ -26,7 +25,7 @@ export interface DuelTraceEntry {
   readonly promptId?: PromptId;
   readonly choiceIds?: readonly ChoiceId[];
   readonly player?: PlayerIndex;
-  readonly opponentReason?: OpponentDecisionReason;
+  readonly opponentReason?: string;
   readonly detail?: string;
 }
 
@@ -45,7 +44,7 @@ export interface RecordedDuelResponse {
   readonly promptId: PromptId;
   readonly choiceIds: readonly ChoiceId[];
   readonly player: PlayerIndex;
-  readonly opponentReason?: OpponentDecisionReason;
+  readonly opponentReason?: string;
 }
 
 /** Everything a fresh session needs to reproduce a duel up to the last

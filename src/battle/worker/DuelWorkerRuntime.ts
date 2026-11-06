@@ -1,3 +1,4 @@
+import { createBasicBotPolicy } from "./bot/basic-bot.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type { PinnedDeckRuleset } from "../../decks/validation/index.ts";
 import type { BattleRuntimeInput } from "../ports/index.ts";
@@ -32,10 +33,7 @@ import { resolveDuelDecks } from "./decks/resolve-duel-decks.ts";
 import { DuelSession } from "./engine/DuelSession.ts";
 import { createProductionSeed, type DuelSeed } from "./engine/duel-seed.ts";
 import type { OcgCoreAdapter } from "./engine/OcgCoreAdapter.ts";
-import {
-  BasicOpponentPolicy,
-  type OpponentPolicy,
-} from "./opponent/OpponentPolicy.ts";
+import { type OpponentPolicy } from "./opponent/OpponentPolicy.ts";
 import {
   ReplayDivergenceError,
   ReplayOpponentPolicy,
@@ -609,7 +607,7 @@ export class DuelWorkerRuntime {
         promptIdNamespace: start.promptIdNamespace,
         opponentPolicy: new ReplayOpponentPolicy(
           opponentResponses,
-          new BasicOpponentPolicy(resources.dependencies),
+          createBasicBotPolicy(resources.dependencies),
         ),
         publishTrace: (trace) => {
           if (handedOver) this.#lastTrace = trace;

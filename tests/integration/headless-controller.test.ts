@@ -12,6 +12,9 @@ import type { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapt
 import { loadVendoredCoreNode } from "../../src/battle/worker/engine/load-vendored-core-node.ts";
 import { HeadlessDuelController } from "../../src/battle/worker/HeadlessDuelController.ts";
 
+import { createBasicBotPolicy } from "../../src/battle/worker/bot/basic-bot.ts";
+import { toOpponentVisibleState } from "../../src/battle/worker/opponent/OpponentPolicy.ts";
+
 let adapter: OcgCoreAdapter;
 let dependencies: ActiveDuelDependencies;
 let preset: MvpPreset;
@@ -28,6 +31,53 @@ beforeAll(async () => {
 });
 
 describe("HeadlessDuelController", () => {
+  it("uses the shared basic bot for both seats in a real-core mirror game", () => {
+    const session = DuelSession.create({
+      adapter,
+      dependencies,
+      playerDeck: preset.player,
+      opponentDeck: preset.player,
+      configuration: { mode: "production", rules: "mr5" },
+    });
+    const bot = createBasicBotPolicy(dependencies);
+    let opponentDecisions = 0;
+    const opponent = createBasicBotPolicy(dependencies);
+    const controller = new HeadlessDuelController({
+      session,
+      dependencies,
+      snapshotId: snapshotId("a".repeat(64)),
+      presetId: preset.id,
+      deckCounts: [preset.player.main.length, preset.player.main.length],
+      extraDeckCounts: [preset.player.extra.length, preset.player.extra.length],
+      extraMonsterZones: true,
+      opponentPolicy: {
+        choose(prompt, observation) {
+          opponentDecisions++;
+          const decision = opponent.choose(prompt, observation);
+          expect(decision.explanation).toBeTruthy();
+          return decision;
+        },
+      },
+    });
+    try {
+      let boundary = controller.advance();
+      for (let i = 0; i < 2000 && boundary.result === undefined; i++) {
+        if (boundary.prompt === undefined)
+          throw new Error("No decision boundary");
+        const decision = bot.choose(
+          boundary.prompt,
+          toOpponentVisibleState(boundary.state),
+        );
+        expect(decision.explanation).toBeTruthy();
+        boundary = controller.respond(boundary.prompt.id, decision.choiceIds);
+      }
+      expect(boundary.result).toBeDefined();
+      expect(opponentDecisions).toBeGreaterThan(0);
+      expect(session.disposed).toBe(true);
+    } finally {
+      controller.dispose();
+    }
+  });
   it("projects real messages and accepts one opaque human choice", () => {
     const session = DuelSession.create({
       adapter,

@@ -100,16 +100,45 @@ pub fn compare(baseline: &Path, candidate: &Path, out: &Path) -> Result<i32> {
         .filter(|id| !candidate_bugs.contains(id))
         .map(|v| (*v).clone())
         .collect::<Vec<_>>();
+    let side_references = [
+        crate::analysis::sideboarding_reference(&baseline)?,
+        crate::analysis::sideboarding_reference(&candidate)?,
+    ]
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>();
+    let side_changes = json!({"baseline":bs["sideboarding"],"candidate":cs["sideboarding"],"observations":{"observation":"Legal exchange counts are partitioned by player, card, direction and reason. Exposure and observed match histories differ; these changes do not establish exchange quality."},"evidence":{"reference":side_references}});
+    let mut categories = std::collections::BTreeSet::new();
+    for summary in [&bs, &cs] {
+        for failure in xml::items(&summary["reliability"]["failures_by_category"], "failure") {
+            categories.insert(xml::text(&failure["category"])?.to_owned());
+        }
+    }
+    let failure_count = |summary: &serde_json::Value, category: &str| {
+        xml::items(&summary["reliability"]["failures_by_category"], "failure")
+            .into_iter()
+            .find(|r| r["category"] == category)
+            .and_then(|r| xml::integer(&r["count"]).ok())
+            .unwrap_or(0)
+    };
+    let bug_refs = |run: &Path, ids: &[serde_json::Value]| {
+        ids.iter()
+            .map(|id| json!({"path":run.join("bugs").join(format!("{}.xml",id.as_str().unwrap()))}))
+            .collect::<Vec<_>>()
+    };
+    let new_refs = bug_refs(&candidate, &new);
+    let recurring_refs = bug_refs(&candidate, &recurring);
+    let reliability_changes = json!({"baseline":bs["counts"],"candidate":cs["counts"],"records":{"record":categories.iter().map(|category|{let a=failure_count(&bs,category);let b=failure_count(&cs,category);json!({"category":category,"baseline":a,"candidate":b,"delta_count":b as i64-a as i64})}).collect::<Vec<_>>()},"observations":{"observation":"Failure counts retain infrastructure outcomes separately from competitive results. A previously observed signature not seen is not proof that its defect is fixed."},"new_bug_references":{"reference":new_refs},"recurring_failure_references":{"reference":recurring_refs}});
     let id = format!(
         "comparison-{}",
         &identity::digest(&json!([baseline, candidate]))[..16]
     );
-    let doc = json!({"comparison_id":id,"baseline_run":baseline,"candidate_run":candidate,"baseline_manifest_sha256":identity::sha(fs::read(baseline.join("manifest.xml"))?),"candidate_manifest_sha256":identity::sha(fs::read(candidate.join("manifest.xml"))?),"comparison_mode":"unpaired","comparability":{"same_input_deck":same_deck,"same_rules_and_banlist":same_rules,"same_engine_and_content":same_content,"same_opponent_artifact_and_config":changed.is_some(),"same_starting_order_cases":same_orders,"changed_bot":changed,"confounded":confounded,"notes":{"note":"Same fixture is not proof of identical later random execution; comparison uses unpaired match clusters."}},"metrics":{"metric":metrics},"decision_changes":behavior,"performance_changes":performance,"sideboarding_changes":{"baseline":bs["sideboarding"],"candidate":cs["sideboarding"],"metric_reference":"sideboarding"},"new_bug_ids":{"bug_id":new},"recurring_failure_signatures":{"bug_id":recurring},"previously_observed_bugs_not_seen":{"bug_id":gone},"limitations":{"limitation":["Self-play symmetry is not evidence of strength improvement.","Starting orders do not control subsequent random outcomes.","Conditional action rates and sideboard differences do not establish causality."]}});
+    let doc = json!({"comparison_id":id,"baseline_run":baseline,"candidate_run":candidate,"baseline_manifest_sha256":identity::sha(fs::read(baseline.join("manifest.xml"))?),"candidate_manifest_sha256":identity::sha(fs::read(candidate.join("manifest.xml"))?),"comparison_mode":"unpaired","comparability":{"same_input_deck":same_deck,"same_rules_and_banlist":same_rules,"same_engine_and_content":same_content,"same_opponent_artifact_and_config":changed.is_some(),"same_starting_order_cases":same_orders,"changed_bot":changed,"confounded":confounded,"notes":{"note":"Same fixture is not proof of identical later random execution; comparison uses unpaired match clusters."}},"metrics":{"metric":metrics},"decision_changes":behavior,"performance_changes":performance,"sideboarding_changes":side_changes,"reliability_changes":reliability_changes,"new_bug_ids":{"bug_id":new},"recurring_failure_signatures":{"bug_id":recurring},"previously_observed_bugs_not_seen":{"bug_id":gone},"limitations":{"limitation":["Self-play symmetry is not evidence of strength improvement.","Starting orders do not control subsequent random outcomes.","Conditional action rates and sideboard differences do not establish causality."]}});
     xml::write(&out.join("comparison.xml"), "comparison", &doc)?;
     xml::write(
         &out.join("report.xml"),
         "comparison-report",
-        &json!({"comparison_id":id,"comparison_path":"comparison.xml","compared_runs":{"baseline":{"manifest_path":baseline.join("manifest.xml")},"candidate":{"manifest_path":candidate.join("manifest.xml")}},"comparability":{"assessment":if confounded{"Inputs do not isolate one changed bot against a fixed opponent; do not infer strength improvement."}else{"Deck, engine, content, rules and reference opponent identities are fixed."},"limitations":doc["limitations"]},"result_changes":{"metric_references":{"metric_reference":["metrics","comparability"]},"observations":{}},"decision_changes":{"metric_reference":"decision_changes","evidence":behavior["evidence"]},"sideboarding_changes":{"metric_reference":"sideboarding_changes"},"performance_changes":{"metric_reference":"performance_changes"},"reliability_changes":{"new_bug_references":doc["new_bug_ids"],"recurring_failure_references":doc["recurring_failure_signatures"]},"recommendations":{"recommendation":[{"hypothesis":"A changed reason distribution may identify a policy decision worth investigating; outcome associations alone are insufficient.","evidence":behavior["evidence"],"next_step":"Inspect cited legal choices and rerun a single policy change against the fixed reference opponent."}]}}),
+        &json!({"comparison_id":id,"comparison_path":"comparison.xml","compared_runs":{"baseline":{"manifest_path":baseline.join("manifest.xml")},"candidate":{"manifest_path":candidate.join("manifest.xml")}},"comparability":{"assessment":if confounded{"Inputs do not isolate one changed bot against a fixed opponent; do not infer strength improvement."}else{"Deck, engine, content, rules and reference opponent identities are fixed."},"limitations":doc["limitations"]},"result_changes":{"metric_references":{"metric_reference":["metrics","comparability"]},"observations":{}},"decision_changes":{"metric_reference":"decision_changes","evidence":behavior["evidence"]},"sideboarding_changes":{"metric_reference":"sideboarding_changes","observations":side_changes["observations"],"evidence":side_changes["evidence"]},"performance_changes":{"metric_reference":"performance_changes"},"reliability_changes":{"metric_reference":"reliability_changes","observations":reliability_changes["observations"],"new_bug_references":reliability_changes["new_bug_references"],"recurring_failure_references":reliability_changes["recurring_failure_references"]},"recommendations":{"recommendation":[{"hypothesis":"A changed reason distribution may identify a policy decision worth investigating; outcome associations alone are insufficient.","evidence":behavior["evidence"],"next_step":"Inspect cited legal choices and rerun a single policy change against the fixed reference opponent."}]}}),
     )?;
     println!("{}", out.display());
     Ok(0)

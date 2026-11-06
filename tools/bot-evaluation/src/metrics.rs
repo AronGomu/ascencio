@@ -18,6 +18,7 @@ pub struct Metrics {
     pub bot: f64,
     pub writes: f64,
     pub elapsed: f64,
+    pub timing_incomplete: bool,
     pub peak: u64,
     pub stages: [[u64; 3]; 2],
     pub stage_durations: [Vec<f64>; 2],
@@ -293,6 +294,7 @@ impl Metrics {
         bugs: Value,
         memory: Value,
     ) -> Value {
+        let measured = |value: f64| (!self.timing_incomplete).then_some(value);
         let mut durations = self.durations.clone();
         durations.sort_by(f64::total_cmp);
         let pct = |p: f64| {
@@ -310,7 +312,7 @@ impl Metrics {
  "combat":{"record":self.events.iter().filter(|(k,_)|k.contains("attack")||k.contains("battle")||k.contains("damage")).map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},
  "materials":{"record":self.events.iter().filter(|(k,_)|k.contains("material_")).map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},"resources":{"record":self.events.iter().filter(|(k,_)|k.contains("life_points")||k.contains("recover")).map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},"sideboarding":{"event_count":self.side_exchanges,"records":{"record":self.side_records.iter().map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()}},
  "decision_behavior":{"record":self.reasons.iter().map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},
- "performance":{"startup_ms":startup,"elapsed_ms":self.elapsed,"by_stage":{"pre_side":quantiles(&self.stage_durations[0]),"post_side":quantiles(&self.stage_durations[1])},"completed_games_per_second":if self.elapsed>0.0{Some(self.completed as f64/(self.elapsed/1000.0))}else{None},"game_duration_ms":{"p50":pct(0.5),"p95":pct(0.95),"p99":pct(0.99),"maximum":durations.last()},"decision_duration_ms":self.decision_times.report(),"engine_time_ms":self.engine,"bot_time_ms":self.bot,"report_write_time_ms":self.writes,"bridge_time_ms":(self.elapsed-self.engine-self.bot-self.writes).max(0.0),"peak_resident_memory_bytes":if self.peak==0{None}else{Some(self.peak)},"acceptance_target":{"warm_game_p95_ms":target,"passed":pct(0.95).map(|v|v<=target)},"memory_samples":memory},"reliability":{"cleanup":{"handles_created":self.handles_created,"handles_destroyed":self.handles_destroyed},"failures_by_category":{"failure":self.failures.iter().map(|(category,count)|json!({"category":category,"count":count})).collect::<Vec<_>>()},"bugs":bugs}})
+ "performance":{"startup_ms":startup,"elapsed_ms":measured(self.elapsed),"timing_complete":!self.timing_incomplete,"by_stage":{"pre_side":quantiles(&self.stage_durations[0]),"post_side":quantiles(&self.stage_durations[1])},"completed_games_per_second":if self.elapsed>0.0 && !self.timing_incomplete{Some(self.completed as f64/(self.elapsed/1000.0))}else{None},"game_duration_ms":{"p50":pct(0.5),"p95":pct(0.95),"p99":pct(0.99),"maximum":durations.last()},"decision_duration_ms":self.decision_times.report(),"engine_time_ms":self.engine,"bot_time_ms":self.bot,"report_write_time_ms":measured(self.writes),"bridge_time_ms":measured((self.elapsed-self.engine-self.bot-self.writes).max(0.0)),"peak_resident_memory_bytes":if self.peak==0 || self.timing_incomplete{None}else{Some(self.peak)},"acceptance_target":{"warm_game_p95_ms":target,"passed":pct(0.95).map(|v|v<=target)},"memory_samples":memory},"reliability":{"cleanup":{"handles_created":self.handles_created,"handles_destroyed":self.handles_destroyed},"failures_by_category":{"failure":self.failures.iter().map(|(category,count)|json!({"category":category,"count":count})).collect::<Vec<_>>()},"bugs":bugs}})
     }
 }
 
@@ -354,7 +356,7 @@ fn aggregation_rules() -> Vec<Value> {
 ("combat/resources","Raw named public event occurrences per observer, with no quality score."),
 ("sideboarding","Sum submitted legal exchange records; records partition player/card/direction/reason. No causal effectiveness inferred."),
 ("decision_behavior","Count bot-provided reasons for completed-game own decisions."),
-("performance","Cold initialization separately timed. Exact nearest-rank game latency includes mandatory evidence persistence. Decision histogram uses bounded log buckets. Peak memory is maximum sampled combined supervisor/host RSS. Throughput includes batch orchestration and evidence I/O."),
+("performance","Cold initialization separately timed. Exact nearest-rank game latency includes mandatory evidence persistence. Decision histogram uses bounded log buckets. Peak memory is maximum sampled combined supervisor/host RSS. Throughput includes batch orchestration and evidence I/O. Aggregate elapsed/write/bridge/peak metrics are null when a resumed process has no complete earlier timing checkpoint; game latency remains reconstructible from persisted game records."),
 ("reliability","Failed game and sideboarding categories counted separately from competitive outcomes; cleanup counts explicit host acknowledgements."),
 ("results.*.uncertainty","Match-cluster sandwich variance with normal 95 percent interval. All completed games within one match form one cluster; estimates null below two informative matches.")
 ].into_iter().map(|(metric_reference,aggregation_rule)|json!({"metric_reference":metric_reference,"aggregation_rule":aggregation_rule})).collect()

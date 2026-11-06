@@ -7,6 +7,8 @@ import {
   mkdirSync,
   readdirSync,
   existsSync,
+  cpSync,
+  unlinkSync,
 } from "node:fs";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
@@ -137,6 +139,23 @@ test(
         "2",
       );
       cli(["evaluate", "--config", f, "--resume", failed], 2);
+      const failureComparison = join(root, `comparison-${kind}`);
+      cli([
+        "compare",
+        "--baseline",
+        run,
+        "--candidate",
+        failed,
+        "--out",
+        failureComparison,
+      ]);
+      const reliability = read(failureComparison, "comparison.xml");
+      assert.match(reliability, /<reliability_changes>/);
+      assert.match(reliability, /<delta_count>2<\/delta_count>/);
+      assert.match(
+        read(failureComparison, "report.xml"),
+        /<reference path="[^"]*bugs\/bug-[^"]+\.xml"/,
+      );
     }
     for (const hang of [false, true]) {
       const sideFailureCfg = config(
@@ -259,6 +278,26 @@ test(
       field(read(interruptedRun, "progress.xml"), "status"),
       "interrupted",
     );
+    const previousElapsed = Number(
+      field(read(interruptedRun, "summary.xml"), "elapsed_ms"),
+    );
+    // A process killed before summary persistence has valid game evidence but no
+    // complete batch timing checkpoint. Recovery must not invent throughput.
+    const noTimingRun = join(root, "recovery-without-timing");
+    cpSync(interruptedRun, noTimingRun, { recursive: true });
+    unlinkSync(join(noTimingRun, "summary.xml"));
+    unlinkSync(join(noTimingRun, "report.xml"));
+    cli(["evaluate", "--config", interruptedCfg, "--resume", noTimingRun], 2);
+    const noTimingSummary = read(noTimingRun, "summary.xml");
+    assert.equal(field(noTimingSummary, "timing_complete"), "false");
+    assert.match(
+      noTimingSummary,
+      /<completed_games_per_second xsi:nil="true"\s*\/>/,
+    );
+    assert.match(
+      noTimingSummary,
+      /<peak_resident_memory_bytes xsi:nil="true"\s*\/>/,
+    );
     cli(
       ["evaluate", "--config", interruptedCfg, "--resume", interruptedRun],
       2,
@@ -268,6 +307,8 @@ test(
       beforeResume,
     );
     const recovered = read(interruptedRun, "summary.xml");
+    assert.equal(field(recovered, "timing_complete"), "true");
+    assert.ok(Number(field(recovered, "elapsed_ms")) >= previousElapsed);
     assert.equal(
       Number(field(recovered, "games_completed")) +
         Number(field(recovered, "games_failed")) +
@@ -325,6 +366,10 @@ test(
     assert.match(
       read(isolatedComparison, "comparison.xml"),
       /<changed_bot>a<\/changed_bot>/,
+    );
+    assert.match(
+      read(isolatedComparison, "report.xml"),
+      /<section>sideboarding<\/section>/,
     );
     const comparison = join(root, "comparison");
     cli([

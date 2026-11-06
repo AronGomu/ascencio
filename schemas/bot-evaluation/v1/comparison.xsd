@@ -388,6 +388,7 @@
 <xs:element name="target" type="record" nillable="true"/>
 <xs:element name="targets" type="record" nillable="true"/>
 <xs:element name="timeline" type="record" nillable="true"/>
+<xs:element name="timing_complete" type="xs:boolean" nillable="true"/>
 <xs:element name="title" type="xs:string" nillable="true"/>
 <xs:element name="to" type="record" nillable="true"/>
 <xs:element name="to_record" type="record" nillable="true"/>
@@ -426,6 +427,7 @@
 <xs:element name="previously_observed_bugs_not_seen" type="record" nillable="false"/>
 <xs:element name="limitations" type="record" nillable="false"/>
 <xs:element name="performance_changes" type="record" nillable="false"/>
+<xs:element name="reliability_changes" type="record" nillable="false"/>
 </xs:all><xs:attribute name="schema_version" type="xs:positiveInteger" use="required" fixed="1"/></xs:complexType></xs:element>
 <xs:simpleType name="fixtureGameNumber"><xs:restriction base="xs:positiveInteger"><xs:maxInclusive value="4"/></xs:restriction></xs:simpleType>
 <xs:simpleType name="actorType"><xs:restriction base="xs:string"><xs:enumeration value="a"/><xs:enumeration value="b"/></xs:restriction></xs:simpleType>

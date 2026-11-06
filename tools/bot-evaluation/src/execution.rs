@@ -32,7 +32,7 @@ pub(crate) fn play(
     let swapped = game["starter"] == "b";
     let order = if swapped { [1, 0] } else { [0, 1] };
     let start = Instant::now();
-    host.send(&json!({"type":"game","game_id":game["game_id"],"profile":c.profile,"limits":c.limits,"decks":[decks[order[0]],decks[order[1]]],"orders":orders,"bot_order":order}))?;
+    let sent = host.send(&json!({"type":"game","game_id":game["game_id"],"profile":c.profile,"limits":c.limits,"decks":[decks[order[0]],decks[order[1]]],"orders":orders,"bot_order":order}));
     let mut records=[0,1].map(|i|json!({"configuration_sha256":identity::digest(&config::deck_doc(&decks[i])),"game_id":game["game_id"],"stage":game["stage"],"starting_player":game["starter"],"status":"failed","initial":null,"timeline":{"entry":[]},"result":{}}));
     let mut checkpoint = json!({"captured_at":now(),"pending_prompt":null,"attempted_response":null,"recent_engine_events":{"entry":[]},"private_engine_state":null,"bot_debug_state":null,"player":null});
     let mut deadline =
@@ -45,7 +45,17 @@ pub(crate) fn play(
     let mut entries = 0u64;
     let mut evidence_bytes = 0usize;
     let mut cleanup = json!({"handles_created":0,"handles_destroyed":0});
+    if let Err(error) = sent {
+        failure = Some(
+            json!({"category":"host_crash","message":error.to_string(),"stack":null,"last_progress_sequence":0}),
+        );
+        host.kill();
+        host_dead = true;
+    }
     loop {
+        if host_dead {
+            break;
+        }
         if entries % 256 == 0 {
             peak = peak.max(rss(std::process::id()) + rss(host.pid()));
         }
@@ -77,7 +87,12 @@ pub(crate) fn play(
         };
         let actor = frame["actor"].as_u64().unwrap_or(0) as usize;
         if actor > 1 {
-            return Err("Invalid host actor".into());
+            failure = Some(
+                json!({"category":"host_protocol","message":"Invalid host actor","stack":null,"last_progress_sequence":entries}),
+            );
+            host.kill();
+            host_dead = true;
+            break;
         }
         let mapped = order[actor];
         match frame["type"].as_str().unwrap_or("") {
@@ -135,6 +150,8 @@ pub(crate) fn play(
                     failure = Some(
                         json!({"category":"handle_cleanup","message":"Core handles were not balanced","stack":null}),
                     );
+                    host.kill();
+                    host_dead = true;
                 }
                 break;
             }
@@ -142,25 +159,51 @@ pub(crate) fn play(
             "host_error" => {
                 failure =
                     Some(json!({"category":"host_error","message":frame["message"],"stack":null}));
+                host.kill();
+                host_dead = true;
                 break;
             }
-            _ => return Err("Unknown host frame".into()),
+            _ => {
+                failure = Some(
+                    json!({"category":"host_protocol","message":"Unknown host frame","stack":null,"last_progress_sequence":entries}),
+                );
+                host.kill();
+                host_dead = true;
+                break;
+            }
         }
+    }
+    if failure.is_none()
+        && terminal.as_ref().is_none_or(|result| {
+            result["type"] != "done"
+                || result.get("winner").is_none()
+                || result["engine_reason"].as_str().is_none()
+                || result["turns"].as_u64().is_none()
+                || (!result["winner"].is_null() && result["winner"].as_u64().is_none_or(|n| n > 1))
+        })
+    {
+        failure = Some(
+            json!({"category":"host_protocol","message":"Host omitted or returned an invalid authoritative result","stack":null,"last_progress_sequence":entries}),
+        );
+        host.kill();
+        host_dead = true;
     }
     let elapsed = start.elapsed().as_secs_f64() * 1000.0;
     let mut neutral = game.clone();
     neutral.as_object_mut().unwrap().remove("skip_reason");
     let status = if failure.is_some() {
         "failed"
-    } else if terminal.is_some() {
-        "completed"
     } else {
-        return Err("Host omitted result".into());
+        "completed"
     };
     let result = terminal.unwrap_or_else(|| json!({}));
-    let winner = result["winner"]
-        .as_u64()
-        .map(|s| if order[s as usize] == 0 { "a" } else { "b" });
+    let winner = result["winner"].as_u64().filter(|s| *s < 2).map(|s| {
+        if order[s as usize] == 0 {
+            "a"
+        } else {
+            "b"
+        }
+    });
     neutral["status"] = json!(status);
     if host_dead {
         cleanup["released_by_host_termination"] = cleanup["handles_created"].clone();
@@ -328,5 +371,52 @@ pub(crate) fn value_size(v: &Value) -> usize {
         Value::Array(a) => a.iter().map(|v| 16 + value_size(v)).sum(),
         Value::String(s) => s.len(),
         _ => 16,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn dead_host_before_game_command_is_a_recorded_failure() {
+        // Exercise a real closed child pipe: this used to escape as a startup
+        // error before the supervisor could persist partial game evidence.
+        let mut host = Host::start().unwrap();
+        host.kill();
+        let deck = json!({"main":[],"extra":[],"side":[]});
+        let c = Config {
+            doc: json!({}),
+            deck: deck.clone(),
+            bots: json!([]),
+            snapshot: Default::default(),
+            banlist: Default::default(),
+            rules: json!({}),
+            profile: "mr5".into(),
+            matches: 1,
+            limits: json!({"game_wall_time_ms":1000,"decision_wall_time_ms":1000}),
+            output: Default::default(),
+            fixture: None,
+            target: 1000.0,
+        };
+        let game =
+            json!({"game_id":"match-000001-game-1","number":1,"stage":"pre_side","starter":"a"});
+        let result = play(
+            &mut host,
+            &c,
+            &game,
+            &[deck.clone(), deck],
+            Value::Null,
+            &AtomicBool::new(false),
+        )
+        .unwrap();
+        assert_eq!(result.neutral["status"], "failed");
+        assert_eq!(result.neutral["failure_category"], "host_crash");
+        assert!(result.neutral["winner"].is_null());
+        assert!(result.neutral["draw"].is_null());
+        assert_eq!(
+            result.neutral["evidence_sha256"].as_str().unwrap().len(),
+            64
+        );
+        assert!(result.host_dead);
     }
 }

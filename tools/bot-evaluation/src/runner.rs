@@ -71,12 +71,33 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
     let mut next = 1;
     let mut last = 0;
     let mut memory = vec![];
+    let mut previous_elapsed = 0.0;
+    let mut previous_writes = 0.0;
     if resume.is_some() {
         let p = xml::read(&directory.join("progress.xml"), "progress")?;
         next = xml::integer(&p["next_unstarted_match"])?;
         last = xml::integer(&p["last_finalized_match"])?;
         if next > c.matches + 1 || last >= next {
             return Err("Invalid progress watermark".into());
+        }
+        if next > 1 {
+            metrics.timing_incomplete = true;
+            if directory.join("summary.xml").exists() {
+                let previous = xml::read(&directory.join("summary.xml"), "summary")?;
+                let covered = xml::integer(&previous["counts"]["matches_completed"])?
+                    + xml::integer(&previous["counts"]["matches_incomplete"])?;
+                let performance = &previous["performance"];
+                if covered == next - 1 && performance["timing_complete"] == "true" {
+                    previous_elapsed = xml::number(&performance["elapsed_ms"])?;
+                    previous_writes = xml::number(&performance["report_write_time_ms"])?;
+                    metrics.peak = xml::integer(&performance["peak_resident_memory_bytes"])?;
+                    memory = xml::items(&performance["memory_samples"], "sample")
+                        .into_iter()
+                        .cloned()
+                        .collect();
+                    metrics.timing_incomplete = false;
+                }
+            }
         }
         for m in 1..next {
             let id = format!("match-{m:06}");
@@ -349,16 +370,8 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
             break;
         }
     }
-    metrics.writes = xml::write_time_ms() - writes_at_warm;
-    metrics.elapsed = warm.elapsed().as_secs_f64() * 1000.0
-        + if resume.is_some() && directory.join("summary.xml").exists() {
-            xml::number(
-                &xml::read(&directory.join("summary.xml"), "summary")?["performance"]["elapsed_ms"],
-            )
-            .unwrap_or(0.0)
-        } else {
-            0.0
-        };
+    metrics.writes = previous_writes + xml::write_time_ms() - writes_at_warm;
+    metrics.elapsed = previous_elapsed + warm.elapsed().as_secs_f64() * 1000.0;
     let status = if interrupted {
         "interrupted"
     } else {

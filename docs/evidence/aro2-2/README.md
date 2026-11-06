@@ -1,6 +1,6 @@
 # Generalist baseline acceptance, 2026-11-06
 
-The ARO2-1 Rust evaluator completed the declared ARO2-2 comparison with **100 wins / 100 completed games (100%)**, zero losses, zero draws, zero failures and zero skipped games. This exceeds the required 60% for this setup only.
+The ARO2-1 Rust evaluator completed the declared ARO2-2 comparison with **99 wins / 100 completed games (99%)**, one loss, zero draws, zero failures and zero skipped games. This exceeds the required 60% for this setup only.
 
 - Run: `run-1793992444791`, 25 sequential four-game matches.
 - Deck: independent copies of `content/freeplay/decks/player.ydk`; the manifest retains the exact deck and its digest.

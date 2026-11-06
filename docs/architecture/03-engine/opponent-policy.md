@@ -32,4 +32,4 @@ To specialize it, supply a `GeneralistStrategy` as the second argument to `creat
 
 Acceptance requires a declared same-deck, starting-player-balanced ARO2-1 evaluation batch with at least 60% wins over **all completed games**, including draws in the denominator, and zero execution/legality failures. A passing batch establishes only that declared setup, not competitive strength or performance across arbitrary decks.
 
-The retained [ARO2-2 acceptance evidence](../../evidence/aro2-2/README.md) records 100/100 wins in 100 balanced same-deck Freeplay games, with no failures or draws, plus the initial failed batch and its resolved cancellation defect.
+The retained [ARO2-2 acceptance evidence](../../evidence/aro2-2/README.md) records 99/100 wins in 100 balanced same-deck Freeplay games, with no failures or draws, plus the initial failed batch and its resolved cancellation defect.

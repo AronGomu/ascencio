@@ -13,6 +13,7 @@ pub struct Metrics {
     pub match_wins: [u64; 2],
     pub ties: u64,
     pub durations: Vec<f64>,
+    pub samples: Vec<Value>,
     pub decision_times: Histogram,
     pub engine: f64,
     pub bot: f64,
@@ -128,6 +129,9 @@ impl Metrics {
             .or_else(|_| xml::number(&records[0]["result"]["duration_ms"]))
             .unwrap_or(0.0);
         self.durations.push(duration);
+        if self.samples.len() < 4 {
+            self.samples.push(json!({"game_id":neutral["game_id"],"stage":neutral["stage"],"duration_ms":duration,"costs":neutral["costs"]}));
+        }
         self.stage_durations[stage].push(duration);
         self.engine += xml::number(&records[0]["result"]["engine_time_ms"]).unwrap_or(0.0);
         self.bot += xml::number(&records[0]["result"]["bot_time_ms"]).unwrap_or(0.0);
@@ -312,7 +316,7 @@ impl Metrics {
  "combat":{"record":self.events.iter().filter(|(k,_)|k.contains("attack")||k.contains("battle")||k.contains("damage")).map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},
  "materials":{"record":self.events.iter().filter(|(k,_)|k.contains("material_")).map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},"resources":{"record":self.events.iter().filter(|(k,_)|k.contains("life_points")||k.contains("recover")).map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},"sideboarding":{"event_count":self.side_exchanges,"records":{"record":self.side_records.iter().map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()}},
  "decision_behavior":{"record":self.reasons.iter().map(|(name,count)|json!({"name":name,"event_count":count})).collect::<Vec<_>>()},
- "performance":{"startup_ms":startup,"elapsed_ms":measured(self.elapsed),"timing_complete":!self.timing_incomplete,"by_stage":{"pre_side":quantiles(&self.stage_durations[0]),"post_side":quantiles(&self.stage_durations[1])},"completed_games_per_second":if self.elapsed>0.0 && !self.timing_incomplete{Some(self.completed as f64/(self.elapsed/1000.0))}else{None},"game_duration_ms":{"p50":pct(0.5),"p95":pct(0.95),"p99":pct(0.99),"maximum":durations.last()},"decision_duration_ms":self.decision_times.report(),"engine_time_ms":self.engine,"bot_time_ms":self.bot,"report_write_time_ms":measured(self.writes),"bridge_time_ms":measured((self.elapsed-self.engine-self.bot-self.writes).max(0.0)),"peak_resident_memory_bytes":if self.peak==0 || self.timing_incomplete{None}else{Some(self.peak)},"acceptance_target":{"warm_game_p95_ms":target,"passed":pct(0.95).map(|v|v<=target)},"memory_samples":memory},"reliability":{"cleanup":{"handles_created":self.handles_created,"handles_destroyed":self.handles_destroyed},"failures_by_category":{"failure":self.failures.iter().map(|(category,count)|json!({"category":category,"count":count})).collect::<Vec<_>>()},"bugs":bugs}})
+ "performance":{"game_samples":if requested==1 {json!({"game":self.samples.iter().map(|sample| { let mut s=sample.clone(); s["passed"]=json!(xml::number(&s["duration_ms"]).is_ok_and(|v|v<target)); s }).collect::<Vec<_>>()})} else {json!({})},"startup_ms":startup,"elapsed_ms":measured(self.elapsed),"timing_complete":!self.timing_incomplete,"by_stage":{"pre_side":quantiles(&self.stage_durations[0]),"post_side":quantiles(&self.stage_durations[1])},"completed_games_per_second":if self.elapsed>0.0 && !self.timing_incomplete{Some(self.completed as f64/(self.elapsed/1000.0))}else{None},"game_duration_ms":{"p50":pct(0.5),"p95":pct(0.95),"p99":pct(0.99),"maximum":durations.last()},"decision_duration_ms":self.decision_times.report(),"engine_time_ms":self.engine,"bot_time_ms":self.bot,"report_write_time_ms":measured(self.writes),"bridge_time_ms":measured((self.elapsed-self.engine-self.bot-self.writes).max(0.0)),"peak_resident_memory_bytes":if self.peak==0 || self.timing_incomplete{None}else{Some(self.peak)},"acceptance_target":{"warm_game_p95_ms":target,"criterion":if requested==1{"all_four_games_strictly_below_limit"}else{"warm_game_p95"},"passed":if requested==1 {Some(self.completed==4 && self.failed==0 && self.incomplete==0 && durations.iter().all(|v|*v<target))}else{pct(0.95).map(|v|v<=target)}},"memory_samples":memory},"reliability":{"cleanup":{"handles_created":self.handles_created,"handles_destroyed":self.handles_destroyed},"failures_by_category":{"failure":self.failures.iter().map(|(category,count)|json!({"category":category,"count":count})).collect::<Vec<_>>()},"bugs":bugs}})
     }
 }
 

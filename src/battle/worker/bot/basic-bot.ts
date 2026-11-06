@@ -44,15 +44,17 @@ export function createBasicBotModule(
 }
 
 /** Both callers use this boundary before PromptRegistry performs engine encoding. */
-export function botAsOpponentPolicy(bot: BotInstance): OpponentPolicy {
+export function botAsOpponentPolicy(
+  bot: BotInstance,
+  cloneInput = true,
+): OpponentPolicy {
   return {
     choose(prompt, observation) {
-      const decision = bot.decide(
-        structuredClone({
-          prompt: bindPromptInstances(prompt, observation.publicState),
-          observation,
-        }),
-      );
+      const input = {
+        prompt: bindPromptInstances(prompt, observation.publicState),
+        observation,
+      };
+      const decision = bot.decide(cloneInput ? structuredClone(input) : input);
       validateBotDecision(prompt, decision);
       return {
         choiceIds: [...decision.choiceIds],
@@ -66,5 +68,8 @@ export function botAsOpponentPolicy(bot: BotInstance): OpponentPolicy {
 export function createBasicBotPolicy(
   dependencies: ActiveDuelDependencies,
 ): OpponentPolicy {
-  return botAsOpponentPolicy(createBasicBotModule(dependencies).create({}));
+  return botAsOpponentPolicy(
+    createBasicBotModule(dependencies).create({}),
+    false,
+  );
 }

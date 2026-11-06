@@ -21,10 +21,27 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 pub fn evaluate(c: Config, resume: Option<PathBuf>) -> Result<i32> {
-    evaluate_inner(c, resume)
+    let (code, directory) = evaluate_inner(c, resume)?;
+    println!("{}", directory.display());
+    Ok(code)
 }
 
-fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
+pub fn benchmark(c: Config, command_start: Instant) -> Result<i32> {
+    if c.matches != 1 || c.target != 100.0 {
+        return Err("Benchmark requires exactly one match and a 100 ms limit; it never resumes or schedules a soak".into());
+    }
+    let (code, directory) = evaluate_inner(c, None)?;
+    crate::evidence_writer::shutdown();
+    let elapsed = command_start.elapsed().as_secs_f64() * 1000.0;
+    let mut summary = xml::read(&directory.join("summary.xml"), "summary")?;
+    summary["performance"]["end_to_end_ms"] = json!(elapsed);
+    summary["performance"]["measurement_boundary"] = json!("Each game: dispatch before engine handle creation through canonical hashing, required event/decision XML, XSD validation, atomic evidence file fsync/rename and progress fsync. End-to-end: command entry, configuration validation, cold startup, all four games, sideboarding, aggregation, summary/report/progress persistence and host shutdown. This final benchmark timing-metadata update is outside that interval. Component timers may overlap across the supervisor and host and are not additive.");
+    xml::write(&directory.join("summary.xml"), "summary", &summary)?;
+    println!("{}", directory.display());
+    Ok(code)
+}
+
+fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> {
     let start = Instant::now();
     let stop = Arc::new(AtomicBool::new(false));
     let signal = stop.clone();
@@ -64,6 +81,7 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
         directory: directory.clone(),
         armed: true,
     };
+    crate::evidence_validation::prepare()?;
     let mut metrics = Metrics::default();
     let mut ledger = ProgressLedger::default();
     let mut bugs = BugStore::new(&directory);
@@ -159,13 +177,13 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
         }
         if p["status"] == "completed" && next == c.matches + 1 {
             failure_guard.armed = false;
-            println!("{}", directory.display());
-            return Ok(if metrics.incomplete > 0 { 2 } else { 0 });
+            return Ok((if metrics.incomplete > 0 { 2 } else { 0 }, directory));
         }
     }
     let startup = start.elapsed().as_secs_f64() * 1000.0;
     let warm = Instant::now();
     let writes_at_warm = xml::write_time_ms();
+    let costs_at_warm = xml::costs();
     let mut host_dead = false;
     let mut interrupted = false;
     for m in next..=c.matches {
@@ -258,6 +276,7 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
             )?;
             let orders = fixture(&c, m, n as u64, &decks)?;
             let full_path_start = Instant::now();
+            let costs_before_game = xml::costs();
             let mut result = play(
                 &mut host,
                 &c,
@@ -319,6 +338,13 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
             )?;
             record["games"]["game"][index]["duration_ms"] =
                 json!(full_path_start.elapsed().as_secs_f64() * 1000.0);
+            let costs = xml::costs();
+            for (k, value) in ["serialization_ms", "schema_validation_ms", "filesystem_ms"]
+                .iter()
+                .zip(costs.iter().zip(costs_before_game).map(|(a, b)| a - b))
+            {
+                record["games"]["game"][index]["costs"][*k] = json!(value);
+            }
             if stop.load(Ordering::SeqCst) {
                 failed = true;
                 interrupted = true;
@@ -377,7 +403,7 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
     } else {
         "completed"
     };
-    let summary = metrics.summary(
+    let mut summary = metrics.summary(
         &run,
         status,
         c.matches,
@@ -386,6 +412,10 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
         json!({"bug_id":bugs.ids}),
         json!({"sample":memory}),
     );
+    let costs = xml::costs();
+    summary["performance"]["costs"] = json!({"serialization_ms":costs[0]-costs_at_warm[0],"schema_validation_ms":costs[1]-costs_at_warm[1],"filesystem_ms":costs[2]-costs_at_warm[2]});
+    summary["performance"]["end_to_end_ms"] = json!(start.elapsed().as_secs_f64() * 1000.0);
+    summary["performance"]["measurement_boundary"] = json!("Game dispatch before engine handle creation through canonical hashing, XML serialization, XSD validation, atomic file fsync/rename and progress fsync. Match elapsed additionally includes sideboarding, match finalization and aggregation; end_to_end_ms includes cold startup and stops before summary/report persistence.");
     xml::write(&directory.join("summary.xml"), "summary", &summary)?;
     xml::write(
         &directory.join("report.xml"),
@@ -404,12 +434,14 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<i32> {
         &bugs,
     )?;
     failure_guard.armed = false;
-    println!("{}", directory.display());
-    Ok(if interrupted || metrics.incomplete > 0 {
-        2
-    } else {
-        0
-    })
+    Ok((
+        if interrupted || metrics.incomplete > 0 {
+            2
+        } else {
+            0
+        },
+        directory,
+    ))
 }
 
 struct FailureGuard {

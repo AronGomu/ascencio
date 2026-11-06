@@ -1793,10 +1793,32 @@ function mutablePlayer(
   };
 }
 
+// Weak caches retain immutable projections only while their game-local source
+// objects live. Every observable field is checked before reusing a projection.
+const deckProjectionCache = new WeakMap<
+  MutablePlayer,
+  {
+    count: number;
+    reveals: Map<number, CardCode>;
+    cards: readonly PublicCard[];
+  }
+>();
+const cardProjectionCache = new WeakMap<MutableCard, PublicCard>();
+const playerProjectionCache = new WeakMap<MutablePlayer, PublicPlayerState>();
 function projectDeck(
   player: MutablePlayer,
   index: PlayerIndex,
 ): readonly PublicCard[] {
+  const cached = deckProjectionCache.get(player);
+  if (
+    cached &&
+    cached.count === player.deckCount &&
+    cached.reveals.size === player.deckReveals.size &&
+    [...player.deckReveals].every(
+      ([slot, code]) => cached.reveals.get(slot) === code,
+    )
+  )
+    return cached.cards;
   const slots: PublicCard[] = [];
   for (let offset = 0; offset < player.deckCount; offset += 1) {
     const code = player.deckReveals.get(offset);
@@ -1817,7 +1839,13 @@ function projectDeck(
       }),
     );
   }
-  return Object.freeze(slots);
+  const cards = Object.freeze(slots);
+  deckProjectionCache.set(player, {
+    count: player.deckCount,
+    reveals: new Map(player.deckReveals),
+    cards,
+  });
+  return cards;
 }
 
 function immutablePlayer(
@@ -1825,11 +1853,30 @@ function immutablePlayer(
   value: MutablePlayer,
   includeHandIdentities: boolean,
 ): PublicPlayerState {
-  return Object.freeze({
+  const old = playerProjectionCache.get(value);
+  const deck = projectDeck(value, player);
+  const equalCards = (a: readonly MutableCard[], b: readonly PublicCard[]) =>
+    a.length === b.length && a.every((c, i) => immutableCard(c) === b[i]);
+  if (
+    old &&
+    old.deck === deck &&
+    old.lifePoints === value.lifePoints &&
+    old.deckCount === value.deckCount &&
+    old.extraDeckCount === value.extraDeckCount &&
+    old.handCount === value.handCount &&
+    (!includeHandIdentities || equalCards(value.hand, old.hand)) &&
+    equalCards(value.extraDeck, old.extraDeck) &&
+    equalCards(value.monsters, old.monsters) &&
+    equalCards(value.spellsAndTraps, old.spellsAndTraps) &&
+    equalCards(value.graveyard, old.graveyard) &&
+    equalCards(value.banished, old.banished)
+  )
+    return old;
+  const result = Object.freeze({
     player,
     lifePoints: value.lifePoints,
     deckCount: value.deckCount,
-    deck: projectDeck(value, player),
+    deck,
     extraDeckCount: value.extraDeckCount,
     handCount: value.handCount,
     hand: Object.freeze(
@@ -1841,10 +1888,41 @@ function immutablePlayer(
     graveyard: Object.freeze(value.graveyard.map(immutableCard)),
     banished: Object.freeze(value.banished.map(immutableCard)),
   });
+  playerProjectionCache.set(value, result);
+  return result;
 }
 
 function immutableCard(value: MutableCard): PublicCard {
-  return Object.freeze({
+  const old = cardProjectionCache.get(value);
+  if (
+    old &&
+    old.instanceId === value.instanceId &&
+    old.code === value.code &&
+    old.owner === value.owner &&
+    old.controller === value.controller &&
+    old.location === value.location &&
+    old.sequence === value.sequence &&
+    old.displayOrder === value.displayOrder &&
+    old.position === value.position &&
+    old.faceUp === value.faceUp &&
+    old.counters.length === value.counters.length &&
+    old.overlayMaterials.length === value.overlayMaterials.length &&
+    value.counters.every((v, i) => {
+      const c = old.counters[i]!;
+      return c.type === v.type && c.name === v.name && c.count === v.count;
+    }) &&
+    value.overlayMaterials.every((v, i) => {
+      const c = old.overlayMaterials[i]!;
+      return (
+        c.instanceId === v.instanceId &&
+        c.code === v.code &&
+        c.identityVisible === v.identityVisible &&
+        c.sequence === v.sequence
+      );
+    })
+  )
+    return old;
+  const result = Object.freeze({
     ...value,
     counters: Object.freeze(
       value.counters.map((counter): PublicCounter =>
@@ -1862,6 +1940,8 @@ function immutableCard(value: MutableCard): PublicCard {
       ),
     ),
   });
+  cardProjectionCache.set(value, result);
+  return result;
 }
 
 function publicZone(

@@ -15,6 +15,9 @@ impl Host {
     pub fn start() -> Result<Self> {
         let mut child = Command::new(std::env::var("ARO2_NODE").unwrap_or_else(|_| "node".into()))
             .args([
+                "--no-lazy",
+                "--no-wasm-lazy-compilation",
+                "--no-liftoff",
                 "--experimental-vm-modules",
                 "--disable-warning=ExperimentalWarning",
                 "scripts/bot-evaluation/host.ts",

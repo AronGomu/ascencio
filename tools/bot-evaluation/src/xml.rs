@@ -226,6 +226,7 @@ pub fn validate(root: &str, bytes: &[u8]) -> Result<()> {
         "bug-ticket",
         "diagnostics",
         "starting-orders",
+        "timeline-fragment",
     ]
     .contains(&root)
     {
@@ -245,9 +246,12 @@ pub fn validate(root: &str, bytes: &[u8]) -> Result<()> {
     SCHEMAS.with(|cache| {
         let mut cache = cache.borrow_mut();
         if !cache.contains_key(root) {
-            let schema = fs::read_to_string(
-                Path::new("schemas/bot-evaluation/v1").join(format!("{root}.xsd")),
-            )?;
+            #[cfg(not(test))]
+            let schema_directory = std::path::PathBuf::from("schemas/bot-evaluation/v1");
+            #[cfg(test)]
+            let schema_directory =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schemas/bot-evaluation/v1");
+            let schema = fs::read_to_string(schema_directory.join(format!("{root}.xsd")))?;
             if schema.contains("schemaLocation")
                 || schema.contains("<!DOCTYPE")
                 || schema.contains("<!ENTITY")
@@ -268,6 +272,17 @@ pub fn validate(root: &str, bytes: &[u8]) -> Result<()> {
 }
 
 thread_local! {static WRITE_MS:std::cell::Cell<f64>=const {std::cell::Cell::new(0.0)};}
+thread_local! {static COSTS:std::cell::Cell<[f64;3]>=const {std::cell::Cell::new([0.0;3])};}
+pub fn costs() -> [f64; 3] {
+    COSTS.with(|v| v.get())
+}
+fn cost(index: usize, start: std::time::Instant) {
+    COSTS.with(|v| {
+        let mut c = v.get();
+        c[index] += start.elapsed().as_secs_f64() * 1000.0;
+        v.set(c);
+    });
+}
 pub fn write_time_ms() -> f64 {
     WRITE_MS.with(|v| v.get())
 }
@@ -284,9 +299,18 @@ impl Drop for WriteTimer {
 }
 pub fn write(path: &Path, root: &str, value: &Value) -> Result<()> {
     let _timer = WriteTimer::start();
+    let start = std::time::Instant::now();
     semantics(root, value)?;
     let bytes = encode(root, value)?;
-    validate(root, &bytes)?;
+    cost(0, start);
+    let start = std::time::Instant::now();
+    if root == "player-report" {
+        crate::evidence_validation::report(&bytes)?;
+    } else {
+        validate(root, &bytes)?;
+    }
+    cost(1, start);
+    let start = std::time::Instant::now();
     fs::create_dir_all(path.parent().ok_or("No parent")?)?;
     let tmp = path.with_extension("xml.tmp");
     let mut file = fs::File::create(&tmp)?;
@@ -295,6 +319,44 @@ pub fn write(path: &Path, root: &str, value: &Value) -> Result<()> {
     fs::rename(tmp, path)?;
     #[cfg(unix)]
     fs::File::open(path.parent().unwrap())?.sync_all()?;
+    cost(2, start);
+    Ok(())
+}
+/// One durable match commit. Evidence files are flushed concurrently, then
+/// renamed in order with match.xml last, followed by one directory fsync.
+/// This is bounded filesystem concurrency, never parallel game execution.
+pub fn write_match(files: &[(std::path::PathBuf, &str, &Value)]) -> Result<()> {
+    let _timer = WriteTimer::start();
+    let parent = files
+        .first()
+        .and_then(|f| f.0.parent())
+        .ok_or("Empty match write")?;
+    let mut prepared = Vec::with_capacity(files.len());
+    for (path, root, value) in files {
+        if path.parent() != Some(parent) {
+            return Err("Match files must share one directory".into());
+        }
+        let start = std::time::Instant::now();
+        semantics(root, value)?;
+        let bytes = encode(root, value)?;
+        cost(0, start);
+        prepared.push((path.with_extension("xml.tmp"), root.to_string(), bytes));
+    }
+    fs::create_dir_all(parent)?;
+    let lane_costs = crate::evidence_writer::flush(prepared)?;
+    COSTS.with(|v| {
+        let mut c = v.get();
+        c[1] += lane_costs[0];
+        c[2] += lane_costs[1];
+        v.set(c);
+    });
+    let start = std::time::Instant::now();
+    for (path, _, _) in files {
+        fs::rename(path.with_extension("xml.tmp"), path)?;
+    }
+    #[cfg(unix)]
+    fs::File::open(parent)?.sync_all()?;
+    cost(2, start);
     Ok(())
 }
 pub fn text(v: &Value) -> Result<&str> {
@@ -426,10 +488,70 @@ pub fn semantics(root: &str, value: &Value) -> Result<()> {
             for g in games {
                 allowed(&g["status"], &["completed", "failed", "skipped"])?;
                 if g["status"] == "skipped" {
-                    if g["skip_reason"].as_str().is_none() {
-                        return Err("Skipped perspective has no reason".into());
+                    if g["skip_reason"].as_str().is_none()
+                        || ["initial", "timeline", "result", "configuration_sha256"]
+                            .iter()
+                            .any(|k| g.get(*k).is_some())
+                    {
+                        return Err(
+                            "Skipped perspective must contain only identity and skip reason".into(),
+                        );
                     }
                 } else {
+                    if !g["timeline"].is_object() || g["configuration_sha256"].as_str().is_none() {
+                        return Err(
+                            "Executed perspective lacks timeline/configuration identity".into()
+                        );
+                    }
+                    if g["status"] == "completed"
+                        && (!g["initial"].is_object()
+                            || g["result"]["engine_reason"].as_str().is_none()
+                            || g["result"]["turns"].is_null()
+                            || !g["result"]["bug_id"].is_null())
+                    {
+                        return Err(
+                            "Completed perspective lacks initial/result evidence or carries a bug"
+                                .into(),
+                        );
+                    }
+                    if g["status"] == "failed" && g["result"]["bug_id"].as_str().is_none() {
+                        return Err("Failed perspective lacks bug reference".into());
+                    }
+                    let mut sequence = 0;
+                    for entry in items(&g["timeline"], "entry") {
+                        let next = integer(&entry["sequence"])?;
+                        if next <= sequence {
+                            return Err("Timeline sequence must increase".into());
+                        }
+                        sequence = next;
+                        match entry["kind"].as_str() {
+                            Some("decision")
+                                if [
+                                    "decision_id",
+                                    "prompt",
+                                    "selected_choice_ids",
+                                    "reason",
+                                    "duration_ms",
+                                ]
+                                .iter()
+                                .all(|k| entry.get(*k).is_some()) =>
+                            {
+                                ()
+                            }
+                            Some("event")
+                                if ["event", "changes", "details"]
+                                    .iter()
+                                    .all(|k| entry.get(*k).is_some()) =>
+                            {
+                                ()
+                            }
+                            _ => {
+                                return Err(
+                                    "Timeline entry lacks its discriminated evidence fields".into(),
+                                )
+                            }
+                        }
+                    }
                     allowed(
                         &g["result"]["outcome"],
                         if g["status"] == "completed" {

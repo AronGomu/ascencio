@@ -108,6 +108,6 @@ pub(crate) fn manifest(c: &Config, ready: &Value, run: &str) -> Result<Value> {
         &json!({"configuration":normalized,"deck":deck,"bots":bots,"engine":engine,"content":content,"banlist":banlist,"fixture":c.fixture,"revision":revision,"runtime":runtime_identity}),
     );
     Ok(
-        json!({"run_id":run,"created_at":now(),"application_revision":revision,"runtime_sha256":runtime_identity,"runtime":{ "node":ready["node"], "os":hardware()["os"], "cpu":hardware()["cpu"], "memory_bytes":hardware()["memory_bytes"] },"engine":{"version":"ocgcore-wasm-0.1.2","sha256":engine},"content":{"snapshot_id":ready["manifest"]["snapshotId"],"sha256":content},"rules":{"profile":c.profile,"banlist_sha256":banlist},"deck":{"sha256":identity::digest(&deck),"main":deck["main"],"extra":deck["extra"],"side":deck["side"]},"bots":bots,"configuration":saved_configuration,"identity_sha256":identity_hash}),
+        json!({"run_id":run,"created_at":now(),"application_revision":revision,"runtime_sha256":runtime_identity,"runtime":{ "node":ready["node"], "node_flags":ready["node_flags"], "os":hardware()["os"], "cpu":hardware()["cpu"], "memory_bytes":hardware()["memory_bytes"] },"engine":{"version":"ocgcore-wasm-0.1.2","sha256":engine},"content":{"snapshot_id":ready["manifest"]["snapshotId"],"sha256":content},"rules":{"profile":c.profile,"banlist_sha256":banlist},"deck":{"sha256":identity::digest(&deck),"main":deck["main"],"extra":deck["extra"],"side":deck["side"]},"bots":bots,"configuration":saved_configuration,"identity_sha256":identity_hash}),
     )
 }

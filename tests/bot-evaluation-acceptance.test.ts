@@ -63,8 +63,58 @@ test(
     );
     assert.equal(build.status, 0, build.stderr);
     const cfg = config("normal");
-    const run = cli(["evaluate", "--config", cfg]);
+    cli(["benchmark", "--config", cfg], 1); // Wrong latency goal is rejected.
+    writeFileSync(
+      cfg,
+      readFileSync(cfg, "utf8").replace(
+        "<warm_game_p95_ms>1000",
+        "<warm_game_p95_ms>100",
+      ),
+    );
+    cli(["benchmark", "--config", cfg, "--resume", "ignored"], 1);
+    const tooMany = config("not-a-sample", 2);
+    writeFileSync(
+      tooMany,
+      readFileSync(tooMany, "utf8").replace(
+        "<warm_game_p95_ms>1000",
+        "<warm_game_p95_ms>100",
+      ),
+    );
+    cli(["benchmark", "--config", tooMany], 1);
+    const run = cli(["benchmark", "--config", cfg]);
     const summary = read(run, "summary.xml");
+    const samples = summary.match(/<game_samples>(.*?)<\/game_samples>/)![1]!;
+    const timings = [
+      ...samples.matchAll(/<duration_ms>(.*?)<\/duration_ms>/g),
+    ].map((m) => Number(m[1]));
+    assert.equal(timings.length, 4);
+    assert.ok(timings.every((t) => t > 0));
+    assert.ok(
+      Number(field(summary, "end_to_end_ms")) >=
+        timings.reduce((a, b) => a + b, 0),
+    );
+    assert.ok(Number(field(summary, "startup_ms")) > 0);
+    assert.match(
+      summary,
+      /<criterion>all_four_games_strictly_below_limit<\/criterion>/,
+    );
+    const target = summary.match(
+      /<acceptance_target>(.*?)<\/acceptance_target>/,
+    )![1]!;
+    assert.equal(
+      field(target, "passed"),
+      String(timings.every((t) => t < 100)),
+    );
+    for (const [i, sample] of [
+      ...samples.matchAll(/<game>(.*?)<\/game>/g),
+    ].entries()) {
+      assert.equal(field(sample[1]!, "passed"), String(timings[i]! < 100));
+      assert.match(sample[1]!, /<filesystem_ms>/);
+      assert.match(sample[1]!, /<schema_validation_ms>/);
+    }
+    assert.match(summary, /<measurement_boundary>.*fsync.*host shutdown/);
+    assert.equal(field(summary, "handles_created"), "4");
+    assert.equal(field(summary, "handles_destroyed"), "4");
     assert.equal(field(summary, "games_completed"), "4");
     assert.equal(field(summary, "games_failed"), "0");
     assert.equal(existsSync(join(run, "bugs")), false);
@@ -73,6 +123,18 @@ test(
     assert.match(report, /<reason>/);
     assert.match(report, /<own_starting_order>/);
     assert.match(report, /<caused_by_decision_id/);
+    for (const [i, malformed] of [
+      report.replace(
+        /<initial>.*?<\/initial>/,
+        '<initial xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>',
+      ),
+      report.replace(/<reason>.*?<\/reason>/, ""),
+      report.replace(/<timeline>.*?<\/timeline>/, ""),
+    ].entries()) {
+      const file = join(root, `invalid-perspective-${i}.xml`);
+      writeFileSync(file, malformed);
+      cli(["validate", "--file", file, "--root", "player-report"], 1);
+    }
     cli(["evaluate", "--config", cfg, "--resume", run]);
     assert.equal(hash(read(run, "manifest.xml")), manifest);
     assert.equal(read(run, "summary.xml"), summary);

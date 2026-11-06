@@ -25,14 +25,11 @@ pub(crate) fn new_match(run: &str, id: &str, manifest: &Value) -> (Value, [Value
 
 pub(crate) fn save_match(dir: &Path, record: &Value, reports: &[Value; 2]) -> Result<()> {
     let base = dir.join("matches").join(xml::text(&record["match_id"])?);
-    for (i, actor) in ["a", "b"].iter().enumerate() {
-        xml::write(
-            &base.join(format!("player-{actor}.xml")),
-            "player-report",
-            &reports[i],
-        )?
-    }
-    xml::write(&base.join("match.xml"), "match", record)
+    xml::write_match(&[
+        (base.join("player-a.xml"), "player-report", &reports[0]),
+        (base.join("player-b.xml"), "player-report", &reports[1]),
+        (base.join("match.xml"), "match", record),
+    ])
 }
 
 #[derive(Default)]
@@ -186,8 +183,11 @@ pub(crate) fn verify_evidence(
             perspectives[0]["configuration_sha256"].clone(),
             perspectives[1]["configuration_sha256"].clone(),
         ];
-        let hash = identity::evidence(
-            &json!({"game_id":g["game_id"],"configurations":configs,"failure_category":g["failure_category"],"records":perspectives}),
+        let hash = identity::game_evidence(
+            &g["game_id"],
+            [&configs[0], &configs[1]],
+            &g["failure_category"],
+            [&perspectives[0], &perspectives[1]],
         );
         if g["evidence_sha256"] != hash {
             return Err(format!("Evidence identity mismatch for {}", g["game_id"]).into());

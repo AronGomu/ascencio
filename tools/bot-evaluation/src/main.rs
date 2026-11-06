@@ -3,6 +3,8 @@ mod application_identity;
 mod bugs;
 mod compare;
 mod config;
+mod evidence_validation;
+mod evidence_writer;
 mod execution;
 mod host;
 mod identity;
@@ -23,13 +25,15 @@ fn main() {
     }
 }
 fn execute() -> xml::Result<i32> {
+    let command_start = std::time::Instant::now();
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     let command = args.first().map(String::as_str).unwrap_or("");
     let option = |key: &str| args.windows(2).find(|w| w[0] == key).map(|w| w[1].clone());
     let required = |key: &str| option(key).ok_or_else(|| format!("Missing {key}"));
     match command{
+ "benchmark"=>{if option("--resume").is_some(){return Err("A benchmark never resumes an existing run".into());} runner::benchmark(config::read(Path::new(&required("--config")?))?, command_start)},
  "evaluate"=>runner::evaluate(config::read(Path::new(&required("--config")?))?,option("--resume").map(PathBuf::from)),
  "compare"=>compare::compare(Path::new(&required("--baseline")?),Path::new(&required("--candidate")?),Path::new(&required("--out")?)),
  "validate"=>{let file=required("--file")?;let root=required("--root")?;xml::read(Path::new(&file),&root)?;xml::validate(&root,&std::fs::read(file)?)?;Ok(0)},
- _=>Err("Usage: bot-evaluation evaluate --config evaluation.xml [--resume RUN] | compare --baseline RUN --candidate RUN --out DIRECTORY | validate --file FILE --root ROOT".into())}
+ _=>Err("Usage: bot-evaluation benchmark --config evaluation.xml | evaluate --config evaluation.xml [--resume RUN] | compare --baseline RUN --candidate RUN --out DIRECTORY | validate --file FILE --root ROOT".into())}
 }

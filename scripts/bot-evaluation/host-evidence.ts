@@ -117,8 +117,9 @@ export function changes(
   before: PublicDuelState,
   after: PublicDuelState,
 ): RecordObject[] {
-  const a = cards(before),
-    b = cards(after),
+  const unchanged = before.players.every((p, i) => p === after.players[i]);
+  const a = unchanged ? new Map<string, PublicCard>() : cards(before),
+    b = unchanged ? a : cards(after),
     out: RecordObject[] = [];
   for (const [id, value] of a)
     if (!b.has(id))

@@ -226,9 +226,17 @@ pub(crate) fn play(
         record["status"] = json!(status);
         record["result"] = json!({"outcome":if status=="failed"{"failed"}else if winner.is_none(){"draw"}else if winner==Some(if i==0{"a"}else{"b"}){"win"}else{"loss"},"engine_reason":result["engine_reason"],"turns":result["turns"],"duration_ms":elapsed,"engine_time_ms":result["engine_time_ms"],"bot_time_ms":result["bot_time_ms"],"evidence_sha256":null,"bug_id":null});
     }
-    let hash = identity::evidence(
-        &json!({"game_id":game["game_id"],"configurations":[records[0]["configuration_sha256"],records[1]["configuration_sha256"]],"failure_category":neutral["failure_category"],"records":records}),
+    let hash_start = Instant::now();
+    let hash = identity::game_evidence(
+        &game["game_id"],
+        [
+            &records[0]["configuration_sha256"],
+            &records[1]["configuration_sha256"],
+        ],
+        &neutral["failure_category"],
+        [&records[0], &records[1]],
     );
+    neutral["costs"] = json!({"host_time_ms":result["duration_ms"],"engine_time_ms":result["engine_time_ms"],"bot_time_ms":result["bot_time_ms"],"host_setup_ms":result["host_setup_ms"],"projection_ms":result["projection_ms"],"ipc_ms":result["ipc_ms"],"evidence_hash_ms":hash_start.elapsed().as_secs_f64()*1000.0});
     neutral["evidence_sha256"] = json!(hash);
     for record in &mut records {
         record["result"]["evidence_sha256"] = json!(hash)

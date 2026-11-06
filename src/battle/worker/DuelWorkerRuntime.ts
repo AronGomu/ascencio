@@ -639,7 +639,11 @@ export class DuelWorkerRuntime {
         extraMonsterZones: profile.extraMonsterZones,
         promptIdNamespace: options.promptIdNamespace,
         opponentPolicy:
-          options.opponentPolicy ?? botAsOpponentPolicy(this.#newBot()),
+          options.opponentPolicy ??
+          botAsOpponentPolicy(
+            this.#newBot(),
+            this.#configuredBot !== undefined,
+          ),
         trace,
       });
     } catch (error) {
@@ -700,7 +704,10 @@ export class DuelWorkerRuntime {
         promptIdNamespace: start.promptIdNamespace,
         opponentPolicy: new ReplayOpponentPolicy(
           opponentResponses,
-          botAsOpponentPolicy(this.#newBot()),
+          botAsOpponentPolicy(
+            this.#newBot(),
+            this.#configuredBot !== undefined,
+          ),
         ),
         publishTrace: (trace) => {
           if (handedOver) this.#lastTrace = trace;

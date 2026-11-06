@@ -65,11 +65,20 @@ export async function loadInputs(
   );
   return { manifest, dependencies, artifacts };
 }
+// The built-in module has no game state at module scope; its factory creates
+// a fresh policy instance. Cache its executable code exactly as the actual
+// runtime does. External artifacts still receive a fresh VM realm per hook.
+const basicFactories = new WeakMap<
+  Artifact,
+  { create: (config: BotConfiguration) => BotInstance }
+>();
 /** New collectible VM realm per instance prevents bundled module globals crossing games. */
 export async function instantiate(
   artifact: Artifact,
   dependencies: ActiveDuelDependencies,
 ): Promise<BotInstance> {
+  const cached = basicFactories.get(artifact);
+  if (cached) return cached.create(artifact.config);
   const context = vm.createContext(
     { structuredClone, performance },
     { codeGeneration: { strings: false, wasm: false } },
@@ -90,8 +99,11 @@ export async function instantiate(
     contractVersion?: number;
     create?: (c: BotConfiguration) => BotInstance;
   };
-  if (artifact.module === "builtin:basic")
-    return ns.createBasicBotModule!(dependencies).create(artifact.config);
+  if (artifact.module === "builtin:basic") {
+    const factory = ns.createBasicBotModule!(dependencies);
+    basicFactories.set(artifact, factory);
+    return factory.create(artifact.config);
+  }
   const factory = ns.default ?? ns;
   if (factory.contractVersion !== 1 || typeof factory.create !== "function")
     throw new Error("Unsupported bot contract");

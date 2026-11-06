@@ -99,6 +99,7 @@
 <xs:element name="contribution" type="record" nillable="true"/>
 <xs:element name="controller" type="record" nillable="true"/>
 <xs:element name="copies" type="xs:nonNegativeInteger" nillable="true"/>
+<xs:element name="costs" type="record" nillable="true"/>
 <xs:element name="count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="counters" type="record" nillable="true"/>
 <xs:element name="counts" type="record" nillable="true"/>
@@ -132,6 +133,7 @@
 <xs:element name="effects" type="record" nillable="true"/>
 <xs:element name="elapsed_ms" type="xs:double" nillable="true"/>
 <xs:element name="end_memory_bytes" type="xs:nonNegativeInteger" nillable="true"/>
+<xs:element name="end_to_end_ms" type="xs:double" nillable="true"/>
 <xs:element name="engine" type="record" nillable="true"/>
 <xs:element name="engine_reason" type="xs:string" nillable="true"/>
 <xs:element name="engine_time_ms" type="xs:double" nillable="true"/>
@@ -140,6 +142,7 @@
 <xs:element name="event" type="xs:string" nillable="true"/>
 <xs:element name="event_count" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="evidence" type="record" nillable="true"/>
+<xs:element name="evidence_hash_ms" type="xs:double" nillable="true"/>
 <xs:element name="evidence_sha256" type="xs:string" nillable="true"/>
 <xs:element name="exact_input_sha256" type="xs:string" nillable="true"/>
 <xs:element name="exchange" type="record" nillable="true"/>
@@ -156,6 +159,7 @@
 <xs:element name="failure_category" type="xs:string" nillable="true"/>
 <xs:element name="failure_signature" type="xs:string" nillable="true"/>
 <xs:element name="failures_by_category" type="record" nillable="true"/>
+<xs:element name="filesystem_ms" type="xs:double" nillable="true"/>
 <xs:element name="fixture" type="fixtureRecord" nillable="true"/>
 <xs:element name="fixture_path" type="xs:string" nillable="true"/>
 <xs:element name="flags" type="record" nillable="true"/>
@@ -166,6 +170,7 @@
 <xs:element name="game_duration_ms" type="record" nillable="true"/>
 <xs:element name="game_id" type="xs:string" nillable="true"/>
 <xs:element name="game_losses" type="xs:nonNegativeInteger" nillable="true"/>
+<xs:element name="game_samples" type="record" nillable="true"/>
 <xs:element name="game_wall_time_ms" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="game_win_rate" type="record" nillable="true"/>
 <xs:element name="game_wins" type="xs:nonNegativeInteger" nillable="true"/>
@@ -179,6 +184,8 @@
 <xs:element name="handles_created" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="handles_destroyed" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="host_restarts" type="xs:nonNegativeInteger" nillable="true"/>
+<xs:element name="host_setup_ms" type="xs:double" nillable="true"/>
+<xs:element name="host_time_ms" type="xs:double" nillable="true"/>
 <xs:element name="hypotheses" type="record" nillable="true"/>
 <xs:element name="hypothesis" type="xs:string" nillable="true"/>
 <xs:element name="id" type="xs:string" nillable="true"/>
@@ -193,6 +200,7 @@
 <xs:element name="instance_id" type="xs:string" nillable="true"/>
 <xs:element name="interval_percentage_points" type="record" nillable="true"/>
 <xs:element name="investigation" type="record" nillable="true"/>
+<xs:element name="ipc_ms" type="xs:double" nillable="true"/>
 <xs:element name="is_hidden" type="record" nillable="true"/>
 <xs:element name="is_public" type="record" nillable="true"/>
 <xs:element name="item" type="record" nillable="true"/>
@@ -232,6 +240,7 @@
 <xs:element name="max_turns_per_game" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="maximum" type="record" nillable="true"/>
 <xs:element name="maximum_events_per_game" type="xs:nonNegativeInteger" nillable="true"/>
+<xs:element name="measurement_boundary" type="xs:string" nillable="true"/>
 <xs:element name="memory_bytes" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="memory_samples" type="record" nillable="true"/>
 <xs:element name="message" type="xs:string" nillable="true"/>
@@ -252,6 +261,7 @@
 <xs:element name="next_step" type="xs:string" nillable="true"/>
 <xs:element name="next_unstarted_match" type="xs:nonNegativeInteger" nillable="true"/>
 <xs:element name="node" type="xs:string" nillable="true"/>
+<xs:element name="node_flags" type="xs:string" nillable="true"/>
 <xs:element name="note" type="record" nillable="true"/>
 <xs:element name="notes" type="record" nillable="true"/>
 <xs:element name="number" type="xs:nonNegativeInteger" nillable="true"/>
@@ -307,6 +317,7 @@
 <xs:element name="previously_observed_bugs_not_seen" type="record" nillable="true"/>
 <xs:element name="private_engine_state" type="record" nillable="true"/>
 <xs:element name="profile" type="xs:string" nillable="true"/>
+<xs:element name="projection_ms" type="xs:double" nillable="true"/>
 <xs:element name="prompt" type="record" nillable="true"/>
 <xs:element name="public_state" type="record" nillable="true"/>
 <xs:element name="reason" type="record" nillable="true"/>
@@ -349,10 +360,12 @@
 <xs:element name="same_starting_order_cases" type="xs:boolean" nillable="true"/>
 <xs:element name="sample" type="record" nillable="true"/>
 <xs:element name="sample_size" type="xs:nonNegativeInteger" nillable="true"/>
+<xs:element name="schema_validation_ms" type="xs:double" nillable="true"/>
 <xs:element name="section" type="xs:string" nillable="true"/>
 <xs:element name="selected" type="xs:boolean" nillable="true"/>
 <xs:element name="selected_choice_ids" type="record" nillable="true"/>
 <xs:element name="sequence" type="xs:nonNegativeInteger" nillable="true"/>
+<xs:element name="serialization_ms" type="xs:double" nillable="true"/>
 <xs:element name="sha256" type="xs:string" nillable="true"/>
 <xs:element name="side" type="record" nillable="true"/>
 <xs:element name="sideboarding" type="record" nillable="true"/>
@@ -431,6 +444,90 @@
 <xs:simpleType name="orderMode"><xs:restriction base="xs:string"><xs:enumeration value="normal"/><xs:enumeration value="fixture"/></xs:restriction></xs:simpleType>
 <xs:simpleType name="hashType"><xs:restriction base="xs:string"><xs:pattern value="[a-f0-9]{64}"/></xs:restriction></xs:simpleType>
 <xs:simpleType name="cardCode"><xs:restriction base="xs:string"><xs:pattern value="[0-9]+"/></xs:restriction></xs:simpleType>
+<xs:complexType name="promptConstraints"><xs:all>
+<xs:element name="required_total" type="xs:nonNegativeInteger" minOccurs="1" nillable="true"/>
+<xs:element name="sum_mode" type="xs:string" minOccurs="1" nillable="true"/>
+<xs:element name="mandatory_contributions" type="contributionList" minOccurs="1" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="promptContribution"><xs:all>
+<xs:element name="contribution" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
+<xs:element name="alternative_contribution" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="promptCardRecord"><xs:all>
+<xs:element name="controller" type="actorType" minOccurs="1" nillable="false"/>
+<xs:element name="location" type="xs:string" minOccurs="1" nillable="false"/>
+<xs:element name="sequence" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
+<xs:element name="position" type="xs:string" minOccurs="1" nillable="true"/>
+<xs:element name="contribution" type="xs:nonNegativeInteger" minOccurs="1" nillable="true"/>
+<xs:element name="alternative_contribution" type="xs:nonNegativeInteger" minOccurs="1" nillable="true"/>
+</xs:all></xs:complexType>
+<xs:complexType name="promptPlaceRecord"><xs:all>
+<xs:element name="player" type="actorType" minOccurs="1" nillable="false"/>
+<xs:element name="location" type="xs:string" minOccurs="1" nillable="false"/>
+<xs:element name="sequence" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="publicCardDelta"><xs:all>
+<xs:element name="instance_id" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="code" type="cardCode" minOccurs="0" nillable="false"/>
+<xs:element name="owner" type="actorType" minOccurs="0" nillable="false"/>
+<xs:element name="controller" type="actorType" minOccurs="0" nillable="false"/>
+<xs:element name="location" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="sequence" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+<xs:element name="display_order" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+<xs:element name="position" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="face_up" type="xs:boolean" minOccurs="0" nillable="false"/>
+<xs:element name="counters" type="counterList" minOccurs="0" nillable="false"/>
+<xs:element name="overlay_materials" type="materialList" minOccurs="0" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="publicCounter"><xs:all>
+<xs:element name="type" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
+<xs:element name="name" type="xs:string" minOccurs="1" nillable="false"/>
+<xs:element name="count" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="publicMaterial"><xs:all>
+<xs:element name="instance_id" type="xs:string" minOccurs="1" nillable="false"/>
+<xs:element name="code" type="cardCode" minOccurs="0" nillable="false"/>
+<xs:element name="identity_visible" type="xs:boolean" minOccurs="1" nillable="false"/>
+<xs:element name="sequence" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="cardAddress"><xs:all>
+<xs:element name="controller" type="actorType" minOccurs="1" nillable="false"/>
+<xs:element name="location" type="xs:string" minOccurs="1" nillable="false"/>
+<xs:element name="sequence" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="stateChange"><xs:all>
+<xs:element name="type" type="xs:string" minOccurs="1" nillable="false"/>
+<xs:element name="instance_id" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="from" type="cardAddress" minOccurs="0" nillable="true"/>
+<xs:element name="to" type="publicCardDelta" minOccurs="0" nillable="false"/>
+<xs:element name="player" type="actorType" minOccurs="0" nillable="false"/>
+<xs:element name="value" type="xs:integer" minOccurs="0" nillable="false"/>
+<xs:element name="chain" type="record" minOccurs="0" nillable="false"/>
+</xs:all></xs:complexType>
+<xs:complexType name="eventDetail"><xs:all>
+<xs:element name="type" type="xs:string" minOccurs="1" nillable="false"/>
+<xs:element name="player" type="record" minOccurs="0" nillable="false"/>
+<xs:element name="turn" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+<xs:element name="phase" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="count" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+<xs:element name="location" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="card" type="record" minOccurs="0" nillable="true"/>
+<xs:element name="instance_id" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="from" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="to" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="position" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="direct" type="xs:boolean" minOccurs="0" nillable="false"/>
+<xs:element name="amount" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+<xs:element name="life_points" type="xs:integer" minOccurs="0" nillable="false"/>
+<xs:element name="size" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+<xs:element name="message" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="cards" type="record" minOccurs="0" nillable="false"/>
+<xs:element name="target" type="record" minOccurs="0" nillable="true"/>
+<xs:element name="chain_index" type="xs:nonNegativeInteger" minOccurs="0" nillable="false"/>
+<xs:element name="card_code" type="cardCode" minOccurs="0" nillable="true"/>
+<xs:element name="outcome" type="xs:string" minOccurs="0" nillable="false"/>
+<xs:element name="reason" type="xs:string" minOccurs="0" nillable="false"/>
+</xs:all></xs:complexType>
 <xs:complexType name="rate"><xs:all>
 <xs:element name="value" type="xs:double" minOccurs="1" nillable="true"/>
 <xs:element name="numerator" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
@@ -471,7 +568,7 @@
 <xs:element name="maximum" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
 <xs:element name="ordered" type="xs:boolean" minOccurs="1" nillable="false"/>
 <xs:element name="cancelable" type="xs:boolean" minOccurs="1" nillable="false"/>
-<xs:element name="constraints" type="record" minOccurs="1" nillable="false"/>
+<xs:element name="constraints" type="promptConstraints" minOccurs="1" nillable="false"/>
 <xs:element name="choices" type="choiceList" minOccurs="1" nillable="false"/>
 </xs:all></xs:complexType>
 <xs:complexType name="choiceRecord"><xs:all>
@@ -480,10 +577,10 @@
 <xs:element name="label" type="xs:string" minOccurs="1" nillable="false"/>
 <xs:element name="card_instance_id" type="xs:string" minOccurs="0" nillable="false"/>
 <xs:element name="card_code" type="cardCode" minOccurs="0" nillable="true"/>
-<xs:element name="card" type="record" minOccurs="0" nillable="false"/>
+<xs:element name="card" type="promptCardRecord" minOccurs="0" nillable="false"/>
 <xs:element name="allocation_maximum" type="xs:nonNegativeInteger" minOccurs="1" nillable="true"/>
 <xs:element name="value" type="record" minOccurs="1" nillable="true"/>
-<xs:element name="place" type="record" minOccurs="1" nillable="true"/>
+<xs:element name="place" type="promptPlaceRecord" minOccurs="1" nillable="true"/>
 <xs:element name="selected" type="xs:boolean" minOccurs="1" nillable="false"/>
 </xs:all></xs:complexType>
 <xs:complexType name="initialRecord"><xs:all>
@@ -507,6 +604,7 @@
 <xs:element name="skip_reason" type="xs:string" minOccurs="0" nillable="false"/>
 <xs:element name="duration_ms" type="xs:double" minOccurs="0" nillable="false"/>
 <xs:element name="cleanup" type="record" minOccurs="0" nillable="false"/>
+<xs:element name="costs" type="record" minOccurs="0" nillable="false"/>
 </xs:all></xs:complexType>
 <xs:complexType name="perspectiveGame"><xs:all>
 <xs:element name="game_id" type="xs:string" minOccurs="1" nillable="false"/>
@@ -537,14 +635,14 @@
 <xs:element name="phase" type="xs:string" minOccurs="1" nillable="false"/>
 <xs:element name="decision_id" type="xs:string" minOccurs="0" nillable="false"/>
 <xs:element name="prompt" type="promptRecord" minOccurs="0" nillable="false"/>
-<xs:element name="selected_choice_ids" type="record" minOccurs="0" nillable="false"/>
+<xs:element name="selected_choice_ids" type="selectedChoices" minOccurs="0" nillable="false"/>
 <xs:element name="reason" type="reasonRecord" minOccurs="0" nillable="false"/>
 <xs:element name="duration_ms" type="xs:double" minOccurs="0" nillable="false"/>
 <xs:element name="event" type="xs:string" minOccurs="0" nillable="false"/>
 <xs:element name="before_initial" type="xs:boolean" minOccurs="0" nillable="false"/>
 <xs:element name="caused_by_decision_id" type="xs:string" minOccurs="0" nillable="true"/>
-<xs:element name="changes" type="record" minOccurs="0" nillable="false"/>
-<xs:element name="details" type="record" minOccurs="0" nillable="false"/>
+<xs:element name="changes" type="changeList" minOccurs="0" nillable="false"/>
+<xs:element name="details" type="eventDetails" minOccurs="0" nillable="false"/>
 </xs:all></xs:complexType>
 <xs:complexType name="matchResult"><xs:all>
 <xs:element name="a_wins" type="xs:nonNegativeInteger" minOccurs="1" nillable="false"/>
@@ -631,6 +729,12 @@
 <xs:element name="a" type="orderSections" minOccurs="1" nillable="false"/>
 <xs:element name="b" type="orderSections" minOccurs="1" nillable="false"/>
 </xs:all></xs:complexType>
+<xs:complexType name="selectedChoices"><xs:sequence><xs:element name="choice_id" type="xs:string" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
+<xs:complexType name="contributionList"><xs:sequence><xs:element name="contribution" type="promptContribution" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
+<xs:complexType name="changeList"><xs:sequence><xs:element name="change" type="stateChange" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
+<xs:complexType name="eventDetails"><xs:sequence><xs:element name="item" type="eventDetail" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
+<xs:complexType name="counterList"><xs:sequence><xs:element name="item" type="publicCounter" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
+<xs:complexType name="materialList"><xs:sequence><xs:element name="item" type="publicMaterial" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
 <xs:complexType name="deckSection"><xs:sequence><xs:element name="card" type="deckCard" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
 <xs:complexType name="orderSection"><xs:sequence><xs:element name="card" type="cardCode" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
 <xs:complexType name="choiceList"><xs:sequence><xs:element name="choice" type="choiceRecord" minOccurs="0" maxOccurs="unbounded"/></xs:sequence></xs:complexType>

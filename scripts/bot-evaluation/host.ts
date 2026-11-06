@@ -45,15 +45,19 @@ let dependencies: ActiveDuelDependencies,
   artifacts: Artifact[] = [],
   adapter: OcgCoreAdapter,
   snapshot: string;
+let ipcTime = 0;
+let measuring = false;
 let handlesCreated = 0,
   handlesDestroyed = 0;
 function send(value: unknown) {
+  const start = performance.now();
   writeSync(
     1,
     JSON.stringify(value, (_k, v) =>
       typeof v === "bigint" ? v.toString() : v,
     ) + "\n",
   );
+  if (measuring) ipcTime += performance.now() - start;
 }
 const names = new Map<number, string>(
   Object.entries(EngineMessageType).map(([name, n]) => [n, name.toLowerCase()]),
@@ -63,6 +67,9 @@ names.set(63, "special_summon_succeeded");
 names.set(65, "flip_summon_succeeded");
 async function game(command: Command) {
   const start = performance.now();
+  measuring = true;
+  ipcTime = 0;
+  let projectionTime = 0;
   let engineTime = 0,
     botTime = 0,
     decisions = 0,
@@ -113,6 +120,7 @@ async function game(command: Command) {
           command.profile === "mr5",
         ),
     );
+    const hostSetup = performance.now() - start;
     const registry = new PromptRegistry(dependencies, command.game_id);
     const previousStates = observers.map((observer) => observer.snapshot());
     let initialized = false;
@@ -129,6 +137,7 @@ async function game(command: Command) {
             "invalid_response: core rejected the previous response",
           );
         for (const actor of [0, 1] as const) {
+          const projectionStart = performance.now();
           const observer = observers[actor]!;
           const before = previousStates[actor]!;
           const update = observer.apply(message);
@@ -141,6 +150,7 @@ async function game(command: Command) {
               reason: update.result.reason,
             };
           const delta = changes(before, after);
+          projectionTime += performance.now() - projectionStart;
           const event = names.get(message.type) ?? `engine_${message.type}`;
           const isPrompt =
             (message.type >= 10 && message.type <= 26) ||
@@ -189,10 +199,12 @@ async function game(command: Command) {
           throw new Error("turn_limit: maximum turns exceeded");
       }
       for (const actor of [0, 1] as const) {
+        const projectionStart = performance.now();
         const observer = observers[actor]!;
         observer.reconcile();
         const after = observer.snapshot();
         const delta = changes(previousStates[actor]!, after);
+        projectionTime += performance.now() - projectionStart;
         if (delta.length)
           send({
             type: "event",
@@ -237,6 +249,9 @@ async function game(command: Command) {
         handlesDestroyed++;
         send({
           type: "done",
+          host_setup_ms: hostSetup,
+          projection_ms: projectionTime,
+          ipc_ms: ipcTime,
           winner: terminal.winner,
           engine_reason: String(terminal.reason),
           turns,
@@ -273,7 +288,13 @@ async function game(command: Command) {
             observers[actor]!.takeEvents(),
           ),
         };
-        const decision = bots[actor]!.decide(structuredClone(input));
+        // The repository-owned basic policy is read-only; its fresh instance
+        // may share immutable observation data, as in the actual runtime.
+        const trusted =
+          artifacts[command.bot_order[actor]]!.module === "builtin:basic";
+        const decision = bots[actor]!.decide(
+          trusted ? input : structuredClone(input),
+        );
         const duration = performance.now() - botStart;
         botTime += duration;
         send({
@@ -366,6 +387,10 @@ for await (const line of createInterface({
       dependencies = loaded.dependencies;
       artifacts = loaded.artifacts;
       snapshot = loaded.manifest.snapshotId;
+      // Executable setup only: no duel or decision is performed during startup.
+      for (const artifact of artifacts)
+        if (artifact.module === "builtin:basic")
+          await instantiate(artifact, dependencies);
       adapter = await loadVendoredCoreNode({
         onDiagnostic: (d) => send({ type: "diagnostic", entry: d }),
       });
@@ -379,6 +404,7 @@ for await (const line of createInterface({
           type: c.type,
         })),
         node: process.version,
+        node_flags: process.execArgv.join(" "),
         rss_bytes: process.memoryUsage().rss,
       });
     } else if (command.type === "game") await game(command);

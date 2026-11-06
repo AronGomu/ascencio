@@ -43,6 +43,10 @@ Readable snapshot compilation normalizes Lua CRLF line endings to LF before hash
 
 Content revision 1.1.2 records this normalized output and refreshed media mappings; the frozen engine bytes remain unchanged.
 
+Content revision 1.1.3 declares both artwork variants for every catalog card, the card back, and every canonical set image path even when the optional file is unavailable. Fresh downloads can fill those paths without changing the critical snapshot hash. This fixes fresh setup failing when the provider restores a previously missing image. Available media is still copied; unavailable media uses the existing runtime fallback. The release adds 1,360 mappings (215 full-card, 201 cropped-card, and 944 set images) without changing card data, rules, scripts, stories, or frozen engine bytes. Freeplay and Chapter 1 revisions advance to retain exact dependencies.
+
+Setup compares cached readable manifests with the requested package manifests. A stale generated source directory is renamed to a UUID-suffixed `.previous` sibling before rebuilding; it is preserved for inspection. Incomplete or symlinked sources are rejected. These backups are generated data and may be removed after verifying the new release.
+
 The historical SQLite conversion fixtures exceed ZIP32 with the complete image
 catalog, so setup deliberately omits the legacy combined archive. The native app
 uses JSON snapshots and live media, and does not need that archive.

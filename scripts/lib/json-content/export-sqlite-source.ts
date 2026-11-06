@@ -14,6 +14,10 @@ import {
   OCG_TYPE,
 } from "../../../src/cards/classification/index.ts";
 import { verifyPackageFile } from "../sqlite-content/index.ts";
+import {
+  declaredLibraryMedia,
+  readableMediaMapping,
+} from "./declared-library-media.ts";
 import type { SourceManifest } from "./source-manifest.ts";
 
 /** Explicit content-only conversion. Never opens the installed registry or user data. */
@@ -76,6 +80,8 @@ export async function exportSqliteSource(
       ),
     );
     const cardLibrary = manifest.packageType === "card-library";
+    const libraryCodes: number[] = [];
+    const librarySetImages: (string | null)[] = [];
     if (cardLibrary) {
       const cards: string[] = [];
       const scripts: { name: string; path: string }[] = [];
@@ -87,6 +93,7 @@ export async function exportSqliteSource(
           String(card.definition_json),
         ) as SnapshotCard["definition"];
         codes.add(definition.code);
+        libraryCodes.push(definition.code);
         const texts = database
           .prepare(
             "SELECT locale,name,description,strings_json FROM card_texts WHERE card_code=? ORDER BY locale",
@@ -132,6 +139,7 @@ export async function exportSqliteSource(
           SnapshotSet,
           "cards"
         >;
+        librarySetImages.push(metadata.imageAssetPath);
         const cards = database
           .prepare(
             "SELECT sc.card_code,ct.name,sc.rarity,sc.printing_code,sc.source_rarity,sc.source_rarity_code FROM set_cards sc JOIN card_texts ct ON ct.card_code=sc.card_code AND ct.locale='en' WHERE sc.set_id=? ORDER BY sc.card_code,sc.printing_code,sc.source_rarity,sc.source_rarity_code",
@@ -203,8 +211,11 @@ export async function exportSqliteSource(
       Object.assign(source, { decks, opponents, stories });
     }
     await json(source.rules, { schemaVersion: 1, quantityByCode: limits });
-    const media: CriticalSnapshot["media"][number][] = [],
+    const media: CriticalSnapshot["media"][number][] = cardLibrary
+        ? declaredLibraryMedia(libraryCodes, librarySetImages)
+        : [],
       engine: SourceManifest["engine"][number][] = [];
+    const mediaById = new Map(media.map((entry) => [entry.id, entry]));
     // One BLOB at a time; the full artwork catalog never resides in conversion memory.
     for (const asset of database
       .prepare("SELECT path,mime,data FROM assets ORDER BY path")
@@ -213,11 +224,25 @@ export async function exportSqliteSource(
       if (!validAssetPath(logical) || !(asset.data instanceof Uint8Array))
         throw new Error("CONVERSION_ASSET_INVALID");
       const file =
-        manifest.packageType === "duel-core" ? logical : mediaFile(logical);
+        manifest.packageType === "duel-core"
+          ? logical
+          : readableMediaMapping(logical, String(asset.mime)).path;
       await write(file, asset.data);
       if (manifest.packageType === "duel-core")
         engine.push({ path: logical, file });
-      else media.push({ id: logical, path: file, mime: String(asset.mime) });
+      else {
+        const mapping = { id: logical, path: file, mime: String(asset.mime) };
+        const declared = mediaById.get(logical);
+        if (
+          declared &&
+          (declared.path !== mapping.path || declared.mime !== mapping.mime)
+        )
+          throw new Error(`CONVERSION_MEDIA_CONFLICT: ${logical}`);
+        if (!declared) {
+          media.push(mapping);
+          mediaById.set(logical, mapping);
+        }
+      }
     }
     Object.assign(source, { media, engine });
     await json("pack.json", source);
@@ -233,10 +258,4 @@ function names(
   return Object.entries(masks)
     .filter(([, mask]) => (value & BigInt(mask)) === BigInt(mask))
     .map(([name]) => name.toLowerCase());
-}
-function mediaFile(logical: string): string {
-  const match = /^cards\/(full|cropped)\/([1-9][0-9]*)\.jpg$/.exec(logical);
-  return match
-    ? `cards/${match[2]}/${match[1] === "full" ? "artwork" : "cropped"}.jpg`
-    : `media/${logical}`;
 }

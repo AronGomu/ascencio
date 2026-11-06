@@ -1,0 +1,18 @@
+[package]
+name = "ascencio-bot-evaluation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+roxmltree = "0.20"
+quick-xml = "0.41"
+ctrlc = "3"
+libxml = "0.3.23"
+time = { version = "0.3", features = ["formatting"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

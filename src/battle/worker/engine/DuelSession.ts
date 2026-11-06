@@ -40,6 +40,8 @@ export interface ProgrammedDuelConfiguration {
   readonly seed: DuelSeed;
   readonly playerDeckOrder: readonly CardCode[];
   readonly opponentDeckOrder: readonly CardCode[];
+  readonly playerExtraOrder?: readonly CardCode[];
+  readonly opponentExtraOrder?: readonly CardCode[];
   readonly startupScripts?: readonly CoreStartupScript[];
   readonly allowFirstTurnAttack?: boolean;
 }
@@ -68,6 +70,8 @@ export interface DuelSessionOptions {
   readonly opponentDeck: ParsedDeck;
   readonly configuration: DuelConfiguration;
   readonly maximumProcessIterations?: number;
+  /** Evaluation-only observation; never changes shuffle or engine seed. */
+  readonly captureStartingOrders?: boolean;
   readonly onEngineDiagnostic?: (entry: {
     readonly type: number;
     readonly message: string;
@@ -84,6 +88,7 @@ export class DuelSession {
     readonly CardCode[],
     readonly CardCode[],
   ];
+  readonly #initialMainDeckOrders: CardCode[][];
   #cleanupFailed = false;
   #disposed = false;
 
@@ -93,7 +98,9 @@ export class DuelSession {
     seed: DuelSeed,
     maximumProcessIterations: number,
     initialExtraDeckOrders: readonly [readonly CardCode[], readonly CardCode[]],
+    initialMainDeckOrders: CardCode[][],
   ) {
+    this.#initialMainDeckOrders = initialMainDeckOrders;
     this.#adapter = adapter;
     this.#handle = handle;
     this.seed = seed;
@@ -121,6 +128,7 @@ export class DuelSession {
           : validateProgrammedSeed(options.configuration.seed)
         : validateProgrammedSeed(options.configuration.seed);
     const missingInputs: string[] = [];
+    const capturedOrders: CardCode[][] = [[], []];
     const handle = options.adapter.createDuel({
       flags:
         masterRuleFlag(options.configuration.rules) |
@@ -165,8 +173,15 @@ export class DuelSession {
           return null;
         }
       },
-      errorHandler: (type, message) =>
-        options.onEngineDiagnostic?.({ type, message }),
+      errorHandler: (type, message) => {
+        const capture = /^ARO2_ORDER:([01]):([0-9,]*)$/.exec(message);
+        if (options.captureStartingOrders && capture) {
+          capturedOrders[Number(capture[1])] = capture[2]!
+            .split(",")
+            .filter(Boolean)
+            .map((code) => Number(code) as CardCode);
+        } else options.onEngineDiagnostic?.({ type, message });
+      },
     });
     if (handle === null)
       throw new Error("ocgcore refused to create a duel handle");
@@ -177,8 +192,31 @@ export class DuelSession {
         options.adapter,
         handle,
         options.configuration.mode === "production"
-          ? [PRODUCTION_SHUFFLE_SCRIPT]
-          : (options.configuration.startupScripts ?? []),
+          ? [
+              {
+                ...PRODUCTION_SHUFFLE_SCRIPT,
+                source: options.captureStartingOrders
+                  ? PRODUCTION_SHUFFLE_SCRIPT.source.replace(
+                      "  Duel.ShuffleDeck(1)",
+                      "  Duel.ShuffleDeck(1)\n" + CAPTURE_ORDER_LUA,
+                    )
+                  : PRODUCTION_SHUFFLE_SCRIPT.source,
+              },
+            ]
+          : [
+              ...(options.configuration.startupScripts ?? []),
+              ...(options.captureStartingOrders
+                ? [
+                    {
+                      name: "aro2_capture.lua",
+                      source: PRODUCTION_SHUFFLE_SCRIPT.source.replace(
+                        "  Duel.ShuffleDeck(0)\n  Duel.ShuffleDeck(1)",
+                        CAPTURE_ORDER_LUA,
+                      ),
+                    },
+                  ]
+                : []),
+            ],
       );
       const playerOrder =
         options.configuration.mode === "programmed"
@@ -190,22 +228,21 @@ export class DuelSession {
           : options.opponentDeck.main;
       assertSameDeck(options.playerDeck.main, playerOrder, "player");
       assertSameDeck(options.opponentDeck.main, opponentOrder, "opponent");
+      const extras =
+        options.configuration.mode === "programmed"
+          ? ([
+              options.configuration.playerExtraOrder ??
+                options.playerDeck.extra,
+              options.configuration.opponentExtraOrder ??
+                options.opponentDeck.extra,
+            ] as const)
+          : ([options.playerDeck.extra, options.opponentDeck.extra] as const);
+      assertSameDeck(options.playerDeck.extra, extras[0], "player extra");
+      assertSameDeck(options.opponentDeck.extra, extras[1], "opponent extra");
       addDeck(options.adapter, handle, 0, playerOrder, EngineLocation.DECK);
-      addDeck(
-        options.adapter,
-        handle,
-        0,
-        options.playerDeck.extra,
-        EngineLocation.EXTRA,
-      );
+      addDeck(options.adapter, handle, 0, extras[0], EngineLocation.EXTRA);
       addDeck(options.adapter, handle, 1, opponentOrder, EngineLocation.DECK);
-      addDeck(
-        options.adapter,
-        handle,
-        1,
-        options.opponentDeck.extra,
-        EngineLocation.EXTRA,
-      );
+      addDeck(options.adapter, handle, 1, extras[1], EngineLocation.EXTRA);
       options.adapter.startDuel(handle);
       if (missingInputs.length > 0) {
         throw new Error(
@@ -217,7 +254,8 @@ export class DuelSession {
         handle,
         seed,
         maximumProcessIterations,
-        [options.playerDeck.extra, options.opponentDeck.extra],
+        extras,
+        capturedOrders,
       );
     } catch (error) {
       try {
@@ -281,6 +319,10 @@ export class DuelSession {
   queryLocation(query: EngineLocationQuery): EngineLocationQueryResult {
     this.#assertActive();
     return this.#adapter.queryLocation(this.#handle, query);
+  }
+
+  initialMainDeckOrder(player: 0 | 1): readonly CardCode[] {
+    return Object.freeze([...(this.#initialMainDeckOrders[player] ?? [])]);
   }
 
   initialExtraDeckOrder(player: 0 | 1): readonly CardCode[] {
@@ -413,3 +455,13 @@ function counts(cards: readonly CardCode[]): ReadonlyMap<CardCode, number> {
   for (const card of cards) result.set(card, (result.get(card) ?? 0) + 1);
   return result;
 }
+
+const CAPTURE_ORDER_LUA = `  for p=0,1 do
+    local codes={}
+    local count=Duel.GetFieldGroupCount(p,LOCATION_DECK,0)
+    for seq=count-1,0,-1 do
+      local c=Duel.GetFieldCard(p,LOCATION_DECK,seq)
+      if c then table.insert(codes,tostring(c:GetOriginalCode())) end
+    end
+    Debug.Message("ARO2_ORDER:"..p..":"..table.concat(codes,","))
+  end`;

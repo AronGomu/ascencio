@@ -1,3 +1,4 @@
+import { ActorObservation } from "../../src/battle/worker/bot/actor-observation.ts";
 import { describe, expect, it, vi } from "vitest";
 import { DuelOperationError } from "../../src/battle/duel/contracts/duel-error.ts";
 import { cardCode, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
@@ -564,6 +565,75 @@ describe("HeadlessDuelController reconciliation", () => {
     expect(session.disposed).toBe(true);
     expect(JSON.stringify(controller.trace())).toContain(
       "reconcile:overlayHost:invariant",
+    );
+  });
+
+  it("sanitizes opponent observation failures before requesting a bot choice", async () => {
+    const harness = await createFakeOcgCoreAdapter(() => ({
+      steps: [
+        {
+          status: EngineProcess.WAITING,
+          messages: [
+            {
+              type: EngineMessageType.SELECT_YES_NO,
+              player: 1,
+              description: 0n,
+            },
+          ],
+        },
+      ],
+    }));
+    const session = DuelSession.create({
+      adapter: harness.adapter,
+      dependencies: FAKE_DEPENDENCIES,
+      playerDeck: EMPTY_DECK,
+      opponentDeck: EMPTY_DECK,
+      configuration: {
+        mode: "programmed",
+        rules: "mr5",
+        seed: [1n, 2n, 3n, 4n],
+        playerDeckOrder: [],
+        opponentDeckOrder: [],
+      },
+    });
+    const choose = vi.fn();
+    const controller = new HeadlessDuelController({
+      session,
+      dependencies: FAKE_DEPENDENCIES,
+      snapshotId: snapshotId("opponent-observation-failure"),
+      presetId: "opponent-observation-failure",
+      deckCounts: [0, 0],
+      extraDeckCounts: [0, 0],
+      extraMonsterZones: true,
+      opponentPolicy: { choose },
+    });
+    const reconcile = vi
+      .spyOn(ActorObservation.prototype, "reconcile")
+      .mockImplementationOnce(() => {
+        throw new Error("private-opponent-query-5053103");
+      });
+    let failure: unknown;
+    try {
+      controller.advance();
+    } catch (error) {
+      failure = error;
+    } finally {
+      reconcile.mockRestore();
+    }
+    expect(failure).toBeInstanceOf(DuelOperationError);
+    expect((failure as Error).message).toBe(
+      "Unable to reconcile opponent observation",
+    );
+    expect(choose).not.toHaveBeenCalled();
+    expect(session.disposed).toBe(true);
+    expect(JSON.stringify(controller.trace())).toContain(
+      "reconcile:opponent:invariant",
+    );
+    expect(JSON.stringify(controller.trace())).not.toContain(
+      "private-opponent-query",
+    );
+    expect(JSON.stringify(routineLogError(failure))).not.toContain(
+      "private-opponent-query",
     );
   });
 

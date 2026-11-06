@@ -1,3 +1,5 @@
+import type { BotObservedEvent } from "../bot/observed-events.ts";
+import { permittedState } from "../bot/actor-observation.ts";
 import type { ChoiceId } from "../../duel/contracts/ids.ts";
 import type {
   PlayerPrompt,
@@ -28,7 +30,8 @@ export type OpponentDecisionReason =
 
 export interface OpponentDecision {
   readonly choiceIds: readonly ChoiceId[];
-  readonly reason: OpponentDecisionReason;
+  readonly reason: string;
+  readonly explanation?: string;
 }
 
 export interface OpponentVisiblePlayerSummary {
@@ -44,11 +47,13 @@ export interface OpponentVisiblePlayerSummary {
 }
 
 /**
- * Deliberately excludes every card identity. Legal opponent choices already
- * carry the card context needed by the basic policy, so passing the human's
- * hand or face-down cards here would only create an information leak.
+ * Actor-relative public state and count summaries. Concealed opponent codes
+ * are removed before this contract reaches a bot; legitimate reveals remain.
  */
 export interface OpponentVisibleDuelState {
+  /** Permitted public events since this actor's preceding decision; no private opponent prompts. */
+  readonly events?: readonly BotObservedEvent[];
+  readonly publicState?: PublicDuelState;
   readonly revision: number;
   readonly turn: number;
   readonly turnPlayer: PlayerIndex;
@@ -69,8 +74,12 @@ export interface OpponentPolicy {
 
 export function toOpponentVisibleState(
   state: PublicDuelState,
+  actor: PlayerIndex = 1,
+  events: readonly BotObservedEvent[] = [],
 ): OpponentVisibleDuelState {
   return Object.freeze({
+    publicState: permittedState(state, actor),
+    events,
     revision: state.revision,
     turn: state.turn,
     turnPlayer: state.turnPlayer,
@@ -165,6 +174,8 @@ export class BasicOpponentPolicy implements OpponentPolicy {
   }
 
   #chooseNormally(prompt: PlayerPrompt): OpponentDecision {
+    if (prompt.choices.length === 0 && prompt.minimum === 0)
+      return { choiceIds: [], reason: "select_first_legal" };
     if (prompt.choices.length === 0)
       throw new Error(`Prompt ${prompt.kind} has no legal choices`);
 
@@ -230,8 +241,19 @@ export class BasicOpponentPolicy implements OpponentPolicy {
         }
         return { choiceIds: selected, reason: "select_first_legal" };
       }
+      case "selectTribute": {
+        const ids: ChoiceId[] = [];
+        let total = 0;
+        for (const choice of prompt.choices) {
+          if (ids.length >= prompt.maximum) break;
+          ids.push(choice.id);
+          total += choice.card?.contribution ?? 1;
+          if (total >= (prompt.requiredTotal ?? prompt.minimum))
+            return { choiceIds: ids, reason: "select_first_legal" };
+        }
+        throw new Error("No legal tribute selection");
+      }
       case "selectCard":
-      case "selectTribute":
       case "selectPlace":
       case "selectDisabledField":
       case "announceAttribute":

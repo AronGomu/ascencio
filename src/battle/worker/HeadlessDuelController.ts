@@ -1,3 +1,5 @@
+import { ActorObservation } from "./bot/actor-observation.ts";
+import { createBasicBotPolicy } from "./bot/basic-bot.ts";
 import {
   DuelOperationError,
   duelOperationError,
@@ -23,7 +25,6 @@ import {
   EngineQueryFlag,
 } from "./engine/engine-constants.ts";
 import {
-  BasicOpponentPolicy,
   toOpponentVisibleState,
   type OpponentPolicy,
 } from "./opponent/OpponentPolicy.ts";
@@ -60,6 +61,7 @@ export interface HeadlessDuelControllerOptions {
 
 export class HeadlessDuelController {
   readonly #session: DuelSession;
+  readonly #opponentObservation: ActorObservation;
   readonly #projector: DuelStateProjector;
   readonly #prompts: PromptRegistry;
   readonly #opponent: OpponentPolicy;
@@ -70,6 +72,15 @@ export class HeadlessDuelController {
 
   constructor(options: HeadlessDuelControllerOptions) {
     this.#session = options.session;
+    this.#opponentObservation = new ActorObservation(
+      1,
+      options.session,
+      options.dependencies,
+      options.snapshotId,
+      options.deckCounts,
+      options.extraDeckCounts,
+      options.extraMonsterZones,
+    );
     this.#projector = new DuelStateProjector(
       options.snapshotId,
       options.deckCounts,
@@ -95,7 +106,7 @@ export class HeadlessDuelController {
         }),
     );
     this.#opponent =
-      options.opponentPolicy ?? new BasicOpponentPolicy(options.dependencies);
+      options.opponentPolicy ?? createBasicBotPolicy(options.dependencies);
     this.#maximumAutomaticResponses =
       options.maximumAutomaticResponses ?? 1_000;
   }
@@ -120,6 +131,7 @@ export class HeadlessDuelController {
       automaticResponses += 1
     ) {
       const checkpoint = this.#projector.checkpoint();
+      const opponentCheckpoint = this.#opponentObservation.checkpoint();
       const previousResult = this.#result;
       try {
         const boundary = this.#session.processUntilBoundary();
@@ -184,6 +196,9 @@ export class HeadlessDuelController {
               ),
             );
           }
+          this.#withOpponentObservation(() => {
+            this.#opponentObservation.apply(message);
+          });
           events.push(...update.events);
           for (const event of update.events)
             this.#trace.record({ kind: "presentation", detail: event.type });
@@ -220,9 +235,16 @@ export class HeadlessDuelController {
             continue;
           }
 
+          this.#withOpponentObservation(() => {
+            this.#opponentObservation.reconcile();
+          });
           const decision = this.#opponent.choose(
             prompt,
-            toOpponentVisibleState(this.#projector.snapshot()),
+            toOpponentVisibleState(
+              this.#opponentObservation.snapshot(),
+              1,
+              this.#opponentObservation.takeEvents(),
+            ),
           );
           const response = this.#prompts.respond(prompt.id, decision.choiceIds);
           this.#session.respond(response);
@@ -232,6 +254,9 @@ export class HeadlessDuelController {
             choiceIds: decision.choiceIds,
             player: 1,
             opponentReason: decision.reason,
+            ...(decision.explanation === undefined
+              ? {}
+              : { detail: decision.explanation }),
           });
           answeredOpponent = true;
         }
@@ -266,6 +291,7 @@ export class HeadlessDuelController {
         }
       } catch (error) {
         this.#projector.restore(checkpoint);
+        this.#opponentObservation.restore(opponentCheckpoint);
         this.#result = previousResult;
         throw error;
       }
@@ -275,6 +301,25 @@ export class HeadlessDuelController {
       "process_timeout",
       `Opponent exceeded ${this.#maximumAutomaticResponses} automatic responses without reaching the human`,
     );
+  }
+
+  #withOpponentObservation(operation: () => void): void {
+    try {
+      operation();
+    } catch (error) {
+      this.#trace.record({
+        kind: "promptDiagnostic",
+        detail: "reconcile:opponent:invariant",
+      });
+      throw new DuelOperationError(
+        {
+          code: "unsupported_message",
+          message: "Unable to reconcile opponent observation",
+          recoverable: false,
+        },
+        error,
+      );
+    }
   }
 
   #ensureOwnExtraDeckReconciled(): void {

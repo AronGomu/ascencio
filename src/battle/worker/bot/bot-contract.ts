@@ -29,6 +29,10 @@ export interface SideboardExchange {
 }
 /** Caller supplies only this actor's records, never the other report. */
 export interface BotGameObservation {
+  /** Chronological permitted event/decision evidence, excluding own future deck order. */
+  readonly events?: readonly unknown[];
+  readonly initial?: unknown;
+  readonly outcome?: "win" | "loss" | "draw";
   readonly gameId: string;
   readonly decisions: readonly (BotDecisionInput & {
     readonly decision: BotDecision;

@@ -242,3 +242,82 @@ describe("runtime policy integration", () => {
     expect(original).toEqual(base);
   });
 });
+
+it("validates tribute contribution rather than requiring two physical cards", () => {
+  const prompt: PlayerPrompt = {
+    ...base,
+    kind: "selectTribute",
+    minimum: 1,
+    maximum: 2,
+    requiredTotal: 2,
+    choices: base.choices.map((c, i) => ({
+      ...c,
+      card: {
+        instanceId: `tribute-${i}` as never,
+        controller: 0,
+        location: "monster",
+        sequence: i,
+        contribution: i === 0 ? 2 : 1,
+      },
+    })),
+  };
+  expect(() => validateBotDecision(prompt, decision(0))).not.toThrow();
+  expect(() => validateBotDecision(prompt, decision(1))).toThrow(
+    "Tribute contribution",
+  );
+});
+
+it.each([0, 1] as const)(
+  "removes concealed opponent identities from actor %s legal prompts",
+  async (actor) => {
+    const { bindPromptInstances } =
+      await import("../../src/battle/worker/bot/prompt-instances.ts");
+    const { permittedState } =
+      await import("../../src/battle/worker/bot/actor-observation.ts");
+    const { RICH_PUBLIC_DUEL_STATE, publicStateCard } =
+      await import("../fixtures/board-public-states.ts");
+    const owner = actor === 0 ? 1 : 0;
+    const state = structuredClone(RICH_PUBLIC_DUEL_STATE);
+    const players = [...state.players];
+    players[owner] = {
+      ...players[owner]!,
+      hand: [
+        publicStateCard(
+          "private-hand",
+          123456,
+          owner,
+          "hand",
+          0,
+          "faceDownDefense",
+        ),
+      ],
+    };
+    const observation = permittedState(
+      { ...state, players: players as unknown as typeof state.players },
+      actor,
+    );
+    const prompt: PlayerPrompt = {
+      ...base,
+      player: actor,
+      choices: [
+        {
+          ...base.choices[0]!,
+          label: "Secret monster",
+          card: {
+            instanceId: "private-hand" as never,
+            code: cardCode(123456),
+            name: "Secret monster",
+            description: "Secret text",
+            controller: owner,
+            location: "hand",
+            sequence: 0,
+          },
+        },
+      ],
+    };
+    const visible = bindPromptInstances(prompt, observation);
+    expect(visible.choices[0]!.card!.code).toBeUndefined();
+    expect(visible.choices[0]!.label).toBe("Concealed card");
+    expect(JSON.stringify(visible)).not.toContain("Secret");
+  },
+);

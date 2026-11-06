@@ -1,4 +1,12 @@
-import { createBasicBotPolicy } from "./bot/basic-bot.ts";
+import { sideboardBots as runBotSideboarding } from "./bot/bot-match.ts";
+import type {
+  BotInstance,
+  BotGameObservation,
+  BotModule,
+  BotConfiguration,
+} from "./bot/bot-contract.ts";
+import { validateDeck, type ParsedDeck } from "../duel/presets/deck-parser.ts";
+import { botAsOpponentPolicy, createBasicBotModule } from "./bot/basic-bot.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 import type { PinnedDeckRuleset } from "../../decks/validation/index.ts";
 import type { BattleRuntimeInput } from "../ports/index.ts";
@@ -104,6 +112,11 @@ export type DuelRuntimeFailureSink = (
 ) => void;
 
 export interface DuelWorkerRuntimeOptions {
+  /** Bundled module/configuration used for both ordinary play and between-game sideboarding. */
+  readonly bot?: {
+    readonly module: BotModule;
+    readonly configuration: BotConfiguration;
+  };
   readonly maximumQueuedCommands?: number;
   readonly runtimeId?: string;
   readonly logger?: WorkerLogger;
@@ -137,6 +150,7 @@ const MAXIMUM_RESTORE_DETAIL_LENGTH = 1_024;
 
 export class DuelWorkerRuntime {
   readonly #initializeResources: DuelRuntimeInitializer;
+  readonly #configuredBot: DuelWorkerRuntimeOptions["bot"];
   #resources: DuelRuntimeResources | null = null;
   #runtimeIdentity: string | null = null;
   #initializationFailure: { readonly error: unknown } | null = null;
@@ -161,6 +175,13 @@ export class DuelWorkerRuntime {
     options: DuelWorkerRuntimeOptions = {},
   ) {
     this.#initializeResources = initializeResources;
+    this.#configuredBot =
+      options.bot === undefined
+        ? undefined
+        : {
+            module: options.bot.module,
+            configuration: structuredClone(options.bot.configuration),
+          };
     this.#maximumQueuedCommands =
       options.maximumQueuedCommands ?? DEFAULT_MAXIMUM_QUEUED_COMMANDS;
     this.#runtimeId = options.runtimeId ?? globalThis.crypto.randomUUID();
@@ -228,6 +249,79 @@ export class DuelWorkerRuntime {
       () => undefined,
     );
     return trackedOperation;
+  }
+
+  #newBot(): BotInstance {
+    const module =
+      this.#configuredBot?.module ??
+      createBasicBotModule(this.#requireResources().dependencies);
+    if (module.contractVersion !== 1)
+      throw new Error("Unsupported bot contract");
+    return module.create(
+      structuredClone(this.#configuredBot?.configuration ?? {}),
+    );
+  }
+
+  /** The actual runtime match host invokes the configured artifact's sideboard hooks. */
+  sideboardConfiguredBots(
+    original: ParsedDeck,
+    histories: readonly [
+      readonly [BotGameObservation, BotGameObservation],
+      readonly [BotGameObservation, BotGameObservation],
+    ],
+  ) {
+    return this.sideboardBots(
+      original,
+      [this.#newBot(), this.#newBot()],
+      histories,
+    );
+  }
+
+  /** Match hosts use the same independent sideboarding transaction as evaluation. */
+  sideboardBots(
+    original: ParsedDeck,
+    bots: readonly [BotInstance, BotInstance],
+    histories: readonly [
+      readonly [BotGameObservation, BotGameObservation],
+      readonly [BotGameObservation, BotGameObservation],
+    ],
+  ) {
+    const resources = this.#resources;
+    if (!resources || this.#controller !== null)
+      throw new Error(
+        "Sideboarding requires initialized resources and no active game",
+      );
+    return runBotSideboarding(original, bots, histories, (deck) => {
+      validateDeck(
+        deck,
+        new Set(resources.dependencies.cards.keys()),
+        { minimumMain: 40, maximumMain: 60, maximumExtra: 15, allowSide: true },
+        resources.dependencies.cards,
+        resources.allowedCardCodes ??
+          new Set(resources.dependencies.cards.keys()),
+      );
+      for (const [section, codes] of Object.entries(deck)) {
+        for (const code of codes) {
+          const type = resources.dependencies.cards.get(code)?.type ?? 0;
+          const extra = (type & (0x40 | 0x2000 | 0x800000 | 0x4000000)) !== 0;
+          if (
+            (type & 0x4000) !== 0 ||
+            (section === "main" && extra) ||
+            (section === "extra" && !extra)
+          )
+            throw new Error("Sideboard violates card placement restrictions");
+        }
+      }
+      if (deck.side.length > 15) throw new Error("Side Deck exceeds 15 cards");
+      const counts = new Map<number, number>();
+      for (const code of [...deck.main, ...deck.extra, ...deck.side]) {
+        const identity = resources.dependencies.cards.get(code)?.alias || code;
+        counts.set(identity, (counts.get(identity) ?? 0) + 1);
+      }
+      for (const [code, count] of counts)
+        if (count > (resources.deckRuleset?.quantityByCode.get(code) ?? 3))
+          throw new Error("Sideboard violates selected banlist");
+    });
   }
 
   dispose(): void {
@@ -544,9 +638,8 @@ export class DuelWorkerRuntime {
         ],
         extraMonsterZones: profile.extraMonsterZones,
         promptIdNamespace: options.promptIdNamespace,
-        ...(options.opponentPolicy === undefined
-          ? {}
-          : { opponentPolicy: options.opponentPolicy }),
+        opponentPolicy:
+          options.opponentPolicy ?? botAsOpponentPolicy(this.#newBot()),
         trace,
       });
     } catch (error) {
@@ -572,7 +665,7 @@ export class DuelWorkerRuntime {
    * trace and its downloadable report exactly as the player found them.
    */
   #restore(events: DuelWorkerEvent[]): void {
-    const resources = this.#requireResources();
+    this.#requireResources();
     if (this.#controller !== null) {
       events.push({ type: "restore_failed", reason: "duel_active" });
       return;
@@ -607,7 +700,7 @@ export class DuelWorkerRuntime {
         promptIdNamespace: start.promptIdNamespace,
         opponentPolicy: new ReplayOpponentPolicy(
           opponentResponses,
-          createBasicBotPolicy(resources.dependencies),
+          botAsOpponentPolicy(this.#newBot()),
         ),
         publishTrace: (trace) => {
           if (handedOver) this.#lastTrace = trace;

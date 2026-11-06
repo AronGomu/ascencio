@@ -1,3 +1,4 @@
+import { bindPromptInstances } from "./prompt-instances.ts";
 import type { ActiveDuelDependencies } from "../assets/active-duel-dependencies.ts";
 import {
   BasicOpponentPolicy,
@@ -46,7 +47,12 @@ export function createBasicBotModule(
 export function botAsOpponentPolicy(bot: BotInstance): OpponentPolicy {
   return {
     choose(prompt, observation) {
-      const decision = bot.decide(structuredClone({ prompt, observation }));
+      const decision = bot.decide(
+        structuredClone({
+          prompt: bindPromptInstances(prompt, observation.publicState),
+          observation,
+        }),
+      );
       validateBotDecision(prompt, decision);
       return {
         choiceIds: [...decision.choiceIds],

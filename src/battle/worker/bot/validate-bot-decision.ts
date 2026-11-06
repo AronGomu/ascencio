@@ -59,6 +59,14 @@ export function validateBotDecision(
     }
   }
   if (
+    prompt.kind === "selectTribute" &&
+    choices.reduce(
+      (total, choice) => total + (choice.card?.contribution ?? 1),
+      0,
+    ) < (prompt.requiredTotal ?? prompt.minimum)
+  )
+    throw new Error("Tribute contribution is below the required total");
+  if (
     prompt.kind === "selectSum" &&
     prompt.requiredTotal !== undefined &&
     !isValidContributionTotal(

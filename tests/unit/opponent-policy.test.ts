@@ -199,9 +199,12 @@ describe("BasicOpponentPolicy", () => {
     ).toEqual({ choiceIds: [pass], reason: "decline_optional" });
   });
 
-  it("never receives human card identities", () => {
+  it("receives public identities but no concealed human cards", () => {
     expect(opponentState.players[0].handCount).toBe(5);
-    expect(JSON.stringify(opponentState)).not.toContain("97590747");
+    expect(opponentState.publicState?.players[0].hand).toEqual([]);
+    expect(opponentState.publicState?.players[0].monsters[0]?.code).toBe(
+      97590747,
+    );
     expect(JSON.stringify(opponentState)).not.toContain("5053103");
     expect(JSON.stringify(opponentState)).not.toContain("human-private-extra");
     expect(JSON.stringify(opponentState)).not.toContain(
@@ -210,7 +213,9 @@ describe("BasicOpponentPolicy", () => {
     expect(opponentState.players[0]).not.toHaveProperty("hand");
     expect(opponentState.players[0]).not.toHaveProperty("extraDeck");
     expect(opponentState.chainSize).toBe(1);
-    expect(JSON.stringify(opponentState)).not.toContain("Private Counter Name");
+    expect(
+      opponentState.publicState?.players[0].monsters[0]?.counters,
+    ).toHaveLength(1);
     expect(JSON.stringify(opponentState)).not.toContain("Card effect");
   });
 

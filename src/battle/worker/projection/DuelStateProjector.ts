@@ -162,6 +162,7 @@ interface ProjectionCheckpoint {
 }
 
 export class DuelStateProjector {
+  readonly #viewer: PlayerIndex;
   readonly #snapshotId: SnapshotId;
   readonly #layout: PublicDuelState["layout"];
   readonly #players: [MutablePlayer, MutablePlayer];
@@ -185,7 +186,9 @@ export class DuelStateProjector {
       readonly CardCode[],
     ] = [[], []],
     textDependencies?: Pick<ActiveDuelDependencies, "texts" | "strings">,
+    viewer: PlayerIndex = 0,
   ) {
+    this.#viewer = viewer;
     this.#snapshotId = snapshotId;
     /* The layout profile is chosen once at duel start; no message, checkpoint
        or restore can change it. */
@@ -197,9 +200,9 @@ export class DuelStateProjector {
       mutablePlayer(deckCounts[0], extraDeckCounts[0]),
       mutablePlayer(deckCounts[1], extraDeckCounts[1]),
     ];
-    if (initialExtraDeckOrders[0].length !== extraDeckCounts[0])
+    if (initialExtraDeckOrders[viewer].length !== extraDeckCounts[viewer])
       throw new Error("Own Extra Deck seed does not match its count");
-    this.#seedOwnExtraDeck(initialExtraDeckOrders[0]);
+    this.#seedOwnExtraDeck(initialExtraDeckOrders[viewer]);
   }
 
   checkpoint(): ProjectionCheckpoint {
@@ -412,7 +415,7 @@ export class DuelStateProjector {
         events.push({
           type: "set",
           player,
-          ...(player === 0 ? { card: cardCode(message.code) } : {}),
+          ...(player === this.#viewer ? { card: cardCode(message.code) } : {}),
         });
         break;
       }
@@ -427,7 +430,7 @@ export class DuelStateProjector {
         );
         events.push({
           type: "positionChanged",
-          ...(message.controller === 0 || isFaceUp(message.position)
+          ...(message.controller === this.#viewer || isFaceUp(message.position)
             ? { card: cardCode(message.code) }
             : {}),
           position,
@@ -610,10 +613,12 @@ export class DuelStateProjector {
           throw new Error("Extra Deck query owner does not match player");
         const position = enginePosition(record.position);
         const publicOpponentCard =
-          player === 1 && record.isPublic && isFaceUp(record.position);
-        if (player === 1 && !publicOpponentCard) continue;
+          player !== this.#viewer &&
+          record.isPublic &&
+          isFaceUp(record.position);
+        if (player !== this.#viewer && !publicOpponentCard) continue;
         if (record.code === undefined || record.code <= 0) {
-          if (player === 0)
+          if (player === this.#viewer)
             throw new Error("Own Extra Deck query omitted card code");
           throw new Error("Public opponent Extra Deck query omitted card code");
         }
@@ -698,7 +703,7 @@ export class DuelStateProjector {
           identityVisible:
             record.identityVisible ??
             matched?.identityVisible ??
-            address.controller === 0,
+            address.controller === this.#viewer,
           sequence,
           ...(matched?.owner === undefined ? {} : { owner: matched.owner }),
         };
@@ -750,8 +755,8 @@ export class DuelStateProjector {
 
   snapshot(): PublicDuelState {
     const players: [PublicPlayerState, PublicPlayerState] = [
-      immutablePlayer(0, this.#players[0], true),
-      immutablePlayer(1, this.#players[1], false),
+      immutablePlayer(0, this.#players[0], this.#viewer === 0),
+      immutablePlayer(1, this.#players[1], this.#viewer === 1),
     ];
     const allVisibleCards = players.flatMap((player) => [
       ...player.hand,
@@ -778,7 +783,7 @@ export class DuelStateProjector {
       throw new Error("Public state exceeds 1024 counter entries");
     if (this.#stateTextUnits() > 262_144)
       throw new Error("Public state exceeds text limit");
-    assertConcealedOpponentIdentities(players[1]);
+    assertConcealedOpponentIdentities(players[this.#viewer === 0 ? 1 : 0]);
 
     return Object.freeze({
       snapshotId: this.#snapshotId,
@@ -810,7 +815,7 @@ export class DuelStateProjector {
       readonly sequence: number;
     }[],
   ): void {
-    if (recipient !== 0) return;
+    if (recipient !== this.#viewer) return;
     for (const entry of cards) {
       if (
         !Number.isSafeInteger(entry.code) ||
@@ -842,7 +847,7 @@ export class DuelStateProjector {
          alone preserves identity through a later set. */
       if (
         stored !== undefined &&
-        (controller === 0 || isFixedLocation(location))
+        (controller === this.#viewer || isFixedLocation(location))
       )
         stored.code = reveal.code;
     }
@@ -953,7 +958,7 @@ export class DuelStateProjector {
         "hand",
         state.hand.length,
         draw.position,
-        player === 0 ? draw.code : undefined,
+        player === this.#viewer ? draw.code : undefined,
       );
       takeHandArrival(state, card);
       state.hand.push(card);
@@ -963,7 +968,7 @@ export class DuelStateProjector {
 
   #shuffleHand(player: PlayerIndex, codes: readonly number[]): void {
     this.#clearPendingPublicReveals(player, "hand");
-    if (player !== 0) {
+    if (player !== this.#viewer) {
       for (const card of this.#players[player].hand) {
         this.#rotatePublicIdentity(card);
         delete card.code;
@@ -1068,7 +1073,7 @@ export class DuelStateProjector {
     for (const { to, fromAddress, toAddress, card } of entries) {
       this.#pendingPublicReveals.delete(publicRevealKey(fromAddress));
       this.#pendingPublicReveals.delete(publicRevealKey(toAddress));
-      if (toAddress.controller === 1) {
+      if (toAddress.controller !== this.#viewer) {
         this.#rotatePublicIdentity(card);
         delete card.code;
       }
@@ -1107,10 +1112,16 @@ export class DuelStateProjector {
       from.controller,
       fromLocation,
       from.position,
+      this.#viewer,
     );
     const toPlayer = this.#players[to.controller];
     const toLocation = engineLocation(to.location);
-    const toVisible = isPublicCard(to.controller, toLocation, to.position);
+    const toVisible = isPublicCard(
+      to.controller,
+      toLocation,
+      to.position,
+      this.#viewer,
+    );
     assertFixedDestinationAvailable(
       toPlayer,
       to.controller,
@@ -1220,8 +1231,12 @@ export class DuelStateProjector {
       throw new Error("Overlay MOVE omitted material card code");
     const fromLocation = engineLocation(from.location);
     const toLocation = engineLocation(to.location);
-    const endpointFromVisible = isPublicOverlayMoveEndpoint(from, fromLocation);
-    const toVisible = isPublicOverlayMoveEndpoint(to, toLocation);
+    const endpointFromVisible = isPublicOverlayMoveEndpoint(
+      from,
+      fromLocation,
+      this.#viewer,
+    );
+    const toVisible = isPublicOverlayMoveEndpoint(to, toLocation, this.#viewer);
     /* Only a monster-zone card carries an overlay list here, but the core
        addresses overlay units on hosts elsewhere too: an Xyz Summon attaches
        its materials while the Xyz monster is still in the Extra Deck, and an
@@ -1425,7 +1440,7 @@ export class DuelStateProjector {
     }
     const nextPosition = enginePosition(position);
     const visible = isCardIdentityVisible(
-      0,
+      this.#viewer,
       playerIndex,
       publicLocation,
       nextPosition,
@@ -1434,7 +1449,7 @@ export class DuelStateProjector {
     card.faceUp = isFaceUp(position);
     if (visible && rawCode > 0) card.code = cardCode(rawCode);
     else if (
-      playerIndex === 1 &&
+      playerIndex !== this.#viewer &&
       !isFixedLocation(publicLocation) &&
       card.code !== undefined
     ) {
@@ -1631,7 +1646,7 @@ export class DuelStateProjector {
     if (
       card?.code === undefined ||
       card.code !== message.code ||
-      !isPublicCard(controller, location, message.position)
+      !isPublicCard(controller, location, message.position, this.#viewer)
     )
       return undefined;
     return { instanceId: card.instanceId, card: card.code };
@@ -1666,7 +1681,7 @@ export class DuelStateProjector {
       );
       const identityVisible =
         card?.code !== undefined &&
-        isPublicCard(controller, location, address.position);
+        isPublicCard(controller, location, address.position, this.#viewer);
       targets.push(
         Object.freeze({
           identityVisible,
@@ -1712,12 +1727,12 @@ export class DuelStateProjector {
   }
 
   #seedOwnExtraDeck(codes: readonly CardCode[]): void {
-    const state = this.#players[0];
+    const state = this.#players[this.#viewer];
     state.extraDeck = codes.map((code, sequence) => ({
       instanceId: this.#nextInstanceId(),
       code,
-      owner: 0,
-      controller: 0,
+      owner: this.#viewer,
+      controller: this.#viewer,
       location: "extra",
       sequence,
       position: "faceDownDefense",
@@ -2134,9 +2149,10 @@ function isPublicCard(
   controller: number,
   location: PublicLocation,
   position: number,
+  viewer: PlayerIndex = 0,
 ): boolean {
   return isCardIdentityVisible(
-    0,
+    viewer,
     asPlayer(controller),
     location,
     enginePosition(position),
@@ -2151,9 +2167,10 @@ function isPublicOverlayMoveEndpoint(
     readonly overlay_sequence?: number;
   },
   location: PublicLocation,
+  viewer: PlayerIndex = 0,
 ): boolean {
-  if (isOverlayAddress(endpoint)) return endpoint.controller === 0;
-  return isPublicCard(endpoint.controller, location, endpoint.position);
+  if (isOverlayAddress(endpoint)) return endpoint.controller === viewer;
+  return isPublicCard(endpoint.controller, location, endpoint.position, viewer);
 }
 
 function isOverlayAddress(value: {

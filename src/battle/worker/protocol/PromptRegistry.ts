@@ -948,10 +948,31 @@ function multiCardPrompt(
     makeCardBinding(id, index, "select", text(card.code), card),
   );
   return binding(
-    prompt(id, kind, player, title, bindings, { minimum, maximum, cancelable }),
+    prompt(id, kind, player, title, bindings, {
+      minimum: kind === "selectTribute" ? Math.min(1, minimum) : minimum,
+      maximum,
+      cancelable,
+      ...(kind === "selectTribute" ? { requiredTotal: minimum } : {}),
+    }),
     (ids) => {
       const selected = selectedBindings(ids, bindings);
-      requireSelectionCount(selected, minimum, maximum, cancelable);
+      // Frozen core SelectTributeP: max limits selected cards, min limits summed release_param.
+      // https://github.com/edo9300/ygopro-core/blob/8e5f4e4f0ab6b8ca750e8e1c91c1a58f407e3272/playerop.cpp#L636
+      requireSelectionCount(
+        selected,
+        kind === "selectTribute" ? Math.min(1, minimum) : minimum,
+        maximum,
+        cancelable,
+      );
+      if (
+        kind === "selectTribute" &&
+        !(selected.length === 0 && cancelable) &&
+        selected.reduce(
+          (total, choice) => total + (choice.choice.card?.contribution ?? 1),
+          0,
+        ) < minimum
+      )
+        throw new Error("Tribute contribution is below the required total");
       /* Indexes into `message.selects`; `null` cancels. Writer cases 5 and 12
          send `i32(-1)` for the cancel and a length-prefixed run of `i32`
          indexes otherwise. */

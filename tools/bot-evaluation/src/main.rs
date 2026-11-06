@@ -1,6 +1,8 @@
 mod analysis;
 mod application_identity;
 mod bugs;
+#[cfg(target_os = "linux")]
+mod campaign;
 mod compare;
 mod config;
 mod evidence_validation;
@@ -39,6 +41,8 @@ fn execute() -> xml::Result<i32> {
     let option = |key: &str| args.windows(2).find(|w| w[0] == key).map(|w| w[1].clone());
     let required = |key: &str| option(key).ok_or_else(|| format!("Missing {key}"));
     match command{
+ #[cfg(target_os = "linux")]
+ "campaign"=>campaign::run(Path::new(&required("--config")?), args.iter().any(|a| a == "--resume")),
  "improve"=>improvement::run(Path::new(&required("--config")?), args.iter().any(|a| a == "--resume")),
  "benchmark"=>{if option("--resume").is_some(){return Err("A benchmark never resumes an existing run".into());} runner::benchmark(config::read(Path::new(&required("--config")?))?, command_start)},
  "evaluate"=>runner::evaluate(config::read(Path::new(&required("--config")?))?,option("--resume").map(PathBuf::from)),

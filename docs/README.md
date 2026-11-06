@@ -197,3 +197,5 @@ Superseded records retained at stable paths for old plan links:
 - [`duel-field-interaction-shell.html`](duel-field-interaction-shell.html), [`duel-field-interaction-model-v2.html`](duel-field-interaction-model-v2.html), [`duel-field-interaction-model-v3.html`](duel-field-interaction-model-v3.html) → historical interaction generations; ADR-019/021 + current architecture HTML override them.
 
 Current module authoring and campaign prerequisites: [Content modules](assets/content-modules.md), [ADR-102](ADR/102_ADR_content_modules_and_campaign_facts.md).
+
+[Multi-deck bot campaigns](architecture/06-quality/bot-campaign.md) documents persistent deck agents, historical pools, fair promotion, recovery epochs, and the 100-round campaign command.

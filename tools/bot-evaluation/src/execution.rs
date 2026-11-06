@@ -297,13 +297,22 @@ pub(crate) fn fixture(c: &Config, m: u64, n: u64, decks: &[Value; 2]) -> Result<
 pub(crate) fn validate_side(
     c: &Config,
     ready: &Value,
-    original: &Value,
+    originals: &[Value; 2],
     result: &Value,
 ) -> Result<()> {
-    for deck in result["decks"]
+    let decks = result["decks"]
+        .as_array()
+        .ok_or("Missing sideboard decks")?;
+    if decks.len() != 2 {
+        return Err("Expected two sideboard decks".into());
+    }
+    for (actor, deck) in result["decks"]
         .as_array()
         .ok_or("Missing sideboard decks")?
+        .iter()
+        .enumerate()
     {
+        let original = &originals[actor];
         config::validate_deck(deck, &ready["cards"], &c.rules)?;
         let mut a = vec![];
         let mut b = vec![];
@@ -340,7 +349,7 @@ pub(crate) fn sideboard(
     record: &mut Value,
     checkpoint: &mut Value,
 ) -> Result<()> {
-    host.send(&json!({"type":"sideboard","decks":[c.deck,c.deck],"histories":[history(&reports[0]),history(&reports[1])]}))?;
+    host.send(&json!({"type":"sideboard","decks":[c.deck,c.deck_b],"histories":[history(&reports[0]),history(&reports[1])]}))?;
     let limit = Duration::from_millis(xml::integer(&c.limits["sideboarding_wall_time_ms"])?);
     let mut deadline = Instant::now() + limit;
     let frame = loop {
@@ -360,7 +369,7 @@ pub(crate) fn sideboard(
     if frame["type"] != "sideboard_done" {
         return Err(format!("Sideboarding host failure: {frame}").into());
     }
-    validate_side(c, ready, &c.deck, &frame)?;
+    validate_side(c, ready, &[c.deck.clone(), c.deck_b.clone()], &frame)?;
     for (i, actor) in ["a", "b"].iter().enumerate() {
         let d = &frame["decisions"][i];
         if xml::number(&frame["durations"][i])?
@@ -390,6 +399,40 @@ pub(crate) fn value_size(v: &Value) -> usize {
 mod tests {
     use super::*;
     #[test]
+    fn sideboarding_preserves_each_players_distinct_original_deck() {
+        let make_deck = |start: u64| {
+            json!({
+                "main": (start..start + 20).flat_map(|code| [code, code]).collect::<Vec<_>>(),
+                "extra": [], "side": []
+            })
+        };
+        let a = make_deck(1);
+        let b = make_deck(21);
+        let c = Config {
+            doc: json!({}),
+            deck: a.clone(),
+            deck_b: b.clone(),
+            bots: json!([]),
+            snapshot: Default::default(),
+            banlist: Default::default(),
+            rules: json!({"defaultLimit":3,"limits":{}}),
+            profile: "mr5".into(),
+            matches: 1,
+            limits: json!({}),
+            output: Default::default(),
+            fixture: None,
+            target: 1000.0,
+        };
+        let ready = json!({"cards": (1..=40).map(|code| json!({
+            "code": code.to_string(), "alias":"0", "type":1
+        })).collect::<Vec<_>>()});
+        let originals = [a.clone(), b.clone()];
+        assert!(validate_side(&c, &ready, &originals, &json!({"decks":[a,b]})).is_ok());
+        assert!(validate_side(&c, &ready, &originals, &json!({"decks":[b,a]})).is_err());
+        assert!(validate_side(&c, &ready, &originals, &json!({"decks":[a,a]})).is_err());
+        assert!(validate_side(&c, &ready, &originals, &json!({"decks":[a]})).is_err());
+    }
+    #[test]
     fn dead_host_before_game_command_is_a_recorded_failure() {
         // Exercise a real closed child pipe: this used to escape as a startup
         // error before the supervisor could persist partial game evidence.
@@ -399,6 +442,7 @@ mod tests {
         let c = Config {
             doc: json!({}),
             deck: deck.clone(),
+            deck_b: deck.clone(),
             bots: json!([]),
             snapshot: Default::default(),
             banlist: Default::default(),

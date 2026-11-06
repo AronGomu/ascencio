@@ -419,7 +419,7 @@ for await (const line of createInterface({
         artifacts.map((a) => instantiate(a, dependencies)),
       );
       const result = sideboardBots(
-        command.decks[0],
+        command.decks,
         [bots[0]!, bots[1]!],
         command.histories,
         () => {},

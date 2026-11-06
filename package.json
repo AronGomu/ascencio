@@ -80,6 +80,7 @@
     "setup": "node scripts/setup-desktop.ts",
     "build": "tauri build --no-bundle",
     "start": "node scripts/start-desktop.ts",
+    "bot:campaign": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- campaign",
     "bot:improve": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- improve",
     "bot:evaluate": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- evaluate",
     "bot:compare": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- compare",

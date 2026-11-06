@@ -1,4 +1,3 @@
-import { eventDetails } from "./host-events.ts";
 import { bindPromptInstances } from "../../src/battle/worker/bot/prompt-instances.ts";
 /** Narrow frozen-core/bot host. Rust alone owns scheduling, persistence and results. */
 import { createInterface } from "node:readline";
@@ -157,21 +156,7 @@ async function game(command: Command) {
             (message.type >= 140 && message.type <= 143) ||
             message.type === 132;
           if (!isPrompt) {
-            const details: unknown[] = update.events.map((event) => {
-              if (
-                "code" in event &&
-                "player" in event &&
-                event.player !== actor &&
-                "position" in event &&
-                (Number(event.position) & 0xa) !== 0
-              ) {
-                const visible = { ...event };
-                delete visible.code;
-                return visible;
-              }
-              return event;
-            });
-            details.push(...eventDetails(message, after, actor));
+            const details = update.observed?.details ?? [];
             send({
               type: "event",
               actor,

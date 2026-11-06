@@ -29,7 +29,7 @@ fn resolve(base: &Path, v: &Value) -> Result<PathBuf> {
 pub fn read(file: &Path) -> Result<Config> {
     let source = file.canonicalize()?;
     let base = source.parent().unwrap();
-    let doc = xml::read(&source, "evaluation")?;
+    let mut doc = xml::read(&source, "evaluation")?;
     xml::validate("evaluation", &fs::read(&source)?)?;
     let matches = xml::integer(&doc["batch"]["matches"])?;
     if !(1..=10000).contains(&matches) || doc["batch"]["execution"] != "sequential" {
@@ -101,11 +101,11 @@ pub fn read(file: &Path) -> Result<Config> {
         _ => return Err("Invalid starting order mode".into()),
     };
     let output = base.join(xml::text(&doc["output"]["directory"])?);
-    let target = if doc["performance_target"].is_null() {
-        1000.0
-    } else {
-        xml::number(&doc["performance_target"]["warm_game_p95_ms"])?
-    };
+    if doc["performance_target"].is_null() {
+        // Owner's sample-first goal; snapshot the resolved default in the manifest.
+        doc["performance_target"] = json!({"warm_game_p95_ms":100.0});
+    }
+    let target = xml::number(&doc["performance_target"]["warm_game_p95_ms"])?;
     if target <= 0.0 {
         return Err("Invalid latency target".into());
     }

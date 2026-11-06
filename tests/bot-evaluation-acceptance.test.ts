@@ -67,8 +67,8 @@ test(
     writeFileSync(
       cfg,
       readFileSync(cfg, "utf8").replace(
-        "<warm_game_p95_ms>1000",
-        "<warm_game_p95_ms>100",
+        /<performance_target>.*?<\/performance_target>/,
+        "",
       ),
     );
     cli(["benchmark", "--config", cfg, "--resume", "ignored"], 1);
@@ -118,6 +118,10 @@ test(
     assert.equal(field(summary, "games_completed"), "4");
     assert.equal(field(summary, "games_failed"), "0");
     assert.equal(existsSync(join(run, "bugs")), false);
+    assert.equal(
+      Number(field(read(run, "manifest.xml"), "warm_game_p95_ms")),
+      100,
+    );
     const manifest = hash(read(run, "manifest.xml"));
     const report = read(run, "matches/match-000001/player-a.xml");
     assert.match(report, /<reason>/);

@@ -141,13 +141,14 @@ export class ActorObservation {
     }
     if (update.reconciliationFailure)
       throw new Error(`Projection failed: ${update.reconciliationFailure}`);
+    let observed: BotObservedEvent | undefined;
     if (!isPromptMessage(message.type)) {
       const state = this.snapshot();
       if (this.#pendingEvents.length >= 100000)
         throw new Error(
           "observation_limit: pending event history exceeds limit",
         );
-      this.#pendingEvents.push({
+      observed = {
         event: observedEventName(message.type),
         turn: state.turn,
         phase: state.phase,
@@ -155,9 +156,10 @@ export class ActorObservation {
           ...update.events,
           ...eventDetails(message, state, this.actor),
         ],
-      });
+      };
+      this.#pendingEvents.push(observed);
     }
-    return update;
+    return { ...update, observed };
   }
   reconcile(): void {
     // The same authoritative reconciliation requests drive the actual runtime

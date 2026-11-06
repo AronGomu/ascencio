@@ -17,10 +17,15 @@ impl Lane {
         let (input, jobs) = mpsc::sync_channel::<Job>(1);
         let (results, output) = mpsc::sync_channel(1);
         let thread = thread::spawn(move || {
+            let mut timeline_prepared = false;
             while let Ok(job) = jobs.recv() {
                 let result = (|| -> Result<[f64; 2]> {
                     let start = Instant::now();
                     if job.root == "player-report" {
+                        if !timeline_prepared {
+                            crate::evidence_validation::prepare()?;
+                            timeline_prepared = true;
+                        }
                         crate::evidence_validation::report(&job.bytes)?;
                     } else {
                         xml::validate(&job.root, &job.bytes)?;

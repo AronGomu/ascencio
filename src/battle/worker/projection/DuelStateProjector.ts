@@ -166,6 +166,8 @@ export class DuelStateProjector {
   readonly #snapshotId: SnapshotId;
   readonly #layout: PublicDuelState["layout"];
   readonly #players: [MutablePlayer, MutablePlayer];
+  #validatedPlayers: readonly PublicPlayerState[] | undefined;
+  #validatedCounterText = 0;
   #revision = 0;
   #turn = 0;
   #turnPlayer: PlayerIndex = 0;
@@ -758,32 +760,50 @@ export class DuelStateProjector {
       immutablePlayer(0, this.#players[0], this.#viewer === 0),
       immutablePlayer(1, this.#players[1], this.#viewer === 1),
     ];
-    const allVisibleCards = players.flatMap((player) => [
-      ...player.hand,
-      ...player.extraDeck,
-      ...player.monsters,
-      ...player.spellsAndTraps,
-      ...player.graveyard,
-      ...player.banished,
-    ]);
-    const allInstanceIds = allVisibleCards.flatMap((card) => [
-      card.instanceId,
-      ...card.overlayMaterials.map((material) => material.instanceId),
-    ]);
-    if (allInstanceIds.length > 256)
-      throw new Error("Public state exceeds 256 physical card instances");
-    const ids = new Set(allInstanceIds);
-    if (ids.size !== allInstanceIds.length)
-      throw new Error("A card instance occupies multiple public zones");
-    const counterEntries = allVisibleCards.reduce(
-      (total, card) => total + card.counters.length,
-      0,
-    );
-    if (counterEntries > 1_024)
-      throw new Error("Public state exceeds 1024 counter entries");
-    if (this.#stateTextUnits() > 262_144)
-      throw new Error("Public state exceeds text limit");
-    assertConcealedOpponentIdentities(players[this.#viewer === 0 ? 1 : 0]);
+    // Immutable projection identity is the validation cache key. A counter,
+    // hidden identity or zone change produces a new projection and rechecks all
+    // invariants. Phase-only messages reuse already validated card collections.
+    if (!this.#validatedPlayers?.every((p, i) => p === players[i])) {
+      const allVisibleCards = players.flatMap((player) => [
+        ...player.hand,
+        ...player.extraDeck,
+        ...player.monsters,
+        ...player.spellsAndTraps,
+        ...player.graveyard,
+        ...player.banished,
+      ]);
+      const allInstanceIds = allVisibleCards.flatMap((card) => [
+        card.instanceId,
+        ...card.overlayMaterials.map((material) => material.instanceId),
+      ]);
+      if (allInstanceIds.length > 256)
+        throw new Error("Public state exceeds 256 physical card instances");
+      const ids = new Set(allInstanceIds);
+      if (ids.size !== allInstanceIds.length)
+        throw new Error("A card instance occupies multiple public zones");
+      const counterEntries = allVisibleCards.reduce(
+        (total, card) => total + card.counters.length,
+        0,
+      );
+      if (counterEntries > 1_024)
+        throw new Error("Public state exceeds 1024 counter entries");
+      assertConcealedOpponentIdentities(players[this.#viewer === 0 ? 1 : 0]);
+
+      this.#validatedCounterText = allVisibleCards.reduce(
+        (sum, card) =>
+          sum + card.counters.reduce((n, c) => n + c.name.length, 0),
+        0,
+      );
+      this.#validatedPlayers = players;
+    }
+    const textUnits =
+      this.#validatedCounterText +
+      this.#chain.reduce(
+        (sum, link) =>
+          sum + link.label.length + (link.description?.length ?? 0),
+        0,
+      );
+    if (textUnits > 262_144) throw new Error("Public state exceeds text limit");
 
     return Object.freeze({
       snapshotId: this.#snapshotId,

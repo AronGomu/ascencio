@@ -134,6 +134,7 @@ export function changes(
       });
   for (const [id, value] of b) {
     const old = a.get(id);
+    if (old === value) continue;
     const changed = old
       ? Object.fromEntries(
           Object.entries(value).filter(

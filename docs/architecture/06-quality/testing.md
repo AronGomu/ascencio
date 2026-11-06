@@ -16,8 +16,8 @@ The programmed real-WASM headless integration suite remains prerequisite for vis
 ## Regression and update rules
 
 - Reproduce each bug with the smallest fixture or deterministic transcript before fixing it.
-- Keep fixtures human-readable; never update traces merely to silence CI.
+- Keep fixtures human-readable; never update traces merely to silence a failing test.
 - Any engine/data update creates a new snapshot and runs all layers.
 - Typecheck, lint, format, unit/component/real-WASM tests, asset verification, independently verified production packaging, reproducible-build comparison, and the browser matrix are release gates.
-- CI regenerates the pinned asset snapshot and uploads traces/reports when a compatibility or browser gate fails.
+- Validation runs locally only under the policy in `AGENTS.md`. GitHub Actions is disabled; preserve local traces/reports when a compatibility or browser check fails. Remote CI never gates commits, merges or completion.
 - DF-16 records machine-readable Chromium parity/perf/resource evidence in `generated/tests/e2e-global/results/df-16-results.json` and the acceptance baseline in `docs/architecture/05-presentation/duel-field-performance-baseline.md`.

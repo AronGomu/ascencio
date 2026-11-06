@@ -7,6 +7,8 @@ description: Select and run tests related to changes in Ascencio. Use for local 
 
 ## Scope
 
+Follow the local-only validation and remote-CI policy in [AGENTS.md](../../../AGENTS.md#local-validation-only--no-remote-ci). Local test results determine readiness; proceed without remote checks or CI waits.
+
 Locally, "run tests", "run the pipeline", "validate", and "test and merge" authorize tests related to the changes. Run the full application suite only when the owner very explicitly asks for it. Do not interpret a request to merge as permission to run everything.
 
 ## Execute

@@ -19,6 +19,12 @@ Verify the actual window reaches startup or Main Menu before reporting that it o
 - `artifacts/manual_test_checklist.md` : Durable. The human test steps for every shipped slice, kept current, never retired with a plan.
 - `ai-artifact/manual_test_checklist.md` : Divergent sibling (221 lines vs 3887). Owner decides merge vs archive.
 
+## Local validation only — no remote CI
+
+Validate changes locally and use the relevant local results and requested reviews to decide when work is ready to commit or merge. Never wait for remote CI, check remote CI results, poll or watch CI, dispatch workflows, rerun remote jobs, or make CI status a condition for completion or merging. Cancel any existing CI watch instead of leaving work pending on it.
+
+GitHub Actions is disabled for this repository. Workflow definitions are archived under `.github/disabled-workflows/` and must remain inactive. Re-enabling remote automation or adding required remote status checks requires an explicit owner request. Administration needed to disable or cancel remote CI is permitted; remote CI is never a validation source. Older CI references elsewhere in the repository are historical and do not override this policy.
+
 ## Local test execution
 
 Use the project skill [ascencio-tests](.agents/skills/ascencio-tests/SKILL.md) whenever selecting or running tests locally.
@@ -27,7 +33,7 @@ An owner's request to "run tests", "run the test pipeline", "validate", or "test
 
 Run `npm run test:context` to gather branch-change context and suggested tests for the agent. For task-specific changes or coverage that static selection cannot establish, supply exact files with `npm test -- --tests <test-files>`. The runner has no file limit or time budget, continues after failures, and streams progress. On failure the main agent continues the selected tests and delegates diagnosis and fixes to a subagent as described in the skill. Detailed reports default to false; use `--report` only when the owner asks for one.
 
-`npm test -- --full` runs the complete `npm run check` pipeline and requires that explicit full-suite request. Existing CI gates remain the full validation authority; targeted local results must be described as targeted validation.
+`npm test -- --full` runs the complete `npm run check` pipeline and requires that explicit full-suite request. Local results are the validation authority; describe targeted results as targeted validation, not full-suite coverage.
 
 `npm run test:all` preserves the original tooling, unit/performance, component and integration test sequence. It stops at the first failing command and requires an explicit request for that complete four-part suite.
 
@@ -112,7 +118,7 @@ Commit a plan before retiring it and that SHA stays a real address: `git show <s
 | Data        | BabelCDB, CardScripts, Project Ignis strings                                                            | Versioned card/effect/protocol snapshot                                                                                     |
 | Persistence | Native Rust content reader; atomic JSON for saves | Immutable native content modules; JSON user records; downloadable diagnostics |
 | Tests       | Node test runner, Vitest, Testing Library, Playwright                                                   | Unit, component, integration, and browser coverage                                                                          |
-| Quality     | TypeScript, ESLint, Prettier, CI                                                                        | Types, lint, format, compatibility, assets, and build gates                                                                 |
+| Quality     | TypeScript, ESLint, Prettier, local checks                                                                        | Types, lint, format, compatibility, assets, and build gates                                                                 |
 
 ## Three-domain application direction
 

@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { ESLint } from "eslint";
 import { expect, it } from "vitest";
 
@@ -12,7 +12,6 @@ it("launch, build and browser hooks resolve every referenced npm command", () =>
     readFileSync("playwright.native.config.ts", "utf8"),
     readFileSync("playwright.acceptance.config.ts", "utf8"),
     readFileSync("playwright.resource.config.ts", "utf8"),
-    readFileSync(".github/workflows/ci.yml", "utf8"),
   ];
   for (const hook of hooks)
     for (const [, name] of hook.matchAll(/npm run ([\w:-]+)/g))
@@ -21,7 +20,7 @@ it("launch, build and browser hooks resolve every referenced npm command", () =>
       );
 });
 
-it("app-only browser sources remain in standard format, lint, typecheck and CI gates", async () => {
+it("app-only browser sources remain in standard local format, lint and typecheck gates", async () => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
     scripts: Record<string, string>;
   };
@@ -43,9 +42,12 @@ it("app-only browser sources remain in standard format, lint, typecheck and CI g
   expect(pkg.scripts["check:headless"]).toContain("npm run lint");
   expect(pkg.scripts["check:headless"]).toContain("npm run typecheck");
   expect(pkg.scripts.check).toContain("npm run check:headless");
-  const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
-  const commands = [...workflow.matchAll(/npm run (check[\w:-]*)/g)].map(
-    ([, name]) => name,
-  );
-  expect(commands).toEqual(["check:headless", "check:frontend-and-browser"]);
+  expect(pkg.scripts.check).toContain("npm run check:frontend-and-browser");
+});
+
+it("keeps remote workflows outside GitHub's active workflow directory", () => {
+  const workflows = existsSync(".github/workflows")
+    ? readdirSync(".github/workflows").filter((name) => /\.ya?ml$/i.test(name))
+    : [];
+  expect(workflows).toEqual([]);
 });

@@ -55,6 +55,18 @@ async function fixture(): Promise<string> {
   );
   return target;
 }
+async function removeFixture(target: string): Promise<void> {
+  // Call only after awaited Vite shutdown. macOS can still report transient
+  // ENOTEMPTY during recursive teardown; bounded fs retries preserve failures
+  // for persistent filesystem errors instead of masking them.
+  await rm(target, {
+    recursive: true,
+    force: true,
+    maxRetries: 3,
+    retryDelay: 100,
+  });
+}
+
 async function files(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   return (
@@ -171,7 +183,7 @@ describe("app/content build boundary", () => {
     } finally {
       await server?.close();
       await chmod(path.join(target, "locked"), 0o700);
-      await rm(target, { recursive: true, force: true });
+      await removeFixture(target);
     }
   });
 
@@ -275,7 +287,7 @@ describe("app/content build boundary", () => {
             ),
           );
       } finally {
-        await rm(target, { recursive: true, force: true });
+        await removeFixture(target);
       }
     },
     180_000,
@@ -660,7 +672,7 @@ describe("app/content build boundary", () => {
           }
         }
       } finally {
-        await rm(target, { recursive: true, force: true });
+        await removeFixture(target);
       }
     },
     180_000,

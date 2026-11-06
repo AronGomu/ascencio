@@ -170,6 +170,10 @@ export default tseslint.config(
   ...svelte.configs["flat/recommended"],
   ...svelte.configs["flat/prettier"],
   {
+    files: ["docs/assets/style-studies/**/*.js"],
+    languageOptions: { globals: globals.browser },
+  },
+  {
     files: ["**/*.ts"],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },

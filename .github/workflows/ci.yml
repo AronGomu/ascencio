@@ -44,9 +44,9 @@ jobs:
             generated
             !generated/build
             !generated/tests
-          key: mvp-assets-v2-${{ runner.os }}-${{ hashFiles('package-lock.json', 'scripts/**/*.ts', 'content/**/*.json', 'content/**/*.ydk', 'assets/content/**/authoring/**/*.json', 'image-content-lock.json', 'assets-source-lock.json') }}
+          key: mvp-assets-v3-${{ runner.os }}-${{ hashFiles('content/packages.json', 'content/critical-release.json') }}-${{ hashFiles('package-lock.json', 'scripts/**/*.ts', 'content/**/*.json', 'content/**/*.ydk', 'assets/content/**/authoring/**/*.json', 'image-content-lock.json', 'assets-source-lock.json') }}
           restore-keys: |
-            mvp-assets-v2-${{ runner.os }}-
+            mvp-assets-v3-${{ runner.os }}-${{ hashFiles('content/packages.json', 'content/critical-release.json') }}-
 
       - run: npm ci
       - name: Regenerate and verify the pinned snapshot

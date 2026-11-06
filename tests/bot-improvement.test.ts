@@ -46,9 +46,9 @@ test(
     const agent = join(root, "agent.mjs");
     writeFileSync(
       agent,
-      `import {readFileSync,writeFileSync} from 'node:fs';
+      `import {readFileSync,writeFileSync,symlinkSync} from 'node:fs';
 const request=JSON.parse(readFileSync('request.json','utf8'));
-if(process.argv[2]==='failure' && request.iteration===1) throw new Error('intentional agent failure');
+if(process.argv[2]==='failure' && request.iteration===1) {symlinkSync('.', 'abandoned-link'); throw new Error('intentional agent failure');}
 const no_change=process.argv[2]==='failure';
 if(!no_change) writeFileSync('strategy.mjs',readFileSync('strategy.mjs','utf8').replace('summon: 100','summon: 101'));
 writeFileSync('response.json',JSON.stringify({no_change,diagnosis:'Protocol regression fixture; no strength claim', evidence:[{path:request.evidence.run+'/matches/match-000001/player-a.xml',game_id:'match-000001-game-1'}],play_changes:'small summon score change',sideboarding_changes:'none',tests:'trusted checks follow'}));`,

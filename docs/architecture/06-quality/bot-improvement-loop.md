@@ -55,7 +55,7 @@ The adapter must run without interactive prompts, finish within its deadline, an
 }
 ```
 
-`no_change: true` with a diagnosis is valid. Agent-reported tests never replace trusted checks. A strategy exports `createStrategy({ cards })`, returning the existing generalist choice-scoring callback. It may also export `sideboard(input)`. Strategies are self-contained ECMAScript modules; imports are forbidden. Shared response construction, legality and repetition guards remain outside the editable strategy. The generated `bot.mjs` is an external evaluator package with a metadata-only `createBotModule({ cards })` factory. It returns the same `BotModule` contract used by `botAsOpponentPolicy` in the simulator; this command does not automatically install or select a bot in the UI.
+`no_change: true` with a diagnosis is valid. Agent-reported tests never replace trusted checks. Proposal references are checked against the supplied actor-relative reports: paths must belong to a supplied run, game IDs must exist, and any decision ID must exist in that game. A strategy exports `createStrategy({ cards })`, returning the existing generalist choice-scoring callback. It may also export `sideboard(input)`. Strategies are self-contained ECMAScript modules; imports are forbidden. Shared response construction, legality and repetition guards remain outside the editable strategy. The generated `bot.mjs` is an external evaluator package with a metadata-only `createBotModule({ cards })` factory. It returns the same `BotModule` contract used by `botAsOpponentPolicy` in the simulator; this command does not automatically install or select a bot in the UI.
 
 Trusted check commands receive `BOT_STRATEGY` and `BOT_CANDIDATE`. The supplied check validates module syntax, import confinement and factory exports. Add deck-specific tactical regression checks to the configuration. Checks cannot be chosen or changed by the improvement agent.
 
@@ -77,7 +77,7 @@ Failed, interrupted or incomplete evidence stops the attempt; it is never scored
 
 ## Persistence, cancellation and limits
 
-`configuration.json` pins inputs and runtime identity. `versions/<sha256>/` stores each distinct strategy and its trusted adapter. `state.json` atomically records baseline, incumbent, attempts, game reservations and decisions. Each attempt retains agent output, checks and every evaluator run. Completed attempt evidence is hashed and checked on resume. Rejected versions remain archived.
+`configuration.json` pins inputs and runtime identity. `versions/<sha256>/` stores each distinct strategy and its trusted adapter. `state.json` atomically records baseline, incumbent, attempts, game reservations and decisions. Each attempt retains agent output, checks and every evaluator run. Completed attempt evidence is hashed and checked on resume. Rejected versions remain archived. Agent-created symlinks are retained and counted without following their targets; result files must be bounded regular files, so symlinks and FIFOs cannot block result parsing or subsequent attempts.
 
 Games are reserved before each batch and never refunded after interruption. Wall time starts with the original run and includes downtime. A process lock prevents concurrent writers. Agent, checks and evaluator subprocess groups have deadlines and are killed on cancellation or limit exhaustion; the evaluator supplies its own game watchdog. Storage is checked periodically, so a short-lived writer can overshoot the configured threshold between checks. Evidence is never deleted to recover space.
 

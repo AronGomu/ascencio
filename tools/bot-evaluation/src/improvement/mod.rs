@@ -1,6 +1,7 @@
 //! Bounded strategy improvement atop the existing Rust evaluator; Linux isolation.
 mod config;
 mod process;
+mod references;
 mod statistics;
 mod storage;
 use crate::{
@@ -259,7 +260,8 @@ pub fn run(file: &Path, resume: bool) -> Result<i32> {
                         "Proposal requires evidence and play/sideboard/test descriptions".into(),
                     );
                 }
-                let source = fs::read(workspace.join("strategy.mjs"))?;
+                references::validate(&response["evidence"], &evidence, &s["history"])?;
+                let source = storage::regular_bytes(&workspace.join("strategy.mjs"), 1024 * 1024)?;
                 // Imports would let archived strategy depend on mutable or privileged sources.
                 let text = std::str::from_utf8(&source)?;
                 if text.contains("import") || text.contains("require(") {

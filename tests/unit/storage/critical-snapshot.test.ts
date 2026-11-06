@@ -47,10 +47,10 @@ describe("critical JSON snapshots", () => {
       scripts: [{ name: "utility.lua", source: "-- comment\nreturn 1\n" }],
     };
     const crlf = structuredClone(lf);
-    crlf.scripts[0].source = "-- comment\r\nreturn 1\r\n";
-    const original = crlf.scripts[0].source;
+    crlf.scripts[0]!.source = "-- comment\r\nreturn 1\r\n";
+    const original = crlf.scripts[0]!.source;
     expect(compileSnapshot(crlf)).toEqual(compileSnapshot(lf));
-    expect(crlf.scripts[0].source).toBe(original);
+    expect(crlf.scripts[0]!.source).toBe(original);
   });
   it("has deterministic bytes independent of object insertion order", () => {
     expect(canonicalJson({ b: 1, a: { z: 2, c: 3 } })).toBe(

@@ -21,6 +21,19 @@ export function validateBotReason(reason: BotReason): void {
   }
 }
 
+/** Some prompts advertise cancellation through an explicit pass/cancel choice.
+ * Only these families encode an empty identifier list as cancellation.
+ */
+export function allowsEmptyCancellation(prompt: PlayerPrompt): boolean {
+  return (
+    prompt.cancelable &&
+    (prompt.kind === "selectCard" ||
+      prompt.kind === "selectTribute" ||
+      prompt.kind === "sortCard" ||
+      prompt.kind === "sortChain")
+  );
+}
+
 /** Defense at the shared boundary; PromptRegistry still resolves the engine response. */
 export function validateBotDecision(
   prompt: PlayerPrompt,
@@ -38,7 +51,12 @@ export function validateBotDecision(
   if (prompt.kind !== "selectCounter" && new Set(ids).size !== ids.length) {
     throw new Error("Duplicate choice identifiers");
   }
-  if (ids.length === 0 && prompt.cancelable) return;
+  if (ids.length === 0 && allowsEmptyCancellation(prompt)) return;
+  // min/max describe the accumulated selection, not this toggle response.
+  if (prompt.kind === "selectUnselectCard") {
+    if (ids.length !== 1) throw new Error("Select exactly one choice");
+    return;
+  }
   if (ids.length < prompt.minimum || ids.length > prompt.maximum) {
     throw new Error("Selection violates minimum/maximum");
   }

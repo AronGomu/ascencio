@@ -45,7 +45,7 @@ pub fn read(file: &Path) -> Result<Config> {
     for actor in ["a", "b"] {
         let b = &doc["bots"][actor];
         let module = xml::text(&b["module"])?;
-        let module = if module == "builtin:basic" {
+        let module = if matches!(module, "builtin:basic" | "builtin:generalist" | "builtin:random") {
             module.to_string()
         } else {
             resolve(base, &b["module"])?.to_string_lossy().into_owned()

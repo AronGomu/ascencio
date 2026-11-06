@@ -60,6 +60,7 @@ writeFileSync('response.json',JSON.stringify({no_change,diagnosis:'Protocol regr
         config,
         JSON.stringify({
           evaluation,
+          command_inputs: [agent],
           initial_strategy: strategy,
           output,
           agent: [process.execPath, agent, mode],
@@ -113,6 +114,13 @@ writeFileSync('response.json',JSON.stringify({no_change,diagnosis:'Protocol regr
       readFileSync(join(normal.output, "state.json"), "utf8"),
       before,
     );
+    const originalAgent = readFileSync(agent, "utf8");
+    writeFileSync(
+      agent,
+      originalAgent + "\n// changed adapter implementation\n",
+    );
+    assert.equal(run(normal.config, true).status, 1);
+    writeFileSync(agent, originalAgent);
     const failed = configure("failure", "failure");
     assert.equal(run(failed.config).status, 2);
     const old = JSON.parse(

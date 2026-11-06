@@ -39,12 +39,33 @@ pub fn read(path: &Path) -> Result<Value> {
     )?)?)
 }
 pub fn size(path: &Path) -> Result<u64> {
-    let meta = fs::symlink_metadata(path)?;
-    if meta.is_dir() {
-        fs::read_dir(path)?.try_fold(0, |n, e| Ok(n + size(&e?.path())?))
-    } else {
-        Ok(meta.len())
+    // Writers atomically rename temporary reports during the scan. Missing
+    // entries are normal; all other I/O errors remain failures.
+    let meta = match fs::symlink_metadata(path) {
+        Ok(meta) => meta,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(0),
+        Err(error) => return Err(error.into()),
+    };
+    if !meta.is_dir() {
+        return Ok(meta.len());
     }
+    let entries = match fs::read_dir(path) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(0),
+        Err(error) => return Err(error.into()),
+    };
+    let mut total = 0_u64;
+    for entry in entries {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error.into()),
+        };
+        total = total
+            .checked_add(size(&entry.path())?)
+            .ok_or("Storage size overflow")?;
+    }
+    Ok(total)
 }
 pub fn archive(root: &Path, source: &[u8]) -> Result<String> {
     let id = identity::sha(source);
@@ -154,6 +175,29 @@ mod untrusted_files_tests {
         assert_eq!(unsafe { libc::mkfifo(name.as_ptr(), 0o600) }, 0);
         assert!(regular_bytes(&fifo, 1024).is_err());
         assert!(evidence_digest(&root).is_ok());
+        fs::remove_dir_all(root).unwrap();
+    }
+}
+#[cfg(test)]
+mod concurrent_scan_tests {
+    use super::*;
+    #[test]
+    fn atomic_report_publication_does_not_fail_size_scans() {
+        let root = std::env::temp_dir().join(format!("loop-scan-{}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        assert_eq!(size(&root.join("already-renamed.tmp")).unwrap(), 0);
+        let target = root.clone();
+        let writer = std::thread::spawn(move || {
+            for _ in 0..500 {
+                fs::write(target.join("report.tmp"), b"report").unwrap();
+                fs::rename(target.join("report.tmp"), target.join("report.xml")).unwrap();
+            }
+        });
+        for _ in 0..1000 {
+            assert!(size(&root).is_ok());
+        }
+        writer.join().unwrap();
+        assert_eq!(size(&root).unwrap(), 6);
         fs::remove_dir_all(root).unwrap();
     }
 }

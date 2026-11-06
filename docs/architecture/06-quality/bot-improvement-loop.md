@@ -23,6 +23,7 @@ The loop configuration is JSON; evaluator configuration and all game evidence re
   "output": "/absolute/path/new-run",
   "agent": ["/absolute/path/your-coding-agent-adapter"],
   "checks": [["node", "--experimental-vm-modules", "scripts/bot-improvement/check-strategy.ts"]],
+  "command_inputs": ["/absolute/path/your-adapter-dependencies"],
   "max_iterations": 20,
   "max_games": 60000,
   "max_no_improvement": 5,
@@ -57,7 +58,7 @@ The adapter must run without interactive prompts, finish within its deadline, an
 
 `no_change: true` with a diagnosis is valid. Agent-reported tests never replace trusted checks. Proposal references are checked against the supplied actor-relative reports: paths must belong to a supplied run, game IDs must exist, and any decision ID must exist in that game. A strategy exports `createStrategy({ cards })`, returning the existing generalist choice-scoring callback. It may also export `sideboard(input)`. Strategies are self-contained ECMAScript modules; imports are forbidden. Shared response construction, legality and repetition guards remain outside the editable strategy. The generated `bot.mjs` is an external evaluator package with a metadata-only `createBotModule({ cards })` factory. It returns the same `BotModule` contract used by `botAsOpponentPolicy` in the simulator; this command does not automatically install or select a bot in the UI.
 
-Trusted check commands receive `BOT_STRATEGY` and `BOT_CANDIDATE`. The supplied check validates module syntax, import confinement and factory exports. Add deck-specific tactical regression checks to the configuration. Checks cannot be chosen or changed by the improvement agent.
+Trusted check commands receive `BOT_STRATEGY` and `BOT_CANDIDATE`. The supplied check validates module syntax, import confinement and factory exports. Add deck-specific tactical regression checks to the configuration. Checks cannot be chosen or changed by the improvement agent. The built-in adapter/check directory, command executables and file arguments are fingerprinted. Declare all other transitive adapter/check inputs (files or directories) in `command_inputs`; use an empty array only for self-contained commands whose inputs are already included. Resume and phase boundaries reject changes to these bytes. Paths in `command_inputs` resolve relative to the loop configuration.
 
 Adapters needing session databases or logs must put them within the proposal directory. For example, Codex supports explicit `sqlite_home` and `log_dir` configuration ([official configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)). Keep authentication in its existing read-only store; do not copy credentials into retained evidence. An optional adapter is included:
 
@@ -77,7 +78,7 @@ Failed, interrupted or incomplete evidence stops the attempt; it is never scored
 
 ## Persistence, cancellation and limits
 
-`configuration.json` pins inputs and runtime identity. `versions/<sha256>/` stores each distinct strategy and its trusted adapter. `state.json` atomically records baseline, incumbent, attempts, game reservations and decisions. Each attempt retains agent output, checks and every evaluator run. Completed attempt evidence is hashed and checked on resume. Rejected versions remain archived. Agent-created symlinks are retained and counted without following their targets; result files must be bounded regular files, so symlinks and FIFOs cannot block result parsing or subsequent attempts.
+`configuration.json` pins inputs and runtime identity. `versions/<sha256>/` stores each distinct strategy and its trusted adapter. `state.json` atomically records baseline, incumbent, attempts, game reservations and decisions. Each attempt retains agent output, checks and every evaluator run. Promotion updates the incumbent, completed history and active-attempt marker together only after the evidence and decision are saved; persistence failures leave the incumbent unchanged. Completed attempt evidence is hashed and checked on resume. Rejected versions remain archived. Agent-created symlinks are retained and counted without following their targets; result files must be bounded regular files, so symlinks and FIFOs cannot block result parsing or subsequent attempts.
 
 Games are reserved before each batch and never refunded after interruption. Wall time starts with the original run and includes downtime. A process lock prevents concurrent writers. Agent, checks and evaluator subprocess groups have deadlines and are killed on cancellation or limit exhaustion; the evaluator supplies its own game watchdog. Storage is checked periodically, so a short-lived writer can overshoot the configured threshold between checks. Evidence is never deleted to recover space.
 

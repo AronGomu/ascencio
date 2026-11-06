@@ -12,6 +12,7 @@ pub struct Config {
     pub output: PathBuf,
     pub agent: Vec<String>,
     pub checks: Vec<Vec<String>>,
+    pub command_inputs: Vec<PathBuf>,
     pub max_iterations: u64,
     pub max_games: u64,
     pub max_no_improvement: u64,
@@ -31,6 +32,11 @@ impl Config {
         c.evaluation = base.join(&c.evaluation).canonicalize()?;
         c.initial_strategy = base.join(&c.initial_strategy).canonicalize()?;
         c.output = base.join(&c.output);
+        c.command_inputs = c
+            .command_inputs
+            .iter()
+            .map(|p| base.join(p).canonicalize())
+            .collect::<std::io::Result<Vec<_>>>()?;
         if c.agent.is_empty() || c.checks.is_empty() || c.checks.iter().any(Vec::is_empty) {
             return Err("Agent and trusted targeted checks required".into());
         }

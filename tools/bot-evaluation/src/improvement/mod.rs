@@ -1,5 +1,7 @@
 //! Bounded strategy improvement atop the existing Rust evaluator; Linux isolation.
+mod command_identity;
 mod config;
+mod decision;
 mod process;
 mod references;
 mod statistics;
@@ -74,6 +76,9 @@ fn batch(
     {
         return Err("Runtime changed during improvement".into());
     }
+    if s["commands"] != command_identity::digest(c)? {
+        return Err("Agent/check implementation changed".into());
+    }
     storage::verify(&c.output)?;
     if s["inputs"] != input_identity(c)? {
         return Err("Evaluation inputs changed during improvement".into());
@@ -136,7 +141,7 @@ pub fn run(file: &Path, resume: bool) -> Result<i32> {
     if evaluation.fixture.is_some() {
         return Err("This loop uses fresh production shuffles; fixtures are not supported".into());
     }
-    let immutable = json!({"configuration":serde_json::to_value(&c)?,"evaluation":evaluation.doc,"deck":evaluation.deck,"rules":evaluation.rules,"initial":identity::sha(fs::read(&c.initial_strategy)?),"runtime":crate::application_identity::digest()?,"content_manifest":identity::sha(fs::read(evaluation.snapshot.join("manifest.json"))?)});
+    let immutable = json!({"commands":command_identity::digest(&c)?,"configuration":serde_json::to_value(&c)?,"evaluation":evaluation.doc,"deck":evaluation.deck,"rules":evaluation.rules,"initial":identity::sha(fs::read(&c.initial_strategy)?),"runtime":crate::application_identity::digest()?,"content_manifest":identity::sha(fs::read(evaluation.snapshot.join("manifest.json"))?)});
     let fingerprint = identity::digest(&immutable);
     let mut s = if resume {
         let s = storage::read(&c.output.join("state.json"))?;
@@ -158,7 +163,7 @@ pub fn run(file: &Path, resume: bool) -> Result<i32> {
     } else {
         storage::save(&c.output.join("configuration.json"), &immutable)?;
         let baseline = storage::archive(&c.output, &fs::read(&c.initial_strategy)?)?;
-        json!({"identity":fingerprint,"inputs":input_identity(&c)?,"runtime":immutable["runtime"],"started_ms":now(),"baseline":baseline,"incumbent":baseline,"next_iteration":1,"reserved_games":0,"no_improvement":0,"active":null,"history":[],"status":"running","reason":null})
+        json!({"identity":fingerprint,"commands":immutable["commands"],"inputs":input_identity(&c)?,"runtime":immutable["runtime"],"started_ms":now(),"baseline":baseline,"incumbent":baseline,"next_iteration":1,"reserved_games":0,"no_improvement":0,"active":null,"history":[],"status":"running","reason":null})
     };
     if s["status"] == "completed" {
         println!("{}", c.output.display());
@@ -183,6 +188,9 @@ pub fn run(file: &Path, resume: bool) -> Result<i32> {
     let outcome = (|| -> Result<()> {
         loop {
             remaining(&c, &s, c.max_wall_ms)?;
+            if s["commands"] != command_identity::digest(&c)? {
+                return Err("Agent/check implementation changed".into());
+            }
             if s["next_iteration"].as_u64().unwrap() > c.max_iterations
                 || s["no_improvement"].as_u64().unwrap() >= c.max_no_improvement
             {
@@ -230,6 +238,9 @@ pub fn run(file: &Path, resume: bool) -> Result<i32> {
                 c.max_bytes,
                 &stop,
             )?;
+            if s["commands"] != command_identity::digest(&c)? {
+                return Err("Agent/check implementation changed".into());
+            }
             let response = storage::read(&workspace.join("response.json"))?;
             if response["no_change"].as_bool().is_none()
                 || response["diagnosis"]
@@ -314,24 +325,12 @@ pub fn run(file: &Path, resume: bool) -> Result<i32> {
                         record["confirmation"] = confirmation.clone();
                         record["outcome"] = json!("rejected_inconclusive");
                         if confirmation["assessment"]["supported"] == true {
-                            s["incumbent"] = json!(candidate);
                             record["outcome"] = json!("promoted");
                         }
                     }
                 }
             }
-            record["directory"] = json!(dir);
-            record["evidence_sha256"] = json!(storage::evidence_digest(&dir)?);
-            storage::save(&dir.join("decision.json"), &record)?;
-            s["no_improvement"] = json!(if record["outcome"] == "promoted" {
-                0
-            } else {
-                s["no_improvement"].as_u64().unwrap() + 1
-            });
-            s["history"].as_array_mut().unwrap().push(record);
-            s["active"] = Value::Null;
-            s["next_iteration"] = json!(i + 1);
-            checkpoint(&c, &s)?;
+            decision::commit(&c.output, &mut s, &dir, record)?;
         }
         Ok(())
     })();

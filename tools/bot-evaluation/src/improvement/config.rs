@@ -32,11 +32,7 @@ impl Config {
         c.evaluation = base.join(&c.evaluation).canonicalize()?;
         c.initial_strategy = base.join(&c.initial_strategy).canonicalize()?;
         c.output = base.join(&c.output);
-        c.command_inputs = c
-            .command_inputs
-            .iter()
-            .map(|p| base.join(p).canonicalize())
-            .collect::<std::io::Result<Vec<_>>>()?;
+        c.command_inputs = c.command_inputs.iter().map(|p| base.join(p)).collect();
         if c.agent.is_empty() || c.checks.is_empty() || c.checks.iter().any(Vec::is_empty) {
             return Err("Agent and trusted targeted checks required".into());
         }

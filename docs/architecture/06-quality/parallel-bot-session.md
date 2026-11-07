@@ -82,6 +82,34 @@ Setup acquires exclusive target/session locks, validates before writing final de
 
 Targeted setup coverage is in `test/tooling/bot-session-setup.test.ts`; use the `ascencio-tests` workflow. Real-engine replay verification belongs to the fixture-aware runner integration, since setup executes no matches.
 
+## Candidate validation (ARO2-21)
+
+Run `npm run bot:validate -- validation-request.json` from the repository root (Node 26+). This standalone step takes no iteration or scheduling dependency. Paths resolve relative to the request file:
+
+```json
+{
+  "schemaVersion": 1,
+  "fixture": { "path": "target/evaluation/fixtures/<identity>", "identity": "<fixture identity>" },
+  "accepted": { "path": "target/evaluation/fixtures/<identity>/versions/initial", "bot": "<full FrozenBot descriptor from manifest.target or a previous valid result>" },
+  "candidate": "candidate-archive",
+  "output": "validation-attempt-1"
+}
+```
+
+`accepted.bot` is an object, represented above by a placeholder for readability. Pin it once when preparing an iteration. Copy the complete accepted archive to `candidate`, then edit only `strategy.mjs` for `builtin:generalist`, or `ai/src/generalist.rs` for the reference Rust generalist package. The TS strategy may be added to an initial built-in archive; generate its initial contents with `node scripts/bot-improvement/prepare-strategy.ts candidate-archive/strategy.mjs`. Candidate archives contain the `FrozenBot.files` payload tree and an optional root `frozen-bot.json` descriptor, without notes, Cargo targets, symlinks or new runtime/deck/configuration files. The descriptor is reserved metadata, never an entry in `FrozenBot.files`. When present in either input archive, its identity and full contents must match the pinned `accepted.bot`; the candidate descriptor continues to describe its accepted base while heuristic edits are pending. Descriptor corruption or a self-consistent replacement with different metadata/file hashes fails as an input error. Initial setup archives without descriptors remain supported. Other policies and arbitrary module/package layouts fail explicitly until they have a reviewed strategy boundary.
+
+The validator verifies the frozen fixture and pinned accepted archive, captures submitted bytes, checks a second read for concurrent edits, and runs checks on that captured copy. Later edits to the live candidate do not affect validation. `submitted/` retains exact input bytes even when compilation fails; `candidate/` holds the compiled payload and a newly generated `frozen-bot.json` matching `result.candidate.bot`. The descriptor stays outside source/payload hashes and build/check inputs. Existing output directories are never overwritten. Keep failures and retry with a fresh output path. Output must be disjoint from all input trees and its parent must exist. Preflight/request errors print to stderr with exit 1; after output reservation, failures also produce structured evidence.
+
+Stdout ends with `CandidateValidationResult` JSON (also `output/result.json`). Exit 0 means `status: "valid"`; exit 1 means invalid. `reasons[].category` distinguishes `scope`, `build`, `check`, and corrupt/inconsistent `input`. Valid results expose `candidate: { path, bot }`, where `bot` is a complete `FrozenBot` with source and compiled file hashes. `snapshotIdentity` hashes the exact submitted file map, including any descriptor retained as evidence; `sourceIdentity` hashes source and frozen non-executable inputs; `executableIdentity` hashes the generated executable file map. The result binds `fixtureIdentity` and `acceptedIdentity`. A consumer must reverify candidate file hashes before evaluation. No session state, accepted archive, fixture or bot-owned configuration is promoted or rewritten. For a prepared iteration, pass its `fixture`, `accepted`, and `candidate.path` directly into the validation request. After evaluation and acceptance, publish the complete validated `candidate.path` archive (including its generated descriptor) before updating `state.accepted` with the published path and `candidate.bot.identity`; the next preparation consumes it directly.
+
+TypeScript compilation uses esbuild, the existing `check-strategy.ts` VM export check (with `BOT_STRATEGY_CONTENT` enabling a bounded factory check using frozen card metadata), and a wrapper around the fixture's archived generalist executable. Rust uses the existing locked release WASM compilation recipe, Cargo library tests, bounded WASM export/memory validation and the setup transport's `create` check with frozen cards/configuration. Command status, argv and bounded stdout/stderr are retained in JSON logs; each subprocess has a two-minute deadline. Source/executable identities remain separate after compilation. Checks do not play games or rank candidates.
+
+The enforced boundary fixes decks, configuration, engine, response selection, projection and legality code. Import/ambient-API guards reject direct external-code and randomness escapes. These checks are deterministic structural validation, not a proof of arbitrary program semantics: reviewers still assess heuristic intent, information use and seed discipline; match correctness belongs to runner evaluation. No caller-supplied shell checks or editable allowlist expand the boundary.
+
+The Rust success test requires the `wasm32-unknown-unknown` standard library and skips explicitly when absent; Rust failure-evidence coverage still runs.
+
+Related local coverage: `test/tooling/bot-candidate-validation.test.ts`, `test/tooling/bot-candidate-session.test.ts` (actual setup → preparation → validation → promotion → next preparation, plus forged descriptor rejection) and `test/tooling/bot-session-setup.test.ts` via `ascencio-tests`.
+
 ## Iteration preparation
 
 ARO2-20 adds `npm run bot:prepare-iteration -- --session SESSION --iteration N --runner-identity RUNNER_VERSION [--baseline RECEIPT]` (Node 26+). Paths are relative to the current directory. `N` is an explicit positive integer chosen by the orchestrator; reuse it to resume, increment it after a decision. Preparation does not advance state, stop budgets, or accepted references and executes no agents, validation or matches.
@@ -109,7 +137,7 @@ Optional `--baseline` points to a `BaselineReceipt` produced after the runner ha
 }
 ```
 
-`matches` must contain exactly the fixture's 500 IDs. Each match must reference a distinct evidence path. Evidence paths are receipt-relative; absolute and parent traversal paths are rejected. This receipt is a completion attestation by the runner; preparation verifies coverage and byte integrity, not game semantics or acceptance quality. It introduces no runner command or implementation. ARO2-18 may adapt its evidence output to this receipt; ARO2-21 may consume the candidate workspace and bindings. Neither integration is implemented here.
+`matches` must contain exactly the fixture's 500 IDs. Each match must reference a distinct evidence path. Evidence paths are receipt-relative; absolute and parent traversal paths are rejected. This receipt is a completion attestation by the runner; preparation verifies coverage and byte integrity, not game semantics or acceptance quality. It introduces no runner command or implementation. ARO2-18 may adapt its evidence output to this receipt. Candidate validation consumes the prepared workspace and bindings as described above.
 
 `baseline.action` is `reuse` only for a complete, intact receipt with the exact comparison identity. Otherwise it is `refresh`, with `missing`, `identity-mismatch`, `incomplete`, or `corrupt` as the reason. `plan.control` is correspondingly `reuse-baseline` or `evaluate`; `plan.candidate` is always `validate-then-evaluate`. Each evaluation has 500 matches / 2000 games. Rerun preparation after producing a receipt to refresh the returned plan.
 

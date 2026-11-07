@@ -93,9 +93,10 @@ You are the main improvement orchestrator.
     - Whenever a match finalizes: Run `npm run bot:analyses -- <session> <analysis-sync-request>` using the [analysis binding contract](../../../docs/architecture/06-quality/parallel-bot-session.md#match-analysis-jobs-aro2-22) and pinned `proposal`/runner job references.
     - For each available analyst slot: Run `npm run bot:analyses -- <session> <analysis-claim-request>` with `action: "claim"`, iteration, role, and a stable dispatch owner; assign the returned packet to `match-analyst` only when `claim` is non-null.
     - Whenever an analyst returns: Run `npm run bot:analyses -- <session> <analysis-complete-request>` with `action: "complete"`, job, claim token and report reference; preserve validation failures for correction under the same claim.
-  - `analysis-status` = Run `npm run bot:analyses -- <session> <analysis-status-request>` with `action: "status"`, iteration and role.
-  - Require: All 500 matches are settled and `analysis-status.complete` is true; otherwise preserve progress and stop with the incomplete evaluation reason.
-  - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline-receipt`, and `proposal`.
+  - `aggregate-result` = Run `npm run bot:aggregate -- <aggregation-request.json>` using [the aggregation contract](../../../docs/architecture/06-quality/parallel-bot-session.md#candidatecontrol-aggregation-aro2-23).
+  - Require: `aggregate-result.completeness.synthesisReady` is true; otherwise preserve the result and stop with its incomplete evidence counts.
+  - `aggregate-results` = Read the JSON file at `aggregate-result.result`.
+  - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, `aggregate-results`, `baseline-receipt`, and `proposal`.
   - `decision` = Accept or reject `candidate` using paired results, uncertainty, observed heuristic effects, and validity; retain `accepted-bot` when inconclusive.
   - Save `decision`, its evidence, and the next heuristic candidates.
   - Index durable proposal, comparison and decision artifacts with `npm run bot:session -- <session> <record-request>` using the documented `record` action.

@@ -313,3 +313,51 @@ After abrupt dispatcher loss, confirm its old dispatcher is gone and recover aba
 `--matches 24` selects the same first 24 immutable fixtures at every concurrency; it never regenerates or edits the full 500-match schedule. A subset cannot publish a full baseline receipt. `latency.json` records each worker's elapsed match latency from before host initialization through four games, sideboarding, canonical validation and durable XML; admission queue time and final timing/commit-marker metadata are excluded. `averageCompletedMatchLatencyMs` averages only completed matches. `amortizedWallMsPerCompletedMatch` divides total wall time by completed matches; the benchmark replaces that value with its wider command boundary including preparation, shutdown and accounting finish. These are different measures under concurrency. One 24-match run per stage is a short local tuning sample; it does not establish full-scale throughput or a repeated-run noise estimate.
 
 SIGINT/SIGTERM on the benchmark supervisor immediately signal active evaluation/build children and prevent new child launches. The supervisor then preserves the interrupted result and settles accounting. Source `OWNER_STOP` remains supported. The owner explicitly replaced the original full-size performance comparisons with this 24-match measurement; earlier full and interrupted baseline evidence is retained separately.
+
+## Candidate/control aggregation (ARO2-23)
+
+Run `npm run bot:aggregate -- aggregation-request.json` with Node 26+. Aggregation reads existing evidence without executing matches, agents, or promotion. Request-file-relative `session` and `output` name the session and a fresh result directory whose parent already exists. Evidence references inside the request are session-relative and SHA-256 pinned:
+
+```json
+{
+  "schemaVersion": 1,
+  "session": ".tmp/bot-session-1",
+  "iteration": 1,
+  "candidateIdentity": "<validated candidate.bot.identity>",
+  "control": {
+    "root": "iterations/iteration-0001/control-run",
+    "execution": {
+      "path": "iterations/iteration-0001/control-run.job.json",
+      "sha256": "<hash>"
+    },
+    "receipt": {
+      "path": "iterations/iteration-0001/control-run/baseline-receipt.json",
+      "sha256": "<hash>"
+    }
+  },
+  "candidate": {
+    "root": "iterations/iteration-0001/candidate-run",
+    "execution": {
+      "path": "iterations/iteration-0001/candidate-run.job.json",
+      "sha256": "<hash>"
+    },
+    "analyses": {
+      "path": "iterations/iteration-0001/analyses/candidate/queue.json",
+      "sha256": "<hash>"
+    }
+  },
+  "output": ".tmp/bot-session-1/iterations/iteration-0001/aggregate-1"
+}
+```
+
+`aggregation-contract.ts` extends the contracts without altering `FrozenSetup`, `IterationManifest`, or the existing `comparisonIdentity` calculation. `candidateIdentity` is explicitly pinned to the validator's output; aggregation does not certify heuristic validation. Both runner preparations must bind the prepared runner version, accepted self, identical fixtures, decks, opponent identities, execution limits and budgets. Control may come from an earlier iteration with that same comparison identity. Candidate must bind this iteration. Runner preparation identities are recalculated using the ARO2-18 fields, and the control identity must equal the prepared accepted identity. A supplied control receipt must cover the exact schedule and address each runner `done.json`. Receipts are optional so interrupted control runs can still be measured; baseline reuse still requires the complete receipt checked by iteration preparation.
+
+The shared `analysis-evidence.ts` reader, `analysis-contract.ts` types and `analysis-report.ts` validator are reused from ARO2-22 (`origin/aro2-22-match-analysis`); this change does not introduce its scheduler or agents. The reader consumes the actual ARO2-18 `frozen_evidence.rs` layout: `<root>/matches/<match>/done.json`, `fixture.json`, `manifest.xml`, and nested `matches/<match>/{match,player-a,player-b}.xml`. Its optional `outcomes` check adds neutral winner/draw and perspective outcome consistency without changing the existing packet game shape. Completion markers pin exact file bytes and the preparation item. Missing or corrupt finalized matches are unavailable with explicit reasons, rather than silently disappearing. Failed/skipped games and sideboarding failures remain separate counts. Aggregate output records both execution identities and hashes of its named inputs. Numeric results follow sorted match IDs, independently of match completion order.
+
+`analyses` is optional on either arm and uses the actual ARO2-22 queue format. Aggregation rechecks queue identity/coverage, each completed packet against finalized evidence, report hashes, required sections and event addresses. It records complete, pending and invalid report counts without interpreting report text. Absent queues are `not-requested`, never implicitly complete. `evaluationComplete` requires every scheduled match to have four completed games in both arms. `synthesisReady` additionally requires all candidate reports and every requested control report; an omitted control queue is allowed. Missing or invalid candidate reports cannot yield synthesis readiness. Reused control evidence can omit analysis or use a queue prepared for the current iteration.
+
+`output/result.json` contains `overall`, ordered `perOpponent`, paired included/excluded match IDs, denominators, completeness, unavailable reasons and the method. `output/summary.txt` renders factual counts and estimates. Stdout ends with JSON paths and completeness. Exit 0 means all evaluation evidence and any requested reports are complete; exit 2 means structured partial results were written; exit 1 means incompatible inputs, corrupt pinned request/receipt, or publication failure. With no candidate analysis queue, exit 0 may still have `synthesisReady: false`. Existing destinations are preserved; rerun with a new output path after recovery. No timestamps or randomness affect results.
+
+Descriptive game win rates divide target wins by all completed games; draws contribute zero wins and half a point to a separately reported score rate. They may include completed games from partial matches. Match win rates divide match wins (more target than opponent wins) by four-completed-game matches; equal wins are ties. Failed, skipped and unavailable games never become losses. Paired estimates include only match IDs with four completed games in both arms, with each match contributing its four-game mean. The estimate is the mean candidate-minus-control difference. Standard error is the sample standard deviation of those paired match means divided by `sqrt(n)`; the approximate 95% normal interval is `mean ± 1.96 SE`, untruncated. Below two paired matches, SE/interval are null; with none, the estimate is null. This respects within-match clustering and reports selection due to incomplete pairs explicitly. It assumes independent match clusters; small samples and dependence across matches limit the approximation. Overall results weight slots by their frozen scheduled match counts, not equally by opponent. Self is separately identified. No significance labels, heuristic recommendations or acceptance decisions are generated.
+
+Related local coverage is `test/tooling/bot-session-aggregation.test.ts` through `ascencio-tests`. The optional `ARO2_AGGREGATION_RUNNER_SAMPLE` JSON file supplies `{ "session", "relative", "expected" }` directly to the shared finalized reader for read-only validation against retained real-runner evidence; `expected` contains match/execution/fixture/candidate/opponent identities and the actual preparation `item`. This smoke test executes no engine or Cargo build. Synthetic failure/recovery coverage alone does not establish a completed 500-match candidate/control run or end-to-end analysis integration.

@@ -26,13 +26,13 @@ Improve one bot through repeatable evaluations, match analysis, and one heuristi
 <ai-bot>/evaluation/fixtures/<identity>/ # Durable frozen inputs and manifest
 <project-root>/.tmp/<session>/
 ├── config.json               # Durable fixture reference and resolved limits
-├── versions/                 # Candidate and accepted strategy references
+├── versions/<iteration>/     # Immutable decision journal and validation archive
 ├── iterations/<iteration>/
 │   ├── manifest.json        # Prepared bindings and baseline execution plan
 │   ├── matches/              # Complete engine evidence
 │   ├── analyses/             # One analyst report per match
 │   ├── synthesis.md          # Findings and heuristic recommendations
-│   └── decision.md           # Acceptance decision and next proposal
+│   └── decision.md           # Agent rationale and next proposal
 ├── state.json                # Accepted reference
 ├── control.json              # Stop reason and execution accounting
 └── report.json               # Factual report
@@ -93,11 +93,16 @@ You are the main improvement orchestrator.
   - Require: All 500 matches and their analyst reports are settled; otherwise preserve progress and stop with the incomplete evaluation reason.
   - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline-receipt`, and `proposal`.
   - `decision` = Accept or reject `candidate` using paired results, uncertainty, observed heuristic effects, and validity; retain `accepted-bot` when inconclusive.
-  - Save `decision`, its evidence, and the next heuristic candidates.
-  - Index durable proposal, comparison and decision artifacts with `npm run bot:session -- <session> <record-request>` using the documented `record` action.
-  - Run `npm run bot:session -- <session> <finish-request>` using `finish` with the iteration status and checkpoint evidence after all runner attempts settle.
-  - If accepted: Set `accepted-bot` to `candidate`; publish its `frozen-bot.json` and update `state.accepted`.
-  - Increment `iteration-number`.
+  - Save the rationale, evidence references, and next heuristic candidates.
+  - Index proposal and comparison artifacts with `npm run bot:session -- <session> <record-request>` using the documented `record` action.
+  - `finish-result` = Run `npm run bot:session -- <session> <finish-request.json>` with action `finish`, `iteration-number`, status `complete`, and the saved decision rationale's hashed session-relative path.
+  - If finishing fails: Stop with the script error.
+  - `decision-request` = Write [CandidateDecisionRequest](../../../scripts/bot-improvement/decision-contract.ts) with `session`, the SHA-256 pins of `iteration-result.manifest` and `validation.evidence/result.json`, `candidate.bot.identity`, `decision`, rationale and hashed evidence paths.
+  - `decision-result` = Run `npm run bot:decide -- <decision-request.json>` using [the decision contract](../../../docs/architecture/06-quality/parallel-bot-session.md#candidate-decisions).
+  - If the command fails: Preserve evidence and stop with the script error; replay the same request after resolving an interruption.
+  - Run `npm run bot:session -- <session> <record-request.json>` with action `record`, the completed iteration number, kind `decision`, and the hashed session-relative `decision-result.archive/outcome.json` path.
+  - If recording fails: Preserve the decision and stop with the script error.
+  - `accepted-bot`, `iteration-number` = Read `accepted` and `nextIteration` from `decision-result`.
 - Returns: `accepted-bot`, iteration evidence, and stopping reason.
 
 ### 3. Stop and report

@@ -141,13 +141,13 @@ Optional `--baseline` points to a `BaselineReceipt` produced after the runner ha
 
 `baseline.action` is `reuse` only for a complete, intact receipt with the exact comparison identity. Otherwise it is `refresh`, with `missing`, `identity-mismatch`, `incomplete`, or `corrupt` as the reason. `plan.control` is correspondingly `reuse-baseline` or `evaluate`; `plan.candidate` is always `validate-then-evaluate`. Each evaluation has 500 matches / 2000 games. Rerun preparation after producing a receipt to refresh the returned plan.
 
-A repeated invocation verifies fixed bindings and snapshot hashes, preserves candidate edits and existing evidence, and atomically replaces only the manifest's baseline decision and plan. Changed accepted or runner identities at an existing iteration number fail explicitly; choose the next number. Corrupt snapshots and conflicting destinations fail without overwriting evidence. A session-local exclusive `.iteration-preparation.lock` protects concurrent preparation; promotion must not run concurrently. New directories publish by staging and rename. Ordinary errors clean their lock and staging output, allowing retry. After a process/power loss, inspect and remove only abandoned locks/staging directories, then rerun the same number; published iterations remain authoritative. No partial destination is repaired silently.
+A repeated invocation verifies fixed bindings and snapshot hashes, preserves candidate edits and existing evidence, and atomically replaces only the manifest's baseline decision and plan. Changed accepted or runner identities at an existing iteration number fail explicitly; choose the next number. Corrupt snapshots and conflicting destinations fail without overwriting evidence. Preparation and decisions use the shared `.session-state.lock`; preparation also retains `.iteration-preparation.lock`. New directories publish by staging and rename. Ordinary errors clean their lock and staging output, allowing retry. After a process/power loss, inspect and remove only abandoned locks/staging directories, then rerun the same number; published iterations remain authoritative. No partial destination is repaired silently.
 
 Targeted coverage: `test/tooling/bot-iteration-preparation.test.ts` and the existing setup contract tests.
 
 ## Stop, resume and factual report (ARO2-25)
 
-`npm run bot:session -- SESSION REQUEST.json` (Node 26+) reads a JSON request and prints one JSON result. The request file is cwd-relative; evidence references inside it are session-relative `{ "path": "...", "sha256": "..." }` pairs. `session-control-contract.ts` defines the actions and outputs' persisted source, `control.json`. Setup's schema-1 config/state and the frozen/iteration manifests remain unchanged. Control owns accounting and stop reasons; promotion owns `state.accepted`. Reports read the current accepted reference without promoting it. The extension lives alongside `session-contract.ts`; it changes neither `FrozenSetup` nor `IterationManifest`.
+`npm run bot:session -- SESSION REQUEST.json` (Node 26+) reads a JSON request and prints one JSON result. The request file is cwd-relative; evidence references inside it are session-relative `{ "path": "...", "sha256": "..." }` pairs. `session-control-contract.ts` defines the actions and outputs' persisted source, `control.json`. Control preserves setup's schema-1 config/state and the frozen/iteration manifests. Control owns accounting and stop reasons; promotion owns `state.accepted`. Reports read the current accepted reference without promoting it. The extension lives alongside `session-contract.ts`; it changes neither `FrozenSetup` nor `IterationManifest`.
 
 ```json
 { "action": "plan" }
@@ -186,3 +186,51 @@ After a process/power loss, inspect stale locks and staging files and remove onl
 Send `{ "action": "report" }` to atomically write `SESSION/report.json`; stdout additionally includes `report`, its absolute path. It contains accepted version, fixture, configured limits, iteration statuses, attempts, completed games, outstanding reservations, unique completed match references, stopping reason, artifact references and integrity checks. `recorded` includes exact source text for intact proposal/decision/comparison artifacts and null for unavailable/damaged ones. These are quoted source records labeled as producer attestations; their statistical or strategic correctness is not inferred. Completed-game counts cover settled attempts only; running reservations explicitly indicate unreconciled work. Iteration accepted references preserve version history. With no records, the arrays are empty; no win rate, uncertainty, acceptance or completed evaluation is invented. Keep agent commentary in a separate artifact. Copy the resulting factual report to a requested report destination only after it exists.
 
 Related tests: `test/tooling/bot-session-control.test.ts`, iteration preparation and setup tests.
+
+
+## Candidate decisions
+
+ARO2-24 adds `npm run bot:decide -- decision-request.json` (Node 26+). The agent chooses acceptance or rejection; this command applies that explicit choice. It neither interprets match quality nor commits, pushes or publishes bot code. [decision-contract.ts](../../../scripts/bot-improvement/decision-contract.ts) defines the additive request/result contract; frozen fixture and validation schemas stay at version 1.
+
+```json
+{
+  "schemaVersion": 1,
+  "session": "session",
+  "manifest": { "path": "session/iterations/iteration-0001/manifest.json", "sha256": "<exact file SHA-256>" },
+  "validation": { "path": "validation-1/result.json", "sha256": "<exact file SHA-256>" },
+  "candidateIdentity": "<validation.candidate.bot.identity>",
+  "decision": "accept",
+  "rationale": "Agent judgment with uncertainty and evidence references",
+  "evidence": [{ "path": "synthesis.md", "sha256": "<exact file SHA-256>" }]
+}
+```
+
+Paths resolve relative to the request file. `evidence` may be empty; rationale is mandatory. Use `reject` with `candidateIdentity: null` for an invalid validation result without a compiled candidate. Acceptance requires a valid result without failure reasons, its exact candidate identity, intact descriptor/payload, submitted/source/executable identities, the prepared candidate request binding, and the current accepted identity. Both outcomes verify the frozen fixture and preserve all validation evidence; frozen fixtures and supplied opponents stay unchanged. Hashes detect drift/corruption; they do not authenticate maliciously rewritten evidence. Match completeness, heuristic quality and acceptance judgment remain orchestrator responsibilities.
+
+Start accounting with `bot:session` before execution. Settle every reservation, then send its existing `finish` action with `complete` or `failed` and an intact evidence reference before applying a decision. A decision requires this latest terminal ledger checkpoint, matching accepted/fixture identities, and no unfinished iteration or running reservation. If candidate attempts are recorded, acceptance also requires their `executableIdentity` to match `validation.executableIdentity`; it cannot switch the evaluated executable. It reads and archives the checkpoint; it never mutates accounting. The manifest must belong to the session, and its iteration must equal `state.iteration + 1`. `state.iteration` records the last completed decision (setup starts at 0). A fresh decision binds the exact manifest bytes, including the current baseline plan; generate its hash after the final preparation invocation. Validation must reference that manifest's fixture, accepted snapshot and candidate workspace. Another iteration's validation is rejected even if its bot identity happens to match.
+
+The command publishes `versions/iteration-NNNN/` by staging and rename:
+
+```text
+versions/iteration-NNNN/
+  decision.json        # Normalized request, result and archived file hashes
+  outcome.json         # CandidateDecisionResult
+  manifest.json        # Exact pinned iteration manifest
+  control.json         # Terminal accounting checkpoint at decision time
+  finish-evidence      # Exact checkpoint attestation bytes
+  validation/          # Complete captured validator output, including failures
+    candidate/         # Compiled archive with frozen-bot.json when valid
+  evidence/0           # Exact bytes from each numbered evidence input
+```
+
+The final stdout line is `CandidateDecisionResult`: decision identity, outcome, completed `iteration`, `nextIteration`, fixture identity, previous/new accepted references and archive path. Acceptance points to the archived `validation/candidate`; rejection keeps the previous reference. The state commit replaces only `iteration`, `accepted` and `lastDecision: {identity, path, iteration}` while preserving every other field. `status`, progress, budgets and stopping reason belong to ARO2-25/runner and are never reset by this command. `nextIteration` is scheduling advice, not permission to bypass stopping limits.
+
+### Shared state mutation and recovery
+
+Preparation, control and decisions use `withSessionLock` from `session-lock.ts` and the session-local exclusive directory lock `.session-state.lock`. **All session state writers must acquire this same lock, reread state inside it, and preserve fields they do not own.** Preparation retains its additional `.iteration-preparation.lock` inside the shared lock; decisions need only the shared lock. Locks fail immediately rather than waiting. Validation operates only on pinned snapshots and takes no session mutation lock. Finish the ledger before `bot:decide`, apply the decision before starting the next ledger iteration, then index `versions/iteration-NNNN/outcome.json` using `bot:session` action `record` with kind `decision` and its exact byte hash. These are separate idempotent operations; do not nest control calls while holding the mutation lock. On journal recovery the ledger must still describe the same terminal iteration; it cannot advance past an unapplied decision. Decision application checks state again before its commit to expose accidental writers outside this protocol; that check is not a replacement for locking.
+
+A decision archive is the durable journal. Archive files and directories are synced before publication; state is written to a fresh file, synced, renamed, and the session directory synced. The accepted pointer therefore references a published archive. A failure before archive publication leaves state unchanged and ordinary failures clean staging output. A failure after publication leaves a complete journal and the prior accepted state. Reapply the **same request** to finish the state commit from archived bytes, even if the original validation/evidence/manifest files have disappeared. Preparation blocks while a published next-decision archive awaits state commit. Do not delete a published journal to retry a different decision.
+
+The same normalized request returns the same result without reverting later state. A different choice, rationale or identity pin for an already journaled iteration fails as a conflict. Stale/out-of-order requests and incompatible recovery state fail explicitly. A damaged journal or occupied archive destination fails without replacing evidence. After process death, first verify no writer is alive, then inspect and remove only its abandoned lock and staging files; replay the request. Filesystem and hardware sync guarantees still apply; this is a local filesystem transaction, not a cross-filesystem database.
+
+Related local coverage: `test/tooling/bot-candidate-session.test.ts` exercises actual setup → preparation → validation → decision → next preparation, including CLI rejection, invalid candidates, drift, lock contention, conflicts and the archive-before-state recovery boundary. It runs alongside preparation/validation/setup contract tests through `ascencio-tests`. Rust rebuilding is covered separately by candidate validation and requires the WASM standard library; these decision tests use the real TypeScript strategy build and the actual ARO2-25 start/reserve/settle/finish/record/report APIs.

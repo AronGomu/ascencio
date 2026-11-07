@@ -87,6 +87,7 @@
     "bot:session": "node scripts/bot-improvement/control-session.ts",
     "bot:setup": "node --experimental-vm-modules scripts/bot-improvement/setup-session.ts",
     "bot:validate": "node --experimental-vm-modules scripts/bot-improvement/validate-candidate.ts",
+    "bot:decide": "node scripts/bot-improvement/apply-decision.ts",
     "bot:prepare-iteration": "node scripts/bot-improvement/prepare-iteration.ts"
   },
   "devDependencies": {

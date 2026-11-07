@@ -197,12 +197,14 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen setup, iterations, validation and session control
+│   ├── bot-improvement/              # Frozen setup, validation, decisions and session control
 │   │   ├── session-contract.ts       # Frozen setup and candidate validation schema
 │   │   ├── iteration-contract.ts     # Prepared bindings and baseline receipts
 │   │   ├── session-control-contract.ts # Stop/resume and execution accounting
 │   │   ├── prepare-iteration.ts      # Accepted snapshot, self binding and baseline reuse
 │   │   ├── control-session.ts        # Admission, settlement, continuation and reports
+│   │   ├── decision-contract.ts      # Pinned orchestrator decision and outcome schema
+│   │   ├── apply-decision.ts         # Recoverable archive and atomic accepted-state commit
 │   │   └── session-lock.ts           # Shared session write lock
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping

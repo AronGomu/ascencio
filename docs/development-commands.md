@@ -115,3 +115,5 @@ Nine specs in `test/e2e/application` retain the retired browser fixture and rema
 Frozen matches: `npm run bot:matches -- --session SESSION --out SESSION/evaluations/control --workers auto`. Local progressive tuning: `npm run bot:matches:benchmark -- --session SESSION --out SESSION/benchmarks/run-1`. See [runner contracts](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
 
 `npm run bot:aggregate -- aggregation-request.json` reads frozen runner evidence and optional analysis queues, writing paired statistics and a factual summary. See [aggregation inputs, denominators and uncertainty](architecture/06-quality/parallel-bot-session.md#candidatecontrol-aggregation-aro2-23).
+
+`npm run bot:decide -- decision-request.json` applies a pinned orchestrator decision and archives its evidence. See [candidate decisions](architecture/06-quality/parallel-bot-session.md#candidate-decisions) for identity pins, recovery and shared state locking.

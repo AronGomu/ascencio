@@ -113,6 +113,20 @@ async function prepareLocked(options: IterationOptions) {
       state.fixtureIdentity !== frozen.identity
     )
       throw new Error("Session fixture identity mismatch");
+    // A published journal may precede state commit after an interruption.
+    const pending = path.join(
+      session,
+      "versions",
+      `iteration-${String(state.iteration + 1).padStart(4, "0")}`,
+    );
+    try {
+      await lstat(pending);
+      throw new Error(
+        "Pending decision archive; replay bot:decide before preparation",
+      );
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
     const accepted = state.accepted;
     const initial = path.join(config.fixture.path, "versions/initial");
     const bot: FrozenBot =

@@ -197,7 +197,7 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen sessions, execution, analysis, control and paired aggregation
+│   ├── bot-improvement/              # Frozen sessions, execution, analysis, aggregation and decisions
 │   │   ├── session-contract.ts       # Frozen setup and candidate validation schema
 │   │   ├── iteration-contract.ts     # Prepared bindings and baseline receipts
 │   │   ├── session-control-contract.ts # Stop/resume and execution accounting
@@ -208,6 +208,8 @@ ascencio/
 │   │   ├── analysis-report.ts        # Structural report and reference validation
 │   │   ├── prepare-analyses.ts       # Durable bounded analysis queue; no model invocation
 │   │   ├── control-session.ts        # Admission, settlement, continuation and reports
+│   │   ├── decision-contract.ts      # Pinned orchestrator decision and outcome schema
+│   │   ├── apply-decision.ts         # Recoverable archive and atomic accepted-state commit
 │   │   └── session-lock.ts           # Shared session write lock
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping

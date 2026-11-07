@@ -207,3 +207,5 @@ Current module authoring and campaign prerequisites: [Content modules](assets/co
 - [Portable Rust bot experiment](feature/rust-bot-experiment.md): packages, selection, runtime boundaries, builds and measured evidence.
 
 - [Frozen real-engine match pool, resume and progressive local tuning](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
+
+- [ARO2-18 frozen-runner local timing, latency and evidence](evidence/bot-session-runner/results.md).

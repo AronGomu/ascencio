@@ -75,3 +75,17 @@ export interface SetupOptions {
   analysisWorkers?: number;
   reuse?: string;
 }
+
+/** Explicit runner override, also usable by iteration preparation. Files remain archive-relative. */
+export interface RunnerSnapshot {
+  schemaVersion: 1;
+  path: string;
+  bot: FrozenBot;
+}
+export interface MatchExecutionLimits {
+  game_wall_time_ms: number;
+  decision_wall_time_ms: number;
+  sideboarding_wall_time_ms: number;
+  max_turns_per_game: number;
+  max_decisions_per_game: number;
+}

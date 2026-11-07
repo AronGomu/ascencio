@@ -1,6 +1,12 @@
 import { bindPromptInstances } from "../../src/battle/worker/bot/prompt-instances.ts";
 /** Narrow frozen-core/bot host. Rust alone owns scheduling, persistence and results. */
 import { createInterface } from "node:readline";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { loadCriticalInputs } from "./critical-inputs.ts";
+import { deckOrder } from "../bot-improvement/session-fixtures.ts";
+import type { GameFixture } from "../bot-improvement/session-contract.ts";
+import { wasmTransport } from "../bot-experiment/transport.ts";
 import { writeSync } from "node:fs";
 import {
   instantiateHostBot,
@@ -14,7 +20,7 @@ import { PromptRegistry } from "../../src/battle/worker/protocol/PromptRegistry.
 import { ActorObservation } from "../../src/battle/worker/bot/actor-observation.ts";
 import { toOpponentVisibleState } from "../../src/battle/worker/opponent/OpponentPolicy.ts";
 import { validateBotDecision } from "../../src/battle/worker/bot/validate-bot-decision.ts";
-import { validateSideboardPair } from "../../src/battle/worker/bot/sideboard.ts";
+import { validateSideboard } from "../../src/battle/worker/bot/sideboard.ts";
 import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
 import {
   deckRecord,
@@ -30,10 +36,13 @@ import type {
   BotGameObservation,
   BotSideboardDecision,
 } from "../../src/battle/worker/bot/bot-contract.ts";
-import type { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
+import { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 interface Command {
   type: string;
   critical?: boolean;
+  frozen?: { engine: string; bots: (Artifact & { wasm?: string })[] };
+  fixture?: GameFixture;
+  botSeeds?: number[];
   capture?: boolean;
   seed?: [string, string, string, string];
   snapshot: string;
@@ -94,7 +103,29 @@ const names = new Map<number, string>(
 names.set(61, "summon_succeeded");
 names.set(63, "special_summon_succeeded");
 names.set(65, "flip_summon_succeeded");
+function botOptions(index: number, seed?: number) {
+  const artifact = artifacts[index] as Artifact & { wasm?: string };
+  return {
+    onFallback: send,
+    ...(seed === undefined ? {} : { seed }),
+    ...(artifact.wasm
+      ? {
+          transport: async () =>
+            wasmTransport({ bytes: await readFile(artifact.wasm!) }),
+        }
+      : {}),
+  };
+}
 async function game(command: Command) {
+  if (command.fixture) {
+    const f = command.fixture;
+    command.seed = f.engineSeed as [string, string, string, string];
+    command.orders = command.bot_order.map((actor, seat) => ({
+      ...(f.orders?.[actor] ??
+        deckOrder(command.decks[seat]!, f.shuffleSeeds[actor]!)),
+      side: command.decks[seat]!.side,
+    })) as Command["orders"];
+  }
   const activeDependencies = dependencies;
   if (!activeDependencies)
     throw new Error("Initialize the host before starting a game");
@@ -111,9 +142,11 @@ async function game(command: Command) {
   try {
     for (const index of command.bot_order)
       bots.push(
-        await instantiateHostBot(artifacts[index]!, activeDependencies, {
-          onFallback: send,
-        }),
+        await instantiateHostBot(
+          artifacts[index]!,
+          activeDependencies,
+          botOptions(index, command.fixture?.botSeeds[index]),
+        ),
       );
     const engineStart = performance.now();
     session = DuelSession.create({
@@ -126,7 +159,9 @@ async function game(command: Command) {
         ? {
             mode: "programmed",
             rules: command.profile,
-            seed: createProductionSeed(),
+            seed: command.seed
+              ? (command.seed.map(BigInt) as [bigint, bigint, bigint, bigint])
+              : createProductionSeed(),
             playerDeckOrder: command.orders[0].main,
             opponentDeckOrder: command.orders[1].main,
             playerExtraOrder: command.orders[0].extra,
@@ -426,6 +461,29 @@ async function game(command: Command) {
     });
   }
 }
+// Frozen artifacts are read verbatim; dependencies/content are reused within one worker only.
+type FrozenInputs = Awaited<ReturnType<typeof loadCriticalInputs>> & {
+  artifacts: (Artifact & { wasm?: string })[];
+};
+const frozenCache = new Map<string, FrozenInputs>();
+let frozenContent: Awaited<ReturnType<typeof loadCriticalInputs>> | undefined;
+async function frozenInputs(command: Command): Promise<FrozenInputs> {
+  const key = JSON.stringify(command.frozen!.bots);
+  const cached = frozenCache.get(key);
+  if (cached) return cached;
+  frozenContent ??= await loadCriticalInputs(command.snapshot);
+  const artifacts = await Promise.all(
+    command.frozen!.bots.map(async (bot) => ({
+      ...bot,
+      source: bot.wasm
+        ? bot.source
+        : await readFile(path.resolve(bot.source), "utf8"),
+    })),
+  );
+  const loaded = { ...frozenContent, artifacts };
+  frozenCache.set(key, loaded);
+  return loaded;
+}
 for await (const line of createInterface({
   input: process.stdin,
   crlfDelay: Infinity,
@@ -433,12 +491,14 @@ for await (const line of createInterface({
   try {
     const command = JSON.parse(line) as Command;
     if (command.type === "initialize") {
-      const loaded = await loadInputs(
-        command.snapshot,
-        command.codes,
-        command.bots,
-        command.critical,
-      );
+      const loaded = command.frozen
+        ? await frozenInputs(command)
+        : await loadInputs(
+            command.snapshot,
+            command.codes,
+            command.bots,
+            command.critical,
+          );
       dependencies = loaded.dependencies;
       artifacts = loaded.artifacts;
       snapshot = loaded.manifest.snapshotId;
@@ -446,9 +506,14 @@ for await (const line of createInterface({
       for (const artifact of artifacts)
         if (artifact.module === "builtin:basic")
           await instantiate(artifact, dependencies);
-      adapter = await loadVendoredCoreNode({
-        onDiagnostic: (d) => send({ type: "diagnostic", entry: d }),
-      });
+      adapter ??= command.frozen
+        ? await OcgCoreAdapter.initialize({
+            wasmBinary: Uint8Array.from(await readFile(command.frozen.engine))
+              .buffer,
+          })
+        : await loadVendoredCoreNode({
+            onDiagnostic: (d) => send({ type: "diagnostic", entry: d }),
+          });
       send({
         type: "ready",
         manifest: loaded.manifest,
@@ -470,11 +535,13 @@ for await (const line of createInterface({
       const decisions: BotSideboardDecision[] = [];
       const durations: number[] = [];
       try {
-        for (const artifact of artifacts)
+        for (const [index, artifact] of artifacts.entries())
           bots.push(
-            await instantiateHostBot(artifact, dependencies, {
-              onFallback: send,
-            }),
+            await instantiateHostBot(
+              artifact,
+              dependencies,
+              botOptions(index, command.botSeeds?.[index]),
+            ),
           );
         for (const [actor, bot] of bots.entries()) {
           send({
@@ -486,7 +553,7 @@ for await (const line of createInterface({
           const start = performance.now();
           const decision = await bot.sideboard(
             structuredClone({
-              deck: command.decks[0],
+              deck: command.decks[actor]!,
               preSideGames: command.histories[actor]!,
             }),
           );
@@ -514,10 +581,8 @@ for await (const line of createInterface({
         for (const bot of bots) bot.close?.();
       }
       const result = {
-        decks: validateSideboardPair(
-          command.decks[0],
-          [decisions[0]!, decisions[1]!],
-          () => {},
+        decks: command.decks.map((deck, i) =>
+          validateSideboard(deck, decisions[i]!, () => {}),
         ),
         decisions,
         durations,

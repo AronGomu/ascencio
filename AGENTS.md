@@ -197,7 +197,7 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen session setup, strategy preparation and checks
+│   ├── bot-improvement/              # Frozen setup, real match pool, local tuning and strategy preparation
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping
 │       ├── json-content/            # Readable sources and startup snapshot compilation
@@ -209,7 +209,11 @@ ascencio/
 │   ├── Cargo.toml                    # Evaluator dependencies and release settings
 │   └── src/
 │       ├── main.rs                   # Evaluate, compare, benchmark and improve commands
-│       ├── runner.rs                 # Sequential real-engine match scheduling
+│       ├── runner.rs                 # Legacy sequential XML evaluation
+│       ├── frozen_pool.rs            # Frozen-session bounded scheduling, budgets and resume
+│       ├── frozen_match.rs           # Four-game execution using existing engine/evidence paths
+│       ├── frozen_evidence.rs        # Completion markers, replay hashes and integrity checks
+│       ├── process_memory.rs         # Process-tree RSS sampling
 │       ├── config.rs                 # Evaluator configuration
 │       └── improvement/             # Bounded strategy improvement, persistence and statistics
 │

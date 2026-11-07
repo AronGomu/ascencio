@@ -26,12 +26,13 @@ export async function instantiateHostBot(
   dependencies: ActiveDuelDependencies,
   options: {
     development?: boolean;
+    seed?: number;
     onFallback?: (event: unknown) => void;
     transport?: () => Promise<BotTransport>;
   } = {},
 ): Promise<HostBot> {
   if (!artifact.module.startsWith("experiment:"))
-    return instantiate(artifact, dependencies);
+    return instantiate(artifact, dependencies, options.seed);
   const [, target, policy] = artifact.module.split(":");
   if (
     !["native", "wasm"].includes(target!) ||
@@ -48,7 +49,7 @@ export async function instantiateHostBot(
       contractVersion: 1,
       policy,
       configuration: artifact.config,
-      seed: 1,
+      seed: options.seed ?? 1,
       cards: [...dependencies.cards.values()].map((c) => ({
         ...c,
         race: String(c.race),

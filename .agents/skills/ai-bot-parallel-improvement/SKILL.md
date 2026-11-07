@@ -15,7 +15,7 @@ Improve one bot through repeatable evaluations, match analysis, and one heuristi
 2. Required `opponents`: fixed bot folders with decks and configurations; may be empty.
 3. Required `stop-condition`: iteration limit, resource budget, or owner stop.
 4. Required `setup-seed`: explicit deterministic seed.
-5. Optional `match-workers`: simultaneous matches (default: 6).
+5. Optional `match-workers`: simultaneous matches (`auto` uses local measurements; setup bound default: 6).
 6. Optional `analysis-workers`: simultaneous match analysts (default: 3).
 7. Optional `reuse-fixtures`: existing frozen directory (default: None).
 8. Optional `session-path`: fresh session destination (default: `.tmp/bot-session`).
@@ -58,9 +58,10 @@ You are the main improvement orchestrator.
 - If setup fails: Stop with the script error.
 - `session`, `session-config` = Read `session` and `config` from `setup-result`.
 - `accepted-bot` = Read `accepted` from `session-config`.
-- `matches-command` = Resolve the documented fixture-aware evaluator entry point.
-- Require: `matches-command` consumes the versioned session contract; otherwise stop with the missing runner capability.
-- `baseline` = Run `matches-command` with `session-config`, `accepted-bot`, and `match-workers`.
+- `matches-command` = `npm run bot:matches -- --session <session> --out <unique-output> --workers <match-workers>`.
+- `baseline` = Run `matches-command`; setup’s initial accepted archive is the default.
+- For prepared iterations: Pass `--candidate` and `--self` with complete archived `RunnerSnapshot` JSON overrides from [the runner contract](../../../docs/architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
+- For local tuning: Run `npm run bot:matches:benchmark -- --session <session> --out <unique-benchmark-output>`; require a setup worker bound of eight on an eight-core machine.
 - Returns: `session`, `accepted-bot`, `baseline`, `matches-command`.
 
 ### 2. Improve and evaluate

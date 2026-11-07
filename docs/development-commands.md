@@ -103,3 +103,5 @@ Nine specs in `test/e2e/application` retain the retired browser fixture and rema
 ## Frozen AI evaluation setup
 
 `npm run bot:setup -- setup-request.json` prepares 500 four-game fixtures and a ready session without playing matches. See [the request and session contract](architecture/06-quality/parallel-bot-session.md) for bot configuration, explicit seeds, durable reuse and runner integration.
+
+`npm run bot:prepare-iteration -- --session SESSION --iteration N --runner-identity VERSION [--baseline RECEIPT]` publishes accepted/self bindings, a candidate workspace and a baseline reuse plan. See [iteration preparation](architecture/06-quality/parallel-bot-session.md#iteration-preparation).

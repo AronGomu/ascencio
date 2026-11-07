@@ -81,3 +81,38 @@ Setup acquires exclusive target/session locks, validates before writing final de
 - Analysis jobs, aggregation and decisions should reference fixture identity, iteration, match `id`, game `number` and event references. Match completion/progress is mutable session/iteration data, never an edit to the frozen schedule. Promotion updates `state.accepted` only after validating evidence and archiving candidate bytes. Resume checks identities before continuing and retains completed evidence and stop budgets. No setup invocation starts any of these jobs.
 
 Targeted setup coverage is in `test/tooling/bot-session-setup.test.ts`; use the `ascencio-tests` workflow. Real-engine replay verification belongs to the fixture-aware runner integration, since setup executes no matches.
+
+## Iteration preparation
+
+ARO2-20 adds `npm run bot:prepare-iteration -- --session SESSION --iteration N --runner-identity RUNNER_VERSION [--baseline RECEIPT]` (Node 26+). Paths are relative to the current directory. `N` is an explicit positive integer chosen by the orchestrator; reuse it to resume, increment it after a decision. Preparation does not advance state, stop budgets, or accepted references and executes no agents, validation or matches.
+
+`iteration-contract.ts` extends the frozen schema without changing `FrozenSetup`. The command's final stdout line is JSON: `manifest` is its absolute path; the remaining fields are the manifest itself. It publishes `iterations/iteration-NNNN/manifest.json`, an `accepted/` snapshot, and a writable `candidate/` copy. IDs are unique within a session; the session path disambiguates sessions. Both control and self reference the same accepted snapshot. Supplied opponent slots and fixture identities come from the verified frozen manifest, never live setup paths. Candidate `basedOn` records its initial identity; `identity: null` explicitly requires ARO2-21 validation after editing. Preparation cannot claim a validated executable identity for future code. Validation publishes the new identity in its separate result; keep the preparation manifest's candidate binding unchanged.
+
+The initial accepted reference resolves to the fixture target. Later `state.accepted` references must point to an archive containing `frozen-bot.json` with the existing `FrozenBot` structure and matching hashed files. Deck, kind, module/policy selector and scalar configuration must remain equal to the initial target. Preparation checks archived bytes and identity, but candidate validation remains responsible for heuristic-only changes and executable behavior. Promotion must publish an archive before updating `state.accepted`.
+
+`comparisonIdentity` hashes fixture identity, control identity, ordered opponent slot/identity pairs (including self), and the explicit runner identity. Fixture identity already includes engine, content, rules, protocol, schedule, seeds and deck orders. The runner identity must change whenever executable runner semantics change. Candidate identity and iteration number are excluded: another candidate can reuse the same control evidence against identical comparison inputs. Changing the accepted bot also changes self and requires a new baseline.
+
+Optional `--baseline` points to a `BaselineReceipt` produced after the runner has completed all four games of all 500 matches:
+
+```json
+{
+  "schemaVersion": 1,
+  "comparisonIdentity": "<iteration comparisonIdentity>",
+  "status": "complete",
+  "completedMatches": ["match-0001", "...all 500 unique IDs..."],
+  "matches": {
+    "match-0001": {
+      "path": "matches/match-0001.json",
+      "sha256": "<exact evidence bytes SHA-256>"
+    }
+  }
+}
+```
+
+`matches` must contain exactly the fixture's 500 IDs. Each match must reference a distinct evidence path. Evidence paths are receipt-relative; absolute and parent traversal paths are rejected. This receipt is a completion attestation by the runner; preparation verifies coverage and byte integrity, not game semantics or acceptance quality. It introduces no runner command or implementation. ARO2-18 may adapt its evidence output to this receipt; ARO2-21 may consume the candidate workspace and bindings. Neither integration is implemented here.
+
+`baseline.action` is `reuse` only for a complete, intact receipt with the exact comparison identity. Otherwise it is `refresh`, with `missing`, `identity-mismatch`, `incomplete`, or `corrupt` as the reason. `plan.control` is correspondingly `reuse-baseline` or `evaluate`; `plan.candidate` is always `validate-then-evaluate`. Each evaluation has 500 matches / 2000 games. Rerun preparation after producing a receipt to refresh the returned plan.
+
+A repeated invocation verifies fixed bindings and snapshot hashes, preserves candidate edits and existing evidence, and atomically replaces only the manifest's baseline decision and plan. Changed accepted or runner identities at an existing iteration number fail explicitly; choose the next number. Corrupt snapshots and conflicting destinations fail without overwriting evidence. A session-local exclusive `.iteration-preparation.lock` protects concurrent preparation; promotion must not run concurrently. New directories publish by staging and rename. Ordinary errors clean their lock and staging output, allowing retry. After a process/power loss, inspect and remove only abandoned locks/staging directories, then rerun the same number; published iterations remain authoritative. No partial destination is repaired silently.
+
+Targeted coverage: `test/tooling/bot-iteration-preparation.test.ts` and the existing setup contract tests.

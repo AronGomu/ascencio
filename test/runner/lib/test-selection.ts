@@ -203,6 +203,22 @@ export function selectTests(root: string, changed: string[], files: string[]) {
       for (const file of reasons) covered.add(file);
     }
   }
+  // These entry points invoke the guard indirectly rather than importing it.
+  const guardTest = "test/tooling/commit-validation.test.ts";
+  const guardReasons = changed.filter((file) =>
+    [
+      ".githooks/pre-commit",
+      "scripts/validate-commit.ts",
+      "scripts/setup-desktop.ts",
+    ].includes(file),
+  );
+  if (files.includes(guardTest) && guardReasons.length) {
+    selected.set(guardTest, [
+      ...(selected.get(guardTest) ?? []),
+      ...guardReasons,
+    ]);
+    for (const file of guardReasons) covered.add(file);
+  }
   const uncovered = changed.filter(
     (file) =>
       !covered.has(file) &&

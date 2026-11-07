@@ -76,6 +76,8 @@
     "test:native:rust": "cargo test --manifest-path tauri/Cargo.toml",
     "test:native:io-acceptance": "node test/runner/native/test-native-io-acceptance.ts",
     "setup": "node scripts/setup-desktop.ts",
+    "hooks:install": "node scripts/install-git-hooks.ts",
+    "commit:validate": "node scripts/validate-commit.ts",
     "build": "tauri build --no-bundle",
     "start": "node scripts/start-desktop.ts",
     "bot:improve": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- improve",

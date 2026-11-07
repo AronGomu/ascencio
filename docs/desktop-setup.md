@@ -104,3 +104,31 @@ It uses `setup --sources-only` to avoid duplicating the multi-GB artwork archive
 on small hosted runners. Full setup, native resource builds and complete test
 suites require the disk budget above. Local validation on a Windows host does
 not establish successful execution on the other operating systems.
+
+## Local commit guard
+
+`npm run setup` installs the tracked `.githooks/pre-commit` through local
+`core.hooksPath=.githooks` before content acquisition. Existing checkouts can run
+`npm run hooks:install`; repeating it is safe. Use Node 26+ on your commit PATH.
+The hook uses only local checks; GitHub Actions stays disabled.
+
+Stage the intended code first. The guard runs ESLint on staged JavaScript,
+TypeScript and Svelte files (whole-project lint for shared configuration), type
+checking when relevant, and tests selected by the existing dependency selector.
+It never requests the full application suite. Markdown-only commits skip these
+application checks. Deletions and non-prose configuration still require validation.
+
+When selection needs human judgment, use `npm run test:context`, inspect the
+suggestions, and run `npm run commit:validate -- --tests <exact-test-files>`.
+Explicit files supplement automatically related tests. Successful checks are
+recorded in the checkout's Git directory and reused only for the same index,
+working-file bytes, staged paths and Node version. Source or configuration changes
+invalidate that success; tests changing files also invalidate the run. Ordinary
+`npm test` output alone does not authorize a commit.
+
+For a code commit all tracked working files must match the index, and nonignored
+untracked code must be staged or moved aside. Partial staging fails with a list
+of differing files; the hook never stashes, resets or rewrites owner edits. Use a
+separate checkout when retaining unstaged edits is necessary. Ignored acquired
+assets and installed dependencies remain setup prerequisites; after changing
+those inputs, remove the Git-directory `commit-validation.json` and revalidate.

@@ -109,3 +109,5 @@ Nine specs in `test/e2e/application` retain the retired browser fixture and rema
 `npm run bot:prepare-iteration -- --session SESSION --iteration N --runner-identity VERSION [--baseline RECEIPT]` publishes accepted/self bindings, a candidate workspace and a baseline reuse plan. See [iteration preparation](architecture/06-quality/parallel-bot-session.md#iteration-preparation).
 
 `npm run bot:session -- SESSION REQUEST.json` gates iteration and match admission, settles accounting, resumes explicitly, and writes factual `report.json`. See [stop/resume and runner integration](architecture/06-quality/parallel-bot-session.md#stop-resume-and-factual-report-aro2-25).
+
+`npm run bot:analyses -- SESSION REQUEST.json` prepares finalized-match analysis packets, bounds durable claims, and validates returned reports. See [analysis job inputs and recovery](architecture/06-quality/parallel-bot-session.md#match-analysis-jobs-aro2-22).

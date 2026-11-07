@@ -186,3 +186,64 @@ After a process/power loss, inspect stale locks and staging files and remove onl
 Send `{ "action": "report" }` to atomically write `SESSION/report.json`; stdout additionally includes `report`, its absolute path. It contains accepted version, fixture, configured limits, iteration statuses, attempts, completed games, outstanding reservations, unique completed match references, stopping reason, artifact references and integrity checks. `recorded` includes exact source text for intact proposal/decision/comparison artifacts and null for unavailable/damaged ones. These are quoted source records labeled as producer attestations; their statistical or strategic correctness is not inferred. Completed-game counts cover settled attempts only; running reservations explicitly indicate unreconciled work. Iteration accepted references preserve version history. With no records, the arrays are empty; no win rate, uncertainty, acceptance or completed evaluation is invented. Keep agent commentary in a separate artifact. Copy the resulting factual report to a requested report destination only after it exists.
 
 Related tests: `test/tooling/bot-session-control.test.ts`, iteration preparation and setup tests.
+
+## Match analysis jobs (ARO2-22)
+
+`npm run bot:analyses -- SESSION REQUEST.json` takes cwd-relative session/request paths and prints one JSON result. Errors print to stderr with exit 1. `analysis-contract.ts` extends the existing contracts without changing frozen setup, iteration, validation or control schemas. This command never invokes models, evaluates matches, aggregates reports or decides acceptance.
+
+Start with a sync request:
+
+```json
+{
+  "action": "sync",
+  "binding": {
+    "iteration": 1,
+    "role": "candidate",
+    "root": "iterations/iteration-0001/candidate-run",
+    "execution": { "path": "iterations/iteration-0001/candidate-run.job.json", "sha256": "<exact bytes hash>" },
+    "proposal": { "path": "iterations/iteration-0001/proposal.json", "sha256": "<exact bytes hash>" }
+  }
+}
+```
+
+All evidence references are session-relative exact-byte SHA-256 pairs. Symlinks, absolute paths and parent traversal are rejected. `root` is an existing frozen runner output directory. `execution` pins its actual preparation job: schema 1, `identity`, `fixtureIdentity`, `candidateIdentity`, `selfIdentity`, and `matches[]` containing the frozen `match` and A/B `identities`. The full 500-match schedule must equal the frozen fixture, and opponent/self identities must equal the iteration bindings. Control jobs additionally match the prepared control identity. The orchestrator must supply the validated candidate's execution job; this consumer does not repeat candidate compilation or attest its heuristic validity. `proposal` retains the candidate heuristic change and rationale; a control job can reference a description of the unchanged control.
+
+The `frozen-xml-v1` adapter follows the ARO2-18 worktree's actual `frozen_evidence.rs` format: `root/matches/<match-id>/done.json` pins `manifest.xml`, `matches/<match-id>/match.xml`, both `player-a.xml`/`player-b.xml` timelines, and any additional evidence files. The nested match directory is intentional. `fixture.json` is runner preparation: early smoke markers omit it, while newer markers hash it too. Both layouts are supported; when preparing packets its contents must equal the pinned execution job item, and its exact bytes are retained as a reference. No invented per-event JSON log or runner command is required. ARO2-18's final integration must retain this adapter format or explicitly version/update it. Parent integration review remains required.
+
+Missing markers/files, malformed or changing bytes, missing completed-game timelines, mismatched identities and unlisted evidence files are reported in `unavailable` and excluded from new jobs. The adapter requires terminal records for games 1–4 and sideboarding, plus both player reports. A completion marker may finalize a failed match: retain its `failed`/`skipped` statuses, partial failure timelines and diagnostic files explicitly. Skipped games have no game evidence hash or invented events; failed games retain their hash. A match with no completion marker remains unavailable even when its XML is parseable. It checks file integrity and cross-document bindings, not the engine's internal game-evidence hash algorithm. Full semantic evidence validation remains the runner's responsibility. It reads hashes twice before publication; finalized producer files must thereafter remain immutable. Damage to already queued evidence appears in `integrity`, never as a successful completion.
+
+Each immutable packet at `iterations/iteration-NNNN/analyses/<role>/packets/<match>.json` contains fixture/runner/execution/candidate/opponent identities, proposal and complete log references, game IDs/statuses/hashes, and actual timeline references `{ "game": 1, "perspective": "a", "sequence": 17 }`. Sequence values come from the player's existing XML `timeline/entry/sequence`, scoped by game and perspective; they need not be contiguous. One logical ID `<iteration>/<role>/<match>` survives retries. Baseline/control and candidate executions are distinct evaluations, even when fixture match IDs coincide.
+
+`queue.json` in that directory retains all discovered logical jobs. At most `2 * analysisWorkers` jobs are pending or claimed; remaining finalized jobs wait in the durable backlog. At most `analysisWorkers` claims can run. Large XML discovery happens outside the shared state lock; publication and all queue transitions use `withSessionLock`, atomic staging/rename and immutable packet/report paths. No command rewrites accepted state, execution accounting, or another producer's evidence.
+
+Dispatch and completion requests use the same entry point:
+
+```json
+{ "action": "claim", "iteration": 1, "role": "candidate", "owner": "analyst-dispatch-unique-1" }
+```
+
+A non-null `claim` returns the packet reference, attempt, owner and random claim token. Launch only after that durable claim returns. A repeated owner request returns its outstanding claim, recovering lost stdout without dispatching a second job. Use a distinct stable owner for each dispatch. Capacity exhaustion returns `claim: null`. Claims never expire automatically: after a crash, reconcile analyst termination first, then send `{ "action": "release", "iteration": 1, "role": "candidate", "job": "1/candidate/match-0001", "token": "<claim token>", "terminated": true }`. Reclaiming keeps the logical job and increments its attempt; old tokens cannot complete it. Until reconciliation, the claim remains outstanding and consumes capacity.
+
+An analyst writes a JSON report, then the orchestrator supplies its hash with `{ "action": "complete", "iteration": 1, "role": "candidate", "job": "1/candidate/match-0001", "token": "<claim token>", "report": { "path": "reports/analyst-1.json", "sha256": "<exact bytes hash>" } }`. The required report shape is:
+
+```json
+{
+  "schemaVersion": 1,
+  "job": "1/candidate/match-0001",
+  "packetSha256": "<claimed packet hash>",
+  "sections": {
+    "activation": { "text": "Observed activation or uncertainty", "evidence": [{ "game": 1, "perspective": "a", "sequence": 17 }] },
+    "changedDecisions": { "text": "Counterfactual unavailable", "evidence": [], "unavailable": "No counterfactual trace was recorded" },
+    "impact": { "text": "Observed impact and causal uncertainty", "assessment": "uncertain", "evidence": [{ "game": 1, "perspective": "a", "sequence": 17 }] },
+    "consequentialPlays": { "text": "Factual consequential plays", "evidence": [{ "game": 1, "perspective": "b", "sequence": 18 }] }
+  }
+}
+```
+
+The example sequences are illustrative; reports must cite tuples from their packet. All four sections require nonempty text and an evidence array. An empty array requires a nonempty `unavailable` explanation. Impact assessment is `positive`, `negative` or `uncertain`. Every supplied tuple must resolve to an actual pinned timeline entry. The validator checks association, sections and reference resolution; it cannot prove factual accuracy, causal effect, or that consequential-play prose avoids strategic judgments. Those remain agent review criteria.
+
+Valid reports are copied into immutable `reports/<match>-attempt-N.json` before queue completion is published. Repeating identical sync/completion requests is safe; conflicting bindings, packets and completed reports fail without replacing evidence. A crash between artifact publication and queue save leaves a reusable orphan artifact: rerun the identical request. After confirming all writers have terminated, inspect/remove only abandoned `.session-state.lock` and staging files as described above; never reset published queue state or claims to recover a lock.
+
+Every response includes `ready`, `outstanding`, `missing`, `reports`, `expected`, `finalized`, `completed`, `complete`, and `integrity`; sync also lists unavailable matches. `ready` contains pending jobs, while `outstanding` includes waiting, pending and claimed jobs. `missing` separately lists fixture matches with no finalized job. `{ "action": "status", "iteration": 1, "role": "candidate" }` verifies stored packets, source bytes and reports. `complete` requires all 500 expected matches to have reports and no integrity failures. A stored completed count is accompanied by integrity failures if later damage occurs; it is not an assertion of report correctness.
+
+Targeted lightweight coverage: `test/tooling/bot-match-analysis.test.ts` exercises bounded dispatch, deduplication, partial files, invalid reports, source damage, orphan publication and claim fencing. The adapter was also exercised read-only against ARO2-18's real finalized four-game smoke evidence (both player timelines); no analysis model was invoked.

@@ -20,6 +20,8 @@ ascencio/
 ├── .agents/skills/                   # Project-local agent workflows
 │   ├── ai-bot-self-improvement/
 │   │   └── SKILL.md                  # Bot improvement orchestration and result reporting
+│   ├── ai-bot-parallel-improvement/
+│   │   └── SKILL.md                  # Frozen setup and parallel improvement orchestration
 │   ├── ascencio-tests/
 │   │   └── SKILL.md                  # Select and run related tests locally
 │   └── impeccable/
@@ -49,7 +51,8 @@ ascencio/
 │   │   ├── 06-quality/
 │   │   │   ├── testing.md            # Test strategy and verification routes
 │   │   │   ├── diagnostics.md        # Errors, traces and reproducibility
-│   │   │   └── bot-improvement-loop.md # Bounded real-engine bot improvement loop
+│   │   │   ├── bot-improvement-loop.md # Bounded real-engine bot improvement loop
+│   │   │   └── parallel-bot-session.md # Frozen setup, fixture and consumer contracts
 │   │   └── 07-governance/            # Trust, security, distribution and extension constraints
 │   ├── ADR/                          # Recorded architecture decisions
 │   │   ├── 022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md
@@ -194,7 +197,7 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Strategy preparation, coding-agent adapter and checks
+│   ├── bot-improvement/              # Frozen session setup, strategy preparation and checks
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping
 │       ├── json-content/            # Readable sources and startup snapshot compilation

@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "moves": [
+    {
+      "from": "schemas/bot-evaluation/v1/bug-ticket.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/bug-ticket.xsd",
+      "sha256": "4e3cdd3454acf1f6e7c1fe6b3cafedb1c414fb99b0f875489d61f32673f5e813"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/comparison-report.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/comparison-report.xsd",
+      "sha256": "02dfd07a9249823d2c47484e87ed97a08782b47f8ec63bb35f23bb65ba294905"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/comparison.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/comparison.xsd",
+      "sha256": "e6be04a6bd3878295b2588884ddd2ac534fdeb69c2b1ce496e0f6d1c282aea9f"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/diagnostics.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/diagnostics.xsd",
+      "sha256": "88f49e36601de53126da06a5648517dc8dd1715d31b8784eea5e09e9b7668fb7"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/evaluation-report.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/evaluation-report.xsd",
+      "sha256": "3d5e64a12efa710e90cf743b5600c274865da52261d817247cb705e5860a6fee"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/evaluation.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/evaluation.xsd",
+      "sha256": "46537dd1a572438202efe527f604d853295e97f7350b2a28d6339347e49dd29d"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/manifest.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/manifest.xsd",
+      "sha256": "50a06bad381b93de2a9ae3d47af4462e75b16198c32247ec81323a503c721610"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/match.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/match.xsd",
+      "sha256": "0e94787caad83e2140f8d107a3a2e43577f9ad2a3a1823b01b901f6ecfac01cc"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/player-report.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/player-report.xsd",
+      "sha256": "e4cfa855d04118fce3ded17243690d1acf79a72591325746226163efcdd9d3d6"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/progress.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/progress.xsd",
+      "sha256": "7d89ff9d6d86eebe6618ff0c60ae5ef85b69e2be50c0fa5403697bd9fdd748f1"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/starting-orders.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/starting-orders.xsd",
+      "sha256": "d4cc5254b1c102ea7ae0321618aa7063a38dfa08d256d8d7a55f4b33b33bdafa"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/summary.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/summary.xsd",
+      "sha256": "7b0457be107fc323a088bd9e73ac1656a00759294da9a3d699f10eacff39aab7"
+    },
+    {
+      "from": "schemas/bot-evaluation/v1/timeline-fragment.xsd",
+      "to": "tools/bot-evaluation/schemas/v1/timeline-fragment.xsd",
+      "sha256": "661d6ebd4cd9d468b1b1e60638e5c889f5b27b5d178881322610272647c556a0"
+    }
+  ],
+  "deletions": [],
+  "consumers": [
+    {
+      "path": "tools/bot-evaluation/src/xml.rs",
+      "replacements": [
+        {
+          "from": "            let schema_directory = std::path::PathBuf::from(\"schemas/bot-evaluation/v1\");\n",
+          "to": "            let schema_directory = std::path::PathBuf::from(\"tools/bot-evaluation/schemas/v1\");\n"
+        },
+        {
+          "from": "                Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../schemas/bot-evaluation/v1\");\n",
+          "to": "                Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"schemas/v1\");\n"
+        }
+      ]
+    },
+    {
+      "path": "tools/bot-evaluation/src/streaming_xml.rs",
+      "replacements": [
+        {
+          "from": "        .arg(format!(\"schemas/bot-evaluation/v1/{root}.xsd\"))\n",
+          "to": "        .arg(format!(\"tools/bot-evaluation/schemas/v1/{root}.xsd\"))\n"
+        }
+      ]
+    },
+    {
+      "path": "scripts/bot-evaluation/generate-schemas.py",
+      "replacements": [
+        {
+          "from": "from pathlib import Path\n",
+          "to": "from pathlib import Path\nschema_directory = Path(__file__).resolve().parents[2] / \"tools/bot-evaluation/schemas/v1\"\nschema_directory.mkdir(parents=True, exist_ok=True)\n"
+        },
+        {
+          "from": " Path(f'schemas/bot-evaluation/v1/{root}.xsd').write_text('\\n'.join(lines)+'\\n')\n",
+          "to": " (schema_directory / f'{root}.xsd').write_text('\\n'.join(lines)+'\\n')\n"
+        },
+        {
+          "from": "source=Path('schemas/bot-evaluation/v1/player-report.xsd').read_text()\n",
+          "to": "source=(schema_directory / 'player-report.xsd').read_text()\n"
+        },
+        {
+          "from": "Path('schemas/bot-evaluation/v1/timeline-fragment.xsd').write_text(source)\n",
+          "to": "(schema_directory / 'timeline-fragment.xsd').write_text(source)\n"
+        }
+      ]
+    },
+    {
+      "path": "tools/bot-evaluation/src/application_identity.rs",
+      "replacements": [
+        {
+          "from": "        \"schemas/bot-evaluation\",\n",
+          "to": "        \"tools/bot-evaluation/schemas\",\n"
+        }
+      ]
+    }
+  ],
+  "exclusions": ["vendor/", ".github/skills/", "package-lock.json"],
+  "protectedPathExceptions": [],
+  "requiredResources": [
+    {
+      "path": "tools/bot-evaluation/schemas/v1/bug-ticket.xsd",
+      "sha256": "4e3cdd3454acf1f6e7c1fe6b3cafedb1c414fb99b0f875489d61f32673f5e813"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/comparison-report.xsd",
+      "sha256": "02dfd07a9249823d2c47484e87ed97a08782b47f8ec63bb35f23bb65ba294905"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/comparison.xsd",
+      "sha256": "e6be04a6bd3878295b2588884ddd2ac534fdeb69c2b1ce496e0f6d1c282aea9f"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/diagnostics.xsd",
+      "sha256": "88f49e36601de53126da06a5648517dc8dd1715d31b8784eea5e09e9b7668fb7"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/evaluation-report.xsd",
+      "sha256": "3d5e64a12efa710e90cf743b5600c274865da52261d817247cb705e5860a6fee"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/evaluation.xsd",
+      "sha256": "46537dd1a572438202efe527f604d853295e97f7350b2a28d6339347e49dd29d"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/manifest.xsd",
+      "sha256": "50a06bad381b93de2a9ae3d47af4462e75b16198c32247ec81323a503c721610"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/match.xsd",
+      "sha256": "0e94787caad83e2140f8d107a3a2e43577f9ad2a3a1823b01b901f6ecfac01cc"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/player-report.xsd",
+      "sha256": "e4cfa855d04118fce3ded17243690d1acf79a72591325746226163efcdd9d3d6"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/progress.xsd",
+      "sha256": "7d89ff9d6d86eebe6618ff0c60ae5ef85b69e2be50c0fa5403697bd9fdd748f1"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/starting-orders.xsd",
+      "sha256": "d4cc5254b1c102ea7ae0321618aa7063a38dfa08d256d8d7a55f4b33b33bdafa"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/summary.xsd",
+      "sha256": "7b0457be107fc323a088bd9e73ac1656a00759294da9a3d699f10eacff39aab7"
+    },
+    {
+      "path": "tools/bot-evaluation/schemas/v1/timeline-fragment.xsd",
+      "sha256": "661d6ebd4cd9d468b1b1e60638e5c889f5b27b5d178881322610272647c556a0"
+    }
+  ],
+  "referenceChecks": [
+    {
+      "text": "schemas/bot-evaluation",
+      "paths": ["src/", "scripts/", "tools/", "docs/"],
+      "exceptions": []
+    }
+  ]
+}

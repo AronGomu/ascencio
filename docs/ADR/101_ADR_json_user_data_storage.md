@@ -16,4 +16,4 @@ Backup export produces `user-data.json`. Inspection validates JSON format/versio
 
 Existing SQLite saves and legacy browser stores remain untouched and unread. No automatic migration or save-continuity guarantee exists. SQLite content packages/registry remain a separate architectural concern.
 
-Implementation: `src/storage/json/`, `src/storage/native/user-json-backend.ts`, and `src-tauri/src/native_user_data.rs`. Former SQL user-runtime code is retained only under `tests/fixtures/legacy-user-*` for historical regression fixtures; it is absent from application imports.
+Implementation: `src/storage/json/`, `src/storage/native/user-json-backend.ts`, and `tauri/src/native_user_data.rs`. Former SQL user-runtime code is retained only under `test/fixtures/legacy-user-*` for historical regression fixtures; it is absent from application imports.

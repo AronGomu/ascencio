@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI bot self-improvement"
+  short_description: "Orchestrate a bot's improvement against specified opponents"
+  default_prompt: "Use $ai-bot-self-improvement to orchestrate the complete improvement process for the supplied AI bot against the supplied opponent AI bots."
+policy:
+  allow_implicit_invocation: true

@@ -41,7 +41,7 @@ type DuelWorkerEvent =
 - Prompt and choice IDs are opaque and namespaced per duel session. Raw response indexes stay in a Worker-private lookup.
 - Only the current prompt can be answered; reject stale, duplicate, unknown, and previous-session IDs.
 - Untrusted Worker commands are runtime-validated and size-bounded before dispatch.
-- Public commands cannot provide seeds, deck order, startup scripts, or programmed mode; those seams are internal to headless tests/authorized diagnostics.
+- Public commands cannot provide seeds, deck order, startup scripts, or programmed mode; those seams are internal to headless test/authorized diagnostics.
 - Commands execute in arrival order through a bounded queue; initialization is single-flight.
 - `dispose` invalidates queued work, aborts cooperative initialization, suppresses late events, and is idempotent.
 - Commands and events are exhaustive unions with `assertNever` consumers.

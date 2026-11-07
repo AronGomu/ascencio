@@ -55,10 +55,7 @@ const releaseRunLock = await acquireAssetDeliveryLock(projectRoot);
 try {
   await mkdir(selectedImageRoot, { recursive: true });
   const shopJson = await readFile(
-    path.join(
-      projectRoot,
-      "assets/content/card-library/authoring/shop-sets.v1.json",
-    ),
+    path.join(projectRoot, "assets/card-library/authoring/shop-sets.v1.json"),
     "utf8",
   );
   const manifestRecords = await readImageManifest(assetRoot);

@@ -1,7 +1,7 @@
 # ADR-084: Asset-free CORE boot
 
 > Status: accepted; implemented by [ADR-099](099_ADR_completed_manual_sqlite_cutover.md) D4/C1
-> Baseline implementation details in body are historical; current build anchors are `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, and `scripts/verify-browser-build.ts`.
+> Baseline implementation details in body are historical; current build anchors are `config/vite.config.ts`, `scripts/lib/vite-app-assets.ts`, and `scripts/verify-browser-build.ts`.
 > Decided: 2026-09-12
 > Owners: shell / build / content
 > Relates: ADR-023 (shell routes), ADR-079 (cold offline shell)
@@ -10,7 +10,7 @@
 
 ## Context
 
-`vite.config.ts` synchronously reads acquired runtime manifest and builds image metadata during config loading. `package.json` builds only after snapshot verification. Fresh checkout therefore cannot reach menu without asset acquisition. `src/shell/AppShell.svelte` includes reactive route restores, catalog warmup and lazy domain paths; disabled buttons alone cannot prevent startup effects.
+`config/vite.config.ts` synchronously reads acquired runtime manifest and builds image metadata during config loading. `package.json` builds only after snapshot verification. Fresh checkout therefore cannot reach menu without asset acquisition. `src/shell/AppShell.svelte` includes reactive route restores, catalog warmup and lazy domain paths; disabled buttons alone cannot prevent startup effects.
 
 ## Decision
 

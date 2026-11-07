@@ -28,7 +28,7 @@ Svelte owns public UI and lifecycle. Two dedicated Workers have separate authori
 ## Build and isolation evidence
 
 - B1. `src/storage/sqlite-worker.ts` and `src/battle/worker/duel.worker-browser.ts` are distinct module Worker entries.
-- B2. `vite.config.ts` includes exact SQLite executable in app/precache while OCG WASM arrives only through imported `duel-core`.
+- B2. `config/vite.config.ts` includes exact SQLite executable in app/precache while OCG WASM arrives only through imported `duel-core`.
 - B3. `scripts/verify-browser-build.ts` rejects content/media/package/extra-WASM leakage and Node-only engine resolution.
 - B4. `scripts/lib/vite-content-deny.ts` rejects private content roots through direct, aliased, encoded, and Vite `@fs` paths.
 - B5. Node/unit/build evidence is code-ready only; owner manual Chromium checklist covers OPFS/offline/second-tab behavior.

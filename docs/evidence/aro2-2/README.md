@@ -3,8 +3,8 @@
 The ARO2-1 Rust evaluator completed the declared ARO2-2 comparison with **99 wins / 100 completed games (99%)**, one loss, zero draws, zero failures and zero skipped games. This exceeds the required 60% for this setup only.
 
 - Run: `run-1793992444791`, 25 sequential four-game matches.
-- Deck: independent copies of `content/freeplay/decks/player.ydk`; the manifest retains the exact deck and its digest.
-- Rules: MR5, `tests/fixtures/bot-evaluation/three-copy-rules.json`.
+- Deck: independent copies of `assets/freeplay/decks/player.ydk`; the manifest retains the exact deck and its digest.
+- Rules: MR5, `test/fixtures/bot-evaluation/three-copy-rules.json`.
 - Bots: `builtin:generalist` vs `builtin:random`, empty configurations; no sideboard changes.
 - Starting player: 50 games each, paired before and after sideboarding; normal engine shuffle.
 - Limits: 10 seconds/game, 1 second/decision or sideboard hook, 200 turns and 100,000 decisions/game.

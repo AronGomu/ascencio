@@ -20,7 +20,7 @@ One long-lived branch: `main`. No worktrees.
 - Every change commits on `main`.
 - Remote domain branches stay as an archive; local branches and worktrees are removed once their work is merged.
 - `AGENTS.md` documents the branch model, not a lane table.
-- **ADR-022's import boundaries are unaffected.** They were never enforced by branches: `eslint.config.js` `no-restricted-imports` zones and `tests/unit/domain-boundaries.test.ts` do that, and both keep running in `check:headless`. Public entries stay `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts`, `src/decks/index.ts`.
+- **ADR-022's import boundaries are unaffected.** They were never enforced by branches: `config/eslint.config.js` `no-restricted-imports` zones and `test/unit/domain-boundaries.test.ts` do that, and both keep running in `check:headless`. Public entries stay `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts`, `src/decks/index.ts`.
 
 ## Consequences
 

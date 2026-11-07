@@ -23,7 +23,7 @@ export interface AssetFailure {
 }
 export interface AssetSuccess {
   readonly status: "ok";
-  readonly operation: "scan" | "check" | "promote" | "migrate";
+  readonly operation: "migrate";
   readonly snapshotSha256: Sha256 | null;
 }
 export type AssetResult = AssetSuccess | AssetFailure;

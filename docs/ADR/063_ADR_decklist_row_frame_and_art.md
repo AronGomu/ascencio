@@ -11,7 +11,7 @@
 
 Frame colour is card-type semantics — nine frames (normal/effect/ritual/fusion/synchro/xyz/link/spell/trap) classified from OCG type bits with precedence spell > trap > link > xyz > synchro > fusion > ritual > effect > normal. Three hosts (deck editor library, story pre-battle, free-play match setup) resolve rows; the panel renders them. Duplicating the nine-colour palette between `src/decks/` and the panel would drift silently — nothing ties two hex lists together.
 
-AGENTS.md describes `src/deck-select/` as importing "no sibling domain at all". The machine checks are narrower: `tests/unit/domain-boundaries.test.ts:109` returns true for target `"decks"` for every domain, and the deck-select ESLint zone lists no decks group — `src/decks/` is the shared deck-data library, not a sibling UI domain.
+AGENTS.md describes `src/deck-select/` as importing "no sibling domain at all". The machine checks are narrower: `test/unit/domain-boundaries.test.ts:109` returns true for target `"decks"` for every domain, and the deck-select ESLint zone lists no decks group — `src/decks/` is the shared deck-data library, not a sibling UI domain.
 
 ## Decision
 

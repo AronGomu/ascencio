@@ -11,18 +11,18 @@ T1 establishes Chapter 1 source-policy readiness. It does not install or publish
 1. **P1.** Use Node.js 26 or newer with npm.
 2. **P2.** Keep project dependencies installed from the pinned lockfile.
 3. **P3.** Provide Chromium through the existing Playwright installation.
-4. **P4.** Keep `content/authoring/card-set-source.json` byte-identical at SHA-256 `b3ac778e5f1b9927554ef8e66185a596c0c35d71ab642b448c952c6c9050496d`.
+4. **P4.** Keep `assets/authoring/card-set-source.json` byte-identical at SHA-256 `b3ac778e5f1b9927554ef8e66185a596c0c35d71ab642b448c952c6c9050496d`.
 
 Private loopback installation does **not** require a Cloudflare account, Cloudflare keys, a rights-to-publish declaration, or Android/iPhone/iPad testers. Public publishing and native-device acceptance are outside this release scope. Existing `publishReady` diagnostics remain public-release checks and do not block private `codeReady` acceptance.
 
 ## Source ownership
 
-- **O1.** `content/authoring/card-set-source.json` is frozen raw audit evidence. Never edit it to make runtime IDs or source gaps pass.
-- **O2.** `content/authoring/chapter-one-corrections.json` owns the exact approved Chapter 1 alias and exclusions.
-- **O3.** `content/chapter-selections.json` owns the shipped Chapter 1 set selection. Collector-edition PCY metadata is absent; the separate PCY promotional set remains selected.
+- **O1.** `assets/authoring/card-set-source.json` is frozen raw audit evidence. Never edit it to make runtime IDs or source gaps pass.
+- **O2.** `assets/authoring/chapter-one-corrections.json` owns the exact approved Chapter 1 alias and exclusions.
+- **O3.** `assets/chapter-selections.json` owns the shipped Chapter 1 set selection. Collector-edition PCY metadata is absent; the separate PCY promotional set remains selected.
 - **O4.** `scripts/lib/chapter-source-policy.ts` is the sole normalization path for setup, deck compatibility, prepared metadata, and chapter payload/acquisition consumers.
-- **O5.** `content/authoring/chapter-one-set-media.json` records the exact 19 Chapter 1 sets for which the authoritative YGOPRODeck `cardsets.php` record has no `set_image`. Each record pins set id, exact source name/code, provider record count, and image-bearing record count.
-- **O6.** `content/authoring/ygoprodeck-cardsets-2026-09-12.json` preserves the bounded 175,008-byte provider response at SHA-256 `9e7d1351e957c49646257db78592996d8a62729a269dacb4c79ede10f42316b4`. Preparation and setup rehash those bytes, derive every selected set without `set_image`, then require exact equality with O5. Stale, omitted, or arbitrary exceptions fail closed.
+- **O5.** `assets/authoring/chapter-one-set-media.json` records the exact 19 Chapter 1 sets for which the authoritative YGOPRODeck `cardsets.php` record has no `set_image`. Each record pins set id, exact source name/code, provider record count, and image-bearing record count.
+- **O6.** `assets/authoring/ygoprodeck-cardsets-2026-09-12.json` preserves the bounded 175,008-byte provider response at SHA-256 `9e7d1351e957c49646257db78592996d8a62729a269dacb4c79ede10f42316b4`. Preparation and setup rehash those bytes, derive every selected set without `set_image`, then require exact equality with O5. Stale, omitted, or arbitrary exceptions fail closed.
 
 Normalization maps source code `81480461` to runtime code `81480460`, excludes unsupported prize-card codes `501000000` and `501000001`, and excludes only `Yu-Gi-Oh! Power of Chaos: Yugi the Destiny Limited Collector's Edition`. It performs no name-based or general alias inference.
 
@@ -49,7 +49,7 @@ Bounded setup inspection validates runtime manifests, JPEG signatures/sizes, and
 | Sets with authoritative image ref |    56 |
 | Sets with approved null image     |    19 |
 
-All 75 sets remain in gameplay data. `ChapterSet.image` is `null` only for the 19 exact evidence records in `content/authoring/chapter-one-set-media.json`; every other set carries a verified image reference. No generated art, unrelated card art, or missing-URL placeholder may substitute for set art. UI passes `null` to `SetTile`, which renders the set name and release year without an `<img>`.
+All 75 sets remain in gameplay data. `ChapterSet.image` is `null` only for the 19 exact evidence records in `assets/authoring/chapter-one-set-media.json`; every other set carries a verified image reference. No generated art, unrelated card art, or missing-URL placeholder may substitute for set art. UI passes `null` to `SetTile`, which renders the set name and release year without an `<img>`.
 
 ## Acceptance
 
@@ -59,7 +59,7 @@ Run from repository root:
 node --version
 npm --version
 npx playwright install --dry-run chromium
-npx vitest run tests/unit/chapter-source-policy.test.ts tests/unit/content-setup*.test.ts tests/unit/chapter-one-decks.test.ts
+npx vitest run test/unit/chapter-source-policy.test.ts test/unit/content-setup*.test.ts test/unit/chapter-one-decks.test.ts
 npx tsc --noEmit
 npm run vendor:verify
 ```

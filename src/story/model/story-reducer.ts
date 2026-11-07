@@ -451,7 +451,7 @@ function reduceStoryCommand(
 
          The other half of that contract is that nothing downstream may add a
          card — not `finish-opening`, not `acknowledge-opened` — or the same
-         pull lands twice. `tests/unit/story/credit-at-open.test.ts` holds
+         pull lands twice. `test/unit/story/credit-at-open.test.ts` holds
          both halves. */
       const collection: Record<number, number> = { ...state.collection };
       for (const { code } of cards) {

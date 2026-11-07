@@ -9,3 +9,5 @@ playwright-report/
 test-results/
 vendor/
 package-lock.json
+
+.tmp/

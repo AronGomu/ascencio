@@ -23,7 +23,7 @@ pub fn validate(path: &Path, root: &str) -> Result<()> {
     }
     let output = std::process::Command::new("xmllint")
         .args(["--nonet", "--stream", "--noout", "--schema"])
-        .arg(format!("schemas/bot-evaluation/v1/{root}.xsd"))
+        .arg(format!("tools/bot-evaluation/schemas/v1/{root}.xsd"))
         .arg(path)
         .output()?;
     if !output.status.success() {

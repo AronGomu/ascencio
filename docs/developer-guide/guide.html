@@ -539,8 +539,8 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
         <tr><td>Projection/opponent</td><td>Privacy-safe immutable state; deterministic legal-action policy</td><td class="path">src/battle/worker/projection/<br>src/battle/worker/opponent/</td><td><span class="tag red">privacy</span></td></tr>
         <tr><td>Presentation</td><td>Svelte semantic controls; lazy Phaser visual field</td><td class="path">src/battle/app/prompts/<br>src/battle/field/</td><td><span class="tag">contained</span></td></tr>
         <tr><td>Storage/assets</td><td>Verified runtime fetch/cache, image cache, IndexedDB activation/rollback</td><td class="path">src/battle/storage/<br>src/battle/worker/assets/<br>src/battle/app/images/</td><td><span class="tag gold">integrity</span></td></tr>
-        <tr><td>Build/tooling</td><td>Asset sync, snapshot generation, Vite packaging, independent verification</td><td class="path">scripts/<br>vite.config.ts</td><td><span class="tag gold">release</span></td></tr>
-        <tr><td>Quality</td><td>Unit, component, real-WASM, Worker-thread, production browser gates</td><td class="path">tests/<br>e2e/<br>.github/workflows/ci.yml</td><td><span class="tag">broad</span></td></tr>
+        <tr><td>Build/tooling</td><td>Asset sync, snapshot generation, Vite packaging, independent verification</td><td class="path">scripts/<br>config/vite.config.ts</td><td><span class="tag gold">release</span></td></tr>
+        <tr><td>Quality</td><td>Unit, component, real-WASM, Worker-thread, production browser gates</td><td class="path">test/<br>e2e/<br>.github/workflows/ci.yml</td><td><span class="tag">broad</span></td></tr>
       </tbody>
     </table>
   </section>
@@ -566,7 +566,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       <div class="panel warning"><h3>Private deployment</h3><p>Image redistribution remains unapproved. Normal production packaging refuses artwork. Approved command uses explicit private mode and writes marker.</p></div>
       <div class="panel"><h3>Two runtime hosts</h3><p>Browser Worker and Node Worker use shared runtime with separate asset loaders/bridges. Keep contracts host-neutral; test both boundaries.</p></div>
       <div class="panel"><h3>Fallback complexity</h3><p>Runtime + image fallbacks depend on synchronized snapshot metadata, digest receipts, cache namespaces, active/previous pointers.</p></div>
-      <div class="panel"><h3>Docs drift</h3><p>Architecture docs are strong but status text differs. Verify statements against current tests/config before relying on historical plan docs.</p></div>
+      <div class="panel"><h3>Docs drift</h3><p>Architecture docs are strong but status text differs. Verify statements against current test/config before relying on historical plan docs.</p></div>
     </div>
   </section>
 
@@ -689,7 +689,7 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
     <h2>Privacy path</h2>
     <div class="notice danger"><strong>Critical invariant.</strong> Opponent hidden card identity must never cross Worker boundary. Rendering a card back is insufficient if code/name remains in JS object.</div>
     <ol class="flow-list"><li>Raw core message may contain card code and field location inside Worker.</li><li><code>DuelStateProjector</code> applies visibility policy. Opponent hand gets <code>handCount</code>, but public <code>hand</code> array is empty.</li><li>When visible card becomes hidden, projector rotates public instance ID and deletes code.</li><li><code>PromptRegistry</code> redacts prompt card code/name/description when viewer cannot see identity.</li><li>Outbound event parser rechecks public state: opponent hand identity array must remain empty.</li><li>Svelte/Phaser receive hidden cards without identity; Phaser selects card-back texture from <code>hidden</code>.</li><li>E2E captures real Worker events and asserts opponent hand objects remain empty.</li></ol>
-    <p class="source-ref">Key files: src/battle/duel/card-visibility.ts · src/battle/worker/projection/DuelStateProjector.ts · src/battle/worker/protocol/PromptRegistry.ts · src/battle/duel/contracts/duel-worker-event.ts · e2e/e2e-global/duel-smoke.spec.ts</p>
+    <p class="source-ref">Key files: src/battle/duel/card-visibility.ts · src/battle/worker/projection/DuelStateProjector.ts · src/battle/worker/protocol/PromptRegistry.ts · src/battle/duel/contracts/duel-worker-event.ts · test/e2e/application/duel-smoke.spec.ts</p>
   </section>
 
   <section id="architecture--direction">
@@ -714,11 +714,11 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       <tr><td>How is prompt encoded?</td><td class="path">src/battle/worker/protocol/PromptRegistry.ts</td><td class="path">player-prompt.ts · prompt-selection.ts · sum-selection.ts</td></tr>
       <tr><td>How is state projected/redacted?</td><td class="path">src/battle/worker/projection/DuelStateProjector.ts</td><td class="path">card-visibility.ts · public-duel-state.ts</td></tr>
       <tr><td>How does core start/process?</td><td class="path">src/battle/worker/engine/DuelSession.ts</td><td class="path">OcgCoreAdapter.ts · HeadlessDuelController.ts</td></tr>
-      <tr><td>How does opponent choose?</td><td class="path">src/battle/worker/opponent/OpponentPolicy.ts</td><td class="path">tests/unit/opponent-policy.test.ts</td></tr>
+      <tr><td>How does opponent choose?</td><td class="path">src/battle/worker/opponent/OpponentPolicy.ts</td><td class="path">test/unit/opponent-policy.test.ts</td></tr>
       <tr><td>How does visual field update?</td><td class="path">src/battle/app/components/DuelField.svelte</td><td class="path">create-phaser-presentation-bridge.ts → DuelScene.ts</td></tr>
       <tr><td>How are runtime assets trusted?</td><td class="path">src/battle/worker/assets/browser-runtime-assets.ts</td><td class="path">runtime-manifest.ts · vite-runtime-assets.ts · verify-browser-build.ts</td></tr>
       <tr><td>How does rollback work?</td><td class="path">src/battle/storage/snapshot-store.ts</td><td class="path">revision-cache-cleanup.ts · browser-snapshot-pointer.ts</td></tr>
-      <tr><td>What proves production behavior?</td><td class="path">e2e/e2e-global/duel-smoke.spec.ts</td><td class="path">tests/integration/node-worker-thread.test.ts · programmed-duel.test.ts</td></tr>
+      <tr><td>What proves production behavior?</td><td class="path">test/e2e/application/duel-smoke.spec.ts</td><td class="path">test/integration/node-worker-thread.test.ts · programmed-duel.test.ts</td></tr>
     </tbody></table>
   </section>
 
@@ -907,11 +907,11 @@ nav a.is-active { color: var(--ink); background: var(--surface-2); box-shadow: i
       </svg>
     </figure>
     <table><thead><tr><th>Layer</th><th>What it proves</th><th>Representative suites</th></tr></thead><tbody>
-      <tr><td>Pure unit</td><td>Parser/encoder behavior, privacy, immutable state, prompt constraints, opponent choices, client/store state</td><td class="path">tests/unit/contracts.test.ts<br>prompt-registry.test.ts<br>duel-state-projector.test.ts<br>duel-worker-client.test.ts</td></tr>
-      <tr><td>Component</td><td>Every prompt family maps to accessible controls and valid submission behavior</td><td class="path">tests/component/PromptControls.test.ts</td></tr>
-      <tr><td>Integration</td><td>Real WASM startup/processing, active deps, controller lifecycle, actual Node Worker structured clone</td><td class="path">tests/integration/real-wasm-smoke.test.ts<br>programmed-duel.test.ts<br>node-worker-thread.test.ts</td></tr>
-      <tr><td>Legacy pipeline</td><td>Asset import helpers and acquisition behavior</td><td class="path">tests/*.test.ts</td></tr>
-      <tr><td>Browser E2E</td><td>Production static package at subpath, real browser Worker/WASM/images, hidden privacy, full keyboard duel, restart, timeouts, fallbacks</td><td class="path">e2e/e2e-global/duel-smoke.spec.ts</td></tr>
+      <tr><td>Pure unit</td><td>Parser/encoder behavior, privacy, immutable state, prompt constraints, opponent choices, client/store state</td><td class="path">test/unit/contracts.test.ts<br>prompt-registry.test.ts<br>duel-state-projector.test.ts<br>duel-worker-client.test.ts</td></tr>
+      <tr><td>Component</td><td>Every prompt family maps to accessible controls and valid submission behavior</td><td class="path">test/component/PromptControls.test.ts</td></tr>
+      <tr><td>Integration</td><td>Real WASM startup/processing, active deps, controller lifecycle, actual Node Worker structured clone</td><td class="path">test/integration/real-wasm-smoke.test.ts<br>programmed-duel.test.ts<br>node-worker-thread.test.ts</td></tr>
+      <tr><td>Legacy pipeline</td><td>Asset import helpers and acquisition behavior</td><td class="path">test/tooling/*.test.ts</td></tr>
+      <tr><td>Browser E2E</td><td>Production static package at subpath, real browser Worker/WASM/images, hidden privacy, full keyboard duel, restart, timeouts, fallbacks</td><td class="path">test/e2e/application/duel-smoke.spec.ts</td></tr>
     </tbody></table>
     <h3>E2E browser matrix</h3><ul><li><strong>Product target:</strong> Chromium PWA family (Chrome/Edge/Chromium).</li><li><strong>Chromium:</strong> complete flow suite, including full duel; sole field-migration acceptance engine.</li><li><strong>Firefox/WebKit:</strong> optional CI hygiene smoke only; not product acceptance for DOM-field migration.</li><li><strong>Base path:</strong> <code>/ygo-story-duel/</code> catches root-relative Worker/WASM/image bugs.</li><li><strong>Artifacts on failure:</strong> trace, screenshot, video retained.</li></ul>
   </section>
@@ -956,7 +956,7 @@ npm run assets:bootstrap
 npm run check
 npm run frontend:dev</code></pre>
     <div class="grid-2"><div class="panel"><h3><code>npm ci</code></h3><p>Installs exact lockfile dev/runtime deps. Node engine requirement: <code>&gt;=24.0.0</code>.</p></div><div class="panel"><h3><code>npm run assets:bootstrap</code></h3><p>Acquires vendored core, upstream DB/scripts/strings, image archive, generated snapshots. Resumable; rerun after network failure.</p></div><div class="panel"><h3><code>npm run check</code></h3><p>Runs complete local release gates. First run installs no browsers automatically; Playwright browser binaries must exist.</p></div><div class="panel"><h3><code>npm run frontend:dev</code></h3><p>Starts Vite. Dev middleware serves verified runtime files under configured base with no-store caching.</p></div></div>
-    <h3>Quick launchers</h3><p>Windows: <code>download-mvp-assets.cmd</code>. macOS/Linux: <code>./download-mvp-assets.sh</code>. Both set project cwd, accept same flags as unified command.</p>
+    <h3>Quick launchers</h3><p>Windows: <code>scripts/download-mvp-assets.cmd</code>. macOS/Linux: <code>./scripts/download-mvp-assets.sh</code>. Both set project cwd, accept same flags as unified command.</p>
     <details><summary>Useful asset flags</summary><div><pre><code>npm run assets:bootstrap -- --offline
 npm run assets:bootstrap -- --concurrency 8 --requests-per-second 12
 npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code> requires populated caches/archive. Default image concurrency/rate: 18; hard max rate: 20 req/s.</p></div></details>
@@ -965,7 +965,7 @@ npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code>
   <section id="onboarding--verify">
     <h2>Verify environment incrementally</h2>
     <ol class="flow-list"><li><strong>Identity:</strong> <code>node --version</code> → 24+; <code>npm --version</code>; <code>git --version</code>.</li><li><strong>Generated status:</strong> <code>generated/mvp-assets-status.json</code> must say <code>ready</code>.</li><li><strong>Vendor:</strong> <code>npm run vendor:verify</code>.</li><li><strong>Data:</strong> <code>npm run assets:verify-all</code> + <code>npm run content:source-manifest:verify</code>.</li><li><strong>Static quality:</strong> <code>npm run format:check &amp;&amp; npm run lint &amp;&amp; npm run typecheck</code>.</li><li><strong>Fast behavior:</strong> <code>npm run test:unit-and-performance</code>.</li><li><strong>Real core:</strong> <code>npm run test:integration</code>.</li><li><strong>Browser package:</strong> <code>npm run frontend:build</code>, then <code>npm run test:browser:native-bridge</code>.</li></ol>
-    <div class="notice warning"><strong>Vite prerequisite.</strong> <code>vite.config.ts</code> reads <code>generated/runtime/current/manifest.json</code> immediately. Missing generated assets can fail config loading before dev server starts.</div>
+    <div class="notice warning"><strong>Vite prerequisite.</strong> <code>config/vite.config.ts</code> reads <code>generated/runtime/current/manifest.json</code> immediately. Missing generated assets can fail config loading before dev server starts.</div>
   </section>
 
   <section id="onboarding--mental">
@@ -994,7 +994,7 @@ npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code>
 │   ├── worker/    # runtime, engine, protocol, projection, opponent, assets
 │   └── styles/    # global app styling
 ├── scripts/       # acquisition, transform, snapshot, package verification
-├── tests/
+├── test/
 │   ├── unit/      # focused behavior/boundary tests
 │   ├── component/ # Svelte prompt controls
 │   ├── integration/ # real WASM, Worker thread, full scenarios
@@ -1004,7 +1004,7 @@ npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code>
 ├── vendor/        # checked-in integrity-verified engine package
 ├── generated/     # ignored generated snapshot/image archive
 ├── .cache/        # ignored upstream Git/temp inputs
-├── vite.config.ts # compile-time snapshot IDs + runtime packaging plugins
+├── config/vite.config.ts # compile-time snapshot IDs + runtime packaging plugins
 └── package.json   # commands and gate composition</code></pre>
     <h3>Read order for all contributors</h3><ol class="flow-list"><li><code>README.md</code> for current status, setup, commands, limits.</li><li><code>docs/developer-guide/index.html</code> for visual system map.</li><li><code>docs/architecture/architecture.md</code> for canonical invariants/task routing.</li><li>Relevant focused architecture doc.</li><li>Owning source file + direct tests.</li><li>Neighboring contract producer/consumer before edit.</li></ol>
   </section>
@@ -1025,7 +1025,7 @@ npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code>
       <tr><td>Change Worker lifecycle</td><td>topology.md + duel-lifecycle.md</td><td class="path">DuelWorkerClient.ts<br>duel.worker.ts<br>DuelWorkerRuntime.ts</td><td>client + attachment + runtime + Node Worker integration + E2E timeout/restart</td></tr>
       <tr><td>Update engine/data</td><td>asset-snapshots.md + asset pipeline doc</td><td class="path">scripts/<br>vendor/<br>generated manifests</td><td>all asset verifiers + all integration + build + E2E</td></tr>
       <tr><td>Change browser storage</td><td>browser-storage.md</td><td class="path">snapshot-store.ts<br>revision-cache-cleanup.ts<br>App.svelte</td><td>snapshot/revision unit + fallback integration + browser refresh cases</td></tr>
-      <tr><td>Change packaging/base paths</td><td>browser-platform.md + licensing doc</td><td class="path">vite.config.ts<br>vite-runtime-assets.ts<br>verify-browser-build.ts<br>playwright.config.ts</td><td>build verify + reproducibility + E2E non-root base</td></tr>
+      <tr><td>Change packaging/base paths</td><td>browser-platform.md + licensing doc</td><td class="path">config/vite.config.ts<br>vite-runtime-assets.ts<br>verify-browser-build.ts<br>test/config/playwright.config.ts</td><td>build verify + reproducibility + E2E non-root base</td></tr>
     </tbody></table>
   </section>
 
@@ -1050,10 +1050,10 @@ npm run assets:bootstrap -- --force-images</code></pre><p><code>--offline</code>
 
     <h3>Targeted commands</h3>
     <pre><code># focused test file
-npx vitest run tests/unit/prompt-registry.test.ts
+npx vitest run test/unit/prompt-registry.test.ts
 
 # real Worker boundary
-npx vitest run tests/integration/node-worker-thread.test.ts
+npx vitest run test/integration/node-worker-thread.test.ts
 
 # production package validation
 npm run frontend:build

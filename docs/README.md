@@ -2,6 +2,10 @@
 
 This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
 
+[`project-guide.md`](project-guide.md) contains operating guidance, local validation policy, architecture constraints, document conventions, and task-management instructions.
+
+[Product direction](PRODUCT.md) describes product goals and priorities; [design direction](DESIGN.md) records the visual design.
+
 [`desktop-setup.md`](desktop-setup.md) covers fresh clones, native prerequisites and headless checks on Windows, macOS and Linux.
 
 [`development-commands.md`](development-commands.md) lists every current npm command, standalone native launch instructions, and the explicit coverage limits of aggregate checks.
@@ -100,7 +104,7 @@ All configured package links are null. Local file selection remains available. A
 | [`MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](MVP_TECHNICAL_IMPLEMENTATION_PLAN.md)                                                         | Completed MVP/Phaser baseline audit plan                                                  |
 | [`assets/asset-import-pipeline.md`](assets/asset-import-pipeline.md)                                                                   | Implemented asset acquisition, generation, and verification pipeline                      |
 | [`assets/manual-sqlite-setup.md`](assets/manual-sqlite-setup.md)                                                                       | Current owner setup and release/manual-acceptance gates                                   |
-| [`assets/asset-profiles.md`](assets/asset-profiles.md)                                                                                 | Retained local scan/migrate/promote/restructure tools and package-root boundaries         |
+| [`assets/asset-profiles.md`](assets/asset-profiles.md)                                                                                 | Asset source layout, removed profiles, and retained copy-migration tools                  |
 | [`assets/asset-root-inventory.md`](assets/asset-root-inventory.md)                                                                     | Historical pre-migration inventory; not current path configuration                        |
 
 Legacy hosted setup/bundle documents remain at stable paths with supersession banners; they are history, not runnable current setup.

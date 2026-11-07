@@ -44,11 +44,11 @@ Create domain boundaries without changing runtime behavior.
 ### Work
 
 - Add target domain directories only as first used.
-- Add `index.ts`, README, AGENTS for shell/campaign/narrative/map/battle/content/assets/saves/decks/pwa.
+- Add `index.ts`, README, AGENTS for shell/campaign/narrative/map/battle/assets/saves/decks/pwa.
 - Add import-boundary ESLint rules.
 - Add temporary narrow migration exceptions for existing duel paths.
 - Define shared opaque IDs in owning domains.
-- Add architecture tests/lint fixtures proving forbidden deep imports fail.
+- Add architecture test/lint fixtures proving forbidden deep imports fail.
 - Keep current `src/main.ts` → existing `App.svelte` behavior unchanged.
 
 ### Verification

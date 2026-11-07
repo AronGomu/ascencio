@@ -26,7 +26,7 @@ listed but unavailable. Draw probabilities and pack size remain unchanged.
 The implementation and regression contract are
 `src/story/shop/data/shop-pricing.ts`,
 `src/story/shop/data/shop-set-data.ts`, and
-`tests/unit/story/installed-shop-set-data.test.ts`.
+`test/unit/story/installed-shop-set-data.test.ts`.
 
 ## Context
 

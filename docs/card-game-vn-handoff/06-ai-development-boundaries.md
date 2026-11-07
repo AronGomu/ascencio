@@ -20,7 +20,7 @@ src/<domain>/
 └── focused implementation folders
 ```
 
-Tests remain under existing central `tests/` hierarchy, grouped by domain. Do not create per-domain `package.json` or `tsconfig.json`.
+Tests remain under existing central `test/` hierarchy, grouped by domain. Do not create per-domain `package.json` or `config/tsconfig.json`.
 
 ## AGENTS.md template
 
@@ -214,7 +214,7 @@ Forbidden:
 
 ```text
 src/pwa/
-vite.config.ts
+config/vite.config.ts
 service-worker source
 web app manifest
 ```
@@ -288,17 +288,17 @@ Never create generic `shared`, `common`, `utils`, or `core` dumping grounds.
 ## Test ownership
 
 ```text
-tests/unit/campaign/
-tests/unit/narrative/
-tests/unit/map/
-tests/unit/decks/
-tests/unit/saves/
-tests/unit/content/
-tests/unit/pwa/
-tests/component/narrative/
-tests/component/map/
-tests/component/shell/
-tests/integration/story-battle-flow/
+test/unit/campaign/
+test/unit/narrative/
+test/unit/map/
+test/unit/decks/
+test/unit/saves/
+test/unit/content/
+test/unit/pwa/
+test/component/narrative/
+test/component/map/
+test/component/shell/
+test/integration/story-battle-flow/
 e2e/prologue-offline.spec.ts
 ```
 

@@ -22,7 +22,13 @@ The loop configuration is JSON; evaluator configuration and all game evidence re
   "initial_strategy": "/absolute/path/initial-strategy.mjs",
   "output": "/absolute/path/new-run",
   "agent": ["/absolute/path/your-coding-agent-adapter"],
-  "checks": [["node", "--experimental-vm-modules", "scripts/bot-improvement/check-strategy.ts"]],
+  "checks": [
+    [
+      "node",
+      "--experimental-vm-modules",
+      "scripts/bot-improvement/check-strategy.ts"
+    ]
+  ],
   "command_inputs": ["/absolute/path/your-adapter-dependencies"],
   "max_iterations": 20,
   "max_games": 60000,
@@ -49,7 +55,13 @@ The adapter must run without interactive prompts, finish within its deadline, an
 {
   "no_change": false,
   "diagnosis": "Describe the observed tactical weakness.",
-  "evidence": [{"path": "/absolute/player-a.xml", "game_id": "match-000001-game-1", "decision_id": "a-decision-1"}],
+  "evidence": [
+    {
+      "path": "/absolute/player-a.xml",
+      "game_id": "match-000001-game-1",
+      "decision_id": "a-decision-1"
+    }
+  ],
   "play_changes": "Describe the scoring change.",
   "sideboarding_changes": "Describe exchanges, or say unchanged.",
   "tests": "Describe any checks performed by the agent."
@@ -86,4 +98,4 @@ Create `CANCEL` in the output directory or send SIGINT to stop. Remove `CANCEL` 
 
 ## Validation
 
-Use the repository's targeted test workflow. `tests/bot-improvement.test.ts` runs real four-game evaluation and tests rejected proposals, immutable incumbents, completed-run resume, failed-agent recovery and changed-config refusal. Set `ARO2_ACCEPTANCE_SNAPSHOT` to a complete verified snapshot to enable it. Rust tests cover conservative confidence decisions, archive tamper detection and process-group watchdog/cancellation. Existing bot tests cover legal responses, hidden identities and simulator policy adaptation.
+Use the repository's targeted test workflow. `test/tooling/bot-improvement.test.ts` runs real four-game evaluation and tests rejected proposals, immutable incumbents, completed-run resume, failed-agent recovery and changed-config refusal. Set `ARO2_ACCEPTANCE_SNAPSHOT` to a complete verified snapshot to enable it. Rust tests cover conservative confidence decisions, archive tamper detection and process-group watchdog/cancellation. Existing bot tests cover legal responses, hidden identities and simulator policy adaptation.

@@ -1,4 +1,4 @@
-/** Legacy source relocation map: local copy/promotion only, never build or serving. */
+/** Legacy source relocation map: local copy only, never build or serving. */
 export const ASSET_SOURCES = {
   data: {
     legacy: "generated/assets/current",
@@ -52,17 +52,21 @@ export const ASSET_SOURCES = {
 
 /** Package-owned acquisition/snapshot roots. Frozen vendor stays separate. */
 export const PACKAGE_ASSET_SOURCES = {
-  data: { source: "assets/content/card-library/data" },
+  data: { source: "assets/card-library/data" },
   dataManifest: { source: "generated/content-inputs/data/manifest.json" },
   dataManifestSha256: {
     source: "generated/content-inputs/data/manifest.sha256",
   },
-  strings: { source: "content/duel-core/strings" },
+  strings: { source: "assets/duel-core/strings" },
   runtime: { source: "generated/content-inputs/runtime" },
-  fullImages: { source: "assets/content/card-library/images/full" },
-  croppedImages: { source: "assets/content/card-library/images/cropped" },
-  cardBack: { source: "assets/content/card-library/images/card-back.jpg" },
-  setImages: { source: "assets/content/card-library/images/sets" },
+  fullImages: { source: "assets/card-library/images/full" },
+  croppedImages: {
+    source: "assets/card-library/images/cropped",
+  },
+  cardBack: {
+    source: "assets/card-library/images/card-back.jpg",
+  },
+  setImages: { source: "assets/card-library/images/sets" },
   acquiredEngine: { source: "generated/acquisition/engine/current" },
-  story: { source: "assets/content/chapter-01/media" },
+  story: { source: "assets/chapter-01/media" },
 } as const;

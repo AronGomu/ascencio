@@ -88,7 +88,7 @@ src/
 │       └── YdkExport.svelte
 └── main.ts                               # Hash-route switch; default duel unchanged
 
-tests/
+test/
 ├── unit/decks/
 ├── component/deck-builder/
 └── fixtures/decks/
@@ -162,8 +162,8 @@ Prototype dynamic import prevents initial execution on duel route. Build may sti
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/app-entry-route.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/prototype-shell.test.ts`
+- [x] `npx vitest run test/unit/app-entry-route.test.ts`
+- [x] `npx vitest run test/component/deck-builder/prototype-shell.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -211,9 +211,9 @@ Prototype dynamic import prevents initial execution on duel route. Build may sti
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/decks/ocg-card-mapper.test.ts`
-- [x] `npx vitest run tests/unit/decks/ocg-mask-parity.test.ts`
-- [x] `npx vitest run tests/unit/decks/prototype-catalog-fixture.test.ts`
+- [x] `npx vitest run test/unit/decks/ocg-card-mapper.test.ts`
+- [x] `npx vitest run test/unit/decks/ocg-mask-parity.test.ts`
+- [x] `npx vitest run test/unit/decks/prototype-catalog-fixture.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -261,8 +261,8 @@ Prototype dynamic import prevents initial execution on duel route. Build may sti
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/decks/deck-model.test.ts`
-- [x] `npx vitest run tests/unit/decks/deck-grid-plan.test.ts`
+- [x] `npx vitest run test/unit/decks/deck-model.test.ts`
+- [x] `npx vitest run test/unit/decks/deck-grid-plan.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -312,8 +312,8 @@ Prototype dynamic import prevents initial execution on duel route. Build may sti
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/decks/deck-validation.test.ts`
-- [x] `npx vitest run tests/unit/decks/deck-resolver.test.ts`
+- [x] `npx vitest run test/unit/decks/deck-validation.test.ts`
+- [x] `npx vitest run test/unit/decks/deck-resolver.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -352,7 +352,7 @@ Prototype dynamic import prevents initial execution on duel route. Build may sti
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/decks/deck-history.test.ts`
+- [x] `npx vitest run test/unit/decks/deck-history.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -396,8 +396,8 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/decks/indexeddb-deck-repository.test.ts`
-- [x] `npx vitest run tests/unit/decks/deck-resolver-integration.test.ts`
+- [x] `npx vitest run test/unit/decks/indexeddb-deck-repository.test.ts`
+- [x] `npx vitest run test/unit/decks/deck-resolver-integration.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -435,9 +435,9 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/decks/ydk-adapter.test.ts`
-- [x] `npx vitest run tests/unit/decks/ydk-history.test.ts`
-- [x] `npx vitest run tests/unit/deck-parser.test.ts`
+- [x] `npx vitest run test/unit/decks/ydk-adapter.test.ts`
+- [x] `npx vitest run test/unit/decks/ydk-history.test.ts`
+- [x] `npx vitest run test/unit/deck-parser.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -476,7 +476,7 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/deck-editor-shell.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-editor-shell.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -519,9 +519,9 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/unit/decks/deck-catalog.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/card-catalog.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/card-details.test.ts`
+- [x] `npx vitest run test/unit/decks/deck-catalog.test.ts`
+- [x] `npx vitest run test/component/deck-builder/card-catalog.test.ts`
+- [x] `npx vitest run test/component/deck-builder/card-details.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -566,8 +566,8 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/deck-zone-grid.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/pointer-drag.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-zone-grid.test.ts`
+- [x] `npx vitest run test/component/deck-builder/pointer-drag.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -606,8 +606,8 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/keyboard-drag.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/deck-builder-a11y.test.ts`
+- [x] `npx vitest run test/component/deck-builder/keyboard-drag.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-builder-a11y.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -647,9 +647,9 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/deck-validation-ui.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/quantity-badge.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/missing-card-placeholder.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-validation-ui.test.ts`
+- [x] `npx vitest run test/component/deck-builder/quantity-badge.test.ts`
+- [x] `npx vitest run test/component/deck-builder/missing-card-placeholder.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -693,9 +693,9 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/deck-autosave.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/deck-history-ui.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/deck-save-conflict.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-autosave.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-history-ui.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-save-conflict.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -738,9 +738,9 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/prototype-entry.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/deck-library.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/deck-crud.test.ts`
+- [x] `npx vitest run test/component/deck-builder/prototype-entry.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-library.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-crud.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -781,9 +781,9 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/ydk-import.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/ydk-export.test.ts`
-- [x] `npx vitest run tests/unit/decks/ydk-adapter.test.ts`
+- [x] `npx vitest run test/component/deck-builder/ydk-import.test.ts`
+- [x] `npx vitest run test/component/deck-builder/ydk-export.test.ts`
+- [x] `npx vitest run test/unit/decks/ydk-adapter.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`
@@ -821,8 +821,8 @@ Use `fake-indexeddb`.
 
 ## Gate
 
-- [x] `npx vitest run tests/component/deck-builder/prototype-state-harness.test.ts`
-- [x] `npx vitest run tests/component/deck-builder/deck-builder-a11y.test.ts`
+- [x] `npx vitest run test/component/deck-builder/prototype-state-harness.test.ts`
+- [x] `npx vitest run test/component/deck-builder/deck-builder-a11y.test.ts`
 - [x] `npm run typecheck`
 - [x] `npm run lint`
 - [x] `npm run format:check`

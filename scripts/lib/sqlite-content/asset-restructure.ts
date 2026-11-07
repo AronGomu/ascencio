@@ -59,40 +59,40 @@ const ROOT_MAPPINGS = [
   ["src/assets/fonts", "assets/app/fonts", "app"],
   [
     "assets/shared/data/current/catalog",
-    "assets/content/card-library/data/catalog",
+    "assets/card-library/data/catalog",
     "card-library",
   ],
   [
     "assets/shared/data/current/scripts",
-    "assets/content/card-library/data/scripts",
+    "assets/card-library/data/scripts",
     "card-library",
   ],
   [
     "assets/shared/data/current/images",
-    "assets/content/card-library/data/images",
+    "assets/card-library/data/images",
     "card-library",
   ],
   [
     "assets/shared/data/current/strings",
-    "content/duel-core/strings",
+    "assets/duel-core/strings",
     "duel-core",
   ],
   [
     "assets/shared/card-images/full",
-    "assets/content/card-library/images/full",
+    "assets/card-library/images/full",
     "card-library",
   ],
   [
     "assets/shared/card-images/cropped",
-    "assets/content/card-library/images/cropped",
+    "assets/card-library/images/cropped",
     "card-library",
   ],
   [
     "assets/shared/set-images",
-    "assets/content/card-library/images/sets",
+    "assets/card-library/images/sets",
     "card-library",
   ],
-  ["assets/story/chapter-01", "assets/content/chapter-01/media", "chapter-01"],
+  ["assets/story/chapter-01", "assets/chapter-01/media", "chapter-01"],
   [
     "assets/battle/engine/current",
     "generated/acquisition/engine/current",
@@ -106,7 +106,7 @@ const FILE_MAPPINGS = new Map<
   ["assets/core/app-icon.svg", ["assets/app/app-icon.svg", "app"]],
   [
     "assets/shared/card-back.jpg",
-    ["assets/content/card-library/images/card-back.jpg", "card-library"],
+    ["assets/card-library/images/card-back.jpg", "card-library"],
   ],
   [
     "assets/shared/data/current/manifest.json",
@@ -121,107 +121,86 @@ const FILE_MAPPINGS = new Map<
     ["generated/content-inputs/runtime/manifest.json", "derived"],
   ],
   [
-    "content/authoring/card-set-source.json",
+    "assets/authoring/card-set-source.json",
+    ["assets/card-library/authoring/card-set-source.json", "card-library"],
+  ],
+  [
+    "assets/authoring/ygoprodeck-cardsets-2026-09-12.json",
     [
-      "assets/content/card-library/authoring/card-set-source.json",
+      "assets/card-library/authoring/ygoprodeck-cardsets-2026-09-12.json",
       "card-library",
     ],
   ],
   [
-    "content/authoring/ygoprodeck-cardsets-2026-09-12.json",
-    [
-      "assets/content/card-library/authoring/ygoprodeck-cardsets-2026-09-12.json",
-      "card-library",
-    ],
+    "assets/authoring/chapter-one-gameplay.json",
+    ["assets/chapter-01/authoring/chapter-one-gameplay.json", "chapter-01"],
   ],
   [
-    "content/authoring/chapter-one-gameplay.json",
+    "assets/authoring/chapter-one-story.json",
+    ["assets/chapter-01/authoring/chapter-one-story.json", "chapter-01"],
+  ],
+  [
+    "assets/authoring/chapter-one-corrections.json",
+    ["assets/chapter-01/authoring/chapter-one-corrections.json", "chapter-01"],
+  ],
+  [
+    "assets/authoring/chapter-one-set-media.json",
+    ["assets/chapter-01/authoring/chapter-one-set-media.json", "chapter-01"],
+  ],
+  [
+    "assets/authoring/chapter-policy.json",
+    ["assets/chapter-01/authoring/chapter-policy.json", "chapter-01"],
+  ],
+  [
+    "assets/authoring/release-date-evidence.json",
+    ["assets/chapter-01/authoring/release-date-evidence.json", "chapter-01"],
+  ],
+  [
+    "assets/authoring/superseded-six-era-mapping.json",
     [
-      "assets/content/chapter-01/authoring/chapter-one-gameplay.json",
+      "assets/chapter-01/authoring/superseded-six-era-mapping.json",
       "chapter-01",
     ],
   ],
   [
-    "content/authoring/chapter-one-story.json",
-    [
-      "assets/content/chapter-01/authoring/chapter-one-story.json",
-      "chapter-01",
-    ],
-  ],
-  [
-    "content/authoring/chapter-one-corrections.json",
-    [
-      "assets/content/chapter-01/authoring/chapter-one-corrections.json",
-      "chapter-01",
-    ],
-  ],
-  [
-    "content/authoring/chapter-one-set-media.json",
-    [
-      "assets/content/chapter-01/authoring/chapter-one-set-media.json",
-      "chapter-01",
-    ],
-  ],
-  [
-    "content/authoring/chapter-policy.json",
-    ["assets/content/chapter-01/authoring/chapter-policy.json", "chapter-01"],
-  ],
-  [
-    "content/authoring/release-date-evidence.json",
-    [
-      "assets/content/chapter-01/authoring/release-date-evidence.json",
-      "chapter-01",
-    ],
-  ],
-  [
-    "content/authoring/superseded-six-era-mapping.json",
-    [
-      "assets/content/chapter-01/authoring/superseded-six-era-mapping.json",
-      "chapter-01",
-    ],
-  ],
-  [
-    "content/chapter-selections.json",
-    [
-      "assets/content/chapter-01/authoring/chapter-selections.json",
-      "chapter-01",
-    ],
+    "assets/chapter-selections.json",
+    ["assets/chapter-01/authoring/chapter-selections.json", "chapter-01"],
   ],
   [
     "public/story/shop-sets.v1.json",
-    ["assets/content/card-library/authoring/shop-sets.v1.json", "card-library"],
+    ["assets/card-library/authoring/shop-sets.v1.json", "card-library"],
   ],
-  ["content/core-bootstrap.json", ["assets/app/content-bootstrap.json", "app"]],
+  ["assets/core-bootstrap.json", ["assets/app/content-bootstrap.json", "app"]],
   [
     "src/battle/duel/presets/decks/player.ydk",
-    ["content/freeplay/decks/player.ydk", "freeplay"],
+    ["assets/freeplay/decks/player.ydk", "freeplay"],
   ],
   [
     "src/battle/duel/presets/decks/opponent.ydk",
-    ["content/freeplay/decks/opponent.ydk", "freeplay"],
+    ["assets/freeplay/decks/opponent.ydk", "freeplay"],
   ],
   [
     "src/battle/duel/presets/decks/chapter-one-starter.ydk",
-    ["assets/content/chapter-01/decks/chapter-one-starter.ydk", "chapter-01"],
+    ["assets/chapter-01/decks/chapter-one-starter.ydk", "chapter-01"],
   ],
   [
     "src/battle/duel/presets/decks/chapter-one-practice.ydk",
-    ["assets/content/chapter-01/decks/chapter-one-practice.ydk", "chapter-01"],
+    ["assets/chapter-01/decks/chapter-one-practice.ydk", "chapter-01"],
   ],
 ]);
 const RETAINED = new Map<string, string>([
-  ["content/README.md", "governance documentation"],
-  ["content/packages.json", "package build recipe"],
-  ["content/duel-core/config.json", "tracked duel-core configuration"],
-  ["content/duel-core/strings/en.json", "tracked duel-core strings"],
-  ["content/freeplay/config.json", "tracked Free Play configuration"],
-  ["content/freeplay/decks.json", "tracked Free Play decks"],
-  ["content/freeplay/decks/player.ydk", "tracked Free Play deck source"],
-  ["content/freeplay/decks/opponent.ydk", "tracked Free Play deck source"],
-  ["content/freeplay/opponents.json", "tracked Free Play opponents"],
-  ["content/freeplay/limits.json", "tracked Free Play limits"],
-  ["content/distribution-evidence.json", "release governance evidence"],
-  ["content/setup-evidence.json", "release governance evidence"],
+  ["assets/README.md", "governance documentation"],
+  ["assets/packages.json", "package build recipe"],
+  ["assets/duel-core/config.json", "tracked duel-core configuration"],
+  ["assets/duel-core/strings/en.json", "tracked duel-core strings"],
+  ["assets/freeplay/config.json", "tracked Free Play configuration"],
+  ["assets/freeplay/decks.json", "tracked Free Play decks"],
+  ["assets/freeplay/decks/player.ydk", "tracked Free Play deck source"],
+  ["assets/freeplay/decks/opponent.ydk", "tracked Free Play deck source"],
+  ["assets/freeplay/opponents.json", "tracked Free Play opponents"],
+  ["assets/freeplay/limits.json", "tracked Free Play limits"],
+  ["assets/distribution-evidence.json", "release governance evidence"],
+  ["assets/setup-evidence.json", "release governance evidence"],
   ["src/battle/duel/presets/decks/burning-abyss.ydk", "unused legacy preset"],
   ["src/battle/duel/presets/decks/nekroz.ydk", "unused legacy preset"],
   ["src/battle/duel/presets/decks/shaddoll.ydk", "unused legacy preset"],
@@ -233,7 +212,7 @@ const INVENTORY_ROOTS = [
   "assets/shared",
   "assets/story",
   "assets/battle/engine/current",
-  "content",
+  "assets",
   "public/story",
   "src/battle/duel/presets/decks",
 ] as const;

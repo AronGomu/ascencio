@@ -4,7 +4,7 @@
    literals of its own, so the three UI domains (duel, deck editor, visual
    novel) restyle onto one source of truth in T16.
    2026-09-02: restyled to the owner-chosen "Basilica Slate" brand direction
-   (PRODUCT.md → Brand Commitments): gold ceremonial accent, warm-white text,
+   (docs/PRODUCT.md → Brand Commitments): gold ceremonial accent, warm-white text,
    serif type, angular radii, translucent glass panel primitives. The slate
    surface family already matched and is unchanged. */
 :root {

@@ -28,19 +28,13 @@ export async function loadChapterOneContentSource(root: string): Promise<{
   readonly unavailableSetImageIds: ReadonlySet<string>;
 }> {
   const sourceBytes = await readFile(
-    path.join(
-      root,
-      "assets/content/card-library/authoring/card-set-source.json",
-    ),
+    path.join(root, "assets/card-library/authoring/card-set-source.json"),
   );
   const source = parseCardSetSource(sourceBytes);
   const selections = parseChapterSelections(
     JSON.parse(
       await readFile(
-        path.join(
-          root,
-          "assets/content/chapter-01/authoring/chapter-selections.json",
-        ),
+        path.join(root, "assets/chapter-01/authoring/chapter-selections.json"),
         "utf8",
       ),
     ) as unknown,
@@ -50,7 +44,7 @@ export async function loadChapterOneContentSource(root: string): Promise<{
       await readFile(
         path.join(
           root,
-          "assets/content/chapter-01/authoring/chapter-one-corrections.json",
+          "assets/chapter-01/authoring/chapter-one-corrections.json",
         ),
         "utf8",
       ),
@@ -73,10 +67,7 @@ export async function loadChapterOneContentSource(root: string): Promise<{
   );
   const shop = JSON.parse(
     await readFile(
-      path.join(
-        root,
-        "assets/content/card-library/authoring/shop-sets.v1.json",
-      ),
+      path.join(root, "assets/card-library/authoring/shop-sets.v1.json"),
       "utf8",
     ),
   ) as { readonly sets?: readonly ExistingSetIdentity[] };

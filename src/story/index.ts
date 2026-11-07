@@ -58,7 +58,7 @@ export { openStoryDeckContext } from "./decks/story-deck-context.ts";
    charge every narrative route for a browser only the collection route opens:
    measured, it takes the story closure from 126,110 to 132,976 bytes against
    the 143,750 budget, inside the ceiling but under the 10% headroom
-   `tests/unit/domain-chunk-closure.test.ts` requires. Loaded, the screen is a
+   `test/unit/domain-chunk-closure.test.ts` requires. Loaded, the screen is a
    chunk of its own and the route that mounts it pays for it. */
 export const loadCollectionScreen = async () =>
   (await import("./collection/CollectionScreen.svelte")).default;

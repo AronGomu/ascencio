@@ -4,7 +4,7 @@
 > Decided: 2026-09-12
 > Owners: content authoring / asset pipeline
 > Relates: ADR-086 (chapter-owned gameplay), ADR-081 (source/profile ownership)
-> Source evidence: `content/authoring/card-set-source.json`, SHA256 `b3ac778e5f1b9927554ef8e66185a596c0c35d71ab642b448c952c6c9050496d`
+> Source evidence: `assets/authoring/card-set-source.json`, SHA256 `b3ac778e5f1b9927554ef8e66185a596c0c35d71ab642b448c952c6c9050496d`
 > Baseline: `36c6f41e35cca9a4d5ca21ae0de00d325736bbe9`
 
 ## Context

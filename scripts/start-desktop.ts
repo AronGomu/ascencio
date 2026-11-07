@@ -35,7 +35,7 @@ build.on("exit", (code) => {
   }
   const binary = path.join(
     root,
-    "src-tauri/target",
+    "tauri/target",
     debug ? "debug" : "release",
     process.platform === "win32" ? "ascencio.exe" : "ascencio",
   );

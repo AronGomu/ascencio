@@ -7,7 +7,7 @@ export async function loadMvpPreset(): Promise<MvpPreset> {
     readFile(
       fileURLToPath(
         new URL(
-          "../../../../content/freeplay/decks/player.ydk",
+          "../../../../assets/freeplay/decks/player.ydk",
           import.meta.url,
         ),
       ),
@@ -16,7 +16,7 @@ export async function loadMvpPreset(): Promise<MvpPreset> {
     readFile(
       fileURLToPath(
         new URL(
-          "../../../../content/freeplay/decks/opponent.ydk",
+          "../../../../assets/freeplay/decks/opponent.ydk",
           import.meta.url,
         ),
       ),

@@ -157,8 +157,8 @@
         <tr><td>Projection/opponent</td><td>Privacy-safe immutable state; deterministic legal-action policy</td><td class="path">src/battle/worker/projection/<br>src/battle/worker/opponent/</td><td><span class="tag red">privacy</span></td></tr>
         <tr><td>Presentation</td><td>Svelte semantic controls; lazy Phaser visual field</td><td class="path">src/battle/app/prompts/<br>src/battle/field/</td><td><span class="tag">contained</span></td></tr>
         <tr><td>Storage/assets</td><td>Verified runtime fetch/cache, image cache, IndexedDB activation/rollback</td><td class="path">src/battle/storage/<br>src/battle/worker/assets/<br>src/battle/app/images/</td><td><span class="tag gold">integrity</span></td></tr>
-        <tr><td>Build/tooling</td><td>Asset sync, snapshot generation, Vite packaging, independent verification</td><td class="path">scripts/<br>vite.config.ts</td><td><span class="tag gold">release</span></td></tr>
-        <tr><td>Quality</td><td>Unit, component, real-WASM, Worker-thread, production browser gates</td><td class="path">tests/<br>e2e/<br>.github/workflows/ci.yml</td><td><span class="tag">broad</span></td></tr>
+        <tr><td>Build/tooling</td><td>Asset sync, snapshot generation, Vite packaging, independent verification</td><td class="path">scripts/<br>config/vite.config.ts</td><td><span class="tag gold">release</span></td></tr>
+        <tr><td>Quality</td><td>Unit, component, real-WASM, Worker-thread, production browser gates</td><td class="path">test/<br>e2e/<br>.github/workflows/ci.yml</td><td><span class="tag">broad</span></td></tr>
       </tbody>
     </table>
   </section>
@@ -184,7 +184,7 @@
       <div class="panel warning"><h3>Private deployment</h3><p>Image redistribution remains unapproved. Normal production packaging refuses artwork. Approved command uses explicit private mode and writes marker.</p></div>
       <div class="panel"><h3>Two runtime hosts</h3><p>Browser Worker and Node Worker use shared runtime with separate asset loaders/bridges. Keep contracts host-neutral; test both boundaries.</p></div>
       <div class="panel"><h3>Fallback complexity</h3><p>Runtime + image fallbacks depend on synchronized snapshot metadata, digest receipts, cache namespaces, active/previous pointers.</p></div>
-      <div class="panel"><h3>Docs drift</h3><p>Architecture docs are strong but status text differs. Verify statements against current tests/config before relying on historical plan docs.</p></div>
+      <div class="panel"><h3>Docs drift</h3><p>Architecture docs are strong but status text differs. Verify statements against current test/config before relying on historical plan docs.</p></div>
     </div>
   </section>
 
@@ -198,6 +198,6 @@
     </div>
   </section>
 </main>
-<footer><p>Generated from current repository working tree. Core references: <code>README.md</code>, <code>docs/architecture/</code>, <code>src/</code>, <code>scripts/</code>, <code>tests/</code>, <code>e2e/</code>.</p></footer>
+<footer><p>Generated from current repository working tree. Core references: <code>README.md</code>, <code>docs/architecture/</code>, <code>src/</code>, <code>scripts/</code>, <code>test/</code>, <code>e2e/</code>.</p></footer>
 </body>
 </html>

@@ -20,7 +20,7 @@ export async function inspectPrototypeDecks(
   )
     return false;
   for (const relative of DECK_CATALOG.map(
-    ({ fileName }) => `assets/content/chapter-01/decks/${fileName}`,
+    ({ fileName }) => `assets/chapter-01/decks/${fileName}`,
   )) {
     const bytes = await readBounded(root, relative, MAX_SETUP_BYTES);
     if (bytes === null) return false;

@@ -106,11 +106,11 @@
       </svg>
     </figure>
     <table><thead><tr><th>Layer</th><th>What it proves</th><th>Representative suites</th></tr></thead><tbody>
-      <tr><td>Pure unit</td><td>Parser/encoder behavior, privacy, immutable state, prompt constraints, opponent choices, client/store state</td><td class="path">tests/unit/contracts.test.ts<br>prompt-registry.test.ts<br>duel-state-projector.test.ts<br>duel-worker-client.test.ts</td></tr>
-      <tr><td>Component</td><td>Every prompt family maps to accessible controls and valid submission behavior</td><td class="path">tests/component/PromptControls.test.ts</td></tr>
-      <tr><td>Integration</td><td>Real WASM startup/processing, active deps, controller lifecycle, actual Node Worker structured clone</td><td class="path">tests/integration/real-wasm-smoke.test.ts<br>programmed-duel.test.ts<br>node-worker-thread.test.ts</td></tr>
-      <tr><td>Legacy pipeline</td><td>Asset import helpers and acquisition behavior</td><td class="path">tests/*.test.ts</td></tr>
-      <tr><td>Browser E2E</td><td>Production static package at subpath, real browser Worker/WASM/images, hidden privacy, full keyboard duel, restart, timeouts, fallbacks</td><td class="path">e2e/e2e-global/duel-smoke.spec.ts</td></tr>
+      <tr><td>Pure unit</td><td>Parser/encoder behavior, privacy, immutable state, prompt constraints, opponent choices, client/store state</td><td class="path">test/unit/contracts.test.ts<br>prompt-registry.test.ts<br>duel-state-projector.test.ts<br>duel-worker-client.test.ts</td></tr>
+      <tr><td>Component</td><td>Every prompt family maps to accessible controls and valid submission behavior</td><td class="path">test/component/PromptControls.test.ts</td></tr>
+      <tr><td>Integration</td><td>Real WASM startup/processing, active deps, controller lifecycle, actual Node Worker structured clone</td><td class="path">test/integration/real-wasm-smoke.test.ts<br>programmed-duel.test.ts<br>node-worker-thread.test.ts</td></tr>
+      <tr><td>Legacy pipeline</td><td>Asset import helpers and acquisition behavior</td><td class="path">test/tooling/*.test.ts</td></tr>
+      <tr><td>Browser E2E</td><td>Production static package at subpath, real browser Worker/WASM/images, hidden privacy, full keyboard duel, restart, timeouts, fallbacks</td><td class="path">test/e2e/application/duel-smoke.spec.ts</td></tr>
     </tbody></table>
     <h3>E2E browser matrix</h3><ul><li><strong>Product target:</strong> Chromium PWA family (Chrome/Edge/Chromium).</li><li><strong>Chromium:</strong> complete flow suite, including full duel; sole field-migration acceptance engine.</li><li><strong>Firefox/WebKit:</strong> optional CI hygiene smoke only; not product acceptance for DOM-field migration.</li><li><strong>Base path:</strong> <code>/ygo-story-duel/</code> catches root-relative Worker/WASM/image bugs.</li><li><strong>Artifacts on failure:</strong> trace, screenshot, video retained.</li></ul>
   </section>

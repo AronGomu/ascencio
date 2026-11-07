@@ -27,10 +27,10 @@ import { withWindowsRenameRetry } from "./lib/windows-rename-retry.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot = path.join(root, "generated/readable-content-v1");
-const pinnedPath = path.join(root, "content/critical-release.json");
-const stage = path.join(root, "src-tauri/resources/readable-content");
+const pinnedPath = path.join(root, "assets/critical-release.json");
+const stage = path.join(root, "tauri/resources/readable-content");
 const recipe = JSON.parse(
-  await readFile(path.join(root, "content/packages.json"), "utf8"),
+  await readFile(path.join(root, "assets/packages.json"), "utf8"),
 ) as { packages: { manifest: unknown }[] };
 if (!Array.isArray(recipe.packages) || recipe.packages.length > 64)
   throw new Error("RELEASE_RECIPE");

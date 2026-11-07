@@ -18,9 +18,9 @@ import { verifyPackageFile } from "./lib/sqlite-content/index.ts";
 import type { PackageBuildSpec } from "../src/storage/contracts/package-build.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const recipePath = path.join(root, "content/packages.json");
-const releasePath = path.join(root, "content/native-release.json");
-const stageRoot = path.join(root, "src-tauri/resources");
+const recipePath = path.join(root, "assets/packages.json");
+const releasePath = path.join(root, "assets/native-release.json");
+const stageRoot = path.join(root, "tauri/resources");
 const marker = ".ascencio-native-stage";
 const markerText = "ascencio-native-stage-v1\n";
 
@@ -51,7 +51,7 @@ if (!["manifest", "prepare", "verify-staged"].includes(command ?? "")) {
       const pinned = parseRelease(await readFile(releasePath, "utf8"));
       if (JSON.stringify(pinned) !== JSON.stringify(expected))
         throw new Error(
-          "Local packages differ from tracked content/native-release.json",
+          "Local packages differ from tracked assets/native-release.json",
         );
       if (command === "prepare") await prepare(pinned);
       else await verifyStaged(pinned);

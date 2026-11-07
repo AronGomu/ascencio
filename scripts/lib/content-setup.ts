@@ -311,7 +311,7 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
       throw error;
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Chapter-01 source corrections are missing or invalid. Restore the exact approved alias and exclusions in assets/content/chapter-01/authoring/chapter-one-corrections.json; never infer aliases or exclusions.",
+      "Chapter-01 source corrections are missing or invalid. Restore the exact approved alias and exclusions in assets/chapter-01/authoring/chapter-one-corrections.json; never infer aliases or exclusions.",
     );
   }
   if (
@@ -320,7 +320,7 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
   ) {
     add(
       "OWNER_MAPPING_REQUIRED",
-      "Provide exactly one chapter-01 selection with all source sets in the approved interval from assets/content/chapter-01/authoring/chapter-policy.json. Empty lists are incomplete scaffolding. Later chapter rows and additional cards are outside this release scope.",
+      "Provide exactly one chapter-01 selection with all source sets in the approved interval from assets/chapter-01/authoring/chapter-policy.json. Empty lists are incomplete scaffolding. Later chapter rows and additional cards are outside this release scope.",
     );
   }
   const sourceSha256 =
@@ -335,12 +335,12 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
   if (!interval)
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Chapter-01 scope interval is missing or invalid. Record approved-chapter-one-scope, inclusive startsOn, exclusive endsBefore, boundaryEvidence and endBoundaryEvidence references, dateConvention and boundaryEvidenceStatus owner-approved-interval-not-exhaustive-history in assets/content/chapter-01/authoring/chapter-policy.json, bound to source SHA-256 and snapshot cutoff. Scope approval is not exhaustive historical verification; do not invent dates or require later chapter boundaries.",
+      "Chapter-01 scope interval is missing or invalid. Record approved-chapter-one-scope, inclusive startsOn, exclusive endsBefore, boundaryEvidence and endBoundaryEvidence references, dateConvention and boundaryEvidenceStatus owner-approved-interval-not-exhaustive-history in assets/chapter-01/authoring/chapter-policy.json, bound to source SHA-256 and snapshot cutoff. Scope approval is not exhaustive historical verification; do not invent dates or require later chapter boundaries.",
     );
   if (!source || !selections || selections.sourceSha256 !== sourceSha256) {
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Provide valid bounded source and selections with matching lowercase SHA-256. Preserve the approved source bytes in assets/content/card-library/authoring/card-set-source.json.",
+      "Provide valid bounded source and selections with matching lowercase SHA-256. Preserve the approved source bytes in assets/card-library/authoring/card-set-source.json.",
     );
   }
   if (source && selections && corrections && normalized) {
@@ -417,7 +417,7 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
   if (!input.availability.prototypeMedia)
     add(
       "SOURCE_COVERAGE_REQUIRED",
-      "Existing Chapter 1 source/media is missing. Restore src/story/content/prologue.ts and assets/content/chapter-01/media/city-map-placeholder.svg; review prototype media rights separately.",
+      "Existing Chapter 1 source/media is missing. Restore src/story/content/prologue.ts and assets/chapter-01/media/city-map-placeholder.svg; review prototype media rights separately.",
     );
 
   if (!input.availability.prototypeDecksCompatible)
@@ -450,7 +450,7 @@ export function verifyContentSetup(input: SetupInput): SetupReport {
   ) {
     add(
       "LICENSE_EVIDENCE_REQUIRED",
-      "Human review required: record approved engine/script source obligations, database terms, artwork and story-media permission references in content/distribution-evidence.json, bound to source SHA-256. Public URLs are not approval; automation validates attestations, not legal truth.",
+      "Human review required: record approved engine/script source obligations, database terms, artwork and story-media permission references in assets/distribution-evidence.json, bound to source SHA-256. Public URLs are not approval; automation validates attestations, not legal truth.",
     );
   }
   add(

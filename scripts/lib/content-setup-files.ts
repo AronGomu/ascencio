@@ -92,7 +92,7 @@ async function inspectAvailability(
   }
   const shop = await json(
     root,
-    "assets/content/card-library/authoring/shop-sets.v1.json",
+    "assets/card-library/authoring/shop-sets.v1.json",
     MAX_SOURCE_BYTES,
   );
   const manifest = await json(
@@ -184,20 +184,20 @@ export async function inspectContentSetup(
 ): Promise<SetupReport> {
   const source = await readBounded(
     root,
-    "assets/content/card-library/authoring/card-set-source.json",
+    "assets/card-library/authoring/card-set-source.json",
     MAX_SOURCE_BYTES,
   );
   const corrections = await json(
     root,
-    "assets/content/chapter-01/authoring/chapter-one-corrections.json",
+    "assets/chapter-01/authoring/chapter-one-corrections.json",
   );
   const selections = await json(
     root,
-    "assets/content/chapter-01/authoring/chapter-selections.json",
+    "assets/chapter-01/authoring/chapter-selections.json",
   );
   const setMedia = await json(
     root,
-    "assets/content/chapter-01/authoring/chapter-one-set-media.json",
+    "assets/chapter-01/authoring/chapter-one-set-media.json",
   );
   const setMediaSource = await readBounded(
     root,
@@ -209,10 +209,10 @@ export async function inspectContentSetup(
     corrections,
     chapterPolicy: await json(
       root,
-      "assets/content/chapter-01/authoring/chapter-policy.json",
+      "assets/chapter-01/authoring/chapter-policy.json",
     ),
     selections,
-    distribution: await json(root, "content/distribution-evidence.json"),
+    distribution: await json(root, "assets/distribution-evidence.json"),
     setup: null,
     environment,
     availability: await inspectAvailability(

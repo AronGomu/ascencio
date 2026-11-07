@@ -8,7 +8,7 @@ The existing SQLite package transport is retained. This change adds module compo
 
 ## Manifest and installed dependencies
 
-Add a recipe entry to `content/packages.json`, with a stable `packageId`, semantic `version`, package `schemaVersion`, timestamp, source directory and sorted dependencies. Build with `npm run legacy:content:export-sqlite`; validate with `npm run legacy:content:verify-sqlite`. Native release preparation is documented in [native-content-release.md](native-content-release.md).
+Add a recipe entry to `assets/packages.json`, with a stable `packageId`, semantic `version`, package `schemaVersion`, timestamp, source directory and sorted dependencies. Build with `npm run legacy:content:export-sqlite`; validate with `npm run legacy:content:verify-sqlite`. Native release preparation is documented in [native-content-release.md](native-content-release.md).
 
 ```json
 {
@@ -26,7 +26,7 @@ Add a recipe entry to `content/packages.json`, with a stable `packageId`, semant
     ],
     "createdAt": "2026-10-01T00:00:00.000Z"
   },
-  "sourceRoot": "assets/content/chapter-02"
+  "sourceRoot": "assets/chapter-02"
 }
 ```
 

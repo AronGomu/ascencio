@@ -6,20 +6,20 @@ The native application mounts `StartupRoot` immediately. One preparation card st
 
 Counter values below are examples, not a percentage of the whole startup. A heading can pass too quickly to notice. Installation and source-copy headings are conditional.
 
-| ID | Current heading | Work represented |
-| --- | --- | --- |
-| L1 | `Preparing application…` | Initial bundled screen; startup diagnostics are read. |
-| L2 | `Verifying installed content…` | Request the native loader's selected trusted content generation. |
-| L3 | `installation (0/7)…` | If that generation is absent, install authenticated bundled critical snapshots and engine resources atomically. |
-| L4 | `source and media copy (0/1)…` | Attempt readable-source and optional-media installation once per generation; preserve existing files. Its checkpoint completes only after the copy attempt returns. |
-| L5 | `verification (0/4)…` | Read, digest-check and parse each selected critical JSON snapshot. |
-| L6 | `engine preparation (0/2)…` | Read and verify the frozen engine WASM and vendor manifest. Worker initialization follows later. |
-| L7 | `user state (0/1)…` | Acquire the user-data writer and initialize current JSON saves/preferences in memory. |
-| L8 | `mod composition (0/3)…` | In modded mode, load/validate, compose, then activate enabled mods and explicit additions/overrides. |
-| L9 | `domain projections (0/1)…` | Build the resident content catalog and mappings for optional media. |
-| L10 | `Preparing gameplay and screens…` | Prepare Freeplay and every active chapter, deck search indexes, screen modules and the duel Worker; check readiness before opening Main Menu. |
-| L11 | `Restoring bundled content…` | Restore eligible bundled critical files, then start a fresh preparation cycle. |
-| L12 | `Application could not start` | A startup error blocks Main Menu and presents diagnostics and applicable recovery actions. |
+| ID  | Current heading                   | Work represented                                                                                                                                                    |
+| --- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1  | `Preparing application…`          | Initial bundled screen; startup diagnostics are read.                                                                                                               |
+| L2  | `Verifying installed content…`    | Request the native loader's selected trusted content generation.                                                                                                    |
+| L3  | `installation (0/7)…`             | If that generation is absent, install authenticated bundled critical snapshots and engine resources atomically.                                                     |
+| L4  | `source and media copy (0/1)…`    | Attempt readable-source and optional-media installation once per generation; preserve existing files. Its checkpoint completes only after the copy attempt returns. |
+| L5  | `verification (0/4)…`             | Read, digest-check and parse each selected critical JSON snapshot.                                                                                                  |
+| L6  | `engine preparation (0/2)…`       | Read and verify the frozen engine WASM and vendor manifest. Worker initialization follows later.                                                                    |
+| L7  | `user state (0/1)…`               | Acquire the user-data writer and initialize current JSON saves/preferences in memory.                                                                               |
+| L8  | `mod composition (0/3)…`          | In modded mode, load/validate, compose, then activate enabled mods and explicit additions/overrides.                                                                |
+| L9  | `domain projections (0/1)…`       | Build the resident content catalog and mappings for optional media.                                                                                                 |
+| L10 | `Preparing gameplay and screens…` | Prepare Freeplay and every active chapter, deck search indexes, screen modules and the duel Worker; check readiness before opening Main Menu.                       |
+| L11 | `Restoring bundled content…`      | Restore eligible bundled critical files, then start a fresh preparation cycle.                                                                                      |
+| L12 | `Application could not start`     | A startup error blocks Main Menu and presents diagnostics and applicable recovery actions.                                                                          |
 
 While preparation runs, the supporting text is `Preparing your content and saves. Gameplay opens when preparation is complete.` On failure, it is replaced by an error title and actual message, followed by Restore, Open Log, Copy Error and Close. All structured diagnostics remain in the scoped log and copied error. Restore is disabled for unrelated save/mod errors.
 
@@ -39,7 +39,7 @@ For a copy review, use a standalone preview that recreates the startup card with
 ## Sources
 
 - S1. [`StartupRoot.svelte`](../src/shell/startup/StartupRoot.svelte): initial/request/final headings, progress formatting, shared supporting text and recovery controls.
-- S2. [`native_startup.rs`](../src-tauri/src/native_startup.rs): installation, optional source/media copy, snapshot verification and engine-resource progress.
+- S2. [`native_startup.rs`](../tauri/src/native_startup.rs): installation, optional source/media copy, snapshot verification and engine-resource progress.
 - S3. [`prepared-storage.ts`](../src/storage/native/prepared-storage.ts): user state, enabled mod composition and resident catalog preparation.
 - S4. [`prepare-application-inputs.ts`](../src/shell/application/prepare-application-inputs.ts): prepared Freeplay/chapter inputs, screen imports and duel Worker initialization.
 - S5. [`application-bootstrap.ts`](../src/shell/application/application-bootstrap.ts): readiness requirements. [ADR-104](ADR/104_ADR_startup_memory_content_and_mod_overrides.md) owns the startup memory contract.

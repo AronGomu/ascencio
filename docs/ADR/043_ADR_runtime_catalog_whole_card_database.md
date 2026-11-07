@@ -10,7 +10,7 @@
 
 ## Context
 
-The editor's catalog is `activeCatalog()`, read from the Vite `define` globals `__ACTIVE_CARD_DATA__` / `__ACTIVE_CARD_TEXTS__`. `vite.config.ts` cuts those from the art-backed codes of the six bundled decks — roughly 120 cards. Feedback round 2 says: wire the entire card database, and make loading and searching fast.
+The editor's catalog is `activeCatalog()`, read from the Vite `define` globals `__ACTIVE_CARD_DATA__` / `__ACTIVE_CARD_TEXTS__`. `config/vite.config.ts` cuts those from the art-backed codes of the six bundled decks — roughly 120 cards. Feedback round 2 says: wire the entire card database, and make loading and searching fast.
 
 Two constraints frame the answer. The packaged snapshot holds **14,794** cards: 2.7 MB of masks, 7.1 MB of text, 33 MB of card scripts, 451 declared files, ~45 MB total. Inlining masks and text into the deck-editor chunk is impossible — its budget is 201,250 bytes. And the build packages only the bundled-deck closure of runtime assets, so a deck built from arbitrary cards would be offered by the editor and then withheld by the duel picker (`supportedDuelCardCodes`), which is precisely the drift `src/battle/decks/selectable-decks.ts` exists to prevent.
 
@@ -19,11 +19,11 @@ Measured on this checkout: parsing all 128 catalog shards costs ~36 ms in Node; 
 ## Decision
 
 1. **The catalog is fetched, not compiled.** `src/decks/catalog/runtime-catalog.ts` reads the 64 card shards and 64 text shards from `runtime/assets/current/catalog/…` — the same files, over the same middleware and the same `dist` layout the Worker already reads — joins them through the existing `packagedCatalog`, and memoizes the promise for the page.
-2. **One catalog, two domains.** The editor and the duel await the same memoized promise. A build cannot offer a card in the editor that the picker withholds, because both derive their code set from one read. The editor narrows what it *offers* by one pure filter, `deckBuildableCards`: the database's 243 Tokens are cards a duel creates on the field and no deck may hold, so the editor offers **14,551** of the 14,794. The duel still reads all 14,794, because a Token on the field has to be nameable.
+2. **One catalog, two domains.** The editor and the duel await the same memoized promise. A build cannot offer a card in the editor that the picker withholds, because both derive their code set from one read. The editor narrows what it _offers_ by one pure filter, `deckBuildableCards`: the database's 243 Tokens are cards a duel creates on the field and no deck may hold, so the editor offers **14,551** of the 14,794. The duel still reads all 14,794, because a Token on the field has to be nameable.
 3. **The build ships the whole verified snapshot.** `copySnapshotAssets` copies every file the runtime manifest declares instead of the bundled-deck closure, and `verify-browser-build.ts` verifies the packaged tree against the full declared list. `dist` grows to ~66 MB (45 MB snapshot, 19 MB card art, the rest JavaScript). That is the price of "any deck you can build, you can play"; the app is an offline private build, not a bandwidth-billed site.
 4. **Card art stays URL-by-convention.** Every code maps to `{BASE_URL}runtime/images/{code}.jpg` (ADR-039's discipline, widened from the manifest-listed subset). Dev serves ~14.5k local images; the production build still packages only manifest-backed art, and a tile whose image 404s falls back to the placeholder glyph.
 5. **`missing-art` is deleted from validation.** Once the catalog is the whole database, art availability describes the build's image coverage, not a defect in the player's deck; keeping it would attach a warning to nearly every deck and teach players to ignore the validation panel.
-6. **Search runs off an index.** `buildDeckCatalogIndex` pre-lowercases names once per card list; `filterDeckCatalogIndex` filters against it. Budgets for load, index build, filter and option derivation are asserted in `tests/unit/decks/deck-catalog-performance.test.ts` with the measurement recorded beside each.
+6. **Search runs off an index.** `buildDeckCatalogIndex` pre-lowercases names once per card list; `filterDeckCatalogIndex` filters against it. Budgets for load, index build, filter and option derivation are asserted in `test/unit/decks/deck-catalog-performance.test.ts` with the measurement recorded beside each.
 
 ## Consequences
 

@@ -26,7 +26,7 @@ The native protocol accepts only GET and HEAD. It rejects missing or closed sess
 
 ## Fixed browser content
 
-The Vite plugin serves the supplied card library, engine pack, Freeplay pack, and Chapter 1 pack from `src-tauri/resources/readable-content`. It verifies the stage against the tracked critical release before serving it. Only declared metadata, engine, and media routes are exposed. Raw resource directories remain blocked by the Vite filesystem fence.
+The Vite plugin serves the supplied card library, engine pack, Freeplay pack, and Chapter 1 pack from `tauri/resources/readable-content`. It verifies the stage against the tracked critical release before serving it. Only declared metadata, engine, and media routes are exposed. Raw resource directories remain blocked by the Vite filesystem fence.
 
 The npm preflight reuses a verified stage. If the stage is missing or stale, it runs the existing content preparation command. A fresh clone still needs `npm ci` and `npm run setup` to acquire source assets. This mode does not download or repin content on demand.
 

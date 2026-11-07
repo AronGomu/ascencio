@@ -26,7 +26,7 @@ pub fn digest() -> Result<String> {
         "src/battle",
         "src/storage",
         "src/decks",
-        "schemas/bot-evaluation",
+        "tools/bot-evaluation/schemas",
         "vendor/ocgcore-wasm/0.1.2",
         "package-lock.json",
     ] {

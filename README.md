@@ -91,13 +91,13 @@ See [desktop setup](docs/desktop-setup.md) for platform prerequisites, offline r
 ### Windows
 
 ```powershell
-.\download-mvp-assets.cmd
+.\scripts\download-mvp-assets.cmd
 ```
 
 ### macOS and Linux
 
 ```bash
-./download-mvp-assets.sh
+./scripts/download-mvp-assets.sh
 ```
 
 Both launchers accept the same options as `npm run assets:bootstrap` and can be launched from outside the repository because they set their own working directory.
@@ -108,7 +108,7 @@ Use Node 26 or newer. [Complete command reference](docs/development-commands.md)
 
 | ID  | Command                                                                           | Description                                                                                                                                                     |
 | --- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1  | `npm start`                                            | Build the standalone desktop application and launch it on Windows, macOS or Linux. No development server required.                                                                |
+| C1  | `npm start`                                                                       | Build the standalone desktop application and launch it on Windows, macOS or Linux. No development server required.                                              |
 | C2  | `npm run native:desktop:dev`                                                      | Launch the native desktop application with its development server.                                                                                              |
 | C3  | `npm run native:desktop:build`                                                    | Prepare content, build the frontend, then build/package the native desktop application.                                                                         |
 | C4  | `npm run frontend:dev`                                                            | Start Vite only; ordinary browser navigation does not provide native IPC.                                                                                       |
@@ -127,7 +127,6 @@ Use Node 26 or newer. [Complete command reference](docs/development-commands.md)
 | C17 | `npm run test:native:rust`                                                        | Run native Rust tests.                                                                                                                                          |
 | C18 | `npm run check`                                                                   | Run headless quality/assets plus component, frontend-build and browser gates; excludes Rust, JSON parity and actual native/physical acceptance.                 |
 | C19 | `npm run content:verify:sqlite-json-parity`                                       | Compare historical SQLite queries with JSON snapshots and check deterministic compilation.                                                                      |
-| C20 | `npm run legacy:assets:inventory -- --check`                                      | Check retained legacy source/profile ownership without mutation.                                                                                                |
 
 To display the unified downloader help:
 
@@ -135,7 +134,7 @@ To display the unified downloader help:
 npm run assets:bootstrap -- --help
 ```
 
-Root/profile migration details: [`docs/assets/asset-profiles.md`](docs/assets/asset-profiles.md). Legacy acquisition is explicit; scan/promotion never refresh upstream inputs.
+Asset source layout and retained migration details: [`docs/assets/asset-profiles.md`](docs/assets/asset-profiles.md). Acquisition remains explicit; the removed profile tools are no longer available.
 
 ## Unified asset command options
 
@@ -162,13 +161,13 @@ npm run assets:bootstrap -- --force-images
 The Windows and Unix launchers accept the same arguments:
 
 ```powershell
-.\download-mvp-assets.cmd --offline
-.\download-mvp-assets.cmd --concurrency 8 --requests-per-second 12
+.\scripts\download-mvp-assets.cmd --offline
+.\scripts\download-mvp-assets.cmd --concurrency 8 --requests-per-second 12
 ```
 
 ```bash
-./download-mvp-assets.sh --offline
-./download-mvp-assets.sh --concurrency 8 --requests-per-second 12
+./scripts/download-mvp-assets.sh --offline
+./scripts/download-mvp-assets.sh --concurrency 8 --requests-per-second 12
 ```
 
 ## Lower-level command lines
@@ -189,14 +188,14 @@ node scripts/verify-engine.ts
 node scripts/sync-assets.ts [options]
 ```
 
-| Option                     |                      Default | Description                                              |
-| -------------------------- | ---------------------------: | -------------------------------------------------------- |
-| `--offline`                |                     disabled | Use existing source repositories without fetching.       |
-| `--cache-dir <directory>`  |            `.cache/upstream` | Set the Git source cache directory inside the project.   |
-| `--output <directory>`     | `assets/content/card-library/data` | Set the generated snapshot output directory.             |
-| `--babel-ref <ref>`        |                     `assets-source-lock.json` | Require the reviewed BabelCDB lock revision.                   |
-| `--scripts-ref <ref>`      |                     `assets-source-lock.json` | Require the reviewed CardScripts lock revision.                |
-| `--distribution-ref <ref>` |                     `assets-source-lock.json` | Require the reviewed Distribution lock revision. |
+| Option                     |                          Default | Description                                            |
+| -------------------------- | -------------------------------: | ------------------------------------------------------ |
+| `--offline`                |                         disabled | Use existing source repositories without fetching.     |
+| `--cache-dir <directory>`  |                `.cache/upstream` | Set the Git source cache directory inside the project. |
+| `--output <directory>`     |       `assets/card-library/data` | Set the generated snapshot output directory.           |
+| `--babel-ref <ref>`        | `config/assets-source-lock.json` | Require the reviewed BabelCDB lock revision.           |
+| `--scripts-ref <ref>`      | `config/assets-source-lock.json` | Require the reviewed CardScripts lock revision.        |
+| `--distribution-ref <ref>` | `config/assets-source-lock.json` | Require the reviewed Distribution lock revision.       |
 
 Explicit revision arguments must equal the reviewed lock; they cannot override it:
 
@@ -220,14 +219,14 @@ node scripts/verify-assets.ts --output <directory>
 node scripts/download-images.ts [options]
 ```
 
-| Option                          |                      Default | Description                                                         |
-| ------------------------------- | ---------------------------: | ------------------------------------------------------------------- |
-| `--assets <directory>`          | `assets/content/card-library/data` | Set the source image-manifest snapshot.                             |
-| `--output <directory>`          |  `assets/content/card-library/images/full` | Set the local image archive directory.                              |
-| `--concurrency <count>`         |                         `18` | Set simultaneous download workers.                                  |
-| `--requests-per-second <count>` |                         `18` | Set request rate; cannot exceed `20`.                               |
-| `--limit <count>`               |                  all records | Process only the first number of image records, useful for testing. |
-| `--force`                       |                     disabled | Redownload valid cached images.                                     |
+| Option                          |                           Default | Description                                                         |
+| ------------------------------- | --------------------------------: | ------------------------------------------------------------------- |
+| `--assets <directory>`          |        `assets/card-library/data` | Set the source image-manifest snapshot.                             |
+| `--output <directory>`          | `assets/card-library/images/full` | Set the local image archive directory.                              |
+| `--concurrency <count>`         |                              `18` | Set simultaneous download workers.                                  |
+| `--requests-per-second <count>` |                              `18` | Set request rate; cannot exceed `20`.                               |
+| `--limit <count>`               |                       all records | Process only the first number of image records, useful for testing. |
+| `--force`                       |                          disabled | Redownload valid cached images.                                     |
 
 Examples:
 
@@ -241,13 +240,13 @@ node scripts/verify-images.ts
 ## Asset sources and operational output
 
 ```text
-assets/content/
+assets/
 ├── card-library/data/          # Catalog, scripts and image metadata
 ├── card-library/images/       # full/, cropped/, sets/ and card-back.jpg
 └── chapter-01/media/           # Optional story media
 content/                       # Tracked package declarations and authoring inputs
 vendor/ocgcore-wasm/0.1.2/      # Frozen authoritative engine
-src-tauri/resources/           # Verified native release staging
+tauri/resources/           # Verified native release staging
 generated/                    # Ignored conversion, build, reports and test output
 ```
 

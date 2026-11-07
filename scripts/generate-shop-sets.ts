@@ -1,6 +1,6 @@
 /**
  * One-shot assembler — pulls YGOPRODeck cardinfo for the first 50 TCG English
- * booster sets and writes assets/content/card-library/authoring/shop-sets.v1.json.
+ * booster sets and writes assets/card-library/authoring/shop-sets.v1.json.
  *
  * Run: node scripts/generate-shop-sets.ts
  */
@@ -404,7 +404,7 @@ for (const spec of SETS) {
 const output = { version: 1, sets: outputSets };
 const outPath = path.join(
   projectRoot,
-  "assets/content/card-library/authoring/shop-sets.v1.json",
+  "assets/card-library/authoring/shop-sets.v1.json",
 );
 await mkdir(path.dirname(outPath), { recursive: true });
 await writeFile(outPath, `${JSON.stringify(output, null, 2)}\n`);

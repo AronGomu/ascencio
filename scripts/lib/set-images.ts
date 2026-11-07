@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
    the network and file I/O, `scripts/verify-set-images.ts` re-hashes, and
    SQLite package export reads the acquired source bytes. */
 
-/** A shop set as `assets/content/card-library/authoring/shop-sets.v1.json` records it. */
+/** A shop set as `assets/card-library/authoring/shop-sets.v1.json` records it. */
 export interface ShopSetIdentity {
   readonly id: string;
   readonly name: string;
@@ -56,7 +56,7 @@ export interface SetImageVerification {
 
 /* Set ids become file names and URL segments, so they are confined to
    characters that cannot traverse, escape or encode. Every id in
-   `assets/content/card-library/authoring/shop-sets.v1.json` is a lowercase slug; the pattern also
+   `assets/card-library/authoring/shop-sets.v1.json` is a lowercase slug; the pattern also
    admits the upstream set codes so a code-keyed caller stays legal. */
 const SAFE_SET_ID = /^[A-Za-z0-9_-]+$/;
 

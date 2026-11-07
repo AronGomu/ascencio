@@ -1,231 +1,238 @@
-# Project Context
-
-This file is the single context initialisation file for all AI agents working on this repository. Read it first.
-
-## Opening the application
-
-For browser-only development and AI player-flow previews, use `npm run browser:dev` after setup. It reuses verified staged Freeplay and Chapter 1 content, runs the real Worker engine, and uses isolated browser development saves. Content installation and mods require Tauri. See [ADR-105](docs/ADR/105_ADR_browser_development_and_shared_content_transport.md) for the development-only exception to ADR-103 and shared resource transport.
-
-When the owner asks to open/start the application, use `npm start` with Node 26 or newer on Windows, macOS or Linux. It builds through the Tauri CLI before launching the standalone native application; no development server is required. Use `npm start -- --headless --debug` when the owner requests headless operation; it builds without opening a window. Browser/native IPC fixtures and Rust tests provide headless validation. Keep acceptance/recovery instrumentation environment variables unset for ordinary owner launches. See [desktop setup](docs/desktop-setup.md) for fresh clones.
-
-Do not launch an arbitrary existing `src-tauri/target/release/ascencio` binary without establishing how it was built. Plain `cargo build --release` can still use `devUrl` and show `Could not connect to 127.0.0.1: Connection refused`. Standalone builds require Tauri's `custom-protocol` feature, enabled automatically by `tauri build`; a direct Cargo build must explicitly use `--features tauri/custom-protocol` and have current frontend/resources already prepared. Use `npm run native:desktop:dev` only when development mode is requested.
-
-Verify the actual window reaches startup or Main Menu before reporting that it opened successfully; a running process alone is insufficient. Preserve an already-running owner session rather than starting another writer.
-
-## Agent workspace layout
-
-- `docs/` : Project documentation. Contains ADR/, architecture/
-- `artifacts/` : Ephemeral design/prototype artifacts and `make-plan-aron` plan indexes/tickets/HTML. Retired when a round ends; see Document rules.
-- `artifacts/manual_test_checklist.md` : Durable. The human test steps for every shipped slice, kept current, never retired with a plan.
-- `ai-artifact/manual_test_checklist.md` : Divergent sibling (221 lines vs 3887). Owner decides merge vs archive.
-
-## Local validation only — no remote CI
-
-Validate changes locally and use the relevant local results and requested reviews to decide when work is ready to commit or merge. Never wait for remote CI, check remote CI results, poll or watch CI, dispatch workflows, rerun remote jobs, or make CI status a condition for completion or merging. Cancel any existing CI watch instead of leaving work pending on it.
-
-GitHub Actions is disabled for this repository. Workflow definitions are archived under `.github/disabled-workflows/` and must remain inactive. Re-enabling remote automation or adding required remote status checks requires an explicit owner request. Administration needed to disable or cancel remote CI is permitted; remote CI is never a validation source. Older CI references elsewhere in the repository are historical and do not override this policy.
-
-## Local test execution
-
-Use the project skill [ascencio-tests](.agents/skills/ascencio-tests/SKILL.md) whenever selecting or running tests locally.
-
-An owner's request to "run tests", "run the test pipeline", "validate", or "test and merge" means tests related to the changes. Run the full application suite locally only when the owner very explicitly asks for the full suite. A merge request does not authorize it.
-
-Run `npm run test:context` to gather branch-change context and suggested tests for the agent. For task-specific changes or coverage that static selection cannot establish, supply exact files with `npm test -- --tests <test-files>`. The runner has no file limit or time budget, continues after failures, and streams progress. On failure the main agent continues the selected tests and delegates diagnosis and fixes to a subagent as described in the skill. Detailed reports default to false; use `--report` only when the owner asks for one.
-
-`npm test -- --full` runs the complete `npm run check` pipeline and requires that explicit full-suite request. Local results are the validation authority; describe targeted results as targeted validation, not full-suite coverage.
-
-`npm run test:all` preserves the original tooling, unit/performance, component and integration test sequence. It stops at the first failing command and requires an explicit request for that complete four-part suite.
-
-## Knowledge graph (graphify) — use first
-
-`graphify-out/` holds a built knowledge graph of this repository (14111 nodes, 39077 edges, 531 labelled communities).
-
-Any question about the codebase, its architecture, or how files relate is a graphify query first, before grep/read sweeps:
-
-- `graphify query "<question>"` — BFS traversal, broad context
-- `graphify path "<a>" "<b>"` — how two things connect
-- `graphify explain "<node>"` — what a node is and what touches it
-- `graphify . --update` — re-extract only new/changed files after edits
-- `graphify-out/GRAPH_REPORT.md` — god nodes, communities, surprising connections
-- `graphify-out/graph.html` — interactive graph, open in a browser
-
-Applies to Claude Code, Codex, and pi; each has the `graphify` skill installed globally. `.graphifyignore` keeps agent scratch dirs out of the corpus.
-
-## Purpose and status
-
-YGO Story Duel Simulator is an offline Tauri desktop/mobile Yu-Gi-Oh! duel client. One shell exposes Duel Simulator, Deck Editor, Visual Novel, and manual content lifecycle. Project Ignis `ygopro-core` is sole authority for rules, legal actions, effects, and results.
-
-Current content uses digest-pinned JSON critical snapshots in the native app-data directory, read once by Rust during startup. Freeplay and Chapter 1 ship as default resources. Mutable data uses atomic native `user-data.json`; legacy stores remain untouched. Browser deployment, OPFS, SQLite WASM, PWA updates, legacy localStorage saves and IndexedDB diagnostics are retired; see ADR-103. ADR-105 adds fixed-content browser development with a new isolated localStorage key. Optional native media uses scoped live filesystem leases. SQLite is retained only for developer conversion and historical tests.
-
-Implemented content architecture: [ADR-104](docs/ADR/104_ADR_startup_memory_content_and_mod_overrides.md) defines readable per-entity JSON sources, verified startup snapshots, memory-authoritative gameplay/user state, explicit mod overrides, live noncritical media, and early compiler-style diagnostics. Startup memory, JSON sources, explicit overrides, live media and early diagnostics are implemented; physical mobile and pre-change performance acceptance remain separate release gates.
-
-The three-UI restructure (plan `PLAN_2026_08_14_three_ui_restructure`) is complete as of 2026-08-15 (commit tagged `restructure-complete`). All three domains — Duel Simulator, Deck Editor, Visual Novel — are live under one shell, reachable through `index.html`. Development runs on a single trunk; the per-domain branch and worktree topology is retired, see [`docs/ADR/045_ADR_single_branch_trunk_development.md`](docs/ADR/045_ADR_single_branch_trunk_development.md). Build budgets are machine-enforced per domain via `npm run frontend:verify`.
-
-### Branch model
-
-Repo keeps one single long-lived branch: `main`. Every change commits there, whatever module it touches — duel, deck, story, shell alike.
-
-Module boundaries are enforced by lint and tests, not by branches. A cross-domain feature is one commit on `main`, reviewed as one thing; the checks in `## Boundary rules` below are what stops it from reaching past a public entry.
-
-The private browser MVP baseline and semantic Svelte DOM duel-field migration are complete. Product targets Tauri desktop/mobile webviews. Field verification includes Chromium and WebKit, with physical mobile-device acceptance still separate.
-
-## Documentation routing
-
-- Start with [`docs/README.md`](docs/README.md) for all documentation.
-- Use [`docs/architecture/architecture.md`](docs/architecture/architecture.md) as the canonical architecture map and granular task-context router.
-- Use [`docs/story/README.md`](docs/story/README.md) as the narrative canon router for any story, character, or chapter question; runtime content under `src/story/content/` derives from it and never contradicts it (ADR-053).
-- Use [`docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md`](docs/DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md) as completed semantic DOM-field migration history.
-- Use [`docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md`](docs/MVP_TECHNICAL_IMPLEMENTATION_PLAN.md) as completed MVP/Phaser baseline history.
-- R0. Use [`docs/ADR/103_ADR_tauri_only_runtime_and_asset_ui.md`](docs/ADR/103_ADR_tauri_only_runtime_and_asset_ui.md) for current platform/runtime and asset presentation boundaries. Browser-specific decisions in ADR-099/100/101 are historical.
-- R5. Use [`docs/ADR/105_ADR_browser_development_and_shared_content_transport.md`](docs/ADR/105_ADR_browser_development_and_shared_content_transport.md) for fixed-content browser development, isolated saves, and shared resource transport across browser development, native development, and packaged Tauri.
-- R4. Use [`docs/ADR/104_ADR_startup_memory_content_and_mod_overrides.md`](docs/ADR/104_ADR_startup_memory_content_and_mod_overrides.md) for the implemented startup-memory/JSON/mod-override/live-media architecture and diagnostics contract.
-- R1. Use [`docs/ADR/099_ADR_completed_manual_sqlite_cutover.md`](docs/ADR/099_ADR_completed_manual_sqlite_cutover.md) plus [`docs/architecture/04-data/manual-sqlite-content-import.md`](docs/architecture/04-data/manual-sqlite-content-import.md) for historical manual SQLite migration architecture; ADR-104 owns current transport and read lifetimes.
-- R3. Use [`docs/assets/content-modules.md`](docs/assets/content-modules.md) and [`docs/ADR/102_ADR_content_modules_and_campaign_facts.md`](docs/ADR/102_ADR_content_modules_and_campaign_facts.md) for card/chapter composition and save-based prerequisites; ADR-101 owns JSON user persistence.
-- R2. Use [`docs/assets/manual-sqlite-setup.md`](docs/assets/manual-sqlite-setup.md) for current owner setup/release gates; use [`docs/assets/asset-import-pipeline.md`](docs/assets/asset-import-pipeline.md) for retained source acquisition/verification.
-- `docs/archive/` is historical only and must not override current decisions.
-
-## Document rules
-
-Neither rule here is machine-enforced, unlike the boundaries further down. They are conventions, and one of them has already been broken once at real cost.
-
-### `feedback*.md` is owner-authored input
-
-`feedback-decks.md`, `feedback-duel.md`, `feedback-vn.md` and any future sibling are written by the owner and record what was actually asked. They are the source of requirements, not a work product. An agent reads them, cites them, and leaves them byte-identical — no edits, no reformatting, no ticking items off, no summarising in place.
-
-Commit `161d1e8` rewrote `feedback-decks.md`. The round-1 ADRs could then no longer be relinked to the text that motivated them, and their plan links were deleted instead of repointed. The file still exists; the record of what was asked does not.
-
-### Durable documents never link to ephemeral ones
-
-`docs/` is durable — ADRs, architecture pages, `README.md`. `artifacts/` (plans, tickets, grill records) and `.tmp/` (progress, scratch) are ephemeral and get deleted when a round ends.
-
-A durable document cites an immutable anchor instead — a commit SHA, a git tag, or a tracked file that outlives the round — and inlines the fact it is citing, so the reader never has to follow the link to get the point. The convention is a header line naming the tickets the commit covers:
-
-> Commit: `c27f4b0` — T1–T8
-
-Commit a plan before retiring it and that SHA stays a real address: `git show <sha>:artifacts/PLAN_....md` recovers the full text long after the working copy is gone.
-
-## Technical stack
-
-| Area        | Technology                                                                                              | Role                                                                                                                        |
-| ----------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Language    | TypeScript (strict), Node.js 26+                                                                        | Application, contracts, tooling, tests, and opponent policy                                                                 |
-| Build       | Vite                                                                                                    | Dev server, Worker/WASM handling, and static build                                                                          |
-| UI          | Svelte                                                                                                  | Application layout, semantic DOM field, prompts, logs, errors, and results                                                  |
-| Duel field  | Svelte DOM + CSS/SVG                                                                                    | Native controls, typed physical layout, highlights, and non-authoritative feedback                                          |
-| Rules       | Vendored `ocgcore-wasm@0.1.2` / Project Ignis `ygopro-core`                                             | Authoritative duel engine                                                                                                   |
-| Isolation   | Dedicated Web Worker                                                                                    | Sole owner of WASM, protocol, scripts, handles, and state projection                                                        |
-| Data        | BabelCDB, CardScripts, Project Ignis strings                                                            | Versioned card/effect/protocol snapshot                                                                                     |
-| Persistence | Native Rust content reader; atomic JSON for saves | Immutable native content modules; JSON user records; downloadable diagnostics |
-| Tests       | Node test runner, Vitest, Testing Library, Playwright                                                   | Unit, component, integration, and browser coverage                                                                          |
-| Quality     | TypeScript, ESLint, Prettier, local checks                                                                        | Types, lint, format, compatibility, assets, and build gates                                                                 |
-
-## Three-domain application direction
-
-- Product is one modular-monolith Svelte app: Duel Simulator, Deck Editor, Visual Novel.
-- One shell owns routing/composition; domains expose narrow public `index.ts` contracts.
-- Cross-domain imports target public entry points only; no deep imports.
-- Exclusive directory ownership: Duel → `src/battle/`; Deck → `src/decks/` + `src/deck-editor/`; Story → `src/story/`; Integration → `src/main.ts`, `src/shell/`, root config/contracts/E2E. `src/deck-select/` is shared by the shell, the deck editor and the story rather than owned by one of them.
-- Read [`docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md`](docs/ADR/022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md) before cross-domain work; its branch topology is superseded by ADR-045, its import boundaries stand.
-
-## Boundary rules
-
-The ADR-022 boundaries above are machine-enforced, not conventions. Two checks run in `npm run check:headless`:
-
-- `eslint.config.js` — `no-restricted-imports` zones give inline feedback while editing. Each message names the public entry to use instead.
-- [`tests/unit/domain-boundaries.test.ts`](tests/unit/domain-boundaries.test.ts) — resolves real paths, so it catches what a specifier glob cannot, and freezes the exported names of every public entry.
-
-What the rules encode:
-
-- Public entries are `src/shell/index.ts`, `src/story/index.ts`, `src/deck-editor/index.ts`, `src/battle/index.ts`, `src/deck-select/index.ts`, `src/decks/index.ts` and the pure module contracts in `src/modules/index.ts`. A cross-domain import targets one of those and nothing deeper.
-- `src/deck-select/` is the shared deck-selection screen: purely presentational, it imports no sibling domain at all, and hosts map their own records into its view models. Its ESLint zone excludes every sibling's internals in both directions.
-- The duel's source lives under `src/battle/` — `app/`, `components/`, `decks/`, `duel/`, `field/`, `storage/` and `worker/` are battle internals, reachable only through `src/battle/index.ts`.
-- `src/decks/` is the shared deck-data library rather than a lazy UI domain, so its modules stay importable; only the shape of its index is frozen.
-- Widening a public API means editing the frozen list in the test on purpose. A silent widening is a failing test.
-- A handful of duel identifiers have no legal path yet, because the only entry that could carry them also exports `BattleFacade` and a static import of it would make the duel eager. Each is allowed against one named file in both checks, with the reason recorded there, and disappears when the module gets a legal home.
-
-## Core architecture rules
-
-- `vendor/ocgcore-wasm/0.1.2/` is permanently frozen; never update engine binary, loader resolution, or vendor manifest.
-- The main thread never imports or calls the engine.
-- Raw core messages/indexes remain in the Worker; the UI receives clone-safe typed domain data.
-- Fixed-slot cards and overlay materials may retain concealed opponent codes (marked `faceUp: false` or `identityVisible: false`); presentation must never reveal them. Opponent hand, deck, extra deck and face-down pile cards must not carry codes at all.
-- Svelte owns all interactive application/field UI; presentation state never determines legality.
-- Canvas may be future pointer-transparent decoration only after separate measured ADR.
-- Synchronous core callbacks use preloaded memory and perform no async I/O.
-- C1. Frozen engine compatibility and Project Ignis content are validated as pinned JSON snapshots and frozen executable buffers; changes activate through a new startup cycle.
-- C2. Webview build contains no SQLite executable, OCG WASM, package DBs or card/chapter media. Tauri resources own verified content; app-data owns installed modules.
-- C3. Package lifecycle never reads/writes saves. User data lives in native `user-data.json`; legacy stores remain untouched/unread; no migration from legacy stores. Campaign facts remain in JSON saves when modules are removed.
-- Production duels shuffle normally; deterministic inputs are test/diagnostic-only.
-
-## File design policy
-
-Prefer small, cohesive, independently navigable files.
-
-- Default to one public interface/type union, component, store, adapter/service, or parser/encoder concern per file.
-- Split a unit when it has an independent name, responsibility, test surface, reuse potential, or reason to change.
-- Keep tiny private helpers/types beside their sole consumer when separation would obscure rather than clarify behavior.
-- Do not split files merely to reduce line count or create pass-through modules.
-- Avoid broad “utils”, “types”, and catch-all component files; use domain-specific names and folders.
-- Keep imports directional across the architecture boundaries documented above.
-- When both choices remain sensible, prefer the additional focused file.
-
-## HTML element contract
-
-Every HTML element rendered by a Svelte component under `src/battle/`, `src/shell/`, `src/deck-editor/`, `src/deck-select/` or `src/story/` must carry a `data-cy` attribute that acts as its variable name. Values are kebab-case, describe the role rather than the styling, and are unique inside a rendered document. Elements rendered in a loop suffix the value with the item's stable id, for example ``data-cy={`field-card-${card.id}`}``. `tests/unit/data-cy-coverage.test.ts` enforces presence and uniqueness.
-
-## Project tree
-
 ```text
-.
-├── AGENTS.md                          # Single context initialisation file for agents
-├── CONTEXT.md                         # Pointer to AGENTS.md (legacy path)
-├── artifacts/                         # Ephemeral plans/tickets/grills + the durable manual_test_checklist.md
-├── docs/
-│   ├── README.md                      # Documentation index
-│   ├── DUEL_FIELD_DOM_IMPLEMENTATION_PLAN.md
-│   ├── MVP_TECHNICAL_IMPLEMENTATION_PLAN.md  # Completed baseline
+ascencio/
+├── AGENTS.md                         # Project navigation: locate information by topic below
+├── README.md                         # Project overview, installation and entry commands
+├── package.json                      # npm commands, dependencies and required Node version
+├── package-lock.json                 # Pinned JavaScript dependency resolution
+├── .node-version                     # Development Node version
+├── .gitignore                        # Generated, acquired and machine-local exclusions
+├── .graphifyignore                   # Knowledge-graph extraction exclusions
+│
+├── config/                          # Movable build, language, quality and source-pin configuration
+│   ├── README.md                    # Config entry points and root-file discovery conventions
+│   ├── vite.config.ts               # Frontend build, server and Worker handling
+│   ├── tsconfig.json                # TypeScript compiler settings
+│   ├── eslint.config.js             # Code checks and domain import boundaries
+│   ├── prettier.config.js           # Formatting settings
+│   ├── assets-source-lock.json      # Upstream asset revisions and integrity pins
+│   └── image-content-lock.json      # Reviewed image-content pins
+│
+├── .agents/skills/                   # Project-local agent workflows
+│   ├── ai-bot-self-improvement/
+│   │   └── SKILL.md                  # Bot improvement orchestration and result reporting
+│   ├── ascencio-tests/
+│   │   └── SKILL.md                  # Select and run related tests locally
+│   └── impeccable/
+│       └── SKILL.md                  # Frontend design, critique and refinement
+│
+├── .github/                         # Repository and GitHub agent integration
+│   ├── agents/                      # Agent role definitions
+│   ├── hooks/                       # Agent hook configuration
+│   ├── skills/                      # GitHub-facing skill integration
+│   └── disabled-workflows/          # Archived remote workflows; local-only policy in project guide
+│
+├── docs/                             # Durable documentation and decision history
+│   ├── README.md                     # Full documentation index
+│   ├── project-guide.md              # Operating rules, local-only validation, boundaries, task management
+│   ├── PRODUCT.md                    # Product intent, priorities and brand commitments
+│   ├── DESIGN.md                     # Visual design direction and presentation conventions
+│   ├── desktop-setup.md              # Install, start, browser preview and native/headless launch
+│   ├── development-commands.md        # Current npm commands and validation scopes
+│   ├── startup-loading-messages.md    # Startup stages, progress messages and diagnostics
 │   ├── architecture/
-│   │   ├── architecture.md            # Canonical decision map
-│   │   └── <numbered concern folders>/
-│   ├── assets/                        # Asset-pipeline documentation
-│   ├── story/                         # Narrative canon: scenario, chapters, characters
-│   └── archive/                       # Superseded historical context
-├── package.json
-├── tsconfig.json
-├── index.html                         # Tauri webview entry document
-├── vite.config.ts                     # Vite/Svelte/Worker build config
-├── src/
-│   ├── main.ts
-│   ├── shell/                         # Routing, composition, stage layout, settings, admin
-│   ├── battle/                        # Duel Simulator domain, entered through index.ts
-│   │   ├── app/                       # Svelte duel shell, atomic components, stores
-│   │   ├── components/                # Shared duel UI components
-│   │   ├── decks/                     # Battle-internal deck selection/loading
-│   │   ├── duel/                      # Atomic contracts, presentation types, presets
-│   │   ├── field/                     # Typed DOM-field layout/model mapping
-│   │   ├── storage/                   # Battle operational diagnostics/update adapters
-│   │   └── worker/                    # Worker entry, engine, protocol, projection, opponent, assets
-│   ├── decks/                         # Shared deck-data library
-│   ├── deck-editor/                   # Deck Editor domain
-│   ├── story/                         # Visual Novel domain
-│   ├── storage/                       # Native content contracts/client, schema and producer/test helpers
-│   └── styles/
-├── scripts/                           # Asset acquisition/verification tools
-│   └── lib/                           # Focused pipeline modules
-├── tests/                             # Unit/component/integration fixtures/tests
-├── e2e/                               # All Playwright browser suites
-│   ├── e2e-global/                    # Production-browser application tests
-│   ├── e2e-acceptance/                # Isolated visual acceptance harness tests
-│   └── e2e-native/                    # Native IPC/webview integration tests
-├── vendor/ocgcore-wasm/0.1.2/         # Checked-in verified engine
-├── public/                            # Retained source/history; Vite publicDir is disabled
-├── generated/                         # Ignored acquisition, build, package, and test outputs
-└── .cache/                            # Ignored upstream downloads/temp data
+│   │   ├── architecture.md           # Canonical architecture map and topic router
+│   │   ├── 01-product/               # Product and technology context
+│   │   ├── 02-runtime/               # Application lifecycle and runtime structure
+│   │   ├── 03-engine/                # Duel engine integration, protocol and execution
+│   │   ├── 04-data/                  # Data, saves, assets and historical transport
+│   │   ├── 05-presentation/          # UI and rendering architecture
+│   │   ├── 06-quality/
+│   │   │   ├── testing.md            # Test strategy and verification routes
+│   │   │   ├── diagnostics.md        # Errors, traces and reproducibility
+│   │   │   └── bot-improvement-loop.md # Bounded real-engine bot improvement loop
+│   │   └── 07-governance/            # Trust, security, distribution and extension constraints
+│   ├── ADR/                          # Recorded architecture decisions
+│   │   ├── 022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md
+│   │   │                             # Domain ownership and public import boundaries
+│   │   ├── 045_ADR_single_branch_trunk_development.md
+│   │   │                             # Branch and integration model
+│   │   ├── 103_ADR_tauri_only_runtime_and_asset_ui.md
+│   │   │                             # Production native platform and asset UI boundaries
+│   │   ├── 104_ADR_startup_memory_content_and_mod_overrides.md
+│   │   │                             # Current JSON snapshots, memory, mods and saves
+│   │   └── 105_ADR_browser_development_and_shared_content_transport.md
+│   │                                 # Browser development exception and shared transport
+│   ├── story/
+│   │   ├── README.md                 # Narrative canon index
+│   │   ├── scenario/                 # Philosophy, premise and world rules
+│   │   ├── chapters/                 # Chapter definitions and progression
+│   │   ├── characters/               # Character definitions
+│   │   ├── themes/                   # Narrative themes
+│   │   └── open-questions.md          # Unresolved story decisions
+│   ├── assets/
+│   │   ├── startup-memory-content.md # Current content authoring, startup and mod contracts
+│   │   ├── native-content-release.md # Compile, stage and verify native content
+│   │   ├── content-modules.md        # Package composition and module dependencies
+│   │   ├── asset-import-pipeline.md  # Source acquisition, transformations and integrity
+│   │   └── asset-profiles.md         # Current asset layout and profile-tool retirement
+│   ├── developer-guide/              # Developer walkthroughs and HTML guides
+│   ├── feature/                      # Feature-specific design rationale
+│   ├── evidence/                     # Retained verification evidence
+│   └── archive/                      # Superseded documentation and historical context
+│
+├── src/                              # TypeScript/Svelte application and Worker code
+│   ├── index.html                    # Main application document
+│   ├── main.ts                       # Frontend bootstrap
+│   ├── acceptance-main.ts            # Visual acceptance harness bootstrap
+│   ├── shell/                        # Application composition and navigation
+│   │   ├── index.ts                  # Public shell contract
+│   │   ├── AppShell.svelte           # Application frame
+│   │   ├── routes.ts                 # Screen routes
+│   │   ├── stage-layout.ts           # Viewport stage and responsive layout
+│   │   ├── startup/                  # Startup flow and readiness UI
+│   │   ├── screens/                  # Main menu and shell-owned screens
+│   │   ├── application/              # Application actions and orchestration
+│   │   ├── handoff/                  # Cross-domain transitions
+│   │   ├── native/                   # Native shell integration
+│   │   └── settings/                 # Application settings UI
+│   ├── battle/                       # Duel Simulator domain
+│   │   ├── index.ts                  # Public battle contract
+│   │   ├── BattleFacade.svelte       # Shell-facing duel composition
+│   │   ├── app/                      # Duel screens, prompts, components and stores
+│   │   ├── duel/                     # Duel contracts and start/preset validation
+│   │   ├── field/                    # Semantic DOM field, layout and interactions
+│   │   ├── ports/                    # External dependencies consumed by battle
+│   │   ├── storage/                  # Battle diagnostics and persistence adapters
+│   │   └── worker/                   # Authoritative engine ownership and duel execution
+│   │       ├── DuelWorkerRuntime.ts  # Worker command and lifecycle coordination
+│   │       ├── HeadlessDuelController.ts # Programmatic real-engine duels
+│   │       ├── engine/               # Engine bridge, constants and handles
+│   │       ├── protocol/             # Raw engine message parsing and response encoding
+│   │       ├── projection/           # Clone-safe views and hidden-information filtering
+│   │       ├── assets/               # Runtime manifests, card data and scripts
+│   │       ├── opponent/             # Opponent-facing observations and policy integration
+│   │       ├── diagnostics/          # Worker errors and diagnostic records
+│   │       └── bot/
+│   │           ├── bot-contract.ts   # Bot inputs, decisions, settings and sideboarding interface
+│   │           ├── generalist-bot.ts # Shared selection and bot execution machinery
+│   │           ├── generalist-strategy.ts # Baseline action-scoring strategy
+│   │           ├── basic-bot.ts      # Basic shared policy
+│   │           ├── random-bot.ts     # Random-choice policy
+│   │           └── sideboard.ts      # Shared sideboarding transactions and validation
+│   ├── deck-editor/                  # Deck editing UI and application logic; index.ts is public
+│   ├── deck-select/                  # Shared presentational deck-selection screen
+│   ├── decks/                        # Deck models, validation, editing and repositories
+│   │   ├── index.ts                  # Shared deck entry
+│   │   ├── contracts/                # Focused deck contracts
+│   │   ├── repository/               # Deck persistence interfaces and implementations
+│   │   ├── editing/                  # Deck editing operations
+│   │   └── validation/               # Deck validation rules
+│   ├── cards/                        # Immutable card definitions, classification and image ports
+│   ├── story/                        # Visual Novel domain; index.ts is public
+│   │   ├── README.md                 # Story runtime developer orientation
+│   │   ├── content/                  # Runtime story definitions derived from narrative canon
+│   │   ├── playback/                 # Story playback
+│   │   ├── screens/                  # Story screens
+│   │   ├── shop/                     # Story shop and commerce UI
+│   │   ├── handoff/                  # Story-to-duel transitions
+│   │   └── saves/                    # Story save contracts and state
+│   ├── modules/                      # Pure shared module and progression contracts
+│   ├── shared-svelte-ui/             # Domain-independent presentational components
+│   ├── storage/                      # Content transport and user-state persistence
+│   │   ├── contracts/                # Shared storage and content contracts
+│   │   ├── native/                   # Tauri commands and prepared native storage
+│   │   ├── browser-dev/              # Isolated fixed-content browser development adapters
+│   │   ├── transport/                # Shared native/browser resource transport
+│   │   ├── snapshot/                 # Startup snapshot handling
+│   │   ├── json/                     # JSON user-state storage
+│   │   └── mods/                     # Mod contracts and composition
+│   └── styles/                       # Global styles, brand tokens and bundled fonts
+│
+├── tauri/                        # Rust native host and application packaging
+│   ├── Cargo.toml                    # Native Rust dependencies and build features
+│   ├── tauri.conf.json               # Window, frontend build and native resources
+│   ├── capabilities/                 # Native permissions
+│   ├── build.rs                      # Trusted release embedding and resource inventory
+│   └── src/
+│       ├── main.rs                   # Desktop executable entry
+│       ├── lib.rs                    # Tauri setup, protocols and command registration
+│       ├── native_startup.rs         # Verified startup snapshots and memory readiness
+│       ├── native_startup/           # Startup maintenance, resources and acceptance support
+│       ├── native_user_data.rs       # Atomic JSON user-data writer
+│       ├── native_mods.rs            # Enabled mod state and activation
+│       ├── native_mod_import.rs      # Mod selection and import
+│       ├── native_diagnostics.rs     # Native diagnostics and log access
+│       └── scoped_files.rs           # Scoped native filesystem access
+│
+├── assets/                           # Authored configuration and acquired package inputs
+│   ├── README.md                     # Content-input orientation and historical setup evidence
+│   ├── packages.json                 # Package definitions, dependencies and source roots
+│   ├── critical-release.json         # Trusted startup snapshot and engine pins
+│   ├── native-release.json           # Native release declaration
+│   ├── distribution-evidence.json    # Distribution approval evidence
+│   ├── setup-evidence.json           # Setup and acceptance evidence
+│   ├── app/                          # Tracked fonts, application icon and download-link settings
+│   ├── duel-core/                    # Engine configuration and strings
+│   ├── freeplay/                     # Freeplay decks, opponents, settings and card limits
+│   ├── bootstrap-inputs/             # Tracked source inputs for initial content setup
+│   ├── commerce/                     # Shop, set, booster and economy source declarations
+│   ├── card-library/                 # Acquired card data, scripts and images; ignored by Git
+│   └── chapter-01/                   # Acquired Chapter 1 package inputs and media; ignored by Git
+│
+├── scripts/                          # Development, acquisition, content and build commands
+│   ├── setup-desktop.ts              # Fresh-clone setup
+│   ├── start-desktop.ts              # Native build-and-launch orchestration
+│   ├── download-mvp-assets.ts        # Asset acquisition entry
+│   ├── download-mvp-assets.sh        # macOS/Linux download wrapper
+│   ├── download-mvp-assets.cmd       # Windows download wrapper
+│   ├── prepare-browser-content.ts   # Fixed-content browser development preparation
+│   ├── readable-content.ts          # Readable JSON conversion and compilation
+│   ├── readable-content-release.ts  # Content release pinning, staging and verification
+│   ├── verify-native-build.ts        # Frontend build and payload boundaries
+│   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
+│   ├── bot-improvement/              # Strategy preparation, coding-agent adapter and checks
+│   └── lib/
+│       ├── asset-roots.ts            # Current acquisition and source-root mapping
+│       ├── json-content/            # Readable sources and startup snapshot compilation
+│       ├── sqlite-content/          # Retained developer conversion and package tooling
+│       ├── asset-delivery/          # Retained copy-migration and file-safety helpers
+│       └── vite-content-deny.ts     # Browser protection for private asset source files
+│
+├── tools/bot-evaluation/             # Separate Rust developer executable
+│   ├── Cargo.toml                    # Evaluator dependencies and release settings
+│   └── src/
+│       ├── main.rs                   # Evaluate, compare, benchmark and improve commands
+│       ├── runner.rs                 # Sequential real-engine match scheduling
+│       ├── config.rs                 # Evaluator configuration
+│       └── improvement/             # Bounded strategy improvement, persistence and statistics
+│
+├── test/                             # All application test sources and test tooling
+│   ├── README.md                     # Test layout, selection and direct command examples
+│   ├── unit/                        # Isolated logic and architecture checks
+│   ├── component/                   # Svelte component tests
+│   ├── integration/                 # Cross-module and real-engine tests
+│   ├── tooling/                     # Node tooling and runner regressions
+│   ├── release-gates/               # Explicit release-readiness checks
+│   ├── e2e/
+│   │   ├── README.md                # Browser suite coverage and collection rules
+│   │   ├── application/             # Application browser scenarios
+│   │   ├── acceptance/              # Visual acceptance scenarios
+│   │   ├── native/                  # Native bridge and webview scenarios
+│   │   └── resources/               # Resource lifetime and performance scenarios
+│   ├── fixtures/                    # Sample decks, content, transcripts and fixture components
+│   ├── helpers/                     # Shared fixture builders and test servers
+│   ├── config/                      # Vitest and Playwright configurations
+│   └── runner/
+│       ├── run-tests.ts             # Targeted test runner
+│       ├── test-context.ts          # Branch-change context and suggested tests
+│       ├── verify-browser-collection.ts # Browser discovery without launching browsers
+│       ├── lib/                     # Test selection, context and reporting helpers
+│       └── native/                  # Native acceptance runners and injected fixtures
+│
+├── vendor/ocgcore-wasm/0.1.2/         # Frozen duel engine, loader and integrity manifest
+├── generated/                       # Ignored build, acquisition and package output
+├── .tmp/                            # Ignored temporary agent and tooling work
+│   └── test/                        # Test logs, reports, coverage and browser artifacts
+├── .cache/                          # Ignored upstream downloads and cache
+└── node_modules/                    # Installed JavaScript dependencies; generated
 ```
-
-Generated assets, caches, and `node_modules/` are not source and remain ignored. Story systems, deck editing, progression, and multiplayer are outside the MVP.
-
-## Task management
-
-This project uses a CLI ticket system for task management. Tickets live in `tickets/`. The `tk` CLI defaults to `.tickets/`, so prefix each command with `TICKETS_DIR="$PWD/tickets"` (for example, `TICKETS_DIR="$PWD/tickets" tk help`).

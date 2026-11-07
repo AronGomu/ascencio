@@ -18,8 +18,8 @@ import { setImageFileName } from "./set-images.ts";
    and never a side effect of downloading or verifying, or the loop would close
    on itself again. */
 
-/** Tracked, at the repository root beside `assets-source-lock.json`. */
-export const IMAGE_CONTENT_LOCK_FILE = "image-content-lock.json";
+/** Tracked under config/ beside `config/assets-source-lock.json`. */
+export const IMAGE_CONTENT_LOCK_FILE = "config/image-content-lock.json";
 
 /** One pinned card image, and the shape observed files are compared in. */
 export interface CardImageDigest {

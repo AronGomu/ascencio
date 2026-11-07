@@ -10,7 +10,7 @@ Feedback asks for a button that restores the last non-bugged state, landing on "
 
 The vendored core (`ocgcore-wasm@0.1.2`, permanently frozen) exposes no state snapshot or duplicate call. There is nothing to save and reload.
 
-What does exist: the worker's trace already records the seed, the deck selection, the snapshot id and **every prompt and response in order**, marking opponent responses with `opponentReason`. `tests/integration/programmed-duel.test.ts` already replays a persisted response log against a fixed seed with no policy fallback. The mechanism is built; it was only ever pointed at tests.
+What does exist: the worker's trace already records the seed, the deck selection, the snapshot id and **every prompt and response in order**, marking opponent responses with `opponentReason`. `test/integration/programmed-duel.test.ts` already replays a persisted response log against a fixed seed with no policy fallback. The mechanism is built; it was only ever pointed at tests.
 
 ## Decision
 

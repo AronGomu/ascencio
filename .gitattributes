@@ -2,6 +2,6 @@
 * text=auto eol=lf
 *.sh text eol=lf
 *.cmd text eol=crlf
-content/bootstrap-inputs/** -text
+assets/bootstrap-inputs/** -text
 vendor/** -text
 vendor/ocgcore-wasm/0.1.2/dist/index.d.ts -text -diff

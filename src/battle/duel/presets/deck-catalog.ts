@@ -3,7 +3,7 @@ export type DeckId = "chapter-one-starter" | "chapter-one-practice";
 export interface DeckMetadata {
   readonly id: DeckId;
   readonly name: string;
-  /** File name inside `assets/content/chapter-01/decks/`. */
+  /** File name inside `assets/chapter-01/decks/`. */
   readonly fileName: string;
 }
 

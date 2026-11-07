@@ -29,7 +29,7 @@ const DOMAIN_CHUNK_PREFIXES: ReadonlyArray<
    headroom rather than tracking the measurement, so ordinary churn does not
    move them; a domain crossing its ceiling is a chunk-composition change worth
    a look. `verify-native-build.ts` gates them and
-   `tests/unit/domain-chunk-closure.test.ts` asserts the built tree keeps at
+   `test/unit/domain-chunk-closure.test.ts` asserts the built tree keeps at
    least 10% headroom, so both read this one table. */
 export const DOMAIN_BUDGET_BYTES: Readonly<
   Record<DomainChunkReport["domain"], number>

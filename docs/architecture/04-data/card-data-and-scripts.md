@@ -8,7 +8,7 @@
 - S1. Standard-format Project Ignis BabelCDB catalog, including release and non-Rush prerelease additions.
 - S2. Compatible official/prerelease Project Ignis CardScripts plus required global/procedure scripts.
 - S3. Project Ignis system strings and card text/options.
-- S4. Package-owned authored inputs under `assets/content/`; frozen OCG bytes remain under `vendor/ocgcore-wasm/0.1.2/`.
+- S4. Package-owned authored inputs under `assets/`; frozen OCG bytes remain under `vendor/ocgcore-wasm/0.1.2/`.
 - S5. Rush Duel, Skill, Goat-only, and unofficial anime/manga catalogs remain excluded formats.
 
 `legacy:content:export-sqlite` creates global card rows/text/scripts/sets/search indexes in `card-library`; `duel-core` carries frozen engine bytes/config/strings. Chapters reference global card IDs and retain chapter limits/config rather than duplicate global card data.

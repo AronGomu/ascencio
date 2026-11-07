@@ -4,22 +4,22 @@ This stage compiles readable JSON into the existing immutable native SQLite pack
 
 ## Sources and provisioning
 
-| ID | Source | Ownership |
-| --- | --- | --- |
-| S1 | `assets/content/card-library/sets/<id>.json` | Ignored acquired set metadata and printing membership |
-| S2 | `assets/content/card-library/boosters/<id>.json` | Ignored generated base products; IDs equal existing set IDs |
-| S3 | `content/commerce/economies/base.json` | Tracked authored resale, singles and pack-eligibility policy |
-| S4 | `content/commerce/shops/chapter-01.json` | Tracked authored product offers and prices |
-| S5 | `content/commerce/chapters/chapter-01.json` | Tracked chapter shop reference and exact allowed card pool |
-| S6 | `content/commerce/sources.json` | Source directories, source compatibility version and explicit mod files |
+| ID  | Source                                     | Ownership                                                               |
+| --- | ------------------------------------------ | ----------------------------------------------------------------------- |
+| S1  | `assets/card-library/sets/<id>.json`       | Ignored acquired set metadata and printing membership                   |
+| S2  | `assets/card-library/boosters/<id>.json`   | Ignored generated base products; IDs equal existing set IDs             |
+| S3  | `assets/commerce/economies/base.json`      | Tracked authored resale, singles and pack-eligibility policy            |
+| S4  | `assets/commerce/shops/chapter-01.json`    | Tracked authored product offers and prices                              |
+| S5  | `assets/commerce/chapters/chapter-01.json` | Tracked chapter shop reference and exact allowed card pool              |
+| S6  | `assets/commerce/sources.json`             | Source directories, source compatibility version and explicit mod files |
 
 Full acquired content stays outside Git. A clean checkout still needs the documented acquired catalog, scripts, media and prepared packages. The checked-in conversion descriptor pins the accepted pre-commerce packages; conversion verifies their byte sizes and SHA-256 before reading them, opens SQLite read-only, and writes only a new destination:
 
 ```sh
-node scripts/convert-shop-content.ts content/commerce/conversion-release.json generated/shop-content-import
+node scripts/convert-shop-content.ts assets/commerce/conversion-release.json generated/shop-content-import
 ```
 
-The destination must not exist. Its `sets/` and `boosters/` directories are the acquired canonical inputs. Place those directories under `assets/content/card-library/` for initial provisioning. The emitted `economies/`, `shops/` and `chapters/` are migration comparison output; tracked authored policy files already own those inputs. Do not replace authored changes with generated defaults.
+The destination must not exist. Its `sets/` and `boosters/` directories are the acquired canonical inputs. Place those directories under `assets/card-library/` for initial provisioning. The emitted `economies/`, `shops/` and `chapters/` are migration comparison output; tracked authored policy files already own those inputs. Do not replace authored changes with generated defaults.
 
 Conversion retains 1,036 set IDs, 44,298 printings and the exact 1,627-card chapter pool, including the one allowed card outside the selected sets. It does not infer IDs from titles or collapse printing variants. Old provider evidence is no longer needed for ordinary package export or image verification. Historical acquisition commands (`assets:cards:download-full`, `assets:sets:download-images`, `assets:images:pin`, `content:shop-sets:fetch-and-generate`) retain their historical provenance inputs; this change does not provision or rewrite those archives.
 
@@ -35,7 +35,7 @@ Base behavior stays 100 DP per pack, eight common draws plus one non-common draw
 
 ## Explicit mods and package builds
 
-`content/commerce/examples/small-packs.json` is an inactive example. It adds a five-card product sharing the existing Legend of Blue Eyes set, explicitly changes that original product to three cards, and replaces chapter offers with prices 12 and 25 DP. Adding its path to the source manifest's `mods` array enables it for the next build. Existing unopened packs retain their product identity; changing that product's definition deliberately changes future openings.
+`assets/commerce/examples/small-packs.json` is an inactive example. It adds a five-card product sharing the existing Legend of Blue Eyes set, explicitly changes that original product to three cards, and replaces chapter offers with prices 12 and 25 DP. Adding its path to the source manifest's `mods` array enables it for the next build. Existing unopened packs retain their product identity; changing that product's definition deliberately changes future openings.
 
 A mod declares `id`, `apiVersion: 1`, the exact `baseVersion`, dependencies, additions and overrides. The package recipe's `sourceVersion` must match the source manifest and mod compatibility version. An override names `kind`, `targetId`, replacement fields and the IDs of earlier mods it supersedes. Arrays replace whole arrays. Identity fields cannot change. Overlapping writes require both a declared dependency and an explicit `overrides` entry; unknown targets, cycles, collisions and unsupported fields reject the entire candidate. Inputs remain unchanged on failure. Do not edit `baseVersion` merely to bypass incompatibility; it identifies the recipe's source contract, independently from output package versions.
 
@@ -44,7 +44,7 @@ Any card-library or card-pack recipe can specify `sourceManifest` and `sourceVer
 After changing sources, bump affected immutable package versions and dependency requirements in the recipe before exporting:
 
 ```sh
-npm run legacy:content:export-sqlite -- --spec content/packages.json
+npm run legacy:content:export-sqlite -- --spec assets/packages.json
 npm run content:release:pin
 npm run content:stage:native
 ```
@@ -54,7 +54,7 @@ Review export results before repinning or staging. Existing package bytes are ne
 The reproducible small-fixture exercise needs no acquired source/provider JSON:
 
 ```sh
-npx vitest run tests/unit/commerce/source-export.test.ts tests/unit/commerce/content.test.ts tests/unit/commerce/runtime.test.ts
+npx vitest run test/unit/commerce/source-export.test.ts test/unit/commerce/content.test.ts test/unit/commerce/runtime.test.ts
 ```
 
 It exports and installs a base package plus a shop-only add-on referencing its parent, tests explicit conflicts and invalid sources, and exercises purchases, sale pricing, draws and saved grouping. The fixture directories are disposable and automatically removed.

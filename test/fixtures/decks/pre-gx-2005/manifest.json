@@ -1,0 +1,1534 @@
+{
+  "schemaVersion": 1,
+  "decks": [
+    {
+      "id": "pre-gx-2005-goat-control",
+      "archetype": "Goat Control",
+      "name": "Pre-GX 2005 - Goat Control",
+      "file": "pre-gx-2005-goat-control.ydk",
+      "counts": {
+        "main": 41,
+        "side": 15,
+        "extra": 15
+      },
+      "sha256": "fe2eb6d933692af521ddab024b6e2d63a36d44eebfe854ef04121cf48f48486e",
+      "main": [
+        {
+          "code": 72989439,
+          "count": 1,
+          "catalogName": "Black Luster Soldier - Envoy of the Beginning"
+        },
+        {
+          "code": 77585513,
+          "count": 1,
+          "catalogName": "Jinzo"
+        },
+        {
+          "code": 18036057,
+          "count": 1,
+          "catalogName": "Airknight Parshath"
+        },
+        {
+          "code": 88240808,
+          "count": 1,
+          "catalogName": "Kycoo the Ghost Destroyer"
+        },
+        {
+          "code": 70074904,
+          "count": 2,
+          "catalogName": "D.D. Assailant"
+        },
+        {
+          "code": 2134346,
+          "count": 1,
+          "catalogName": "Asura Priest"
+        },
+        {
+          "code": 71413901,
+          "count": 1,
+          "catalogName": "Breaker the Magical Warrior"
+        },
+        {
+          "code": 33184167,
+          "count": 1,
+          "catalogName": "Tribe-Infecting Virus"
+        },
+        {
+          "code": 7572887,
+          "count": 1,
+          "catalogName": "D.D. Warrior Lady"
+        },
+        {
+          "code": 34853266,
+          "count": 1,
+          "catalogName": "Tsukuyomi"
+        },
+        {
+          "code": 26202165,
+          "count": 1,
+          "catalogName": "Sangan"
+        },
+        {
+          "code": 33508719,
+          "count": 1,
+          "catalogName": "Morphing Jar"
+        },
+        {
+          "code": 9156135,
+          "count": 1,
+          "catalogName": "Apprentice Magician"
+        },
+        {
+          "code": 31560081,
+          "count": 2,
+          "catalogName": "Magician of Faith"
+        },
+        {
+          "code": 8131171,
+          "count": 1,
+          "catalogName": "Sinister Serpent"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 19613556,
+          "count": 1,
+          "catalogName": "Heavy Storm"
+        },
+        {
+          "code": 5318639,
+          "count": 1,
+          "catalogName": "Mystical Space Typhoon"
+        },
+        {
+          "code": 70828912,
+          "count": 1,
+          "catalogName": "Premature Burial"
+        },
+        {
+          "code": 45986603,
+          "count": 1,
+          "catalogName": "Snatch Steal"
+        },
+        {
+          "code": 44763025,
+          "count": 1,
+          "catalogName": "Delinquent Duo"
+        },
+        {
+          "code": 72302403,
+          "count": 1,
+          "catalogName": "Swords of Revealing Light"
+        },
+        {
+          "code": 71044499,
+          "count": 2,
+          "catalogName": "Nobleman of Crossout"
+        },
+        {
+          "code": 73915051,
+          "count": 2,
+          "catalogName": "Scapegoat"
+        },
+        {
+          "code": 14087893,
+          "count": 2,
+          "catalogName": "Book of Moon"
+        },
+        {
+          "code": 69162969,
+          "count": 1,
+          "catalogName": "Lightning Vortex"
+        },
+        {
+          "code": 31036355,
+          "count": 1,
+          "catalogName": "Creature Swap"
+        },
+        {
+          "code": 46411259,
+          "count": 1,
+          "catalogName": "Metamorphosis"
+        },
+        {
+          "code": 83555666,
+          "count": 1,
+          "catalogName": "Ring of Destruction"
+        },
+        {
+          "code": 97077563,
+          "count": 1,
+          "catalogName": "Call of the Haunted"
+        },
+        {
+          "code": 44095762,
+          "count": 1,
+          "catalogName": "Mirror Force"
+        },
+        {
+          "code": 53582587,
+          "count": 1,
+          "catalogName": "Torrential Tribute"
+        },
+        {
+          "code": 29401950,
+          "count": 1,
+          "catalogName": "Bottomless Trap Hole"
+        },
+        {
+          "code": 56120475,
+          "count": 1,
+          "catalogName": "Sakuretsu Armor"
+        },
+        {
+          "code": 36468556,
+          "count": 1,
+          "catalogName": "Ceasefire"
+        }
+      ],
+      "extra": [
+        {
+          "code": 63519819,
+          "count": 3,
+          "catalogName": "Thousand-Eyes Restrict"
+        },
+        {
+          "code": 49868263,
+          "count": 1,
+          "catalogName": "Ryu Senshi"
+        },
+        {
+          "code": 80071763,
+          "count": 1,
+          "catalogName": "Dark Balter the Terrible"
+        },
+        {
+          "code": 13722870,
+          "count": 1,
+          "catalogName": "Dark Flare Knight"
+        },
+        {
+          "code": 86805855,
+          "count": 1,
+          "catalogName": "Dark Blade the Dragon Knight"
+        },
+        {
+          "code": 66235877,
+          "count": 1,
+          "catalogName": "Fiend Skull Dragon"
+        },
+        {
+          "code": 87751584,
+          "count": 1,
+          "catalogName": "Gatling Dragon"
+        },
+        {
+          "code": 95144193,
+          "count": 1,
+          "catalogName": "Kwagar Hercules"
+        },
+        {
+          "code": 45231177,
+          "count": 1,
+          "catalogName": "Flame Swordsman"
+        },
+        {
+          "code": 21175632,
+          "count": 1,
+          "catalogName": "St. Joan"
+        },
+        {
+          "code": 51828629,
+          "count": 1,
+          "catalogName": "Giltia the D. Knight"
+        },
+        {
+          "code": 13756293,
+          "count": 1,
+          "catalogName": "King Dragun"
+        },
+        {
+          "code": 86099788,
+          "count": 1,
+          "catalogName": "The Last Warrior from Another Planet"
+        }
+      ],
+      "side": [
+        {
+          "code": 4929256,
+          "count": 1,
+          "catalogName": "Mobius the Frost Monarch"
+        },
+        {
+          "code": 83986578,
+          "count": 1,
+          "catalogName": "King Tiger Wanghu"
+        },
+        {
+          "code": 11384280,
+          "count": 1,
+          "catalogName": "Cannon Soldier"
+        },
+        {
+          "code": 74131780,
+          "count": 1,
+          "catalogName": "Exiled Force"
+        },
+        {
+          "code": 47507260,
+          "count": 1,
+          "catalogName": "Mystic Swordsman LV2"
+        },
+        {
+          "code": 51452091,
+          "count": 2,
+          "catalogName": "Royal Decree"
+        },
+        {
+          "code": 57139487,
+          "count": 2,
+          "catalogName": "Chain Disappearance"
+        },
+        {
+          "code": 58851034,
+          "count": 2,
+          "catalogName": "Cursed Seal of the Forbidden Spell"
+        },
+        {
+          "code": 60082869,
+          "count": 1,
+          "catalogName": "Dust Tornado"
+        },
+        {
+          "code": 8842266,
+          "count": 2,
+          "catalogName": "Poison of the Old Man"
+        },
+        {
+          "code": 46411259,
+          "count": 1,
+          "catalogName": "Metamorphosis"
+        }
+      ]
+    },
+    {
+      "id": "pre-gx-2005-warrior-toolbox",
+      "archetype": "Warrior Toolbox",
+      "name": "Pre-GX 2005 - Warrior Toolbox",
+      "file": "pre-gx-2005-warrior-toolbox.ydk",
+      "counts": {
+        "main": 40,
+        "side": 15,
+        "extra": 10
+      },
+      "sha256": "cdad7722bff6c3a23ab0b580582372b4c55352a08ae5825b19653006d723c0ab",
+      "main": [
+        {
+          "code": 32362575,
+          "count": 1,
+          "catalogName": "Magical Merchant"
+        },
+        {
+          "code": 22609617,
+          "count": 1,
+          "catalogName": "Mataza the Zapper"
+        },
+        {
+          "code": 39507162,
+          "count": 1,
+          "catalogName": "Blade Knight"
+        },
+        {
+          "code": 72989439,
+          "count": 1,
+          "catalogName": "Black Luster Soldier - Envoy of the Beginning"
+        },
+        {
+          "code": 78658564,
+          "count": 1,
+          "catalogName": "Goblin Attack Force"
+        },
+        {
+          "code": 33184167,
+          "count": 1,
+          "catalogName": "Tribe-Infecting Virus"
+        },
+        {
+          "code": 2460565,
+          "count": 1,
+          "catalogName": "Marauding Captain"
+        },
+        {
+          "code": 8131171,
+          "count": 1,
+          "catalogName": "Sinister Serpent"
+        },
+        {
+          "code": 77585513,
+          "count": 1,
+          "catalogName": "Jinzo"
+        },
+        {
+          "code": 88240808,
+          "count": 1,
+          "catalogName": "Kycoo the Ghost Destroyer"
+        },
+        {
+          "code": 71413901,
+          "count": 1,
+          "catalogName": "Breaker the Magical Warrior"
+        },
+        {
+          "code": 76922029,
+          "count": 2,
+          "catalogName": "Don Zaloog"
+        },
+        {
+          "code": 74131780,
+          "count": 1,
+          "catalogName": "Exiled Force"
+        },
+        {
+          "code": 18036057,
+          "count": 1,
+          "catalogName": "Airknight Parshath"
+        },
+        {
+          "code": 31560081,
+          "count": 1,
+          "catalogName": "Magician of Faith"
+        },
+        {
+          "code": 7572887,
+          "count": 1,
+          "catalogName": "D.D. Warrior Lady"
+        },
+        {
+          "code": 70828912,
+          "count": 1,
+          "catalogName": "Premature Burial"
+        },
+        {
+          "code": 5318639,
+          "count": 1,
+          "catalogName": "Mystical Space Typhoon"
+        },
+        {
+          "code": 14087893,
+          "count": 1,
+          "catalogName": "Book of Moon"
+        },
+        {
+          "code": 32807846,
+          "count": 2,
+          "catalogName": "Reinforcement of the Army"
+        },
+        {
+          "code": 72302403,
+          "count": 1,
+          "catalogName": "Swords of Revealing Light"
+        },
+        {
+          "code": 19613556,
+          "count": 1,
+          "catalogName": "Heavy Storm"
+        },
+        {
+          "code": 38992735,
+          "count": 1,
+          "catalogName": "Wave-Motion Cannon"
+        },
+        {
+          "code": 71044499,
+          "count": 2,
+          "catalogName": "Nobleman of Crossout"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 97169186,
+          "count": 2,
+          "catalogName": "Smashing Ground"
+        },
+        {
+          "code": 44763025,
+          "count": 1,
+          "catalogName": "Delinquent Duo"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 45986603,
+          "count": 1,
+          "catalogName": "Snatch Steal"
+        },
+        {
+          "code": 95281259,
+          "count": 1,
+          "catalogName": "The Warrior Returning Alive"
+        },
+        {
+          "code": 83555666,
+          "count": 1,
+          "catalogName": "Ring of Destruction"
+        },
+        {
+          "code": 53582587,
+          "count": 1,
+          "catalogName": "Torrential Tribute"
+        },
+        {
+          "code": 97077563,
+          "count": 1,
+          "catalogName": "Call of the Haunted"
+        },
+        {
+          "code": 29401950,
+          "count": 1,
+          "catalogName": "Bottomless Trap Hole"
+        },
+        {
+          "code": 44095762,
+          "count": 1,
+          "catalogName": "Mirror Force"
+        },
+        {
+          "code": 60082869,
+          "count": 1,
+          "catalogName": "Dust Tornado"
+        }
+      ],
+      "extra": [
+        {
+          "code": 63519819,
+          "count": 2,
+          "catalogName": "Thousand-Eyes Restrict"
+        },
+        {
+          "code": 80071763,
+          "count": 1,
+          "catalogName": "Dark Balter the Terrible"
+        },
+        {
+          "code": 54541900,
+          "count": 1,
+          "catalogName": "Karbonala Warrior"
+        },
+        {
+          "code": 70681994,
+          "count": 1,
+          "catalogName": "Dragoness the Wicked Knight"
+        },
+        {
+          "code": 86805855,
+          "count": 2,
+          "catalogName": "Dark Blade the Dragon Knight"
+        },
+        {
+          "code": 49868263,
+          "count": 1,
+          "catalogName": "Ryu Senshi"
+        },
+        {
+          "code": 13756293,
+          "count": 2,
+          "catalogName": "King Dragun"
+        }
+      ],
+      "side": [
+        {
+          "code": 12607053,
+          "count": 2,
+          "catalogName": "Waboku"
+        },
+        {
+          "code": 31036355,
+          "count": 1,
+          "catalogName": "Creature Swap"
+        },
+        {
+          "code": 73915051,
+          "count": 2,
+          "catalogName": "Scapegoat"
+        },
+        {
+          "code": 42703248,
+          "count": 2,
+          "catalogName": "Giant Trunade"
+        },
+        {
+          "code": 4929256,
+          "count": 1,
+          "catalogName": "Mobius the Frost Monarch"
+        },
+        {
+          "code": 2460565,
+          "count": 1,
+          "catalogName": "Marauding Captain"
+        },
+        {
+          "code": 95281259,
+          "count": 1,
+          "catalogName": "The Warrior Returning Alive"
+        },
+        {
+          "code": 36468556,
+          "count": 1,
+          "catalogName": "Ceasefire"
+        },
+        {
+          "code": 69162969,
+          "count": 1,
+          "catalogName": "Lightning Vortex"
+        },
+        {
+          "code": 29401950,
+          "count": 1,
+          "catalogName": "Bottomless Trap Hole"
+        },
+        {
+          "code": 46411259,
+          "count": 2,
+          "catalogName": "Metamorphosis"
+        }
+      ]
+    },
+    {
+      "id": "pre-gx-2005-tribute-control",
+      "archetype": "Tribute Control",
+      "name": "Pre-GX 2005 - Tribute Control",
+      "file": "pre-gx-2005-tribute-control.ydk",
+      "counts": {
+        "main": 42,
+        "side": 15,
+        "extra": 15
+      },
+      "sha256": "9fe2ffcf2f27fc3c9a1ccea96f06eba58af81fa782d2f26404af0fb36a99e03c",
+      "main": [
+        {
+          "code": 71413901,
+          "count": 1,
+          "catalogName": "Breaker the Magical Warrior"
+        },
+        {
+          "code": 33184167,
+          "count": 1,
+          "catalogName": "Tribe-Infecting Virus"
+        },
+        {
+          "code": 22567609,
+          "count": 3,
+          "catalogName": "Nimble Momonga"
+        },
+        {
+          "code": 52624755,
+          "count": 3,
+          "catalogName": "Peten the Dark Clown"
+        },
+        {
+          "code": 8131171,
+          "count": 1,
+          "catalogName": "Sinister Serpent"
+        },
+        {
+          "code": 89111398,
+          "count": 1,
+          "catalogName": "Dark Dust Spirit"
+        },
+        {
+          "code": 4929256,
+          "count": 1,
+          "catalogName": "Mobius the Frost Monarch"
+        },
+        {
+          "code": 77585513,
+          "count": 1,
+          "catalogName": "Jinzo"
+        },
+        {
+          "code": 51945556,
+          "count": 1,
+          "catalogName": "Zaborg the Thunder Monarch"
+        },
+        {
+          "code": 18036057,
+          "count": 1,
+          "catalogName": "Airknight Parshath"
+        },
+        {
+          "code": 26202165,
+          "count": 1,
+          "catalogName": "Sangan"
+        },
+        {
+          "code": 74131780,
+          "count": 1,
+          "catalogName": "Exiled Force"
+        },
+        {
+          "code": 72989439,
+          "count": 1,
+          "catalogName": "Black Luster Soldier - Envoy of the Beginning"
+        },
+        {
+          "code": 31560081,
+          "count": 2,
+          "catalogName": "Magician of Faith"
+        },
+        {
+          "code": 23205979,
+          "count": 1,
+          "catalogName": "Spirit Reaper"
+        },
+        {
+          "code": 70828912,
+          "count": 1,
+          "catalogName": "Premature Burial"
+        },
+        {
+          "code": 45986603,
+          "count": 1,
+          "catalogName": "Snatch Steal"
+        },
+        {
+          "code": 44763025,
+          "count": 1,
+          "catalogName": "Delinquent Duo"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 31036355,
+          "count": 2,
+          "catalogName": "Creature Swap"
+        },
+        {
+          "code": 46411259,
+          "count": 2,
+          "catalogName": "Metamorphosis"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 19613556,
+          "count": 1,
+          "catalogName": "Heavy Storm"
+        },
+        {
+          "code": 97169186,
+          "count": 1,
+          "catalogName": "Smashing Ground"
+        },
+        {
+          "code": 72302403,
+          "count": 1,
+          "catalogName": "Swords of Revealing Light"
+        },
+        {
+          "code": 69162969,
+          "count": 1,
+          "catalogName": "Lightning Vortex"
+        },
+        {
+          "code": 73915051,
+          "count": 3,
+          "catalogName": "Scapegoat"
+        },
+        {
+          "code": 12607053,
+          "count": 1,
+          "catalogName": "Waboku"
+        },
+        {
+          "code": 83555666,
+          "count": 1,
+          "catalogName": "Ring of Destruction"
+        },
+        {
+          "code": 44095762,
+          "count": 1,
+          "catalogName": "Mirror Force"
+        },
+        {
+          "code": 97077563,
+          "count": 1,
+          "catalogName": "Call of the Haunted"
+        },
+        {
+          "code": 53582587,
+          "count": 1,
+          "catalogName": "Torrential Tribute"
+        },
+        {
+          "code": 38411870,
+          "count": 1,
+          "catalogName": "Needle Ceiling"
+        }
+      ],
+      "extra": [
+        {
+          "code": 63519819,
+          "count": 3,
+          "catalogName": "Thousand-Eyes Restrict"
+        },
+        {
+          "code": 49868263,
+          "count": 1,
+          "catalogName": "Ryu Senshi"
+        },
+        {
+          "code": 80071763,
+          "count": 1,
+          "catalogName": "Dark Balter the Terrible"
+        },
+        {
+          "code": 15237615,
+          "count": 1,
+          "catalogName": "Empress Judge"
+        },
+        {
+          "code": 2504891,
+          "count": 1,
+          "catalogName": "Skull Knight"
+        },
+        {
+          "code": 89112729,
+          "count": 1,
+          "catalogName": "Cyber Saurus"
+        },
+        {
+          "code": 87751584,
+          "count": 1,
+          "catalogName": "Gatling Dragon"
+        },
+        {
+          "code": 53539634,
+          "count": 1,
+          "catalogName": "Sanwitch"
+        },
+        {
+          "code": 86805855,
+          "count": 1,
+          "catalogName": "Dark Blade the Dragon Knight"
+        },
+        {
+          "code": 13722870,
+          "count": 1,
+          "catalogName": "Dark Flare Knight"
+        },
+        {
+          "code": 66235877,
+          "count": 1,
+          "catalogName": "Fiend Skull Dragon"
+        },
+        {
+          "code": 21175632,
+          "count": 1,
+          "catalogName": "St. Joan"
+        },
+        {
+          "code": 19066538,
+          "count": 1,
+          "catalogName": "Roaring Ocean Snake"
+        }
+      ],
+      "side": [
+        {
+          "code": 38992735,
+          "count": 3,
+          "catalogName": "Wave-Motion Cannon"
+        },
+        {
+          "code": 36468556,
+          "count": 1,
+          "catalogName": "Ceasefire"
+        },
+        {
+          "code": 71044499,
+          "count": 2,
+          "catalogName": "Nobleman of Crossout"
+        },
+        {
+          "code": 60082869,
+          "count": 1,
+          "catalogName": "Dust Tornado"
+        },
+        {
+          "code": 37576645,
+          "count": 1,
+          "catalogName": "Reckless Greed"
+        },
+        {
+          "code": 3819470,
+          "count": 1,
+          "catalogName": "Seven Tools of the Bandit"
+        },
+        {
+          "code": 41872150,
+          "count": 2,
+          "catalogName": "Swarm of Locusts"
+        },
+        {
+          "code": 4178474,
+          "count": 1,
+          "catalogName": "Raigeki Break"
+        },
+        {
+          "code": 5318639,
+          "count": 1,
+          "catalogName": "Mystical Space Typhoon"
+        },
+        {
+          "code": 19230407,
+          "count": 2,
+          "catalogName": "Offerings to the Doomed"
+        }
+      ]
+    },
+    {
+      "id": "pre-gx-2005-zombie-recruiter",
+      "archetype": "Zombie Recruiter",
+      "name": "Pre-GX 2005 - Zombie Recruiter",
+      "file": "pre-gx-2005-zombie-recruiter.ydk",
+      "counts": {
+        "main": 40,
+        "extra": 0,
+        "side": 0
+      },
+      "sha256": "df27f3e09c8cc9bc1c6d91fd51cc0e0806d0ca3c5dd47e75066eaa49187f3ea9",
+      "main": [
+        {
+          "code": 39168895,
+          "count": 3,
+          "catalogName": "Berserk Gorilla"
+        },
+        {
+          "code": 97017120,
+          "count": 3,
+          "catalogName": "Giant Rat"
+        },
+        {
+          "code": 88240808,
+          "count": 3,
+          "catalogName": "Kycoo the Ghost Destroyer"
+        },
+        {
+          "code": 77044671,
+          "count": 3,
+          "catalogName": "Pyramid Turtle"
+        },
+        {
+          "code": 57281778,
+          "count": 3,
+          "catalogName": "Ryu Kokki"
+        },
+        {
+          "code": 71413901,
+          "count": 1,
+          "catalogName": "Breaker the Magical Warrior"
+        },
+        {
+          "code": 74131780,
+          "count": 1,
+          "catalogName": "Exiled Force"
+        },
+        {
+          "code": 79575620,
+          "count": 1,
+          "catalogName": "Injection Fairy Lily"
+        },
+        {
+          "code": 33184167,
+          "count": 1,
+          "catalogName": "Tribe-Infecting Virus"
+        },
+        {
+          "code": 53839837,
+          "count": 1,
+          "catalogName": "Vampire Lord"
+        },
+        {
+          "code": 2204140,
+          "count": 3,
+          "catalogName": "Book of Life"
+        },
+        {
+          "code": 79759861,
+          "count": 3,
+          "catalogName": "Tribute to The Doomed"
+        },
+        {
+          "code": 31036355,
+          "count": 2,
+          "catalogName": "Creature Swap"
+        },
+        {
+          "code": 71044499,
+          "count": 2,
+          "catalogName": "Nobleman of Crossout"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 19613556,
+          "count": 1,
+          "catalogName": "Heavy Storm"
+        },
+        {
+          "code": 5318639,
+          "count": 1,
+          "catalogName": "Mystical Space Typhoon"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 70828912,
+          "count": 1,
+          "catalogName": "Premature Burial"
+        },
+        {
+          "code": 45986603,
+          "count": 1,
+          "catalogName": "Snatch Steal"
+        },
+        {
+          "code": 51452091,
+          "count": 3,
+          "catalogName": "Royal Decree"
+        },
+        {
+          "code": 97077563,
+          "count": 1,
+          "catalogName": "Call of the Haunted"
+        }
+      ],
+      "extra": [],
+      "side": []
+    },
+    {
+      "id": "pre-gx-2005-gravekeeper",
+      "archetype": "Gravekeeper",
+      "name": "Pre-GX 2005 - Gravekeeper",
+      "file": "pre-gx-2005-gravekeeper.ydk",
+      "counts": {
+        "main": 40,
+        "extra": 0,
+        "side": 0
+      },
+      "sha256": "9a489c01ada237fc563837dea0f1a6fb1fa52e8276d818ab163c3e1a6f507bdd",
+      "main": [
+        {
+          "code": 71413901,
+          "count": 1,
+          "catalogName": "Breaker the Magical Warrior"
+        },
+        {
+          "code": 25262697,
+          "count": 3,
+          "catalogName": "Gravekeeper's Assailant"
+        },
+        {
+          "code": 37101832,
+          "count": 3,
+          "catalogName": "Gravekeeper's Guard"
+        },
+        {
+          "code": 63695531,
+          "count": 3,
+          "catalogName": "Gravekeeper's Spear Soldier"
+        },
+        {
+          "code": 24317029,
+          "count": 3,
+          "catalogName": "Gravekeeper's Spy"
+        },
+        {
+          "code": 34853266,
+          "count": 2,
+          "catalogName": "Tsukuyomi"
+        },
+        {
+          "code": 14087893,
+          "count": 3,
+          "catalogName": "Book of Moon"
+        },
+        {
+          "code": 44763025,
+          "count": 1,
+          "catalogName": "Delinquent Duo"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 69279219,
+          "count": 2,
+          "catalogName": "My Body as a Shield"
+        },
+        {
+          "code": 5318639,
+          "count": 1,
+          "catalogName": "Mystical Space Typhoon"
+        },
+        {
+          "code": 47355498,
+          "count": 3,
+          "catalogName": "Necrovalley"
+        },
+        {
+          "code": 71044499,
+          "count": 2,
+          "catalogName": "Nobleman of Crossout"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 73628505,
+          "count": 2,
+          "catalogName": "Terraforming"
+        },
+        {
+          "code": 94192409,
+          "count": 2,
+          "catalogName": "Compulsory Evacuation Device"
+        },
+        {
+          "code": 60082869,
+          "count": 1,
+          "catalogName": "Dust Tornado"
+        },
+        {
+          "code": 44095762,
+          "count": 1,
+          "catalogName": "Mirror Force"
+        },
+        {
+          "code": 83555666,
+          "count": 1,
+          "catalogName": "Ring of Destruction"
+        },
+        {
+          "code": 30450531,
+          "count": 1,
+          "catalogName": "Rite of Spirit"
+        },
+        {
+          "code": 41420027,
+          "count": 3,
+          "catalogName": "Solemn Judgment"
+        }
+      ],
+      "extra": [],
+      "side": []
+    },
+    {
+      "id": "pre-gx-2005-gardna-burn",
+      "archetype": "Gardna Burn",
+      "name": "Pre-GX 2005 - Gardna Burn",
+      "file": "pre-gx-2005-gardna-burn.ydk",
+      "counts": {
+        "main": 40,
+        "extra": 0,
+        "side": 0
+      },
+      "sha256": "77e63061582d62f0cae27f5f08037e396114e7a10b4a000fb7edeaf03f1f4450",
+      "main": [
+        {
+          "code": 65240384,
+          "count": 3,
+          "catalogName": "Big Shield Gardna"
+        },
+        {
+          "code": 34124316,
+          "count": 1,
+          "catalogName": "Cyber Jar"
+        },
+        {
+          "code": 87621407,
+          "count": 3,
+          "catalogName": "Dekoichi the Battlechanted Locomotive"
+        },
+        {
+          "code": 69579761,
+          "count": 3,
+          "catalogName": "Des Koala"
+        },
+        {
+          "code": 95178994,
+          "count": 3,
+          "catalogName": "Giant Germ"
+        },
+        {
+          "code": 33508719,
+          "count": 1,
+          "catalogName": "Morphing Jar"
+        },
+        {
+          "code": 16226786,
+          "count": 2,
+          "catalogName": "Night Assailant"
+        },
+        {
+          "code": 26202165,
+          "count": 1,
+          "catalogName": "Sangan"
+        },
+        {
+          "code": 14087893,
+          "count": 3,
+          "catalogName": "Book of Moon"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 36468556,
+          "count": 1,
+          "catalogName": "Ceasefire"
+        },
+        {
+          "code": 93747864,
+          "count": 3,
+          "catalogName": "Desert Sunlight"
+        },
+        {
+          "code": 83968380,
+          "count": 2,
+          "catalogName": "Jar of Greed"
+        },
+        {
+          "code": 24068492,
+          "count": 3,
+          "catalogName": "Just Desserts"
+        },
+        {
+          "code": 62279055,
+          "count": 1,
+          "catalogName": "Magic Cylinder"
+        },
+        {
+          "code": 44095762,
+          "count": 1,
+          "catalogName": "Mirror Force"
+        },
+        {
+          "code": 29843091,
+          "count": 3,
+          "catalogName": "Ojama Trio"
+        },
+        {
+          "code": 83555666,
+          "count": 1,
+          "catalogName": "Ring of Destruction"
+        },
+        {
+          "code": 27053506,
+          "count": 3,
+          "catalogName": "Secret Barrel"
+        }
+      ],
+      "extra": [],
+      "side": []
+    },
+    {
+      "id": "pre-gx-2005-ben-kei-otk",
+      "archetype": "Ben Kei OTK",
+      "name": "Pre-GX 2005 - Ben Kei OTK",
+      "file": "pre-gx-2005-ben-kei-otk.ydk",
+      "counts": {
+        "main": 40,
+        "extra": 0,
+        "side": 0
+      },
+      "sha256": "50b1d1c42775d54043e09c89100361dd745b74281ff4e82691a5cedfc3dedc6e",
+      "main": [
+        {
+          "code": 84430950,
+          "count": 3,
+          "catalogName": "Armed Samurai - Ben Kei"
+        },
+        {
+          "code": 34124316,
+          "count": 1,
+          "catalogName": "Cyber Jar"
+        },
+        {
+          "code": 7572887,
+          "count": 1,
+          "catalogName": "D.D. Warrior Lady"
+        },
+        {
+          "code": 74131780,
+          "count": 1,
+          "catalogName": "Exiled Force"
+        },
+        {
+          "code": 73431236,
+          "count": 3,
+          "catalogName": "Iron Blacksmith Kotetsu"
+        },
+        {
+          "code": 31560081,
+          "count": 2,
+          "catalogName": "Magician of Faith"
+        },
+        {
+          "code": 33508719,
+          "count": 1,
+          "catalogName": "Morphing Jar"
+        },
+        {
+          "code": 83011277,
+          "count": 2,
+          "catalogName": "Mystic Tomato"
+        },
+        {
+          "code": 26202165,
+          "count": 1,
+          "catalogName": "Sangan"
+        },
+        {
+          "code": 40619825,
+          "count": 2,
+          "catalogName": "Axe of Despair"
+        },
+        {
+          "code": 61127349,
+          "count": 2,
+          "catalogName": "Big Bang Shot"
+        },
+        {
+          "code": 42703248,
+          "count": 3,
+          "catalogName": "Giant Trunade"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 19613556,
+          "count": 1,
+          "catalogName": "Heavy Storm"
+        },
+        {
+          "code": 3136426,
+          "count": 2,
+          "catalogName": "Level Limit - Area B"
+        },
+        {
+          "code": 83746708,
+          "count": 1,
+          "catalogName": "Mage Power"
+        },
+        {
+          "code": 71044499,
+          "count": 2,
+          "catalogName": "Nobleman of Crossout"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 70828912,
+          "count": 1,
+          "catalogName": "Premature Burial"
+        },
+        {
+          "code": 32807846,
+          "count": 2,
+          "catalogName": "Reinforcement of the Army"
+        },
+        {
+          "code": 45986603,
+          "count": 1,
+          "catalogName": "Snatch Steal"
+        },
+        {
+          "code": 56747793,
+          "count": 1,
+          "catalogName": "United We Stand"
+        },
+        {
+          "code": 97077563,
+          "count": 1,
+          "catalogName": "Call of the Haunted"
+        },
+        {
+          "code": 85742772,
+          "count": 2,
+          "catalogName": "Gravity Bind"
+        },
+        {
+          "code": 44095762,
+          "count": 1,
+          "catalogName": "Mirror Force"
+        },
+        {
+          "code": 83555666,
+          "count": 1,
+          "catalogName": "Ring of Destruction"
+        }
+      ],
+      "extra": [],
+      "side": []
+    },
+    {
+      "id": "pre-gx-2005-empty-jar",
+      "archetype": "Empty Jar",
+      "name": "Pre-GX 2005 - Empty Jar",
+      "file": "pre-gx-2005-empty-jar.ydk",
+      "counts": {
+        "main": 40,
+        "extra": 0,
+        "side": 0
+      },
+      "sha256": "85266e82cb8fc0c7f30781cc82b57aacb8d664cbdc7e656a5915a5e52056d4fc",
+      "main": [
+        {
+          "code": 33508719,
+          "count": 1,
+          "catalogName": "Morphing Jar"
+        },
+        {
+          "code": 34124316,
+          "count": 1,
+          "catalogName": "Cyber Jar"
+        },
+        {
+          "code": 31786629,
+          "count": 3,
+          "catalogName": "Thunder Dragon"
+        },
+        {
+          "code": 83011277,
+          "count": 3,
+          "catalogName": "Mystic Tomato"
+        },
+        {
+          "code": 26202165,
+          "count": 1,
+          "catalogName": "Sangan"
+        },
+        {
+          "code": 19613556,
+          "count": 1,
+          "catalogName": "Heavy Storm"
+        },
+        {
+          "code": 37520316,
+          "count": 3,
+          "catalogName": "Mind Control"
+        },
+        {
+          "code": 49140998,
+          "count": 2,
+          "catalogName": "A Feather of the Phoenix"
+        },
+        {
+          "code": 14087893,
+          "count": 3,
+          "catalogName": "Book of Moon"
+        },
+        {
+          "code": 38699854,
+          "count": 3,
+          "catalogName": "Book of Taiyou"
+        },
+        {
+          "code": 72892473,
+          "count": 1,
+          "catalogName": "Card Destruction"
+        },
+        {
+          "code": 55144522,
+          "count": 1,
+          "catalogName": "Pot of Greed"
+        },
+        {
+          "code": 79571449,
+          "count": 1,
+          "catalogName": "Graceful Charity"
+        },
+        {
+          "code": 70828912,
+          "count": 1,
+          "catalogName": "Premature Burial"
+        },
+        {
+          "code": 70368879,
+          "count": 2,
+          "catalogName": "Upstart Goblin"
+        },
+        {
+          "code": 49398568,
+          "count": 1,
+          "catalogName": "Serial Spell"
+        },
+        {
+          "code": 22589918,
+          "count": 3,
+          "catalogName": "Reload"
+        },
+        {
+          "code": 43434803,
+          "count": 3,
+          "catalogName": "The Shallow Grave"
+        },
+        {
+          "code": 29228529,
+          "count": 3,
+          "catalogName": "Spell Reproduction"
+        },
+        {
+          "code": 42703248,
+          "count": 3,
+          "catalogName": "Giant Trunade"
+        }
+      ],
+      "extra": [],
+      "side": []
+    }
+  ]
+}

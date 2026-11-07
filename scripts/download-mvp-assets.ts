@@ -22,8 +22,8 @@ if (options.help) {
 
 Usage:
   npm run assets:bootstrap -- [options]
-  download-mvp-assets.cmd [options]       Windows
-  ./download-mvp-assets.sh [options]      macOS/Linux
+  scripts/download-mvp-assets.cmd [options]       Windows
+  ./scripts/download-mvp-assets.sh [options]      macOS/Linux
 
 Options:
   --offline                  Regenerate from existing Git/image caches without network access

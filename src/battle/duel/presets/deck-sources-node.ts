@@ -8,7 +8,7 @@ export async function loadDeckSources(): Promise<ReadonlyMap<DeckId, string>> {
       const source = await readFile(
         fileURLToPath(
           new URL(
-            `../../../../assets/content/chapter-01/decks/${fileName}`,
+            `../../../../assets/chapter-01/decks/${fileName}`,
             import.meta.url,
           ),
         ),

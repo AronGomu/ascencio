@@ -295,10 +295,10 @@ async function loadSource(
   await assertNoSymlinkParents(root, entry.sourceRoot);
   await requiredFile(sourceRoot, "config.json", entry.manifest.packageId);
   let config = await json(sourceRoot, "config.json", entry.manifest.packageId);
-  if (entry.sourceRoot === "assets/content/chapter-01") {
+  if (entry.sourceRoot === "assets/chapter-01") {
     const policy = (await normalizedJson(
       root,
-      "content/commerce/chapters/chapter-01.json",
+      "assets/commerce/chapters/chapter-01.json",
       "chapter-01",
     )) as { shopId: string };
     config = { ...(config as object), shopId: policy.shopId };
@@ -321,7 +321,7 @@ async function loadSource(
         entry.manifest.packageId,
         catalog.cards.map(({ code }) => code),
       )
-    : entry.sourceRoot === "assets/content/chapter-01"
+    : entry.sourceRoot === "assets/chapter-01"
       ? await normalizedMedia(sourceRoot, entry.manifest.packageId)
       : [];
   const globalSets =
@@ -372,7 +372,7 @@ async function loadSource(
       incomplete(entry.manifest.packageId, asset.source);
   }
   if (entry.manifest.packageType === "duel-core") {
-    const production = entry.sourceRoot === "content/duel-core";
+    const production = entry.sourceRoot === "assets/duel-core";
     const required = production
       ? ([
           [
@@ -510,7 +510,7 @@ async function loadSource(
     entry.manifest.packageId,
   );
   const limits =
-    entry.sourceRoot === "assets/content/chapter-01"
+    entry.sourceRoot === "assets/chapter-01"
       ? await normalizedChapterLimits(
           root,
           prior
@@ -537,7 +537,7 @@ async function loadSource(
         )
       : [];
   const projected =
-    entry.sourceRoot === "assets/content/chapter-01"
+    entry.sourceRoot === "assets/chapter-01"
       ? projectChapterStories(stories, entry.manifest.packageId, config, assets)
       : { stories, missingOptionalMedia: [] };
   return {
@@ -1207,9 +1207,9 @@ function validSourceRoot(value: string, packageId: PackageId): boolean {
   return (
     value ===
       (packageId === "duel-core" || packageId === "freeplay"
-        ? `content/${packageId}`
-        : `assets/content/${packageId}`) ||
-    value === `tests/fixtures/sqlite/sources/${packageId}`
+        ? `assets/${packageId}`
+        : `assets/${packageId}`) ||
+    value === `test/fixtures/sqlite/sources/${packageId}`
   );
 }
 function validRelative(value: unknown): value is string {

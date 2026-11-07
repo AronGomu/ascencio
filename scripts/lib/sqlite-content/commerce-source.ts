@@ -87,7 +87,7 @@ export async function readEntities(
 }
 export async function loadCommerceSource(
   root: string,
-  manifestPath = "content/commerce/sources.json",
+  manifestPath = "assets/commerce/sources.json",
   expectedVersion?: string,
   references?: CommerceReferences,
 ): Promise<CompiledShopSource> {

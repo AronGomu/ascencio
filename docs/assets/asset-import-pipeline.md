@@ -18,7 +18,7 @@ Acquire and verify producer inputs under package-owned roots while keeping gener
 
 The resumable command remains `scripts/download-mvp-assets.ts`. It orchestrates pinned engine acquisition diagnostics, catalog/script/string import, card-image downloads, and integrity verifiers. Current routing comes from `scripts/lib/asset-roots.ts:PACKAGE_ASSET_SOURCES`; frozen `vendor/ocgcore-wasm/0.1.2/` remains authoritative and is copied only by package producer.
 
-[Manual SQLite setup](manual-sqlite-setup.md) owns package export/verification. [Profiles and copy-only migration](asset-profiles.md) are retained local source tools only. [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md) retires hosted/ZIP/progressive player delivery.
+[Manual SQLite setup](manual-sqlite-setup.md) owns package export/verification. [Asset source layout and copy-only migration](asset-profiles.md) describe local source storage; delivery profiles and their scan/promotion commands have been removed. [ADR-099](../ADR/099_ADR_completed_manual_sqlite_cutover.md) retires hosted/ZIP/progressive player delivery.
 
 ## Sources
 
@@ -52,7 +52,7 @@ download and integrity-check pinned ocgcore-wasm package
 → hash every generated artifact
 → write manifest.json
 → independently verify the staging snapshot
-→ write verified package inputs under assets/content/**, content/duel-core/strings/** and generated/content-inputs/**
+→ write verified package inputs under assets/**, assets/duel-core/strings/** and generated/content-inputs/**
 ```
 
 ## Card normalization
@@ -94,8 +94,8 @@ https://images.ygoprodeck.com/images/cards_cropped/<ID>.jpg
 `npm run assets:cards:download-full` downloads full-card JPEGs; `npm run assets:cards:download-cropped` downloads text-free artwork crops into sibling resumable archives:
 
 ```text
-assets/content/card-library/images/full/<ID>.jpg
-assets/content/card-library/images/cropped/<ID>.jpg
+assets/card-library/images/full/<ID>.jpg
+assets/card-library/images/cropped/<ID>.jpg
 ```
 
 For browser-build work that only needs bundled preset decks, `npm run assets:cards:download-cropped-reviewed-pool` acquires their cropped art without downloading the complete catalog.
@@ -128,12 +128,12 @@ Executable launchers are also included and set their own working directory, so t
 
 ```powershell
 # Windows Command Prompt or PowerShell
-.\download-mvp-assets.cmd
+.\scripts\download-mvp-assets.cmd
 ```
 
 ```bash
 # macOS/Linux
-./download-mvp-assets.sh
+./scripts/download-mvp-assets.sh
 ```
 
 No npm package installation is required for acquisition itself; the launchers use Node.js 26's native TypeScript execution and Node built-ins. Requirements are Node.js 26+, Git, network access, and roughly 2.5 GB of free disk space.
@@ -212,7 +212,7 @@ Downloaded card-library and chapter source families remain ignored by Git. Duel-
 - image URL/card-ID consistency;
 - that image redistribution has not been marked approved accidentally.
 
-Every image check above re-hashes files against a manifest generated from those same files, so bytes substituted upstream would verify clean, and `generated/` is ignored by Git, so no reviewer diff would show them either. `image-content-lock.json` at the repository root closes that loop. It is the only image digest under version control and covers the shipped surface alone: the byte length and SHA-256 of every full card plus cropped illustration the preset decks use (120 each today), and every shop set image (50 today). `npm run frontend:verify` compares both packaged card-image forms against it and `npm run assets:sets:verify-images` compares the set archive; either fails on a difference — including art shipped without a pin.
+Every image check above re-hashes files against a manifest generated from those same files, so bytes substituted upstream would verify clean, and `generated/` is ignored by Git, so no reviewer diff would show them either. `config/image-content-lock.json` at the repository root closes that loop. It is the only image digest under version control and covers the shipped surface alone: the byte length and SHA-256 of every full card plus cropped illustration the preset decks use (120 each today), and every shop set image (50 today). `npm run frontend:verify` compares both packaged card-image forms against it and `npm run assets:sets:verify-images` compares the set archive; either fails on a difference — including art shipped without a pin.
 
 YGOPRODeck publishes no digest of its own, so the lock is seeded from the first fetch: it proves the bytes have not changed since they were pinned, not that they are genuine. Regenerating it after an intended upstream art refresh is a separate, explicit command, never a side effect of downloading or verifying, because a lock rewritten by the run it guards would prove nothing:
 

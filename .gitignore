@@ -10,9 +10,9 @@ assets/shared/runtime/
 assets/shared/card-images/
 assets/shared/card-back.jpg
 assets/shared/set-images/
-assets/content/card-library/
-assets/content/card-pack-*/
-assets/content/chapter-*/
+assets/card-library/
+assets/card-pack-*/
+assets/chapter-*/
 coverage/
 *.log
 
@@ -37,9 +37,9 @@ coverage/
 
 # Generated knowledge graph (rebuild with `graphify .`)
 graphify-out/
-src-tauri/resources/
-src-tauri/target/
-src-tauri/gen/
+tauri/resources/
+tauri/target/
+tauri/gen/
 
 # Agent scratch and subagent transcripts. Machine-local, large, and churns
 # every run; the transcripts also carry opaque session tokens.

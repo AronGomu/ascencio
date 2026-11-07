@@ -9,7 +9,7 @@
 1. L1. Install Node.js 24+ dependencies from lockfile: `npm ci`.
 2. L2. Inspect supported producer/verification syntax: `npm run legacy:content:export-sqlite -- --help`; `npm run legacy:content:verify-sqlite -- --help`.
 3. L3. Inspect package-root move syntax: `npm run legacy:assets:copy-to-package-roots -- --help`.
-4. L4. Keep tracked duel-core and Free Play inputs under `content/duel-core/` and `content/freeplay/`; keep acquired card-library and chapter inputs under `assets/content/<package-id>/`; keep app icon/link metadata under `assets/app/`; never move frozen `vendor/ocgcore-wasm/0.1.2/`.
+4. L4. Keep tracked duel-core and Free Play inputs under `assets/duel-core/` and `assets/freeplay/`; keep acquired card-library and chapter inputs under `assets/<package-id>/`; keep app icon/link metadata under `assets/app/`; never move frozen `vendor/ocgcore-wasm/0.1.2/`.
 5. L5. Build app independently with `npm run frontend:build`; this must not acquire or package content.
 
 Do not run export/acquisition solely to inspect syntax. Export writes immutable output and requires deliberate version/source inputs.
@@ -17,7 +17,7 @@ Do not run export/acquisition solely to inspect syntax. Export writes immutable 
 ## Current commands
 
 ```sh
-npm run legacy:content:export-sqlite -- --spec content/packages.json
+npm run legacy:content:export-sqlite -- --spec assets/packages.json
 npm run legacy:content:verify-sqlite -- --file generated/content-packages/duel-core-1.0.0.sqlite
 npm run legacy:assets:copy-to-package-roots -- --plan
 npm run legacy:assets:copy-to-package-roots -- --apply generated/content-packages/asset-move-plan.json
@@ -25,7 +25,7 @@ npm run legacy:assets:copy-to-package-roots -- --apply generated/content-package
 
 `legacy:content:export-sqlite` validates full selected recipe/dependency/reference closure and emits directly named raw SQLite files plus `generated/content-packages/content-packages.zip`. The app accepts that single ZIP or one to sixty-four raw files. `legacy:content:verify-sqlite` validates one raw file only; it does not infer active stack validity. Existing differing output under same package ID/version fails immutable identity conflict and must not be overwritten or described as upgrade.
 
-Retained `legacy:assets:copy-migrate`, `legacy:assets:profile-promote`, and `legacy:assets:inventory` are pure local source scanners/copy/profile tools. They do not publish, host, upload, download player packages, or determine browser activation.
+Retained `legacy:assets:copy-migrate` and `legacy:assets:copy-to-package-roots` are local copy-migration tools. Profile declarations, inventory, and profile promotion have been removed. Copy migration does not publish, host, upload, or determine browser activation.
 
 ## Code-ready state
 
@@ -33,7 +33,7 @@ Retained `legacy:assets:copy-migrate`, `legacy:assets:profile-promote`, and `leg
 | --- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | C1  | implemented    | Producer/verifier scripts and exact package schema under `scripts/lib/sqlite-content/` + `src/storage/schema/`                           |
 | C2  | implemented    | Manual import/OPFS Worker/user DB under `src/storage/`                                                                                   |
-| C3  | implemented    | App-only Vite/precache/source-deny boundary under `vite.config.ts`, `scripts/lib/vite-app-assets.ts`, `scripts/lib/vite-content-deny.ts` |
+| C3  | implemented    | App-only Vite/precache/source-deny boundary under `config/vite.config.ts`, `scripts/lib/vite-app-assets.ts`, `scripts/lib/vite-content-deny.ts` |
 | C4  | implemented    | Lifecycle UI and null-link behavior under `src/shell/application/manual-content-controller.ts`, `assets/app/download-links.json`         |
 | C5  | pending manual | Owner runs unchecked durable manual checklist named by root `AGENTS.md`; automated tests do not prove Chromium OPFS/download durability  |
 

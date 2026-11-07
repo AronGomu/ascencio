@@ -5,7 +5,7 @@
    story was charged for all of it on every narrative route: measured, these
    components and what only they pull in are 24,119 bytes of the story's
    129,057-byte closure against the 143,750-byte budget, which
-   `tests/unit/domain-chunk-closure.test.ts` requires 10% headroom under. Loaded
+   `test/unit/domain-chunk-closure.test.ts` requires 10% headroom under. Loaded
    here, the shop pays for itself, the way `loadCollectionScreen` already makes
    the collection browser pay for itself.
 

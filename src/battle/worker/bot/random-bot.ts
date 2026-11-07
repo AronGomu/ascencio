@@ -7,7 +7,7 @@ import {
 } from "./legal-selection.ts";
 import { validateBotDecision } from "./validate-bot-decision.ts";
 
-/** Injected randomness is for tests/diagnostics; production uses fresh Math.random. */
+/** Injected randomness is for test/diagnostics; production uses fresh Math.random. */
 export function createRandomBotModule(
   random: RandomSource = Math.random,
 ): BotModule {

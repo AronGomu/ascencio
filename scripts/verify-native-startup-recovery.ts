@@ -22,7 +22,7 @@ if (!output || extra.length || process.platform !== "linux") {
   process.exitCode = 2;
 } else {
   const scope = path.resolve(".tmp", `native-recovery-${randomUUID()}`);
-  const releaseBytes = await readFile("content/critical-release.json");
+  const releaseBytes = await readFile("assets/critical-release.json");
   const release = JSON.parse(releaseBytes.toString()) as {
     packages: readonly { path: string; sha256: string }[];
     engine: readonly { path: string; sha256: string }[];
@@ -50,7 +50,7 @@ if (!output || extra.length || process.platform !== "linux") {
       const generation = path.join(app, "critical-generations", identity);
       for (const resource of [...release.packages, ...release.engine]) {
         const source = path.join(
-          "src-tauri/resources/readable-content",
+          "tauri/resources/readable-content",
           resource.path,
         );
         const bytes = await readFile(source);
@@ -144,22 +144,18 @@ if (!output || extra.length || process.platform !== "linux") {
         bytes[0] = bytes[0]! ^ 1;
         await writeFile(target, bytes);
       }
-      const child = spawn(
-        path.resolve("src-tauri/target/release/ascencio"),
-        [],
-        {
-          detached: true,
-          env: {
-            ...process.env,
-            XDG_DATA_HOME: data,
-            XDG_CONFIG_HOME: path.join(fixture, "config"),
-            ASCENCIO_IO_TRACE: "1",
-            ASCENCIO_NATIVE_ACCEPTANCE: "1",
-            ASCENCIO_NATIVE_RECOVERY: scenario,
-          },
-          stdio: ["ignore", "pipe", "pipe"],
+      const child = spawn(path.resolve("tauri/target/release/ascencio"), [], {
+        detached: true,
+        env: {
+          ...process.env,
+          XDG_DATA_HOME: data,
+          XDG_CONFIG_HOME: path.join(fixture, "config"),
+          ASCENCIO_IO_TRACE: "1",
+          ASCENCIO_NATIVE_ACCEPTANCE: "1",
+          ASCENCIO_NATIVE_RECOVERY: scenario,
         },
-      );
+        stdio: ["ignore", "pipe", "pipe"],
+      });
       let nativeOutput = "";
       const capture = (chunk: Buffer) => {
         nativeOutput = (nativeOutput + chunk.toString()).slice(-32768);

@@ -21,7 +21,7 @@ const sourceRoot = path.resolve(
   process.argv[2] ?? "generated/readable-content-v1",
 );
 const legacyRoot = path.resolve(
-  process.argv[3] ?? "src-tauri/resources/game-content",
+  process.argv[3] ?? "tauri/resources/game-content",
 );
 const ids = ["duel-core", "card-library", "freeplay", "chapter-01"] as const;
 try {

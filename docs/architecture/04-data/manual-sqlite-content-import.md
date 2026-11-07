@@ -28,13 +28,13 @@ Free Play and Deck Builder require first three packages. New Game additionally r
 Current commands:
 
 ```sh
-npm run legacy:content:export-sqlite -- --spec content/packages.json
+npm run legacy:content:export-sqlite -- --spec assets/packages.json
 npm run legacy:content:verify-sqlite -- --file generated/content-packages/duel-core-1.0.0.sqlite
 npm run legacy:assets:copy-to-package-roots -- --plan
 npm run legacy:assets:copy-to-package-roots -- --apply generated/content-packages/asset-move-plan.json
 ```
 
-Every command supports `--help`. `legacy:content:export-sqlite` reads tracked `content/duel-core/` and `content/freeplay/` roots, acquired card-library/chapter `assets/content/<package-id>/` roots, and frozen vendor input and writes directly named immutable releases such as `generated/content-packages/duel-core-1.0.0.sqlite`, plus `generated/content-packages/content-packages.zip` containing the selected releases. Full-recipe export validates dependency/reference closure. `legacy:content:verify-sqlite` validates one raw file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
+Every command supports `--help`. `legacy:content:export-sqlite` reads tracked `assets/duel-core/` and `assets/freeplay/` roots, acquired card-library/chapter `assets/<package-id>/` roots, and frozen vendor input and writes directly named immutable releases such as `generated/content-packages/duel-core-1.0.0.sqlite`, plus `generated/content-packages/content-packages.zip` containing the selected releases. Full-recipe export validates dependency/reference closure. `legacy:content:verify-sqlite` validates one raw file's exact schema, rows, SQLite integrity/local foreign keys, script and asset hashes, and full-file identity; it does not infer active stack validity from sibling files.
 
 Re-export with identical inputs is a no-op. Existing same package ID/version with different identity fails. Source completeness, rights, external links, and upload remain owner gates; fixture success does not prove public-release readiness.
 
@@ -71,9 +71,9 @@ Operational app-update approval and Battle diagnostics may retain IndexedDB. The
 
 ## App-only build
 
-`vite.config.ts` uses `publicDir:false`. Explicit `assets/app/` imports provide icon/link metadata. Build emits app code/fonts/licenses plus exact pinned SQLite executable JS/WASM. Service Worker precaches shell and SQLite runtime only.
+`config/vite.config.ts` uses `publicDir:false`. Explicit `assets/app/` imports provide icon/link metadata. Build emits app code/fonts/licenses plus exact pinned SQLite executable JS/WASM. Service Worker precaches shell and SQLite runtime only.
 
-`scripts/lib/vite-content-deny.ts` blocks direct and aliased Vite/`@fs` access to `assets/content/**`, `content/duel-core/**`, `content/freeplay/**`, and `generated/content-packages/**`. `scripts/verify-browser-build.ts` rejects package DBs, ZIPs, OCG WASM, card/chapter media, raw content, and extra WASM in `generated/build/app/` or precache. App build requires no acquired roots and triggers no source acquisition.
+`scripts/lib/vite-content-deny.ts` blocks direct and aliased Vite/`@fs` access to `assets/**`, `assets/duel-core/**`, `assets/freeplay/**`, and `generated/content-packages/**`. `scripts/verify-browser-build.ts` rejects package DBs, ZIPs, OCG WASM, card/chapter media, raw content, and extra WASM in `generated/build/app/` or precache. App build requires no acquired roots and triggers no source acquisition.
 
 ## Acceptance boundary
 

@@ -48,7 +48,7 @@ The mandatory pre-visual isolated `npm ci --offline && npm run check:headless` g
 
 The embedded core does not automatically shuffle decks at `OCG_StartDuel`. Production sessions therefore load a small application-owned `EVENT_STARTUP` script that calls `Duel.ShuffleDeck(0)` and `Duel.ShuffleDeck(1)`. The real core performs both shuffles with its fresh cryptographic seed and emits two `MSG_SHUFFLE_DECK` messages before opening draws.
 
-`tests/integration/duel-session.test.ts` starts four production sessions and proves:
+`test/integration/duel-session.test.ts` starts four production sessions and proves:
 
 - fresh non-zero seeds;
 - one core shuffle message per player;
@@ -80,7 +80,7 @@ Programmed sessions remain deterministic and use pseudo-shuffle plus explicit de
 
 ### Checkpoint A: actual Worker isolation
 
-`tests/integration/node-worker-thread.test.ts` launches the production Node Worker entry and proves across real structured-clone IPC that:
+`test/integration/node-worker-thread.test.ts` launches the production Node Worker entry and proves across real structured-clone IPC that:
 
 - the Worker validates the local snapshot and reports core version `[11, 0]`;
 - a production preset duel emits public state and a human prompt;
@@ -90,7 +90,7 @@ Programmed sessions remain deterministic and use pseudo-shuffle plus explicit de
 - an unresponsive Worker falls back to bounded forced termination;
 - an initialized live Worker can be forcibly terminated and reclaimed.
 
-The alternate missing-snapshot, cleanup-failure, and unresponsive entries exist only under `tests/fixtures/`; the production Worker accepts no project-root, seed, deck-order, startup-script, or programmed-mode override.
+The alternate missing-snapshot, cleanup-failure, and unresponsive entries exist only under `test/fixtures/`; the production Worker accepts no project-root, seed, deck-order, startup-script, or programmed-mode override.
 
 ### Checkpoint C: programmed duel coverage
 
@@ -114,9 +114,9 @@ Each scenario:
 - must reach the expected result;
 - must have disposed its native handle before returning.
 
-`tests/fixtures/action-coverage.ts` contains 24 action rows and 21 prompt rows. Coverage is collected from executed prompts, selections, presentation events, and core message types. `uncoveredProgrammedCoverage()` now returns `[]`, and the unit test fails if any row becomes uncovered.
+`test/fixtures/action-coverage.ts` contains 24 action rows and 21 prompt rows. Coverage is collected from executed prompts, selections, presentation events, and core message types. `uncoveredProgrammedCoverage()` now returns `[]`, and the unit test fails if any row becomes uncovered.
 
-The rare prompt families are produced by test-only startup scripts in `tests/fixtures/core-scripts/`. These scripts execute inside the real core and exercise its real wire messages and response validation; they are not available through public Worker commands. Ordinary gameplay evidence remains in the three full preset-duel transcripts.
+The rare prompt families are produced by test-only startup scripts in `test/fixtures/core-scripts/`. These scripts execute inside the real core and exercise its real wire messages and response validation; they are not available through public Worker commands. Ordinary gameplay evidence remains in the three full preset-duel transcripts.
 
 ## 4. Vendored adapter corrections
 
@@ -129,8 +129,8 @@ The WASM binary and package version remain unchanged; the `SELECT_SUM` declarati
 
 ## 5. Honest plan status
 
-| Plan range  | Status                     | Notes                                                                                                                                                                         |
-| ----------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan range  | Status                     | Notes                                                                                                                                                                          |
+| ----------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Steps 01-18 | Complete for the MVP       | Real Worker/WASM isolation, verified assets, deterministic programmed coverage, production shuffling, projection, typed prompts and the legal basic opponent are all retained. |
 | Steps 19-20 | **Complete: Checkpoint D** | The base-safe browser app, Worker client/store, exhaustive controls and keyboard-only duel are green.                                                                          |
 | Steps 21-24 | **Complete: Checkpoint E** | Phaser/semantic field parity, verified images/placeholders, bounded presentation and complete surrender/result/restart lifecycle are implemented.                              |
@@ -169,7 +169,7 @@ Expected implementation surfaces:
 
 ```text
 index.html
-vite.config.ts
+config/vite.config.ts
 src/main.ts
 src/battle/app/App.svelte
 src/battle/app/DuelWorkerClient.ts
@@ -227,7 +227,7 @@ Interaction requirements:
 
 Step 20 tests must include:
 
-- exhaustive renderer classification so a new `PlayerPrompt` variant fails tests/typechecking until it has a control;
+- exhaustive renderer classification so a new `PlayerPrompt` variant fails test/typechecking until it has a control;
 - component tests for each control family and its boundary constraints;
 - duplicate-submit, stale-prompt, focus-restoration, keyboard, and hidden-information regressions;
 - a Chromium production-build smoke test that initializes the real browser Worker, starts the preset duel, and submits one real human choice exactly once;
@@ -307,5 +307,5 @@ Verified private release-candidate facts:
 - runtime snapshot: `a562f5ad6794e377157d91adba6a51d73960d5384a00b25fd8bf1236b0f69fb2`;
 - active runtime closure: 70 files;
 - reproducible static package: 109 files;
-- pinned upstream lock: `assets-source-lock.json`;
+- pinned upstream lock: `config/assets-source-lock.json`;
 - current distribution mode: private-only.

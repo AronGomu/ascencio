@@ -91,7 +91,7 @@ for the shared content reader and environment boundaries.
 
 ## Source inputs
 
-`content/bootstrap-inputs/` preserves the original authoring documents, normalized
+`assets/bootstrap-inputs/` preserves the original authoring documents, normalized
 sets and boosters, Chapter 1 decks, and the available story map. Downloaded card
 definitions, scripts and media remain ignored. Current release inputs were
 recovered from the repository's pre-migration history and normalized against the

@@ -21,7 +21,7 @@ and the same `#/story` route.
   pure `saves/index.ts` entry exposes `createSqliteStoryRepository` and schema-6
   envelope validation; the shell supplies the shared SQLite user-data owner.
 - The domain imports no production duel domain (`app`, `duel`, `field`,
-  `storage`, `worker`); `tests/unit/story/story-boundaries.test.ts` enforces it.
+  `storage`, `worker`); `test/unit/story/story-boundaries.test.ts` enforces it.
 - `styles.css` is scoped to `.story-app` so it cannot repaint the duel or deck
   editor that the shell mounts in the same document.
 - Progress lives in the shared SQLite user-data store's `story` namespace,

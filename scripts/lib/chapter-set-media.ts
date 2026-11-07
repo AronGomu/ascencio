@@ -12,11 +12,11 @@ import {
 import { compareCodePoints } from "./asset-delivery/canonical-json.ts";
 
 export const CHAPTER_ONE_SET_MEDIA_EVIDENCE_PATH =
-  "assets/content/chapter-01/authoring/chapter-one-set-media.json";
+  "assets/chapter-01/authoring/chapter-one-set-media.json";
 export const CHAPTER_ONE_SET_MEDIA_SOURCE_PATH =
-  "assets/content/card-library/authoring/ygoprodeck-cardsets-2026-09-12.json";
+  "assets/card-library/authoring/ygoprodeck-cardsets-2026-09-12.json";
 const CHAPTER_ONE_SET_MEDIA_PROVENANCE_PATH =
-  "content/authoring/ygoprodeck-cardsets-2026-09-12.json";
+  "assets/authoring/ygoprodeck-cardsets-2026-09-12.json";
 export const CHAPTER_SET_INDEX_MAX_BYTES = 1024 * 1024;
 
 function parseUnavailableSet(value: unknown) {

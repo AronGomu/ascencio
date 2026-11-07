@@ -91,14 +91,14 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/unit/prototype/prototype-boundaries.test.ts`.
+- [x] Add `test/unit/prototype/prototype-boundaries.test.ts`.
 - [x] Assert every source import under `src/prototype/` rejects `app`, `duel`, `field`, `storage`, and `worker` domains.
 - [x] Assert prototype entry cannot be current `src/main.ts`.
 - [x] Add `e2e/prototype-entry.spec.ts`.
 - [x] Assert `/prototype.html` loads heading `Visual novel prototype`.
 - [x] Assert prototype page exposes `Start full flow` and `Jump to screen or state`.
 - [x] Assert root URL still reaches current direct-duel UI.
-- [x] Run `npx vitest run tests/unit/prototype/prototype-boundaries.test.ts`; confirm RED because prototype entry does not exist.
+- [x] Run `npx vitest run test/unit/prototype/prototype-boundaries.test.ts`; confirm RED because prototype entry does not exist.
 - [x] Run `npx playwright test e2e/prototype-entry.spec.ts --project=chromium`; confirm RED because `/prototype.html` is absent.
 
 ### GREEN — minimum implementation
@@ -130,7 +130,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/unit/prototype/prototype-state.test.ts`.
+- [x] Add `test/unit/prototype/prototype-state.test.ts`.
 - [x] Define expected screen union: launcher, title, load, narrative, map, pre-battle, battle mock, outcome, reward, end.
 - [x] Test New Game starts first narrative beat.
 - [x] Test Continue resumes mock progress.
@@ -147,7 +147,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test resolved outcome grants one reward/flag exactly once.
 - [x] Test reset returns pristine state.
 - [x] Test every state is serializable.
-- [x] Run `npx vitest run tests/unit/prototype/prototype-state.test.ts`; confirm RED.
+- [x] Run `npx vitest run test/unit/prototype/prototype-state.test.ts`; confirm RED.
 
 ### GREEN — minimum implementation
 
@@ -182,13 +182,13 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/VisualDirectionBoards.test.ts`.
+- [x] Add `test/component/prototype/VisualDirectionBoards.test.ts`.
 - [x] Assert exactly three named directions render: Existing client continuity, Duel-anime broadcast, Cinematic visual novel.
 - [x] Assert each direction uses same title, dialogue beat, and illustrated-map state.
 - [x] Assert each direction explains benefit and risk.
 - [x] Assert direction selection is keyboard-operable.
 - [x] Assert selected direction is exposed semantically.
-- [x] Run `npx vitest run tests/component/prototype/VisualDirectionBoards.test.ts`; confirm RED.
+- [x] Run `npx vitest run test/component/prototype/VisualDirectionBoards.test.ts`; confirm RED.
 
 ### GREEN — minimum implementation
 
@@ -217,7 +217,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/TitleAndLoad.test.ts`.
+- [x] Add `test/component/prototype/TitleAndLoad.test.ts`.
 - [x] Test title renders New Game, Load, Settings.
 - [x] Test Continue appears only when mock progress exists.
 - [x] Test New Game transitions directly to prologue.
@@ -227,7 +227,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test incompatible/corrupt example is reachable from reviewer state.
 - [x] Test Delete requires confirmation.
 - [x] Test Back restores title focus.
-- [x] Run `npx vitest run tests/component/prototype/TitleAndLoad.test.ts`; confirm RED.
+- [x] Run `npx vitest run test/component/prototype/TitleAndLoad.test.ts`; confirm RED.
 
 ### GREEN — minimum implementation
 
@@ -256,7 +256,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/NarrativeScreen.test.ts`.
+- [x] Add `test/component/prototype/NarrativeScreen.test.ts`.
 - [x] Test narration, named dialogue, protagonist thought.
 - [x] Test one-character and two-character compositions.
 - [x] Test expression change and character exit.
@@ -270,7 +270,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test Hide UI preserves narrative cursor.
 - [x] Test missing sprite/background fallback.
 - [x] Test complete dialogue line is exposed without character-by-character live-region spam.
-- [x] Run `npx vitest run tests/component/prototype/NarrativeScreen.test.ts`; confirm RED.
+- [x] Run `npx vitest run test/component/prototype/NarrativeScreen.test.ts`; confirm RED.
 
 ### GREEN — minimum implementation
 
@@ -302,7 +302,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/PrototypeOverlays.test.ts`.
+- [x] Add `test/component/prototype/PrototypeOverlays.test.ts`.
 - [x] Test History lists current-scene entries in declared order.
 - [x] Test empty History state.
 - [x] Test Settings exposes text speed, auto speed, transition preference, disabled audio notice, fullscreen support state, reset.
@@ -313,7 +313,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test unsaved progress requires Return to Title confirmation.
 - [x] Test Save success, overwrite, and simulated failure states.
 - [x] Test Auto and Skip are marked experimental, not fully functional.
-- [x] Run `npx vitest run tests/component/prototype/PrototypeOverlays.test.ts`; confirm RED.
+- [x] Run `npx vitest run test/component/prototype/PrototypeOverlays.test.ts`; confirm RED.
 
 ### GREEN — minimum implementation
 
@@ -346,7 +346,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/IllustratedMap.test.ts`.
+- [x] Add `test/component/prototype/IllustratedMap.test.ts`.
 - [x] Test illustrated map, objective, hotspot layer, marker states, location list.
 - [x] Test hotspot and list expose same location IDs.
 - [x] Test focusing/selecting hotspot synchronizes list detail.
@@ -359,7 +359,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test authored order controls keyboard order, not absolute coordinates.
 - [x] Test Back renders only when state allows it.
 - [x] Test every interactive map target has accessible name/state/marker description.
-- [x] Run `npx vitest run tests/component/prototype/IllustratedMap.test.ts`; confirm RED.
+- [x] Run `npx vitest run test/component/prototype/IllustratedMap.test.ts`; confirm RED.
 
 ### GREEN — minimum implementation
 
@@ -391,7 +391,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/BattleHandoff.test.ts`.
+- [x] Add `test/component/prototype/BattleHandoff.test.ts`.
 - [x] Test briefing shows opponent, stakes, deck labels, objective/format.
 - [x] Test Start Duel enters battle handoff once.
 - [x] Test Return to Map appears only when allowed.
@@ -402,7 +402,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test abort offers retry/return without progression.
 - [x] Test technical failure offers retry/return without story defeat.
 - [x] Test no mock action imports or invokes real Worker.
-- [x] Run `npx vitest run tests/component/prototype/BattleHandoff.test.ts`; confirm RED.
+- [x] Run `npx vitest run test/component/prototype/BattleHandoff.test.ts`; confirm RED.
 
 ### GREEN — minimum implementation
 
@@ -431,7 +431,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/OutcomeProgression.test.ts`.
+- [x] Add `test/component/prototype/OutcomeProgression.test.ts`.
 - [x] Test player win renders win-specific scene.
 - [x] Test player loss renders loss-specific scene.
 - [x] Test both resolved branches can continue.
@@ -442,7 +442,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test autosave indicator appears only at stable boundary.
 - [x] Test manual Save writes mock state.
 - [x] Test storage failure preserves playable in-memory state.
-- [x] Add `tests/unit/prototype/prototype-storage.test.ts`.
+- [x] Add `test/unit/prototype/prototype-storage.test.ts`.
 - [x] Test localStorage adapter exact parsing, missing value, invalid value, reset.
 - [x] Test adapter never reads/writes production DB or snapshot keys.
 - [x] Run focused component/unit tests; confirm RED.
@@ -476,7 +476,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/component/prototype/ReviewerTools.test.ts`.
+- [x] Add `test/component/prototype/ReviewerTools.test.ts`.
 - [x] Test every state-matrix entry is reachable within two actions from launcher/review drawer.
 - [x] Test jump-to-screen.
 - [x] Test set choice result.
@@ -488,7 +488,7 @@ Never write production behavior before failing test. Visual-only details must st
 - [x] Test reset.
 - [x] Test readable current-state JSON.
 - [x] Test reviewer controls remain clearly separate from player UI.
-- [x] Add `tests/unit/prototype/review-link.test.ts`.
+- [x] Add `test/unit/prototype/review-link.test.ts`.
 - [x] Test supported state serializes into bounded URL query.
 - [x] Test malformed/unknown query values fall back safely.
 - [x] Test copied link restores same supported review state.
@@ -523,7 +523,7 @@ Never write production behavior before failing test. Visual-only details must st
 
 ### RED — tests first
 
-- [x] Add `tests/unit/prototype/contrast.test.ts`.
+- [x] Add `test/unit/prototype/contrast.test.ts`.
 - [x] Test normal text token pairs meet 4.5:1.
 - [x] Test large text/non-text state pairs meet required contrast.
 - [x] Extend component tests for heading hierarchy, dialog labels, button names, state text, and focus restoration.
@@ -655,8 +655,8 @@ src/prototype/
 └── components/
     └── VisualDirectionBoards.svelte
 
-tests/unit/prototype/
-tests/component/prototype/
+test/unit/prototype/
+test/component/prototype/
 e2e/
 ├── prototype-entry.spec.ts
 ├── prototype-accessibility.spec.ts

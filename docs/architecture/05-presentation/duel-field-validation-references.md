@@ -117,8 +117,8 @@ Capture generated test artifacts; do not commit card-art screenshots unless lice
 Use deterministic artifact paths:
 
 ```text
-generated/tests/e2e-global/results/duel-field/<browser>/<viewport-id>/<state-id>.png
-generated/tests/e2e-global/results/duel-field/<browser>/<viewport-id>/<state-id>.trace.zip
+.tmp/test/e2e-global/results/duel-field/<browser>/<viewport-id>/<state-id>.png
+.tmp/test/e2e-global/results/duel-field/<browser>/<viewport-id>/<state-id>.trace.zip
 ```
 
 Each visual ticket records before/after captures for affected state IDs. Final parity ticket captures every state at VP-01/02/04, plus responsive subset at VP-05/06/07.

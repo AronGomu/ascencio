@@ -15,7 +15,7 @@ npm run native:desktop:build -- --no-bundle
 mkdir -p .tmp/startup-native-data .tmp/startup-native-config
 XDG_DATA_HOME="$PWD/.tmp/startup-native-data" \
 XDG_CONFIG_HOME="$PWD/.tmp/startup-native-config" \
-ASCENCIO_IO_TRACE=1 src-tauri/target/release/ascencio
+ASCENCIO_IO_TRACE=1 tauri/target/release/ascencio
 ```
 
 Never use installed owner user data for fault or performance fixtures. Android/iOS capture uses platform-specific app-managed test storage and physical hardware.
@@ -40,7 +40,7 @@ The Linux desktop recovery runner authenticates and copies only critical resourc
 
 ```sh
 npm run frontend:build
-cargo build --manifest-path src-tauri/Cargo.toml --release --features tauri/custom-protocol,native-acceptance
+cargo build --manifest-path tauri/Cargo.toml --release --features tauri/custom-protocol,native-acceptance
 node scripts/verify-native-startup-recovery.ts recovery-capture.json
 # Optional final argument selects one scenario, for example maintenance.
 ```

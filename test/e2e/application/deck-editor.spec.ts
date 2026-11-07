@@ -1,0 +1,1647 @@
+import { test, putSelectedStorySave } from "./selected-content-fixture.ts";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { RESULT_WINDOW_CEILING } from "../../../src/deck-editor/layout/result-window.ts";
+import { createInitialStoryState } from "../../../src/story/model/story-state.ts";
+
+import { storyStarterSave } from "./story-starter-save.ts";
+
+const libraryUrl = "./#/decks";
+const BLUE_EYES = 89631139;
+const OBELISK = 10000000;
+const RAIGEKI = 12580477;
+const MIRROR_FORCE = 44095762;
+const LONG_NAME_CARD = 72989439;
+const STORY_STARTER = storyStarterSave();
+/* The catalog is the whole card database, where a name is not unique: six
+   printings answer to "Summoned Skull" and three to "Celtic Guardian". Pick the
+   card by code, the way the rest of this file already does. */
+const SUMMONED_SKULL = 70781052;
+const CELTIC_GUARDIAN = 91152256;
+
+async function deleteDeckDatabase(page: Page) {
+  await page.evaluate(() => window.selectedContent.resetDecks());
+}
+
+async function openStoryEditor(page: Page): Promise<void> {
+  await page.goto("./#/");
+  const envelope: Parameters<typeof putSelectedStorySave>[1] = {
+    slot: "autosave",
+    state: {
+      ...createInitialStoryState(),
+      screen: "map",
+      savedScreen: "map",
+      progressExists: true,
+      decks: [STORY_STARTER.deck],
+      defaultDeckId: STORY_STARTER.deck.id,
+      collection: STORY_STARTER.collection,
+    },
+  };
+  await putSelectedStorySave(page, envelope);
+  await page.goto(`./#/story/decks/${STORY_STARTER.deck.id}`);
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible({
+    timeout: 120_000,
+  });
+}
+
+async function expectContained(
+  container: Locator,
+  child: Locator,
+  label: string,
+  vertical = true,
+): Promise<void> {
+  const [containerBox, childBox] = await Promise.all([
+    container.boundingBox(),
+    child.boundingBox(),
+  ]);
+  expect(containerBox, `${label} container must be visible`).not.toBeNull();
+  expect(childBox, `${label} must be visible`).not.toBeNull();
+  expect(childBox!.x, `${label} left edge`).toBeGreaterThanOrEqual(
+    containerBox!.x - 1,
+  );
+  expect(
+    childBox!.x + childBox!.width,
+    `${label} right edge`,
+  ).toBeLessThanOrEqual(containerBox!.x + containerBox!.width + 1);
+  if (vertical) {
+    expect(childBox!.y, `${label} top edge`).toBeGreaterThanOrEqual(
+      containerBox!.y - 1,
+    );
+    expect(
+      childBox!.y + childBox!.height,
+      `${label} bottom edge`,
+    ).toBeLessThanOrEqual(containerBox!.y + containerBox!.height + 1);
+  }
+}
+
+/* The counts moved into each zone's collapse bar, so "Main 1" is now the main
+   zone's own `1/40`. `40-60` only appears once the deck is past forty cards. */
+function zoneCount(page: Page, zone: "main" | "extra" | "side"): Locator {
+  return page.locator(`[data-cy="deck-zone-count-${zone}"]`);
+}
+
+function zoneTile(page: Page, zone: "main" | "extra" | "side", code: number) {
+  return page.locator(
+    `[data-cy="deck-zone-drop-area-${zone}"] [data-card-code="${code}"]`,
+  );
+}
+
+/* The catalog and the deck render the same card as the same tile, so every
+   tile locator says which of the two it means. */
+function catalogTile(page: Page, code: number): Locator {
+  return page.locator(
+    `[data-cy="deck-catalog-results"] [data-cy="catalog-tile-${code}"]`,
+  );
+}
+
+interface DeckCounts {
+  readonly main: number;
+  readonly extra: number;
+  readonly side: number;
+}
+
+/* Reads the deck row the editor writes, not the one it is holding. */
+async function persistedDeckCounts(
+  page: Page,
+  deckId: string,
+): Promise<DeckCounts | null> {
+  return page.evaluate(async (id) => {
+    const stored = await window.selectedContent.deck(id);
+    return stored === null
+      ? null
+      : {
+          main: stored.deck.main.length,
+          extra: stored.deck.extra.length,
+          side: stored.deck.side.length,
+        };
+  }, deckId);
+}
+
+/* `aria-busy` on the editor layout is `saveState === "saving"` and nothing
+   else, so its absence is equally true of `saved`, `failed`, `conflict` and of
+   `idle` before the queued save has begun — four of the five states, two of
+   them failures. It is also unordered: a mutation chains onto a promise queue,
+   so the click resolves at least a microtask before `saveState` leaves the
+   value it already had, and the first poll lands inside that window. Neither
+   the scenarios that follow a save nor the second browser context that has to
+   lose a revision race can stand on that.
+
+   What only a committed save produces is the deck row itself. The expected
+   card counts are passed in rather than read back off the page, because the
+   page is the thing under test: comparing the database to the DOM passes
+   whenever both are still one step behind. */
+async function expectSaveSettled(page: Page, expected: DeckCounts) {
+  const deckId = new URL(page.url()).hash.replace(
+    /^#\/(?:free-play|story)\/decks\//,
+    "",
+  );
+  expect(deckId, "expectSaveSettled must be called on a deck route").not.toBe(
+    "",
+  );
+  await expect
+    .poll(() => persistedDeckCounts(page, deckId), {
+      message: `the saved deck row should hold ${expected.main}/${expected.extra}/${expected.side}`,
+    })
+    .toEqual(expected);
+}
+
+interface DeckCardOrder {
+  readonly main: readonly number[];
+  readonly extra: readonly number[];
+  readonly side: readonly number[];
+}
+
+async function replaceOpenDeckCards(
+  page: Page,
+  cards: DeckCardOrder,
+): Promise<void> {
+  await expect
+    .poll(() =>
+      page.evaluate(async () =>
+        (await window.selectedContent.decks()).some(
+          ({ name }) => name === "Sort Matrix",
+        ),
+      ),
+    )
+    .toBe(true);
+  await page.evaluate(async (cards) => {
+    const deck = (await window.selectedContent.decks()).find(
+      ({ name }) => name === "Sort Matrix",
+    );
+    if (!deck) throw new Error("Sort Matrix deck is missing");
+    await window.selectedContent.replaceDeck(deck.id, cards);
+  }, cards);
+}
+
+async function renderedDeckOrder(page: Page): Promise<DeckCardOrder> {
+  const codes = (zone: "main" | "extra" | "side") =>
+    page
+      .locator(`[data-cy="deck-zone-drop-area-${zone}"] [data-card-code]`)
+      .evaluateAll((tiles) =>
+        tiles.map((tile) => Number(tile.getAttribute("data-card-code"))),
+      );
+  return {
+    main: await codes("main"),
+    extra: await codes("extra"),
+    side: await codes("side"),
+  };
+}
+
+async function expectDeckOrder(
+  page: Page,
+  expected: DeckCardOrder,
+): Promise<void> {
+  await expect.poll(() => renderedDeckOrder(page)).toEqual(expected);
+}
+
+test("open deck returns through the button below its preview", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Return Control");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  const preview = page.locator('[data-cy="card-preview-panel"]');
+  const back = page.locator('[data-cy="deck-editor-return"]');
+  await expect(back).toHaveText("Return to Deck Selection");
+  await expect(
+    page.locator('[data-cy="deck-editor-library-link"]'),
+  ).toHaveCount(0);
+  const [previewBox, backBox] = await Promise.all([
+    preview.boundingBox(),
+    back.boundingBox(),
+  ]);
+  expect(previewBox).not.toBeNull();
+  expect(backBox).not.toBeNull();
+  expect(backBox!.x).toBeCloseTo(previewBox!.x, 0);
+  expect(backBox!.width).toBeCloseTo(previewBox!.width, 0);
+  expect(backBox!.y).toBeGreaterThanOrEqual(previewBox!.y + previewBox!.height);
+
+  await back.click();
+  await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("#/free-play/decks");
+});
+
+test("sorts every deck zone in all modes and directions with undo", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Sort Matrix");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  await replaceOpenDeckCards(page, {
+    main: [12580477, 74677422, 46986414, 91152256, 53129443],
+    extra: [1641882, 98502113, 9293977, 1412158],
+    side: [98502113, 44095762, 89631139, 12580477],
+  });
+  await page.reload();
+  const sideToggle = page.locator('[data-cy="deck-zone-toggle-side"]');
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "false");
+  await sideToggle.click();
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "true");
+
+  const expected = [
+    {
+      mode: "alpha",
+      asc: {
+        main: [91152256, 53129443, 46986414, 12580477, 74677422],
+        extra: [98502113, 1641882, 9293977, 1412158],
+        side: [89631139, 98502113, 44095762, 12580477],
+      },
+      desc: {
+        main: [74677422, 12580477, 46986414, 53129443, 91152256],
+        extra: [1412158, 9293977, 1641882, 98502113],
+        side: [12580477, 44095762, 98502113, 89631139],
+      },
+    },
+    {
+      mode: "type",
+      asc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [98502113, 1641882, 9293977, 1412158],
+        side: [89631139, 12580477, 44095762, 98502113],
+      },
+      desc: {
+        main: [53129443, 12580477, 91152256, 46986414, 74677422],
+        extra: [98502113, 1641882, 9293977, 1412158],
+        side: [98502113, 44095762, 12580477, 89631139],
+      },
+    },
+    {
+      mode: "level",
+      asc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [1641882, 9293977, 1412158, 98502113],
+        side: [89631139, 98502113, 12580477, 44095762],
+      },
+      desc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [98502113, 9293977, 1412158, 1641882],
+        side: [89631139, 98502113, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "attribute",
+      asc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [98502113, 1641882, 1412158, 9293977],
+        side: [98502113, 89631139, 12580477, 44095762],
+      },
+      desc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [9293977, 1641882, 1412158, 98502113],
+        side: [89631139, 98502113, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "race",
+      asc: {
+        main: [74677422, 46986414, 91152256, 53129443, 12580477],
+        extra: [1641882, 9293977, 1412158, 98502113],
+        side: [89631139, 98502113, 12580477, 44095762],
+      },
+      desc: {
+        main: [91152256, 46986414, 74677422, 53129443, 12580477],
+        extra: [98502113, 9293977, 1412158, 1641882],
+        side: [98502113, 89631139, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "atk",
+      asc: {
+        main: [91152256, 74677422, 46986414, 53129443, 12580477],
+        extra: [1641882, 1412158, 9293977, 98502113],
+        side: [98502113, 89631139, 12580477, 44095762],
+      },
+      desc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [98502113, 9293977, 1412158, 1641882],
+        side: [89631139, 98502113, 12580477, 44095762],
+      },
+    },
+    {
+      mode: "def",
+      asc: {
+        main: [91152256, 74677422, 46986414, 53129443, 12580477],
+        extra: [1412158, 1641882, 9293977, 98502113],
+        side: [98502113, 89631139, 12580477, 44095762],
+      },
+      desc: {
+        main: [46986414, 74677422, 91152256, 53129443, 12580477],
+        extra: [98502113, 9293977, 1641882, 1412158],
+        side: [89631139, 98502113, 12580477, 44095762],
+      },
+    },
+  ] as const;
+  const modeSelect = page.locator('[data-cy="deck-workspace-sort-mode"]');
+  const direction = page.locator('[data-cy="deck-workspace-sort-direction"]');
+
+  for (const entry of expected) {
+    await modeSelect.selectOption(entry.mode);
+    await expectDeckOrder(page, entry.asc);
+    await expect(direction).toHaveAttribute("aria-label", "Sort descending");
+
+    await direction.click();
+    await expectDeckOrder(page, entry.desc);
+    await expect(direction).toHaveAttribute("aria-label", "Sort ascending");
+
+    await page.locator('[data-cy="deck-editor-undo"]').click();
+    await expectDeckOrder(page, entry.asc);
+    await page.locator('[data-cy="deck-editor-redo"]').click();
+    await expectDeckOrder(page, entry.desc);
+
+    await direction.click();
+    await expectDeckOrder(page, entry.asc);
+  }
+});
+
+test("deck editor persists edits across reloads", async ({ page }) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await expect(
+    page.getByRole("heading", { name: "Deck Library" }),
+  ).toBeVisible();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("E2E Control");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Control");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  const blueEyes = catalogTile(page, BLUE_EYES);
+  await expect(blueEyes).toBeVisible();
+  /* Single click pins preview. Paired clicks from dblclick stay selection-only,
+     so one double-click produces one mutation. */
+  await blueEyes.click();
+  await expect(
+    page.getByText(
+      "This legendary dragon is a powerful engine of destruction.",
+    ),
+  ).toBeVisible();
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await blueEyes.dblclick();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+  /* Dragging is still its own path into the deck, so a second copy arrives
+     that way and undo/redo has to see both adds. */
+  await blueEyes.dragTo(page.locator('[data-cy="deck-zone-drop-area-main"]'));
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await page.getByRole("button", { name: "Redo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+
+  /* Double-click deletes from source instead of silently sideboarding. */
+  await zoneTile(page, "main", BLUE_EYES).dblclick();
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await expect(zoneCount(page, "side")).toHaveText("0/15");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  /* Right click opens card actions without losing exact copy. */
+  await zoneTile(page, "main", BLUE_EYES).click({ button: "right" });
+  await page.locator('[data-cy="deck-card-context-remove"]').click();
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+  await page.reload();
+  await expect(page.getByLabel("Deck name")).toHaveValue("E2E Control");
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+
+  /* A one-card deck is invalid, and exporting one says so rather than
+     refusing. */
+  await page.locator('[data-cy="deck-editor-export"]').click();
+  await expect(
+    page.locator('[data-cy="deck-ydk-export-warning"]'),
+  ).toContainText("invalid");
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.reload();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+
+  // Rename via deck-name-input (A7: commit on blur, no dialog)
+  const nameInput = page.locator('[data-cy="deck-name-input"]');
+  await nameInput.fill("E2E Renamed");
+  await nameInput.blur();
+  await expect(nameInput).toHaveValue("E2E Renamed");
+
+  // Duplicate via deck page
+  await page.locator('[data-cy="deck-editor-duplicate"]').click();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "E2E Renamed Copy",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expect(zoneTile(page, "main", BLUE_EYES)).toBeVisible();
+  await page.reload();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "E2E Renamed Copy",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+
+  // Delete via deck page — confirm dialog, then land on library
+  await page.locator('[data-cy="deck-editor-delete"]').click();
+  await expect(
+    page.locator('[data-cy="deck-editor-delete-dialog"]'),
+  ).toBeVisible();
+  await page.locator('[data-cy="deck-editor-delete-confirm"]').click();
+  const grid = page.locator('[data-cy="deck-select-grid"]');
+  await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
+  await expect(grid).not.toContainText("E2E Renamed Copy");
+  await expect(page.getByText("E2E Renamed", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(grid).not.toContainText("E2E Renamed Copy");
+});
+
+test("the deck route deep-links, survives a reload and answers Back", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Deep Link");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Deep Link",
+  );
+
+  /* Opening a deck has to be a real navigation, not internal state: the hash
+     names the deck and a reload of that hash reopens the same deck. */
+  const deckHash = new URL(page.url()).hash;
+  expect(deckHash).toMatch(/^#\/free-play\/decks\/.+/);
+  await page.reload();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Deep Link",
+  );
+
+  await page.goBack();
+  await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("#/decks");
+
+  await page.goto("./#/decks/no-such-deck");
+  await expect(page.locator('[data-cy="deck-not-found"]')).toBeVisible();
+  await page.locator('[data-cy="deck-not-found-back"]').click();
+  await expect(page.locator('[data-cy="deck-library"]')).toBeVisible();
+  /* Deck-name controls now identify their action before the stored name. */
+  await expect(
+    page.getByRole("button", { name: /^Select Deep Link,/ }),
+  ).toBeVisible();
+});
+
+test("Deck Library imports one persisted undoable update", async ({ page }) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-library-import"]').click();
+  await page.getByLabel("Deck name").fill("Library Import E2E");
+  await page
+    .getByLabel("Or paste YDK text")
+    .fill("#main\n99999999\n#extra\n!side\n");
+  await page.getByRole("button", { name: "Preview import" }).click();
+  await page.getByRole("button", { name: "Replace deck cards" }).click();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Library Import E2E",
+  );
+  /* A code the pinned catalog does not know stays in the deck as a tile that
+     says so; nothing is repaired silently. */
+  await expect(zoneTile(page, "main", 99999999)).toHaveAttribute(
+    "aria-label",
+    /Missing card 99999999/,
+  );
+  await expect(page.getByRole("button", { name: "Undo" })).toBeEnabled();
+  await page.reload();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Library Import E2E",
+  );
+  await expect(zoneTile(page, "main", 99999999)).toHaveAttribute(
+    "aria-label",
+    /Missing card 99999999/,
+  );
+});
+
+test("open deck imports YDK with atomic Undo/Redo and keeps failures open", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Open Import E2E");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await catalogTile(page, BLUE_EYES).dblclick();
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+  const importButton = page.locator('[data-cy="deck-editor-import"]');
+  await importButton.click();
+  await expect(page.getByLabel("Deck name")).toHaveCount(1);
+  await page.getByLabel("Choose .ydk file").setInputFiles({
+    name: "replacement.ydk",
+    mimeType: "text/plain",
+    buffer: Buffer.from(
+      `#main\n${SUMMONED_SKULL}\n99999999\n#extra\n8505920\n!side\n${BLUE_EYES}\n`,
+    ),
+  });
+  await page.getByRole("button", { name: "Replace deck cards" }).click();
+
+  await expect(page.locator('[data-cy="deck-ydk-import"]')).toHaveCount(0);
+  await expect(importButton).toBeFocused();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Open Import E2E",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await expect(zoneCount(page, "extra")).toHaveText("1/15");
+  await expect(zoneCount(page, "side")).toHaveText("1/15");
+  await expect(zoneTile(page, "main", 99999999)).toHaveAttribute(
+    "aria-label",
+    /Missing card 99999999/,
+  );
+  await expectSaveSettled(page, { main: 2, extra: 1, side: 1 });
+
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expect(zoneCount(page, "extra")).toHaveText("0/15");
+  await expect(zoneCount(page, "side")).toHaveText("0/15");
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+  await page.getByRole("button", { name: "Redo" }).click();
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await expect(zoneCount(page, "extra")).toHaveText("1/15");
+  await expect(zoneCount(page, "side")).toHaveText("1/15");
+  await expectSaveSettled(page, { main: 2, extra: 1, side: 1 });
+  await page.reload();
+  await expect(page.locator('[data-cy="deck-name-input"]')).toHaveValue(
+    "Open Import E2E",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await expect(zoneCount(page, "extra")).toHaveText("1/15");
+  await expect(zoneCount(page, "side")).toHaveText("1/15");
+
+  await expect(page.getByRole("searchbox", { name: "Name" })).toBeVisible();
+  await page.evaluate(() => window.selectedContent.failDeckWrite());
+  await importButton.click();
+  await page
+    .getByLabel("Or paste YDK text")
+    .fill(`#main\n${CELTIC_GUARDIAN}\n#extra\n!side\n`);
+  await page.getByRole("button", { name: "Preview import" }).click();
+  const commit = page.getByRole("button", { name: "Replace deck cards" });
+  await commit.click();
+
+  await expect(page.locator('[data-cy="deck-ydk-import"]')).toBeVisible();
+  await expect(
+    page.locator('[data-cy="deck-ydk-import-commit-error"]'),
+  ).toContainText("Import could not be saved. Try again.");
+  await expect(
+    page.locator('[data-cy="deck-editor-save-failed"]'),
+  ).toContainText("Unable to save deck");
+  await expect(commit).toBeFocused();
+  await page.locator('[data-cy="deck-ydk-import-cancel"]').click();
+  await expect(importButton).toBeFocused();
+  await page.getByRole("button", { name: "Retry autosave" }).click();
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+});
+
+test("the deck editor recovers real save failures and revision conflicts", async ({
+  page,
+}) => {
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Recovery E2E");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  await expect(page.getByRole("searchbox", { name: "Name" })).toBeVisible();
+  await page.evaluate(() => window.selectedContent.failDeckWrite());
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await catalogTile(page, BLUE_EYES).dblclick();
+  await expect(page.getByRole("alert")).toContainText("Unable to save deck");
+  await page.getByRole("button", { name: "Retry autosave" }).click();
+  /* The banner is the failure; its absence is the recovery. */
+  await expect(page.locator('[data-cy="deck-editor-save-failed"]')).toHaveCount(
+    0,
+  );
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+  // Same-store external writer advances SQLite revision while editor remains stale.
+  // A second app tab is intentionally rejected by the production owner lock.
+  await page.evaluate(async (id) => {
+    const stored = await window.selectedContent.deck(id);
+    if (!stored) throw new Error("Recovery deck missing");
+    await window.selectedContent.replaceDeck(id, {
+      ...stored.deck,
+      main: [...stored.deck.main, 70781052],
+    });
+  }, new URL(page.url()).hash.split("/").at(-1)!);
+  await expectSaveSettled(page, { main: 2, extra: 0, side: 0 });
+  await page.getByRole("searchbox", { name: "Name" }).fill("Celtic Guardian");
+  await catalogTile(page, CELTIC_GUARDIAN).dblclick();
+  await expect(page.getByRole("alert")).toContainText(
+    "changed by another browser context",
+  );
+  await page
+    .getByRole("button", { name: "Preserve local edits as copy" })
+    .click();
+  await expect(page.getByLabel("Deck name")).toHaveValue(
+    "Recovery E2E Recovered Copy",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+  await page.reload();
+  await expect(page.getByLabel("Deck name")).toHaveValue(
+    "Recovery E2E Recovered Copy",
+  );
+  await expect(zoneCount(page, "main")).toHaveText("2/40");
+});
+
+// Legacy migration is retired. Current counterpart: persisted SQLite deck/history
+// survives reload; invalid one-card deck remains repairable through its tile menu.
+test("a current SQLite deck and history survive reload", async ({ page }) => {
+  await page.goto("./#/");
+  await deleteDeckDatabase(page);
+  await page.evaluate(() =>
+    window.selectedContent.seedDeck("sqlite-deck", "SQLite Survivor", {
+      main: [89631139],
+      extra: [],
+      side: [],
+    }),
+  );
+  await page.reload();
+  await page.goto(libraryUrl);
+  await expect(
+    page.getByRole("button", { name: /^Select SQLite Survivor,/ }),
+  ).toBeVisible();
+  await page.locator('[data-cy="deck-tile-menu-sqlite-deck"]').click();
+  await page.locator('[data-cy="deck-tile-menu-open-sqlite-deck"]').click();
+  await expect(page.getByLabel("Deck name")).toHaveValue("SQLite Survivor");
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  expect(
+    await page.evaluate(
+      async () => (await window.selectedContent.deck("sqlite-deck"))?.history,
+    ),
+  ).toEqual({ undo: [], redo: [], nextSequence: 1 });
+});
+
+test("the deck editor builds a deck by tap on a small screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Portrait Build");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  /* One pane at a time. Catalog opens first so name search owns entry focus. */
+  const main = zoneCount(page, "main");
+  const side = zoneCount(page, "side");
+  await expect(page.locator('[data-cy="deck-pane-catalog"]')).toBeVisible();
+  await expect(page.locator('[data-cy="deck-pane-deck"]')).toHaveCount(0);
+  await page.locator('[data-cy="deck-tab-deck"]').click();
+  await expect(main).toBeVisible();
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await catalogTile(page, BLUE_EYES).click();
+  /* Adding leaves the catalog open, so the next card is one tap away. */
+  await expect(page.locator('[data-cy="deck-pane-catalog"]')).toBeVisible();
+  await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+  await page.locator('[data-cy="deck-tab-deck"]').click();
+  await expect(main).toHaveText("1/40");
+  /* The tile itself, not the validation issue that also names the card. */
+  const deckTile = page.locator(
+    '[data-cy="deck-pane-deck"] [data-card-code="89631139"]',
+  );
+  await deckTile.click();
+  await expect(page.locator('[data-cy="deck-tap-menu"]')).toBeVisible();
+  await expect(page.locator('[data-cy="deck-tap-target-main"]')).toHaveCount(0);
+  await expect(
+    page.locator('[data-cy="deck-tap-target-extra"]'),
+  ).toBeDisabled();
+  await page.locator('[data-cy="deck-tap-target-side"]').click();
+  await expect(side).toHaveText("1/15");
+  await expect(main).toHaveText("0/40");
+  await page.locator('[data-cy="deck-zone-toggle-side"]').click();
+
+  await deckTile.click();
+  await page.locator('[data-cy="deck-tap-target-remove"]').click();
+  await expect(side).toHaveText("0/15");
+
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(side).toHaveText("1/15");
+  await expectSaveSettled(page, { main: 0, extra: 0, side: 1 });
+  await page.reload();
+  await expect(page.getByLabel("Deck name")).toHaveValue("Portrait Build");
+  await page.locator('[data-cy="deck-tab-deck"]').click();
+  await expect(side).toHaveText("1/15");
+
+  /* No sideways scroll at any of the sizes the editor now has to serve. */
+  for (const size of [
+    { width: 360, height: 640 },
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+  ]) {
+    await page.setViewportSize(size);
+    await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      `page overflows at ${size.width}x${size.height}`,
+    ).toBe(true);
+    expect(
+      await page.evaluate(() => {
+        const layout = document.querySelector('[data-cy="deck-editor-layout"]');
+        return layout === null || layout.scrollWidth <= layout.clientWidth;
+      }),
+      `editor layout overflows at ${size.width}x${size.height}`,
+    ).toBe(true);
+  }
+});
+
+test("the deck editor keeps its three panels above the breakpoint", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Desktop Panels");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  for (const pane of ["catalog", "deck", "details"])
+    await expect(page.locator(`[data-cy="deck-pane-${pane}"]`)).toHaveCount(1);
+  await expect(page.getByRole("tablist")).toHaveCount(0);
+  /* Tap menu stays touch affordance. Desktop click only pins; double-click
+     adds without opening menu. */
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+  await catalogTile(page, BLUE_EYES).click();
+  await expect(page.locator('[data-cy="deck-tap-menu"]')).toHaveCount(0);
+  await expect(zoneCount(page, "main")).toHaveText("0/40");
+  await catalogTile(page, BLUE_EYES).dblclick();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+});
+
+test("small editor polish stays usable in Chromium", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Small Polish");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  const sideToggle = page.locator('[data-cy="deck-zone-toggle-side"]');
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#deck-zone-body-side")).toHaveCount(0);
+  await expect(page.locator("#deck-zone-body-main")).toBeVisible();
+  await expect(page.locator("#deck-zone-body-extra")).toBeVisible();
+
+  const search = page.getByRole("searchbox", { name: "Name" });
+  await search.fill("Obelisk the Tormentor");
+  await expect(catalogTile(page, OBELISK)).toHaveCount(0);
+  for (const [name, code, limit] of [
+    ["Raigeki", RAIGEKI, 1],
+    ["Mirror Force", MIRROR_FORCE, 2],
+    ["Blue-Eyes White Dragon", BLUE_EYES, 3],
+  ] as const) {
+    await search.fill(name);
+    const tile = catalogTile(page, code);
+    await expect(tile).toHaveAttribute(
+      "aria-label",
+      new RegExp(`maximum ${limit}`),
+    );
+    await expect(
+      tile.locator(`[data-cy="catalog-tile-limit-${code}"]`),
+    ).toHaveCount(limit < 3 ? 1 : 0);
+  }
+
+  const summary = page.locator('[data-cy="deck-catalog-filter-summary"]');
+  const results = page.locator('[data-cy="deck-catalog-results-region"]');
+  const summaryBox = (await summary.boundingBox())!;
+  const resultsBox = (await results.boundingBox())!;
+  expect(
+    resultsBox.y - (summaryBox.y + summaryBox.height),
+  ).toBeGreaterThanOrEqual(11);
+
+  await sideToggle.click();
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#deck-zone-body-side")).toBeVisible();
+  await catalogTile(page, BLUE_EYES).dblclick();
+  await expect(zoneCount(page, "main")).toHaveText("1/40");
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "true");
+
+  await sideToggle.click();
+  await expect(sideToggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#deck-zone-body-side")).toHaveCount(0);
+});
+
+test.describe("touch-enabled deck editor", () => {
+  test.use({ hasTouch: true });
+
+  test("zone validation tooltips work by pointer, keyboard, and touch", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(libraryUrl);
+    await deleteDeckDatabase(page);
+    await page.reload();
+    await page.locator('[data-cy="deck-select-create"]').click();
+    await page.getByLabel("Deck name").fill("Zone Validation");
+    await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+    const mainZone = page.locator('[data-cy="deck-zone-main"]');
+    const extraZone = page.locator('[data-cy="deck-zone-extra"]');
+    const sideZone = page.locator('[data-cy="deck-zone-side"]');
+    await expect(mainZone).toHaveClass(/invalid/);
+    await expect(mainZone).toHaveCSS("border-top-color", "rgb(255, 140, 155)");
+    await expect(extraZone).not.toHaveClass(/invalid/);
+    await expect(sideZone).not.toHaveClass(/invalid/);
+    await expect(page.locator('[data-cy="deck-validation"]')).toHaveCount(0);
+
+    const mainIcon = page.locator('[data-cy="deck-zone-error-main"]');
+    const mainTooltip = page.locator(
+      '[data-cy="deck-zone-error-tooltip-main"]',
+    );
+    await expect(mainIcon).toHaveAccessibleName(
+      "Main Deck has 1 validation error",
+    );
+    await mainIcon.hover();
+    await expect(mainTooltip).toBeVisible();
+    await expect(mainTooltip.locator("li")).toHaveText([
+      "Main Deck needs 40 more card(s).",
+    ]);
+    await page.mouse.move(0, 0);
+    await expect(mainTooltip).toHaveCount(0);
+
+    await mainIcon.focus();
+    await expect(mainIcon).toHaveAttribute("aria-expanded", "true");
+    await expect(mainTooltip).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(mainIcon).toHaveAttribute("aria-expanded", "false");
+    await expect(mainTooltip).toHaveCount(0);
+
+    await expect(page.locator("#deck-zone-body-side")).toHaveCount(0);
+    await expect(page.locator('[data-cy="deck-zone-error-side"]')).toHaveCount(
+      0,
+    );
+
+    const iconBox = await mainIcon.boundingBox();
+    if (iconBox === null)
+      throw new Error("Main validation icon is not visible");
+    const touchX = iconBox.x + iconBox.width / 2;
+    const touchY = iconBox.y + iconBox.height / 2;
+
+    await page.touchscreen.tap(touchX, touchY);
+    await expect(mainIcon).toHaveAttribute("aria-expanded", "true");
+    await expect(mainTooltip).toBeVisible();
+    await page.touchscreen.tap(touchX, touchY);
+    await expect(mainIcon).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
+test("the deck editor fits stage with stable gutter, single-line card name and header fill", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Viewport Fit");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+
+  const region = page.locator('[data-cy="shell-region-decks"]');
+  const measure = () =>
+    region.evaluate((el) => ({
+      fitsVertically: el.scrollHeight <= el.clientHeight + 1,
+      fitsHorizontally: el.scrollWidth <= el.clientWidth + 1,
+    }));
+  for (const size of [
+    { width: 1024, height: 768 },
+    { width: 1280, height: 720 },
+    { width: 1366, height: 768 },
+    { width: 1440, height: 810 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(size);
+    const scrolls = await measure();
+    expect(
+      scrolls.fitsVertically,
+      `region must not scroll vertically at ${size.width}x${size.height}`,
+    ).toBe(true);
+    expect(
+      scrolls.fitsHorizontally,
+      `region must not scroll horizontally at ${size.width}x${size.height}`,
+    ).toBe(true);
+
+    const header = page.locator('[data-cy="deck-editor-header"]');
+    const nameInput = page.locator('[data-cy="deck-name-input"]');
+    const sortActions = page.locator('[data-cy="deck-workspace-sort-actions"]');
+    const [headerFit, nameBox, sortBox] = await Promise.all([
+      header.evaluate((el) => ({
+        width: el.scrollWidth - el.clientWidth,
+        height: el.scrollHeight - el.clientHeight,
+      })),
+      nameInput.boundingBox(),
+      sortActions.boundingBox(),
+    ]);
+    expect(
+      headerFit.width,
+      `header actions must not overlap horizontally at ${size.width}x${size.height}`,
+    ).toBeLessThanOrEqual(1);
+    expect(
+      headerFit.height,
+      `header actions must not wrap at ${size.width}x${size.height}`,
+    ).toBeLessThanOrEqual(1);
+    expect(nameBox).not.toBeNull();
+    expect(sortBox).not.toBeNull();
+    expect(
+      nameBox!.width,
+      `deck name should consume remaining header width at ${size.width}x${size.height}`,
+    ).toBeGreaterThan(150);
+    expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(sortBox!.x + 1);
+    expect(
+      sortBox!.x - (nameBox!.x + nameBox!.width),
+      `deck name should reach the action-group gap at ${size.width}x${size.height}`,
+    ).toBeLessThanOrEqual(12);
+
+    if (size.width === 1440 && size.height === 810) {
+      const density = await page
+        .locator('[data-cy="deck-catalog-results"]')
+        .evaluate((results) => {
+          const resultBottom = results.getBoundingClientRect().bottom;
+          const tiles = Array.from(
+            results.querySelectorAll<HTMLElement>(".card-tile"),
+          );
+          const rows = new Map<number, number>();
+          for (const tile of tiles) {
+            const box = tile.getBoundingClientRect();
+            const top = Math.round(box.top);
+            rows.set(top, Math.max(rows.get(top) ?? 0, box.bottom));
+          }
+          const firstTop = Math.min(...rows.keys());
+          return {
+            completeRows: Array.from(rows.values()).filter(
+              (bottom) => bottom <= resultBottom + 0.5,
+            ).length,
+            firstRowColumns: new Set(
+              tiles
+                .filter(
+                  (tile) =>
+                    Math.round(tile.getBoundingClientRect().top) === firstTop,
+                )
+                .map((tile) => Math.round(tile.getBoundingClientRect().left)),
+            ).size,
+            aspectRatios: Array.from(
+              new Set(tiles.map((tile) => getComputedStyle(tile).aspectRatio)),
+            ),
+          };
+        });
+      expect(
+        density.completeRows,
+        "one-line tile density must expose at least one row beyond the prior two",
+      ).toBeGreaterThanOrEqual(3);
+      expect(density.firstRowColumns).toBe(3);
+      expect(density.aspectRatios).toEqual(["59 / 86"]);
+    }
+  }
+
+  const workspace = page.locator('[data-cy="deck-workspace"]');
+  const gutter = await workspace.evaluate(
+    (el) => getComputedStyle(el).scrollbarGutter,
+  );
+  expect(gutter).toContain("stable");
+  const zone = page.locator('[data-cy="deck-zone-main"]');
+  const zoneWidthAt = async (height: string) => {
+    await workspace.evaluate((el, value) => (el.style.height = value), height);
+    return (await zone.boundingBox())!.width;
+  };
+  const withoutOverflow = await zoneWidthAt("1000px");
+  const withOverflow = await zoneWidthAt("120px");
+  expect(Math.abs(withOverflow - withoutOverflow)).toBeLessThanOrEqual(1);
+  await workspace.evaluate((el) => el.style.removeProperty("height"));
+
+  await page
+    .getByRole("searchbox", { name: "Name" })
+    .fill("Black Luster Soldier - Envoy");
+  const tileName = catalogTile(page, LONG_NAME_CARD).locator(
+    `[data-cy="catalog-tile-name-${LONG_NAME_CARD}"]`,
+  );
+  await expect(tileName).toHaveText(
+    "Black Luster Soldier - Envoy of the Beginning",
+  );
+  const nameStyle = await tileName.evaluate((el) => {
+    const style = getComputedStyle(el);
+    return {
+      clientWidth: el.clientWidth,
+      scrollWidth: el.scrollWidth,
+      clientHeight: el.clientHeight,
+      lineHeight: Number.parseFloat(style.lineHeight),
+      verticalPadding:
+        Number.parseFloat(style.paddingTop) +
+        Number.parseFloat(style.paddingBottom),
+      overflow: style.overflow,
+      textOverflow: style.textOverflow,
+      whiteSpace: style.whiteSpace,
+    };
+  });
+  expect(nameStyle).toMatchObject({
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  });
+  expect(
+    nameStyle.scrollWidth,
+    "long card name must actually overflow its one-line box",
+  ).toBeGreaterThan(nameStyle.clientWidth + 1);
+  expect(nameStyle.clientHeight).toBeLessThanOrEqual(
+    nameStyle.lineHeight + nameStyle.verticalPadding + 1,
+  );
+
+  /* Duplicate reports through the shell toast without changing region height. */
+  await page.locator('[data-cy="deck-editor-duplicate"]').click();
+  await expect(page.locator('[data-cy^="shell-toast-message-"]')).toHaveText(
+    "Deck duplicated.",
+  );
+  const withMessage = await measure();
+  expect(
+    withMessage.fitsVertically,
+    "region must not scroll vertically while a message shows",
+  ).toBe(true);
+  expect(
+    withMessage.fitsHorizontally,
+    "region must not scroll horizontally while a message shows",
+  ).toBe(true);
+});
+
+test("quick Types density and card-name entry focus", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 810 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Quick Types");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  const nameInput = page.locator('[data-cy="deck-catalog-name-input"]');
+  await expect(nameInput).toBeFocused();
+  await expect(page.getByRole("combobox", { name: "Types" })).toBeVisible();
+  await expect(
+    page.locator('[data-cy="deck-catalog-family-select"]'),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('[data-cy="deck-catalog-subtype-select"]'),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('[data-cy="deck-catalog-attribute-select"]'),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('[data-cy="deck-catalog-race-select"]'),
+  ).toHaveCount(0);
+
+  const completeRows = await page
+    .locator('[data-cy="deck-catalog-results"]')
+    .evaluate((results) => {
+      const bottom = results.getBoundingClientRect().bottom;
+      const rows = new Map<number, number>();
+      for (const tile of results.querySelectorAll<HTMLElement>(".card-tile")) {
+        const box = tile.getBoundingClientRect();
+        const top = Math.round(box.top);
+        rows.set(top, Math.max(rows.get(top) ?? 0, box.bottom));
+      }
+      return Array.from(rows.values()).filter(
+        (rowBottom) => rowBottom <= bottom + 0.5,
+      ).length;
+    });
+  expect(
+    completeRows,
+    "compact quick filters must expose one full row beyond the prior three",
+  ).toBeGreaterThanOrEqual(4);
+});
+
+test("advanced search owns workspace geometry, modality and live close semantics", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 810 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Advanced Search");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+
+  const trigger = page.locator('[data-cy="deck-catalog-advanced-search"]');
+  const dialog = page.locator('[data-cy="advanced-search-dialog"]');
+  const assertBounds = async (targetCy: string) => {
+    await expect
+      .poll(async () => {
+        const [target, overlay] = await Promise.all([
+          page.locator(`[data-cy="${targetCy}"]`).boundingBox(),
+          dialog.boundingBox(),
+        ]);
+        if (target === null || overlay === null)
+          return Number.POSITIVE_INFINITY;
+        return Math.max(
+          ...(["x", "y", "width", "height"] as const).map((key) =>
+            Math.abs(target[key] - overlay[key]),
+          ),
+        );
+      })
+      .toBeLessThanOrEqual(1);
+  };
+
+  await expect(dialog).toHaveCount(0);
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  await expect(page.locator('[data-cy="advanced-search-close"]')).toBeFocused();
+  await expect(page.locator('[data-cy="advanced-search-veil"]')).toHaveCSS(
+    "opacity",
+    "0.34",
+  );
+  for (const viewport of [
+    { width: 1024, height: 768 },
+    { width: 1440, height: 810 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await assertBounds("deck-workspace");
+  }
+
+  const outside = await page
+    .locator('[data-cy="deck-name-input"]')
+    .boundingBox();
+  expect(outside).not.toBeNull();
+  await page.mouse.click(
+    outside!.x + outside!.width / 2,
+    outside!.y + outside!.height / 2,
+  );
+  expect(
+    await page.evaluate(() =>
+      document.querySelector(":modal")?.contains(document.activeElement),
+    ),
+    "native modal must keep outside editor controls inert",
+  ).toBe(true);
+
+  const initialCount = Number(
+    await page
+      .locator('[data-cy="advanced-search-result-value"]')
+      .textContent(),
+  );
+  await page
+    .locator('[data-cy="advanced-search-name-input"]')
+    .fill("Dark Magician");
+  await page
+    .locator('[data-cy="advanced-search-name-match"]')
+    .selectOption("exact");
+  await expect
+    .poll(async () =>
+      Number(
+        await page
+          .locator('[data-cy="advanced-search-result-value"]')
+          .textContent(),
+      ),
+    )
+    .toBeLessThan(initialCount);
+  const filteredCount = Number(
+    await page
+      .locator('[data-cy="advanced-search-result-value"]')
+      .textContent(),
+  );
+  expect(filteredCount).toBeGreaterThan(0);
+  await expect(
+    page.locator('[data-cy="deck-catalog-results"] > .card-tile'),
+  ).toHaveCount(filteredCount);
+
+  await page.setViewportSize({ width: 800, height: 1000 });
+  await expect(dialog).toBeVisible();
+  await expect(page.locator('[data-cy="deck-tab-catalog"]')).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(
+    await page.evaluate(() =>
+      document
+        .querySelector('[data-cy="advanced-search-dialog"]')
+        ?.contains(document.activeElement),
+    ),
+    "responsive transition must keep focus inside advanced search",
+  ).toBe(true);
+  await assertBounds("deck-editor-layout");
+
+  await page.locator('[data-cy="advanced-search-close"]').click();
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(page.locator('[data-cy="deck-catalog-name-input"]')).toHaveValue(
+    "Dark Magician",
+  );
+  await expect(
+    page.locator('[data-cy="deck-catalog-results"] > .card-tile'),
+  ).toHaveCount(filteredCount);
+
+  await trigger.click();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(page.locator('[data-cy="deck-catalog-name-input"]')).toHaveValue(
+    "Dark Magician",
+  );
+});
+
+test("the story editor fits stage with reachable portrait panes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 810 });
+  await openStoryEditor(page);
+
+  const region = page.locator('[data-cy="shell-region-decks"]');
+  await expectContained(
+    region,
+    page.locator('[data-cy="deck-editor-context-banner"]'),
+    "story context banner",
+  );
+  await expectContained(
+    region,
+    page.locator('[data-cy="deck-editor-header"]'),
+    "story editor header",
+  );
+  await expectContained(
+    region,
+    page.locator('[data-cy="deck-editor-layout"]'),
+    "story editor panes",
+  );
+
+  await page.setViewportSize({ width: 800, height: 1000 });
+  await expect(page.locator('[data-cy="deck-tab-catalog"]')).toBeVisible();
+  await expectContained(
+    region,
+    page.locator('[data-cy="deck-editor-context-banner"]'),
+    "portrait story context banner",
+  );
+  await expectContained(
+    region,
+    page.locator('[data-cy="deck-editor-header"]'),
+    "portrait editor header",
+    false,
+  );
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+  const catalogPane = page.locator('[data-cy="deck-pane-catalog"]');
+  await expect(catalogPane).toBeVisible();
+  await expectContained(region, catalogPane, "portrait catalog pane");
+  const scroll = await region.evaluate((el) => ({
+    clientHeight: el.clientHeight,
+    scrollHeight: el.scrollHeight,
+  }));
+  expect(
+    scroll.scrollHeight,
+    "portrait catalog should remain reachable without escaping its stage",
+  ).toBeLessThanOrEqual(scroll.clientHeight + 1);
+});
+
+test("the card viewer is card width", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Card Width");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+  await expect(page.locator('[data-cy="deck-editor-layout"]')).toBeVisible();
+
+  const preview = page.locator('[data-cy="card-preview-panel"]');
+  const box = await preview.boundingBox();
+  expect(box, "card-preview-panel must be visible").not.toBeNull();
+  const expectedPx = 15.5 * 16;
+  expect(
+    Math.abs(box!.width - expectedPx),
+    `card-preview-panel width ${box!.width}px should be within 10px of ${expectedPx}px`,
+  ).toBeLessThanOrEqual(10);
+});
+
+/* jsdom holds no component CSS — `vite-plugin-svelte` keeps it out of the
+   document, so `getComputedStyle` answers `none` for every grid property —
+   which leaves the unit test in `card-tile-art.test.ts` reading rules out of
+   the source. Whether those rules add up to art that fills the tile is a
+   question only a real box tree answers, so it is asked here: without
+   `grid-template-areas: "card"` and `.card-tile > * { grid-area: card }` the
+   badge, the art and the name take a row each and the art collapses to a strip
+   across the top of the tile. */
+test("the tile art fills the tile", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Art Fit");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+  await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+
+  const tile = catalogTile(page, BLUE_EYES);
+  await expect(tile).toBeVisible();
+  /* Whichever of the two this build has for the card: the image when it
+     packages art, the placeholder glyph when it does not. Both sit in the same
+     grid area and both have to fill it. */
+  const art = tile.locator(
+    `[data-cy="catalog-tile-image-${BLUE_EYES}"], [data-cy="catalog-tile-art-${BLUE_EYES}"]`,
+  );
+  await expect(art).toHaveCount(1);
+
+  /* The tile's content box rather than its border box: the 1px border is not
+     something the art is supposed to cover. */
+  const inner = await tile.evaluate((el) => ({
+    width: el.clientWidth,
+    height: el.clientHeight,
+    scrollHeight: el.scrollHeight,
+  }));
+  const tileBox = (await tile.boundingBox())!;
+  const artBox = (await art.boundingBox())!;
+  const nameBox = (await tile
+    .locator(`[data-cy="catalog-tile-name-${BLUE_EYES}"]`)
+    .boundingBox())!;
+  expect(tileBox, "the catalog tile must be laid out").not.toBeNull();
+  expect(artBox, "the tile art must be laid out").not.toBeNull();
+  expect(nameBox, "the tile name must be laid out").not.toBeNull();
+  expect(inner.height, "a card tile is taller than it is wide").toBeGreaterThan(
+    inner.width,
+  );
+
+  expect(
+    artBox.height,
+    `art ${artBox.height}px should cover the ${inner.height}px tile interior`,
+  ).toBeGreaterThanOrEqual(inner.height - 1);
+  expect(
+    artBox.width,
+    `art ${artBox.width}px should cover the ${inner.width}px tile interior`,
+  ).toBeGreaterThanOrEqual(inner.width - 1);
+  /* Covering it from the top-left corner, not overflowing past it. */
+  expect(Math.abs(artBox.y - tileBox.y)).toBeLessThanOrEqual(2);
+  expect(Math.abs(artBox.x - tileBox.x)).toBeLessThanOrEqual(2);
+
+  /* The art filling the tile is not by itself the thing the grid area buys.
+     A card image already has the tile's own 59:86 proportions, so an image
+     that loaded is about tile-sized whether or not it shares an area with the
+     name; what it does not do is leave room for the name underneath. Take the
+     rows away and the two stack to 209px inside a 176px tile, `overflow:
+     hidden` eats the name, and the tile the player reads has no title on it.
+     So: the name sits over the art, and nothing spills out of the tile. */
+  expect(
+    nameBox.y,
+    `the name at ${nameBox.y} should sit over art starting at ${artBox.y}`,
+  ).toBeGreaterThanOrEqual(artBox.y - 1);
+  expect(
+    nameBox.y + nameBox.height,
+    "the name should end inside the tile rather than under its clipped edge",
+  ).toBeLessThanOrEqual(tileBox.y + tileBox.height + 1);
+  expect(
+    inner.scrollHeight,
+    `tile content ${inner.scrollHeight}px overflows its ${inner.height}px box`,
+  ).toBeLessThanOrEqual(inner.height + 1);
+});
+
+/* The tabbed layout hands `CardCatalog` `filled`, which stops `.results` being
+   a scroll container. The observer is viewport-rooted in that layout. The
+   result window grows with scroll but is capped at `RESULT_WINDOW_CEILING` to
+   bound the DOM. When the ceiling is reached, a truncation notice appears and
+   the sentinel is removed. */
+test("the catalog tile count stays under the ceiling on a phone", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Scroll Build");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+
+  /* The selector must match only the tile buttons themselves, not their child
+     elements (limit badge, image, name), which also have data-cy attributes
+     prefixed with "catalog-tile-". The button is the only direct child. */
+  const tiles = page.locator(
+    '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
+  );
+  await expect(tiles.first()).toBeVisible();
+  await expect(
+    page.locator('[data-cy="deck-catalog-result-count"]'),
+  ).toHaveText(/\d{4,} results/);
+
+  /* The window grows with scroll but stops at the ceiling. */
+  const scrollToBottom = () =>
+    page.evaluate(() => {
+      const region = document.querySelector(
+        '[data-cy="shell-region-decks"]',
+      ) as HTMLElement | null;
+      region?.scrollTo({ top: region.scrollHeight });
+    });
+
+  /* Scroll once — window should grow past initial 60. */
+  await scrollToBottom();
+  await page.waitForTimeout(500);
+  const afterOneScroll = await tiles.count();
+  expect(afterOneScroll, "first scroll should append tiles").toBeGreaterThan(
+    60,
+  );
+
+  /* Scroll many times — window should hit ceiling and stop. */
+  for (let i = 0; i < 20; i++) {
+    await scrollToBottom();
+    await page.waitForTimeout(100);
+  }
+  const afterManyScrolls = await tiles.count();
+  expect(
+    afterManyScrolls,
+    `tile count ${afterManyScrolls} exceeds ceiling ${RESULT_WINDOW_CEILING}`,
+  ).toBeLessThanOrEqual(RESULT_WINDOW_CEILING);
+
+  /* Ceiling notice must be visible. */
+  await expect(
+    page.locator('[data-cy="deck-catalog-ceiling-notice"]'),
+    "ceiling truncation notice should appear",
+  ).toBeVisible();
+
+  /* Sentinel must be removed from DOM. */
+  await expect(
+    page.locator('[data-cy="deck-catalog-results-sentinel"]'),
+  ).toHaveCount(0);
+});
+
+/* Exercise real persisted copy edits at both result-window depths. DOM-only
+   mutation counts can stay low when no deck command succeeds, so this checks
+   committed deck rows plus visible result/window invariants instead. */
+test("copy edits preserve the result window while committing deck updates", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(libraryUrl);
+  await deleteDeckDatabase(page);
+  await page.reload();
+
+  await page.locator('[data-cy="deck-select-create"]').click();
+  await page.getByLabel("Deck name").fill("Copy Edit Test");
+  await page.locator('[data-cy="deck-library-create-submit"]').click();
+  await page.locator('[data-cy="deck-tab-catalog"]').click();
+
+  const tiles = page.locator(
+    '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
+  );
+  const resultCount = page.locator('[data-cy="deck-catalog-result-count"]');
+  await expect(tiles.first()).toBeVisible();
+  const initialVisible = await tiles.count();
+  const initialResults = await resultCount.textContent();
+  const unlimitedTile = page
+    .locator(
+      '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"][aria-label*="Unlimited, maximum 3"]',
+    )
+    .first();
+  await expect(unlimitedTile).toBeVisible();
+  const deckId = new URL(page.url()).hash.replace(
+    /^#\/(?:free-play|story)\/decks\//,
+    "",
+  );
+
+  const addAndVerify = async (expectedTotal: number) => {
+    await unlimitedTile.click();
+    await expect
+      .poll(async () => {
+        const persisted = await persistedDeckCounts(page, deckId);
+        return persisted === null
+          ? null
+          : persisted.main + persisted.extra + persisted.side;
+      })
+      .toBe(expectedTotal);
+    await expect(resultCount).toHaveText(initialResults!);
+  };
+
+  await addAndVerify(1);
+  await expect(tiles).toHaveCount(initialVisible);
+
+  const scrollToBottom = () =>
+    page.evaluate(() => {
+      const region = document.querySelector(
+        '[data-cy="shell-region-decks"]',
+      ) as HTMLElement | null;
+      region?.scrollTo({ top: region.scrollHeight });
+    });
+  for (let i = 0; i < 20; i++) {
+    await scrollToBottom();
+    await page.waitForTimeout(100);
+  }
+
+  const ceilingVisible = await tiles.count();
+  expect(ceilingVisible).toBeGreaterThanOrEqual(RESULT_WINDOW_CEILING - 10);
+  await addAndVerify(2);
+  await expect(tiles).toHaveCount(ceilingVisible);
+});
+
+test.describe("installed media", () => {
+  test.use({ installedMedia: true });
+  test("deck library shows art rows with frame and copy count", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(libraryUrl);
+    await deleteDeckDatabase(page);
+    await page.reload();
+
+    await page.locator('[data-cy="deck-select-create"]').click();
+    await page.getByLabel("Deck name").fill("Decklist Rows");
+    await page.locator('[data-cy="deck-library-create-submit"]').click();
+    await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+    await catalogTile(page, BLUE_EYES).dblclick();
+    await page.getByRole("searchbox", { name: "Name" }).fill("");
+    const catalogTiles = page.locator(
+      '[data-cy="deck-catalog-results"] > [data-cy^="catalog-tile-"]',
+    );
+    const catalogCodes = await catalogTiles.evaluateAll((tiles) =>
+      tiles.map((tile) => tile.getAttribute("data-card-code")),
+    );
+    const additionalCodes = catalogCodes
+      .filter(
+        (code): code is string => code !== null && code !== String(BLUE_EYES),
+      )
+      .slice(0, 59);
+    expect(additionalCodes.length).toBeGreaterThanOrEqual(39);
+    for (const code of additionalCodes) {
+      await catalogTile(page, Number(code)).dblclick();
+      if ((await zoneCount(page, "main").textContent())?.startsWith("40/"))
+        break;
+    }
+    await expect(zoneCount(page, "main")).toHaveText("40/40");
+    // Explicit selected-chapter Extra Deck entries keep the row-count fixture stable.
+    for (const [name, code] of [
+      ["Fusionist", 1641882],
+      ["Metal Dragon", 9293977],
+      ["Dark Paladin", 98502113],
+    ] as const) {
+      await page.getByRole("searchbox", { name: "Name" }).fill(name);
+      await catalogTile(page, code).dblclick();
+    }
+    await expectSaveSettled(page, { main: 40, extra: 3, side: 0 });
+
+    await page.goto(libraryUrl);
+    await page.getByRole("button", { name: /^Select Decklist Rows,/ }).click();
+
+    const row = page
+      .locator('[data-cy^="deck-select-docked-list-main-row-"]')
+      .first();
+    await expect(row).toBeVisible();
+    await expect(row).toHaveCSS("border-left-width", "5px");
+    await expect(row.locator('[data-cy*="-row-copies-"]')).toHaveCount(1);
+    await expect(row.locator('[data-cy*="-row-art-"]')).toHaveCount(1);
+    const image = testInfo.outputPath("deck-library-installed-images.png");
+    await page.screenshot({ path: image });
+    await testInfo.attach("deck-library-installed-images", {
+      path: image,
+      contentType: "image/png",
+    });
+  });
+});
+
+test.describe("touch click regression", () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test("touch taps retain catalog add and deck target-menu behavior", async ({
+    page,
+  }) => {
+    await page.goto(libraryUrl);
+    await deleteDeckDatabase(page);
+    await page.reload();
+
+    await page.locator('[data-cy="deck-select-create"]').click();
+    await page.getByLabel("Deck name").fill("Touch Gestures");
+    await page.locator('[data-cy="deck-library-create-submit"]').click();
+    await page.locator('[data-cy="deck-tab-catalog"]').click();
+    await page.getByRole("searchbox", { name: "Name" }).fill("Blue-Eyes");
+
+    await catalogTile(page, BLUE_EYES).tap();
+    await expectSaveSettled(page, { main: 1, extra: 0, side: 0 });
+
+    await page.locator('[data-cy="deck-tab-deck"]').click();
+    await zoneTile(page, "main", BLUE_EYES).tap();
+    await expect(page.locator('[data-cy="deck-tap-menu"]')).toBeVisible();
+    await expect(
+      page.locator('[data-cy="deck-tap-target-side"]'),
+    ).toBeEnabled();
+  });
+});

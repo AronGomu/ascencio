@@ -61,11 +61,13 @@ try {
       path.join(root, "generated/.locks/desktop-setup"),
     );
     for (const id of ["card-library", "chapter-01"]) {
-      await mkdir(path.join(root, "assets/content", id), { recursive: true });
+      await mkdir(path.join(root, "assets", id), {
+        recursive: true,
+      });
       // Existing author edits are preserved. Compilation diagnoses divergent inputs.
       await cp(
-        path.join(root, "content/bootstrap-inputs", id),
-        path.join(root, "assets/content", id),
+        path.join(root, "assets/bootstrap-inputs", id),
+        path.join(root, "assets", id),
         {
           recursive: true,
           force: false,
@@ -92,7 +94,7 @@ try {
       }
       run("verify-set-images.ts");
       const recipe = JSON.parse(
-        await readFile(path.join(root, "content/packages.json"), "utf8"),
+        await readFile(path.join(root, "assets/packages.json"), "utf8"),
       ) as PackageBuildSpec;
       const readableRoot = path.join(root, "generated/readable-content-v1");
       await mkdir(readableRoot, { recursive: true });

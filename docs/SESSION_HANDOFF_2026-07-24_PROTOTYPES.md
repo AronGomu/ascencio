@@ -75,7 +75,7 @@ Evidence:
 ### Build/routing
 
 - `src/main.ts`
-- `vite.config.ts`
+- `config/vite.config.ts`
 - `scripts/verify-browser-build.ts`
 - `package.json`
 

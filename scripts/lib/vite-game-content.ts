@@ -107,10 +107,10 @@ const digest = (bytes: Uint8Array) =>
 
 async function prepareFixture(projectRoot: string) {
   const folder = await realpath(
-    path.join(projectRoot, "src-tauri/resources/readable-content"),
+    path.join(projectRoot, "tauri/resources/readable-content"),
   );
   const pinned = await readFile(
-    path.join(projectRoot, "content/critical-release.json"),
+    path.join(projectRoot, "assets/critical-release.json"),
   );
   const staged = await boundedFile(
     path.join(folder, "release.json"),

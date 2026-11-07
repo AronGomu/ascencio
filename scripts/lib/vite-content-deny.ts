@@ -1,14 +1,22 @@
-import { realpath } from "node:fs/promises";
+import { readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Connect, Plugin, ViteDevServer } from "vite";
 
 const PRIVATE_ROOTS = [
-  "assets/content",
-  "content/duel-core",
-  "content/freeplay",
+  "assets/card-library",
+  "assets/chapter-01",
+  "assets/duel-core",
+  "assets/freeplay",
+  "assets/bootstrap-inputs",
+  "assets/commerce",
+  "assets/packages.json",
+  "assets/critical-release.json",
+  "assets/native-release.json",
+  "assets/distribution-evidence.json",
+  "assets/setup-evidence.json",
   "generated/content-packages",
-  "src-tauri/resources",
+  "tauri/resources",
 ] as const;
 function within(candidate: string, root: string): boolean {
   const relative = path.relative(root, candidate);
@@ -133,8 +141,21 @@ export function contentSourceDenyPlugin(projectRoot: string): Plugin {
             }
           }
         }
-        const roots = PRIVATE_ROOTS.map((root) =>
-          path.resolve(projectRoot, root),
+        // Package folders share assets/ with the public app-shell resources.
+        // Include newly authored packages without blocking emitted /assets/ URLs.
+        let additionalRoots: string[] = [];
+        try {
+          const entries = await readdir(path.join(projectRoot, "assets"), {
+            withFileTypes: true,
+          });
+          additionalRoots = entries
+            .filter((entry) => entry.name !== "app" || !entry.isDirectory())
+            .map((entry) => `assets/${entry.name}`);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+        }
+        const roots = [...new Set([...PRIVATE_ROOTS, ...additionalRoots])].map(
+          (root) => path.resolve(projectRoot, root),
         );
         for (const candidate of candidates)
           if (roots.some((root) => within(candidate, root))) return true;

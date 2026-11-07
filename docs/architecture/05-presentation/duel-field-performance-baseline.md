@@ -33,7 +33,7 @@
 
 ## Recorded DF-16 run
 
-Source artifact: `generated/tests/e2e-global/results/df-16-results.json`.
+Source artifact: `.tmp/test/e2e-global/results/df-16-results.json`.
 
 | Workload                    |       p50 |       p95 | Long tasks | Resource result                                            |
 | --------------------------- | --------: | --------: | ---------: | ---------------------------------------------------------- |

@@ -249,10 +249,10 @@ pub fn validate(root: &str, bytes: &[u8]) -> Result<()> {
         let mut cache = cache.borrow_mut();
         if !cache.contains_key(root) {
             #[cfg(not(test))]
-            let schema_directory = std::path::PathBuf::from("schemas/bot-evaluation/v1");
+            let schema_directory = std::path::PathBuf::from("tools/bot-evaluation/schemas/v1");
             #[cfg(test)]
             let schema_directory =
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schemas/bot-evaluation/v1");
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("schemas/v1");
             let schema = fs::read_to_string(schema_directory.join(format!("{root}.xsd")))?;
             if schema.contains("schemaLocation")
                 || schema.contains("<!DOCTYPE")

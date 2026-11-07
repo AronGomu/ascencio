@@ -3,11 +3,10 @@ import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
 
 const ROOT_FILES = [
-  "index.html",
   "package-lock.json",
   "package.json",
-  "tsconfig.json",
-  "vite.config.ts",
+  "config/tsconfig.json",
+  "config/vite.config.ts",
 ] as const;
 const VENDOR_APP_ROOT = "vendor/ocgcore-wasm/0.1.2";
 

@@ -7,7 +7,7 @@ import { setTimeout as delay } from "node:timers/promises";
 export async function captureReopenedStartup(data: string, config: string) {
   const logs = path.join(data, "com.ascencio.storyduel", "logs");
   const previous = new Set(await readdir(logs));
-  const child = spawn(path.resolve("src-tauri/target/release/ascencio"), [], {
+  const child = spawn(path.resolve("tauri/target/release/ascencio"), [], {
     detached: true,
     env: {
       ...process.env,

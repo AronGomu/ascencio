@@ -51,20 +51,20 @@ The MVP is complete when a production browser build can initialize the vendored 
 
 ## 3. Technical stack
 
-| Concern | Technology | Responsibility |
-|---|---|---|
-| Language | TypeScript with strict settings | Browser orchestration, contracts, projection, programmed integration driver and basic opponent policy |
-| Build | Vite | Development server, Worker/WASM assets and production static build |
-| Application UI | Svelte | Loading, prompts, logs, inspector, controls, errors and result |
-| Duel field | Phaser | Board coordinates, zones, cards, highlights and presentation feedback |
-| Rule engine | Project Ignis `ygopro-core` through `ocgcore-wasm` | Legal actions, effects, rules and final result |
-| Isolation | Dedicated Web Worker | Sole owner of WASM, duel handles, scripts and raw protocol |
-| Persistent data | IndexedDB through `idb` | Versioned snapshot metadata, preferences and debug runs |
-| Image cache | Cache Storage API | Snapshot-aware card-image cache |
-| Unit/integration tests | Vitest | Pure modules, Worker adapter, reducers, encoders and programmed real-WASM duels |
-| Browser tests | Playwright | Production browser smoke path |
-| Static quality | ESLint and Prettier | Code and formatting checks |
-| CI | GitHub Actions or repository-equivalent CI | Clean install, generation, verification, tests and production build |
+| Concern                | Technology                                         | Responsibility                                                                                        |
+| ---------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Language               | TypeScript with strict settings                    | Browser orchestration, contracts, projection, programmed integration driver and basic opponent policy |
+| Build                  | Vite                                               | Development server, Worker/WASM assets and production static build                                    |
+| Application UI         | Svelte                                             | Loading, prompts, logs, inspector, controls, errors and result                                        |
+| Duel field             | Phaser                                             | Board coordinates, zones, cards, highlights and presentation feedback                                 |
+| Rule engine            | Project Ignis `ygopro-core` through `ocgcore-wasm` | Legal actions, effects, rules and final result                                                        |
+| Isolation              | Dedicated Web Worker                               | Sole owner of WASM, duel handles, scripts and raw protocol                                            |
+| Persistent data        | IndexedDB through `idb`                            | Versioned snapshot metadata, preferences and debug runs                                               |
+| Image cache            | Cache Storage API                                  | Snapshot-aware card-image cache                                                                       |
+| Unit/integration tests | Vitest                                             | Pure modules, Worker adapter, reducers, encoders and programmed real-WASM duels                       |
+| Browser tests          | Playwright                                         | Production browser smoke path                                                                         |
+| Static quality         | ESLint and Prettier                                | Code and formatting checks                                                                            |
+| CI                     | GitHub Actions or repository-equivalent CI         | Clean install, generation, verification, tests and production build                                   |
 
 ## 4. Dependencies to import
 
@@ -156,9 +156,9 @@ All upstream revisions must be recorded in one generated `manifest.json` with ha
 ├── package.json
 ├── vendor/
 │   └── ocgcore-wasm/0.1.2/   # Checked-in, integrity-verified engine package
-├── vite.config.ts
-├── tsconfig.json
-├── eslint.config.js
+├── config/vite.config.ts
+├── config/tsconfig.json
+├── config/eslint.config.js
 ├── src/
 │   ├── app/
 │   │   ├── App.svelte
@@ -182,7 +182,7 @@ All upstream revisions must be recorded in one generated `manifest.json` with ha
 │   ├── styles/
 │   └── main.ts
 ├── scripts/                    # Existing asset synchronization code
-├── tests/
+├── test/
 │   ├── fixtures/
 │   ├── integration/
 │   └── unit/

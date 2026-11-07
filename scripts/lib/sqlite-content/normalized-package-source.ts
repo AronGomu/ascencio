@@ -252,7 +252,7 @@ export async function normalizedChapterLimits(
 ) {
   const policy = await normalizedJson(
     root,
-    "content/commerce/chapters/chapter-01.json",
+    "assets/commerce/chapters/chapter-01.json",
     "chapter-01",
   );
   if (
@@ -266,7 +266,7 @@ export async function normalizedChapterLimits(
   )
     throw new NormalizedSourceFailure(
       "chapter-01",
-      "content/commerce/chapters/chapter-01.json",
+      "assets/commerce/chapters/chapter-01.json",
     );
   const global = new Set(codes);
   const included = new Set<number>(policy.allowedCardCodes);

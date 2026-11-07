@@ -25,7 +25,7 @@ import type {
    entry that could legally carry these four functions also exports `StoryApp`,
    and a static import of it would make the whole visual novel eager. This
    module imports no component and no state of its own. Allowed against this
-   file alone in `eslint.config.js` and `tests/unit/domain-boundaries.test.ts`. */
+   file alone in `config/eslint.config.js` and `test/unit/domain-boundaries.test.ts`. */
 import {
   acceptsResult,
   restoreStoryState,

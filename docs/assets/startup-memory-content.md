@@ -10,7 +10,7 @@ A1. Acquire/export the verified historical packages with the existing content ac
 npm run content:convert:sqlite-to-json -- generated/content-packages/card-library-1.1.0.sqlite generated/readable-content-v1/card-library
 ```
 
-A2. Repeat conversion for every package in `content/packages.json`. Installed authoring sources have `pack.json`, `config.json`, per-entity JSON files and per-card folders. `pack.json` lists critical files explicitly. A normal monster's Lua script is optional. Cards retain all engine values and localized strings; named classification fields compile to engine masks. Explicit masks preserve unknown official bits and must agree with named known bits.
+A2. Repeat conversion for every package in `assets/packages.json`. Installed authoring sources have `pack.json`, `config.json`, per-entity JSON files and per-card folders. `pack.json` lists critical files explicitly. A normal monster's Lua script is optional. Cards retain all engine values and localized strings; named classification fields compile to engine masks. Explicit masks preserve unknown official bits and must agree with named known bits.
 
 A3. Compile and check parity, then review and pin the release:
 
@@ -23,7 +23,7 @@ npm run content:stage:verify-native
 npm run native:desktop:build -- --no-bundle
 ```
 
-The compiler writes `critical.json`, `source-map.json` and engine digests deterministically. `content/critical-release.json` is the tracked trust anchor embedded by Rust; staged metadata must match it. `content:stage:native` refuses unpinned changes and atomically replaces only its marked stage. Artwork/audio/video bytes never enter critical hashes. Generated sources, media and packages remain ignored.
+The compiler writes `critical.json`, `source-map.json` and engine digests deterministically. `assets/critical-release.json` is the tracked trust anchor embedded by Rust; staged metadata must match it. `content:stage:native` refuses unpinned changes and atomically replaces only its marked stage. Artwork/audio/video bytes never enter critical hashes. Generated sources, media and packages remain ignored.
 
 ## Installed layout and maintenance
 
@@ -46,7 +46,7 @@ B3. Additions supply complete entities. Cards may use the same readable `{schema
 B4. Overrides may provide a complete replacement or `{ "fields": { ... } }`. Field overrides recursively replace named record fields; arrays replace completely. Unknown fields and identity changes fail. Disjoint field writes compose. Overlapping writes require an explicit dependency on each prior writer plus its ID in `resolves`; filesystem order never sets precedence. For example, a Freeplay config override file can contain:
 
 ```json
-{"fields":{"title":"My freeplay title"}}
+{ "fields": { "title": "My freeplay title" } }
 ```
 
 B5. Deck zones and set printing codes accept resident numeric codes, `official:<code>`, or declared namespaced card IDs. Story documents retain stable document/beat/choice IDs. Optional `chain` nodes identify beats, explicit next/choice targets and terminals; reachable loops with a terminal path are allowed. Optional node media uses `{kind, logicalId, timeoutMs}`. Invalid critical references stop startup with file/pointer diagnostics.

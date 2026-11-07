@@ -16,21 +16,21 @@ T1 provides read-only setup, strict Node-only schemas, path guards, common local
 
 ## Owner prerequisites — complete before any publication
 
-Automation cannot supply these owner facts. Record completion versus pending in a local nonsecret checklist; keep existing `content/setup-evidence.json` and `content/distribution-evidence.json` as their respective PWA/evidence records. Do not put secrets in JSON, Git, screenshots, reports, shell history or command arguments.
+Automation cannot supply these owner facts. Record completion versus pending in a local nonsecret checklist; keep existing `assets/setup-evidence.json` and `assets/distribution-evidence.json` as their respective PWA/evidence records. Do not put secrets in JSON, Git, screenshots, reports, shell history or command arguments.
 
-| ID | Prerequisite | Current T1 evidence / owner action |
-| --- | --- | --- |
-| O1 | Node26/Git/npm | Fixture-tested on Node26; each developer verifies local tools and runs `npm ci` |
-| O2 | Cloudflare R2 account | Pending; owner creates/enables account, activates R2 and payment method if Cloudflare requires it |
-| O3 | Standard bucket | Pending; owner creates a Standard-storage bucket; no Infrequent Access substitution |
-| O4 | Custom public DNS domain | Pending; owner chooses, acquires if needed, connects HTTPS custom domain to bucket; `r2.dev` is not production delivery |
-| O5 | Exact dev/prod app origins | Pending; owner records actual localhost dev origin(s), production Pages/custom app origin(s), any intentional preview origins; no wildcard origin |
-| O6 | Bucket-scoped S3 credentials | Pending; owner creates scoped credentials for this bucket, sets local environment securely; grants only permissions needed for intended operation |
-| O7 | Rights/source obligations | Pending; owner reviews engine/scripts source obligations, DB terms, artwork and story-original permissions, unreleased public scope; existing source approval is not blanket future-original approval |
-| O8 | Budget acknowledgment | Pending; estimate source corpus + dev ZIP + prod/core packs + immutable releases + at least 24h replaced-nightly overlap + retained metadata + request counts. 10 GB is a corpus estimate, not a billing cap or promised free tier |
-| O9 | PWA project/protection | Existing PWA setup owns Pages project, GitHub production protection and its credentials; continue `npm run content:setup:verify`; do not replace its records |
-| O10 | Native access | Existing PWA setup requires Android, iPhone and iPad testers/devices. Access attestation is not install/quota/reopen proof; native tests remain pending |
-| O11 | Initial empty publication state | Pending; perform the explicit, owner-run bootstrap below only for a genuinely new empty publication namespace |
+| ID  | Prerequisite                    | Current T1 evidence / owner action                                                                                                                                                                                                 |
+| --- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| O1  | Node26/Git/npm                  | Fixture-tested on Node26; each developer verifies local tools and runs `npm ci`                                                                                                                                                    |
+| O2  | Cloudflare R2 account           | Pending; owner creates/enables account, activates R2 and payment method if Cloudflare requires it                                                                                                                                  |
+| O3  | Standard bucket                 | Pending; owner creates a Standard-storage bucket; no Infrequent Access substitution                                                                                                                                                |
+| O4  | Custom public DNS domain        | Pending; owner chooses, acquires if needed, connects HTTPS custom domain to bucket; `r2.dev` is not production delivery                                                                                                            |
+| O5  | Exact dev/prod app origins      | Pending; owner records actual localhost dev origin(s), production Pages/custom app origin(s), any intentional preview origins; no wildcard origin                                                                                  |
+| O6  | Bucket-scoped S3 credentials    | Pending; owner creates scoped credentials for this bucket, sets local environment securely; grants only permissions needed for intended operation                                                                                  |
+| O7  | Rights/source obligations       | Pending; owner reviews engine/scripts source obligations, DB terms, artwork and story-original permissions, unreleased public scope; existing source approval is not blanket future-original approval                              |
+| O8  | Budget acknowledgment           | Pending; estimate source corpus + dev ZIP + prod/core packs + immutable releases + at least 24h replaced-nightly overlap + retained metadata + request counts. 10 GB is a corpus estimate, not a billing cap or promised free tier |
+| O9  | PWA project/protection          | Existing PWA setup owns Pages project, GitHub production protection and its credentials; continue `npm run content:setup:verify`; do not replace its records                                                                       |
+| O10 | Native access                   | Existing PWA setup requires Android, iPhone and iPad testers/devices. Access attestation is not install/quota/reopen proof; native tests remain pending                                                                            |
+| O11 | Initial empty publication state | Pending; perform the explicit, owner-run bootstrap below only for a genuinely new empty publication namespace                                                                                                                      |
 
 ### Public config
 
@@ -59,7 +59,7 @@ This is a real outward-facing write. Do not run it unless you own the bucket, ha
 - B2. Save these exact UTF-8 bytes with one trailing LF to a local `publication-inventory.json`. This is canonical empty state, not an eligibility record:
 
 ```json
-{"nightly":null,"releases":[],"retiredNightlies":[],"schemaVersion":1}
+{ "nightly": null, "releases": [], "retiredNightlies": [], "schemaVersion": 1 }
 ```
 
 - B3. From the project directory, run this reviewed Node command yourself. It uses only the installed SDK, your local environment and the validated config. `IfNoneMatch: "*"` prevents overwriting any existing index. Do not replace a rejected create-only write with an unconditional PUT.
@@ -107,7 +107,7 @@ JS
 - S2. File paths reject absolute/traversal/backslash/colon/NUL/percent/query/fragment names, Windows devices and trailing dot/space, Unicode/case aliases, secret/private-key containers and nested Git/node_modules inputs. Managed writes stay inside `assets/{battle,deck-editor,story,shared}`. Immediate `lstat`/`realpath` parent checks reject links/reparse aliases. These pathname checks are not an OS sandbox against a hostile process swapping parents between check and I/O; future writers must revalidate immediately at mutation time and perform the ticket's identity/hash checks.
 - S3. Common local lock: `generated/.locks/asset-delivery`; acquire local before remote, once per exported writer. No automatic stale takeover. An interrupted local writer leaves a busy lock; owner must confirm no active process, inspect pending install/prune journals, recover them under the appropriate later command before clearing any exact stale lock. T1 setup is read-only and never acquires/writes this lock.
 - S4. Future remote writers use `_control/write-lock.json`, no lease expiry or automatic takeover. Owner recovery: confirm no process active, inspect exact lock owner, remove only that lock in R2 console. Pending `_control/prune-journal.json` still requires later `assets:prune --resume --remote`; never delete the journal to bypass recovery. No `sync --delete`.
-- S5. SDKs are devDependencies pinned exactly `@aws-sdk/client-s3@3.1128.0`, `@aws-sdk/lib-storage@3.1128.0`; zip.js remains `2.13.1`. No substitutions. ZIP options fixture: `tests/fixtures/asset-delivery-zip.ts`, using installed `ZipWriterConstructorOptions`, `ZipWriter(WritableStream)`, `add(ReadableStream)`, awaited sequential entry/close.
+- S5. SDKs are devDependencies pinned exactly `@aws-sdk/client-s3@3.1128.0`, `@aws-sdk/lib-storage@3.1128.0`; zip.js remains `2.13.1`. No substitutions. ZIP options fixture: `test/fixtures/asset-delivery-zip.ts`, using installed `ZipWriterConstructorOptions`, `ZipWriter(WritableStream)`, `add(ReadableStream)`, awaited sequential entry/close.
 - S6. ZIP fixture pins STORE0, raw DOS `0x00210000` (1980-01-01 00:00:00; no timezone conversion), UTF-8, zero comments/attributes, no timestamps/optional extras, unbuffered writes, no workers/native compression. `zip64` omitted: library auto-enables required ZIP64 for large/unknown-size streams. Small unknown-size fixture has required local ZIP64 extra only. UTC/Honolulu fixture match is not Windows/macOS or >4GiB/10GB proof; those remain later gates.
 - S7. [Asset-root inventory](asset-root-inventory.md) records old literals and classifications before any move. Frozen vendor, feedback and user assets stay untouched. Native PWA installer/build activation remains separate work, never claimed from these fixtures.
 

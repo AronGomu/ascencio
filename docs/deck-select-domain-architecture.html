@@ -75,7 +75,7 @@
 <tr><td><code>DeckSelectScreen</code></td><td>One screen, two modes: <code>duel-start</code> (seat panel, Start) and <code>library</code> (teal focus, docked decklist). Data in via props/resolvers, intent out via callbacks.</td></tr>
 <tr><td><code>orderDeckTiles</code></td><td>The design's rank: illegal sinks → default → favourites → sort. <code>pinSelectedFirst</code> adds the mobile pin. <code>src/decks/deck-library-order.ts</code> stays untouched (data-lib ordering over records).</td></tr>
 <tr><td>Resolvers</td><td><code>decklistFor(key)</code>, <code>cardImageFor(code)</code> — async host lookups for hover previews; stale resolutions dropped.</td></tr>
-<tr><td>Enforcement</td><td><code>eslint.config.js</code> zone + frozen export list in <code>tests/unit/domain-boundaries.test.ts</code>; <code>data-cy</code> on every element per the HTML element contract.</td></tr>
+<tr><td>Enforcement</td><td><code>config/eslint.config.js</code> zone + frozen export list in <code>test/unit/domain-boundaries.test.ts</code>; <code>data-cy</code> on every element per the HTML element contract.</td></tr>
 </tbody>
 </table>
 

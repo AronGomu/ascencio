@@ -27,7 +27,7 @@ if (
     const target = await realpath(path.resolve(args[index + 1]!));
     if (target === path.parse(target).root || target === process.env.HOME)
       throw new Error("Refusing a filesystem root or home directory");
-    const bundledStage = path.join(projectRoot, "src-tauri", "resources");
+    const bundledStage = path.join(projectRoot, "tauri", "resources");
     if (
       (target === projectRoot ||
         target.startsWith(`${projectRoot}${path.sep}`)) &&

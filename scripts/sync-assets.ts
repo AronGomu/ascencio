@@ -44,7 +44,7 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
 const sourceLock = parseSourceLock(
   JSON.parse(
-    await readFile(path.join(projectRoot, "assets-source-lock.json"), "utf8"),
+    await readFile(path.join(projectRoot, "config/assets-source-lock.json"), "utf8"),
   ),
 );
 const options = parseOptions(process.argv.slice(2), sourceLock);
@@ -307,7 +307,7 @@ function parseOptions(args: string[], lock: AssetSourceLock): Options {
   ] as const) {
     if (requested !== pinned) {
       throw new Error(
-        `--${name} cannot override the pinned asset source lock; update assets-source-lock.json through review instead`,
+        `--${name} cannot override the pinned asset source lock; update config/assets-source-lock.json through review instead`,
       );
     }
   }

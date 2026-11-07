@@ -27,7 +27,7 @@ The field's rendered size derives from its slot box: `.duel-field-slot` width fe
 
 - The field gains the ~8rem column plus 4rem of rail, minus 2.5rem of height. Net area growth is the acceptance bar and is measured in Chromium at 1920×1080, not assumed.
 - The vertical bar's "whose half glows" reading rotates 90°: turn position now reads left/right instead of top/bottom, and the opponent's mirrored horizontal order is less like reading a list than the vertical stack was. Trade taken for field size.
-- Exact-string CSS locks (`tests/unit/global-styles.test.ts` grid/slot formulas) and phase-bar pixel-geometry e2e assertions all rewrite; anyone bisecting across this change will see mass test churn from one commit.
+- Exact-string CSS locks (`test/unit/global-styles.test.ts` grid/slot formulas) and phase-bar pixel-geometry e2e assertions all rewrite; anyone bisecting across this change will see mass test churn from one commit.
 - The rail at 11rem is tight for long status text; overflow there is now the rail's problem to solve within its narrower track.
 
 ## Alternatives rejected

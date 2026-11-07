@@ -1,4 +1,6 @@
 from pathlib import Path
+schema_directory = Path(__file__).resolve().parents[2] / "tools/bot-evaluation/schemas/v1"
+schema_directory.mkdir(parents=True, exist_ok=True)
 import runpy
 structures=runpy.run_path(str(Path(__file__).with_name("schema-structures.py")))
 from xml.sax.saxutils import escape
@@ -37,11 +39,11 @@ for root,required in roots.items():
  if root=='evaluation':lines.append('<xs:element name="performance_target" type="evalTarget" minOccurs="0"/>')
  lines+=['</xs:all><xs:attribute name="schema_version" type="xs:positiveInteger" use="required" fixed="1"/></xs:complexType></xs:element>','</xs:schema>']
  lines[-1:-1]=structures['named_types']()
- Path(f'schemas/bot-evaluation/v1/{root}.xsd').write_text('\n'.join(lines)+'\n')
+ (schema_directory / f'{root}.xsd').write_text('\n'.join(lines)+'\n')
 
 # The standalone timeline uses exactly the same named type as player-report.
-source=Path('schemas/bot-evaluation/v1/player-report.xsd').read_text()
+source=(schema_directory / 'player-report.xsd').read_text()
 start=source.index('<xs:element name="player-report"><xs:complexType><xs:all>')
 end=source.index('</xs:complexType></xs:element>',start)+len('</xs:complexType></xs:element>')
 source=source[:start]+'<xs:element name="timeline-fragment"><xs:complexType><xs:complexContent><xs:extension base="timelineRecord"><xs:attribute name="schema_version" type="xs:positiveInteger" use="required" fixed="1"/></xs:extension></xs:complexContent></xs:complexType></xs:element>'+source[end:]
-Path('schemas/bot-evaluation/v1/timeline-fragment.xsd').write_text(source)
+(schema_directory / 'timeline-fragment.xsd').write_text(source)

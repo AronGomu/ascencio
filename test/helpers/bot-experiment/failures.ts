@@ -1,6 +1,6 @@
 import { createWasmTransport } from "../../../src/battle/worker/bot-runtime/wasm-transport.ts";
 /** Minimal import-free modules exercise actual traps and preempted infinite loops. */
-function fixture(loop: boolean) {
+export function fixture(loop: boolean) {
   const section = (id: number, data: number[]) => [id, data.length, ...data];
   const name = (s: string) => [s.length, ...new TextEncoder().encode(s)];
   const body = (data: number[]) => [data.length, ...data];

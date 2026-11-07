@@ -1,118 +1,126 @@
 # ARO2-14 measured runtime results
 
-Keep TypeScript as the default for these workloads. The equivalent Rust bots are
-slower in this experiment, and transport/copying costs dominate their computation.
-The portable path is useful for Rust-authored packages; these measurements provide
-no performance reason to switch the built-in policies to it or to native Rust.
-This is a measured recommendation for the saved scenarios, not a language-wide claim.
+Keep TypeScript as the default for these saved workloads. Rust remains useful for
+portable Rust-authored packages, but these results provide no performance reason
+to switch the built-in policies. Transport/copying dominates Rust round-trip cost.
+This is a measured scenario-specific recommendation, not a language-wide claim.
 
-Recorded-input parity matches 22,158 decisions and 20 sideboard responses on both
-Rust targets. Separate live smoke completes 40 games per supported Rust path,
-including browser WASM, Tauri WASM/native, packaged-protocol bot harness and Node
-evaluator, with no runtime failures. Every run reuses the same five seeded
-four-game matches per bot and one deck. C3 does not require live action equality.
+Both Rust targets match 22,158 recorded decisions and 20 sideboard exchanges.
+Separate real-engine smoke completes 40 games (five four-game matches per Basic
+and Generalist) and 20 real sideboard responses on each supported Rust route,
+without crashes, illegal decisions or unexpected recovery. No live action-ID
+comparison is required. Actual client/runtime integration tests additionally cover
+load, player response, asynchronous bot progression, injected engine failure,
+pinned restore and disposal with both isolated Rust transports. The fake-engine
+fault-injection tests and the real-engine complete flows are distinct evidence;
+the latter alone is not claimed as 40 UI-driven application matches.
 
-## Actual release transports
+## Release transport latency
 
-All values below come from the production bot boundaries inside an optimized
-instrumentation frontend. Browser uses Chromium 152/Electron 44; Tauri uses the
-system WebKit webview. Compare within an environment. Native Rust includes the
-actual Worker→main thread→Tauri IPC→child process round trip. WASM includes its
-actual nested Worker transport, structured clones and linear-memory JSON copies.
-TypeScript runs directly in the duel Worker, as it does in the application.
+Browser measurements use isolated headless Chromium 153; Tauri uses the system
+WebKit webview and an optimized packaged-protocol instrumentation frontend. Native
+round trips include Worker → main → Tauri → child process. Browser/Tauri WASM uses
+the actual nested Worker transport. TypeScript runs directly in the duel Worker.
+Compare paths within one environment.
 
-| Environment/path | Mean compute µs | Mean round trip µs | p95 round trip µs | First instance ms | Mean later instance ms |
+| Path | Mean compute µs | Mean round trip µs | p95 round trip µs | First instance ms | Mean later instance ms |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Browser TypeScript | 5.51 | 6.41 | 100 | 0.10 | 0.01 |
-| Browser Rust/WASM | 10.39 | 296.90 | 400 | 86.70 | 75.29 |
-| Tauri TypeScript | 4.12 | 4.44 | 0 | 0.00 | 0.01 |
-| Tauri Rust/WASM | 11.12 | 328.97 | 1000 | 85.00 | 78.39 |
-| Tauri native Rust | 6.51 | 494.34 | 1000 | 89.00 | 78.19 |
+| Browser TypeScript | 2.45 | 2.96 | 0.00 | 0.10 | 0.01 |
+| Browser Rust/WASM | 10.02 | 276.25 | 400.00 | 85.50 | 71.14 |
+| Tauri TypeScript | 3.67 | 4.08 | 0.00 | 0.00 | 0.01 |
+| Tauri Rust/WASM | 10.26 | 332.21 | 1000.00 | 83.00 | 78.12 |
+| Tauri native Rust | 6.42 | 489.38 | 1000.00 | 86.00 | 78.00 |
 
-One complete saved-workload warmup precedes three measured passes (66,474 measured
-decisions per path). Inputs are parsed before timing; reference checks and final
-report I/O are outside the decision interval on every path. Instance creation
-resets each game and is measured separately. Sideboard work is covered by smoke
-and full-flow throughput, not mixed into the warmed decision samples. Raw JSON
-reports retain min/max, standard deviation, median, p95 and per-pass variability.
+One full saved-workload warmup precedes three measured passes (66,474 decisions
+per path). Input parsing, reference checks and final report writes are outside
+the timed interval. Raw JSON includes min/max, p50/p95, standard deviation and
+per-pass durations. Instance creation/reset is measured separately across games.
+First-instance samples include normal OS/compiler caches: they are not forced
+disk-cold results. WebKit's millisecond and Chromium's 0.1 ms timer quantization
+produce zero medians/p95 for tiny computations; aggregate means are not individual
+microsecond-resolution samples. No measured targets ran concurrently.
 
-Native compute uses Rust Instant nanoseconds; browser/WebKit compute uses
-performance.now around execute, excluding prepare/serialize. WebKit's observed
-1 ms quantization and Chromium's 0.1 ms quantization make single short decisions
-imprecise (including zero samples). Means aggregate the whole saved workload;
-do not interpret a zero first TypeScript instance as zero actual cost. First
-instance includes package loading, Worker/process creation, compilation and card
-initialization after the common content load. Later instances include fresh
-per-game creation. OS/file/code caches were not forcibly flushed; these are
-first-instance versus warm-session measurements, not claimed disk-cold startup.
+The seeded xorshift32 Random control replays the first saved game's 599 inputs,
+one warmup and three measured passes. It does not generate additional games:
 
-Each actual-runtime report also includes Random as a lightweight control: the
-first saved game's 599 decision inputs, xorshift32 seed 1, one warmup and three
-passes. No extra engine games are generated for that control. Basic/Generalist
-consume no random draws; Random consumes the specified reproducible stream.
-
-## Memory and measurement limits
-
-Tauri process-tree RSS snapshots use Linux /proc while each target is running.
-They include the app, webview, network helper and bot processes; shared resident
-pages may be counted twice. Native child RSS and WASM linear memory are separate
-scopes, not directly comparable allocation metrics. Browser WASM linear memory
-was 51,904,512 bytes per instance for the recorded workload.
-
-Comparable browser-wide memory is **not available**: the isolated browser's
-measureUserAgentSpecificMemory API throws SecurityError. The exact failed results
-are retained; main-page heap was not substituted for Worker heap. This is an
-outstanding C9 measurement, not a successful acceptance result. Full application
-startup is also blocked by staged content/trust-anchor mismatch; the successful
-packaged-protocol bot harness does not erase that C4 limitation. See
-[environment evidence](environment-blockers.md).
-
-## Evaluator comparison
-
-The retained Node evaluator decision benchmark uses the same saved workload,
-release Rust and minified TypeScript, one warmup and three repetitions:
-
-| Path | Mean compute µs | Mean JSON/host round trip µs |
+| Path | Random mean compute µs | Random mean round trip µs |
 | --- | ---: | ---: |
-| TypeScript | 2.72 | 57.34 |
-| Rust/WASM | 5.96 | 137.47 |
-| Native Rust | 4.73 | 118.71 |
+| browser-typescript | 0.67 | 1.34 |
+| browser-wasm | 3.95 | 257.65 |
+| tauri-typescript | 1.11 | 1.67 |
+| tauri-wasm | 3.34 | 275.46 |
+| tauri-native | 1.58 | 477.46 |
 
-These Node timings are not substituted for Tauri or browser latency. The older
-Node cold samples have unequal construction scopes and are retained only as
-diagnostics; use the actual-runtime instance measurements above for comparison.
-The machine is AMD Ryzen 7 7700 (16 logical CPUs), Linux x64, 32,673,456,128 bytes
-RAM; Node 26.12.0, Rust/Cargo 1.99.1, Vite 8 production minification and Cargo
-release builds. Exact toolchain/binary provenance is in evaluator-performance.json
-and assets/ai-bots/reference/dist/build.json. No benchmark targets ran concurrently.
+## Evaluator
+
+The evaluator WASM transport is now a preemptible Node Worker thread, with
+structured cloning plus linear-memory JSON copying. Native uses bounded child
+stdin/stdout JSON. The release/minified TypeScript control uses same-process JSON
+loopback. All three measure the same request boundary, excluding host evidence
+I/O and the fallback guard; complete-flow throughput below includes those costs.
+The old synchronous-WASM evaluator timings are superseded.
+
+| Path | Mean compute µs | Mean request round trip µs |
+| --- | ---: | ---: |
+| typescript | 2.82 | 56.69 |
+| wasm | 7.52 | 272.01 |
+| native | 4.45 | 126.33 |
+
+Evaluator timing uses performance.now and Rust Instant, one warmup and three
+passes. Constructor samples retain unequal scopes (TS includes esbuild, native
+starts a process without a create handshake, WASM starts/compiles a Worker), so
+no comparative cold-start claim uses those samples. Actual-runtime instance
+measurements above include package loading/create and are reported separately.
 
 ## Complete-flow throughput
 
-Separate from C3, one complete 40-game pass per target measures real engine work,
-bot loading, state progression and actual sideboarding. No new deck or seed is
-introduced. Native/browser harnesses collect the same in-memory histories;
-evaluator command timings include the same full host event/evidence streaming.
-Final result writes and baseline decoding are excluded. One pass is deliberately
-bounded; different seeded games are not claimed to be repeated identical timing
-samples. Detailed per-game/aggregate records accompany the summary below.
+One separate 40-game pass per target includes real engine work, bot loading,
+state progression and actual sideboarding. Each environment handles histories and
+evidence identically across runtimes. Fixture decoding and final result writes
+are excluded; evaluator streaming/report transport is included. This is bounded
+throughput evidence, separate from C3 correctness and repeated-input timing.
 
-| Environment/path | Games per second |
+| Environment/path | Games/second |
 | --- | ---: |
-| browser / typescript | 6.92 |
-| browser / wasm | 2.05 |
-| tauri / typescript | 8.53 |
+| browser / typescript | 10.16 |
+| browser / wasm | 2.32 |
+| tauri / typescript | 8.52 |
 | tauri / wasm | 1.94 |
-| tauri / native | 1.52 |
-| evaluator / typescript | 3.61 |
-| evaluator / wasm | 1.97 |
-| evaluator / native | 1.97 |
+| tauri / native | 1.51 |
+| evaluator / typescript | 3.78 |
+| evaluator / wasm | 1.37 |
+| evaluator / native | 1.85 |
 
-Native RSS samples (whole process tree, not exclusive/peak memory):
+## Memory
+
+Comparable browser-wide memory uses a fresh Chromium process/profile per target,
+identical flags, and three Linux process-tree VmRSS snapshots one second apart
+after 100 identical saved decisions, retaining the bot and workload. RSS includes
+shared pages per process, browser/renderer/utilities and Workers. These are whole
+process snapshots, not exclusive allocations, GC-normalized samples or peak use.
+The rejected Electron memory API is no longer the only measurement method.
+
+| Browser path | Mean RSS MiB | Sample range MiB |
+| --- | ---: | ---: |
+| typescript | 1594.5 | 1542.2–1620.7 |
+| wasm | 1701.9 | 1649.1–1728.4 |
+
+Tauri process-tree RSS is sampled ten seconds into each benchmark, using the same
+method but a different observation point from browser memory. Do not compare the
+two tables as equivalent allocation measurements.
 
 | Tauri path | RSS MiB |
 | --- | ---: |
-| typescript | 1446.7 |
-| wasm | 1464.6 |
-| native | 1598.2 |
+| typescript | 1321.3 |
+| wasm | 1308.5 |
+| native | 1260.9 |
 
-Reproducible commands are in README.md; implementation-status.md maps every criterion to evidence and owner. Local validation includes targeted runtime, loader, lifecycle, selection and snapshot tests, native failure tests, type/Svelte checks, lint, formatting, release frontend verification and unchanged vendor verification. No remote CI was run. Two pre-existing Story media assertions and the two environment limitations are explicitly retained in environment-blockers.md.
+WASM committed linear memory is 51,904,512 bytes per reference instance. Native
+child RSS is approximately 79 MB; raw per-instance samples are retained. These
+subsystem metrics are not directly comparable to whole-browser/Node RSS.
+
+Machine: AMD Ryzen 7 7700, 16 logical CPUs, Linux x64, 32,673,456,128 bytes RAM.
+Toolchains: Node 26.12.0, Rust/Cargo 1.99.1, Vite 8 production minification and
+Cargo release builds. Build/binary provenance is retained in dist/build.json and
+phase3-provenance.json. Reproducible commands are in README.md; criterion owners,
+inputs and evidence are in implementation-status.md. No remote CI was run.

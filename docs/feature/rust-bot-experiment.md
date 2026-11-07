@@ -63,6 +63,11 @@ A trap, timeout or invalid response closes the failed runtime and uses validated
 built-in Basic decisions for the rest of the duel. Invalid sideboarding retains
 the original deck. Development shows a warning and logs the pinned version,
 stack and full permitted input. Production recovers without warning or trace.
+The evaluator uses a preemptible Node Worker for WASM and a bounded native child,
+with the same fallback validation and deadlines. Machine-readable fallback
+telemetry is always emitted to the evaluator; development warnings remain separate.
+Setup failures count immediately, including games without a bot decision.
+
 Each unexpected recovery increments the correctness-failure counter; no experiment
 may count such a game or replay as a pass. Explicit missing Story dependencies are
 always visible, including production, and are not silent fallback cases.

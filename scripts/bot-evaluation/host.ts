@@ -111,7 +111,9 @@ async function game(command: Command) {
   try {
     for (const index of command.bot_order)
       bots.push(
-        await instantiateHostBot(artifacts[index]!, activeDependencies),
+        await instantiateHostBot(artifacts[index]!, activeDependencies, {
+          onFallback: send,
+        }),
       );
     const engineStart = performance.now();
     session = DuelSession.create({
@@ -469,7 +471,11 @@ for await (const line of createInterface({
       const durations: number[] = [];
       try {
         for (const artifact of artifacts)
-          bots.push(await instantiateHostBot(artifact, dependencies));
+          bots.push(
+            await instantiateHostBot(artifact, dependencies, {
+              onFallback: send,
+            }),
+          );
         for (const [actor, bot] of bots.entries()) {
           send({
             type: "sideboard_hook",

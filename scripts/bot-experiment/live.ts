@@ -23,6 +23,22 @@ const messages = createInterface({ input: child.stdout })[
   Symbol.asyncIterator
 ]();
 async function command(request: unknown, terminal: string) {
+  let timer: ReturnType<typeof setTimeout>;
+  try {
+    return await Promise.race([
+      readCommand(request, terminal),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          child.kill("SIGKILL");
+          reject(new Error(`Evaluator host ${terminal} exceeded 180 seconds`));
+        }, 180000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+async function readCommand(request: unknown, terminal: string) {
   child.stdin.write(JSON.stringify(request) + "\n");
   const result: HostMessage[] = [];
   for (;;) {
@@ -99,7 +115,9 @@ try {
       const observed = actual.filter((m) => m.type === "captured_decision");
       const done = actual.find((m) => m.type === "done");
       if (!done)
-        throw new Error(`Game did not complete: ${record.request.game_id}`);
+        throw new Error(
+          `Game did not complete: ${record.request.game_id}; received ${actual.map((message) => message.type).join(",")}`,
+        );
       for (const actor of [0, 1] as const) {
         histories[record.request.bot_order[actor]].push({
           gameId: record.request.game_id,

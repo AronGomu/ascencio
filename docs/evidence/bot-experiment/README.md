@@ -106,9 +106,10 @@ node scripts/bot-experiment/run-native.ts smoke wasm native
 
 This bot-only build requires an absent/empty local game-content staging directory,
 or correctly staged content matching the tracked trust anchor. Never remove shared
-content or weaken its trust anchor. The retained packaged harness runs used an
-empty checkout-owned game-content directory and explicit fixture-server content;
-they do not establish full packaged application startup. See environment-blockers.md.
+content or weaken its trust anchor. The refreshed packaged harness runs use correctly staged current game content
+and explicit fixture-server inputs for the saved scenarios. Full packaged
+application startup is independently verified in packaged-application-startup.json.
+See environment-blockers.md for the resolved staging investigation.
 
 The `memory` mode enables cross-origin isolation and attempts
 `performance.measureUserAgentSpecificMemory()` after the same 100 decisions.
@@ -119,3 +120,69 @@ process-memory.ts also accepts a PID and output path for a manual sample.
 See validation.json for exact related validation commands, outcomes and retained
 failure descriptions. Run with Node 26+, a Rust toolchain with wasm32-unknown-unknown,
 and no remote CI. The test runner is intentionally limited to related files.
+
+## Evaluator isolation and recovery
+
+The evaluator now uses a preemptible Node Worker thread for WASM and a dedicated
+native child with bounded JSON input/output. Setup has a 15-second deadline;
+decisions and sideboarding have a two-second deadline. Failed transports are
+permanently terminated. The evaluator host uses the same validated built-in
+fallback guard as the application, including deck-section validation. Setup
+failures count immediately, even if the engine never asks for a decision.
+Development emits detailed permitted-input traces; production emits no warning.
+The machine-readable `fallback` frame and counter remain available in both modes.
+The Rust evaluator records unexpected recovery as a failed execution while the
+host can finish the game. Live/replay/benchmark success requires zero recoveries.
+Live host commands also have an independent 180-second outer deadline.
+
+```sh
+npm test -- --tests test/tooling/evaluator-bot-boundary.test.ts \
+  test/tooling/bot-experiment.test.ts test/unit/duel-worker-runtime.test.ts \
+  test/unit/duel-worker-client.test.ts
+node scripts/bot-experiment/run-browser.ts /path/to/chromium smoke wasm
+node scripts/bot-experiment/run-browser.ts /path/to/chromium benchmark typescript wasm
+node scripts/bot-experiment/run-browser.ts /path/to/chromium throughput typescript wasm
+node scripts/bot-experiment/run-browser.ts /path/to/chromium memory typescript wasm
+```
+
+Run one harness command at a time: browser and native commands share the fixture
+server's selected mode. `run-browser.ts` starts an isolated Chromium process and
+fresh profile per target and retains JSON under `.tmp/browser-results`. Its memory
+mode uses OS process-tree RSS, retaining the same loaded bot and 100-input workload.
+The API-specific memory mode is optional diagnostic evidence, not the only method.
+
+The complete real-engine harness is combined with actual DuelWorkerClient→DuelWorkerRuntime tests
+using both isolated Rust transports: load, human response, bot progression,
+engine failure, pinned restore and disposal. DuelWorkerClient tests cover selection
+forwarding, command/session ownership and cleanup of late native session opens.
+These tests use a deterministic fake engine for fault injection; the 40-game
+harness uses the real frozen engine. Do not describe the latter alone as 40 full
+DuelWorkerClient/Runtime application matches.
+
+To reproduce the resolved content staging from **current acquired assets** in a
+checkout with new/empty generated conversion outputs (never the stale 1.1.2
+readable tree), the existing conversion entry points are:
+
+```sh
+node --input-type=module <<'JS'
+import { readFile, mkdir } from 'node:fs/promises';
+import { exportPackages } from './scripts/lib/sqlite-content/index.ts';
+import { exportSqliteSource } from './scripts/lib/json-content/export-sqlite-source.ts';
+const recipe = JSON.parse(await readFile('assets/packages.json', 'utf8'));
+const result = await exportPackages(process.cwd(), recipe, { archive: false });
+if (result.kind !== 'ok') throw new Error(JSON.stringify(result));
+await mkdir('generated/readable-content-v1', { recursive: true });
+for (const { manifest } of recipe.packages) {
+  await exportSqliteSource(process.cwd(),
+    `generated/content-packages/${manifest.packageId}-${manifest.version}.sqlite`,
+    `generated/readable-content-v1/${manifest.packageId}`);
+}
+JS
+node scripts/readable-content-release.ts prepare
+node scripts/readable-content-release.ts verify-staged
+```
+
+Conversion deliberately refuses to overwrite authored readable directories. It
+requires the current acquired assets; isolated worktrees can copy those assets
+from their primary checkout without modifying the primary files. This setup is
+separate from the saved experiment workload, whose content identity stays fixed.

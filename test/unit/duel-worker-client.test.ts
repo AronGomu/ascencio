@@ -1,3 +1,4 @@
+import * as packageHost from "../../src/battle/app/bots/package-host.ts";
 import {
   TEST_RUNTIME_INPUT,
   TEST_RUNTIME_SOURCE,
@@ -852,4 +853,40 @@ describe("DuelWorkerClient", () => {
       });
     },
   );
+});
+
+describe("bot host bridge lifecycle", () => {
+  it("relays native requests and closes a session opened after disposal", async () => {
+    let finish!: (value: string) => void;
+    const host = vi
+      .spyOn(packageHost, "botHostCall")
+      .mockImplementation(async (call) => {
+        if (call.method === "nativeOpen")
+          return new Promise<string>((resolve) => {
+            finish = resolve;
+          });
+        return null;
+      });
+    const { client, workers } = createHarness(1);
+    try {
+      workers[0]!.emitRaw({
+        type: "botHostCall",
+        id: 7,
+        method: "nativeOpen",
+        payload: { digest: "test" },
+      });
+      await vi.waitFor(() => expect(host).toHaveBeenCalled());
+      await client.dispose();
+      finish("late-session");
+      await vi.waitFor(() =>
+        expect(host).toHaveBeenCalledWith({
+          method: "nativeClose",
+          payload: { session: "late-session" },
+        }),
+      );
+    } finally {
+      host.mockRestore();
+      await client.dispose();
+    }
+  });
 });

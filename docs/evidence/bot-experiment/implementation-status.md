@@ -1,29 +1,26 @@
 # ARO2-14 implementation and acceptance handoff
 
-Application integration, isolated transports, package pinning, selection and
-failure recovery are implemented. Recorded parity and supported runtime smoke
-pass. Two concrete environment limitations prevent claiming full acceptance:
-full application startup lacks the pinned 1.1.3 content, and Electron refuses
-browser-wide memory measurement. See [attempted commands and errors](environment-blockers.md).
-The parent owns exact-head reviews and integration; no reviewer, PR, merge, remote
-CI, ticket closure or external message was dispatched by this implementation.
+The R1 implementation objections are addressed, including evaluator preemption,
+validated recovery and failure telemetry. Current-source content reconstruction
+and isolated Chromium process accounting resolve the earlier C4/C9 environment
+blockers. The parent owns fresh exact-head reviews and integration. No reviewers,
+PR, merge, remote CI, ticket closure or external message were dispatched here.
 
-| Criterion | Implementation evidence / status | Owner and required remaining input |
+| Criterion | Status and evidence | Owner / required input |
 | --- | --- | --- |
-| C1 retained TS baseline | Pass: immutable 40-game artifact and README provenance; no regeneration | Implementation; complete saved inputs/seeds/source/deck/content identities retained |
-| C2 action parity | Pass: native-parity.json and wasm-parity.json, 22,158 decisions and 20 sideboards each; replay state/reset and divergence command retained | Implementation; scenario-bounded, not exhaustive strategy coverage |
-| C3 live flows | Pass: native-live.json, wasm-live.json, browser-wasm-smoke.json, tauri-native-smoke.json, tauri-wasm-smoke.json, packaged-harness-*-smoke.json; each has 40 completed games, 20 real sideboard responses, zero crashes/illegal/unexpected fallbacks | Implementation; independent from parity and timing |
-| C4 supported environments | Implemented: shared Rust crate, TS unchanged, browser development package server, native dev/release staging, evaluator; optimized frontend build passes; packaged bot harness passes | Environment owner: supply content matching unchanged assets/critical-release.json for full application startup acceptance |
-| C5 boundary and transport | Pass: asynchronous serialized controller, nested isolated WASM Worker, Worker→main→Tauri→bounded native child, permitted observations only; engine/vendor unchanged | Implementation; targeted lifecycle and native timeout tests retained |
-| C6 packages/version lifetime | Pass: assets/ai-bots, native app-data discovery/override, safe relative manifest paths, pinned bytes/digest/version through restore, next-duel reload; fixed browser index | Implementation; loader/version tests and package documentation |
-| C7 recovery | Pass: validated Basic fallback, failure counts, dev warning/detailed trace, silent production; actual browser trap and two-second infinite-loop termination, native stalled-process kill, invalid-decision/disposal/sideboard tests | Implementation; no fallback counted as parity or smoke success |
-| C8 selection/dependencies | Pass: Freeplay independent selector; per-deck requiredAi; resident Story metadata check reports missing AI on startup menu without opening a duel; start/resume recheck blocks affected duel | Implementation; component, snapshot, handoff tests and isolated browser presentation evidence |
-| C9 measurements | Actual release transport compute/round-trip/cold-instance/warm timing, Random control, native process memory, WASM linear memory and separate complete-flow throughput retained | Environment owner: comparable browser-wide heap/process measurement remains blocked by SecurityError; cold samples include normal OS/compiler caches, not forced disk-cold conditions |
-| C10 reproducibility/delivery | Commands, package/environment limitations, results and measured recommendation documented; targeted local validation performed | Parent: exact-head three-reviewer rounds and integration gate. Two unrelated Story media assertions reproduce against the base AppShell; see blocker evidence |
+| C1 baseline | Pass: immutable 40-game TypeScript artifact and README provenance; never regenerated | Implementation; saved inputs, seeds, identities and empty Basic/Generalist RNG consumption retained |
+| C2 recorded parity | Pass: native-parity.json, wasm-parity.json; 22,158 decisions / 20 sideboards each after signed-zero correction | Implementation; scenario-bounded, not exhaustive coverage |
+| C3 live flows | Pass with explicit coverage composition: real-engine 40-game / 20-sideboard smoke per Rust route plus real DuelWorkerClient→DuelWorkerRuntime integration with native/WASM transports | Implementation; smoke JSON and validation.json. Integration tests use a deterministic engine for failure/restore injection. The lower-level real-engine harness alone is not claimed as 40 full UI matches |
+| C4 environments | Pass: normal browser startup/Freeplay selection, current-content trust-anchor verification, actual packaged application startup, packaged bot transports and evaluator | Implementation; packaged-application-startup.json and environment-blockers.md document resolved source reconstruction |
+| C5 boundary/transport | Pass: serialized async runtime/client lifecycle, preemptible nested browser Worker / evaluator Worker thread, bounded native child transport; vendor unchanged | Implementation; native/WASM stall, trap, malformed/oversized output, lifecycle/restore tests |
+| C6 packages/pinning | Pass: bundled/app-data discovery, per-ID malformed package errors preserving healthy identities, pinned bytes/version through restore, browser fixed delivery, Windows executable suffix | Implementation; loader/native inventory tests and runtime documentation |
+| C7 recovery | Pass: validated Basic fallback and sideboards, immediate setup-failure counts, production-silent/dev detailed traces, host fallback frames and Rust evaluator failure accounting | Implementation; evaluator-bot-boundary.test.ts, bot-runtime.test.ts; no recovery counts as smoke/parity success |
+| C8 selection/dependency | Pass: independent Freeplay selection, per-deck Story requirement and actionable menu/start checks; opponent controls have data-cy coverage | Implementation; component/snapshot/handoff and element coverage tests |
+| C9 performance | Pass: refreshed release browser/Tauri/evaluator computation, actual transport, cold-instance/warm timing, throughput and memory, including isolated browser process trees | Implementation; results.md, raw JSON, reproducible commands and scoped limitations |
+| C10 delivery | Implementation complete: reproducible commands, package/environment docs, measured recommendation, targeted local validation | Parent: fresh exact-head three-reviewer round and integration gate. Two unrelated Story media assertions reproduce at original ticket base |
 
-All criterion inputs are the acceptance inventory revision 2, referenced by the
-implementation evidence record in the parent's shared ledger. That record names
-the exact final commit and validation references. The absence of a repository
-merge gate is a parent integration responsibility, not something this experiment
-changes. The baseline TypeScript policies, BasicOpponentPolicy and frozen vendor
-remain byte-identical to the fetched base.
+Criterion definitions are acceptance inventory revision 2. The shared
+`ascencio/933b25a5/ARO2-14/implementation-3` record carries the exact final head,
+criterion input/reference/owner/status and validation. See validation.json for
+related test outcomes and environment-blockers.md for original-base reproductions.
+The TypeScript policies, BasicOpponentPolicy and frozen engine remain unchanged.

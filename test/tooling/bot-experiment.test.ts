@@ -131,12 +131,14 @@ test("Rust targets preserve selection ordering, loop state, and Random draws", a
   ];
   workloads.push(...Array.from({ length: 5 }, () => workloads.at(-1)!));
   for (const target of [nativeTransport, wasmTransport]) {
-    const transport = await target();
+    let transport = await target();
     try {
       await assert.rejects(
         transport.request({ op: "decide", input: workloads[0] }),
         /Uninitialized/,
       );
+      transport.close();
+      transport = await target();
       await assert.rejects(
         transport.request({
           op: "create",
@@ -145,6 +147,8 @@ test("Rust targets preserve selection ordering, loop state, and Random draws", a
         }),
         /version/,
       );
+      transport.close();
+      transport = await target();
       await assert.rejects(
         transport.request({
           op: "create",
@@ -154,6 +158,8 @@ test("Rust targets preserve selection ordering, loop state, and Random draws", a
         }),
         /Configuration/,
       );
+      transport.close();
+      transport = await target();
       for (const policy of ["basic", "generalist", "random"]) {
         let seed = 12345;
         let draws: number[] = [];

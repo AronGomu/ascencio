@@ -37,6 +37,7 @@ export function guardedBot(
   version: string,
   development: boolean,
   validateDeck: (deck: ParsedDeck) => void = () => {},
+  initialFailure?: { error: unknown; input: unknown },
 ): LoadedBot {
   let closed = false,
     degraded = false,
@@ -63,6 +64,7 @@ export function guardedBot(
       });
     }
   }
+  if (initialFailure) fail(initialFailure.error, initialFailure.input);
   return {
     version,
     get fallbackCount() {
@@ -294,6 +296,7 @@ async function createPinnedBot(
       `${pinned.manifest.packageVersion}:${pinned.digest}`,
       development,
       validateDeck,
+      { error, input: { op: "create", policy: selection.policy, seed } },
     );
     return Object.assign(guarded, {
       memoryBytes: () => transport?.memoryBytes?.() ?? Promise.resolve(null),

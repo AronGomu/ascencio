@@ -1,4 +1,14 @@
+import {
+  nativeTransport,
+  wasmTransport,
+} from "../../scripts/bot-experiment/transport.ts";
+import { createBasicBotModule } from "../../src/battle/worker/bot/basic-bot.ts";
 import * as runtimeBots from "../../src/battle/worker/bot-runtime/loaded-bot.ts";
+import {
+  DuelWorkerClient,
+  type DuelWorkerPort,
+} from "../../src/battle/app/DuelWorkerClient.ts";
+import { TEST_RUNTIME_SOURCE } from "../fixtures/installed-gameplay.ts";
 import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { inspect } from "node:util";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
@@ -9,7 +19,7 @@ import {
   duelOperationError,
   type DuelErrorCode,
 } from "../../src/battle/duel/contracts/duel-error.ts";
-import { duelId } from "../../src/battle/duel/contracts/ids.ts";
+import { duelId, snapshotId } from "../../src/battle/duel/contracts/ids.ts";
 import {
   createFakeOcgCoreAdapter,
   FAKE_DEPENDENCIES,
@@ -1059,6 +1069,112 @@ describe("duels started from an explicit card list", () => {
     expect(harness.counters).toEqual({ createDuel: 0, destroyDuel: 0 });
     runtime.dispose();
   });
+
+  it.each(["native", "wasm"] as const)(
+    "serializes %s bot loading, progression, pinned restore and disposal",
+    async (target) => {
+      const harness = await createFakeOcgCoreAdapter(recordedDuelProgram);
+      const instances: runtimeBots.LoadedBot[] = [];
+      const create = async (): Promise<runtimeBots.LoadedBot> => {
+        const transport =
+          target === "native" ? await nativeTransport() : await wasmTransport();
+        await transport.request({
+          op: "create",
+          contractVersion: 1,
+          policy: "basic",
+          configuration: {},
+          seed: 1,
+          cards: [],
+        });
+        const bot = runtimeBots.guardedBot(
+          transport,
+          createBasicBotModule(FAKE_DEPENDENCIES).create({}),
+          "pinned-test-version",
+          false,
+        );
+        bot.recreate = create;
+        instances.push(bot);
+        return bot;
+      };
+      const load = vi.spyOn(runtimeBots, "loadBot").mockImplementation(create);
+      const runtime = new DuelWorkerRuntime(async () => ({
+        ...createResources(harness.adapter),
+        snapshotId: snapshotId(TEST_CONTENT_REF.snapshotId),
+      }));
+      const events: DuelWorkerEvent[] = [];
+      let queue = Promise.resolve();
+      const port: DuelWorkerPort = {
+        onmessage: null,
+        onerror: null,
+        onmessageerror: null,
+        postMessage(command) {
+          queue = queue.then(async () => {
+            for (const event of await runtime.handle(command))
+              port.onmessage?.({ data: event } as MessageEvent);
+          });
+        },
+        terminate() {
+          runtime.dispose();
+        },
+      };
+      const client = new DuelWorkerClient({
+        workerFactory: () => port,
+        logger: { info() {}, error() {} },
+      });
+      client.subscribe(({ event }) => events.push(event));
+      async function takePrompt() {
+        await vi.waitFor(() =>
+          expect(events.some((e) => e.type === "prompt")).toBe(true),
+        );
+        const prompt = events.find((e) => e.type === "prompt");
+        events.length = 0;
+        if (prompt?.type !== "prompt") throw new Error("Missing prompt");
+        return prompt.prompt;
+      }
+      try {
+        expect(client.initialize(TEST_RUNTIME_SOURCE)).toBe(true);
+        await vi.waitFor(() =>
+          expect(events.some((e) => e.type === "ready")).toBe(true),
+        );
+        expect(
+          client.startDuel(
+            START_FAKE_DUEL.duelId,
+            START_FAKE_DUEL.player,
+            START_FAKE_DUEL.opponent,
+            {
+              runtime: target,
+              packageId: "ascencio.reference",
+              policy: "basic",
+            },
+          ),
+        ).not.toBeNull();
+        const first = await takePrompt();
+        expect(client.respond(first.id, [first.choices[0]!.id])).toBe(true);
+        const next = await takePrompt();
+        expect(client.respond(next.id, [next.choices[0]!.id])).toBe(true);
+        await vi.waitFor(() =>
+          expect(events).toContainEqual(
+            expect.objectContaining({ type: "error", canRestore: true }),
+          ),
+        );
+        expect(client.restore()).toBe(true);
+        await vi.waitFor(() =>
+          expect(events).toContainEqual(
+            expect.objectContaining({ type: "restored" }),
+          ),
+        );
+        expect(instances).toHaveLength(2);
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(instances.every((bot) => bot.fallbackCount === 0)).toBe(true);
+        expect(harness.counters.createDuel).toBe(2);
+      } finally {
+        await client.dispose();
+        runtime.dispose();
+        load.mockRestore();
+      }
+      expect(harness.counters.destroyDuel).toBe(2);
+    },
+  );
 
   it("rebuilds a failed duel from its own recorded responses", async () => {
     const harness = await createFakeOcgCoreAdapter(recordedDuelProgram);

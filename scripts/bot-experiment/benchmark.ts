@@ -179,7 +179,7 @@ for (const target of ["typescript", "wasm", "native"]) {
       target === "typescript"
         ? "same-process JSON loopback"
         : target === "wasm"
-          ? "Node to WASM linear-memory copy and JSON"
+          ? "Node main → preemptible Worker thread structured clone → WASM linear-memory JSON; bounded requests"
           : "Node to native child stdin/stdout JSON",
   });
 }

@@ -18,9 +18,15 @@ worker.onmessage = async (event) => {
     };
     let result: unknown;
     try {
-      if (!api.measureUserAgentSpecificMemory)
-        throw new Error("measureUserAgentSpecificMemory unavailable");
-      result = await api.measureUserAgentSpecificMemory();
+      if (params.has("holdMemory")) {
+        result = {
+          method: "External Linux process-tree RSS sampling; bot retained",
+        };
+      } else {
+        if (!api.measureUserAgentSpecificMemory)
+          throw new Error("measureUserAgentSpecificMemory unavailable");
+        result = await api.measureUserAgentSpecificMemory();
+      }
     } catch (error) {
       result = { error: String(error) };
     }
@@ -39,7 +45,7 @@ worker.onmessage = async (event) => {
       method: "POST",
       body: JSON.stringify(report),
     });
-    worker.terminate();
+    if (!params.has("holdMemory")) worker.terminate();
     return;
   }
 

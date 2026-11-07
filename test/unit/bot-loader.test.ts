@@ -55,3 +55,22 @@ it("reports missing required packages before a duel can load", async () => {
   ).rejects.toThrow(/Install/);
   expect(createWasmTransport).not.toHaveBeenCalled();
 });
+
+it("counts setup failures immediately even before any engine decision", async () => {
+  vi.mocked(botHostRpc).mockResolvedValue({
+    manifest: { packageVersion: "1" },
+    digest: "pinned",
+    bytes: new Uint8Array([1]),
+  });
+  vi.mocked(createWasmTransport).mockRejectedValue(
+    new Error("compile failure"),
+  );
+  const bot = await loadBot(
+    { runtime: "wasm", packageId: "test.ai", policy: "basic" },
+    FAKE_DEPENDENCIES,
+    false,
+  );
+  expect(bot.fallbackCount).toBe(1);
+  expect(bot.failures).toEqual([]);
+  bot.dispose();
+});

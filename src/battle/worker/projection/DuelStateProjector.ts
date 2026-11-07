@@ -337,11 +337,22 @@ export class DuelStateProjector {
         ) {
           const endpoint =
             Number(message.from.location) === 0 ? message.to : message.from;
-          if (endpoint.location !== EngineLocation.MONSTER)
-            throw new Error("Token MOVE must name a monster zone");
+          const removing = Number(message.to.location) === 0;
+          if (
+            endpoint.location !== EngineLocation.MONSTER &&
+            !(removing && endpoint.location === EngineLocation.SPELL_TRAP)
+          )
+            throw new Error(
+              "Token MOVE must name a monster zone or an equipped token",
+            );
           const player = this.#players[endpoint.controller];
-          if (Number(message.to.location) === 0) {
-            removePublicCard(player, "monster", endpoint.sequence);
+          if (removing) {
+            // A token equipped by an effect ceases to exist from the S/T zone.
+            removePublicCard(
+              player,
+              engineLocation(endpoint.location),
+              endpoint.sequence,
+            );
           } else {
             if (
               findPublicCard(player, "monster", endpoint.sequence) !== undefined

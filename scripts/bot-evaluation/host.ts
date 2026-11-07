@@ -26,6 +26,9 @@ import type { BotGameObservation } from "../../src/battle/worker/bot/bot-contrac
 import type { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 interface Command {
   type: string;
+  critical?: boolean;
+  capture?: boolean;
+  seed?: [string, string, string, string];
   snapshot: string;
   codes: number[];
   bots: { module: string; config: Record<string, string> }[];
@@ -117,7 +120,20 @@ async function game(command: Command) {
             playerExtraOrder: command.orders[0].extra,
             opponentExtraOrder: command.orders[1].extra,
           }
-        : { mode: "production", rules: command.profile },
+        : {
+            mode: "production",
+            rules: command.profile,
+            ...(command.seed
+              ? {
+                  seed: command.seed.map(BigInt) as [
+                    bigint,
+                    bigint,
+                    bigint,
+                    bigint,
+                  ],
+                }
+              : {}),
+          },
       onEngineDiagnostic: (e) =>
         send({
           type: "diagnostic",
@@ -160,7 +176,14 @@ async function game(command: Command) {
           const projectionStart = performance.now();
           const observer = observers[actor]!;
           const before = previousStates[actor]!;
-          const update = observer.apply(message);
+          let update;
+          try {
+            update = observer.apply(message);
+          } catch (error) {
+            throw new Error(
+              `Projection failed for ${JSON.stringify(message)}: ${String(error)}`,
+            );
+          }
           const after = observer.snapshot();
           previousStates[actor] = after;
           turns = after.turn;
@@ -294,6 +317,9 @@ async function game(command: Command) {
             observers[actor]!.takeEvents(),
           ),
         };
+        const capturedInput = command.capture
+          ? structuredClone(input)
+          : undefined;
         // The repository-owned basic policy is read-only; its fresh instance
         // may share immutable observation data, as in the actual runtime.
         const trusted =
@@ -302,6 +328,15 @@ async function game(command: Command) {
           trusted ? input : structuredClone(input),
         );
         const duration = performance.now() - botStart;
+        if (command.capture)
+          send({
+            type: "captured_decision",
+            actor,
+            input: capturedInput,
+            decision,
+            configuration: artifacts[command.bot_order[actor]]!.config,
+            randomDraws: [],
+          });
         botTime += duration;
         send({
           type: "attempted_response",
@@ -389,6 +424,7 @@ for await (const line of createInterface({
         command.snapshot,
         command.codes,
         command.bots,
+        command.critical,
       );
       dependencies = loaded.dependencies;
       artifacts = loaded.artifacts;

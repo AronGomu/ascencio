@@ -23,6 +23,7 @@ pub fn digest() -> Result<String> {
     let mut records = Vec::new();
     for path in [
         "scripts/bot-evaluation",
+        "scripts/bot-improvement",
         "src/battle",
         "src/storage",
         "src/decks",

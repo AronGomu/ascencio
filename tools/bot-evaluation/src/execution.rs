@@ -32,7 +32,7 @@ pub(crate) fn play(
     let swapped = game["starter"] == "b";
     let order = if swapped { [1, 0] } else { [0, 1] };
     let start = Instant::now();
-    let sent = host.send(&json!({"type":"game","game_id":game["game_id"],"profile":c.profile,"limits":c.limits,"decks":[decks[order[0]],decks[order[1]]],"orders":orders,"bot_order":order}));
+    let sent = host.send(&json!({"type":"game","game_id":game["game_id"],"profile":c.profile,"limits":c.limits,"decks":[decks[order[0]],decks[order[1]]],"orders":orders,"bot_order":order,"fixture":c.frozen.as_ref().map(|f| &f["match"]["games"][game["number"].as_u64().unwrap() as usize - 1])}));
     let mut records=[0,1].map(|i|json!({"configuration_sha256":identity::digest(&config::deck_doc(&decks[i])),"game_id":game["game_id"],"stage":game["stage"],"starting_player":game["starter"],"status":"failed","initial":null,"timeline":{"entry":[]},"result":{}}));
     let mut checkpoint = json!({"captured_at":now(),"pending_prompt":null,"attempted_response":null,"recent_engine_events":{"entry":[]},"private_engine_state":null,"bot_debug_state":null,"player":null});
     let mut deadline =
@@ -305,10 +305,17 @@ pub(crate) fn validate_side(
     original: &Value,
     result: &Value,
 ) -> Result<()> {
-    for deck in result["decks"]
+    for (i, deck) in result["decks"]
         .as_array()
         .ok_or("Missing sideboard decks")?
+        .iter()
+        .enumerate()
     {
+        let original = c
+            .frozen
+            .as_ref()
+            .map(|f| &f["decks"][i])
+            .unwrap_or(original);
         config::validate_deck(deck, &ready["cards"], &c.rules)?;
         let mut a = vec![];
         let mut b = vec![];
@@ -345,7 +352,7 @@ pub(crate) fn sideboard(
     record: &mut Value,
     checkpoint: &mut Value,
 ) -> Result<()> {
-    host.send(&json!({"type":"sideboard","decks":[c.deck,c.deck],"histories":[history(&reports[0]),history(&reports[1])]}))?;
+    host.send(&json!({"type":"sideboard","decks":c.frozen.as_ref().map(|f| f["decks"].clone()).unwrap_or(json!([c.deck,c.deck])),"botSeeds":c.frozen.as_ref().map(|f| &f["match"]["sideboardSeeds"]),"histories":[history(&reports[0]),history(&reports[1])]}))?;
     let limit = Duration::from_millis(xml::integer(&c.limits["sideboarding_wall_time_ms"])?);
     let mut deadline = Instant::now() + limit;
     let mut recovered = false;
@@ -422,6 +429,7 @@ mod tests {
             output: Default::default(),
             fixture: None,
             target: 1000.0,
+            frozen: None,
         };
         let game =
             json!({"game_id":"match-000001-game-1","number":1,"stage":"pre_side","starter":"a"});

@@ -1,0 +1,14 @@
+{
+  "utc": "2026-11-07T20:50:51Z",
+  "loadAverage": [
+    0.79443359375,
+    2.59033203125,
+    3.20947265625
+  ],
+  "heavyBuildOrTestProcesses": [],
+  "codeSha": "894114bb45486510d0bcc86e4e590e659a3e4555",
+  "matchesPerStage": 24,
+  "gamesPerStage": 96,
+  "repeats": 1,
+  "note": "Owner override: only first 24 frozen fixtures per stage. Other heavy agent work remains deferred. Full-size partial evidence retained separately."
+}

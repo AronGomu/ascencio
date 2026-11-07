@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "machineIdentity": "cb4ba3e37f491dfa6a415dbdf080e29ec4d6d84344819100d08d857c5bde940e",
+  "resources": {
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 7 7700 8-Core Processor",
+    "logical": 16,
+    "physical": 8,
+    "node": "v26.12.0",
+    "usable": 8,
+    "identity": "cb4ba3e37f491dfa6a415dbdf080e29ec4d6d84344819100d08d857c5bde940e"
+  },
+  "workers": 6,
+  "evidence": "/home/aron/.local/share/ascencio/bot-evaluation-evidence/aro2-18-20261107/benchmark.json"
+}

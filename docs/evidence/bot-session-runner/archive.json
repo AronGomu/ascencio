@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "measuredCommit": "894114bb45486510d0bcc86e4e590e659a3e4555",
+  "archive": "/home/aron/.local/share/ascencio/bot-evaluation-evidence/aro2-18-20261107/evidence.tar.zst",
+  "bytes": 532045554,
+  "sha256": "ff7afb6f0a5e250657de7d5466a48e736f87faa61ac1f97945bcb5670442e5c1",
+  "contents": [
+    "all four generated/bot-tuning/aro2-18* trees, including the preserved 500-match comparison",
+    "frozen content, engine, bots, decks and 500-fixture manifest",
+    "complete and interrupted XML evidence and control ledgers",
+    "test/build/benchmark logs under .tmp/aro2-18",
+    "measured-source.tar from the measured commit",
+    "compiled evaluator binary"
+  ],
+  "replayIdentity": "8a5228214b91e0bda1e43f35533da8770ef3101b306acd5028232e11c569bf91"
+}

@@ -61,9 +61,10 @@ You are the main improvement orchestrator.
 - If setup fails: Stop with the script error.
 - `session`, `session-config` = Read `session` and `config` from `setup-result`.
 - `accepted-bot` = Read `accepted` from `session-config`.
-- `matches-command` = Resolve the documented fixture-aware evaluator entry point.
-- Require: `matches-command` consumes the versioned session contract; otherwise stop with the missing runner capability.
-- `runner-identity` = Resolve the runner version covering its execution semantics.
+- `matches-command` = `npm run bot:matches -- --session <session> --iteration <iteration-number> --role control|candidate --out <session>/evaluations/<unique-output> --workers auto`.
+- Pass `--candidate SNAPSHOT.json` and optional `--self SNAPSHOT.json` for explicit archived overrides using `RunnerSnapshot`; the prepared accepted archive is the default.
+- `runner-identity` = `frozen-rust-match-pool/v1` for newly prepared iterations.
+- For local tuning: Run `npm run bot:matches:benchmark -- --session <session> --out <session>/benchmarks/<unique-run> --matches 24 --repeats 1`; allow eight match workers; each stage uses fresh accounting state.
 - `baseline-receipt` = None.
 - `iteration-number` = 1.
 - Returns: `session`, `accepted-bot`, `matches-command`, `runner-identity`, `baseline-receipt`, `iteration-number`.

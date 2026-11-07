@@ -1,0 +1,8 @@
+{
+  "id": "ascencio.reference",
+  "packageVersion": "0.1.0",
+  "contractVersion": 1,
+  "source": "ai/Cargo.toml",
+  "wasm": "dist/ai.wasm",
+  "policies": ["basic", "generalist", "random"]
+}

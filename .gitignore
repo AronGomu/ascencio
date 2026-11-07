@@ -46,3 +46,6 @@ tauri/gen/
 .pi-subagents/
 .tmp/
 .cptr
+
+# Local Rust bot experiment builds
+assets/ai-bots/*/ai/target/

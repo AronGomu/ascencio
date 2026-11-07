@@ -1,0 +1,190 @@
+{
+  "scope": "Evaluator replay only; browser and Worker-to-Tauri not measured",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 7 7700 8-Core Processor",
+    "logicalCpus": 16,
+    "totalMemory": 32673456128
+  },
+  "toolchain": {
+    "node": "v26.12.0",
+    "rustBuild": {
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "profile": "release",
+      "wasmMaximumMemoryBytes": 536870912,
+      "files": [
+        {
+          "path": "assets/ai-bots/reference/ai/target/release/ascencio-reference-bot",
+          "sha256": "b145c8f92d369c7645b2ee17b35db37ad6289f4f01d060d7a97d84fa09ecbbed"
+        },
+        {
+          "path": "assets/ai-bots/reference/dist/ai.wasm",
+          "sha256": "d10f6000393ab8db066e9551ce40e7c4431815660bff43ee87773b59078c61dc"
+        }
+      ]
+    }
+  },
+  "repetitions": 3,
+  "warmup": 1,
+  "timing": "performance.now host monotonic milliseconds; Rust Instant compute nanoseconds; WASM execute export timed separately from prepare/serialize. Input gzip/read/parse and parity assertions excluded from decision timings. No per-decision evidence I/O.",
+  "limitations": [
+    "Native compute includes result construction; wasm execute includes envelope construction",
+    "Cold TypeScript includes esbuild, native process construction excludes ready handshake, WASM includes compilation/instantiation: these are not directly comparable startup measurements",
+    "Memory scopes differ; no comparative memory efficiency claim",
+    "Complete duel throughput is not measured by this replay benchmark"
+  ],
+  "results": [
+    {
+      "target": "typescript",
+      "computeMs": {
+        "n": 66474,
+        "mean": 0.0027166228450155707,
+        "p50": 0.002034000001003733,
+        "p95": 0.005740999999034102,
+        "min": 0.0010419999998703133,
+        "max": 0.27035499999965396,
+        "stddev": 0.00325584959176204
+      },
+      "roundtripMs": {
+        "n": 66474,
+        "mean": 0.05734492517375562,
+        "p50": 0.049892999999428866,
+        "p95": 0.06455999999889173,
+        "min": 0.039994999999180436,
+        "max": 5.0506249999998545,
+        "stddev": 0.12331838987777703
+      },
+      "coldConstructPairMs": {
+        "n": 4,
+        "mean": 9.970971999999982,
+        "p50": 9.45105699999931,
+        "p95": 13.127195999999998,
+        "min": 8.489552999999432,
+        "max": 13.127195999999998,
+        "stddev": 1.854752996429824
+      },
+      "workloadDecisionMs": {
+        "n": 3,
+        "mean": 1270.6488520000769,
+        "p50": 1270.844437000067,
+        "p95": 1283.6266180000885,
+        "min": 1257.4755010000754,
+        "max": 1283.6266180000885,
+        "stddev": 10.677044541328186
+      },
+      "sampledMemoryBytes": {
+        "n": 160,
+        "mean": 635191884.8,
+        "p50": 614064128,
+        "p95": 879411200,
+        "min": 232083456,
+        "max": 909893632,
+        "stddev": 129098475.95420368
+      },
+      "memoryMeaning": "whole Node process RSS including fixture reader",
+      "transport": "same-process JSON loopback"
+    },
+    {
+      "target": "wasm",
+      "computeMs": {
+        "n": 66474,
+        "mean": 0.005955816228899998,
+        "p50": 0.0053299999999580905,
+        "p95": 0.011420999995607417,
+        "min": 0.0019739999988814816,
+        "max": 0.22811599999840837,
+        "stddev": 0.0030342718183979543
+      },
+      "roundtripMs": {
+        "n": 66474,
+        "mean": 0.13746983822242997,
+        "p50": 0.11239999999816064,
+        "p95": 0.13190699999540811,
+        "min": 0.09415499999886379,
+        "max": 10.211416000001918,
+        "stddev": 0.3491650954400131
+      },
+      "coldConstructPairMs": {
+        "n": 4,
+        "mean": 0.8509577499999068,
+        "p50": 0.817164000000048,
+        "p95": 1.025524000000587,
+        "min": 0.7471440000008442,
+        "max": 1.025524000000587,
+        "stddev": 0.1045928260791739
+      },
+      "workloadDecisionMs": {
+        "n": 3,
+        "mean": 3046.0566753326034,
+        "p50": 3043.73389999917,
+        "p95": 3060.2296449993737,
+        "min": 3034.206480999266,
+        "max": 3060.2296449993737,
+        "stddev": 10.750123412666102
+      },
+      "sampledMemoryBytes": {
+        "n": 160,
+        "mean": 64944537.6,
+        "p50": 64946176,
+        "p95": 64946176,
+        "min": 64880640,
+        "max": 64946176,
+        "stddev": 10231.804720575945
+      },
+      "memoryMeaning": "one instance committed linear memory",
+      "transport": "Node to WASM linear-memory copy and JSON"
+    },
+    {
+      "target": "native",
+      "computeMs": {
+        "n": 66474,
+        "mean": 0.004732456524355374,
+        "p50": 0.003917,
+        "p95": 0.010259,
+        "min": 0.000941,
+        "max": 0.222615,
+        "stddev": 0.0032775163968158786
+      },
+      "roundtripMs": {
+        "n": 66474,
+        "mean": 0.11870873269248249,
+        "p50": 0.09401499999512453,
+        "p95": 0.1335289999988163,
+        "min": 0.07001100000343286,
+        "max": 16.775998999990406,
+        "stddev": 0.33505813866623496
+      },
+      "coldConstructPairMs": {
+        "n": 4,
+        "mean": 8.858607250002024,
+        "p50": 9.642976000002818,
+        "p95": 9.688010000005306,
+        "min": 6.748374000002514,
+        "max": 9.688010000005306,
+        "stddev": 1.2250206014903218
+      },
+      "workloadDecisionMs": {
+        "n": 3,
+        "mean": 2630.3480990000267,
+        "p50": 2625.7670449991856,
+        "p95": 2709.6628600008407,
+        "min": 2555.614392000054,
+        "max": 2709.6628600008407,
+        "stddev": 62.973392080392784
+      },
+      "sampledMemoryBytes": {
+        "n": 160,
+        "mean": 104129254.4,
+        "p50": 104259584,
+        "p95": 104288256,
+        "min": 99368960,
+        "max": 104292352,
+        "stddev": 761338.3010950128
+      },
+      "memoryMeaning": "one native bot child RSS; Linux /proc",
+      "transport": "Node to native child stdin/stdout JSON"
+    }
+  ]
+}

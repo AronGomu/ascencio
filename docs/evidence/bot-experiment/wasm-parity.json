@@ -1,0 +1,9 @@
+{
+  "target": "wasm",
+  "games": 40,
+  "decisions": 22158,
+  "sideboards": 20,
+  "unexpectedFallbacks": 0,
+  "elapsedMs": 11586.293236,
+  "node": "v26.12.0"
+}

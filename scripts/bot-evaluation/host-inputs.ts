@@ -42,6 +42,10 @@ export async function loadInputs(
       })();
   const artifacts = await Promise.all(
     bots.map(async (bot) => {
+      if (
+        /^experiment:(native|wasm):(basic|generalist|random)$/.test(bot.module)
+      )
+        return { ...bot, source: "", dependencies: [] };
       const entry =
         bot.module === "builtin:basic" ||
         bot.module === "builtin:generalist" ||

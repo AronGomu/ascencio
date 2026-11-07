@@ -1,6 +1,7 @@
+import type { HostMessage } from "./evidence.ts";
 /** One-time reference acquisition. Never overwrites an existing baseline. */
 import { spawn, execFileSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, access } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import { createGzip } from "node:zlib";
 import { createWriteStream } from "node:fs";
@@ -17,6 +18,15 @@ if (!root)
   );
 const output = "docs/evidence/bot-experiment/typescript-baseline.jsonl.gz";
 const base = "2e9489fb33b4d60cd4c9a541154362059c8f4bb7";
+try {
+  await access(output);
+  throw new Error(
+    "Reference already exists; replay it instead of regenerating matches",
+  );
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+}
+
 // All transitive bot sources must remain at the reference revision.
 execFileSync("git", [
   "diff",
@@ -39,11 +49,11 @@ const child = spawn(
 const lines = createInterface({ input: child.stdout })[Symbol.asyncIterator]();
 async function command(value: unknown, terminal: string) {
   child.stdin.write(JSON.stringify(value) + "\n");
-  const messages: any[] = [];
+  const messages: HostMessage[] = [];
   for (;;) {
     const line = await lines.next();
     if (line.done) throw new Error("Host exited before " + terminal);
-    const message = JSON.parse(line.value);
+    const message = JSON.parse(line.value) as HostMessage;
     if (["failure", "host_error"].includes(message.type))
       throw new Error(JSON.stringify(message));
     messages.push(message);
@@ -167,7 +177,7 @@ try {
             request,
             messages,
           });
-          decks = messages.at(-1).decks;
+          decks = messages.at(-1)!.decks;
         }
       }
     }

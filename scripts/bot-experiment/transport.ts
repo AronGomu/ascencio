@@ -11,7 +11,7 @@ export interface ExperimentTransport {
 }
 export async function nativeTransport(): Promise<ExperimentTransport> {
   const child = spawn(
-    "assets/ai-bots/reference/ai/target/release/ascencio-reference-bot",
+    `assets/ai-bots/reference/ai/target/release/ascencio-reference-bot${process.platform === "win32" ? ".exe" : ""}`,
     [],
     { stdio: ["pipe", "pipe", "inherit"] },
   );

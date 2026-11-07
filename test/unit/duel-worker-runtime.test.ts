@@ -1,3 +1,4 @@
+import * as runtimeBots from "../../src/battle/worker/bot-runtime/loaded-bot.ts";
 import { TEST_CONTENT_REF } from "../fixtures/installed-gameplay.ts";
 import { inspect } from "node:util";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
@@ -1099,6 +1100,21 @@ describe("duels started from an explicit card list", () => {
         },
       ]);
       const before = runtime.diagnosticTrace();
+      const load = vi.spyOn(runtimeBots, "loadBot");
+      try {
+        const refused = await runtime.handle({
+          ...START_FAKE_DUEL,
+          duelId: "unrelated-invalid-preset",
+          bot: { runtime: "wasm", packageId: "other.ai", policy: "generalist" },
+        });
+        expect(refused).toContainEqual(
+          expect.objectContaining({ type: "error" }),
+        );
+        expect(load).not.toHaveBeenCalled();
+        expect(runtime.diagnosticTrace()).toEqual(before);
+      } finally {
+        load.mockRestore();
+      }
 
       const restored = await runtime.handle({ type: "restore" });
       expect(restored.map((event) => event.type)).toEqual([

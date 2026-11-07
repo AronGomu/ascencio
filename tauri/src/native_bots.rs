@@ -104,35 +104,66 @@ fn roots(app: &tauri::AppHandle) -> Result<Vec<PathBuf>, String> {
             .join("ai-bots"),
     ])
 }
-fn packages(app: &tauri::AppHandle) -> Result<BTreeMap<String, Value>, String> {
-    let mut result = BTreeMap::new();
-    for root in roots(app)? {
+#[derive(Default)]
+struct PackageInventory {
+    valid: BTreeMap<String, Value>,
+    failures: BTreeMap<String, String>,
+}
+fn scan_packages(roots: &[PathBuf]) -> Result<PackageInventory, String> {
+    let mut result = PackageInventory::default();
+    for root in roots {
         if !root.exists() {
             continue;
         }
         let mut identities = std::collections::BTreeSet::new();
-        for entry in fs::read_dir(root).map_err(|e| e.to_string())? {
-            let entry = entry.map_err(|e| e.to_string())?;
+        let mut entries = fs::read_dir(root)
+            .map_err(|e| format!("Cannot read AI directory {}: {e}", root.display()))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?;
+        entries.sort_by_key(|entry| entry.file_name());
+        for entry in entries {
             if !entry.file_type().map_err(|e| e.to_string())?.is_dir()
                 || !entry.path().join("bot.json").exists()
             {
                 continue;
             }
-            let value = read_package(&entry.path())?;
-            let id = value["manifest"]["id"].as_str().unwrap().to_owned();
-            if !identities.insert(id.clone()) {
-                return Err(format!(
-                    "Duplicate AI identity {id}; remove one package folder"
-                ));
+            // Even invalid executables can have a recognizable manifest identity.
+            // Bound this diagnostic read just like the primary manifest reader.
+            let manifest_path = entry.path().join("bot.json");
+            let identity = fs::symlink_metadata(&manifest_path)
+                .ok()
+                .filter(|m| m.is_file() && !m.file_type().is_symlink() && m.len() <= 16384)
+                .and_then(|_| fs::read(&manifest_path).ok())
+                .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+                .and_then(|m| m["id"].as_str().map(str::to_owned))
+                .unwrap_or_else(|| entry.file_name().to_string_lossy().into_owned());
+            let failure = if !identities.insert(identity.clone()) {
+                Err(format!(
+                    "Duplicate AI identity {identity}; remove one package folder"
+                ))
+            } else {
+                read_package(&entry.path())
+            };
+            match failure {
+                Ok(value) if !result.failures.contains_key(&identity) => {
+                    result.valid.insert(identity, value);
+                }
+                Ok(_) => {}
+                Err(error) => {
+                    let detail = format!("AI {identity} in {} is unavailable: {error}. Repair or remove that package folder and retry.", entry.path().display());
+                    eprintln!("{detail}");
+                    result.valid.remove(&identity);
+                    result.failures.insert(identity, detail);
+                }
             }
-            result.insert(id, value);
         }
     }
     Ok(result)
 }
 #[tauri::command]
 pub fn native_bot_list(app: tauri::AppHandle) -> Result<Vec<Value>, String> {
-    Ok(packages(&app)?
+    Ok(scan_packages(&roots(&app)?)?
+        .valid
         .into_values()
         .map(|mut p| {
             p.as_object_mut().unwrap().remove("bytes");
@@ -142,7 +173,11 @@ pub fn native_bot_list(app: tauri::AppHandle) -> Result<Vec<Value>, String> {
 }
 #[tauri::command]
 pub fn native_bot_pin(app: tauri::AppHandle, id: String) -> Result<Value, String> {
-    packages(&app)?.remove(&id).ok_or(format!("Required AI {id} is missing. Install its folder in the app-data ai-bots directory and retry."))
+    let mut inventory = scan_packages(&roots(&app)?)?;
+    if let Some(error) = inventory.failures.remove(&id) {
+        return Err(error);
+    }
+    inventory.valid.remove(&id).ok_or(format!("Required AI {id} is missing. Install its folder in the app-data ai-bots directory and retry."))
 }
 struct Session {
     child: Mutex<Child>,
@@ -337,6 +372,25 @@ mod tests {
         manifest["wasm"] = json!("dist/../../outside");
         fs::write(root.join("bot.json"), manifest.to_string()).unwrap();
         assert!(read_package(&root).is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn broken_packages_do_not_hide_other_identities() {
+        let root = std::env::temp_dir().join(format!("ascencio-packages-{}", uuid::Uuid::new_v4()));
+        let good = root.join("good");
+        let broken = root.join("broken");
+        fs::create_dir_all(good.join("dist")).unwrap();
+        fs::create_dir_all(&broken).unwrap();
+        fs::write(good.join("bot.json"), json!({"id":"test.good","packageVersion":"1.0.0","contractVersion":1,"source":"ai/Cargo.toml","wasm":"dist/ai.wasm","policies":["basic"]}).to_string()).unwrap();
+        fs::write(good.join("dist/ai.wasm"), [1, 2, 3]).unwrap();
+        fs::write(broken.join("bot.json"), "invalid JSON").unwrap();
+        let inventory = scan_packages(&[root.clone()]).unwrap();
+        assert!(inventory.valid.contains_key("test.good"));
+        assert!(inventory.failures["broken"].contains("Repair or remove"));
+        fs::write(broken.join("bot.json"), json!({"id":"test.broken","packageVersion":"1.0.0","contractVersion":1,"source":"ai/Cargo.toml","wasm":"dist/missing.wasm","policies":["basic"]}).to_string()).unwrap();
+        let inventory = scan_packages(&[root.clone()]).unwrap();
+        assert!(inventory.valid.contains_key("test.good"));
+        assert!(inventory.failures.contains_key("test.broken"));
         fs::remove_dir_all(root).unwrap();
     }
     #[cfg(unix)]

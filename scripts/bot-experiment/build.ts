@@ -36,7 +36,7 @@ await copyFile(
 );
 
 const files = [
-  "assets/ai-bots/reference/ai/target/release/ascencio-reference-bot",
+  `assets/ai-bots/reference/ai/target/release/ascencio-reference-bot${process.platform === "win32" ? ".exe" : ""}`,
   "assets/ai-bots/reference/dist/ai.wasm",
 ];
 await writeFile(

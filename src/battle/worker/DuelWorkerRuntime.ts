@@ -3,10 +3,7 @@ import {
   loadedBotPolicy,
   type LoadedBot,
 } from "./bot-runtime/loaded-bot.ts";
-import {
-  DEFAULT_BOT,
-  type BotSelection,
-} from "../duel/contracts/bot-selection.ts";
+import type { BotSelection } from "../duel/contracts/bot-selection.ts";
 import type { AsyncOpponentPolicy } from "./opponent/async-opponent-policy.ts";
 import { sideboardBots as runBotSideboarding } from "./bot/bot-match.ts";
 import type {
@@ -520,35 +517,50 @@ export class DuelWorkerRuntime {
         "A duel session is already active",
       );
     }
-    this.#loadedBot?.dispose();
-    this.#loadedBot = null;
-    if (selection) {
-      const loaded = await loadBot(
-        selection ?? DEFAULT_BOT,
-        resources.dependencies,
+    // Refused starts must leave the preceding duel's restore owner untouched.
+    const decks = resolveDuelDecks(player, opponent, resources);
+    if (decks.presetId !== null && duelId !== decks.presetId)
+      throw duelOperationError(
+        "invalid_command",
+        `Unknown preset duel: ${duelId}`,
       );
-      if (this.#disposed) {
-        loaded.dispose();
-        return;
-      }
-      this.#loadedBot = loaded;
+    const prospective = selection
+      ? await loadBot(selection, resources.dependencies)
+      : null;
+    if (this.#disposed) {
+      prospective?.dispose();
+      return;
     }
     const promptIdNamespace = `${this.#runtimeId}-duel-${this.#nextDuelSequence + 1}`;
-    const controller = this.#openDuel({
-      duelId,
-      player,
-      opponent,
-      ...(this.#loadedBot
-        ? { asyncOpponentPolicy: loadedBotPolicy(this.#loadedBot) }
-        : {}),
-      seed: createProductionSeed(),
-      snapshotId: resources.snapshotId,
-      promptIdNamespace,
-      publishTrace: (trace) => {
-        this.#lastTrace = trace;
-      },
-    });
-    if (controller === null) return;
+    let committed = false;
+    let controller: HeadlessDuelController | null;
+    try {
+      controller = this.#openDuel({
+        duelId,
+        player,
+        opponent,
+        ...(prospective
+          ? { asyncOpponentPolicy: loadedBotPolicy(prospective) }
+          : {}),
+        seed: createProductionSeed(),
+        snapshotId: resources.snapshotId,
+        promptIdNamespace,
+        publishTrace: (trace) => {
+          if (committed) this.#lastTrace = trace;
+        },
+      });
+    } catch (error) {
+      prospective?.dispose();
+      throw error;
+    }
+    if (controller === null) {
+      prospective?.dispose();
+      return;
+    }
+    this.#loadedBot?.dispose();
+    this.#loadedBot = prospective;
+    committed = true;
+    this.#lastTrace = controller.trace();
     this.#nextDuelSequence += 1;
     this.#nextEventSequence = 0;
     this.#controller = controller;
@@ -730,8 +742,9 @@ export class DuelWorkerRuntime {
     }
     let handedOver = false;
     let controller: HeadlessDuelController | null = null;
+    let resumed: LoadedBot | undefined;
     try {
-      const resumed = await this.#loadedBot?.recreate?.();
+      resumed = await this.#loadedBot?.recreate?.();
       if (this.#disposed) {
         resumed?.dispose();
         return;
@@ -741,7 +754,6 @@ export class DuelWorkerRuntime {
         botAsOpponentPolicy(this.#newBot(), this.#configuredBot !== undefined),
       );
       const asyncPolicy = resumed ? loadedBotPolicy(resumed) : undefined;
-      if (resumed) this.#loadedBot = resumed;
       controller = this.#openDuel({
         duelId: start.duelId,
         player: start.player,
@@ -795,6 +807,10 @@ export class DuelWorkerRuntime {
         return;
       }
       handedOver = true;
+      if (resumed) {
+        this.#loadedBot?.dispose();
+        this.#loadedBot = resumed;
+      }
       this.#controller = controller;
       this.#lastTrace = controller.trace();
       events.push(
@@ -827,6 +843,8 @@ export class DuelWorkerRuntime {
         reason,
         ...(detail.length === 0 ? {} : { detail }),
       });
+    } finally {
+      if (!handedOver) resumed?.dispose();
     }
   }
 

@@ -1,10 +1,11 @@
 /** No engine or filesystem capability is exposed to the WASM instance. */
 import { parentPort, workerData } from "node:worker_threads";
 import { createWasmExecutor } from "../../src/battle/worker/bot-runtime/wasm-executor.ts";
-const execute = await createWasmExecutor(new Uint8Array(workerData));
-parentPort!.postMessage({ ready: true });
-parentPort!.on("message", (value: unknown) => {
+const executor = createWasmExecutor(new Uint8Array(workerData));
+// Register the port before asynchronous compilation so Node keeps this worker alive.
+parentPort!.on("message", async (value: unknown) => {
   try {
+    const execute = await executor;
     parentPort!.postMessage(execute(value));
   } catch (error) {
     parentPort!.postMessage({
@@ -12,3 +13,5 @@ parentPort!.on("message", (value: unknown) => {
     });
   }
 });
+
+void executor.then(() => parentPort!.postMessage({ ready: true }));

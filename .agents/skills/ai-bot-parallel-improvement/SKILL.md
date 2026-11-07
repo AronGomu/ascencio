@@ -61,9 +61,10 @@ You are the main improvement orchestrator.
 - If setup fails: Stop with the script error.
 - `session`, `session-config` = Read `session` and `config` from `setup-result`.
 - `accepted-bot` = Read `accepted` from `session-config`.
-- `matches-command` = Resolve the documented fixture-aware evaluator entry point.
-- Require: `matches-command` consumes the versioned session contract; otherwise stop with the missing runner capability.
-- `runner-identity` = Resolve the runner version covering its execution semantics.
+- `matches-command` = `npm run bot:matches -- --session <session> --iteration <iteration-number> --role control|candidate --out <session>/evaluations/<unique-output> --workers auto`.
+- Pass `--candidate SNAPSHOT.json` and optional `--self SNAPSHOT.json` for explicit archived overrides using `RunnerSnapshot`; the prepared accepted archive is the default.
+- `runner-identity` = `frozen-rust-match-pool/v1` for newly prepared iterations.
+- For local tuning: Run `npm run bot:matches:benchmark -- --session <session> --out <session>/benchmarks/<unique-run> --matches 24 --repeats 1`; allow eight match workers; each stage uses fresh accounting state.
 - `baseline-receipt` = None.
 - `iteration-number` = 1.
 - Returns: `session`, `accepted-bot`, `matches-command`, `runner-identity`, `baseline-receipt`, `iteration-number`.
@@ -89,8 +90,11 @@ You are the main improvement orchestrator.
   - `candidate` = Read `validation.candidate`; record the proposal rationale.
   - In parallel:
     - `evaluation` = Run `matches-command` with `candidate`, frozen opponents plus the self-opponent, fixtures, and `match-workers`.
-    - Whenever a completed match becomes available: Assign it to a Luna match analyst, bounded by `analysis-workers`.
-  - Require: All 500 matches and their analyst reports are settled; otherwise preserve progress and stop with the incomplete evaluation reason.
+    - Whenever a match finalizes: Run `npm run bot:analyses -- <session> <analysis-sync-request>` using the [analysis binding contract](../../../docs/architecture/06-quality/parallel-bot-session.md#match-analysis-jobs-aro2-22) and pinned `proposal`/runner job references.
+    - For each available analyst slot: Run `npm run bot:analyses -- <session> <analysis-claim-request>` with `action: "claim"`, iteration, role, and a stable dispatch owner; assign the returned packet to `match-analyst` only when `claim` is non-null.
+    - Whenever an analyst returns: Run `npm run bot:analyses -- <session> <analysis-complete-request>` with `action: "complete"`, job, claim token and report reference; preserve validation failures for correction under the same claim.
+  - `analysis-status` = Run `npm run bot:analyses -- <session> <analysis-status-request>` with `action: "status"`, iteration and role.
+  - Require: All 500 matches are settled and `analysis-status.complete` is true; otherwise preserve progress and stop with the incomplete evaluation reason.
   - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline-receipt`, and `proposal`.
   - `decision` = Accept or reject `candidate` using paired results, uncertainty, observed heuristic effects, and validity; retain `accepted-bot` when inconclusive.
   - Save the rationale, evidence references, and next heuristic candidates.
@@ -110,11 +114,12 @@ You are the main improvement orchestrator.
 - On owner stop or interruption: Run `npm run bot:session -- <session> <stop-request>` with `action: "stop"` and the corresponding reason from [the control contract](../../../docs/architecture/06-quality/parallel-bot-session.md#orchestrator-transitions).
 - Stop dispatching work when plan returns a stop reason.
 - Settle/cancel every running attempt through `matches-command`; preserve interrupted checkpoints.
+- Release analysis claims with `bot:analyses` only after confirming analyst termination; preserve claim tokens and completed reports across continuation.
 - `report-result` = Run `npm run bot:session -- <session> <report-request>` with `{ "action": "report" }` in `report-request`.
 - Keep agent interpretation separate from `report-result.report`.
 - Returns: `report-result.report`, `accepted-bot`.
 
 ## Agent assignments
 
-- `match-analyst`: Read one match's complete logs and `proposal`; return one report assessing heuristic activation, changed decisions, and positive, negative, or uncertain impact, followed by factual consequential plays without strategic judgments. Mark unavailable evidence explicitly.
+- `match-analyst`: Read the claimed packet, its pinned logs and proposal; return the [four-section JSON report](../../../docs/architecture/06-quality/parallel-bot-session.md#match-analysis-jobs-aro2-22) with actual event tuples and explicit unavailable evidence.
 - `synthesis-agent`: Read all match reports and aggregate candidate/baseline results; return recurring facts, keep/reject advice with uncertainty, and ranked heuristic proposals supported by evidence.

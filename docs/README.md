@@ -12,7 +12,7 @@ This directory contains current project documentation and historical context. Ro
 
 [`startup-loading-messages.md`](startup-loading-messages.md) maps each startup heading to its work and explains how to review wording in a paused visual preview.
 
-[Frozen parallel evaluation setup](architecture/06-quality/parallel-bot-session.md) defines fixtures, iterations, candidate validation, recoverable decisions, baseline receipts, stop/resume, execution accounting and factual reports.
+[Frozen parallel evaluation setup](architecture/06-quality/parallel-bot-session.md) defines fixtures, iterations, candidate validation, recoverable decisions, baseline receipts, stop/resume, execution accounting, finalized-match analysis queues and factual reports.
 
 [Bounded bot improvement](architecture/06-quality/bot-improvement-loop.md) documents the fixed-deck coding-agent loop, configuration, isolation, promotion and recovery.
 
@@ -205,3 +205,7 @@ Superseded records retained at stable paths for old plan links:
 Current module authoring and campaign prerequisites: [Content modules](assets/content-modules.md), [ADR-102](ADR/102_ADR_content_modules_and_campaign_facts.md).
 
 - [Portable Rust bot experiment](feature/rust-bot-experiment.md): packages, selection, runtime boundaries, builds and measured evidence.
+
+- [Frozen real-engine match pool, resume and progressive local tuning](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
+
+- [ARO2-18 frozen-runner local timing, latency and evidence](evidence/bot-session-runner/results.md).

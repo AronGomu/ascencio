@@ -1,5 +1,7 @@
 import test from "node:test";
 import { controlSession } from "../../scripts/bot-improvement/control-session.ts";
+import { executeMatches } from "../../scripts/bot-improvement/run-matches.ts";
+import { bindMatches } from "../../scripts/bot-improvement/match-session.ts";
 import { applyDecision } from "../../scripts/bot-improvement/apply-decision.ts";
 import type { CandidateDecisionRequest } from "../../scripts/bot-improvement/decision-contract.ts";
 import assert from "node:assert/strict";
@@ -665,6 +667,95 @@ test("acceptance cannot switch the executable recorded by candidate evaluation a
     );
     const result = await applyDecision({ ...f.request, decision: "reject" });
     assert.equal(result.accepted.identity, f.prepared.accepted.identity);
+  } finally {
+    await rm(f.root, { recursive: true, force: true });
+  }
+});
+
+test("runner bridge settles validated candidates before decision and binds the promoted next iteration", async () => {
+  const f = await validatedSession(false);
+  try {
+    const snapshot = path.join(f.root, "runner-snapshot.json");
+    await save(snapshot, { schemaVersion: 1, ...f.validation.candidate });
+    // Exercise executeMatches and its actual persistent control bridge without
+    // playing games: the fake evaluator leaves a failed, fully settled attempt.
+    const binary = path.join(f.root, "fake-evaluator.mjs");
+    await writeFile(
+      binary,
+      String.raw`#!${process.execPath}
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+const job = JSON.parse(readFileSync(process.argv[process.argv.indexOf("--job") + 1]));
+const out = process.argv[process.argv.indexOf("--out") + 1];
+const match = job.matches[0].match.id;
+const commands = [
+  { type: "initialize", binding: job.sessionControl },
+  { type: "reserve", match },
+  { type: "settle", match, attempt: 1, status: "failed", games: [] },
+];
+const bridge = spawnSync(process.execPath, [${JSON.stringify(path.resolve("scripts/bot-improvement/runner-control-host.ts"))}], {
+  input: commands.map(c => JSON.stringify(c)).join("\n") + "\n", encoding: "utf8"
+});
+if (bridge.status !== 0) throw new Error(bridge.stderr);
+const replies = bridge.stdout.trim().split("\n").map(line => JSON.parse(line));
+if (replies.some(r => r.type !== "control") || !replies[1].plan.reservation?.launch || replies[2].plan.running.length) throw new Error(bridge.stdout);
+mkdirSync(out, { recursive: true });
+writeFileSync(out + "/result.json", JSON.stringify({ completedGames: 0, failedMatches: 1 }));
+process.exitCode = 2;
+`,
+      { mode: 0o755 },
+    );
+    const run = await executeMatches({
+      session: f.setup.session,
+      out: path.join(f.setup.session, "evaluations/candidate"),
+      candidate: snapshot,
+      workers: "1",
+      matchCount: 1,
+      binary,
+    });
+    assert.equal(run.exitCode, 2);
+    const ledger = await json(path.join(f.setup.session, "control.json"));
+    assert.equal(ledger.attempts.length, 1);
+    assert.equal(ledger.attempts[0].status, "failed");
+    assert.equal(
+      ledger.attempts[0].executableIdentity,
+      f.validation.executableIdentity,
+    );
+    assert.notEqual(
+      ledger.attempts[0].executableIdentity,
+      f.validation.candidate!.bot.identity,
+    );
+    await assert.rejects(
+      applyDecision(f.request),
+      /Finish the iteration ledger/,
+    );
+    const request = await decisionRequest(
+      f.setup.session,
+      f.prepared.manifest,
+      f.validation,
+    );
+    // Match-quality judgment stays with the orchestrator; this test checks only
+    // lifecycle and byte identity, not an endorsement of failed match evidence.
+    const outcome = await applyDecision(request);
+    assert.equal(
+      outcome.accepted.identity,
+      f.validation.candidate!.bot.identity,
+    );
+    const next = await bindMatches({
+      session: f.setup.session,
+      out: path.join(f.setup.session, "evaluations/next-control"),
+    });
+    try {
+      assert.equal(next.iteration, 2);
+      assert.equal(next.accepted.bot.identity, outcome.accepted.identity);
+      const plan = await controlSession(f.setup.session, {
+        action: "start",
+        iteration: next.iteration,
+      });
+      assert.deepEqual(plan.iterations.at(-1)?.accepted, outcome.accepted);
+    } finally {
+      await next.release();
+    }
   } finally {
     await rm(f.root, { recursive: true, force: true });
   }

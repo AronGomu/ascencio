@@ -1,3 +1,4 @@
+import { randomWords } from "../bot-improvement/session-fixtures.ts";
 import { loadCriticalInputs } from "./critical-inputs.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -89,6 +90,7 @@ const basicFactories = new WeakMap<
 export async function instantiate(
   artifact: Artifact,
   dependencies: ActiveDuelDependencies,
+  seed?: number,
 ): Promise<BotInstance> {
   const cached = basicFactories.get(artifact);
   if (cached) return cached.create(artifact.config);
@@ -107,6 +109,9 @@ export async function instantiate(
       create: (c: BotConfiguration) => BotInstance;
     };
     createGeneralistBotModule?: (d: ActiveDuelDependencies) => {
+      create: (c: BotConfiguration) => BotInstance;
+    };
+    createRandomBotModule?: (random: () => number) => {
       create: (c: BotConfiguration) => BotInstance;
     };
     createBasicBotModule?: (d: ActiveDuelDependencies) => {
@@ -130,6 +135,12 @@ export async function instantiate(
     basicFactories.set(artifact, factory);
     return factory.create(artifact.config);
   }
+  if (artifact.module === "builtin:random" && seed !== undefined) {
+    const next = randomWords(String(seed));
+    return ns.createRandomBotModule!(() => next() / 2 ** 32).create(
+      artifact.config,
+    );
+  }
   const factory =
     ns.createBotModule?.(
       vm.runInContext(
@@ -141,7 +152,14 @@ export async function instantiate(
     ns;
   if (factory.contractVersion !== 1 || typeof factory.create !== "function")
     throw new Error("Unsupported bot contract");
-  const instance = factory.create(structuredClone(artifact.config));
+  const configuration: Record<string, string | number | boolean> =
+    structuredClone(artifact.config);
+  if (seed !== undefined && "seed" in configuration) {
+    if (typeof configuration.seed !== "number")
+      throw new Error("External bot seed configuration must be numeric");
+    configuration.seed = seed;
+  }
+  const instance = factory.create(configuration);
   if (
     typeof instance.decide !== "function" ||
     typeof instance.sideboard !== "function"

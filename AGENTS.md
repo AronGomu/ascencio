@@ -52,7 +52,7 @@ ascencio/
 │   │   │   ├── testing.md            # Test strategy and verification routes
 │   │   │   ├── diagnostics.md        # Errors, traces and reproducibility
 │   │   │   ├── bot-improvement-loop.md # Bounded real-engine bot improvement loop
-│   │   │   └── parallel-bot-session.md # Setup, iteration, stop/resume and runner accounting
+│   │   │   └── parallel-bot-session.md # Setup, iterations, analysis jobs and session accounting
 │   │   └── 07-governance/            # Trust, security, distribution and extension constraints
 │   ├── ADR/                          # Recorded architecture decisions
 │   │   ├── 022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md
@@ -197,11 +197,16 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen setup, validation, decisions and session control
+│   ├── bot-improvement/              # Frozen sessions, execution, analysis, decisions and control
 │   │   ├── session-contract.ts       # Frozen setup and candidate validation schema
 │   │   ├── iteration-contract.ts     # Prepared bindings and baseline receipts
 │   │   ├── session-control-contract.ts # Stop/resume and execution accounting
 │   │   ├── prepare-iteration.ts      # Accepted snapshot, self binding and baseline reuse
+│   │   ├── analysis-contract.ts      # Analysis packets, claims and report sections
+│   │   ├── analysis-discovery.ts     # Frozen execution bindings and match packet preparation
+│   │   ├── analysis-evidence.ts      # Finalized runner XML adapter and event references
+│   │   ├── analysis-report.ts        # Structural report and reference validation
+│   │   ├── prepare-analyses.ts       # Durable bounded analysis queue; no model invocation
 │   │   ├── control-session.ts        # Admission, settlement, continuation and reports
 │   │   ├── decision-contract.ts      # Pinned orchestrator decision and outcome schema
 │   │   ├── apply-decision.ts         # Recoverable archive and atomic accepted-state commit
@@ -217,6 +222,9 @@ ascencio/
 │   ├── Cargo.toml                    # Evaluator dependencies and release settings
 │   └── src/
 │       ├── main.rs                   # Evaluate, compare, benchmark and improve commands
+│       ├── frozen_pool.rs            # Frozen-session scheduling, budgets and resume
+│       ├── frozen_match.rs           # Four-game execution through existing engine/evidence
+│       ├── frozen_evidence.rs        # Completion markers, replay hashes and integrity
 │       ├── runner.rs                 # Sequential real-engine match scheduling
 │       ├── config.rs                 # Evaluator configuration
 │       └── improvement/             # Bounded strategy improvement, persistence and statistics

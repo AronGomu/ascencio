@@ -141,13 +141,13 @@ Optional `--baseline` points to a `BaselineReceipt` produced after the runner ha
 
 `baseline.action` is `reuse` only for a complete, intact receipt with the exact comparison identity. Otherwise it is `refresh`, with `missing`, `identity-mismatch`, `incomplete`, or `corrupt` as the reason. `plan.control` is correspondingly `reuse-baseline` or `evaluate`; `plan.candidate` is always `validate-then-evaluate`. Each evaluation has 500 matches / 2000 games. Rerun preparation after producing a receipt to refresh the returned plan.
 
-A repeated invocation verifies fixed bindings and snapshot hashes, preserves candidate edits and existing evidence, and atomically replaces only the manifest's baseline decision and plan. Changed accepted or runner identities at an existing iteration number fail explicitly; choose the next number. Corrupt snapshots and conflicting destinations fail without overwriting evidence. Preparation and decisions use the shared `.session-state.lock`; preparation also retains `.iteration-preparation.lock`. New directories publish by staging and rename. Ordinary errors clean their lock and staging output, allowing retry. After a process/power loss, inspect and remove only abandoned locks/staging directories, then rerun the same number; published iterations remain authoritative. No partial destination is repaired silently.
+A repeated invocation verifies fixed bindings and snapshot hashes, preserves candidate edits and existing evidence, and atomically replaces only the manifest's baseline decision and plan. Changed accepted or runner identities at an existing iteration number fail explicitly; choose the next number. Corrupt snapshots and conflicting destinations fail without overwriting evidence. A session-local exclusive `.iteration-preparation.lock` protects concurrent preparation; promotion must not run concurrently. New directories publish by staging and rename. Ordinary errors clean their lock and staging output, allowing retry. After a process/power loss, inspect and remove only abandoned locks/staging directories, then rerun the same number; published iterations remain authoritative. No partial destination is repaired silently.
 
 Targeted coverage: `test/tooling/bot-iteration-preparation.test.ts` and the existing setup contract tests.
 
 ## Stop, resume and factual report (ARO2-25)
 
-`npm run bot:session -- SESSION REQUEST.json` (Node 26+) reads a JSON request and prints one JSON result. The request file is cwd-relative; evidence references inside it are session-relative `{ "path": "...", "sha256": "..." }` pairs. `session-control-contract.ts` defines the actions and outputs' persisted source, `control.json`. Control preserves setup's schema-1 config/state and the frozen/iteration manifests. Control owns accounting and stop reasons; promotion owns `state.accepted`. Reports read the current accepted reference without promoting it. The extension lives alongside `session-contract.ts`; it changes neither `FrozenSetup` nor `IterationManifest`.
+`npm run bot:session -- SESSION REQUEST.json` (Node 26+) reads a JSON request and prints one JSON result. The request file is cwd-relative; evidence references inside it are session-relative `{ "path": "...", "sha256": "..." }` pairs. `session-control-contract.ts` defines the actions and outputs' persisted source, `control.json`. Setup's schema-1 config/state and the frozen/iteration manifests remain unchanged. Control owns accounting and stop reasons; promotion owns `state.accepted`. Reports read the current accepted reference without promoting it. The extension lives alongside `session-contract.ts`; it changes neither `FrozenSetup` nor `IterationManifest`.
 
 ```json
 { "action": "plan" }
@@ -187,6 +187,132 @@ Send `{ "action": "report" }` to atomically write `SESSION/report.json`; stdout 
 
 Related tests: `test/tooling/bot-session-control.test.ts`, iteration preparation and setup tests.
 
+## Match analysis jobs (ARO2-22)
+
+`npm run bot:analyses -- SESSION REQUEST.json` takes cwd-relative session/request paths and prints one JSON result. Errors print to stderr with exit 1. `analysis-contract.ts` extends the existing contracts without changing frozen setup, iteration, validation or control schemas. This command never invokes models, evaluates matches, aggregates reports or decides acceptance.
+
+Start with a sync request:
+
+```json
+{
+  "action": "sync",
+  "binding": {
+    "iteration": 1,
+    "role": "candidate",
+    "root": "iterations/iteration-0001/candidate-run",
+    "execution": { "path": "iterations/iteration-0001/candidate-run.job.json", "sha256": "<exact bytes hash>" },
+    "proposal": { "path": "iterations/iteration-0001/proposal.json", "sha256": "<exact bytes hash>" }
+  }
+}
+```
+
+All evidence references are session-relative exact-byte SHA-256 pairs. Symlinks, absolute paths and parent traversal are rejected. `root` is an existing frozen runner output directory. `execution` pins its actual preparation job: schema 1, `identity`, `fixtureIdentity`, `candidateIdentity`, `selfIdentity`, and `matches[]` containing the frozen `match` and A/B `identities`. The full 500-match schedule must equal the frozen fixture, and opponent/self identities must equal the iteration bindings. Control jobs additionally match the prepared control identity. The orchestrator must supply the validated candidate's execution job; this consumer does not repeat candidate compilation or attest its heuristic validity. `proposal` retains the candidate heuristic change and rationale; a control job can reference a description of the unchanged control.
+
+The `frozen-xml-v1` adapter follows the ARO2-18 worktree's actual `frozen_evidence.rs` format: `root/matches/<match-id>/done.json` pins `manifest.xml`, `matches/<match-id>/match.xml`, both `player-a.xml`/`player-b.xml` timelines, and any additional evidence files. The nested match directory is intentional. `fixture.json` is runner preparation: early smoke markers omit it, while newer markers hash it too. Both layouts are supported; when preparing packets its contents must equal the pinned execution job item, and its exact bytes are retained as a reference. No invented per-event JSON log or runner command is required. ARO2-18's final integration must retain this adapter format or explicitly version/update it. Parent integration review remains required.
+
+Missing markers/files, malformed or changing bytes, missing completed-game timelines, mismatched identities and unlisted evidence files are reported in `unavailable` and excluded from new jobs. The adapter requires terminal records for games 1–4 and sideboarding, plus both player reports. A completion marker may finalize a failed match: retain its `failed`/`skipped` statuses, partial failure timelines and diagnostic files explicitly. Skipped games have no game evidence hash or invented events; failed games retain their hash. A match with no completion marker remains unavailable even when its XML is parseable. It checks file integrity and cross-document bindings, not the engine's internal game-evidence hash algorithm. Full semantic evidence validation remains the runner's responsibility. It reads hashes twice before publication; finalized producer files must thereafter remain immutable. Damage to already queued evidence appears in `integrity`, never as a successful completion.
+
+Each immutable packet at `iterations/iteration-NNNN/analyses/<role>/packets/<match>.json` contains fixture/runner/execution/candidate/opponent identities, proposal and complete log references, game IDs/statuses/hashes, and actual timeline references `{ "game": 1, "perspective": "a", "sequence": 17 }`. Sequence values come from the player's existing XML `timeline/entry/sequence`, scoped by game and perspective; they need not be contiguous. One logical ID `<iteration>/<role>/<match>` survives retries. Baseline/control and candidate executions are distinct evaluations, even when fixture match IDs coincide.
+
+`queue.json` in that directory retains all discovered logical jobs. At most `2 * analysisWorkers` jobs are pending or claimed; remaining finalized jobs wait in the durable backlog. At most `analysisWorkers` claims can run. Large XML discovery happens outside the shared state lock; publication and all queue transitions use `withSessionLock`, atomic staging/rename and immutable packet/report paths. No command rewrites accepted state, execution accounting, or another producer's evidence.
+
+Dispatch and completion requests use the same entry point:
+
+```json
+{ "action": "claim", "iteration": 1, "role": "candidate", "owner": "analyst-dispatch-unique-1" }
+```
+
+A non-null `claim` returns the packet reference, attempt, owner and random claim token. Launch only after that durable claim returns. A repeated owner request returns its outstanding claim, recovering lost stdout without dispatching a second job. Use a distinct stable owner for each dispatch. Capacity exhaustion returns `claim: null`. Claims never expire automatically: after a crash, reconcile analyst termination first, then send `{ "action": "release", "iteration": 1, "role": "candidate", "job": "1/candidate/match-0001", "token": "<claim token>", "terminated": true }`. Reclaiming keeps the logical job and increments its attempt; old tokens cannot complete it. Until reconciliation, the claim remains outstanding and consumes capacity.
+
+An analyst writes a JSON report, then the orchestrator supplies its hash with `{ "action": "complete", "iteration": 1, "role": "candidate", "job": "1/candidate/match-0001", "token": "<claim token>", "report": { "path": "reports/analyst-1.json", "sha256": "<exact bytes hash>" } }`. The required report shape is:
+
+```json
+{
+  "schemaVersion": 1,
+  "job": "1/candidate/match-0001",
+  "packetSha256": "<claimed packet hash>",
+  "sections": {
+    "activation": { "text": "Observed activation or uncertainty", "evidence": [{ "game": 1, "perspective": "a", "sequence": 17 }] },
+    "changedDecisions": { "text": "Counterfactual unavailable", "evidence": [], "unavailable": "No counterfactual trace was recorded" },
+    "impact": { "text": "Observed impact and causal uncertainty", "assessment": "uncertain", "evidence": [{ "game": 1, "perspective": "a", "sequence": 17 }] },
+    "consequentialPlays": { "text": "Factual consequential plays", "evidence": [{ "game": 1, "perspective": "b", "sequence": 18 }] }
+  }
+}
+```
+
+The example sequences are illustrative; reports must cite tuples from their packet. All four sections require nonempty text and an evidence array. An empty array requires a nonempty `unavailable` explanation. Impact assessment is `positive`, `negative` or `uncertain`. Every supplied tuple must resolve to an actual pinned timeline entry. The validator checks association, sections and reference resolution; it cannot prove factual accuracy, causal effect, or that consequential-play prose avoids strategic judgments. Those remain agent review criteria.
+
+Valid reports are copied into immutable `reports/<match>-attempt-N.json` before queue completion is published. Repeating identical sync/completion requests is safe; conflicting bindings, packets and completed reports fail without replacing evidence. A crash between artifact publication and queue save leaves a reusable orphan artifact: rerun the identical request. After confirming all writers have terminated, inspect/remove only abandoned `.session-state.lock` and staging files as described above; never reset published queue state or claims to recover a lock.
+
+Every response includes `ready`, `outstanding`, `missing`, `reports`, `expected`, `finalized`, `completed`, `complete`, and `integrity`; sync also lists unavailable matches. `ready` contains pending jobs, while `outstanding` includes waiting, pending and claimed jobs. `missing` separately lists fixture matches with no finalized job. `{ "action": "status", "iteration": 1, "role": "candidate" }` verifies stored packets, source bytes and reports. `complete` requires all 500 expected matches to have reports and no integrity failures. A stored completed count is accompanied by integrity failures if later damage occurs; it is not an assertion of report correctness.
+
+Targeted lightweight coverage: `test/tooling/bot-match-analysis.test.ts` exercises bounded dispatch, deduplication, partial files, invalid reports, source damage, orphan publication and claim fencing. The adapter was also exercised read-only against ARO2-18's real finalized four-game smoke evidence (both player timelines); no analysis model was invoked.
+
+## Execute frozen matches (ARO2-18)
+
+```sh
+npm run bot:matches -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/evaluations/baseline --workers auto
+npm run bot:matches -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/evaluations/baseline --workers auto --resume
+npm run bot:matches:benchmark -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/benchmarks/run-1
+```
+
+The Node entry point verifies archived files and the 500-match manifest, prepares a JSON job, then invokes the existing Rust evaluator's `frozen` command. Rust owns the bounded pool and the existing `execution::play` / `execution::sideboard` real-core path. Each worker owns one reusable Node engine host; only independent matches overlap. The legacy XML commands retain their sequential behavior and schema. Internal `.job.json` files are prepared inputs; invoke the public npm entry point to verify archives before execution.
+
+The runner prepares the initial iteration through `prepareIteration` when needed, using setup’s accepted snapshot. Existing prepared iterations are consumed through `--iteration N`; `--role control|candidate` binds admission and accounting. It does not require candidate-validation output for an initial accepted baseline. Later consumers pass `--candidate SNAPSHOT.json` and `--self SNAPSHOT.json` explicitly. Both use the exported `RunnerSnapshot` contract:
+
+```json
+{
+  "schemaVersion": 1,
+  "path": "./archived-version",
+  "bot": { "identity": "...", "kind": "module", "module": "builtin:basic", "configuration": {}, "deck": { "main": [], "extra": [], "side": [] }, "files": { "bot.mjs": "..." } }
+}
+```
+
+`bot` is a complete `FrozenBot`, not the abbreviated values above. Paths resolve relative to the override file. File hashes and bot identity are verified; deck, scalar configuration, kind, policy and module tag must match the frozen target. Override executable/source bytes may differ. Module bundles load verbatim; package WASM loads from the archived manifest, using the existing preemptible transport. Both self and candidate identities enter the execution identity. Candidate validation and promotion remain separate workflows. A stored `strategy.mjs` is source evidence; execution uses the archived executable, so candidate preparation must build the strategy into that executable.
+
+The host consumes all engine seeds even with programmed orders, maps actor orders/seeds to starter seats, creates fresh bots per game and sideboarding, and derives post-side orders from the actual legally exchanged decks. Builtin Random gets the specified deterministic stream; package `create` receives the fixture u32 seed. External modules declaring a numeric `configuration.seed` receive the fixture u32 in a fresh configuration copy; other frozen configuration stays unchanged. Deterministic external modules remain responsible for exposing randomness through their factory/configuration as described above; arbitrary external ambient randomness cannot be validated by this runner. Actual initial orders and deck-configuration hashes are in the perspective XML, and `replay.json` records each game's canonical evidence and configuration hashes for comparison.
+
+`--workers auto|N` is clamped by pending matches, setup's `limits.matchWorkers`, and usable CPUs. Cheap Linux physical-core topology is preferred, respecting affinity and cgroup v2 quota; other platforms fall back to available process parallelism. Auto uses `$XDG_STATE_HOME/ascencio/bot-evaluation-machine.json` (default `~/.local/state/ascencio/`) only for the same CPU/topology/OS/Node identity, otherwise falls back to one and requests retuning. Set up with `--match-workers 8` to permit every benchmark stage. Analysis workers remain independent.
+
+Execution limits default to 60 s/game, 1 s/decision, 5 s/sideboarding, 200 turns and 20,000 decisions. `--limits LIMITS.json` supplies all five positive integer fields of `MatchExecutionLimits`; limits enter execution identity and remain identical across tuning stages. Session game/wall budgets remain authoritative across evaluations and retries. `--max-games N` / `--max-wall-ms N` are additional per-evaluation caps; they never extend the shared session budget. A match reserves four games durably before dispatch; interrupted attempts retain that reservation on resume, conservatively preserving the cap. Wall accounting includes prior invocations, excluding time between invocations. Iteration limits belong to the iteration orchestrator. SIGINT/SIGTERM stop dispatch and terminate active game hosts at the existing deadline boundary; hard process death may require recovery of stale locks. The runner does not relax decision deadlines under contention.
+
+```text
+<out>.job.json                 # Verified prepared job, workers excluded from identity
+<out>/execution.json           # Job + application/executable identity for resume
+<out>/progress.json            # Sorted finalized IDs, reservation and wall accounting
+<out>/matches/<match-id>/
+  manifest.xml                 # Match input/runtime identity
+  fixture.json                 # Exact slot, seeds, decks, archived executable references
+  matches/<match-id>/           # Existing match.xml, player-a.xml, player-b.xml
+  bugs/                        # Existing privileged diagnostics, isolated per match
+  done.json                    # Commit marker hashing all match evidence files
+<out>/attempts/                # Interrupted partial attempts retained before retry
+<out>/summary.xml              # Existing aggregate metrics format
+<out>/replay.json               # Canonical game hashes in deterministic ID order
+<out>/result.json               # Actual counts, wall time, peak tree RSS, failures
+```
+
+A coordinator alone writes aggregate progress. Workers persist their own XML using existing XSD validation, file fsync, atomic rename and directory fsync. Completion is independent of numeric order; resume scans commit markers rather than a sequential watermark, verifies every file and canonical game hash, and schedules only unfinalized matches. Failed finalized matches remain evidence and yield exit code 2. Interrupted attempts are preserved and retried, without reusing partial mutable duel state. Corrupt committed evidence fails resume. A complete resume validates evidence without rewriting timing/results. Exclusive `.prepare-lock` and `runner.lock` directories prevent competing writers. After process/power loss, inspect ownership before removing abandoned locks or preparation temporary files.
+
+The benchmark builds once, then executes stages 1, 2, 4, 6, 8 sequentially, with one repetition and the first 24 frozen matches / 96 games by default (`--matches N`, 1–500; `--repeats N`, minimum one). Production `bot:matches` still defaults to all 500 matches / 2,000 games. Every repetition uses the same selected fixture prefix and normal evidence writing; there is no substitute simulator or unmeasured game warmup. Smaller machines record skipped stages. End-to-end command timing includes archive verification/preparation, cold hosts, all required evidence/summary/progress persistence and shutdown. Resume verification is outside that execution timing and checks every completed match. A stage is reliable only with exact totals, no failures/skips, valid evidence and canonical replay hashes matching the first repetition. `benchmark.json` preserves each run, speedups against one and the previous stage, memory and actual failure/timeout totals. Choose the smallest reliable stage within the larger of 3% or observed relative repetition spread of the fastest median; save a recommendation only when a reliable stage exists.
+
+Linux peak memory is the sum of evaluator-process and descendant RSS sampled every 100 ms, including Node and WASM workers (threads share their process RSS). Shared pages may be counted in multiple processes, and sub-100-ms peaks can be missed. This is process-tree RSS, not allocator usage or a single-host sample; unavailable `/proc` measurements are zero and should not be interpreted as a measured peak on another OS.
+
+
+### Shared accounting integration
+
+`bot:matches` uses PR80’s `controlSession` admission interface through a persistent `runner-control-host.ts` bridge. Before each dispatch it reserves a four-game attempt; it settles only persisted completed game references after the worker’s handles/hosts have been released for that attempt. Poll `plan` every second while executing; `OWNER_STOP`, wall/game budgets and explicit interrupts stop admission and cancel active hosts. Every settlement remains permitted after stopping. The Rust coordinator serializes admission and aggregate writes. All shared session mutations use `.session-state.lock`; short collisions retry up to ten seconds. A separate `.match-dispatch-<iteration>-<role>.lock` owns the dispatcher for that role, without holding the shared transaction lock during execution.
+
+Output must be inside the session so control evidence references are relative and intact. Cancelled partial match evidence moves to a stable attempt archive before settlement, preserving references across retries. A complete control evaluation emits `baseline-receipt.json` with the prepared comparison identity and hashed match commit markers. The runner leaves iteration `finish` to the orchestrator, which must settle it before promotion changes accepted identity. Candidate reservations use the validator’s executable-file identity (`bot.mjs` plus `strategy.mjs`, or `dist/ai.wasm`); control reservations retain the prepared accepted bot identity. Finish the ledger, apply `bot:decide`, then start the next iteration so its checkpoint binds the promoted accepted reference. Benchmark repetitions call `finish` themselves and use isolated accounting sessions starting at iteration 1, preventing growing ledger size from biasing later stages; fixture identity, executable bytes, seeds and actual game hashes remain identical. The default five stages execute 480 completed games across five isolated run ledgers. Each starts with the same configured stopping limits and empty progress. The source session supplies frozen bindings and accepted identity; its `OWNER_STOP` is forwarded to the active run. Source gameplay accounting is retained unchanged.
+
+After abrupt dispatcher loss, confirm its old dispatcher is gone and recover abandoned dispatcher/output locks before `--resume`. `owners.json` records Linux process start identities; resume terminates surviving hosts only when their saved identity still matches, before reconciling checkpoints. A running reservation is reconciled only from a validated persisted checkpoint; unverifiable or missing checkpoints keep accounting outstanding for explicit recovery. Complete output is integrity-checked and reused without another reservation. Owner-stop continuation still requires PR80’s explicit token acknowledgement. The discarded pre-integration performance run is retained separately and does not supply a measured recommendation.
+
+
+### Match timing and subset measurements
+
+`--matches 24` selects the same first 24 immutable fixtures at every concurrency; it never regenerates or edits the full 500-match schedule. A subset cannot publish a full baseline receipt. `latency.json` records each worker's elapsed match latency from before host initialization through four games, sideboarding, canonical validation and durable XML; admission queue time and final timing/commit-marker metadata are excluded. `averageCompletedMatchLatencyMs` averages only completed matches. `amortizedWallMsPerCompletedMatch` divides total wall time by completed matches; the benchmark replaces that value with its wider command boundary including preparation, shutdown and accounting finish. These are different measures under concurrency. One 24-match run per stage is a short local tuning sample; it does not establish full-scale throughput or a repeated-run noise estimate.
+
+SIGINT/SIGTERM on the benchmark supervisor immediately signal active evaluation/build children and prevent new child launches. The supervisor then preserves the interrupted result and settles accounting. Source `OWNER_STOP` remains supported. The owner explicitly replaced the original full-size performance comparisons with this 24-match measurement; earlier full and interrupted baseline evidence is retained separately.
 
 ## Candidate decisions
 

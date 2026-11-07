@@ -6,10 +6,15 @@ mod config;
 mod evidence_validation;
 mod evidence_writer;
 mod execution;
+mod frozen_evidence;
+mod frozen_match;
+mod frozen_pool;
 mod host;
 mod identity;
 #[cfg(target_os = "linux")]
 mod improvement;
+mod process_memory;
+mod process_ownership;
 #[cfg(not(target_os = "linux"))]
 mod improvement {
     pub fn run(_: &std::path::Path, _: bool) -> crate::xml::Result<i32> {
@@ -20,6 +25,7 @@ mod match_evidence;
 mod metrics;
 mod runner;
 mod runtime_identity;
+mod session_admission;
 mod streaming_xml;
 mod xml;
 use std::path::{Path, PathBuf};
@@ -39,6 +45,7 @@ fn execute() -> xml::Result<i32> {
     let option = |key: &str| args.windows(2).find(|w| w[0] == key).map(|w| w[1].clone());
     let required = |key: &str| option(key).ok_or_else(|| format!("Missing {key}"));
     match command{
+ "frozen"=>frozen_pool::run(Path::new(&required("--job")?),Path::new(&required("--out")?),required("--workers")?.parse()?,args.iter().any(|a| a == "--resume")),
  "improve"=>improvement::run(Path::new(&required("--config")?), args.iter().any(|a| a == "--resume")),
  "benchmark"=>{if option("--resume").is_some(){return Err("A benchmark never resumes an existing run".into());} runner::benchmark(config::read(Path::new(&required("--config")?))?, command_start)},
  "evaluate"=>runner::evaluate(config::read(Path::new(&required("--config")?))?,option("--resume").map(PathBuf::from)),

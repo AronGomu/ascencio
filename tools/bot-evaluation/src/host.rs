@@ -13,6 +13,9 @@ pub struct Host {
 }
 impl Host {
     pub fn start() -> Result<Self> {
+        Self::start_script("scripts/bot-evaluation/host.ts")
+    }
+    pub fn start_script(script: &str) -> Result<Self> {
         let mut child = Command::new(std::env::var("ARO2_NODE").unwrap_or_else(|_| "node".into()))
             .args([
                 "--no-lazy",
@@ -20,7 +23,7 @@ impl Host {
                 "--no-liftoff",
                 "--experimental-vm-modules",
                 "--disable-warning=ExperimentalWarning",
-                "scripts/bot-evaluation/host.ts",
+                script,
             ])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

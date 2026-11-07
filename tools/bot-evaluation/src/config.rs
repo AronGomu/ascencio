@@ -18,6 +18,7 @@ pub struct Config {
     pub output: PathBuf,
     pub fixture: Option<Value>,
     pub target: f64,
+    pub frozen: Option<Value>,
 }
 fn resolve(base: &Path, v: &Value) -> Result<PathBuf> {
     let s = xml::text(v)?;
@@ -45,7 +46,10 @@ pub fn read(file: &Path) -> Result<Config> {
     for actor in ["a", "b"] {
         let b = &doc["bots"][actor];
         let module = xml::text(&b["module"])?;
-        let module = if matches!(module, "builtin:basic" | "builtin:generalist" | "builtin:random") {
+        let module = if matches!(
+            module,
+            "builtin:basic" | "builtin:generalist" | "builtin:random"
+        ) {
             module.to_string()
         } else {
             resolve(base, &b["module"])?.to_string_lossy().into_owned()
@@ -122,6 +126,7 @@ pub fn read(file: &Path) -> Result<Config> {
         output,
         fixture,
         target,
+        frozen: None,
     })
 }
 fn parse_deck(text: &str) -> Result<Value> {

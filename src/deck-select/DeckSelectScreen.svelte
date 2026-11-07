@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick, type Snippet } from "svelte";
   import DecklistPanel from "./DecklistPanel.svelte";
   import DeckTile from "./DeckTile.svelte";
   import DeckTileMenu from "./DeckTileMenu.svelte";
@@ -60,6 +60,7 @@
   export let opponent: OpponentView | null = null;
   /** Free-play picker options; empty + opponent.locked → no picker (story). */
   export let opponents: readonly OpponentView[] = [];
+  export let opponentControls: Snippet | undefined = undefined;
   /** Opponent's current deck tile; named by the red seat chip. */
   export let opponentDeck: DeckTileModel | null = null;
   /** Your current deck tile; null falls back to the selected grid tile. */
@@ -826,7 +827,11 @@
           </div>
         </div>
 
-        <div class="seat-section opponent" data-cy="seat-section-opponent">
+        <div
+          class="seat-section opponent"
+          class:has-controls={opponentControls !== undefined}
+          data-cy="seat-section-opponent"
+        >
           <!-- svelte-ignore a11y_no_static_element_interactions (the handler only
                exists on the button branch; a locked opponent renders an inert div) -->
           <svelte:element
@@ -879,6 +884,12 @@
             {/if}
           </svelte:element>
 
+          {#if opponentControls}<div
+              class="opponent-controls"
+              data-cy="duel-start-opponent-controls"
+            >
+              {@render opponentControls()}
+            </div>{/if}
           <div class="opponent-chip-row" data-cy="duel-start-opponent-chip-row">
             <!-- svelte-ignore a11y_no_static_element_interactions (the handler only
                  exists on the button branch; the story's chip is an inert div) -->
@@ -1762,6 +1773,13 @@
     min-height: 0;
     grid-template-rows: max-content max-content minmax(0, 1fr);
     gap: var(--space-2);
+  }
+
+  .seat-section.has-controls {
+    grid-template-rows: max-content max-content max-content minmax(0, 1fr);
+  }
+  .opponent-controls {
+    min-width: 0;
   }
 
   .avatar {

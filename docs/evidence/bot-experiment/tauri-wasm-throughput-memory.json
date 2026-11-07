@@ -1,0 +1,24 @@
+{
+  "method": "Linux /proc VmRSS snapshot; sum includes shared pages more than once; whole app plus webview and bot processes, not isolated bot allocation",
+  "processes": [
+    {
+      "pid": 1070470,
+      "ppid": 1070322,
+      "name": "ascencio",
+      "rssBytes": 298635264
+    },
+    {
+      "pid": 1070483,
+      "ppid": 1070470,
+      "name": "WebKitNetworkPr",
+      "rssBytes": 122253312
+    },
+    {
+      "pid": 1070485,
+      "ppid": 1070470,
+      "name": "WebKitWebProces",
+      "rssBytes": 1094299648
+    }
+  ],
+  "totalRssBytes": 1515188224
+}

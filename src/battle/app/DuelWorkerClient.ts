@@ -1,3 +1,5 @@
+import type { BotSelection } from "../duel/contracts/bot-selection.ts";
+import { botHostCall, type BotHostCall } from "./bots/package-host.ts";
 import type { BattleRuntimeSource } from "../ports/index.ts";
 import {
   parseDuelCommand,
@@ -68,6 +70,7 @@ export interface DuelClient {
     duelId: DuelId,
     player: DuelDeckSelection,
     opponent: DuelDeckSelection,
+    bot?: BotSelection,
   ): DuelClientContext | null;
   respond(promptId: PromptId, choiceIds: readonly ChoiceId[]): boolean;
   surrender(): boolean;
@@ -120,6 +123,7 @@ export class DuelWorkerClient implements DuelClient {
   #runtimeLoadAbort: AbortController | null = null;
   #expectedSnapshotId: string | null = null;
   #closed = false;
+  #closeBotSessions: (() => void) | null = null;
 
   constructor(options: DuelWorkerClientOptions = {}) {
     this.#workerFactory = options.workerFactory ?? createBrowserWorker;
@@ -230,6 +234,7 @@ export class DuelWorkerClient implements DuelClient {
     duelId: DuelId,
     player: DuelDeckSelection,
     opponent: DuelDeckSelection,
+    bot?: BotSelection,
   ): DuelClientContext | null {
     if (
       this.#closed ||
@@ -249,6 +254,7 @@ export class DuelWorkerClient implements DuelClient {
     if (
       !this.#post({
         type: "startDuel",
+        ...(bot ? { bot } : {}),
         duelId,
         player,
         opponent,
@@ -393,7 +399,96 @@ export class DuelWorkerClient implements DuelClient {
     }
     this.#worker = worker;
     const generation = this.#workerGeneration;
-    worker.onmessage = (event) => this.#receive(generation, event.data);
+    const nativeSessions = new Set<string>();
+    this.#closeBotSessions = () => {
+      for (const session of nativeSessions)
+        void botHostCall({ method: "nativeClose", payload: { session } }).catch(
+          () => {},
+        );
+      nativeSessions.clear();
+    };
+    worker.onmessage = (event) => {
+      const message = event.data as {
+        type?: string;
+        id?: number;
+        method?: string;
+        payload?: Record<string, unknown>;
+        message?: string;
+      };
+      if (message?.type === "botWarning") {
+        if (import.meta.env.DEV) {
+          console.warn(message.message);
+          globalThis.dispatchEvent(
+            new CustomEvent("ascencio-bot-warning", {
+              detail: message.message ?? "AI recovered",
+            }),
+          );
+        }
+        return;
+      }
+      if (message?.type === "botHostCall") {
+        if (
+          !Number.isSafeInteger(message.id) ||
+          ![
+            "pin",
+            "nativeOpen",
+            "nativeRequest",
+            "nativeClose",
+            "nativeMemory",
+          ].includes(message.method ?? "")
+        )
+          return;
+        const call = message as unknown as BotHostCall;
+        if (
+          (call.method === "nativeRequest" ||
+            call.method === "nativeClose" ||
+            call.method === "nativeMemory") &&
+          !nativeSessions.has(String(call.payload.session))
+        )
+          return;
+        void botHostCall(call).then(
+          (value) => {
+            if (call.method === "nativeOpen") nativeSessions.add(String(value));
+            if (call.method === "nativeClose")
+              nativeSessions.delete(String(call.payload.session));
+            if (
+              generation !== this.#workerGeneration ||
+              worker !== this.#worker
+            ) {
+              if (call.method === "nativeOpen")
+                void botHostCall({
+                  method: "nativeClose",
+                  payload: { session: value },
+                });
+              return;
+            }
+            worker.postMessage({
+              type: "botHostResult",
+              id: message.id,
+              value,
+            } as unknown as DuelCommand);
+          },
+          (error) => {
+            if (worker === this.#worker)
+              worker.postMessage({
+                type: "botHostResult",
+                id: message.id,
+                error: String(error),
+              } as unknown as DuelCommand);
+          },
+        );
+        return;
+      }
+      if (message?.type === "disposed") {
+        for (const session of nativeSessions)
+          void botHostCall({
+            method: "nativeClose",
+            payload: { session },
+          }).catch(() => {});
+        nativeSessions.clear();
+      }
+      this.#receive(generation, event.data);
+    };
     worker.onerror = (event) => {
       event.preventDefault();
       this.#log("error", {
@@ -685,6 +780,8 @@ export class DuelWorkerClient implements DuelClient {
     this.#runtimeLoadAbort = null;
     const worker = this.#worker;
     if (worker === null) return;
+    this.#closeBotSessions?.();
+    this.#closeBotSessions = null;
     worker.onmessage = null;
     worker.onerror = null;
     worker.onmessageerror = null;

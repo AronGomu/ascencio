@@ -1,3 +1,4 @@
+import { query } from "../adapters/sqlite-content-inputs.ts";
 import { selectStoryModule } from "./story-module-selection.ts";
 import { chapterTransition } from "../../story/saves/index.ts";
 import {
@@ -273,6 +274,26 @@ export function createSqliteApplicationService(options: {
     return started;
   };
   const application: ShellApplication = {
+    async requiredStoryBots() {
+      const current = await options.storage.packages.current();
+      if (current.kind !== "ok")
+        throw new Error(
+          "Unable to read Story AI requirements. Reload installed content.",
+        );
+      const result = [];
+      for (const pack of current.value.packages) {
+        if (pack.packageType !== "chapter") continue;
+        const decks = await query(
+          options.storage.content,
+          { kind: "decks", packageId: pack.packageId },
+          rootAbort.signal,
+        );
+        for (const deck of decks)
+          if (deck.requiredAi)
+            result.push({ deckName: deck.name, bot: deck.requiredAi });
+      }
+      return result;
+    },
     acquire,
     clear() {
       for (const listener of listeners) listener();

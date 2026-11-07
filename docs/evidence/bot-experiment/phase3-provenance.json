@@ -1,0 +1,60 @@
+{
+  "base": "d021b535537ce9db01b5da974e4732cd3c369dfb",
+  "node": "26.12.0",
+  "rustBuild": {
+    "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+    "profile": "release",
+    "wasmMaximumMemoryBytes": 536870912,
+    "files": [
+      {
+        "path": "assets/ai-bots/reference/ai/target/release/ascencio-reference-bot",
+        "sha256": "8639de5df0cf5365106558345d89aea8b4026e686d593824f970b050b6e1bf8c"
+      },
+      {
+        "path": "assets/ai-bots/reference/dist/ai.wasm",
+        "sha256": "1eeb4c89553861d027c19e77671ddf4e7c6a5623061bd8c31c78be7b87cd5d3c"
+      }
+    ]
+  },
+  "baselineSha256": "28b40b97976cd4986e016ff419488715ddf32129971f4fb951486bf56e8658d8",
+  "trustAnchorSha256": "8decc2cdf4490a07f211756e436ba26f90033301c6e5e6c2f0c4762638228253",
+  "measurements": "Sequential release workloads. Node WASM uses bounded Worker-thread transport. Browser uses isolated Chromium 153. Tauri timing uses packaged-protocol release instrumentation; dev-host smoke rerun separately. Final setup-failure counting hardening does not change successful decision computation; latest smoke and tests cover it.",
+  "artifacts": {
+    "native-parity.json": "0f2fe997eca146e3be84ca3d8dda8a6ee9c91808e7eb5c76d7488d160b53c4e2",
+    "wasm-parity.json": "1276f7e9c2406c0750d4a33e238e51a2d0c54fee50df90ae54657dfe6272ef32",
+    "wasm-live.json": "69538022225fca55c319a2fd020a6a1ed2757baad3bc481abf0d35c8e8584992",
+    "native-live.json": "ebcc6ac19356098f870f15d8e357dd42252eb283bfd5eec7e453064f91fca455",
+    "evaluator-performance.json": "acf918ac04c9c9ec77ca973fbb884aa99e20b1d6bc06023b0ffe9fae12383bd8",
+    "tauri-native-smoke.json": "af38b70a24e809630e2ba20e0652d9d27f7926d79a69a0f31ec2b4167be84bde",
+    "browser-wasm-smoke.json": "82797b56063f6aa5ba76cb37911ac632b4b2f90c56d4505d26df5ce5cf5d2ab7",
+    "browser-wasm-benchmark.json": "1d4ed6b5cd026ffea0573ddf3ebf6fea9b8567288f13c316788dca4a7de52933",
+    "tauri-wasm-smoke.json": "2659797bccf3a650e6ab465f488936ed5e6b9d65e2cd4545045363a459a91d1e",
+    "browser-typescript-benchmark.json": "3cc97b280bdfdd5875a6b6e8879e7cb0f8e5d938eb90b41209bbad4a95de5c44",
+    "browser-failures.json": "2a094c977b87a6b825ae295a22fa38fe2d198eda979fc381571f9600cc5c2e96",
+    "packaged-harness-wasm-smoke.json": "2659797bccf3a650e6ab465f488936ed5e6b9d65e2cd4545045363a459a91d1e",
+    "packaged-harness-native-smoke.json": "af38b70a24e809630e2ba20e0652d9d27f7926d79a69a0f31ec2b4167be84bde",
+    "typescript-evaluator-throughput.json": "70d8c31a97d505387cd582ce268772d104f5c0730ba0cf418ea39882145871af",
+    "wasm-evaluator-throughput.json": "15487f9fce3a0de042e615059804625b43cd1e344bca808e624b35049a9eae4b",
+    "native-evaluator-throughput.json": "a0df4227f15cdec13b53500f95f8667813122800d1dd0292569999d41205f7a9",
+    "browser-typescript-memory.json": "a61c09f8300c0f4454b36150f21941692c1b640aa9734ac4d0eb7f3b92a932c7",
+    "browser-wasm-memory.json": "a5db0e12cf7b79742ec965d08a3e6c1889aedd7288b4a9ebdadd04fbf30df9cb",
+    "tauri-typescript-benchmark.json": "73a48935252f178e94d8c85fbf7030f4b29368c0a29ccc214011200bbde85439",
+    "tauri-typescript-benchmark-memory.json": "4162e791875dc1cc85ecf9ef86ae9fc2f0de2c4c0232a288fc36f72dff9d1ced",
+    "tauri-typescript-throughput.json": "9acdcfc2d7ca42530ba44986be953543355eb5ebda0fc5472c20286e1308cdcf",
+    "tauri-wasm-benchmark.json": "b7966ff80be29fa2354edb2d022814f237a5e6342154853099c258503b061030",
+    "tauri-wasm-benchmark-memory.json": "1f2966fa70b82d86ce920b5d4192f0828ad4dd31769f3413376dcd12c1237f0c",
+    "tauri-wasm-throughput.json": "59afd3ae00ade20e56adb9fbae4c5d9daefa3aebf7d4a7a95d2d1ced7c352508",
+    "tauri-wasm-throughput-memory.json": "8151a63e3ba64ad7dbe2e43e613bae65c1092e88d951aed2443bd6cd731bbb0b",
+    "tauri-native-benchmark.json": "7e31401eaa273cb3ca33fb302f7da391212815568aa0a035738711675060ccfd",
+    "tauri-native-benchmark-memory.json": "74987f018287c1033ae004d0c59ca30dc6abbbb77d3ee9486ee5ce16abd7f1be",
+    "tauri-native-throughput.json": "0d310f41e5152b5429bfed113b1b3b420dba7efe4fd35de57cc0dcc4aa037409",
+    "tauri-native-throughput-memory.json": "26bf3d5606ef54cdfecfa308849ee1f1599dbe1152c84274ee09572bc8372ead",
+    "browser-typescript-throughput.json": "f3823dae85034404e1b48576f4979a0f42f43cda51f86d542fd14129cb56df90",
+    "browser-wasm-throughput.json": "cf4d00b5c3c9bf6a0236758bbd1ad5351dd34ff66e53e243bd996f45f7825785",
+    "packaged-application-startup.json": "a078b48ef9354f9aed737d3b7f774ae6a11b51b920eeb4bb5679d5d7306a8635",
+    "browser-application-startup.json": "41efab800a4b1e3d60f72922db5d9185846aef37552c2578d7b8173b6ca7c705",
+    "packaged-harness-wasm-smoke-memory.json": "5ac0bf4419c2276ee3e4061f16c28dcb1ee9e06e477dd585661452860a88f442",
+    "packaged-harness-native-smoke-memory.json": "b46367a511db1b007397118b10711ed94da3f95bf624d236f900dfc5bc65a3a4"
+  }
+}

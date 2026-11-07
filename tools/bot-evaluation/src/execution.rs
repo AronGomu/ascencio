@@ -141,6 +141,11 @@ pub(crate) fn play(
                 checkpoint["player"] = json!(if mapped == 0 { "a" } else { "b" });
             }
             "attempted_response" => checkpoint["attempted_response"] = frame["response"].clone(),
+            "fallback" => {
+                failure = Some(
+                    json!({"category":"unexpected_fallback","message":"Bot recovered with built-in policy","count":frame["count"],"stack":null}),
+                );
+            }
             "failure" => {
                 failure = Some(frame["failure"].clone());
                 terminal = Some(frame);
@@ -343,8 +348,13 @@ pub(crate) fn sideboard(
     host.send(&json!({"type":"sideboard","decks":[c.deck,c.deck],"histories":[history(&reports[0]),history(&reports[1])]}))?;
     let limit = Duration::from_millis(xml::integer(&c.limits["sideboarding_wall_time_ms"])?);
     let mut deadline = Instant::now() + limit;
+    let mut recovered = false;
     let frame = loop {
         let frame = host.receive(deadline.saturating_duration_since(Instant::now()))?;
+        if frame["type"] == "fallback" {
+            recovered = true;
+            continue;
+        }
         if frame["type"] == "sideboard_hook" {
             checkpoint["player"] = json!(if frame["actor"] == 0 { "a" } else { "b" });
             if !frame["response"].is_null() {
@@ -359,6 +369,9 @@ pub(crate) fn sideboard(
     };
     if frame["type"] != "sideboard_done" {
         return Err(format!("Sideboarding host failure: {frame}").into());
+    }
+    if recovered {
+        return Err("Unexpected bot fallback during sideboarding".into());
     }
     validate_side(c, ready, &c.deck, &frame)?;
     for (i, actor) in ["a", "b"].iter().enumerate() {

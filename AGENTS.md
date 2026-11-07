@@ -76,7 +76,7 @@ ascencio/
 │   │   ├── asset-import-pipeline.md  # Source acquisition, transformations and integrity
 │   │   └── asset-profiles.md         # Current asset layout and profile-tool retirement
 │   ├── developer-guide/              # Developer walkthroughs and HTML guides
-│   ├── feature/                      # Feature-specific design rationale
+│   ├── feature/                      # Feature-specific design rationale, including rust-bot-experiment.md
 │   ├── evidence/                     # Retained verification evidence
 │   └── archive/                      # Superseded documentation and historical context
 │
@@ -112,6 +112,7 @@ ascencio/
 │   │       ├── assets/               # Runtime manifests, card data and scripts
 │   │       ├── opponent/             # Opponent-facing observations and policy integration
 │   │       ├── diagnostics/          # Worker errors and diagnostic records
+│   │       ├── bot-runtime/           # Preemptible WASM/native transports, pinning and validated recovery
 │   │       └── bot/
 │   │           ├── bot-contract.ts   # Bot inputs, decisions, settings and sideboarding interface
 │   │           ├── generalist-bot.ts # Shared selection and bot execution machinery
@@ -158,6 +159,7 @@ ascencio/
 │       ├── lib.rs                    # Tauri setup, protocols and command registration
 │       ├── native_startup.rs         # Verified startup snapshots and memory readiness
 │       ├── native_startup/           # Startup maintenance, resources and acceptance support
+│       ├── native_bots.rs            # Installed packages and bounded native bot subprocesses
 │       ├── native_user_data.rs       # Atomic JSON user-data writer
 │       ├── native_mods.rs            # Enabled mod state and activation
 │       ├── native_mod_import.rs      # Mod selection and import
@@ -171,6 +173,7 @@ ascencio/
 │   ├── native-release.json           # Native release declaration
 │   ├── distribution-evidence.json    # Distribution approval evidence
 │   ├── setup-evidence.json           # Setup and acceptance evidence
+│   ├── ai-bots/                      # Versioned Rust AI sources, manifests and portable executables
 │   ├── app/                          # Tracked fonts, application icon and download-link settings
 │   ├── duel-core/                    # Engine configuration and strings
 │   ├── freeplay/                     # Freeplay decks, opponents, settings and card limits
@@ -189,6 +192,7 @@ ascencio/
 │   ├── readable-content.ts          # Readable JSON conversion and compilation
 │   ├── readable-content-release.ts  # Content release pinning, staging and verification
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
+│   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
 │   ├── bot-improvement/              # Strategy preparation, coding-agent adapter and checks
 │   └── lib/

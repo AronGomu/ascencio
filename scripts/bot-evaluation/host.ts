@@ -2,6 +2,10 @@ import { bindPromptInstances } from "../../src/battle/worker/bot/prompt-instance
 /** Narrow frozen-core/bot host. Rust alone owns scheduling, persistence and results. */
 import { createInterface } from "node:readline";
 import { writeSync } from "node:fs";
+import {
+  instantiateHostBot,
+  type HostBot,
+} from "../bot-experiment/host-bot.ts";
 import { loadInputs, instantiate, type Artifact } from "./host-inputs.ts";
 import { loadVendoredCoreNode } from "../../src/battle/worker/engine/load-vendored-core-node.ts";
 import { DuelSession } from "../../src/battle/worker/engine/DuelSession.ts";
@@ -10,7 +14,7 @@ import { PromptRegistry } from "../../src/battle/worker/protocol/PromptRegistry.
 import { ActorObservation } from "../../src/battle/worker/bot/actor-observation.ts";
 import { toOpponentVisibleState } from "../../src/battle/worker/opponent/OpponentPolicy.ts";
 import { validateBotDecision } from "../../src/battle/worker/bot/validate-bot-decision.ts";
-import { sideboardBots } from "../../src/battle/worker/bot/bot-match.ts";
+import { validateSideboardPair } from "../../src/battle/worker/bot/sideboard.ts";
 import { snapshotId } from "../../src/battle/duel/contracts/ids.ts";
 import {
   deckRecord,
@@ -22,10 +26,16 @@ import {
 import { EngineMessageType } from "../../src/battle/worker/engine/engine-constants.ts";
 import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
 import type { ActiveDuelDependencies } from "../../src/battle/worker/assets/active-duel-dependencies.ts";
-import type { BotGameObservation } from "../../src/battle/worker/bot/bot-contract.ts";
+import type {
+  BotGameObservation,
+  BotSideboardDecision,
+} from "../../src/battle/worker/bot/bot-contract.ts";
 import type { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 interface Command {
   type: string;
+  critical?: boolean;
+  capture?: boolean;
+  seed?: [string, string, string, string];
   snapshot: string;
   codes: number[];
   bots: { module: string; config: Record<string, string> }[];
@@ -40,7 +50,7 @@ interface Command {
     readonly [BotGameObservation, BotGameObservation],
   ];
 }
-let dependencies: ActiveDuelDependencies,
+let dependencies: ActiveDuelDependencies | undefined,
   artifacts: Artifact[] = [],
   adapter: OcgCoreAdapter,
   snapshot: string;
@@ -85,6 +95,9 @@ names.set(61, "summon_succeeded");
 names.set(63, "special_summon_succeeded");
 names.set(65, "flip_summon_succeeded");
 async function game(command: Command) {
+  const activeDependencies = dependencies;
+  if (!activeDependencies)
+    throw new Error("Initialize the host before starting a game");
   const start = performance.now();
   measuring = true;
   ipcTime = 0;
@@ -94,16 +107,18 @@ async function game(command: Command) {
     decisions = 0,
     turns = 0;
   let session: DuelSession | undefined;
+  const bots: HostBot[] = [];
   try {
-    const bots = await Promise.all(
-      command.bot_order.map((index) =>
-        instantiate(artifacts[index]!, dependencies),
-      ),
-    );
+    for (const index of command.bot_order)
+      bots.push(
+        await instantiateHostBot(artifacts[index]!, activeDependencies, {
+          onFallback: send,
+        }),
+      );
     const engineStart = performance.now();
     session = DuelSession.create({
       adapter,
-      dependencies,
+      dependencies: activeDependencies,
       playerDeck: command.decks[0],
       opponentDeck: command.decks[1],
       captureStartingOrders: true,
@@ -117,7 +132,20 @@ async function game(command: Command) {
             playerExtraOrder: command.orders[0].extra,
             opponentExtraOrder: command.orders[1].extra,
           }
-        : { mode: "production", rules: command.profile },
+        : {
+            mode: "production",
+            rules: command.profile,
+            ...(command.seed
+              ? {
+                  seed: command.seed.map(BigInt) as [
+                    bigint,
+                    bigint,
+                    bigint,
+                    bigint,
+                  ],
+                }
+              : {}),
+          },
       onEngineDiagnostic: (e) =>
         send({
           type: "diagnostic",
@@ -132,7 +160,7 @@ async function game(command: Command) {
         new ActorObservation(
           actor,
           session!,
-          dependencies,
+          activeDependencies,
           snapshotId(snapshot),
           [command.decks[0].main.length, command.decks[1].main.length],
           [command.decks[0].extra.length, command.decks[1].extra.length],
@@ -140,7 +168,7 @@ async function game(command: Command) {
         ),
     );
     const hostSetup = performance.now() - start;
-    const registry = new PromptRegistry(dependencies, command.game_id);
+    const registry = new PromptRegistry(activeDependencies, command.game_id);
     const previousStates = observers.map((observer) => observer.snapshot());
     let initialized = false;
     let sequence = 0;
@@ -160,7 +188,14 @@ async function game(command: Command) {
           const projectionStart = performance.now();
           const observer = observers[actor]!;
           const before = previousStates[actor]!;
-          const update = observer.apply(message);
+          let update;
+          try {
+            update = observer.apply(message);
+          } catch (error) {
+            throw new Error(
+              `Projection failed for ${JSON.stringify(message)}: ${String(error)}`,
+            );
+          }
           const after = observer.snapshot();
           previousStates[actor] = after;
           turns = after.turn;
@@ -294,14 +329,26 @@ async function game(command: Command) {
             observers[actor]!.takeEvents(),
           ),
         };
+        const capturedInput = command.capture
+          ? structuredClone(input)
+          : undefined;
         // The repository-owned basic policy is read-only; its fresh instance
         // may share immutable observation data, as in the actual runtime.
         const trusted =
           artifacts[command.bot_order[actor]]!.module === "builtin:basic";
-        const decision = bots[actor]!.decide(
+        const decision = await bots[actor]!.decide(
           trusted ? input : structuredClone(input),
         );
         const duration = performance.now() - botStart;
+        if (command.capture)
+          send({
+            type: "captured_decision",
+            actor,
+            input: capturedInput,
+            decision,
+            configuration: artifacts[command.bot_order[actor]]!.config,
+            randomDraws: [],
+          });
         botTime += duration;
         send({
           type: "attempted_response",
@@ -366,6 +413,7 @@ async function game(command: Command) {
       bot_time_ms: botTime,
     });
   } finally {
+    for (const bot of bots) bot.close?.();
     if (session && !session.disposed) {
       session.dispose();
       handlesDestroyed++;
@@ -389,6 +437,7 @@ for await (const line of createInterface({
         command.snapshot,
         command.codes,
         command.bots,
+        command.critical,
       );
       dependencies = loaded.dependencies;
       artifacts = loaded.artifacts;
@@ -415,35 +464,64 @@ for await (const line of createInterface({
       });
     } else if (command.type === "game") await game(command);
     else if (command.type === "sideboard") {
-      const bots = await Promise.all(
-        artifacts.map((a) => instantiate(a, dependencies)),
-      );
-      const result = sideboardBots(
-        command.decks[0],
-        [bots[0]!, bots[1]!],
-        command.histories,
-        () => {},
-        (actor, phase, decision) =>
+      if (!dependencies)
+        throw new Error("Initialize the host before sideboarding");
+      const bots: HostBot[] = [];
+      const decisions: BotSideboardDecision[] = [];
+      const durations: number[] = [];
+      try {
+        for (const artifact of artifacts)
+          bots.push(
+            await instantiateHostBot(artifact, dependencies, {
+              onFallback: send,
+            }),
+          );
+        for (const [actor, bot] of bots.entries()) {
           send({
             type: "sideboard_hook",
             actor,
-            phase,
-            response: decision
-              ? {
-                  reason: decision.reason,
-                  exchanges: {
-                    exchange: decision.exchanges.map((e) => ({
-                      from_section: e.from,
-                      to_section: e.to,
-                      card_code: e.cardCode,
-                      copies: e.copies,
-                      reason: e.reason,
-                    })),
-                  },
-                }
-              : null,
-          }),
-      );
+            phase: "start",
+            response: null,
+          });
+          const start = performance.now();
+          const decision = await bot.sideboard(
+            structuredClone({
+              deck: command.decks[0],
+              preSideGames: command.histories[actor]!,
+            }),
+          );
+          durations.push(performance.now() - start);
+          decisions.push(structuredClone(decision));
+          send({
+            type: "sideboard_hook",
+            actor,
+            phase: "end",
+            response: {
+              reason: decision.reason,
+              exchanges: {
+                exchange: decision.exchanges.map((e) => ({
+                  from_section: e.from,
+                  to_section: e.to,
+                  card_code: e.cardCode,
+                  copies: e.copies,
+                  reason: e.reason,
+                })),
+              },
+            },
+          });
+        }
+      } finally {
+        for (const bot of bots) bot.close?.();
+      }
+      const result = {
+        decks: validateSideboardPair(
+          command.decks[0],
+          [decisions[0]!, decisions[1]!],
+          () => {},
+        ),
+        decisions,
+        durations,
+      };
       send({
         type: "sideboard_done",
         decks: result.decks,

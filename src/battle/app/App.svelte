@@ -816,6 +816,7 @@
         duel.start(
           toDuelDeckSelection(requested.player),
           toDuelDeckSelection(requested.opponent),
+          requested.bot,
         )
       )
         return;

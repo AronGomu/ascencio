@@ -1,3 +1,4 @@
+import type { BotSelection } from "../../battle/index.ts";
 import type { StoryBinding } from "../../story/saves/index.ts";
 import type { StoryState } from "../../story/index.ts";
 import type {
@@ -61,6 +62,10 @@ export interface SessionByMode {
   readonly story: StorySession;
 }
 export interface ShellApplication {
+  /** Resident deck metadata only; does not open a Story session or saves. */
+  requiredStoryBots?(): Promise<
+    readonly { deckName: string; bot: BotSelection }[]
+  >;
   acquire<M extends keyof SessionByMode>(
     mode: M,
     signal: AbortSignal,

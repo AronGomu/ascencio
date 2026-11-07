@@ -1,0 +1,10 @@
+{
+  "environment": "Browser development, normal application, Electron preview; current acquired 1.1.3 content",
+  "command": "DEV_PORT=4215 node node_modules/vite/bin/vite.js --config config/vite.config.ts --mode browser-dev",
+  "startup": "Main menu reached; real DuelWorkerClient initialize and dispose completed",
+  "freeplay": "Opened normal Freeplay, observed Basic/Generalist/Random TypeScript and WASM options; selected wasm:ascencio.reference:generalist independently of unchanged deck seats",
+  "additionalGames": 0,
+  "consoleErrors": [],
+  "contentVerification": "readable-content-release prepare and verify-staged passed for all four snapshots against unchanged trust anchor",
+  "trustAnchorSha256": "8decc2cdf4490a07f211756e436ba26f90033301c6e5e6c2f0c4762638228253"
+}

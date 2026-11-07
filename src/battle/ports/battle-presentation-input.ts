@@ -1,6 +1,8 @@
+import type { BotSelection } from "../duel/contracts/bot-selection.ts";
 import type { DeckBuilderCardView } from "../../decks/catalog/index.ts";
 
 export interface BattlePresentationDeck {
+  readonly requiredAi?: BotSelection;
   readonly id: string;
   readonly name: string;
   readonly main: readonly number[];

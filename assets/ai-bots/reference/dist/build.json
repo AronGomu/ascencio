@@ -1,0 +1,16 @@
+{
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+  "profile": "release",
+  "wasmMaximumMemoryBytes": 536870912,
+  "files": [
+    {
+      "path": "assets/ai-bots/reference/ai/target/release/ascencio-reference-bot",
+      "sha256": "8639de5df0cf5365106558345d89aea8b4026e686d593824f970b050b6e1bf8c"
+    },
+    {
+      "path": "assets/ai-bots/reference/dist/ai.wasm",
+      "sha256": "1eeb4c89553861d027c19e77671ddf4e7c6a5623061bd8c31c78be7b87cd5d3c"
+    }
+  ]
+}

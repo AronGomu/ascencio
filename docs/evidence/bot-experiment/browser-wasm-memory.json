@@ -1,0 +1,298 @@
+{
+  "type": "complete",
+  "runtime": "wasm",
+  "mode": "memory",
+  "environment": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "result": {
+    "method": "External Linux process-tree RSS sampling; bot retained"
+  },
+  "scope": "Whole isolated page and workers, after 100 decisions with live bot and identical saved inputs; browser-enforced GC measurement outside timing",
+  "processMemory": {
+    "method": "Three Linux process-tree VmRSS snapshots, 1 second apart, fresh isolated Chromium profile/process per runtime, after identical 100 saved decisions; live bot and workload retained; shared pages counted per process; no forced GC or disk cache reset",
+    "samples": [
+      {
+        "method": "Linux /proc VmRSS snapshot; sum includes shared pages more than once; whole app plus webview and bot processes, not isolated bot allocation",
+        "processes": [
+          {
+            "pid": 972791,
+            "ppid": 972464,
+            "name": "chrome",
+            "rssBytes": 235720704
+          },
+          {
+            "pid": 972799,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 76791808
+          },
+          {
+            "pid": 972800,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 76447744
+          },
+          {
+            "pid": 972802,
+            "ppid": 972800,
+            "name": "chrome",
+            "rssBytes": 21762048
+          },
+          {
+            "pid": 972826,
+            "ppid": 972799,
+            "name": "chrome",
+            "rssBytes": 180256768
+          },
+          {
+            "pid": 972828,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 137859072
+          },
+          {
+            "pid": 972829,
+            "ppid": 972828,
+            "name": "chrome",
+            "rssBytes": 21151744
+          },
+          {
+            "pid": 972844,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 55746560
+          },
+          {
+            "pid": 972870,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 176558080
+          },
+          {
+            "pid": 972911,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 366116864
+          },
+          {
+            "pid": 972922,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 99471360
+          },
+          {
+            "pid": 972936,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 100511744
+          },
+          {
+            "pid": 972937,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 100458496
+          },
+          {
+            "pid": 972952,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 80375808
+          }
+        ],
+        "totalRssBytes": 1729228800
+      },
+      {
+        "method": "Linux /proc VmRSS snapshot; sum includes shared pages more than once; whole app plus webview and bot processes, not isolated bot allocation",
+        "processes": [
+          {
+            "pid": 972791,
+            "ppid": 972464,
+            "name": "chrome",
+            "rssBytes": 237842432
+          },
+          {
+            "pid": 972799,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 76791808
+          },
+          {
+            "pid": 972800,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 76447744
+          },
+          {
+            "pid": 972802,
+            "ppid": 972800,
+            "name": "chrome",
+            "rssBytes": 21762048
+          },
+          {
+            "pid": 972826,
+            "ppid": 972799,
+            "name": "chrome",
+            "rssBytes": 180469760
+          },
+          {
+            "pid": 972828,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 138448896
+          },
+          {
+            "pid": 972829,
+            "ppid": 972828,
+            "name": "chrome",
+            "rssBytes": 21151744
+          },
+          {
+            "pid": 972844,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 55746560
+          },
+          {
+            "pid": 972870,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 176558080
+          },
+          {
+            "pid": 972911,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 366129152
+          },
+          {
+            "pid": 972922,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 99471360
+          },
+          {
+            "pid": 972936,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 100511744
+          },
+          {
+            "pid": 972937,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 100458496
+          },
+          {
+            "pid": 972952,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 80375808
+          },
+          {
+            "pid": 973002,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 80150528
+          }
+        ],
+        "totalRssBytes": 1812316160
+      },
+      {
+        "method": "Linux /proc VmRSS snapshot; sum includes shared pages more than once; whole app plus webview and bot processes, not isolated bot allocation",
+        "processes": [
+          {
+            "pid": 972791,
+            "ppid": 972464,
+            "name": "chrome",
+            "rssBytes": 237842432
+          },
+          {
+            "pid": 972799,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 76791808
+          },
+          {
+            "pid": 972800,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 76447744
+          },
+          {
+            "pid": 972802,
+            "ppid": 972800,
+            "name": "chrome",
+            "rssBytes": 21762048
+          },
+          {
+            "pid": 972826,
+            "ppid": 972799,
+            "name": "chrome",
+            "rssBytes": 180469760
+          },
+          {
+            "pid": 972828,
+            "ppid": 972791,
+            "name": "chrome",
+            "rssBytes": 138448896
+          },
+          {
+            "pid": 972829,
+            "ppid": 972828,
+            "name": "chrome",
+            "rssBytes": 21151744
+          },
+          {
+            "pid": 972844,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 55746560
+          },
+          {
+            "pid": 972870,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 176558080
+          },
+          {
+            "pid": 972911,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 366129152
+          },
+          {
+            "pid": 972922,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 99471360
+          },
+          {
+            "pid": 972936,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 100511744
+          },
+          {
+            "pid": 972937,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 100458496
+          },
+          {
+            "pid": 972952,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 80375808
+          },
+          {
+            "pid": 973002,
+            "ppid": 972802,
+            "name": "chrome",
+            "rssBytes": 80150528
+          }
+        ],
+        "totalRssBytes": 1812316160
+      }
+    ]
+  }
+}

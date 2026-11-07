@@ -1,3 +1,4 @@
+import { loadCriticalInputs } from "./critical-inputs.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { build } from "esbuild";
@@ -23,18 +24,28 @@ export async function loadInputs(
   snapshot: string,
   codes: number[],
   bots: { module: string; config: BotConfiguration }[],
+  critical = false,
 ) {
-  const manifest = await buildRuntimeSnapshotManifest(
-    snapshot,
-    path.resolve("vendor/ocgcore-wasm/0.1.2"),
-  );
-  await verifyRuntimeSnapshotFiles(manifest, snapshot);
-  const dependencies = await loadActiveDuelDependenciesNode(
-    snapshot,
-    new Set(codes.map(cardCode)),
-  );
+  const { manifest, dependencies } = critical
+    ? await loadCriticalInputs(snapshot)
+    : await (async () => {
+        const manifest = await buildRuntimeSnapshotManifest(
+          snapshot,
+          path.resolve("vendor/ocgcore-wasm/0.1.2"),
+        );
+        await verifyRuntimeSnapshotFiles(manifest, snapshot);
+        const dependencies = await loadActiveDuelDependenciesNode(
+          snapshot,
+          new Set(codes.map(cardCode)),
+        );
+        return { manifest, dependencies };
+      })();
   const artifacts = await Promise.all(
     bots.map(async (bot) => {
+      if (
+        /^experiment:(native|wasm):(basic|generalist|random)$/.test(bot.module)
+      )
+        return { ...bot, source: "", dependencies: [] };
       const entry =
         bot.module === "builtin:basic" ||
         bot.module === "builtin:generalist" ||

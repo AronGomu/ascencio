@@ -1,0 +1,92 @@
+{
+  "ticket": "ARO2-14",
+  "date": "2026-11-07",
+  "implementationBase": "933b25a588a65410fc6ed4ddd017ca0aaf0232ba",
+  "retainedParentFixes": "d021b535 signed-zero parity, Windows executable paths, package inventory isolation, restore ownership and data-cy coverage",
+  "exactHead": "Recorded after commit in shared implementation-3 ledger",
+  "acceptanceRevision": 2,
+  "remoteCI": false,
+  "commands": [
+    {
+      "command": "npm run test:context",
+      "status": "pass",
+      "scope": "Branch context read; no full suite"
+    },
+    {
+      "command": "npm test -- --tests test/tooling/evaluator-bot-boundary.test.ts test/tooling/bot-experiment.test.ts test/unit/duel-worker-runtime.test.ts test/unit/duel-worker-client.test.ts test/unit/bot-loader.test.ts test/unit/bot-runtime.test.ts test/unit/domain-boundaries.test.ts",
+      "status": "pass",
+      "files": 7,
+      "tests": 140
+    },
+    {
+      "command": "cargo test --manifest-path tauri/Cargo.toml native_bots::tests",
+      "status": "pass",
+      "tests": 3
+    },
+    {
+      "command": "cargo test --manifest-path tools/bot-evaluation/Cargo.toml execution",
+      "status": "pass",
+      "tests": 1
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "pass",
+      "errors": 0,
+      "existingSvelteWarnings": 4
+    },
+    {
+      "command": "eslint --config config/eslint.config.js <changed TS/Svelte files>",
+      "status": "pass"
+    },
+    {
+      "command": "prettier --config config/prettier.config.js --write <changed TS/Svelte files>",
+      "status": "pass"
+    },
+    {
+      "command": "npm run frontend:build",
+      "status": "pass",
+      "vendorFiles": 21,
+      "embeddedWasmBytes": 0
+    },
+    {
+      "command": "rustfmt --check --edition 2021 tools/bot-evaluation/src/execution.rs",
+      "status": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "status": "pass"
+    }
+  ],
+  "originalBaseReproduction": {
+    "base": "2e9489fb33b4d60cd4c9a541154362059c8f4bb7",
+    "file": "src/shell/AppShell.svelte",
+    "command": "node node_modules/vitest/vitest.mjs run -c test/config/vitest.config.ts test/component/AppShell.test.ts -t \"keeps Story collection media lazy|cancels pending Story collection preview\"",
+    "result": "Both existing media assertions fail identically (1 acquire instead of 0; 2 instead of 1); current file restored immediately in finally",
+    "reference": "environment-blockers.md"
+  },
+  "environmentBlockers": [],
+  "recoveryCoverage": [
+    "native setup stall",
+    "native decision stall",
+    "native sideboard stall",
+    "native malformed/oversized output",
+    "WASM setup loop/trap",
+    "WASM decision loop",
+    "WASM sideboard loop",
+    "invalid actions",
+    "validated fallback and explicit telemetry",
+    "setup failure counted before first engine prompt"
+  ],
+  "integrationCoverage": {
+    "test": "duel-worker-runtime.test.ts serializes native/wasm bot loading, progression, pinned restore and disposal",
+    "boundary": "actual DuelWorkerClient connected to DuelWorkerRuntime through test port; real isolated Rust transports; deterministic fake core for error injection",
+    "realEngine": "Separate 40-game smoke per path with actual sideboarding; no claim that lower-level harness alone exercises entire UI lifecycle"
+  },
+  "references": [
+    "README.md",
+    "results.md",
+    "implementation-status.md",
+    "phase3-provenance.json"
+  ],
+  "reviewOwner": "Parent; fresh exact-head three-reviewer round and integration gate pending"
+}

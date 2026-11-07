@@ -103,6 +103,25 @@ function ownHandByEngine(value: DuelStateProjector): readonly number[] {
 }
 
 describe("engine-created token projection", () => {
+  it("removes an equipped token from the spell/trap zone", () => {
+    const value = projector();
+    const monster = {
+      location: EngineLocation.MONSTER,
+      position: EnginePosition.FACE_UP_DEFENSE,
+    };
+    const equipped = {
+      location: EngineLocation.SPELL_TRAP,
+      position: EnginePosition.FACE_UP_ATTACK,
+    };
+    const absent = { location: 0, position: 0 };
+    moveOpponent(value, 73915052, absent, monster);
+    moveOpponent(value, 73915052, monster, equipped);
+    expect(value.snapshot().players[1].spellsAndTraps).toHaveLength(1);
+    moveOpponent(value, 73915052, equipped, absent);
+    expect(value.snapshot().players[1].spellsAndTraps).toHaveLength(0);
+    expect(value.snapshot().players[1].deckCount).toBe(40);
+  });
+
   it("creates and removes token without inventing a source deck movement", () => {
     const value = projector();
     const field = {

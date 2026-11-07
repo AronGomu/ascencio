@@ -1,3 +1,7 @@
+import {
+  parseBotSelection,
+  type BotSelection,
+} from "./duel/contracts/bot-selection.ts";
 import { deckId, type ValidatedDeckSnapshot } from "../decks/index.ts";
 import {
   parseDuelDeckSelection,
@@ -14,6 +18,7 @@ export type BattleDeckSelection =
 export interface BattleRequest {
   readonly player: BattleDeckSelection;
   readonly opponent: BattleDeckSelection;
+  readonly bot?: BotSelection;
 }
 
 export type BattleOutcome = "player-win" | "player-loss" | "draw";
@@ -39,10 +44,19 @@ export class BattleRequestError extends Error {
 const ZONE_LIMITS = { main: 60, extra: 15, side: 15 } as const;
 
 export function parseBattleRequest(value: unknown): BattleRequest {
-  const request = exactKeys(value, ["player", "opponent"], "request");
+  const request = exactKeys(
+    value,
+    Object.hasOwn(plainObject(value, "request"), "bot")
+      ? ["player", "opponent", "bot"]
+      : ["player", "opponent"],
+    "request",
+  );
   return Object.freeze({
     player: parseSelection(request.player, "player"),
     opponent: parseSelection(request.opponent, "opponent"),
+    ...(request.bot === undefined
+      ? {}
+      : { bot: parseBotSelection(request.bot) }),
   });
 }
 

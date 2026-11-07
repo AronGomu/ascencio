@@ -1,0 +1,19 @@
+[package]
+name = "ascencio-reference-bot"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[[bin]]
+name = "ascencio-reference-bot"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"

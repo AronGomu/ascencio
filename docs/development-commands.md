@@ -99,3 +99,7 @@ Resource acceptance runs locally with `npm run test:browser:resources`. The form
 Runner timing preserves Vitest's worker isolation. Per-file worker durations can overlap and must not be summed as wall time. Tests/hooks include fixture work inside hooks; collection includes module imports and suite callbacks. Use repeated alternating runs before claiming that consolidation or fixture caching improves performance.
 
 Nine specs in `test/e2e/application` retain the retired browser fixture and remain explicitly uncollected. Their presence is not evidence of native browser coverage. Portrait, admin, scrollbar, and emitted-font specs now run in the native or production resource configurations. Current native journeys and visual acceptance cases protect additional ported behavior. The collection report lists collected cases and remaining legacy files separately.
+
+## Frozen AI evaluation setup
+
+`npm run bot:setup -- setup-request.json` prepares 500 four-game fixtures and a ready session without playing matches. See [the request and session contract](architecture/06-quality/parallel-bot-session.md) for bot configuration, explicit seeds, durable reuse and runner integration.

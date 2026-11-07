@@ -49,3 +49,6 @@ tauri/gen/
 
 # Local Rust bot experiment builds
 assets/ai-bots/*/ai/target/
+
+# Durable local evaluation archives; evaluation.json retains their references.
+assets/ai-bots/*/evaluation/

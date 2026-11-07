@@ -33,7 +33,9 @@ Improve one bot through repeatable evaluations, match analysis, and one heuristi
 │   ├── analyses/             # One analyst report per match
 │   ├── synthesis.md          # Findings and heuristic recommendations
 │   └── decision.md           # Acceptance decision and next proposal
-└── state.json                # Progress and stopping reason
+├── state.json                # Accepted reference
+├── control.json              # Stop reason and execution accounting
+└── report.json               # Factual report
 <project-root>/artifacts/
 └── AI-BOT-PARALLEL-IMPROVEMENT-REPORT.md
 ```
@@ -68,7 +70,14 @@ You are the main improvement orchestrator.
 
 ### 2. Improve and evaluate
 
+- For an existing `session`: Require explicit continuation before running `npm run bot:session -- <session> <continue-request>` with `action: "continue"` and the returned owner-stop token when required.
+- Require: `matches-command` implements [reservation, settlement and cancellation](../../../docs/architecture/06-quality/parallel-bot-session.md#minimum-runner-interface-for-aro2-18).
 - While `stop-condition` is unmet:
+  - `session-plan` = Run `npm run bot:session -- <session> <plan-request>` with `{ "action": "plan" }` in `plan-request`.
+  - If `session-plan.mayStart` is false: Break.
+  - `iteration-number` = Read `session-plan.iteration`.
+  - Run `npm run bot:session -- <session> <start-request>` with `{ "action": "start", "iteration": <iteration-number> }` in `start-request`.
+  - Require: The returned plan permits work.
   - `iteration-result` = Run `npm run bot:prepare-iteration -- --session <session> --iteration <iteration-number> --runner-identity <runner-identity>` with `--baseline <baseline-receipt>` when present.
   - If preparation fails: Stop with the script error.
   - `iteration-manifest` = Read the JSON file at `iteration-result.manifest`.
@@ -82,14 +91,20 @@ You are the main improvement orchestrator.
   - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline-receipt`, and `proposal`.
   - `decision` = Accept or reject `candidate` using paired results, uncertainty, observed heuristic effects, and validity; retain `accepted-bot` when inconclusive.
   - Save `decision`, its evidence, and the next heuristic candidates.
+  - Index durable proposal, comparison and decision artifacts with `npm run bot:session -- <session> <record-request>` using the documented `record` action.
+  - Run `npm run bot:session -- <session> <finish-request>` using `finish` with the iteration status and checkpoint evidence after all runner attempts settle.
   - If accepted: Set `accepted-bot` to `candidate`; publish its `frozen-bot.json` and update `state.accepted`.
   - Increment `iteration-number`.
 - Returns: `accepted-bot`, iteration evidence, and stopping reason.
 
-### 3. Report
+### 3. Stop and report
 
-- Write the final report with attempted changes, acceptance decisions, win-rate comparisons and uncertainty, completed match/game counts, evidence paths, and stopping reason.
-- Returns: Final report and `accepted-bot`.
+- On owner stop or interruption: Run `npm run bot:session -- <session> <stop-request>` with `action: "stop"` and the corresponding reason from [the control contract](../../../docs/architecture/06-quality/parallel-bot-session.md#orchestrator-transitions).
+- Stop dispatching work when plan returns a stop reason.
+- Settle/cancel every running attempt through `matches-command`; preserve interrupted checkpoints.
+- `report-result` = Run `npm run bot:session -- <session> <report-request>` with `{ "action": "report" }` in `report-request`.
+- Keep agent interpretation separate from `report-result.report`.
+- Returns: `report-result.report`, `accepted-bot`.
 
 ## Agent assignments
 

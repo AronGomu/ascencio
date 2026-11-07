@@ -11,6 +11,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
+import { withSessionLock } from "./session-lock.ts";
 import { verifyFrozen } from "./frozen-setup.ts";
 import { digest, identity } from "./session-fixtures.ts";
 import type { FrozenBot } from "./session-contract.ts";
@@ -26,7 +27,7 @@ function localFile(root: string, file: string) {
     throw new Error("Unsafe archive path");
   return path.join(root, file);
 }
-async function botBytes(root: string, bot: FrozenBot) {
+export async function botBytes(root: string, bot: FrozenBot) {
   const { identity: expected, ...body } = bot;
   if (identity(body) !== expected || !Object.keys(bot.files).length)
     throw new Error("Accepted bot identity mismatch");
@@ -84,6 +85,12 @@ async function baselinePlan(
 }
 
 export async function prepareIteration(options: IterationOptions) {
+  return withSessionLock(path.resolve(options.session), () =>
+    prepareLocked(options),
+  );
+}
+
+async function prepareLocked(options: IterationOptions) {
   if (
     !Number.isSafeInteger(options.iteration) ||
     options.iteration < 1 ||

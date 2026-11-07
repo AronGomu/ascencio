@@ -884,7 +884,10 @@
             {/if}
           </svelte:element>
 
-          {#if opponentControls}<div class="opponent-controls">
+          {#if opponentControls}<div
+              class="opponent-controls"
+              data-cy="duel-start-opponent-controls"
+            >
               {@render opponentControls()}
             </div>{/if}
           <div class="opponent-chip-row" data-cy="duel-start-opponent-chip-row">

@@ -1,4 +1,4 @@
-use crate::{Bot, V, array, n, s, selection};
+use crate::{array, n, s, selection, Bot, V};
 use serde_json::json;
 impl Bot {
     pub(crate) fn generalist(&mut self, input: &V) -> Result<Vec<V>, String> {
@@ -122,7 +122,9 @@ impl Bot {
                 (i, score)
             })
             .collect();
-        ranked.sort_by(|a, b| b.1.total_cmp(&a.1)); // stable: equal scores preserve offered order
+        // JavaScript's subtraction comparator ties -0 and +0; stable sort keeps
+        // their offered order. total_cmp would distinguish those two scores.
+        ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         let selected = selection::legal(
             p,
             &ranked.iter().map(|x| x.0).collect::<Vec<_>>(),

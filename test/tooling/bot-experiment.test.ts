@@ -88,6 +88,21 @@ test("Rust targets preserve selection ordering, loop state, and Random draws", a
   );
   assert.equal(build.status, 0, build.stderr);
   const workloads = [
+    // Generalist scores the enemy's zero ATK as -0 and our zero ATK as +0.
+    // Both targets must preserve the first offered choice like TypeScript.
+    input("selectCard", {
+      choices: [1, 0].map((controller, i) => ({
+        id: choiceId(`zero-${i}`),
+        action: "select" as const,
+        label: `Zero ATK ${i}`,
+        card: {
+          instanceId: cardInstanceId(`zero-${i}`),
+          controller: controller as 0 | 1,
+          location: "monster" as const,
+          sequence: i,
+        },
+      })),
+    }),
     input("selectCard", { minimum: 0, maximum: 3, cancelable: true }),
     input("selectCounter", { minimum: 4, maximum: 4 }),
     input("sortCard", { minimum: 3, maximum: 3, ordered: true }),

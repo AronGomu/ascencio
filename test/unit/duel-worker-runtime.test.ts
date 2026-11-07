@@ -1104,7 +1104,7 @@ describe("duels started from an explicit card list", () => {
       try {
         const refused = await runtime.handle({
           ...START_FAKE_DUEL,
-          duelId: "unrelated-invalid-preset",
+          duelId: duelId("unrelated-invalid-preset"),
           bot: { runtime: "wasm", packageId: "other.ai", policy: "generalist" },
         });
         expect(refused).toContainEqual(

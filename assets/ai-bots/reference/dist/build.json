@@ -6,11 +6,11 @@
   "files": [
     {
       "path": "assets/ai-bots/reference/ai/target/release/ascencio-reference-bot",
-      "sha256": "b145c8f92d369c7645b2ee17b35db37ad6289f4f01d060d7a97d84fa09ecbbed"
+      "sha256": "8639de5df0cf5365106558345d89aea8b4026e686d593824f970b050b6e1bf8c"
     },
     {
       "path": "assets/ai-bots/reference/dist/ai.wasm",
-      "sha256": "d10f6000393ab8db066e9551ce40e7c4431815660bff43ee87773b59078c61dc"
+      "sha256": "1eeb4c89553861d027c19e77671ddf4e7c6a5623061bd8c31c78be7b87cd5d3c"
     }
   ]
 }

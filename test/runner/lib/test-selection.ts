@@ -219,6 +219,35 @@ export function selectTests(root: string, changed: string[], files: string[]) {
     ]);
     for (const file of guardReasons) covered.add(file);
   }
+  // Rust and schema consumers are outside the TypeScript import graph. Keep
+  // deleted/renamed resources covered using changed paths, not only inventory.
+  const explicitRules = [
+    {
+      test: "test/tooling/bot-evaluation-tooling.test.ts",
+      matches: (file: string) =>
+        file.startsWith("tools/bot-evaluation/") ||
+        file.startsWith("schemas/bot-evaluation/") ||
+        file.startsWith("scripts/bot-evaluation/") ||
+        file.startsWith("config/migrations/"),
+    },
+    {
+      test: "test/tooling/repository-migration.test.ts",
+      matches: (file: string) =>
+        file.startsWith("config/migrations/") ||
+        file.startsWith("tools/bot-evaluation/schemas/") ||
+        file.startsWith("schemas/bot-evaluation/") ||
+        file === "scripts/check-repository-migration.ts",
+    },
+  ];
+  for (const rule of explicitRules) {
+    if (!files.includes(rule.test)) continue;
+    const reasons = changed.filter(rule.matches);
+    if (!reasons.length) continue;
+    selected.set(rule.test, [
+      ...new Set([...(selected.get(rule.test) ?? []), ...reasons]),
+    ]);
+    for (const file of reasons) covered.add(file);
+  }
   const uncovered = changed.filter(
     (file) =>
       !covered.has(file) &&

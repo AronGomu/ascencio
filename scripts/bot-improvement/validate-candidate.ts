@@ -22,12 +22,41 @@ function body(bot: FrozenBot) {
   void _files;
   return metadata;
 }
-function assertIdentity(bot: FrozenBot) {
-  if (identity({ ...body(bot), files: bot.files }) !== bot.identity)
+function assertIdentity(bot: FrozenBot, label = "Accepted") {
+  if (
+    Object.hasOwn(bot.files, "frozen-bot.json") ||
+    identity({ ...body(bot), files: bot.files }) !== bot.identity
+  )
     throw new ValidationFailure(
       "input",
-      "Accepted bot descriptor identity mismatch",
+      `${label} bot descriptor identity mismatch`,
     );
+}
+/** Prepared workspaces retain the accepted descriptor while heuristics are edited. */
+function payload(
+  archive: Record<string, Buffer>,
+  accepted: FrozenBot,
+  label: string,
+) {
+  const { "frozen-bot.json": descriptor, ...files } = archive;
+  if (descriptor) {
+    let bot: FrozenBot;
+    try {
+      bot = JSON.parse(descriptor.toString());
+      assertIdentity(bot, label);
+    } catch (error) {
+      throw new ValidationFailure(
+        "input",
+        `${label} archive descriptor invalid: ${String(error)}`,
+      );
+    }
+    if (identity(bot) !== identity(accepted))
+      throw new ValidationFailure(
+        "input",
+        `${label} archive descriptor differs from pinned accepted bot`,
+      );
+  }
+  return files;
 }
 function inside(a: string, b: string) {
   return a === b || a.startsWith(`${b}${path.sep}`);
@@ -78,15 +107,17 @@ export async function validateCandidate(
         "scope",
         "Accepted deck, policy, module or configuration differs from frozen target",
       );
-    const acceptedFiles = await readTree(request.accepted.path);
+    const acceptedArchive = await readTree(request.accepted.path);
+    const acceptedFiles = payload(acceptedArchive, accepted, "Accepted");
     if (identity(hashes(acceptedFiles)) !== identity(accepted.files))
       throw new ValidationFailure(
         "input",
         "Accepted archive bytes differ from pinned descriptor",
       );
-    const submitted = await readTree(request.candidate);
-    await writeTree(path.join(destination, "submitted"), submitted);
-    result.snapshotIdentity = treeIdentity(submitted);
+    const submittedArchive = await readTree(request.candidate);
+    await writeTree(path.join(destination, "submitted"), submittedArchive);
+    result.snapshotIdentity = treeIdentity(submittedArchive);
+    const submitted = payload(submittedArchive, accepted, "Candidate");
     if (
       treeIdentity(await readTree(request.candidate)) !==
       result.snapshotIdentity
@@ -217,7 +248,7 @@ export async function validateCandidate(
     await verifyFrozen(request.fixture.path);
     if (
       treeIdentity(await readTree(request.accepted.path)) !==
-      treeIdentity(acceptedFiles)
+      treeIdentity(acceptedArchive)
     )
       throw new ValidationFailure(
         "input",
@@ -235,6 +266,12 @@ export async function validateCandidate(
         ? { "strategy.mjs": files["strategy.mjs"] }
         : {}),
     });
+    // Publish the descriptor after checking and hashing the compiled payload.
+    await writeFile(
+      path.join(compiledRoot, "frozen-bot.json"),
+      JSON.stringify(bot, null, 2) + "\n",
+      { flag: "wx" },
+    );
     result.candidate = { path: compiledRoot, bot };
     result.status = "valid";
   } catch (error) {

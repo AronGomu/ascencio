@@ -22,7 +22,7 @@ export interface FrozenBot {
   policy?: string;
   module?: string;
   deck: ParsedDeck;
-  /** Archive-relative files, never live source references. */
+  /** Archive-relative payload files; excludes the reserved frozen-bot.json descriptor. */
   files: Record<string, string>;
 }
 export interface GameFixture {
@@ -82,7 +82,7 @@ export interface CandidateValidationRequest {
   fixture: { path: string; identity: string };
   /** Explicit pinned accepted descriptor; never read mutable state during validation. */
   accepted: { path: string; bot: FrozenBot };
-  /** Exact archive-shaped tree, including unchanged files. */
+  /** Exact payload tree, including unchanged files and optional accepted frozen-bot.json. */
   candidate: string;
   /** Fresh evidence directory; existing evidence is never overwritten. */
   output: string;

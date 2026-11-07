@@ -12,7 +12,7 @@ This directory contains current project documentation and historical context. Ro
 
 [`startup-loading-messages.md`](startup-loading-messages.md) maps each startup heading to its work and explains how to review wording in a paused visual preview.
 
-[Frozen parallel evaluation setup](architecture/06-quality/parallel-bot-session.md) defines durable fixtures, the session contract, and the standalone candidate validation request/result.
+[Frozen parallel evaluation setup](architecture/06-quality/parallel-bot-session.md) defines durable fixtures, iteration preparation, baseline receipts and candidate validation contracts.
 
 [Bounded bot improvement](architecture/06-quality/bot-improvement-loop.md) documents the fixed-deck coding-agent loop, configuration, isolation, promotion and recovery.
 

@@ -70,6 +70,80 @@ console.log(JSON.stringify({values,configuration:artifact.config}));`;
 });
 
 test(
+  "benchmark subset keeps the frozen 500 schedule and forwards supervisor SIGINT immediately",
+  { skip: !session, timeout: 45000 },
+  async () => {
+    const full = await prepareMatches({ session: session! });
+    const subset = await prepareMatches({ session: session!, matchCount: 24 });
+    assert.equal(full.job.matches.length, 500);
+    assert.equal(subset.job.matches.length, 24);
+    assert.deepEqual(subset.job.matches, full.job.matches.slice(0, 24));
+    await assert.rejects(
+      prepareMatches({ session: session!, matchCount: 0 }),
+      /Match count/,
+    );
+    await assert.rejects(
+      prepareMatches({ session: session!, matchCount: 501 }),
+      /Match count/,
+    );
+    const root = await mkdtemp(path.resolve(".tmp/frozen-subset-stop-"));
+    const out = path.join(root, "benchmark");
+    const child = spawn(
+      process.execPath,
+      [
+        "scripts/bot-improvement/benchmark-matches.ts",
+        "--session",
+        session!,
+        "--out",
+        out,
+        "--matches",
+        "24",
+        "--repeats",
+        "1",
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let output = "";
+    child.stdout.on("data", (d) => (output += d));
+    child.stderr.on("data", (d) => (output += d));
+    const done = new Promise<number | null>((resolve, reject) => {
+      child.on("error", reject);
+      child.on("close", resolve);
+    });
+    const control = path.join(out, "workers-1-repeat-1/session/control.json");
+    let running = false;
+    for (let n = 0; n < 1000; n++) {
+      try {
+        if (
+          (await json(control)).attempts.some(
+            (a: { status: string }) => a.status === "running",
+          )
+        ) {
+          running = true;
+          break;
+        }
+      } catch {
+        /* Await durable admission. */
+      }
+      await pause();
+    }
+    assert.ok(running, output);
+    const start = Date.now();
+    child.kill("SIGINT");
+    assert.equal(await done, 2, output);
+    assert.ok(Date.now() - start < 15000, output);
+    const report = await json(path.join(out, "benchmark.json"));
+    assert.equal(report.stages.length, 1);
+    assert.match(report.stoppingReason, /interrupted/);
+    assert.ok(
+      (await json(control)).attempts.every(
+        (a: { status: string }) => a.status !== "running",
+      ),
+    );
+  },
+);
+
+test(
   "real frozen pool replays across concurrency, resumes cancellation, rejects corrupt/duplicate evidence",
   { skip: !session, timeout: 180000 },
   async (t) => {

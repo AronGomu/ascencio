@@ -6,23 +6,32 @@ import {
   createBenchmarkSession,
 } from "./benchmark-session.ts";
 import { sessionControl } from "./match-session.ts";
-import { executeMatches, matchOptions, runProcess } from "./run-matches.ts";
+import {
+  executeMatches,
+  matchOptions,
+  runProcess,
+  interruptActiveProcess,
+} from "./run-matches.ts";
 import { machineResources, saveRecommendation } from "./match-workers.ts";
 import { digest, identity } from "./session-fixtures.ts";
 
 const { values: v } = parseArgs({
-  options: { ...matchOptions, repeats: { type: "string", default: "2" } },
+  options: { ...matchOptions, repeats: { type: "string", default: "1" } },
 });
 if (!v.session || !v.out || v.resume)
   throw new Error(
-    "Benchmark requires --session SESSION --out NEW_DIRECTORY; optional --repeats N (minimum 2), --candidate, --self, --limits",
+    "Benchmark requires --session SESSION --out NEW_DIRECTORY; optional --repeats N (minimum 1), --candidate, --self, --limits",
   );
 const repeats = Number(v.repeats);
-if (!Number.isSafeInteger(repeats) || repeats < 2)
-  throw new Error("At least two repetitions required");
+if (!Number.isSafeInteger(repeats) || repeats < 1)
+  throw new Error("At least one repetition required");
+const matchCount = Number(v.matches ?? 24);
+if (!Number.isSafeInteger(matchCount) || matchCount < 1 || matchCount > 500)
+  throw new Error("Match count must be 1–500");
 let ownerStopped = false;
 const requestStop = () => {
   ownerStopped = true;
+  interruptActiveProcess();
 };
 process.on("SIGINT", requestStop);
 process.on("SIGTERM", requestStop);
@@ -71,8 +80,9 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     continue;
   }
   for (let repeat = 1; repeat <= repeats; repeat++) {
+    if (ownerStopped) break stagesLoop;
     console.error(
-      `Benchmark: ${workers} workers, repetition ${repeat}/${repeats}, 500 matches / 2000 games`,
+      `Benchmark: ${workers} workers, repetition ${repeat}/${repeats}, ${matchCount} matches / ${matchCount * 4} games`,
     );
     const runSession = await createBenchmarkSession(
       inputs,
@@ -84,6 +94,7 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
       stopSource: inputs.stopSource,
       out: path.join(runSession, "evaluation"),
       workers: String(workers),
+      matchCount,
       candidate: v.candidate,
       self: v.self,
       limits: v.limits,
@@ -92,6 +103,9 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     });
     run.commandWallMs = performance.now() - begin;
     run.commandGamesPerSecond = run.completedGames / (run.commandWallMs / 1000);
+    run.amortizedWallMsPerCompletedMatch = run.matches
+      ? run.commandWallMs / run.matches
+      : null;
     if (run.workers !== workers)
       throw new Error(
         "Session worker bound clamps requested benchmark stage; setup with --match-workers 8",
@@ -121,6 +135,7 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
       stopSource: inputs.stopSource,
       out: run.output,
       workers: String(workers),
+      matchCount,
       candidate: v.candidate,
       self: v.self,
       limits: v.limits,
@@ -143,6 +158,9 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     });
     run.commandWallMs += performance.now() - finishStart;
     run.commandGamesPerSecond = run.completedGames / (run.commandWallMs / 1000);
+    run.amortizedWallMsPerCompletedMatch = run.matches
+      ? run.commandWallMs / run.matches
+      : null;
     run.evidenceVerified =
       verified.completedGames === run.completedGames &&
       verified.identity === run.identity &&
@@ -159,8 +177,10 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     (r) =>
       r.exitCode === 0 &&
       r.status === "completed" &&
-      r.matches === 500 &&
-      r.completedGames === 2000 &&
+      r.matches === matchCount &&
+      r.completedGames === matchCount * 4 &&
+      r.completedMatchLatencySamples === matchCount &&
+      Number(r.averageCompletedMatchLatencyMs) > 0 &&
       r.failedGames === 0 &&
       r.skippedGames === 0 &&
       r.evidenceVerified === true &&
@@ -194,6 +214,7 @@ const selected = ownerStopped
 const result = {
   schemaVersion: 1,
   resources,
+  matchCount,
   repeats,
   executionIdentity,
   stages,
@@ -208,7 +229,7 @@ const result = {
     ? "Owner interrupted benchmark; recommendation unchanged"
     : selected
       ? "completed"
-      : "No reliable complete 500-match / 2000-game stage; recommendation unchanged",
+      : "No reliable complete selected-match stage; recommendation unchanged",
 };
 await writeFile(
   path.join(output, "benchmark.json"),

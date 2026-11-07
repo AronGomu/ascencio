@@ -1,6 +1,7 @@
-import { availableParallelism, cpus, platform, arch } from "node:os";
+import { availableParallelism, cpus, platform, arch, homedir } from "node:os";
 import { readFile, mkdir, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { identity } from "./session-fixtures.ts";
 
 export async function machineResources() {
@@ -57,7 +58,8 @@ export async function machineResources() {
   };
 }
 export const recommendationPath = path.resolve(
-  "generated/bot-evaluation-machine.json",
+  process.env.XDG_STATE_HOME ?? path.join(homedir(), ".local/state"),
+  "ascencio/bot-evaluation-machine.json",
 );
 export async function resolveWorkers(
   request: string,
@@ -88,7 +90,7 @@ export async function resolveWorkers(
 export async function saveRecommendation(workers: number, evidence: string) {
   const resources = await machineResources();
   await mkdir(path.dirname(recommendationPath), { recursive: true });
-  const tmp = `${recommendationPath}.tmp`;
+  const tmp = `${recommendationPath}.${randomUUID()}.tmp`;
   await writeFile(
     tmp,
     JSON.stringify(

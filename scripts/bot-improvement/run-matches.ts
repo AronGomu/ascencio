@@ -2,7 +2,7 @@ import { readFile, mkdir, writeFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { verifyFrozen } from "./frozen-setup.ts";
 import { digest, identity } from "./session-fixtures.ts";
 import { bindMatches, sessionControl } from "./match-session.ts";
@@ -84,6 +84,7 @@ export async function prepareMatches(options: {
   maxGames?: number | undefined;
   maxWallMs?: number | undefined;
   accepted?: RunnerSnapshot | undefined;
+  matchCount?: number | undefined;
 }) {
   const config = await json(path.join(options.session, "config.json"));
   if (config.schemaVersion !== 1) throw new Error("Unsupported session");
@@ -122,8 +123,15 @@ export async function prepareMatches(options: {
   for (const n of Object.values(budget))
     if (n !== undefined && (!Number.isSafeInteger(n) || n <= 0))
       throw new Error("Invalid execution budget");
+  const count = options.matchCount ?? frozen.matches.length;
+  if (
+    !Number.isSafeInteger(count) ||
+    count < 1 ||
+    count > frozen.matches.length
+  )
+    throw new Error("Match count must be 1–500");
   const matches = [];
-  for (const match of frozen.matches) {
+  for (const match of frozen.matches.slice(0, count)) {
     const opponent = opponents.get(match.opponentSlot);
     if (!opponent) throw new Error("Unknown opponent slot");
     matches.push({
@@ -295,17 +303,26 @@ export async function executeMatches(
     await binding.release();
   }
 }
+const activeProcesses = new Set<ChildProcess>();
+let interrupted = false;
+export function interruptActiveProcess() {
+  interrupted = true;
+  for (const child of activeProcesses) child.kill("SIGINT");
+}
 export function runProcess(command: string, args: string[]) {
+  if (interrupted) return Promise.resolve(130);
   return new Promise<number>((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: "inherit",
       env: { ...process.env, ARO2_NODE: process.execPath },
     });
-    const interrupt = () => child.kill("SIGINT");
+    activeProcesses.add(child);
+    const interrupt = interruptActiveProcess;
     process.on("SIGINT", interrupt);
     process.on("SIGTERM", interrupt);
     child.on("error", reject);
     child.on("close", (code) => {
+      activeProcesses.delete(child);
       process.off("SIGINT", interrupt);
       process.off("SIGTERM", interrupt);
       resolve(code ?? 2);
@@ -322,6 +339,7 @@ export const matchOptions = {
   "max-games": { type: "string" },
   "max-wall-ms": { type: "string" },
   resume: { type: "boolean" },
+  matches: { type: "string" },
   iteration: { type: "string" },
   role: { type: "string" },
 } as const;
@@ -349,6 +367,7 @@ if (
     session: v.session,
     out: v.out,
     workers: v.workers,
+    matchCount: v.matches ? Number(v.matches) : undefined,
     iteration: v.iteration ? Number(v.iteration) : undefined,
     role: v.role as "control" | "candidate" | undefined,
     candidate: v.candidate,

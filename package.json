@@ -84,7 +84,8 @@
     "bot:evaluate": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- evaluate",
     "bot:compare": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- compare",
     "bot:benchmark": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- benchmark",
-    "bot:setup": "node --experimental-vm-modules scripts/bot-improvement/setup-session.ts"
+    "bot:setup": "node --experimental-vm-modules scripts/bot-improvement/setup-session.ts",
+    "bot:validate": "node --experimental-vm-modules scripts/bot-improvement/validate-candidate.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -75,3 +75,30 @@ export interface SetupOptions {
   analysisWorkers?: number;
   reuse?: string;
 }
+
+/** Standalone validation input; paths resolve relative to the request JSON. */
+export interface CandidateValidationRequest {
+  schemaVersion: 1;
+  fixture: { path: string; identity: string };
+  /** Explicit pinned accepted descriptor; never read mutable state during validation. */
+  accepted: { path: string; bot: FrozenBot };
+  /** Exact archive-shaped tree, including unchanged files. */
+  candidate: string;
+  /** Fresh evidence directory; existing evidence is never overwritten. */
+  output: string;
+}
+export interface CandidateValidationResult {
+  schemaVersion: 1;
+  status: "valid" | "invalid";
+  fixtureIdentity: string;
+  acceptedIdentity: string;
+  snapshotIdentity?: string;
+  sourceIdentity?: string;
+  executableIdentity?: string;
+  candidate?: { path: string; bot: FrozenBot };
+  reasons: {
+    category: "input" | "scope" | "build" | "check";
+    message: string;
+  }[];
+  evidence: string;
+}

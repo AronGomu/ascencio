@@ -67,7 +67,10 @@ You are the main improvement orchestrator.
 
 - While `stop-condition` is unmet:
   - `proposal` = Choose one heuristic change with the strongest expected win-rate benefit, using available evidence.
-  - `candidate` = Implement and validate `proposal` against `accepted-bot`; record its rationale and identity.
+  - `candidate-workspace` = Implement `proposal` in a copy of the accepted archive.
+  - `validation` = Run `npm run bot:validate -- <validation-request.json>` with the named inputs in [the validation contract](../../../docs/architecture/06-quality/parallel-bot-session.md#candidate-validation-aro2-21).
+  - If `validation.status` is `invalid`: Preserve `validation.evidence` and stop with `validation.reasons`.
+  - `candidate` = Read `validation.candidate`; record the proposal rationale.
   - Freeze `accepted-bot` as this iteration's self-opponent.
   - Refresh `baseline` on identical fixtures and opponents if its comparison identities differ.
   - In parallel:

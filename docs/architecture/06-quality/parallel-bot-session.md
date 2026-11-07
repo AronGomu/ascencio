@@ -81,3 +81,31 @@ Setup acquires exclusive target/session locks, validates before writing final de
 - Analysis jobs, aggregation and decisions should reference fixture identity, iteration, match `id`, game `number` and event references. Match completion/progress is mutable session/iteration data, never an edit to the frozen schedule. Promotion updates `state.accepted` only after validating evidence and archiving candidate bytes. Resume checks identities before continuing and retains completed evidence and stop budgets. No setup invocation starts any of these jobs.
 
 Targeted setup coverage is in `test/tooling/bot-session-setup.test.ts`; use the `ascencio-tests` workflow. Real-engine replay verification belongs to the fixture-aware runner integration, since setup executes no matches.
+
+## Candidate validation (ARO2-21)
+
+Run `npm run bot:validate -- validation-request.json` from the repository root (Node 26+). This standalone step takes no iteration or scheduling dependency. Paths resolve relative to the request file:
+
+```json
+{
+  "schemaVersion": 1,
+  "fixture": { "path": "target/evaluation/fixtures/<identity>", "identity": "<fixture identity>" },
+  "accepted": { "path": "target/evaluation/fixtures/<identity>/versions/initial", "bot": "<full FrozenBot descriptor from manifest.target or a previous valid result>" },
+  "candidate": "candidate-archive",
+  "output": "validation-attempt-1"
+}
+```
+
+`accepted.bot` is an object, represented above by a placeholder for readability. Pin it once when preparing an iteration. Copy the complete accepted archive to `candidate`, then edit only `strategy.mjs` for `builtin:generalist`, or `ai/src/generalist.rs` for the reference Rust generalist package. The TS strategy may be added to an initial built-in archive; generate its initial contents with `node scripts/bot-improvement/prepare-strategy.ts candidate-archive/strategy.mjs`. Candidate archives contain exactly the `FrozenBot.files` tree, without notes, Cargo targets, symlinks or new runtime/deck/configuration files. Other policies and arbitrary module/package layouts fail explicitly until they have a reviewed strategy boundary.
+
+The validator verifies the frozen fixture and pinned accepted archive, captures submitted bytes, checks a second read for concurrent edits, and runs checks on that captured copy. Later edits to the live candidate do not affect validation. `submitted/` retains exact input bytes even when compilation fails; `candidate/` holds the compiled archive. Existing output directories are never overwritten. Keep failures and retry with a fresh output path. Output must be disjoint from all input trees and its parent must exist. Preflight/request errors print to stderr with exit 1; after output reservation, failures also produce structured evidence.
+
+Stdout ends with `CandidateValidationResult` JSON (also `output/result.json`). Exit 0 means `status: "valid"`; exit 1 means invalid. `reasons[].category` distinguishes `scope`, `build`, `check`, and corrupt/inconsistent `input`. Valid results expose `candidate: { path, bot }`, where `bot` is a complete `FrozenBot` with source and compiled file hashes. `snapshotIdentity` hashes the submitted file map; `sourceIdentity` hashes source and frozen non-executable inputs; `executableIdentity` hashes the generated executable file map. The result binds `fixtureIdentity` and `acceptedIdentity`. A consumer must reverify candidate file hashes before evaluation. No session state, accepted archive, fixture or bot-owned configuration is promoted or rewritten.
+
+TypeScript compilation uses esbuild, the existing `check-strategy.ts` VM export check (with `BOT_STRATEGY_CONTENT` enabling a bounded factory check using frozen card metadata), and a wrapper around the fixture's archived generalist executable. Rust uses the existing locked release WASM compilation recipe, Cargo library tests, bounded WASM export/memory validation and the setup transport's `create` check with frozen cards/configuration. Command status, argv and bounded stdout/stderr are retained in JSON logs; each subprocess has a two-minute deadline. Source/executable identities remain separate after compilation. Checks do not play games or rank candidates.
+
+The enforced boundary fixes decks, configuration, engine, response selection, projection and legality code. Import/ambient-API guards reject direct external-code and randomness escapes. These checks are deterministic structural validation, not a proof of arbitrary program semantics: reviewers still assess heuristic intent, information use and seed discipline; match correctness belongs to runner evaluation. No caller-supplied shell checks or editable allowlist expand the boundary.
+
+The Rust success test requires the `wasm32-unknown-unknown` standard library and skips explicitly when absent; Rust failure-evidence coverage still runs.
+
+Related local coverage: `test/tooling/bot-candidate-validation.test.ts` and `test/tooling/bot-session-setup.test.ts` via `ascencio-tests`.

@@ -197,7 +197,7 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen session setup, strategy preparation and checks
+│   ├── bot-improvement/              # Frozen setup, candidate validation and strategy checks
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping
 │       ├── json-content/            # Readable sources and startup snapshot compilation

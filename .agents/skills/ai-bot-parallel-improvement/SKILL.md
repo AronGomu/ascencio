@@ -28,6 +28,7 @@ Improve one bot through repeatable evaluations, match analysis, and one heuristi
 ├── config.json               # Durable fixture reference and resolved limits
 ├── versions/                 # Candidate and accepted strategy references
 ├── iterations/<iteration>/
+│   ├── manifest.json        # Prepared bindings and baseline execution plan
 │   ├── matches/              # Complete engine evidence
 │   ├── analyses/             # One analyst report per match
 │   ├── synthesis.md          # Findings and heuristic recommendations
@@ -60,24 +61,29 @@ You are the main improvement orchestrator.
 - `accepted-bot` = Read `accepted` from `session-config`.
 - `matches-command` = Resolve the documented fixture-aware evaluator entry point.
 - Require: `matches-command` consumes the versioned session contract; otherwise stop with the missing runner capability.
-- `baseline` = Run `matches-command` with `session-config`, `accepted-bot`, and `match-workers`.
-- Returns: `session`, `accepted-bot`, `baseline`, `matches-command`.
+- `runner-identity` = Resolve the runner version covering its execution semantics.
+- `baseline-receipt` = None.
+- `iteration-number` = 1.
+- Returns: `session`, `accepted-bot`, `matches-command`, `runner-identity`, `baseline-receipt`, `iteration-number`.
 
 ### 2. Improve and evaluate
 
 - While `stop-condition` is unmet:
+  - `iteration-result` = Run `npm run bot:prepare-iteration -- --session <session> --iteration <iteration-number> --runner-identity <runner-identity>` with `--baseline <baseline-receipt>` when present.
+  - If preparation fails: Stop with the script error.
+  - `iteration-manifest` = Read the JSON file at `iteration-result.manifest`.
+  - If `iteration-result.plan.control` is `evaluate`: Run `matches-command` for `iteration-manifest.control` using its fixture and opponent bindings; save `baseline-receipt` using [the receipt contract](../../../docs/architecture/06-quality/parallel-bot-session.md#iteration-preparation).
   - `proposal` = Choose one heuristic change with the strongest expected win-rate benefit, using available evidence.
-  - `candidate` = Implement and validate `proposal` against `accepted-bot`; record its rationale and identity.
-  - Freeze `accepted-bot` as this iteration's self-opponent.
-  - Refresh `baseline` on identical fixtures and opponents if its comparison identities differ.
+  - `candidate` = Implement `proposal` in `iteration-manifest.candidate.path`; validate against `accepted-bot` and record its rationale and executable identity.
   - In parallel:
     - `evaluation` = Run `matches-command` with `candidate`, frozen opponents plus the self-opponent, fixtures, and `match-workers`.
     - Whenever a completed match becomes available: Assign it to a Luna match analyst, bounded by `analysis-workers`.
   - Require: All 500 matches and their analyst reports are settled; otherwise preserve progress and stop with the incomplete evaluation reason.
-  - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline`, and `proposal`.
+  - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline-receipt`, and `proposal`.
   - `decision` = Accept or reject `candidate` using paired results, uncertainty, observed heuristic effects, and validity; retain `accepted-bot` when inconclusive.
   - Save `decision`, its evidence, and the next heuristic candidates.
-  - If accepted: Set `accepted-bot` to `candidate`.
+  - If accepted: Set `accepted-bot` to `candidate`; publish its `frozen-bot.json` and update `state.accepted`.
+  - Increment `iteration-number`.
 - Returns: `accepted-bot`, iteration evidence, and stopping reason.
 
 ### 3. Report

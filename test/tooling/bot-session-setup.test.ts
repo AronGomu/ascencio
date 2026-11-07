@@ -17,6 +17,7 @@ import {
   schedule,
   deckOrder,
 } from "../../scripts/bot-improvement/session-fixtures.ts";
+import { prepareIteration } from "../../scripts/bot-improvement/prepare-iteration.ts";
 
 const deck = {
   main: Array.from({ length: 40 }, (_, i) => cardCode(i + 1)),
@@ -145,6 +146,19 @@ test("setup CLI atomically publishes durable inputs, validates reuse, archives s
     await write(path.join(root, "request.json"), request);
     const first = run(request);
     assert.equal(first.games, 2000);
+    await t.test(
+      "published setup feeds iteration preparation without conversion",
+      async () => {
+        const prepared = await prepareIteration({
+          session: first.session,
+          iteration: 1,
+          runnerIdentity: "test-runner-v1",
+        });
+        assert.equal(prepared.fixture.identity, first.identity);
+        assert.equal(prepared.control.identity, prepared.self.identity);
+        assert.equal(prepared.baseline.action, "refresh");
+      },
+    );
     assert.ok(
       first.fixture.startsWith(path.join(target, "evaluation", "fixtures")),
     );

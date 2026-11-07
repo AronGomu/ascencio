@@ -52,7 +52,7 @@ ascencio/
 │   │   │   ├── testing.md            # Test strategy and verification routes
 │   │   │   ├── diagnostics.md        # Errors, traces and reproducibility
 │   │   │   ├── bot-improvement-loop.md # Bounded real-engine bot improvement loop
-│   │   │   └── parallel-bot-session.md # Frozen setup, fixture and consumer contracts
+│   │   │   └── parallel-bot-session.md # Frozen setup, iteration and baseline contracts
 │   │   └── 07-governance/            # Trust, security, distribution and extension constraints
 │   ├── ADR/                          # Recorded architecture decisions
 │   │   ├── 022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md
@@ -197,7 +197,10 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen session setup, strategy preparation and checks
+│   ├── bot-improvement/              # Frozen setup, iteration preparation, strategy and checks
+│   │   ├── session-contract.ts       # Frozen setup and fixture schema
+│   │   ├── iteration-contract.ts     # Prepared iteration and baseline receipt schema
+│   │   └── prepare-iteration.ts      # Accepted snapshot, self binding and baseline reuse plan
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping
 │       ├── json-content/            # Readable sources and startup snapshot compilation

@@ -1,8 +1,8 @@
 # Frozen parallel evaluation setup
 
-ARO2-19 introduces `npm run bot:setup -- setup-request.json` (Node 26+). Run from the repository root. Setup validates and archives inputs; it does not play games or invoke agents. The existing `bot:evaluate` / `bot:improve` XML commands remain sequential and do not yet consume this session format.
+ARO2-19 introduces `npm run bot:setup -- setup-request.json` (Node 26+). Run from the repository root. Setup validates and archives inputs; it does not play games or invoke agents. The existing `bot:evaluate` / `bot:improve` XML commands remain sequential; `bot:matches` consumes this session format.
 
-The bundled reference includes its associated evaluation sidecar. After normal content staging and bot build, this single command needs no file edits:
+The bundled reference includes its associated evaluation sidecar. After content staging, bot build and checking the associated deck against its banlist, run:
 
 ```sh
 npm run bot:setup -- --target assets/ai-bots/reference --seed experiment-1 --session .tmp/bot-session-1 --max-iterations 10
@@ -42,7 +42,7 @@ The request file uses paths relative to itself:
 }
 ```
 
-At least one positive stopping limit is required; `{ "ownerStop": true }` requests owner-controlled stopping. Worker limits default to six and three and must be integers from 1 to 64. They are requested bounds, not measured throughput. Setup seed is mandatory. Add `reuse` with an existing frozen directory to reuse it explicitly. A fresh setup whose deterministic destination already exists fails; reuse never regenerates seeds. Changed bot/deck/configuration/content/engine/profile/seed yields an explicit mismatch. Limits and session destination may change on reuse.
+At least one positive stopping limit is required; `{ "ownerStop": true }` requests owner-controlled stopping. Worker limits default to six and three and must be integers from 1 to 64. They are requested bounds, not measured throughput. Setup seed is mandatory. Add `reuse` with an existing frozen directory to reuse it explicitly. The bundled player deck currently includes two Raigeki against a one-copy limit; setup correctly rejects that combination. Use a legal associated deck for evaluation. A fresh setup whose deterministic destination already exists fails; reuse never regenerates seeds. Changed bot/deck/configuration/content/engine/profile/seed yields an explicit mismatch. Limits and session destination may change on reuse.
 
 Stdout ends with one JSON object containing `session`, `config`, `fixture`, `identity`, `matches: 500`, and `games: 2000`. Consume the final line when calling through npm. `evaluation.json.fixtures` records the bot-relative durable fixture path and identity. The fixture store is `<target>/evaluation/fixtures/<identity>/`, independent of `.tmp` sessions.
 
@@ -186,3 +186,69 @@ After a process/power loss, inspect stale locks and staging files and remove onl
 Send `{ "action": "report" }` to atomically write `SESSION/report.json`; stdout additionally includes `report`, its absolute path. It contains accepted version, fixture, configured limits, iteration statuses, attempts, completed games, outstanding reservations, unique completed match references, stopping reason, artifact references and integrity checks. `recorded` includes exact source text for intact proposal/decision/comparison artifacts and null for unavailable/damaged ones. These are quoted source records labeled as producer attestations; their statistical or strategic correctness is not inferred. Completed-game counts cover settled attempts only; running reservations explicitly indicate unreconciled work. Iteration accepted references preserve version history. With no records, the arrays are empty; no win rate, uncertainty, acceptance or completed evaluation is invented. Keep agent commentary in a separate artifact. Copy the resulting factual report to a requested report destination only after it exists.
 
 Related tests: `test/tooling/bot-session-control.test.ts`, iteration preparation and setup tests.
+
+## Execute frozen matches (ARO2-18)
+
+```sh
+npm run bot:matches -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/evaluations/baseline --workers auto
+npm run bot:matches -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/evaluations/baseline --workers auto --resume
+npm run bot:matches:benchmark -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/benchmarks/run-1
+```
+
+The Node entry point verifies archived files and the 500-match manifest, prepares a JSON job, then invokes the existing Rust evaluator's `frozen` command. Rust owns the bounded pool and the existing `execution::play` / `execution::sideboard` real-core path. Each worker owns one reusable Node engine host; only independent matches overlap. The legacy XML commands retain their sequential behavior and schema. Internal `.job.json` files are prepared inputs; invoke the public npm entry point to verify archives before execution.
+
+The runner prepares the initial iteration through `prepareIteration` when needed, using setup’s accepted snapshot. Existing prepared iterations are consumed through `--iteration N`; `--role control|candidate` binds admission and accounting. It does not require candidate-validation output for an initial accepted baseline. Later consumers pass `--candidate SNAPSHOT.json` and `--self SNAPSHOT.json` explicitly. Both use the exported `RunnerSnapshot` contract:
+
+```json
+{
+  "schemaVersion": 1,
+  "path": "./archived-version",
+  "bot": { "identity": "...", "kind": "module", "module": "builtin:basic", "configuration": {}, "deck": { "main": [], "extra": [], "side": [] }, "files": { "bot.mjs": "..." } }
+}
+```
+
+`bot` is a complete `FrozenBot`, not the abbreviated values above. Paths resolve relative to the override file. File hashes and bot identity are verified; deck, scalar configuration, kind, policy and module tag must match the frozen target. Override executable/source bytes may differ. Module bundles load verbatim; package WASM loads from the archived manifest, using the existing preemptible transport. Both self and candidate identities enter the execution identity. Candidate validation and promotion remain separate workflows. A stored `strategy.mjs` is source evidence; execution uses the archived executable, so candidate preparation must build the strategy into that executable.
+
+The host consumes all engine seeds even with programmed orders, maps actor orders/seeds to starter seats, creates fresh bots per game and sideboarding, and derives post-side orders from the actual legally exchanged decks. Builtin Random gets the specified deterministic stream; package `create` receives the fixture u32 seed. External modules declaring a numeric `configuration.seed` receive the fixture u32 in a fresh configuration copy; other frozen configuration stays unchanged. Deterministic external modules remain responsible for exposing randomness through their factory/configuration as described above; arbitrary external ambient randomness cannot be validated by this runner. Actual initial orders and deck-configuration hashes are in the perspective XML, and `replay.json` records each game's canonical evidence and configuration hashes for comparison.
+
+`--workers auto|N` is clamped by pending matches, setup's `limits.matchWorkers`, and usable CPUs. Cheap Linux physical-core topology is preferred, respecting affinity and cgroup v2 quota; other platforms fall back to available process parallelism. Auto uses `$XDG_STATE_HOME/ascencio/bot-evaluation-machine.json` (default `~/.local/state/ascencio/`) only for the same CPU/topology/OS/Node identity, otherwise falls back to one and requests retuning. Set up with `--match-workers 8` to permit every benchmark stage. Analysis workers remain independent.
+
+Execution limits default to 60 s/game, 1 s/decision, 5 s/sideboarding, 200 turns and 20,000 decisions. `--limits LIMITS.json` supplies all five positive integer fields of `MatchExecutionLimits`; limits enter execution identity and remain identical across tuning stages. Session game/wall budgets remain authoritative across evaluations and retries. `--max-games N` / `--max-wall-ms N` are additional per-evaluation caps; they never extend the shared session budget. A match reserves four games durably before dispatch; interrupted attempts retain that reservation on resume, conservatively preserving the cap. Wall accounting includes prior invocations, excluding time between invocations. Iteration limits belong to the iteration orchestrator. SIGINT/SIGTERM stop dispatch and terminate active game hosts at the existing deadline boundary; hard process death may require recovery of stale locks. The runner does not relax decision deadlines under contention.
+
+```text
+<out>.job.json                 # Verified prepared job, workers excluded from identity
+<out>/execution.json           # Job + application/executable identity for resume
+<out>/progress.json            # Sorted finalized IDs, reservation and wall accounting
+<out>/matches/<match-id>/
+  manifest.xml                 # Match input/runtime identity
+  fixture.json                 # Exact slot, seeds, decks, archived executable references
+  matches/<match-id>/           # Existing match.xml, player-a.xml, player-b.xml
+  bugs/                        # Existing privileged diagnostics, isolated per match
+  done.json                    # Commit marker hashing all match evidence files
+<out>/attempts/                # Interrupted partial attempts retained before retry
+<out>/summary.xml              # Existing aggregate metrics format
+<out>/replay.json               # Canonical game hashes in deterministic ID order
+<out>/result.json               # Actual counts, wall time, peak tree RSS, failures
+```
+
+A coordinator alone writes aggregate progress. Workers persist their own XML using existing XSD validation, file fsync, atomic rename and directory fsync. Completion is independent of numeric order; resume scans commit markers rather than a sequential watermark, verifies every file and canonical game hash, and schedules only unfinalized matches. Failed finalized matches remain evidence and yield exit code 2. Interrupted attempts are preserved and retried, without reusing partial mutable duel state. Corrupt committed evidence fails resume. A complete resume validates evidence without rewriting timing/results. Exclusive `.prepare-lock` and `runner.lock` directories prevent competing writers. After process/power loss, inspect ownership before removing abandoned locks or preparation temporary files.
+
+The benchmark builds once, then executes stages 1, 2, 4, 6, 8 sequentially, with one repetition and the first 24 frozen matches / 96 games by default (`--matches N`, 1–500; `--repeats N`, minimum one). Production `bot:matches` still defaults to all 500 matches / 2,000 games. Every repetition uses the same selected fixture prefix and normal evidence writing; there is no substitute simulator or unmeasured game warmup. Smaller machines record skipped stages. End-to-end command timing includes archive verification/preparation, cold hosts, all required evidence/summary/progress persistence and shutdown. Resume verification is outside that execution timing and checks every completed match. A stage is reliable only with exact totals, no failures/skips, valid evidence and canonical replay hashes matching the first repetition. `benchmark.json` preserves each run, speedups against one and the previous stage, memory and actual failure/timeout totals. Choose the smallest reliable stage within the larger of 3% or observed relative repetition spread of the fastest median; save a recommendation only when a reliable stage exists.
+
+Linux peak memory is the sum of evaluator-process and descendant RSS sampled every 100 ms, including Node and WASM workers (threads share their process RSS). Shared pages may be counted in multiple processes, and sub-100-ms peaks can be missed. This is process-tree RSS, not allocator usage or a single-host sample; unavailable `/proc` measurements are zero and should not be interpreted as a measured peak on another OS.
+
+
+### Shared accounting integration
+
+`bot:matches` uses PR80’s `controlSession` admission interface through a persistent `runner-control-host.ts` bridge. Before each dispatch it reserves a four-game attempt; it settles only persisted completed game references after the worker’s handles/hosts have been released for that attempt. Poll `plan` every second while executing; `OWNER_STOP`, wall/game budgets and explicit interrupts stop admission and cancel active hosts. Every settlement remains permitted after stopping. The Rust coordinator serializes admission and aggregate writes. All shared session mutations use `.session-state.lock`; short collisions retry up to ten seconds. A separate `.match-dispatch-<iteration>-<role>.lock` owns the dispatcher for that role, without holding the shared transaction lock during execution.
+
+Output must be inside the session so control evidence references are relative and intact. Cancelled partial match evidence moves to a stable attempt archive before settlement, preserving references across retries. A complete control evaluation emits `baseline-receipt.json` with the prepared comparison identity and hashed match commit markers. The runner leaves iteration `finish` to the orchestrator, which must settle it before promotion changes accepted identity. Benchmark repetitions call `finish` themselves and use isolated accounting sessions starting at iteration 1, preventing growing ledger size from biasing later stages; fixture identity, executable bytes, seeds and actual game hashes remain identical. The default five stages execute 480 completed games across five isolated run ledgers. Each starts with the same configured stopping limits and empty progress. The source session supplies frozen bindings and accepted identity; its `OWNER_STOP` is forwarded to the active run. Source gameplay accounting is retained unchanged.
+
+After abrupt dispatcher loss, confirm its old dispatcher is gone and recover abandoned dispatcher/output locks before `--resume`. `owners.json` records Linux process start identities; resume terminates surviving hosts only when their saved identity still matches, before reconciling checkpoints. A running reservation is reconciled only from a validated persisted checkpoint; unverifiable or missing checkpoints keep accounting outstanding for explicit recovery. Complete output is integrity-checked and reused without another reservation. Owner-stop continuation still requires PR80’s explicit token acknowledgement. The discarded pre-integration performance run is retained separately and does not supply a measured recommendation.
+
+
+### Match timing and subset measurements
+
+`--matches 24` selects the same first 24 immutable fixtures at every concurrency; it never regenerates or edits the full 500-match schedule. A subset cannot publish a full baseline receipt. `latency.json` records each worker's elapsed match latency from before host initialization through four games, sideboarding, canonical validation and durable XML; admission queue time and final timing/commit-marker metadata are excluded. `averageCompletedMatchLatencyMs` averages only completed matches. `amortizedWallMsPerCompletedMatch` divides total wall time by completed matches; the benchmark replaces that value with its wider command boundary including preparation, shutdown and accounting finish. These are different measures under concurrency. One 24-match run per stage is a short local tuning sample; it does not establish full-scale throughput or a repeated-run noise estimate.
+
+SIGINT/SIGTERM on the benchmark supervisor immediately signal active evaluation/build children and prevent new child launches. The supervisor then preserves the interrupted result and settles accounting. Source `OWNER_STOP` remains supported. The owner explicitly replaced the original full-size performance comparisons with this 24-match measurement; earlier full and interrupted baseline evidence is retained separately.

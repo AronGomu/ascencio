@@ -85,6 +85,8 @@
     "bot:compare": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- compare",
     "bot:benchmark": "cargo run --release --manifest-path tools/bot-evaluation/Cargo.toml -- benchmark",
     "bot:session": "node scripts/bot-improvement/control-session.ts",
+    "bot:matches": "node scripts/bot-improvement/run-matches.ts",
+    "bot:matches:benchmark": "node scripts/bot-improvement/benchmark-matches.ts",
     "bot:setup": "node --experimental-vm-modules scripts/bot-improvement/setup-session.ts",
     "bot:validate": "node --experimental-vm-modules scripts/bot-improvement/validate-candidate.ts",
     "bot:prepare-iteration": "node scripts/bot-improvement/prepare-iteration.ts"

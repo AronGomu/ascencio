@@ -205,3 +205,7 @@ Superseded records retained at stable paths for old plan links:
 Current module authoring and campaign prerequisites: [Content modules](assets/content-modules.md), [ADR-102](ADR/102_ADR_content_modules_and_campaign_facts.md).
 
 - [Portable Rust bot experiment](feature/rust-bot-experiment.md): packages, selection, runtime boundaries, builds and measured evidence.
+
+- [Frozen real-engine match pool, resume and progressive local tuning](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
+
+- [ARO2-18 frozen-runner local timing, latency and evidence](evidence/bot-session-runner/results.md).

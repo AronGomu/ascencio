@@ -290,7 +290,7 @@ export async function applyDecision(
             (attempt) =>
               attempt.iteration === iteration &&
               attempt.role === "candidate" &&
-              attempt.executableIdentity !== validation.executableIdentity,
+              attempt.executableIdentity !== validation.candidate?.bot.identity,
           )
         )
           throw new Error(

@@ -173,15 +173,6 @@ export async function prepareMatches(options: {
         })),
       }),
     },
-    executableIdentity: identity({
-      [candidate.bot.kind === "module" ? "bot.mjs" : "dist/ai.wasm"]:
-        candidate.bot.files[
-          candidate.bot.kind === "module" ? "bot.mjs" : "dist/ai.wasm"
-        ],
-      ...(candidate.bot.kind === "module"
-        ? { "strategy.mjs": candidate.bot.files["strategy.mjs"] }
-        : {}),
-    }),
     bound: config.limits.matchWorkers as number,
   };
 }
@@ -201,11 +192,7 @@ export async function executeMatches(
     role: options.role ?? (options.candidate ? "candidate" : "control"),
   });
   try {
-    const {
-      job: prepared,
-      bound,
-      executableIdentity,
-    } = await prepareMatches({
+    const { job: prepared, bound } = await prepareMatches({
       ...options,
       accepted: binding.accepted,
     });
@@ -222,12 +209,7 @@ export async function executeMatches(
         iteration: binding.iteration,
         role: binding.role,
         runnerIdentity: binding.runnerIdentity,
-        // Control admission binds the accepted bot; candidate promotion binds
-        // the validator's executable-file identity, excluding metadata/source.
-        executableIdentity:
-          binding.role === "control"
-            ? prepared.candidateIdentity
-            : executableIdentity,
+        executableIdentity: prepared.candidateIdentity,
         ...(options.stopSource ? { stopSource: options.stopSource } : {}),
       },
     };

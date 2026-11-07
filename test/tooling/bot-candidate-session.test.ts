@@ -577,7 +577,7 @@ test("promotion requires ledger finish after reservation settlement and remains 
       iteration: 1,
       role: "candidate",
       match: fixture.matches[0].id,
-      executableIdentity: f.validation.executableIdentity!,
+      executableIdentity: f.validation.candidate!.bot.identity,
       runnerIdentity: f.options.runnerIdentity,
     });
     assert.equal(reservation.reservation?.launch, true);
@@ -719,11 +719,11 @@ process.exitCode = 2;
     assert.equal(ledger.attempts[0].status, "failed");
     assert.equal(
       ledger.attempts[0].executableIdentity,
-      f.validation.executableIdentity,
+      f.validation.candidate!.bot.identity,
     );
     assert.notEqual(
       ledger.attempts[0].executableIdentity,
-      f.validation.candidate!.bot.identity,
+      f.validation.executableIdentity,
     );
     await assert.rejects(
       applyDecision(f.request),

@@ -113,3 +113,5 @@ Nine specs in `test/e2e/application` retain the retired browser fixture and rema
 `npm run bot:analyses -- SESSION REQUEST.json` prepares finalized-match analysis packets, bounds durable claims, and validates returned reports. See [analysis job inputs and recovery](architecture/06-quality/parallel-bot-session.md#match-analysis-jobs-aro2-22).
 
 Frozen matches: `npm run bot:matches -- --session SESSION --out SESSION/evaluations/control --workers auto`. Local progressive tuning: `npm run bot:matches:benchmark -- --session SESSION --out SESSION/benchmarks/run-1`. See [runner contracts](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
+
+`npm run bot:aggregate -- aggregation-request.json` reads frozen runner evidence and optional analysis queues, writing paired statistics and a factual summary. See [aggregation inputs, denominators and uncertainty](architecture/06-quality/parallel-bot-session.md#candidatecontrol-aggregation-aro2-23).

@@ -69,6 +69,9 @@ function xmlSummary(bytes: Buffer, root: string) {
           "game_id",
           "number",
           "status",
+          "winner",
+          "draw",
+          "result/outcome",
           "stage",
           "starter",
           "starting_player",
@@ -130,6 +133,8 @@ export async function finalizedXml(
     candidateIdentity: string;
     opponentIdentity: string;
     item?: unknown;
+    /** Aggregation additionally validates competitive outcomes. */
+    outcomes?: boolean;
   },
 ) {
   const base = await analysisPath(session, relative);
@@ -236,7 +241,28 @@ export async function finalizedXml(
               game.fields["result/evidence_sha256"] !== other.evidence_sha256))
       )
         throw new Error("Incomplete or inconsistent game evidence");
+      if (
+        expected.outcomes &&
+        summary.fields["sideboarding/status"] !==
+          neutral.fields["sideboarding/status"]
+      )
+        throw new Error("Sideboarding status mismatch");
       if (i > 0) {
+        const outcome =
+          other.status === "skipped"
+            ? ""
+            : other.status === "failed"
+              ? "failed"
+              : other.winner === ""
+                ? "draw"
+                : other.winner === (i === 1 ? "a" : "b")
+                  ? "win"
+                  : "loss";
+        if (
+          expected.outcomes &&
+          (game.fields["result/outcome"] ?? "") !== outcome
+        )
+          throw new Error("Perspective outcome mismatch");
         if (game.fields.status === "completed" && !game.sequences.length)
           throw new Error("Missing perspective timeline");
         events.push(
@@ -255,6 +281,16 @@ export async function finalizedXml(
     games: neutral.games.map((g, i) => {
       const status = g.fields.status as "completed" | "failed" | "skipped";
       const evidenceHash = g.fields.evidence_sha256 || null;
+      const winner = g.fields.winner;
+      const draw = g.fields.draw;
+      if (
+        expected.outcomes &&
+        (status === "completed"
+          ? !["a", "b", ""].includes(winner ?? "missing") ||
+            draw !== (winner === "" ? "true" : "false")
+          : winner !== "" || draw !== "")
+      )
+        throw new Error("Invalid game outcome");
       if (
         status === "skipped"
           ? evidenceHash !== null
@@ -263,6 +299,17 @@ export async function finalizedXml(
         throw new Error("Missing or invalid game evidence hash");
       return { number: i + 1, id: g.fields.game_id!, status, evidenceHash };
     }),
+    outcomes: neutral.games.map((g) => {
+      const status = g.fields.status as "completed" | "failed" | "skipped";
+      return status !== "completed"
+        ? status
+        : g.fields.winner === "a"
+          ? ("win" as const)
+          : g.fields.winner === "b"
+            ? ("loss" as const)
+            : ("draw" as const);
+    }),
     events,
+    sideboarding: neutral.fields["sideboarding/status"]!,
   };
 }

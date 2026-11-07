@@ -5,6 +5,7 @@ import { parseArgs } from "node:util";
 import { spawn } from "node:child_process";
 import { verifyFrozen } from "./frozen-setup.ts";
 import { digest, identity } from "./session-fixtures.ts";
+import { bindMatches, sessionControl } from "./match-session.ts";
 import { resolveWorkers } from "./match-workers.ts";
 import type {
   FrozenBot,
@@ -82,6 +83,7 @@ export async function prepareMatches(options: {
   limits?: string | undefined;
   maxGames?: number | undefined;
   maxWallMs?: number | undefined;
+  accepted?: RunnerSnapshot | undefined;
 }) {
   const config = await json(path.join(options.session, "config.json"));
   if (config.schemaVersion !== 1) throw new Error("Unsupported session");
@@ -89,7 +91,7 @@ export async function prepareMatches(options: {
   const frozen = await verifyFrozen(root);
   if (frozen.identity !== config.fixture.identity)
     throw new Error("Session fixture identity mismatch");
-  const initial: RunnerSnapshot = {
+  const initial: RunnerSnapshot = options.accepted ?? {
     schemaVersion: 1,
     path: path.join(root, "versions/initial"),
     bot: frozen.target,
@@ -147,7 +149,22 @@ export async function prepareMatches(options: {
     matches,
   };
   return {
-    job: { ...body, identity: identity(body) },
+    job: {
+      ...body,
+      identity: identity({
+        fixtureIdentity: body.fixtureIdentity,
+        candidateIdentity: body.candidateIdentity,
+        selfIdentity: body.selfIdentity,
+        profile: body.profile,
+        limits: body.limits,
+        budget: body.budget,
+        matches: body.matches.map(({ match, decks, identities }) => ({
+          match,
+          decks,
+          identities,
+        })),
+      }),
+    },
     bound: config.limits.matchWorkers as number,
   };
 }
@@ -157,47 +174,119 @@ export async function executeMatches(
     workers: string;
     resume?: boolean | undefined;
     binary?: string | undefined;
+    iteration?: number | undefined;
+    role?: "control" | "candidate" | undefined;
   },
 ) {
-  const { job, bound } = await prepareMatches(options);
-  const workers = await resolveWorkers(
-    options.workers,
-    job.matches.length,
-    bound,
-  );
-  const output = path.resolve(options.out);
-  // Preparation files have a separate exclusive owner, never collide with pool output/resume.
-  await mkdir(path.dirname(output), { recursive: true });
-  const lock = `${output}.prepare-lock`;
-  await mkdir(lock);
+  const binding = await bindMatches({
+    ...options,
+    role: options.role ?? (options.candidate ? "candidate" : "control"),
+  });
   try {
-    const file = `${output}.job.json`;
-    if (options.resume) {
-      if (identity(await json(file)) !== identity(job))
-        throw new Error("Resume preparation identity mismatch");
-    } else {
-      await writeFile(`${file}.tmp`, JSON.stringify(job), { flag: "wx" });
-      await rename(`${file}.tmp`, file);
+    const { job: prepared, bound } = await prepareMatches({
+      ...options,
+      accepted: binding.accepted,
+    });
+    if (
+      prepared.selfIdentity !== binding.selfIdentity ||
+      (binding.role === "control" &&
+        prepared.candidateIdentity !== binding.accepted.bot.identity)
+    )
+      throw new Error("Prepared iteration control/self identity mismatch");
+    const job = {
+      ...prepared,
+      sessionControl: {
+        session: binding.session,
+        iteration: binding.iteration,
+        role: binding.role,
+        runnerIdentity: binding.runnerIdentity,
+        executableIdentity: prepared.candidateIdentity,
+      },
+    };
+    const plan = await sessionControl(binding.session, {
+      action: "start",
+      iteration: binding.iteration,
+    });
+    if (!plan.mayStart && !options.resume)
+      throw new Error(`Session stopped: ${plan.stoppingReason}`);
+    const workers = await resolveWorkers(
+      options.workers,
+      job.matches.length,
+      bound,
+    );
+    const output = path.resolve(options.out);
+    // Preparation files have a separate exclusive owner, never collide with pool output/resume.
+    await mkdir(path.dirname(output), { recursive: true });
+    const lock = `${output}.prepare-lock`;
+    await mkdir(lock);
+    try {
+      const file = `${output}.job.json`;
+      if (options.resume) {
+        if (identity(await json(file)) !== identity(job))
+          throw new Error("Resume preparation identity mismatch");
+      } else {
+        await writeFile(`${file}.tmp`, JSON.stringify(job), { flag: "wx" });
+        await rename(`${file}.tmp`, file);
+      }
+      const binary =
+        options.binary ??
+        path.resolve(
+          "tools/bot-evaluation/target/release/ascencio-bot-evaluation",
+        );
+      const code = await runProcess(binary, [
+        "frozen",
+        "--job",
+        file,
+        "--out",
+        output,
+        "--workers",
+        String(workers),
+        ...(options.resume ? ["--resume"] : []),
+      ]);
+      const result = await json(path.join(output, "result.json"));
+      let receipt: string | null = null;
+      if (
+        code === 0 &&
+        result.completedGames === 2000 &&
+        binding.role === "control"
+      ) {
+        const matches: Record<string, { path: string; sha256: string }> = {};
+        for (const item of job.matches) {
+          const file = `matches/${item.match.id}/done.json`;
+          matches[item.match.id] = {
+            path: file,
+            sha256: digest(await readFile(path.join(output, file))),
+          };
+        }
+        receipt = path.join(output, "baseline-receipt.json");
+        await writeFile(
+          receipt,
+          JSON.stringify(
+            {
+              schemaVersion: 1,
+              comparisonIdentity: binding.comparisonIdentity,
+              status: "complete",
+              completedMatches: job.matches.map((m) => m.match.id),
+              matches,
+            },
+            null,
+            2,
+          ),
+        );
+      }
+      return {
+        ...result,
+        receipt,
+        exitCode: code,
+        output,
+        iteration: binding.iteration,
+        role: binding.role,
+      };
+    } finally {
+      await rm(lock, { recursive: true, force: true });
     }
-    const binary =
-      options.binary ??
-      path.resolve(
-        "tools/bot-evaluation/target/release/ascencio-bot-evaluation",
-      );
-    const code = await runProcess(binary, [
-      "frozen",
-      "--job",
-      file,
-      "--out",
-      output,
-      "--workers",
-      String(workers),
-      ...(options.resume ? ["--resume"] : []),
-    ]);
-    const result = await json(path.join(output, "result.json"));
-    return { ...result, exitCode: code, output };
   } finally {
-    await rm(lock, { recursive: true, force: true });
+    await binding.release();
   }
 }
 export function runProcess(command: string, args: string[]) {
@@ -227,6 +316,8 @@ export const matchOptions = {
   "max-games": { type: "string" },
   "max-wall-ms": { type: "string" },
   resume: { type: "boolean" },
+  iteration: { type: "string" },
+  role: { type: "string" },
 } as const;
 if (
   process.argv[1] &&
@@ -246,10 +337,14 @@ if (
     ])
   )
     throw new Error("Evaluator build failed");
+  if (v.role && !["control", "candidate"].includes(v.role))
+    throw new Error("Role must be control or candidate");
   const result = await executeMatches({
     session: v.session,
     out: v.out,
     workers: v.workers,
+    iteration: v.iteration ? Number(v.iteration) : undefined,
+    role: v.role as "control" | "candidate" | undefined,
     candidate: v.candidate,
     self: v.self,
     limits: v.limits,

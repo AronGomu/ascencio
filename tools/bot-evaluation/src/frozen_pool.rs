@@ -6,7 +6,9 @@ use crate::{
     identity,
     metrics::Metrics,
     process_memory::tree_rss,
+    process_ownership::Owners,
     runtime_identity::now,
+    session_admission::{Admission, Reservation},
     xml::{self, Result},
 };
 use serde_json::{json, Value};
@@ -142,6 +144,15 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
         }
         peak
     });
+    let owners = Arc::new(Mutex::new(Owners::start(output, resume)?));
+    let mut admission = if job["sessionControl"].is_object() {
+        Some(Admission::start(&job["sessionControl"])?)
+    } else {
+        None
+    };
+    if let Some(control) = admission.as_ref() {
+        owners.lock().unwrap().register(control.pid())?;
+    }
     let items = job["matches"].as_array().ok_or("Missing matches")?;
     let mut unique = BTreeSet::new();
     for item in items {
@@ -160,7 +171,7 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
         .max(1)
         .min(std::thread::available_parallelism()?.get())
         .min(items.len().max(1));
-    let (tx, rx) = mpsc::sync_channel::<Value>(workers);
+    let (tx, rx) = mpsc::sync_channel::<(Value, u64)>(workers);
     let rx = Arc::new(Mutex::new(rx));
     let (results, done) = mpsc::sync_channel(workers);
     let mut metrics = Metrics::default();
@@ -189,6 +200,7 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
     let max_games = job["budget"]["maxGames"].as_u64().unwrap_or(u64::MAX);
     let max_wall = job["budget"]["maxWallMs"].as_f64().unwrap_or(f64::MAX);
     let mut error: Option<String> = None;
+    let mut last_poll = Instant::now();
     std::thread::scope(|scope| {
         for _ in 0..workers {
             let rx = rx.clone();
@@ -196,16 +208,17 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
             let stop = stop.clone();
             let job = job.clone();
             let runtime = &runtime;
+            let owners = owners.clone();
             scope.spawn(move || {
                 let mut host: Option<Host> = None;
                 loop {
-                    let item = match rx.lock().unwrap().recv() {
+                    let (item, attempt) = match rx.lock().unwrap().recv() {
                         Ok(v) => v,
                         Err(_) => break,
                     };
                     let id = item["match"]["id"].as_str().unwrap().to_owned();
                     let base = output.join("matches").join(&id);
-                    let result = (|| -> Result<(Value, [Value; 2])> {
+                    let result = (|| -> Result<(Value, [Value; 2], PathBuf)> {
                         if base.exists() {
                             fs::create_dir_all(output.join("attempts"))?;
                             fs::rename(
@@ -219,6 +232,10 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                         let c = configuration(&job, &item, &base);
                         if host.is_none() {
                             host = Some(Host::start()?);
+                            owners
+                                .lock()
+                                .unwrap()
+                                .register(host.as_ref().unwrap().pid())?;
                         }
                         let active = host.as_mut().unwrap();
                         let ready = initialize(active, &job, &item, &c)?;
@@ -235,11 +252,20 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                         if evidence.0["status"] != "completed" {
                             host.take();
                         }
-                        Ok(evidence)
+                        let mut persisted = base.clone();
+                        if stop.load(Ordering::SeqCst) {
+                            fs::create_dir_all(output.join("attempts"))?;
+                            persisted = output.join("attempts").join(format!(
+                                "{id}-attempt-{attempt}-{}",
+                                time::OffsetDateTime::now_utc().unix_timestamp_nanos()
+                            ));
+                            fs::rename(&base, &persisted)?;
+                        }
+                        Ok((evidence.0, evidence.1, persisted))
                     })()
                     .map_err(|e| e.to_string());
                     let interrupted = stop.load(Ordering::SeqCst);
-                    if results.send((id, result, interrupted)).is_err() {
+                    if results.send((id, attempt, result, interrupted)).is_err() {
                         break;
                     }
                 }
@@ -248,7 +274,7 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
             });
         }
         drop(results);
-        let mut next = pending.into_iter();
+        let mut next = pending.into_iter().peekable();
         let mut active = 0;
         loop {
             while active < workers
@@ -256,9 +282,71 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                 && reserved.saturating_add(4) <= max_games
                 && previous_ms + started.elapsed().as_secs_f64() * 1000.0 < max_wall
             {
-                let Some(item) = next.next() else {
+                let Some(item) = next.peek().cloned() else {
                     break;
                 };
+                let id = item["match"]["id"].as_str().unwrap();
+                let attempt = if let Some(control) = admission.as_mut() {
+                    let base = output.join("matches").join(id);
+                    let recovered = if resume && base.exists() && !base.join("done.json").exists() {
+                        let dir = base.join("matches").join(id);
+                        let record = xml::read(&dir.join("match.xml"), "match");
+                        match record {
+                            Ok(record) => {
+                                let reports = [
+                                    xml::read(&dir.join("player-a.xml"), "player-report"),
+                                    xml::read(&dir.join("player-b.xml"), "player-report"),
+                                ];
+                                if let [Ok(a), Ok(b)] = reports {
+                                    if crate::match_evidence::verify_evidence(
+                                        &record,
+                                        &[a, b],
+                                        &match_manifest(&job, &item, &runtime),
+                                        id,
+                                    )
+                                    .is_ok()
+                                    {
+                                        let archive = output.join("attempts").join(format!(
+                                            "{id}-recovered-{}",
+                                            time::OffsetDateTime::now_utc().unix_timestamp_nanos()
+                                        ));
+                                        if let Err(e) = fs::create_dir_all(output.join("attempts"))
+                                            .and_then(|_| fs::rename(&base, &archive))
+                                        {
+                                            error = Some(e.to_string());
+                                            stop.store(true, Ordering::SeqCst);
+                                            break;
+                                        }
+                                        Some((archive, record))
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                }
+                            }
+                            Err(_) => None,
+                        }
+                    } else {
+                        None
+                    };
+                    match control.reserve(id, recovered.as_ref().map(|(p, r)| (p.as_path(), r))) {
+                        Ok(Reservation::Launch(n)) => n,
+                        Ok(Reservation::Wait) => break,
+                        Ok(Reservation::Stop) => {
+                            stop.store(true, Ordering::SeqCst);
+                            break;
+                        }
+                        Err(e) => {
+                            error = Some(e.to_string());
+                            stop.store(true, Ordering::SeqCst);
+                            break;
+                        }
+                    }
+                } else {
+                    1
+                };
+                next.next();
                 reserved += 4;
                 // Reserve before dispatch: interrupted attempts cannot evade the game budget.
                 if let Err(e) = save(
@@ -269,19 +357,34 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                     stop.store(true, Ordering::SeqCst);
                     break;
                 }
-                if tx.send(item).is_err() {
+                if tx.send((item, attempt)).is_err() {
                     break;
                 }
                 active += 1;
             }
             if active == 0 {
+                if next.peek().is_some()
+                    && !stop.load(Ordering::SeqCst)
+                    && reserved.saturating_add(4) <= max_games
+                    && previous_ms + started.elapsed().as_secs_f64() * 1000.0 < max_wall
+                {
+                    std::thread::sleep(Duration::from_millis(100));
+                    continue;
+                }
                 break;
             }
             match done.recv_timeout(Duration::from_millis(100)) {
-                Ok((id, result, interrupted)) => {
+                Ok((id, attempt, result, interrupted)) => {
+                    if let Some(control) = admission.as_mut() {
+                        let evidence = result.as_ref().ok().map(|(r, _, p)| (p.as_path(), r));
+                        if let Err(e) = control.settle(&id, attempt, evidence, interrupted) {
+                            error = Some(e.to_string());
+                            stop.store(true, Ordering::SeqCst);
+                        }
+                    }
                     active -= 1;
                     match result {
-                        Ok((record, reports)) => {
+                        Ok((record, reports, _)) => {
                             replay.insert(id.clone(), replay_record(&record, &reports));
                             observe(&mut metrics, &record, &reports);
                             if !interrupted {
@@ -312,8 +415,28 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                 Err(mpsc::RecvTimeoutError::Timeout) => {}
                 Err(_) => break,
             }
+            if last_poll.elapsed() >= Duration::from_millis(1000) {
+                if let Some(control) = admission.as_mut() {
+                    match control.cancelled() {
+                        Ok(true) => stop.store(true, Ordering::SeqCst),
+                        Ok(false) => {}
+                        Err(e) => {
+                            error = Some(e.to_string());
+                            stop.store(true, Ordering::SeqCst);
+                        }
+                    }
+                }
+                last_poll = Instant::now();
+            }
             if previous_ms + started.elapsed().as_secs_f64() * 1000.0 >= max_wall {
                 stop.store(true, Ordering::SeqCst);
+            }
+        }
+        if stop.load(Ordering::SeqCst) {
+            if let Some(control) = admission.as_mut() {
+                if let Err(e) = control.stop() {
+                    error = Some(e.to_string());
+                }
             }
         }
         drop(tx);

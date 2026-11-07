@@ -17,6 +17,8 @@ import {
   schedule,
   deckOrder,
 } from "../../scripts/bot-improvement/session-fixtures.ts";
+import { controlSession } from "../../scripts/bot-improvement/control-session.ts";
+import { prepareIteration } from "../../scripts/bot-improvement/prepare-iteration.ts";
 
 const deck = {
   main: Array.from({ length: 40 }, (_, i) => cardCode(i + 1)),
@@ -145,6 +147,26 @@ test("setup CLI atomically publishes durable inputs, validates reuse, archives s
     await write(path.join(root, "request.json"), request);
     const first = run(request);
     assert.equal(first.games, 2000);
+    await t.test(
+      "published setup feeds preparation and session control without conversion",
+      async () => {
+        const prepared = await prepareIteration({
+          session: first.session,
+          iteration: 1,
+          runnerIdentity: "test-runner-v1",
+        });
+        assert.equal(prepared.fixture.identity, first.identity);
+        assert.equal(prepared.control.identity, prepared.self.identity);
+        assert.equal(prepared.baseline.action, "refresh");
+        const plan = await controlSession(first.session, {
+          action: "start",
+          iteration: 1,
+        });
+        assert.equal(plan.mayStart, true);
+        assert.equal(plan.completedGames, 0);
+        assert.equal(plan.accepted.identity, prepared.control.identity);
+      },
+    );
     assert.ok(
       first.fixture.startsWith(path.join(target, "evaluation", "fixtures")),
     );

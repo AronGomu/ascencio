@@ -7,10 +7,17 @@ import {
   mkdir,
   appendFile,
   stat,
+  cp,
+  rm,
 } from "node:fs/promises";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
-import { prepareMatches } from "../../scripts/bot-improvement/run-matches.ts";
+import { digest } from "../../scripts/bot-improvement/session-fixtures.ts";
+import { controlSession } from "../../scripts/bot-improvement/control-session.ts";
+import {
+  prepareMatches,
+  executeMatches,
+} from "../../scripts/bot-improvement/run-matches.ts";
 import {
   machineResources,
   resolveWorkers,
@@ -168,5 +175,187 @@ test(
     const bad = start("duplicate", 2, false, duplicate);
     assert.equal(await bad.done, 1);
     assert.match(bad.output(), /Duplicate\/unsafe/);
+  },
+);
+
+test(
+  "public runner settles shared reservations, enforces session game budgets and OWNER_STOP",
+  { skip: !session, timeout: 120000 },
+  async (t) => {
+    await mkdir(".tmp", { recursive: true });
+    const root = await mkdtemp(path.resolve(".tmp/frozen-accounting-test-"));
+    t.diagnostic(`Retained accounting evidence: ${root}`);
+    async function clone(name: string, budget?: number) {
+      const destination = path.join(root, name);
+      await mkdir(destination);
+      const config = await json(path.join(session!, "config.json"));
+      config.limits.stop = {
+        ownerStop: true,
+        ...(budget === undefined ? {} : { maxGames: budget }),
+      };
+      await writeFile(
+        path.join(destination, "config.json"),
+        JSON.stringify(config),
+      );
+      await cp(
+        path.join(session!, "state.json"),
+        path.join(destination, "state.json"),
+      );
+      for (const dir of ["iterations", "versions", "matches", "analyses"])
+        await mkdir(path.join(destination, dir));
+      return destination;
+    }
+    const limited = await clone("limited", 8);
+    const run = await executeMatches({
+      session: limited,
+      out: path.join(limited, "evaluations/budget"),
+      workers: "2",
+    });
+    assert.equal(run.exitCode, 2);
+    assert.equal(run.completedGames, 8);
+    const plan = await controlSession(limited, { action: "plan" });
+    assert.equal(plan.completedGames, 8);
+    assert.equal(plan.reservedGames, 0);
+    assert.equal(plan.stoppingReason, "max-games");
+    assert.deepEqual(plan.running, []);
+    const ledger = await json(path.join(limited, "control.json"));
+    assert.equal(ledger.attempts.length, 2);
+    assert.ok(
+      ledger.attempts.every(
+        (a: { status: string; games: unknown[] }) =>
+          a.status === "complete" && a.games.length === 4,
+      ),
+    );
+    const stopped = await clone("owner-stop");
+    const child = spawn(
+      process.execPath,
+      [
+        "scripts/bot-improvement/run-matches.ts",
+        "--session",
+        stopped,
+        "--out",
+        path.join(stopped, "evaluations/cancel"),
+        "--workers",
+        "2",
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let output = "";
+    child.stdout.on("data", (d) => (output += d));
+    child.stderr.on("data", (d) => (output += d));
+    const done = new Promise<number | null>((resolve, reject) => {
+      child.on("error", reject);
+      child.on("close", resolve);
+    });
+    let started = false;
+    for (let n = 0; n < 1000; n++) {
+      try {
+        if (
+          (await json(path.join(stopped, "control.json"))).attempts.some(
+            (a: { status: string }) => a.status === "running",
+          )
+        ) {
+          started = true;
+          break;
+        }
+      } catch {
+        /* Wait for the initial durable reservation. */
+      }
+      await pause();
+    }
+    assert.ok(started, output);
+    const begin = Date.now();
+    await writeFile(path.join(stopped, "OWNER_STOP"), "test-owner-stop");
+    assert.equal(await done, 2, output);
+    assert.ok(Date.now() - begin < 15000, output);
+    const cancelled = await controlSession(stopped, { action: "plan" });
+    assert.equal(cancelled.stoppingReason, "owner-stop");
+    assert.equal(cancelled.reservedGames, 0);
+    assert.deepEqual(cancelled.running, []);
+    const result = await json(
+      path.join(stopped, "evaluations/cancel/result.json"),
+    );
+    assert.equal(cancelled.completedGames, result.completedGames);
+    const file = path.join(stopped, "evaluations/cancel/result.json");
+    await controlSession(stopped, {
+      action: "finish",
+      iteration: 1,
+      status: "interrupted",
+      evidence: {
+        path: "evaluations/cancel/result.json",
+        sha256: digest(await readFile(file)),
+      },
+    });
+    const crashed = await clone("crash");
+    const crashOutput = path.join(crashed, "evaluations/recovery");
+    function crashRun(resume = false) {
+      const child = spawn(
+        process.execPath,
+        [
+          "scripts/bot-improvement/run-matches.ts",
+          "--session",
+          crashed,
+          "--out",
+          crashOutput,
+          "--workers",
+          "1",
+          "--max-games",
+          "24",
+          ...(resume ? ["--resume"] : []),
+        ],
+        { stdio: ["ignore", "pipe", "pipe"] },
+      );
+      let log = "";
+      child.stdout.on("data", (d) => (log += d));
+      child.stderr.on("data", (d) => (log += d));
+      return {
+        child,
+        done: new Promise<number | null>((resolve, reject) => {
+          child.on("error", reject);
+          child.on("close", resolve);
+        }),
+        log: () => log,
+      };
+    }
+    const first = crashRun();
+    let checkpoint = false;
+    for (let n = 0; n < 2000; n++) {
+      try {
+        const text = await readFile(
+          path.join(
+            crashOutput,
+            "matches/match-0001/matches/match-0001/match.xml",
+          ),
+          "utf8",
+        );
+        if (
+          text.includes("<status>completed</status>") &&
+          text.includes("<status>skipped</status>")
+        ) {
+          checkpoint = true;
+          break;
+        }
+      } catch {
+        /* Wait for a real durable game prefix. */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    assert.ok(checkpoint, first.log());
+    const owner = await json(path.join(crashOutput, "owners.json"));
+    process.kill(owner.dispatcher.pid, "SIGKILL");
+    assert.notEqual(await first.done, 0, first.log());
+    // An operator may remove only the dead dispatcher's stale output lock.
+    assert.throws(() => process.kill(owner.dispatcher.pid, 0));
+    await rm(path.join(crashOutput, "runner.lock"), { recursive: true });
+    const recovered = crashRun(true);
+    assert.equal(await recovered.done, 2, recovered.log());
+    const recoveredPlan = await controlSession(crashed, { action: "plan" });
+    const recoveredResult = await json(path.join(crashOutput, "result.json"));
+    assert.equal(recoveredPlan.reservedGames, 0);
+    assert.ok(recoveredPlan.completedGames > recoveredResult.completedGames);
+    const attempts = (await json(path.join(crashed, "control.json"))).attempts;
+    assert.equal(attempts[0].status, "interrupted");
+    assert.ok(attempts[0].games.length > 0);
+    assert.equal(attempts[1].attempt, 2);
   },
 );

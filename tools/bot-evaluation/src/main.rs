@@ -14,6 +14,7 @@ mod identity;
 #[cfg(target_os = "linux")]
 mod improvement;
 mod process_memory;
+mod process_ownership;
 #[cfg(not(target_os = "linux"))]
 mod improvement {
     pub fn run(_: &std::path::Path, _: bool) -> crate::xml::Result<i32> {
@@ -24,6 +25,7 @@ mod match_evidence;
 mod metrics;
 mod runner;
 mod runtime_identity;
+mod session_admission;
 mod streaming_xml;
 mod xml;
 use std::path::{Path, PathBuf};

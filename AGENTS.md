@@ -52,7 +52,7 @@ ascencio/
 │   │   │   ├── testing.md            # Test strategy and verification routes
 │   │   │   ├── diagnostics.md        # Errors, traces and reproducibility
 │   │   │   ├── bot-improvement-loop.md # Bounded real-engine bot improvement loop
-│   │   │   └── parallel-bot-session.md # Frozen setup, fixture and consumer contracts
+│   │   │   └── parallel-bot-session.md # Setup, iteration, stop/resume and runner accounting
 │   │   └── 07-governance/            # Trust, security, distribution and extension constraints
 │   ├── ADR/                          # Recorded architecture decisions
 │   │   ├── 022_ADR_three_ui_modular_monolith_and_worktree_boundaries.md
@@ -197,7 +197,13 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen setup, real match pool, local tuning and strategy preparation
+│   ├── bot-improvement/              # Frozen setup, iterations, validation and session control
+│   │   ├── session-contract.ts       # Frozen setup and candidate validation schema
+│   │   ├── iteration-contract.ts     # Prepared bindings and baseline receipts
+│   │   ├── session-control-contract.ts # Stop/resume and execution accounting
+│   │   ├── prepare-iteration.ts      # Accepted snapshot, self binding and baseline reuse
+│   │   ├── control-session.ts        # Admission, settlement, continuation and reports
+│   │   └── session-lock.ts           # Shared session write lock
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping
 │       ├── json-content/            # Readable sources and startup snapshot compilation
@@ -210,10 +216,12 @@ ascencio/
 │   └── src/
 │       ├── main.rs                   # Evaluate, compare, benchmark and improve commands
 │       ├── runner.rs                 # Legacy sequential XML evaluation
-│       ├── frozen_pool.rs            # Frozen-session bounded scheduling, budgets and resume
-│       ├── frozen_match.rs           # Four-game execution using existing engine/evidence paths
-│       ├── frozen_evidence.rs        # Completion markers, replay hashes and integrity checks
+│       ├── frozen_pool.rs            # Frozen-session scheduling, budgets and resume
+│       ├── frozen_match.rs           # Four-game execution through existing engine/evidence
+│       ├── frozen_evidence.rs        # Completion markers, replay hashes and integrity
 │       ├── process_memory.rs         # Process-tree RSS sampling
+│       ├── process_ownership.rs      # Dead-dispatcher host identity and recovery
+│       ├── session_admission.rs      # Shared reservation, settlement and cancellation bridge
 │       ├── config.rs                 # Evaluator configuration
 │       └── improvement/             # Bounded strategy improvement, persistence and statistics
 │

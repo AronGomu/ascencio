@@ -1,9 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { sessionControl } from "./match-session.ts";
 import { executeMatches, matchOptions, runProcess } from "./run-matches.ts";
 import { machineResources, saveRecommendation } from "./match-workers.ts";
-import { identity } from "./session-fixtures.ts";
+import { digest, identity } from "./session-fixtures.ts";
 
 const { values: v } = parseArgs({
   options: { ...matchOptions, repeats: { type: "string", default: "2" } },
@@ -89,6 +90,16 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     if (run.identity !== executionIdentity)
       throw new Error("Benchmark inputs changed between stages");
     if (ownerStopped) {
+      const file = path.join(run.output, "result.json");
+      await sessionControl(v.session, {
+        action: "finish",
+        iteration: run.iteration,
+        status: "interrupted",
+        evidence: {
+          path: path.relative(path.resolve(v.session), file),
+          sha256: digest(await readFile(file)),
+        },
+      });
       stage.runs.push(run);
       break stagesLoop;
     }
@@ -102,9 +113,24 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
       self: v.self,
       limits: v.limits,
       resume: true,
+      iteration: run.iteration,
+      role: run.role,
       maxGames: v["max-games"] ? Number(v["max-games"]) : undefined,
       maxWallMs: v["max-wall-ms"] ? Number(v["max-wall-ms"]) : undefined,
     });
+    const finishStart = performance.now();
+    const resultFile = path.join(run.output, "result.json");
+    await sessionControl(v.session, {
+      action: "finish",
+      iteration: run.iteration,
+      status: run.exitCode === 0 ? "complete" : "failed",
+      evidence: {
+        path: path.relative(path.resolve(v.session), resultFile),
+        sha256: digest(await readFile(resultFile)),
+      },
+    });
+    run.commandWallMs += performance.now() - finishStart;
+    run.commandGamesPerSecond = run.completedGames / (run.commandWallMs / 1000);
     run.evidenceVerified =
       verified.completedGames === run.completedGames &&
       verified.identity === run.identity &&

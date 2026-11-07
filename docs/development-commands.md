@@ -104,4 +104,10 @@ Nine specs in `test/e2e/application` retain the retired browser fixture and rema
 
 `npm run bot:setup -- setup-request.json` prepares 500 four-game fixtures and a ready session without playing matches. See [the request and session contract](architecture/06-quality/parallel-bot-session.md) for bot configuration, explicit seeds, durable reuse and runner integration.
 
-Frozen match execution and local tuning: `npm run bot:matches -- --session SESSION --out NEW_OUTPUT --workers auto` and `npm run bot:matches:benchmark -- --session SESSION --out NEW_BENCHMARK_OUTPUT`. See [runner contracts, limits and resume](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
+`npm run bot:validate -- validation-request.json` validates an archived candidate against a pinned accepted bot; see [candidate validation](architecture/06-quality/parallel-bot-session.md#candidate-validation-aro2-21) for inputs, outputs and failure evidence.
+
+`npm run bot:prepare-iteration -- --session SESSION --iteration N --runner-identity VERSION [--baseline RECEIPT]` publishes accepted/self bindings, a candidate workspace and a baseline reuse plan. See [iteration preparation](architecture/06-quality/parallel-bot-session.md#iteration-preparation).
+
+`npm run bot:session -- SESSION REQUEST.json` gates iteration and match admission, settles accounting, resumes explicitly, and writes factual `report.json`. See [stop/resume and runner integration](architecture/06-quality/parallel-bot-session.md#stop-resume-and-factual-report-aro2-25).
+
+Frozen matches: `npm run bot:matches -- --session SESSION --out SESSION/evaluations/control --workers auto`. Local progressive tuning: `npm run bot:matches:benchmark -- --session SESSION --out SESSION/benchmarks/run-1`. See [runner contracts](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).

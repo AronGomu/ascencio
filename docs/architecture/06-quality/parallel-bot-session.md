@@ -2,7 +2,7 @@
 
 ARO2-19 introduces `npm run bot:setup -- setup-request.json` (Node 26+). Run from the repository root. Setup validates and archives inputs; it does not play games or invoke agents. The existing `bot:evaluate` / `bot:improve` XML commands remain sequential; `bot:matches` consumes this session format.
 
-The bundled reference includes its associated evaluation sidecar. After normal content staging and bot build, this single command needs no file edits:
+The bundled reference includes its associated evaluation sidecar. After content staging, bot build and checking the associated deck against its banlist, run:
 
 ```sh
 npm run bot:setup -- --target assets/ai-bots/reference --seed experiment-1 --session .tmp/bot-session-1 --max-iterations 10
@@ -42,7 +42,7 @@ The request file uses paths relative to itself:
 }
 ```
 
-At least one positive stopping limit is required; `{ "ownerStop": true }` requests owner-controlled stopping. Worker limits default to six and three and must be integers from 1 to 64. They are requested bounds, not measured throughput. Setup seed is mandatory. Add `reuse` with an existing frozen directory to reuse it explicitly. A fresh setup whose deterministic destination already exists fails; reuse never regenerates seeds. Changed bot/deck/configuration/content/engine/profile/seed yields an explicit mismatch. Limits and session destination may change on reuse.
+At least one positive stopping limit is required; `{ "ownerStop": true }` requests owner-controlled stopping. Worker limits default to six and three and must be integers from 1 to 64. They are requested bounds, not measured throughput. Setup seed is mandatory. Add `reuse` with an existing frozen directory to reuse it explicitly. The bundled player deck currently includes two Raigeki against a one-copy limit; setup correctly rejects that combination. Use a legal associated deck for evaluation. A fresh setup whose deterministic destination already exists fails; reuse never regenerates seeds. Changed bot/deck/configuration/content/engine/profile/seed yields an explicit mismatch. Limits and session destination may change on reuse.
 
 Stdout ends with one JSON object containing `session`, `config`, `fixture`, `identity`, `matches: 500`, and `games: 2000`. Consume the final line when calling through npm. `evaluation.json.fixtures` records the bot-relative durable fixture path and identity. The fixture store is `<target>/evaluation/fixtures/<identity>/`, independent of `.tmp` sessions.
 
@@ -82,17 +82,122 @@ Setup acquires exclusive target/session locks, validates before writing final de
 
 Targeted setup coverage is in `test/tooling/bot-session-setup.test.ts`; use the `ascencio-tests` workflow. Real-engine replay verification belongs to the fixture-aware runner integration, since setup executes no matches.
 
+## Candidate validation (ARO2-21)
+
+Run `npm run bot:validate -- validation-request.json` from the repository root (Node 26+). This standalone step takes no iteration or scheduling dependency. Paths resolve relative to the request file:
+
+```json
+{
+  "schemaVersion": 1,
+  "fixture": { "path": "target/evaluation/fixtures/<identity>", "identity": "<fixture identity>" },
+  "accepted": { "path": "target/evaluation/fixtures/<identity>/versions/initial", "bot": "<full FrozenBot descriptor from manifest.target or a previous valid result>" },
+  "candidate": "candidate-archive",
+  "output": "validation-attempt-1"
+}
+```
+
+`accepted.bot` is an object, represented above by a placeholder for readability. Pin it once when preparing an iteration. Copy the complete accepted archive to `candidate`, then edit only `strategy.mjs` for `builtin:generalist`, or `ai/src/generalist.rs` for the reference Rust generalist package. The TS strategy may be added to an initial built-in archive; generate its initial contents with `node scripts/bot-improvement/prepare-strategy.ts candidate-archive/strategy.mjs`. Candidate archives contain the `FrozenBot.files` payload tree and an optional root `frozen-bot.json` descriptor, without notes, Cargo targets, symlinks or new runtime/deck/configuration files. The descriptor is reserved metadata, never an entry in `FrozenBot.files`. When present in either input archive, its identity and full contents must match the pinned `accepted.bot`; the candidate descriptor continues to describe its accepted base while heuristic edits are pending. Descriptor corruption or a self-consistent replacement with different metadata/file hashes fails as an input error. Initial setup archives without descriptors remain supported. Other policies and arbitrary module/package layouts fail explicitly until they have a reviewed strategy boundary.
+
+The validator verifies the frozen fixture and pinned accepted archive, captures submitted bytes, checks a second read for concurrent edits, and runs checks on that captured copy. Later edits to the live candidate do not affect validation. `submitted/` retains exact input bytes even when compilation fails; `candidate/` holds the compiled payload and a newly generated `frozen-bot.json` matching `result.candidate.bot`. The descriptor stays outside source/payload hashes and build/check inputs. Existing output directories are never overwritten. Keep failures and retry with a fresh output path. Output must be disjoint from all input trees and its parent must exist. Preflight/request errors print to stderr with exit 1; after output reservation, failures also produce structured evidence.
+
+Stdout ends with `CandidateValidationResult` JSON (also `output/result.json`). Exit 0 means `status: "valid"`; exit 1 means invalid. `reasons[].category` distinguishes `scope`, `build`, `check`, and corrupt/inconsistent `input`. Valid results expose `candidate: { path, bot }`, where `bot` is a complete `FrozenBot` with source and compiled file hashes. `snapshotIdentity` hashes the exact submitted file map, including any descriptor retained as evidence; `sourceIdentity` hashes source and frozen non-executable inputs; `executableIdentity` hashes the generated executable file map. The result binds `fixtureIdentity` and `acceptedIdentity`. A consumer must reverify candidate file hashes before evaluation. No session state, accepted archive, fixture or bot-owned configuration is promoted or rewritten. For a prepared iteration, pass its `fixture`, `accepted`, and `candidate.path` directly into the validation request. After evaluation and acceptance, publish the complete validated `candidate.path` archive (including its generated descriptor) before updating `state.accepted` with the published path and `candidate.bot.identity`; the next preparation consumes it directly.
+
+TypeScript compilation uses esbuild, the existing `check-strategy.ts` VM export check (with `BOT_STRATEGY_CONTENT` enabling a bounded factory check using frozen card metadata), and a wrapper around the fixture's archived generalist executable. Rust uses the existing locked release WASM compilation recipe, Cargo library tests, bounded WASM export/memory validation and the setup transport's `create` check with frozen cards/configuration. Command status, argv and bounded stdout/stderr are retained in JSON logs; each subprocess has a two-minute deadline. Source/executable identities remain separate after compilation. Checks do not play games or rank candidates.
+
+The enforced boundary fixes decks, configuration, engine, response selection, projection and legality code. Import/ambient-API guards reject direct external-code and randomness escapes. These checks are deterministic structural validation, not a proof of arbitrary program semantics: reviewers still assess heuristic intent, information use and seed discipline; match correctness belongs to runner evaluation. No caller-supplied shell checks or editable allowlist expand the boundary.
+
+The Rust success test requires the `wasm32-unknown-unknown` standard library and skips explicitly when absent; Rust failure-evidence coverage still runs.
+
+Related local coverage: `test/tooling/bot-candidate-validation.test.ts`, `test/tooling/bot-candidate-session.test.ts` (actual setup → preparation → validation → promotion → next preparation, plus forged descriptor rejection) and `test/tooling/bot-session-setup.test.ts` via `ascencio-tests`.
+
+## Iteration preparation
+
+ARO2-20 adds `npm run bot:prepare-iteration -- --session SESSION --iteration N --runner-identity RUNNER_VERSION [--baseline RECEIPT]` (Node 26+). Paths are relative to the current directory. `N` is an explicit positive integer chosen by the orchestrator; reuse it to resume, increment it after a decision. Preparation does not advance state, stop budgets, or accepted references and executes no agents, validation or matches.
+
+`iteration-contract.ts` extends the frozen schema without changing `FrozenSetup`. The command's final stdout line is JSON: `manifest` is its absolute path; the remaining fields are the manifest itself. It publishes `iterations/iteration-NNNN/manifest.json`, an `accepted/` snapshot, and a writable `candidate/` copy. IDs are unique within a session; the session path disambiguates sessions. Both control and self reference the same accepted snapshot. Supplied opponent slots and fixture identities come from the verified frozen manifest, never live setup paths. Candidate `basedOn` records its initial identity; `identity: null` explicitly requires ARO2-21 validation after editing. Preparation cannot claim a validated executable identity for future code. Validation publishes the new identity in its separate result; keep the preparation manifest's candidate binding unchanged.
+
+The initial accepted reference resolves to the fixture target. Later `state.accepted` references must point to an archive containing `frozen-bot.json` with the existing `FrozenBot` structure and matching hashed files. Deck, kind, module/policy selector and scalar configuration must remain equal to the initial target. Preparation checks archived bytes and identity, but candidate validation remains responsible for heuristic-only changes and executable behavior. Promotion must publish an archive before updating `state.accepted`.
+
+`comparisonIdentity` hashes fixture identity, control identity, ordered opponent slot/identity pairs (including self), and the explicit runner identity. Fixture identity already includes engine, content, rules, protocol, schedule, seeds and deck orders. The runner identity must change whenever executable runner semantics change. Candidate identity and iteration number are excluded: another candidate can reuse the same control evidence against identical comparison inputs. Changing the accepted bot also changes self and requires a new baseline.
+
+Optional `--baseline` points to a `BaselineReceipt` produced after the runner has completed all four games of all 500 matches:
+
+```json
+{
+  "schemaVersion": 1,
+  "comparisonIdentity": "<iteration comparisonIdentity>",
+  "status": "complete",
+  "completedMatches": ["match-0001", "...all 500 unique IDs..."],
+  "matches": {
+    "match-0001": {
+      "path": "matches/match-0001.json",
+      "sha256": "<exact evidence bytes SHA-256>"
+    }
+  }
+}
+```
+
+`matches` must contain exactly the fixture's 500 IDs. Each match must reference a distinct evidence path. Evidence paths are receipt-relative; absolute and parent traversal paths are rejected. This receipt is a completion attestation by the runner; preparation verifies coverage and byte integrity, not game semantics or acceptance quality. It introduces no runner command or implementation. ARO2-18 may adapt its evidence output to this receipt. Candidate validation consumes the prepared workspace and bindings as described above.
+
+`baseline.action` is `reuse` only for a complete, intact receipt with the exact comparison identity. Otherwise it is `refresh`, with `missing`, `identity-mismatch`, `incomplete`, or `corrupt` as the reason. `plan.control` is correspondingly `reuse-baseline` or `evaluate`; `plan.candidate` is always `validate-then-evaluate`. Each evaluation has 500 matches / 2000 games. Rerun preparation after producing a receipt to refresh the returned plan.
+
+A repeated invocation verifies fixed bindings and snapshot hashes, preserves candidate edits and existing evidence, and atomically replaces only the manifest's baseline decision and plan. Changed accepted or runner identities at an existing iteration number fail explicitly; choose the next number. Corrupt snapshots and conflicting destinations fail without overwriting evidence. A session-local exclusive `.iteration-preparation.lock` protects concurrent preparation; promotion must not run concurrently. New directories publish by staging and rename. Ordinary errors clean their lock and staging output, allowing retry. After a process/power loss, inspect and remove only abandoned locks/staging directories, then rerun the same number; published iterations remain authoritative. No partial destination is repaired silently.
+
+Targeted coverage: `test/tooling/bot-iteration-preparation.test.ts` and the existing setup contract tests.
+
+## Stop, resume and factual report (ARO2-25)
+
+`npm run bot:session -- SESSION REQUEST.json` (Node 26+) reads a JSON request and prints one JSON result. The request file is cwd-relative; evidence references inside it are session-relative `{ "path": "...", "sha256": "..." }` pairs. `session-control-contract.ts` defines the actions and outputs' persisted source, `control.json`. Setup's schema-1 config/state and the frozen/iteration manifests remain unchanged. Control owns accounting and stop reasons; promotion owns `state.accepted`. Reports read the current accepted reference without promoting it. The extension lives alongside `session-contract.ts`; it changes neither `FrozenSetup` nor `IterationManifest`.
+
+```json
+{ "action": "plan" }
+```
+
+`plan` verifies frozen and accepted bytes, persists elapsed time/stopping reason, and returns `mayStart`, `iteration`, `accepted`, `completedGames`, `reservedGames`, `elapsedMs`, `running`, `cancel`, `remainingMatches`, `completedMatches`, `iterations` and `records`. `remainingMatches` lists uncompleted, unreserved IDs per role; control reuse still follows the iteration manifest's baseline plan. A stopped plan admits no new work. Every caller must inspect the returned stop reason and reservation. Exhausted budgets return a stopped plan; temporarily reserved capacity returns `reservation: null` without cancelling running work. Semantic validation, analysis, statistics and promotion remain ARO2-21–24 responsibilities.
+
+### Orchestrator transitions
+
+- Send `{ "action": "start", "iteration": 1 }` before preparation/execution. Admission charges one attempted iteration, including failed attempts. Numbers are consecutive. Retrying an active/interrupted iteration preserves its number and budget. Settled complete/failed iterations cannot restart.
+- Send `{ "action": "stop", "reason": "interrupted" }` on orchestrator interruption. Owner requests use `reason: "owner-stop"`, or write `SESSION/OWNER_STOP`. Marker bytes identify that request. Stop polling returns running attempts in `cancel`; stop dispatching new jobs, ask the runner to cancel/settle, and retain its evidence.
+- Send `{ "action": "continue" }` only for an explicit continuation. Owner stops additionally require the exact `ownerStopToken` returned by plan. Continuation requires all running attempts settled; it preserves accepted identity, iteration history, actual games and elapsed time. An acknowledged marker stays acknowledged until its bytes change. Use a new marker token for a new request. Exhausted limits remain exhausted.
+- Send `finish` with `iteration`, `status` (`complete`, `failed`, `interrupted`) and an evidence reference after settlement. Complete describes the orchestrator checkpoint; it does not attest that 500 matches, validation, analysis or acceptance succeeded. Interrupted iterations can resume; complete/failed ones are terminal. Repeating an identical terminal update is harmless; conflicting updates fail.
+- Send `record` with `iteration`, `kind` (`proposal`, `decision`, `comparison`) and an evidence reference to index an upstream artifact. One immutable reference per kind/iteration prevents duplicate decisions. The producing ticket owns that artifact's schema and meaning. Missing artifacts remain unavailable; control generates no judgment or comparison. Publish any validated candidate identity, comparison data and acceptance outcome through the producing ticket's artifact, then index that artifact here.
+
+### Minimum runner interface for ARO2-18
+
+Before launching **each match attempt**, call `reserve` with `iteration`, `role` (`control` or `candidate`), fixture match `match`, the validated `executableIdentity`, and the manifest's `runnerIdentity`. Launch only when `mayStart` and `reservation.launch` are true, using `reservation.attempt`. A null reservation means wait for capacity or stop according to the plan. Bind executable bytes through runner/validation checks; accounting does not validate a candidate. The same executable identity must serve the entire role/evaluation. Control identity must match the prepared manifest; runner identity and fixture binding must match too. Requested match concurrency is bounded by setup's `matchWorkers`.
+
+Reservation holds four games against `maxGames`, atomically under the session lock. A repeated request returns the existing running or completed match with `reservation.launch: false`, without another reservation or launch authorization. The dispatcher retains attempt ownership. After a dispatcher crash, do not assume a running attempt is dead: establish subprocess termination, collect its checkpoint, and settle it before retrying. This interface coordinates admission/accounting; it does not provide subprocess ownership or kill processes.
+
+The runner polls `plan` while working and stops launching games on cancellation/deadline. At process settlement, call `settle` with `iteration`, `role`, `match`, returned `attempt` number, `status` (`complete`, `failed`, `interrupted`) and `games: [{ "number": 1, "evidence": { "path": "...", "sha256": "..." } }]`. Each distinct completed game in that attempt needs an intact evidence reference; complete requires numbers 1–4. Interrupted/failed attempts may contain 0–4 completed games. Delivery is idempotent; changed settlements fail. Settlements remain permitted after stopping. Release unused reservations only after the runner confirms termination. Never settle guessed counts after a crash. Runner-local durable per-game checkpoints are required to recover actual counts; until recovered, the reservation remains outstanding and the report shows incomplete accounting.
+
+An interrupted/failed match may retry under the same fixture ID with a new attempt number after settlement. A retry reserves four games and replays the whole match so sideboarding remains sequential. Previously played games remain charged; games replayed in another attempt also count toward actual resource use. Completed matches are unique per iteration/role and never rerun. Reused baseline games are not charged again. `maxGames` bounds recorded actual games plus outstanding reservations, not fabricated full evaluations. A resource limit reached mid-iteration preserves that partial scope.
+
+`maxWallMs` charges elapsed wall time while an iteration is active, including time between polls and process downtime until interruption is recorded. Stopped idle time is excluded; cancellation latency remains charged until running attempts settle. This conservative clock cannot reset a consumed budget on restart; a backward clock does not reduce consumed time. Runner polling/cancellation bounds enforcement latency; this command itself cannot forcibly terminate running engines. Poll regularly and use subprocess deadlines. No hard real-time cancellation claim is made.
+
+### Shared writes and recovery
+
+`withSessionLock` in `session-lock.ts` acquires `SESSION/.session-state.lock`. Preparation, control and **promotion/state writers must use this same lock**, for short read/modify/publish transactions only. Preparation retains its older preparation lock too. Promotion must wait until the iteration is finished before changing the accepted reference; unfinished iterations remain bound to their starting accepted identity. Control writes only `control.json` and `report.json`, by staging/rename, preserving setup state and other producers' evidence. It never updates a decision or accepted identity itself. Configured stop limits are pinned at first control use; later changes fail rather than extending budgets. Start accounting before any execution: existing unaccounted progress fails and needs explicit migration, never zero initialization.
+
+After a process/power loss, inspect stale locks and staging files and remove only abandoned ones after confirming all writers are gone. Published control data stays authoritative; retry identical requests. A running reservation survives process loss and cannot be resumed until its owner is reconciled as above. Filesystem renames are process transactions, not a power-loss database guarantee.
+
+### Factual report
+
+Send `{ "action": "report" }` to atomically write `SESSION/report.json`; stdout additionally includes `report`, its absolute path. It contains accepted version, fixture, configured limits, iteration statuses, attempts, completed games, outstanding reservations, unique completed match references, stopping reason, artifact references and integrity checks. `recorded` includes exact source text for intact proposal/decision/comparison artifacts and null for unavailable/damaged ones. These are quoted source records labeled as producer attestations; their statistical or strategic correctness is not inferred. Completed-game counts cover settled attempts only; running reservations explicitly indicate unreconciled work. Iteration accepted references preserve version history. With no records, the arrays are empty; no win rate, uncertainty, acceptance or completed evaluation is invented. Keep agent commentary in a separate artifact. Copy the resulting factual report to a requested report destination only after it exists.
+
+Related tests: `test/tooling/bot-session-control.test.ts`, iteration preparation and setup tests.
+
 ## Execute frozen matches (ARO2-18)
 
 ```sh
-npm run bot:matches -- --session .tmp/bot-session-1 --out generated/bot-runs/baseline --workers auto
-npm run bot:matches -- --session .tmp/bot-session-1 --out generated/bot-runs/baseline --workers auto --resume
-npm run bot:matches:benchmark -- --session .tmp/bot-session-1 --out generated/bot-tuning/run-1
+npm run bot:matches -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/evaluations/baseline --workers auto
+npm run bot:matches -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/evaluations/baseline --workers auto --resume
+npm run bot:matches:benchmark -- --session .tmp/bot-session-1 --out .tmp/bot-session-1/benchmarks/run-1
 ```
 
 The Node entry point verifies archived files and the 500-match manifest, prepares a JSON job, then invokes the existing Rust evaluator's `frozen` command. Rust owns the bounded pool and the existing `execution::play` / `execution::sideboard` real-core path. Each worker owns one reusable Node engine host; only independent matches overlap. The legacy XML commands retain their sequential behavior and schema. Internal `.job.json` files are prepared inputs; invoke the public npm entry point to verify archives before execution.
 
-A setup session's `versions/initial` is the default target and accepted self snapshot. The runner does not require candidate-validation or iteration-preparation output. Later consumers pass `--candidate SNAPSHOT.json` and `--self SNAPSHOT.json` explicitly. Both use the exported `RunnerSnapshot` contract:
+The runner prepares the initial iteration through `prepareIteration` when needed, using setup’s accepted snapshot. Existing prepared iterations are consumed through `--iteration N`; `--role control|candidate` binds admission and accounting. It does not require candidate-validation output for an initial accepted baseline. Later consumers pass `--candidate SNAPSHOT.json` and `--self SNAPSHOT.json` explicitly. Both use the exported `RunnerSnapshot` contract:
 
 ```json
 {
@@ -108,7 +213,7 @@ The host consumes all engine seeds even with programmed orders, maps actor order
 
 `--workers auto|N` is clamped by pending matches, setup's `limits.matchWorkers`, and usable CPUs. Cheap Linux physical-core topology is preferred, respecting affinity and cgroup v2 quota; other platforms fall back to available process parallelism. Auto uses `generated/bot-evaluation-machine.json` only for the same CPU/topology/OS/Node identity, otherwise falls back to one and requests retuning. Set up with `--match-workers 8` to permit every benchmark stage. Analysis workers remain independent.
 
-Execution limits default to 60 s/game, 1 s/decision, 5 s/sideboarding, 200 turns and 20,000 decisions. `--limits LIMITS.json` supplies all five positive integer fields of `MatchExecutionLimits`; limits enter execution identity and remain identical across tuning stages. Session game/wall budgets apply per evaluation. `--max-games N` / `--max-wall-ms N` are explicit per-evaluation budget overrides, useful when a session's improvement-loop budget does not cover a standalone baseline/benchmark. A match reserves four games durably before dispatch; interrupted attempts retain that reservation on resume, conservatively preserving the cap. Wall accounting includes prior invocations, excluding time between invocations. Iteration limits belong to the iteration orchestrator. SIGINT/SIGTERM stop dispatch and terminate active game hosts at the existing deadline boundary; hard process death may require recovery of stale locks. The runner does not relax decision deadlines under contention.
+Execution limits default to 60 s/game, 1 s/decision, 5 s/sideboarding, 200 turns and 20,000 decisions. `--limits LIMITS.json` supplies all five positive integer fields of `MatchExecutionLimits`; limits enter execution identity and remain identical across tuning stages. Session game/wall budgets remain authoritative across evaluations and retries. `--max-games N` / `--max-wall-ms N` are additional per-evaluation caps; they never extend the shared session budget. A match reserves four games durably before dispatch; interrupted attempts retain that reservation on resume, conservatively preserving the cap. Wall accounting includes prior invocations, excluding time between invocations. Iteration limits belong to the iteration orchestrator. SIGINT/SIGTERM stop dispatch and terminate active game hosts at the existing deadline boundary; hard process death may require recovery of stale locks. The runner does not relax decision deadlines under contention.
 
 ```text
 <out>.job.json                 # Verified prepared job, workers excluded from identity
@@ -131,3 +236,12 @@ A coordinator alone writes aggregate progress. Workers persist their own XML usi
 The benchmark builds once, then executes stages 1, 2, 4, 6, 8 sequentially, with two full repetitions by default (`--repeats N`, minimum two). Every repetition uses all 500 matches / 2,000 games and normal evidence writing; there is no substitute simulator or unmeasured game warmup. Smaller machines record skipped stages. End-to-end command timing includes archive verification/preparation, cold hosts, all required evidence/summary/progress persistence and shutdown. Resume verification is outside that execution timing and checks every completed match. A stage is reliable only with exact totals, no failures/skips, valid evidence and canonical replay hashes matching the first repetition. `benchmark.json` preserves each run, speedups against one and the previous stage, memory and actual failure/timeout totals. Choose the smallest reliable stage within the larger of 3% or observed relative repetition spread of the fastest median; save a recommendation only when a reliable stage exists.
 
 Linux peak memory is the sum of evaluator-process and descendant RSS sampled every 100 ms, including Node and WASM workers (threads share their process RSS). Shared pages may be counted in multiple processes, and sub-100-ms peaks can be missed. This is process-tree RSS, not allocator usage or a single-host sample; unavailable `/proc` measurements are zero and should not be interpreted as a measured peak on another OS.
+
+
+### Shared accounting integration
+
+`bot:matches` uses PR80’s `controlSession` admission interface through a persistent `runner-control-host.ts` bridge. Before each dispatch it reserves a four-game attempt; it settles only persisted completed game references after the worker’s handles/hosts have been released for that attempt. Poll `plan` every second while executing; `OWNER_STOP`, wall/game budgets and explicit interrupts stop admission and cancel active hosts. Every settlement remains permitted after stopping. The Rust coordinator serializes admission and aggregate writes. All shared session mutations use `.session-state.lock`; short collisions retry up to ten seconds. A separate `.match-dispatch-<iteration>-<role>.lock` owns the dispatcher for that role, without holding the shared transaction lock during execution.
+
+Output must be inside the session so control evidence references are relative and intact. Cancelled partial match evidence moves to a stable attempt archive before settlement, preserving references across retries. A complete control evaluation emits `baseline-receipt.json` with the prepared comparison identity and hashed match commit markers. The runner leaves iteration `finish` to the orchestrator, which must settle it before promotion changes accepted identity. Benchmark repetitions call `finish` themselves and prepare a fresh accounting iteration; fixture identity, executable bytes, seeds and actual game hashes remain identical. Two repetitions of all five stages consume ten iterations and 20,000 completed games, plus any interrupted attempts; configure sufficient stopping limits up front.
+
+After abrupt dispatcher loss, confirm its old dispatcher is gone and recover abandoned dispatcher/output locks before `--resume`. `owners.json` records Linux process start identities; resume terminates surviving hosts only when their saved identity still matches, before reconciling checkpoints. A running reservation is reconciled only from a validated persisted checkpoint; unverifiable or missing checkpoints keep accounting outstanding for explicit recovery. Complete output is integrity-checked and reused without another reservation. Owner-stop continuation still requires PR80’s explicit token acknowledgement. The discarded pre-integration performance run is retained separately and does not supply a measured recommendation.

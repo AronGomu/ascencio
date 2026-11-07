@@ -15,7 +15,7 @@ Improve one bot through repeatable evaluations, match analysis, and one heuristi
 2. Required `opponents`: fixed bot folders with decks and configurations; may be empty.
 3. Required `stop-condition`: iteration limit, resource budget, or owner stop.
 4. Required `setup-seed`: explicit deterministic seed.
-5. Optional `match-workers`: simultaneous matches (`auto` uses local measurements; setup bound default: 6).
+5. Optional `match-workers`: simultaneous matches (default: 6).
 6. Optional `analysis-workers`: simultaneous match analysts (default: 3).
 7. Optional `reuse-fixtures`: existing frozen directory (default: None).
 8. Optional `session-path`: fresh session destination (default: `.tmp/bot-session`).
@@ -28,11 +28,14 @@ Improve one bot through repeatable evaluations, match analysis, and one heuristi
 ├── config.json               # Durable fixture reference and resolved limits
 ├── versions/                 # Candidate and accepted strategy references
 ├── iterations/<iteration>/
+│   ├── manifest.json        # Prepared bindings and baseline execution plan
 │   ├── matches/              # Complete engine evidence
 │   ├── analyses/             # One analyst report per match
 │   ├── synthesis.md          # Findings and heuristic recommendations
 │   └── decision.md           # Acceptance decision and next proposal
-└── state.json                # Progress and stopping reason
+├── state.json                # Accepted reference
+├── control.json              # Stop reason and execution accounting
+└── report.json               # Factual report
 <project-root>/artifacts/
 └── AI-BOT-PARALLEL-IMPROVEMENT-REPORT.md
 ```
@@ -58,33 +61,54 @@ You are the main improvement orchestrator.
 - If setup fails: Stop with the script error.
 - `session`, `session-config` = Read `session` and `config` from `setup-result`.
 - `accepted-bot` = Read `accepted` from `session-config`.
-- `matches-command` = `npm run bot:matches -- --session <session> --out <unique-output> --workers <match-workers>`.
-- `baseline` = Run `matches-command`; setup’s initial accepted archive is the default.
-- For prepared iterations: Pass `--candidate` and `--self` with complete archived `RunnerSnapshot` JSON overrides from [the runner contract](../../../docs/architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
-- For local tuning: Run `npm run bot:matches:benchmark -- --session <session> --out <unique-benchmark-output>`; require a setup worker bound of eight on an eight-core machine.
-- Returns: `session`, `accepted-bot`, `baseline`, `matches-command`.
+- `matches-command` = `npm run bot:matches -- --session <session> --iteration <iteration-number> --role control|candidate --out <session>/evaluations/<unique-output> --workers auto`.
+- Pass `--candidate SNAPSHOT.json` and optional `--self SNAPSHOT.json` for explicit archived overrides using `RunnerSnapshot`; the prepared accepted archive is the default.
+- `runner-identity` = `frozen-rust-match-pool/v1` for newly prepared iterations.
+- For local tuning: Run `npm run bot:matches:benchmark -- --session <session> --out <session>/benchmarks/<unique-run>`; allow eight match workers and ten evaluation iterations for two repetitions of every stage.
+- `baseline-receipt` = None.
+- `iteration-number` = 1.
+- Returns: `session`, `accepted-bot`, `matches-command`, `runner-identity`, `baseline-receipt`, `iteration-number`.
 
 ### 2. Improve and evaluate
 
+- For an existing `session`: Require explicit continuation before running `npm run bot:session -- <session> <continue-request>` with `action: "continue"` and the returned owner-stop token when required.
+- Require: `matches-command` implements [reservation, settlement and cancellation](../../../docs/architecture/06-quality/parallel-bot-session.md#minimum-runner-interface-for-aro2-18).
 - While `stop-condition` is unmet:
+  - `session-plan` = Run `npm run bot:session -- <session> <plan-request>` with `{ "action": "plan" }` in `plan-request`.
+  - If `session-plan.mayStart` is false: Break.
+  - `iteration-number` = Read `session-plan.iteration`.
+  - Run `npm run bot:session -- <session> <start-request>` with `{ "action": "start", "iteration": <iteration-number> }` in `start-request`.
+  - Require: The returned plan permits work.
+  - `iteration-result` = Run `npm run bot:prepare-iteration -- --session <session> --iteration <iteration-number> --runner-identity <runner-identity>` with `--baseline <baseline-receipt>` when present.
+  - If preparation fails: Stop with the script error.
+  - `iteration-manifest` = Read the JSON file at `iteration-result.manifest`.
+  - If `iteration-result.plan.control` is `evaluate`: Run `matches-command` for `iteration-manifest.control` using its fixture and opponent bindings; save `baseline-receipt` using [the receipt contract](../../../docs/architecture/06-quality/parallel-bot-session.md#iteration-preparation).
   - `proposal` = Choose one heuristic change with the strongest expected win-rate benefit, using available evidence.
-  - `candidate` = Implement and validate `proposal` against `accepted-bot`; record its rationale and identity.
-  - Freeze `accepted-bot` as this iteration's self-opponent.
-  - Refresh `baseline` on identical fixtures and opponents if its comparison identities differ.
+  - Implement `proposal` in `iteration-manifest.candidate.path`.
+  - `validation` = Run `npm run bot:validate -- <validation-request.json>` with `iteration-manifest.fixture`, `iteration-manifest.accepted`, `iteration-manifest.candidate.path`, and a fresh output path using [the validation contract](../../../docs/architecture/06-quality/parallel-bot-session.md#candidate-validation-aro2-21).
+  - If `validation.status` is `invalid`: Preserve `validation.evidence` and stop with `validation.reasons`.
+  - `candidate` = Read `validation.candidate`; record the proposal rationale.
   - In parallel:
     - `evaluation` = Run `matches-command` with `candidate`, frozen opponents plus the self-opponent, fixtures, and `match-workers`.
     - Whenever a completed match becomes available: Assign it to a Luna match analyst, bounded by `analysis-workers`.
   - Require: All 500 matches and their analyst reports are settled; otherwise preserve progress and stop with the incomplete evaluation reason.
-  - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline`, and `proposal`.
+  - `synthesis` = Assign a fresh Sol synthesis agent all analyst reports, aggregate results, `baseline-receipt`, and `proposal`.
   - `decision` = Accept or reject `candidate` using paired results, uncertainty, observed heuristic effects, and validity; retain `accepted-bot` when inconclusive.
   - Save `decision`, its evidence, and the next heuristic candidates.
-  - If accepted: Set `accepted-bot` to `candidate`.
+  - Index durable proposal, comparison and decision artifacts with `npm run bot:session -- <session> <record-request>` using the documented `record` action.
+  - Run `npm run bot:session -- <session> <finish-request>` using `finish` with the iteration status and checkpoint evidence after all runner attempts settle.
+  - If accepted: Set `accepted-bot` to `candidate`; publish its `frozen-bot.json` and update `state.accepted`.
+  - Increment `iteration-number`.
 - Returns: `accepted-bot`, iteration evidence, and stopping reason.
 
-### 3. Report
+### 3. Stop and report
 
-- Write the final report with attempted changes, acceptance decisions, win-rate comparisons and uncertainty, completed match/game counts, evidence paths, and stopping reason.
-- Returns: Final report and `accepted-bot`.
+- On owner stop or interruption: Run `npm run bot:session -- <session> <stop-request>` with `action: "stop"` and the corresponding reason from [the control contract](../../../docs/architecture/06-quality/parallel-bot-session.md#orchestrator-transitions).
+- Stop dispatching work when plan returns a stop reason.
+- Settle/cancel every running attempt through `matches-command`; preserve interrupted checkpoints.
+- `report-result` = Run `npm run bot:session -- <session> <report-request>` with `{ "action": "report" }` in `report-request`.
+- Keep agent interpretation separate from `report-result.report`.
+- Returns: `report-result.report`, `accepted-bot`.
 
 ## Agent assignments
 

@@ -57,6 +57,8 @@ You are the improvement orchestrator.
 - Require `resolved-opponents` contains at least one eligible nonidentical opponent.
 - Returns: `project-root`, `campaign-guide`, `resolved-ai-bot`, `resolved-opponents`.
 
+Now the bots each have their own folder with all the context and resources they need.
+
 ### 2. Establish the campaign
 
 - `existing-campaign` = Find a checkpoint matching `resolved-ai-bot` and `resolved-opponents`, or None.

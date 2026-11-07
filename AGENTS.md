@@ -1,3 +1,5 @@
+Whenever files change, review this map and keep paths and responsibilities synchronized in the same change; directory entries cover their descendants.
+
 ```text
 ascencio/
 ├── AGENTS.md                         # Project navigation: locate information by topic below
@@ -27,6 +29,9 @@ ascencio/
 │   └── impeccable/
 │       └── SKILL.md                  # Frontend design, critique and refinement
 │
+├── .githooks/                       # Local Git checks; install via project guide
+│   └── pre-commit                   # Existing lint/typecheck for staged code changes
+│
 ├── .github/                         # Repository and GitHub agent integration
 │   ├── agents/                      # Agent role definitions
 │   ├── hooks/                       # Agent hook configuration
@@ -35,6 +40,7 @@ ascencio/
 │
 ├── docs/                             # Durable documentation and decision history
 │   ├── README.md                     # Full documentation index
+│   ├── ticketing.md                 # Linear workspace, project and connection
 │   ├── project-guide.md              # Operating rules, local-only validation, boundaries, task management
 │   ├── PRODUCT.md                    # Product intent, priorities and brand commitments
 │   ├── DESIGN.md                     # Visual design direction and presentation conventions
@@ -177,6 +183,7 @@ ascencio/
 │   ├── distribution-evidence.json    # Distribution approval evidence
 │   ├── setup-evidence.json           # Setup and acceptance evidence
 │   ├── ai-bots/                      # Versioned Rust AI sources, manifests and portable executables
+│   │   └── goat-control/             # GOAT Control specialist development home and baseline links
 │   ├── app/                          # Tracked fonts, application icon and download-link settings
 │   ├── duel-core/                    # Engine configuration and strings
 │   ├── freeplay/                     # Freeplay decks, opponents, settings and card limits

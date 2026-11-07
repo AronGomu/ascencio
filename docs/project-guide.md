@@ -40,7 +40,7 @@ Run `npm run test:context` to gather branch-change context and suggested tests f
 
 When generated, `graphify-out/` contains the repository knowledge graph; its size and availability depend on the current checkout.
 
-Any question about the codebase, its architecture, or how files relate is a graphify query first, before grep/read sweeps:
+When `graphify-out/graph.json` exists, use graphify first for codebase and architecture questions. Otherwise use the `AGENTS.md` tree to locate the owning documentation and files; ordinary questions do not require building a graph:
 
 - `graphify query "<question>"` — BFS traversal, broad context
 - `graphify path "<a>" "<b>"` — how two things connect
@@ -175,4 +175,16 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 
 ## Task management
 
-Use the [Ascencio Linear project](https://linear.app/arongomu/project/ascencio-c85611c9b786) in the AronGomu workspace for task management. Create issues in the Hailin team (`ARO`) and assign them to that project. Use Linear’s native blocking relationships for dependencies. Apply the `ready-for-agent` label to tickets ready for agent work; use the existing `Bug`, `Feature`, or `Improvement` labels when appropriate.
+Use [Ticketing](ticketing.md) for the Linear workspace, project and connection steps.
+
+## Repository navigation and bounded search
+
+Review the `AGENTS.md` tree whenever files change. Update paths and descriptions in the same change when files are added, removed, renamed, moved, or change responsibility. Keep the tree as a curated topic map: files represented by a directory remain covered there. Content-only edits need no artificial tree diff when the map remains accurate.
+
+Start searches from the owning directory found in `AGENTS.md`. List candidate filenames with `rg --files` before reading content. Search selected files or directories; include `.tmp/` only for specific evidence and exclude generated bundles. Keep output bounded and narrow the search when it truncates.
+
+## Local commit checks
+
+Install the tracked hook after cloning with `git config --local core.hooksPath .githooks`. The pre-commit hook runs existing lint and typecheck commands for staged code/config changes. It checks the working tree and does not stage or rewrite files. Keep staged and working changes aligned for a reproducible commit. Node and installed npm dependencies are required.
+
+Run related tests separately using the ascencio-tests workflow before committing. The hook is a quick static guardrail, not full validation. Remote CI remains disabled.

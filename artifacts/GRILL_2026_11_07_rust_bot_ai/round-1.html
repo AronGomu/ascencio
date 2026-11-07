@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Define the migration release</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0a08; --panel:#17130d; --panel-2:#1f190f; --text:#fff7ed; --muted:#c9b99f; --line:#4a3b25; --accent:#fbbf24; --accent-2:#fb923c; --focus:#facc15; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(960px,calc(100% - 32px)); margin:0 auto; padding:48px 0 96px; }
+    header { display:grid; gap:12px; margin-bottom:32px; }
+    .eyebrow { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,p { margin:0; } h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.08; letter-spacing:-.035em; }
+    .lede { max-width:70ch; color:var(--muted); }
+    .tree { display:flex; align-items:center; gap:8px; overflow:auto; padding:16px; margin:24px 0 32px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--muted); white-space:nowrap; }
+    .tree b { color:var(--text); } .node { padding:6px 10px; border:1px solid var(--line); border-radius:999px; } .node.active { border-color:var(--accent); color:var(--accent); } .arrow { color:var(--line); }
+    .visuals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0 0 32px; }
+    figure { min-width:0; margin:0; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    figcaption { margin-bottom:14px; color:var(--muted); font-size:.85rem; } figcaption b { display:block; color:var(--text); font-size:1rem; }
+    svg { display:block; width:100%; height:auto; } svg text { font-family:ui-sans-serif,system-ui,sans-serif; }
+    .svg-node { fill:var(--panel-2); stroke:var(--line); stroke-width:2; } .svg-node.active { stroke:var(--accent); } .svg-line { fill:none; stroke:var(--line); stroke-width:2; } .svg-arrow { fill:var(--line); } .svg-label { fill:var(--text); font-size:12px; } .svg-note { fill:var(--muted); font-size:10px; } .svg-accent { fill:var(--accent); }
+    form { display:grid; gap:20px; }
+    fieldset { min-width:0; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+    legend { max-width:100%; padding:0 8px; font-size:1.15rem; font-weight:750; }
+    .why { margin:0 0 18px; color:var(--muted); font-size:.925rem; }
+    .choices { display:grid; gap:10px; }
+    .choice { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+    .choice:has(input:checked) { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+    input { width:18px; height:18px; margin-top:3px; accent-color:var(--accent); }
+    .rank { display:inline-block; margin-left:7px; color:var(--accent-2); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .detail { display:block; margin-top:3px; color:var(--muted); font-size:.875rem; }
+    label.precision { display:block; margin-top:18px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    textarea { width:100%; min-height:90px; margin-top:7px; padding:12px; resize:vertical; border:1px solid var(--line); border-radius:10px; background:#100d08; color:var(--text); font:inherit; }
+    input:focus-visible,textarea:focus-visible,button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    .actions { position:sticky; bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(19,23,28,.96); box-shadow:0 16px 40px #0008; backdrop-filter:blur(10px); }
+    button { padding:11px 16px; border:0; border-radius:9px; background:var(--accent); color:#211500; font:inherit; font-weight:800; cursor:pointer; }
+    #status { color:var(--muted); font-size:.875rem; }
+    @media (max-width:700px) { .visuals { grid-template-columns:1fr; } }
+    @media (max-width:600px) { main { width:min(100% - 20px,960px); padding-top:28px; } fieldset { padding:18px 14px; } .actions { align-items:flex-start; flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Grill me · Round 1 · Scope and behavior</span>
+    <h1>Define the migration release</h1>
+    <p class="lede">The folder name ai/ and Rust/WASM direction come from our conversation. Choose the outcomes you want; ticket details proposed earlier remain open for confirmation. Copy the full answer summary back into chat.</p>
+  </header>
+
+  <nav class="tree" aria-label="Design tree progress"><span class="node">Moddable Rust AI</span><span class="arrow">→</span><span class="node active">Scope</span><span class="node active">Authoring</span><span class="node active">Lifecycle</span><span class="node active">Runtime</span></nav>
+
+  <section class="visuals" aria-label="Technical context">
+    <!-- Prefer inline SVG. Every image needs role="img", aria-labelledby, title, and desc. -->
+    <figure><figcaption><b>Current frontier</b>Scope, authoring, installation, runtime and compatibility.</figcaption><svg viewBox="0 0 440 160" role="img" aria-labelledby="t d"><title id="t">Decision tree</title><desc id="d">Rust bot goal branches into product and lifecycle decisions before detailed acceptance scenarios.</desc><path class="svg-line" d="M100 80H160M160 30V130M160 30H220M160 80H220M160 130H220"/><text class="svg-label" x="8" y="84">Rust bot AI</text><text class="svg-label" x="230" y="34">Delivery and authoring</text><text class="svg-label" x="230" y="84">Execution and parity</text><text class="svg-label" x="230" y="134">Updates and state</text></svg></figure>
+  </section>
+
+  <form id="questions">
+    <!-- Repeat one fieldset per frontier question. Keep data-question unique. -->
+    <fieldset data-question="What must this migration deliver before it is complete?"><legend>1. What must this migration deliver before it is complete?</legend><p class="why">This sets the release gate rather than treating the ticket draft as an approved specification.</p><div class="choices"><label class="choice"><input type="checkbox" value="Rust bots plus full package lifecycle"><span><b>Rust bots plus full package lifecycle</b><span class="rank">Recommended</span><span class="detail">Port existing bots and let players import, select, update and remove packages in releases.</span></span></label><label class="choice"><input type="checkbox" value="Rust runtime and bundled bots first"><span><b>Rust runtime and bundled bots first</b><span class="rank">Second</span><span class="detail">Deliver external package installation as a separate follow-up.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+<fieldset data-question="Who should be able to create a bot without writing code?"><legend>2. Who should be able to create a bot without writing code?</legend><p class="why">This determines whether configuration-only authoring is required.</p><div class="choices"><label class="choice"><input type="checkbox" value="Players can customize built-in AI through JSON"><span><b>Players can customize built-in AI through JSON</b><span class="rank">Recommended</span><span class="detail">Advanced authors write Rust for new behavior.</span></span></label><label class="choice"><input type="checkbox" value="Rust authors only initially"><span><b>Rust authors only initially</b><span class="rank">Second</span><span class="detail">Ship a template and documentation; postpone configuration-only variants.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+<fieldset data-question="How should players install and manage packages?"><legend>3. How should players install and manage packages?</legend><p class="why">Easy installation needs a concrete player action.</p><div class="choices"><label class="choice"><input type="checkbox" value="In-game folder and ZIP import, plus enable/remove controls"><span><b>In-game folder and ZIP import, plus enable/remove controls</b><span class="rank">Recommended</span><span class="detail">Players manage bots without locating application data manually.</span></span></label><label class="choice"><input type="checkbox" value="Drop folders into a documented bots directory"><span><b>Drop folders into a documented bots directory</b><span class="rank">Second</span><span class="detail">Keep the first version file-based with restart discovery.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+<fieldset data-question="What should happen if a bot traps, times out or returns an invalid decision?"><legend>4. What should happen if a bot traps, times out or returns an invalid decision?</legend><p class="why">Failure behavior changes duel outcomes and must be visible.</p><div class="choices"><label class="choice"><input type="checkbox" value="Stop the duel with a diagnostic and retry or exit"><span><b>Stop the duel with a diagnostic and retry or exit</b><span class="rank">Recommended</span><span class="detail">Never silently substitute another policy.</span></span></label><label class="choice"><input type="checkbox" value="Continue with a built-in fallback and show a warning"><span><b>Continue with a built-in fallback and show a warning</b><span class="rank">Second</span><span class="detail">Keep play moving, but the bot no longer exclusively controls its seat.</span></span></label><label class="choice"><input type="checkbox" value="Treat the bot as forfeiting"><span><b>Treat the bot as forfeiting</b><span class="rank">Third</span><span class="detail">A faulty bot loses the game with an explicit reason.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+<fieldset data-question="How closely must the Rust bots match existing behavior?"><legend>5. How closely must the Rust bots match existing behavior?</legend><p class="why">A port can preserve exact decisions or intentionally change them.</p><div class="choices"><label class="choice"><input type="checkbox" value="Match recorded decisions with fixed inputs and randomness"><span><b>Match recorded decisions with fixed inputs and randomness</b><span class="rank">Recommended</span><span class="detail">Document and approve any unavoidable differences.</span></span></label><label class="choice"><input type="checkbox" value="Preserve capabilities and broadly similar strength"><span><b>Preserve capabilities and broadly similar strength</b><span class="rank">Second</span><span class="detail">Permit scoring differences if real-engine evaluation passes.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+<fieldset data-question="Which environments must work at delivery?"><legend>6. Which environments must work at delivery?</legend><p class="why">This establishes where the same bot package must execute.</p><div class="choices"><label class="choice"><input type="checkbox" value="Native development, packaged releases, browser development and evaluator"><span><b>Native development, packaged releases, browser development and evaluator</b><span class="rank">Recommended</span><span class="detail">Keep all current development and evaluation routes usable.</span></span></label><label class="choice"><input type="checkbox" value="Native development, packaged releases and evaluator"><span><b>Native development, packaged releases and evaluator</b><span class="rank">Second</span><span class="detail">Browser development can follow later.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+<fieldset data-question="How should updates and missing bot references behave?"><legend>7. How should updates and missing bot references behave?</legend><p class="why">Existing selections must remain understandable after packages change.</p><div class="choices"><label class="choice"><input type="checkbox" value="Explicit updates; pin active duels; prompt for replacement when missing"><span><b>Explicit updates; pin active duels; prompt for replacement when missing</b><span class="rank">Recommended</span><span class="detail">Future duels use the enabled version and saves retain stable bot IDs.</span></span></label><label class="choice"><input type="checkbox" value="Discover updates at restart; block missing selections"><span><b>Discover updates at restart; block missing selections</b><span class="rank">Second</span><span class="detail">Use a simpler restart-based lifecycle with a clear missing-bot message.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+<fieldset data-question="Should bots retain learned state between matches?"><legend>8. Should bots retain learned state between matches?</legend><p class="why">Persistent learning needs storage and lifecycle rules beyond game-local state.</p><div class="choices"><label class="choice"><input type="checkbox" value="No cross-match bot memory in this migration"><span><b>No cross-match bot memory in this migration</b><span class="rank">Recommended</span><span class="detail">Allow decision, game and match state; reset for a new match.</span></span></label><label class="choice"><input type="checkbox" value="Yes, optional persistent bot memory"><span><b>Yes, optional persistent bot memory</b><span class="rank">Second</span><span class="detail">Define storage, reset and removal behavior in the next round.</span></span></label></div><label class="precision">Precision or custom answer<textarea placeholder="Add constraints or describe your preferred behavior."></textarea></label></fieldset>
+
+    <div class="actions">
+      <span id="status" role="status">Selections stay in this page until copied.</span>
+      <button type="button" id="copy-summary">Copy answer summary</button>
+    </div>
+  </form>
+</main>
+<script>
+  const button = document.querySelector('#copy-summary');
+  const status = document.querySelector('#status');
+
+  function buildSummary() {
+    const sections = [...document.querySelectorAll('fieldset[data-question]')].map((field, index) => {
+      const question = field.dataset.question;
+      const selected = [...field.querySelectorAll('input[type="checkbox"]:checked')].map(input => `- ${input.value}`);
+      const precision = field.querySelector('textarea').value.trim();
+      const answers = selected.length ? selected.join('\n') : '- No recommended answer selected';
+      return `${index + 1}. ${question}\n${answers}${precision ? `\nPrecision: ${precision}` : ''}`;
+    });
+    return `Round 1 · Scope and behavior — Define the migration release\n\n${sections.join('\n\n')}`;
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummary());
+      status.textContent = 'Summary copied to clipboard.';
+    } catch (_) {
+      const fallback = document.createElement('textarea');
+      fallback.value = buildSummary();
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand('copy');
+      fallback.remove();
+      status.textContent = 'Summary copied to clipboard.';
+    }
+  });
+</script>
+</body>
+</html>

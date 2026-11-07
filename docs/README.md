@@ -4,6 +4,8 @@ This directory contains current project documentation and historical context. Ro
 
 [`project-guide.md`](project-guide.md) contains operating guidance, local validation policy, architecture constraints, document conventions, and task-management instructions.
 
+[Ticketing](ticketing.md) identifies the Linear workspace, project and connection steps.
+
 [Product direction](PRODUCT.md) describes product goals and priorities; [design direction](DESIGN.md) records the visual design.
 
 [`desktop-setup.md`](desktop-setup.md) covers fresh clones, native prerequisites and headless checks on Windows, macOS and Linux.

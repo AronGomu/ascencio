@@ -21,3 +21,9 @@ The programmed real-WASM headless integration suite remains prerequisite for vis
 - Typecheck, lint, format, unit/component/real-WASM tests, asset verification, independently verified production packaging, reproducible-build comparison, and the browser matrix are release gates.
 - Validation runs locally only under the policy in `AGENTS.md`. GitHub Actions is disabled; preserve local traces/reports when a compatibility or browser check fails. Remote CI never gates commits, merges or completion.
 - DF-16 records machine-readable Chromium parity/perf/resource evidence in `.tmp/test/e2e-global/results/df-16-results.json` and the acceptance baseline in `docs/architecture/05-presentation/duel-field-performance-baseline.md`.
+
+## Smoke checks, focused tests and performance
+
+A smoke check exercises a small complete flow to catch integration failures: for example, load a bot and finish a duel. Focused tests check a specific rule or edge case in detail. A smoke run complements these tests; it does not establish exhaustive correctness or rare-failure rates. Performance measurements answer how fast a workload runs, not whether its decisions are correct.
+
+For the parallel TypeScript/Rust bot experiment, the initial smoke baseline is five seeded four-game Goat Control matches per Basic and Generalist. Record the TypeScript decisions once and replay identical inputs/randomness against Rust for action parity, then run the same matches live for integration. Repeated fixture timing is separate from correctness and does not require generating more matches.

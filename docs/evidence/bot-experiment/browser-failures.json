@@ -1,0 +1,1 @@
+{"type":"complete","mode":"failures","results":[{"kind":"trap","elapsedMs":4.699999999254942,"message":"Error: unreachable"},{"kind":"infinite-loop","elapsedMs":2000.2000000029802,"message":"Error: Bot execution timed out"}],"environment":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeBeta/0.1.7 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36"}

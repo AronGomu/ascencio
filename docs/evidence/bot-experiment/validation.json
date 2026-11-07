@@ -1,0 +1,89 @@
+{
+  "ticket": "ARO2-14",
+  "date": "2026-11-07",
+  "base": "6e4bd045a2099d6e52cb9c179bc3e90f20672fd2",
+  "exactHead": "Recorded in shared implementation-2 ledger after commit; this file describes the containing commit",
+  "acceptanceRevision": 2,
+  "node": "26.12.0",
+  "rust": "1.99.1",
+  "remoteCI": false,
+  "commands": [
+    {
+      "command": "node test/runner/run-tests.ts --tests test/tooling/browser-bot-packages.test.ts test/tooling/vite-config.test.ts test/unit/domain-boundaries.test.ts test/unit/bot-runtime.test.ts test/unit/bot-loader.test.ts test/unit/headless-lifecycle.test.ts test/unit/storage/critical-snapshot.test.ts test/unit/shell/story-battle-request.test.ts",
+      "status": "pass",
+      "summary": "8 selected files passed"
+    },
+    {
+      "command": "node test/runner/run-tests.ts --tests test/component/AppShell.test.ts test/component/FreePlayMatchSetup.test.ts test/unit/shell/sqlite-application-service.test.ts",
+      "status": "two_existing_failures",
+      "summary": "AppShell 63/65; Freeplay 27/27; application service 14/14"
+    },
+    {
+      "command": "npm run test:context",
+      "status": "pass",
+      "scope": "branch context read; related tests selected, no full suite"
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run -c test/config/vitest.config.ts test/component/AppShell.test.ts -t \"required AI|startup\"",
+      "status": "pass",
+      "summary": "3 selected menu/startup tests passed; 62 skipped"
+    },
+    {
+      "command": "cargo test --manifest-path tauri/Cargo.toml native_bots::tests",
+      "status": "pass",
+      "summary": "2 passed; 36 filtered; isolated Rust 1.99.1"
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "pass",
+      "summary": "0 errors; 4 existing Svelte warnings"
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js --config config/eslint.config.js <changed .ts/.svelte files>",
+      "status": "pass"
+    },
+    {
+      "command": "node node_modules/prettier/bin/prettier.cjs --config config/prettier.config.js --write <changed code/config files>",
+      "status": "pass"
+    },
+    {
+      "command": "npm run frontend:build",
+      "status": "pass",
+      "summary": "21 vendor files verified; release bundle and payload budgets pass; 0 embedded WASM bytes"
+    },
+    {
+      "command": "git diff --check",
+      "status": "pass"
+    },
+    {
+      "command": "rustfmt --check --edition 2021 tauri/src/native_bots.rs",
+      "status": "pass"
+    },
+    {
+      "command": "git diff --exit-code 2e9489fb33b4d60cd4c9a541154362059c8f4bb7 -- src/battle/worker/bot src/battle/worker/opponent/OpponentPolicy.ts vendor",
+      "status": "pass",
+      "summary": "Reference TypeScript policies and frozen engine unchanged"
+    }
+  ],
+  "unchangedBaselineSha256": "28b40b97976cd4986e016ff419488715ddf32129971f4fb951486bf56e8658d8",
+  "existingFailures": {
+    "reference": "environment-blockers.md",
+    "tests": [
+      "keeps Story collection media lazy and releases selected preview on navigation",
+      "cancels pending Story collection preview media on navigation"
+    ],
+    "reproduction": "Both reproduce with exact base AppShell.svelte temporarily restored; restored implementation immediately afterward."
+  },
+  "environmentBlockers": {
+    "C4": "Supplied content 1.1.2 does not match tracked 1.1.3 trust anchor; full application startup not accepted.",
+    "C9": "Browser memory API throws SecurityError even with crossOriginIsolated=true."
+  },
+  "evidence": {
+    "criteria": "implementation-status.md",
+    "commands": "README.md",
+    "performance": "results.md",
+    "live": "*-smoke.json, native-live.json, wasm-live.json; separate from parity and timing",
+    "runtimeFailures": "browser-failures.json and native timeout tests"
+  },
+  "reviewOwner": "Parent; no implementation child reviewer or integration dispatch"
+}

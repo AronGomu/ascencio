@@ -109,3 +109,26 @@ describe("critical JSON snapshots", () => {
     ).toContain("../save.json");
   });
 });
+
+it("preserves authored AI requirements and rejects unsafe identities", () => {
+  const requiredAi = {
+    runtime: "wasm",
+    packageId: "story.guardian",
+    policy: "generalist",
+  };
+  const source = { ...empty, decks: [{ ...empty.decks[0], requiredAi }] };
+  expect(
+    JSON.parse(compileSnapshot(source).source).decks[0].requiredAi,
+  ).toEqual(requiredAi);
+  expect(() =>
+    compileSnapshot({
+      ...source,
+      decks: [
+        {
+          ...source.decks[0],
+          requiredAi: { ...requiredAi, packageId: "../escape" },
+        },
+      ],
+    }),
+  ).toThrow("/requiredAi");
+});

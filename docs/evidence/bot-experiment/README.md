@@ -42,3 +42,80 @@ node scripts/bot-experiment/capture.ts /path/to/generated/readable-content-v1
 The command refuses to overwrite the saved artifact. Content roots are read-only;
 no machine-specific path is needed when replaying the saved decisions. Detailed
 capture I/O is not a bot performance measurement.
+
+## Application transports and live smoke
+
+See [package and runtime documentation](../../feature/rust-bot-experiment.md).
+The release harness uses the same `loadBot`, nested WASM Worker, main-thread host
+bridge and Tauri native commands as the application, plus the frozen real engine.
+It deliberately supplies the saved seeds and one deck instead of using production
+random engine seeds. It checks all 40 completions and 20 actual sideboard responses;
+zero crashes, illegal responses and unexpected fallbacks are required. It does not
+compare live action IDs. The initial application build is separately validated.
+
+```sh
+# Terminal 1: fixed, read-only critical inputs from your acquired content
+node scripts/bot-experiment/serve-smoke.ts /path/to/generated/readable-content-v1
+# Browser: http://127.0.0.1:4214/?runtime=wasm
+# The server writes .tmp/wasm-runtime-smoke.json after all 40 games.
+
+# Build a release Tauri host pointed at the instrumentation page (no remote CI).
+node scripts/bot-experiment/stage.ts
+TAURI_CONFIG='{"build":{"devUrl":"http://127.0.0.1:4214/?runtime=native"}}' \
+  cargo build --release --features native-acceptance --manifest-path tauri/Cargo.toml
+node scripts/bot-experiment/run-native.ts smoke wasm native
+```
+
+`run-native.ts` launches the actual Tauri webview with isolated app data, selects
+one runtime at a time through `.tmp/bot-harness-config.json`, and retains outputs
+under `.tmp/native-results/`. Native dev and packaged builds use the same host
+commands. The CLI stops on failed results rather than treating fallback as success.
+
+For separate measurements, use `run-native.ts benchmark` and
+`run-native.ts throughput`. For browser runs, write
+`{"mode":"benchmark","runtime":null}` (or `throughput`, `failures`, `smoke`, `memory`) to
+`.tmp/bot-harness-config.json`, then reload the browser URL with `runtime=typescript`
+or `runtime=wasm`. Run measured targets sequentially. Benchmark replays all saved
+inputs: one warmup and three measured passes, then seeded Random overhead control
+on the first saved game's inputs. Throughput executes the same seeded complete
+flows with identical evidence handling; it is a separate result from C3 smoke.
+`failures` executes real trapping and infinite-loop WASM fixtures to verify
+preemption, outside the correctness workload.
+
+Evaluator throughput uses:
+
+```sh
+node scripts/bot-experiment/live.ts typescript /path/to/critical-root --throughput
+node scripts/bot-experiment/live.ts wasm /path/to/critical-root --throughput
+node scripts/bot-experiment/live.ts native /path/to/critical-root --throughput
+```
+
+These run one bounded 40-game pass per target. The repeatable decision benchmark
+reuses saved fixtures instead of expanding the game campaign. Timings exclude
+fixture parsing and final evidence writes; evaluator command timings include its
+normal streamed host evidence consistently on every path. Browser/desktop live
+harness timings include in-memory permitted history collection consistently.
+
+For a packaged-protocol instrumentation build, use the same fixture server and:
+
+```sh
+TAURI_CONFIG='{"build":{"frontendDist":"../.tmp/bot-smoke-web"}}' \
+  cargo build --release --features tauri/custom-protocol,native-acceptance --manifest-path tauri/Cargo.toml
+node scripts/bot-experiment/run-native.ts smoke wasm native
+```
+
+This bot-only build requires an absent/empty local game-content staging directory,
+or correctly staged content matching the tracked trust anchor. Never remove shared
+content or weaken its trust anchor. The retained packaged harness runs used an
+empty checkout-owned game-content directory and explicit fixture-server content;
+they do not establish full packaged application startup. See environment-blockers.md.
+
+The `memory` mode enables cross-origin isolation and attempts
+`performance.measureUserAgentSpecificMemory()` after the same 100 decisions.
+A returned SecurityError is a failed measurement, even when the harness completes.
+Native process-tree sampling is performed by run-native.ts after ten seconds;
+process-memory.ts also accepts a PID and output path for a manual sample.
+
+See validation.json for exact related validation commands, outcomes and retained
+failure descriptions. Run with Node 26+, a Rust toolchain with wasm32-unknown-unknown,
+and no remote CI. The test runner is intentionally limited to related files.

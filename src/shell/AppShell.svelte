@@ -543,10 +543,19 @@
         loadDuelDomain(),
       ]);
       built = storyBattleRequest(battle, request.deck, gameplay);
+      if (built.bot) await battle.assertBotAvailable?.(built.bot);
     } catch (error) {
       /* The duel's own parser refused the snapshot the briefing accepted, which
          means the two contracts drifted apart. The story says so and keeps the
          player on the screen they can change the deck from. */
+      if (error instanceof Error && error.name === "BotDependencyError") {
+        toasts.show({
+          message: error.message,
+          tone: "error",
+          durationMs: 12000,
+        });
+        return "deck-rejected" as const;
+      }
       if (error instanceof Error && error.name === "BattleRequestError")
         return "deck-rejected" as const;
       domainError(error);
@@ -593,9 +602,17 @@
         import("./handoff/handoff-request.ts"),
         loadDuelDomain(),
       ]);
-      return storyBattleRequest(battle, deck, gameplay);
+      const built = storyBattleRequest(battle, deck, gameplay);
+      if (built.bot) await battle.assertBotAvailable?.(built.bot);
+      return built;
     } catch (error) {
-      domainError(error);
+      if (error instanceof Error && error.name === "BotDependencyError")
+        toasts.show({
+          message: error.message,
+          tone: "error",
+          durationMs: 12000,
+        });
+      else domainError(error);
       return null;
     }
   }
@@ -930,6 +947,57 @@
      mirrors it for domains and for `data-stage-mode`. */
   const stageBox = writable<StageBox>(readViewportBox());
   setContext(STAGE_CONTEXT_KEY, readonly(stageBox));
+  let storyAiError: string | null = null;
+  let checkedGameplay: ShellGameplay | null = null;
+  $: if (gameplay !== checkedGameplay) {
+    // Svelte reads this value on subsequent reactive executions.
+    // eslint-disable-next-line no-useless-assignment
+    checkedGameplay = gameplay;
+    void checkStoryAi(gameplay);
+  }
+  async function checkStoryAi(value: ShellGameplay | null) {
+    if (!value) return;
+    storyAiError = null;
+    const requirements = value.decks.flatMap((d) =>
+      d.requiredAi ? [{ name: d.name, selection: d.requiredAi }] : [],
+    );
+    if (!requirements.length) return;
+    try {
+      const battle = await loadDuelDomain();
+      for (const requirement of requirements)
+        await battle.assertBotAvailable?.(requirement.selection);
+    } catch (error) {
+      if (gameplay === value)
+        storyAiError = error instanceof Error ? error.message : String(error);
+    }
+  }
+  $: if (application && coreGate.kind === "ready" && route.kind === "home") {
+    void checkStartupStoryAi(application);
+  }
+  async function checkStartupStoryAi(owner: ShellApplication) {
+    try {
+      const requirements = await owner.requiredStoryBots?.();
+      if (!requirements?.length) {
+        if (application === owner) storyAiError = null;
+        return;
+      }
+      const battle = await loadDuelDomain();
+      for (const requirement of requirements) {
+        try {
+          await battle.assertBotAvailable?.(requirement.bot);
+        } catch (error) {
+          throw new Error(
+            `${requirement.deckName}: ${error instanceof Error ? error.message : String(error)}`,
+            { cause: error },
+          );
+        }
+      }
+      if (application === owner) storyAiError = null;
+    } catch (error) {
+      if (application === owner)
+        storyAiError = error instanceof Error ? error.message : String(error);
+    }
+  }
   const toasts = createToastStore();
   setContext(TOAST_CONTEXT_KEY, toasts);
   let box: StageBox;
@@ -939,6 +1007,15 @@
 
   onMount(() => {
     let mounted = true;
+    const botWarning = (event: Event) => {
+      if (import.meta.env.DEV)
+        toasts.show({
+          message: String((event as CustomEvent).detail),
+          tone: "warning",
+          durationMs: 10000,
+        });
+    };
+    globalThis.addEventListener("ascencio-bot-warning", botWarning);
     if (initialCoreGate === null) {
       void loadCoreStartup()
         .then(async (startup) => {
@@ -1041,6 +1118,7 @@
       globalThis.removeEventListener("hashchange", syncFromLocation);
       globalThis.removeEventListener("beforeunload", protectRestore);
       document.removeEventListener("visibilitychange", syncVisibility);
+      globalThis.removeEventListener("ascencio-bot-warning", botWarning);
       toasts.destroy();
       unsubscribeStage();
       unsubscribe();
@@ -1090,6 +1168,11 @@
         You can keep playing. {applicationStatus.warnings.length.toLocaleString()}
         warning{applicationStatus.warnings.length === 1 ? "" : "s"} recorded.
       </aside>
+    {/if}
+    {#if storyAiError && (route.kind === "home" || route.kind === "story")}
+      <p role="alert" data-cy="story-ai-dependency-error">
+        {storyAiError} The affected Story duel cannot start.
+      </p>
     {/if}
     {#if route.kind === "home"}
       <div class="shell-region shell-region--home" data-cy="shell-region-home">

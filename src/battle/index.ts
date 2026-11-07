@@ -40,3 +40,14 @@ export {
   DEFAULT_OPPONENT_DECK_ID,
   DEFAULT_PLAYER_DECK_ID,
 } from "./duel/presets/deck-catalog.ts";
+
+export {
+  DEFAULT_BOT,
+  parseBotSelection,
+  type BotSelection,
+} from "./duel/contracts/bot-selection.ts";
+export type { BotPackageInfo } from "./duel/contracts/bot-package.ts";
+export {
+  listBotPackages,
+  assertBotAvailable,
+} from "./app/bots/package-host.ts";

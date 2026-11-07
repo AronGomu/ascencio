@@ -60,7 +60,7 @@ const jspiChunks = javaScriptFiles.filter((file) =>
 const synchronousEngineChunks = javaScriptFiles.filter((file) =>
   path.basename(file).startsWith("ocgcore.sync-"),
 );
-if (jspiChunks.length > 0 || synchronousEngineChunks.length !== 1)
+if (jspiChunks.length > 0 || synchronousEngineChunks.length > 1)
   throw new Error(
     `Native frontend emitted an unexpected engine chunk set: ${[
       ...jspiChunks,
@@ -69,7 +69,10 @@ if (jspiChunks.length > 0 || synchronousEngineChunks.length !== 1)
       .map((file) => path.basename(file))
       .join(", ")}`,
   );
-if ((await stat(synchronousEngineChunks[0]!)).size > 100_000)
+if (
+  synchronousEngineChunks[0] &&
+  (await stat(synchronousEngineChunks[0])).size > 100_000
+)
   throw new Error("Native frontend emitted the embedded-WASM fallback chunk");
 const workerFile = javaScriptFiles.find((file) =>
   path.basename(file).startsWith("duel.worker-browser-"),

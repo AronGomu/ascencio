@@ -61,3 +61,19 @@ describe("the battle request a story encounter starts", () => {
     ).toThrow(battle.BattleRequestError);
   });
 });
+
+it("binds the story deck's required AI instead of a Freeplay preference", () => {
+  const gameplay = installedGameplayFixture();
+  const requiredAi = {
+    runtime: "wasm",
+    packageId: "story.guardian",
+    policy: "generalist",
+  } as const;
+  const authored = {
+    ...gameplay,
+    decks: gameplay.decks.map((d) => ({ ...d, requiredAi })),
+  };
+  expect(storyBattleRequest(module, snapshot(FORTY), authored).bot).toEqual(
+    requiredAi,
+  );
+});

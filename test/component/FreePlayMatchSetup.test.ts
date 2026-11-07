@@ -688,3 +688,42 @@ describe("FreePlayMatchSetup", () => {
     expect(document.querySelector('[data-cy^="deck-tile-fav-"]')).toBeNull();
   });
 });
+
+it("chooses a bot independently of both deck seats", async () => {
+  const available = vi.fn(async () => {});
+  const setup = await renderListedSetup({
+    module: { assertBotAvailable: available },
+  });
+  const player = seatKey("yours"),
+    opponent = seatKey("opponent");
+  await fireEvent.change(query("freeplay-ai-select")!, {
+    target: { value: "typescript:builtin:generalist" },
+  });
+  expect(seatKey("yours")).toBe(player);
+  expect(seatKey("opponent")).toBe(opponent);
+  await fireEvent.click(startButton());
+  await vi.waitFor(() => expect(setup.onstart).toHaveBeenCalledOnce());
+  expect(setup.onstart.mock.calls[0]![0].bot).toEqual({
+    runtime: "typescript",
+    packageId: "builtin",
+    policy: "generalist",
+  });
+});
+it("blocks an unavailable selected package with an actionable error", async () => {
+  const toasts = { show: vi.fn(), dismiss: vi.fn() };
+  const setup = await renderListedSetup({
+    module: {
+      assertBotAvailable: async () => {
+        throw new Error("Install missing AI folder and retry");
+      },
+    },
+    toasts,
+  });
+  await fireEvent.click(startButton());
+  await vi.waitFor(() =>
+    expect(query("deck-select-block-notice")?.textContent).toContain(
+      "Install missing AI folder and retry",
+    ),
+  );
+  expect(setup.onstart).not.toHaveBeenCalled();
+});

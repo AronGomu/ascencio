@@ -1,3 +1,4 @@
+import type { BotSelection } from "../../duel/contracts/bot-selection.ts";
 import { writable, type Readable } from "svelte/store";
 import type { BattleRuntimeSource } from "../../ports/index.ts";
 import type { DuelDiagnosticTrace } from "../../duel/contracts/duel-diagnostics.ts";
@@ -111,7 +112,11 @@ export interface DuelViewState {
 
 export interface DuelStore extends Readable<DuelViewState> {
   initialize(): boolean;
-  start(player: DuelDeckSelection, opponent: DuelDeckSelection): boolean;
+  start(
+    player: DuelDeckSelection,
+    opponent: DuelDeckSelection,
+    bot?: BotSelection,
+  ): boolean;
   respond(choiceIds: readonly ChoiceId[]): boolean;
   dispatchInteraction(action: InteractionSessionAction): boolean;
   armPlacementIntent(zoneId: PhysicalZoneId): boolean;
@@ -364,6 +369,7 @@ export function createDuelStore(
   type DeckPair = Readonly<{
     player: DuelDeckSelection;
     opponent: DuelDeckSelection;
+    bot?: BotSelection;
   }>;
   let replacementOperation: Promise<boolean> | null = null;
   let lastStartedDecks: DeckPair | null = null;
@@ -371,14 +377,20 @@ export function createDuelStore(
   const startCurrentDuel = (
     player: DuelDeckSelection,
     opponent: DuelDeckSelection,
+    bot?: BotSelection,
   ): boolean => {
     const context = client.startDuel(
       duelIdForPair(player, opponent),
       player,
       opponent,
+      bot,
     );
     if (context === null) return false;
-    lastStartedDecks = Object.freeze({ player, opponent });
+    lastStartedDecks = Object.freeze({
+      player,
+      opponent,
+      ...(bot ? { bot } : {}),
+    });
     set(
       freezeState({
         ...createInitialDuelViewState(context),
@@ -475,7 +487,7 @@ export function createDuelStore(
     if (received.event.type === "ready") {
       const pair = pendingReplacementStart;
       pendingReplacementStart = null;
-      if (pair !== null) startCurrentDuel(pair.player, pair.opponent);
+      if (pair !== null) startCurrentDuel(pair.player, pair.opponent, pair.bot);
       return;
     }
     if (received.event.type !== "prompt") return;

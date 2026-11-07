@@ -32,6 +32,11 @@ export function storyBattleRequest(
     throw new Error("Installed story opponent deck is unavailable");
   return battle.parseBattleRequest({
     player: { kind: "local", deck },
+    bot: opponentDeck.requiredAi ?? {
+      runtime: "typescript",
+      packageId: "builtin",
+      policy: "basic",
+    },
     opponent: {
       kind: "local",
       deck: {

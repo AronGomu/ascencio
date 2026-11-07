@@ -45,6 +45,12 @@ export interface DeckValidationSummary {
 }
 
 export interface DeckCardLists {
+  /** Installed story deck dependency; legacy content explicitly defaults to builtin Basic. */
+  readonly requiredAi?: {
+    readonly runtime: "typescript" | "wasm" | "native";
+    readonly packageId: string;
+    readonly policy: "basic" | "generalist" | "random";
+  };
   readonly main: readonly number[];
   readonly extra: readonly number[];
   readonly side: readonly number[];

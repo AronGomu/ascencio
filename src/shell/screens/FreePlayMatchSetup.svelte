@@ -1,6 +1,10 @@
 <script lang="ts">
   import { getContext, onMount } from "svelte";
-  import type { BattleRequest, SelectableDeck } from "../../battle/index.ts";
+  import type {
+    BattleRequest,
+    SelectableDeck,
+    BotSelection,
+  } from "../../battle/index.ts";
   import type { BattlePresentationInput } from "../../battle/ports/index.ts";
   import {
     DeckSelectScreen,
@@ -75,6 +79,21 @@
   export let onopendeck: (id: string) => void = () => undefined;
 
   let battle: BattleDeckModule | null = null;
+  let aiKey = "typescript:builtin:basic";
+  let aiOptions: { key: string; label: string; selection: BotSelection }[] = [
+    "basic",
+    "generalist",
+    "random",
+  ].map((policy) => ({
+    key: `typescript:builtin:${policy}`,
+    label: `${policy[0]!.toUpperCase() + policy.slice(1)} · TypeScript`,
+    selection: {
+      runtime: "typescript",
+      packageId: "builtin",
+      policy: policy as BotSelection["policy"],
+    },
+  }));
+  let aiPackageError: string | null = null;
   let decks: readonly SelectableDeck[] = [];
   /* Card art and card names, for the covers and the hover decklists. Empty
      until the packaged database answers, which is a fetch the seats never wait
@@ -88,6 +107,7 @@
   /* Which seat the grid is filling. The player's own, until they press the
      opponent's card to browse for the deck they want to face. */
   let seat: "player" | "opponent" = "player";
+  let starting = false;
   let startError: string | null = null;
   /* A deck-library write the library refused. Kept apart from `startError`
      because it is a different fact about a different press, and shown in the
@@ -131,7 +151,10 @@
   /* Both seats, or no match: a request is two decks, and a seat that resolves
      to nothing is a duel the Worker would refuse after the click. */
   $: canStart =
-    ready && playerDeck?.legal === true && opponentDeck?.legal === true;
+    !starting &&
+    ready &&
+    playerDeck?.legal === true &&
+    opponentDeck?.legal === true;
   /* One notice slot, and the refusal outranks the wait: a player who pressed
      Start is owed the reason it did not run. Every press clears both errors
      before it acts, so the slot always holds the most recent one. */
@@ -157,6 +180,34 @@
       const loaded = await freePlayBattleModule(loadBattle);
       if (!alive()) return;
       battle = loaded;
+      if (loaded.listBotPackages) {
+        try {
+          const packages = await loaded.listBotPackages();
+          if (!alive()) return;
+          aiOptions = [
+            ...aiOptions.filter((o) => o.selection.runtime === "typescript"),
+            ...packages.flatMap((p) =>
+              p.manifest.policies.flatMap((policy) =>
+                (p.nativeCompatible
+                  ? (["wasm", "native"] as const)
+                  : (["wasm"] as const)
+                ).map((runtime) => ({
+                  key: `${runtime}:${p.manifest.id}:${policy}`,
+                  label: `${policy[0]!.toUpperCase() + policy.slice(1)} · ${runtime === "wasm" ? "WebAssembly" : "Native"} (${p.manifest.packageVersion})`,
+                  selection: {
+                    runtime,
+                    packageId: p.manifest.id,
+                    policy: policy as BotSelection["policy"],
+                  },
+                })),
+              ),
+            ),
+          ];
+        } catch (error) {
+          aiPackageError =
+            error instanceof Error ? error.message : String(error);
+        }
+      }
       /* Whatever is already known, so the seats fill on the first paint: the
          listing this page last read, or the bundled decks alone, which are
          compiled into this build and need no read at all. */
@@ -447,7 +498,8 @@
     };
   }
 
-  function start(): void {
+  async function start(): Promise<void> {
+    if (starting) return;
     startError = null;
     if (battle === null) return;
     const player = battle.findSelectableDeck(decks, playerKey);
@@ -464,20 +516,26 @@
         "A chosen deck is not legal.";
       return;
     }
+    starting = true;
     let request: BattleRequest;
     /* The duel's own parser, run before the duel mounts: a deck edited to 39
        cards after it was remembered names the rule it broke here, rather than
        taking the player into a duel that dies on creation. */
     try {
+      const bot = aiOptions.find((option) => option.key === aiKey)?.selection;
+      if (!bot) throw new Error("Choose an available AI");
+      await battle.assertBotAvailable?.(bot);
       request = battle.parseBattleRequest({
         player: player.selection,
         opponent: opponent.selection,
+        bot,
       });
     } catch (error) {
       startError =
         error instanceof Error
           ? `That pairing cannot be played: ${error.message}`
           : "That pairing cannot be played.";
+      starting = false;
       return;
     }
     settings.rememberFreePlayPairing({
@@ -497,6 +555,7 @@
   />
 {:else}
   <DeckSelectScreen
+    {opponentControls}
     mode="duel-start"
     eyebrow="Free play"
     title="Choose your deck"
@@ -527,3 +586,50 @@
     ondelete={(key) => void deleteDeck(key)}
   />
 {/if}
+
+{#snippet opponentControls()}
+  <label class="ai-choice" data-cy="freeplay-ai-label" for="freeplay-ai"
+    >Opponent AI
+    <select id="freeplay-ai" data-cy="freeplay-ai-select" bind:value={aiKey}>
+      {#each aiOptions as option (option.key)}<option
+          value={option.key}
+          data-cy={`freeplay-ai-option-${option.key.replaceAll(":", "-").replaceAll(".", "-")}`}
+          >{option.label}</option
+        >{/each}
+    </select>
+  </label>
+  {#if aiPackageError}<p
+      role="status"
+      class="ai-package-error"
+      data-cy="freeplay-ai-package-error"
+    >
+      {aiPackageError} Built-in AI remains available.
+    </p>{/if}
+{/snippet}
+
+<style>
+  .ai-choice {
+    display: grid;
+    gap: 0.35rem;
+    margin-block: 0.75rem;
+    font-size: 0.875rem;
+  }
+  .ai-choice select {
+    width: 100%;
+    min-height: 2.5rem;
+    color: inherit;
+    background: var(--surface-panel, #22212b);
+    border: 1px solid currentColor;
+    border-radius: 0.35rem;
+    padding: 0.4rem;
+    font: inherit;
+  }
+  .ai-choice select:focus-visible {
+    outline: 2px solid var(--color-accent, #e3b86c);
+    outline-offset: 3px;
+  }
+  .ai-package-error {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+</style>

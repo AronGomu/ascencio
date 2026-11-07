@@ -8,7 +8,11 @@ import { createReadStream } from "node:fs";
 import { createGunzip } from "node:zlib";
 import { writeFile } from "node:fs/promises";
 const [target, root] = process.argv.slice(2);
-if (!["native", "wasm"].includes(target!) || !root)
+const timing = process.argv[4] === "--throughput";
+const gameMs: number[] = [],
+  sideboardMs: number[] = [],
+  startupMs: number[] = [];
+if (!["native", "wasm", "typescript"].includes(target!) || !root)
   throw new Error("Usage: live.ts native|wasm <critical-content-root>");
 const child = spawn(
   process.execPath,
@@ -48,6 +52,7 @@ try {
     const record = JSON.parse(line) as EvidenceRecord;
     if (record.type === "metadata") metadata = record;
     if (record.type === "ready") {
+      const startup = performance.now();
       const actual = await command(
         {
           type: "initialize",
@@ -55,12 +60,25 @@ try {
           snapshot: root,
           codes: [],
           bots: [
-            { module: `experiment:${target}:${record.policy}`, config: {} },
-            { module: `experiment:${target}:basic`, config: {} },
+            {
+              module:
+                target === "typescript"
+                  ? `builtin:${record.policy}`
+                  : `experiment:${target}:${record.policy}`,
+              config: {},
+            },
+            {
+              module:
+                target === "typescript"
+                  ? "builtin:basic"
+                  : `experiment:${target}:basic`,
+              config: {},
+            },
           ],
         },
         "ready",
       );
+      startupMs.push(performance.now() - startup);
       if (actual.at(-1)!.manifest.snapshotId !== metadata!.content.snapshotId)
         throw new Error("Content identity differs from baseline");
     }
@@ -75,7 +93,9 @@ try {
         ...record.request,
         decks: record.request.bot_order.map((i) => decks[i]),
       };
+      const started = performance.now();
       const actual = await command(request, "cleanup");
+      gameMs.push(performance.now() - started);
       const observed = actual.filter((m) => m.type === "captured_decision");
       const done = actual.find((m) => m.type === "done");
       if (!done)
@@ -111,10 +131,12 @@ try {
       console.error(`${target} smoke: ${record.request.game_id} completed`);
     }
     if (record.type === "sideboarding") {
+      const started = performance.now();
       const actual = await command(
         { ...record.request, histories },
         "sideboard_done",
       );
+      sideboardMs.push(performance.now() - started);
       decks = actual.at(-1)!.decks;
       if (decks.length !== 2 || actual.at(-1)!.decisions.length !== 2)
         throw new Error("Incomplete sideboarding");
@@ -134,11 +156,28 @@ try {
     unexpectedFallbacks: 0,
     node: process.version,
     environment: "Node evaluator host; not Tauri or browser",
-    criterion:
-      "C3 complete-flow smoke; no action-ID parity or performance gate",
+    criterion: timing
+      ? "C9 evaluator throughput; separate from C3 smoke"
+      : "C3 complete-flow smoke; no action-ID parity or performance gate",
+    ...(timing
+      ? {
+          gameMs,
+          sideboardMs,
+          startupMs,
+          gamesPerSecond:
+            40 /
+            ([...gameMs, ...sideboardMs, ...startupMs].reduce(
+              (a, b) => a + b,
+              0,
+            ) /
+              1000),
+          method:
+            "One full 40-game pass; complete real-engine commands including identical host streaming/report transport; baseline parsing and retained summary writes excluded; no new seeds/decks",
+        }
+      : {}),
   };
   await writeFile(
-    `docs/evidence/bot-experiment/${target}-live.json`,
+    `docs/evidence/bot-experiment/${target}-${timing ? "evaluator-throughput" : "live"}.json`,
     JSON.stringify(result, null, 2) + "\n",
   );
   console.log({

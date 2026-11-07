@@ -1,3 +1,8 @@
+import type {
+  AsyncOpponentPolicy,
+  OpponentRequest,
+} from "./opponent/async-opponent-policy.ts";
+import type { OpponentDecision } from "./opponent/OpponentPolicy.ts";
 import { ActorObservation } from "./bot/actor-observation.ts";
 import { createBasicBotPolicy } from "./bot/basic-bot.ts";
 import {
@@ -54,6 +59,7 @@ export interface HeadlessDuelControllerOptions {
   /** Immutable layout half of the duel's rules profile. */
   readonly extraMonsterZones: boolean;
   readonly opponentPolicy?: OpponentPolicy;
+  readonly asyncOpponentPolicy?: AsyncOpponentPolicy;
   readonly maximumAutomaticResponses?: number;
   readonly promptIdNamespace?: string;
   readonly trace?: BoundedDuelTrace;
@@ -65,6 +71,8 @@ export class HeadlessDuelController {
   readonly #projector: DuelStateProjector;
   readonly #prompts: PromptRegistry;
   readonly #opponent: OpponentPolicy;
+  readonly #asyncOpponent: AsyncOpponentPolicy | undefined;
+  #advancing = false;
   readonly #trace: BoundedDuelTrace;
   readonly #maximumAutomaticResponses: number;
   #result: DuelResult | null = null;
@@ -72,6 +80,7 @@ export class HeadlessDuelController {
 
   constructor(options: HeadlessDuelControllerOptions) {
     this.#session = options.session;
+    this.#asyncOpponent = options.asyncOpponentPolicy;
     this.#opponentObservation = new ActorObservation(
       1,
       options.session,
@@ -113,15 +122,60 @@ export class HeadlessDuelController {
 
   advance(): DuelAdvance {
     this.#assertActive();
+    if (this.#advancing) throw new Error("Duel advance already pending");
     try {
-      return this.#advanceUntilBoundary();
+      if (this.#asyncOpponent)
+        throw new Error("This controller requires advanceAsync");
+      const steps = this.#advanceUntilBoundary();
+      let step = steps.next();
+      while (!step.done)
+        step = steps.next(
+          this.#opponent.choose(step.value.prompt, step.value.state),
+        );
+      return step.value;
     } catch (error) {
       this.#fail(error);
       throw error;
     }
   }
 
-  #advanceUntilBoundary(): DuelAdvance {
+  async advanceAsync(): Promise<DuelAdvance> {
+    this.#assertActive();
+    if (this.#advancing) throw new Error("Duel advance already pending");
+    this.#advancing = true;
+    const steps = this.#advanceUntilBoundary();
+    try {
+      let step = steps.next();
+      while (!step.done) {
+        const { prompt, state } = step.value;
+        const decision = this.#asyncOpponent
+          ? await this.#asyncOpponent.choose(prompt, state)
+          : this.#opponent.choose(prompt, state);
+        this.#assertActive();
+        step = steps.next(decision);
+      }
+      return step.value;
+    } catch (error) {
+      this.#fail(error);
+      throw error;
+    } finally {
+      steps.return(undefined as never);
+      this.#advancing = false;
+    }
+  }
+
+  #botClosed = false;
+  cancelPendingBot(): void {
+    if (this.#botClosed) return;
+    this.#botClosed = true;
+    this.#asyncOpponent?.dispose();
+  }
+
+  *#advanceUntilBoundary(): Generator<
+    OpponentRequest,
+    DuelAdvance,
+    OpponentDecision
+  > {
     this.#ensureOwnExtraDeckReconciled();
     const events: DuelPresentationEvent[] = [];
 
@@ -238,14 +292,14 @@ export class HeadlessDuelController {
           this.#withOpponentObservation(() => {
             this.#opponentObservation.reconcile();
           });
-          const decision = this.#opponent.choose(
+          const decision = yield {
             prompt,
-            toOpponentVisibleState(
+            state: toOpponentVisibleState(
               this.#opponentObservation.snapshot(),
               1,
               this.#opponentObservation.takeEvents(),
             ),
-          );
+          };
           const response = this.#prompts.respond(prompt.id, decision.choiceIds);
           this.#session.respond(response);
           this.#trace.record({
@@ -520,7 +574,19 @@ export class HeadlessDuelController {
   }
 
   respond(promptId: PromptId, choiceIds: readonly ChoiceId[]): DuelAdvance {
+    this.#respondHuman(promptId, choiceIds);
+    return this.advance();
+  }
+  async respondAsync(
+    promptId: PromptId,
+    choiceIds: readonly ChoiceId[],
+  ): Promise<DuelAdvance> {
+    this.#respondHuman(promptId, choiceIds);
+    return this.advanceAsync();
+  }
+  #respondHuman(promptId: PromptId, choiceIds: readonly ChoiceId[]): void {
     this.#assertActive();
+    if (this.#advancing) throw new Error("Duel advance already pending");
     const prompt = this.#prompts.current;
     if (prompt?.player !== 0) {
       throw duelOperationError(
@@ -536,7 +602,6 @@ export class HeadlessDuelController {
       this.#fail(error);
       throw error;
     }
-    return this.advance();
   }
 
   surrender(): DuelAdvance {
@@ -561,6 +626,7 @@ export class HeadlessDuelController {
   }
 
   dispose(): void {
+    this.cancelPendingBot();
     this.#closeSession("disposed");
   }
 
@@ -601,6 +667,7 @@ export class HeadlessDuelController {
   #closeSession(
     reason: "completed" | "surrendered" | "failed" | "disposed",
   ): void {
+    this.cancelPendingBot();
     this.#prompts.clear();
     if (this.#session.disposed) return;
     this.#session.dispose();

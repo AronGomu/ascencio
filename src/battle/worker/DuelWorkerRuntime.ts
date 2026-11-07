@@ -1,3 +1,13 @@
+import {
+  loadBot,
+  loadedBotPolicy,
+  type LoadedBot,
+} from "./bot-runtime/loaded-bot.ts";
+import {
+  DEFAULT_BOT,
+  type BotSelection,
+} from "../duel/contracts/bot-selection.ts";
+import type { AsyncOpponentPolicy } from "./opponent/async-opponent-policy.ts";
 import { sideboardBots as runBotSideboarding } from "./bot/bot-match.ts";
 import type {
   BotInstance,
@@ -141,6 +151,7 @@ interface OpenDuelOptions {
   readonly snapshotId: SnapshotId;
   readonly promptIdNamespace: string;
   readonly opponentPolicy?: OpponentPolicy;
+  readonly asyncOpponentPolicy?: AsyncOpponentPolicy;
   readonly publishTrace: (trace: DuelTrace) => void;
 }
 
@@ -152,6 +163,7 @@ export class DuelWorkerRuntime {
   readonly #initializeResources: DuelRuntimeInitializer;
   readonly #configuredBot: DuelWorkerRuntimeOptions["bot"];
   #resources: DuelRuntimeResources | null = null;
+  #loadedBot: LoadedBot | null = null;
   #runtimeIdentity: string | null = null;
   #initializationFailure: { readonly error: unknown } | null = null;
   #initializationAbortController: AbortController | null = null;
@@ -327,6 +339,9 @@ export class DuelWorkerRuntime {
   dispose(): void {
     if (this.#disposed) return;
     this.#disposed = true;
+    this.#loadedBot?.dispose();
+    this.#loadedBot = null;
+    this.#controller?.cancelPendingBot();
     this.#initializationAbortController?.abort();
     this.#initializationAbortController = null;
     const controller = this.#controller;
@@ -367,18 +382,19 @@ export class DuelWorkerRuntime {
           break;
         }
         case "startDuel":
-          this.#startDuel(
+          await this.#startDuel(
             command.duelId,
             command.player,
             command.opponent,
             events,
+            command.bot,
           );
           break;
         case "respond": {
           const controller = this.#requireController();
           this.#recordAdvance(
             controller,
-            controller.respond(command.promptId, command.choiceIds),
+            await controller.respondAsync(command.promptId, command.choiceIds),
             events,
           );
           break;
@@ -392,7 +408,7 @@ export class DuelWorkerRuntime {
           events.push({ type: "diagnostics", trace: this.#diagnosticTrace() });
           break;
         case "restore":
-          this.#restore(events);
+          await this.#restore(events);
           break;
         default:
           assertNever(command);
@@ -490,12 +506,13 @@ export class DuelWorkerRuntime {
     }
   }
 
-  #startDuel(
+  async #startDuel(
     duelId: string,
     player: DuelDeckSelection,
     opponent: DuelDeckSelection,
     events: DuelWorkerEvent[],
-  ): void {
+    selection?: BotSelection,
+  ): Promise<void> {
     const resources = this.#requireResources();
     if (this.#controller !== null) {
       throw duelOperationError(
@@ -503,11 +520,27 @@ export class DuelWorkerRuntime {
         "A duel session is already active",
       );
     }
+    this.#loadedBot?.dispose();
+    this.#loadedBot = null;
+    if (selection) {
+      const loaded = await loadBot(
+        selection ?? DEFAULT_BOT,
+        resources.dependencies,
+      );
+      if (this.#disposed) {
+        loaded.dispose();
+        return;
+      }
+      this.#loadedBot = loaded;
+    }
     const promptIdNamespace = `${this.#runtimeId}-duel-${this.#nextDuelSequence + 1}`;
     const controller = this.#openDuel({
       duelId,
       player,
       opponent,
+      ...(this.#loadedBot
+        ? { asyncOpponentPolicy: loadedBotPolicy(this.#loadedBot) }
+        : {}),
       seed: createProductionSeed(),
       snapshotId: resources.snapshotId,
       promptIdNamespace,
@@ -526,7 +559,7 @@ export class DuelWorkerRuntime {
       promptIdNamespace,
     });
     try {
-      this.#recordAdvance(controller, controller.advance(), events);
+      this.#recordAdvance(controller, await controller.advanceAsync(), events);
     } catch (error) {
       try {
         controller.dispose();
@@ -638,6 +671,9 @@ export class DuelWorkerRuntime {
         ],
         extraMonsterZones: profile.extraMonsterZones,
         promptIdNamespace: options.promptIdNamespace,
+        ...(options.asyncOpponentPolicy
+          ? { asyncOpponentPolicy: options.asyncOpponentPolicy }
+          : {}),
         opponentPolicy:
           options.opponentPolicy ??
           botAsOpponentPolicy(
@@ -668,7 +704,7 @@ export class DuelWorkerRuntime {
    * reached that prompt: a replay that fails leaves the previous error, its
    * trace and its downloadable report exactly as the player found them.
    */
-  #restore(events: DuelWorkerEvent[]): void {
+  async #restore(events: DuelWorkerEvent[]): Promise<void> {
     this.#requireResources();
     if (this.#controller !== null) {
       events.push({ type: "restore_failed", reason: "duel_active" });
@@ -695,6 +731,17 @@ export class DuelWorkerRuntime {
     let handedOver = false;
     let controller: HeadlessDuelController | null = null;
     try {
+      const resumed = await this.#loadedBot?.recreate?.();
+      if (this.#disposed) {
+        resumed?.dispose();
+        return;
+      }
+      const replay = new ReplayOpponentPolicy(
+        opponentResponses,
+        botAsOpponentPolicy(this.#newBot(), this.#configuredBot !== undefined),
+      );
+      const asyncPolicy = resumed ? loadedBotPolicy(resumed) : undefined;
+      if (resumed) this.#loadedBot = resumed;
       controller = this.#openDuel({
         duelId: start.duelId,
         player: start.player,
@@ -702,26 +749,37 @@ export class DuelWorkerRuntime {
         seed: plan.seed,
         snapshotId: plan.snapshotId,
         promptIdNamespace: start.promptIdNamespace,
-        opponentPolicy: new ReplayOpponentPolicy(
-          opponentResponses,
-          botAsOpponentPolicy(
-            this.#newBot(),
-            this.#configuredBot !== undefined,
-          ),
-        ),
+        opponentPolicy: replay,
+        ...(asyncPolicy
+          ? {
+              asyncOpponentPolicy: {
+                async choose(prompt, state) {
+                  // Warm game-local loop/RNG state while recorded answers remain authoritative.
+                  const decision = await asyncPolicy.choose(prompt, state);
+                  return replay.pending
+                    ? replay.choose(prompt, state)
+                    : decision;
+                },
+                dispose: () => asyncPolicy.dispose(),
+              } satisfies AsyncOpponentPolicy,
+            }
+          : {}),
         publishTrace: (trace) => {
           if (handedOver) this.#lastTrace = trace;
         },
       });
       if (controller === null) return;
-      let advance = controller.advance();
+      let advance = await controller.advanceAsync();
       for (const response of humanResponses) {
         if (advance.prompt?.id !== response.promptId) {
           throw new ReplayDivergenceError(
             `Replay expected to answer ${response.promptId} but the rebuilt duel asked ${advance.prompt?.id ?? "nothing"}`,
           );
         }
-        advance = controller.respond(response.promptId, response.choiceIds);
+        advance = await controller.respondAsync(
+          response.promptId,
+          response.choiceIds,
+        );
       }
       const prompt = advance.prompt;
       if (prompt === undefined || prompt.id !== plan.stopAtPromptId) {

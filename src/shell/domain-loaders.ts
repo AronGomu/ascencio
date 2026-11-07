@@ -11,6 +11,8 @@ import type {
   findSelectableDeck,
   installedSelectableDecks,
   parseBattleRequest,
+  listBotPackages,
+  assertBotAvailable,
 } from "../battle/index.ts";
 import type { EditorCatalogInput } from "../deck-editor/ports/index.ts";
 import type { DeckEditorRoute } from "../deck-editor/index.ts";
@@ -68,6 +70,8 @@ export type BattleDomainLoader = () => Promise<{
   readonly findSelectableDeck: typeof findSelectableDeck;
   readonly installedSelectableDecks: typeof installedSelectableDecks;
   readonly parseBattleRequest: typeof parseBattleRequest;
+  readonly listBotPackages?: typeof listBotPackages;
+  readonly assertBotAvailable?: typeof assertBotAvailable;
 }>;
 
 /** What a deck picker reads from the battle entry: everything but the duel

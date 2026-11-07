@@ -97,6 +97,10 @@ const loaders: DomainLoaders = {
   story: never,
 };
 
+vi.hoisted(() => {
+  Object.assign(globalThis, { __APP_BUILD_ID__: "component-test" });
+});
+
 const SESSION_HANDOFF = "77777777-2222-4333-8444-555555555555";
 const READY_CORE_GATE: CoreGate = {
   kind: "ready",
@@ -1711,4 +1715,45 @@ it("current Freeplay session opens full collection without Story gameplay and re
   expect(close).not.toHaveBeenCalled();
   store.navigate({ kind: "home" });
   await vi.waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+});
+
+it("reports a missing Story AI on the startup menu without acquiring a duel", async () => {
+  const application = sqliteApplication(
+    async () => {
+      throw new Error("No session expected");
+    },
+    async () => {
+      throw new Error("No session expected");
+    },
+  );
+  application.requiredStoryBots = async () => [
+    {
+      deckName: "Guardian deck",
+      bot: {
+        runtime: "wasm",
+        packageId: "missing.guardian",
+        policy: "generalist",
+      },
+    },
+  ];
+  const assertBotAvailable = vi.fn(async () => {
+    throw new Error("Install missing.guardian in ai-bots and retry");
+  });
+  render(AppShell, {
+    store: createShellStore("#/", () => {}),
+    initialCoreGate: READY_CORE_GATE,
+    application,
+    loaders: {
+      ...loaders,
+      duel: async () => ({ ...(await duelDeckModule()), assertBotAvailable }),
+    },
+  });
+  await vi.waitFor(() =>
+    expect(
+      document.querySelector('[data-cy="story-ai-dependency-error"]')
+        ?.textContent,
+    ).toContain("Guardian deck: Install missing.guardian"),
+  );
+  expect(assertBotAvailable).toHaveBeenCalledOnce();
+  expect(document.querySelector('[data-cy="battle-facade-probe"]')).toBeNull();
 });

@@ -122,10 +122,11 @@ export async function loadFreeplayInputs(
       const snapshotId = runtimeSnapshotId(packages);
       const libraryIdentity = packageById(packages, "card-library");
       const presentationDecks = Object.freeze(
-        decks.map(({ id, name, main, extra, side }) =>
+        decks.map(({ id, name, main, extra, side, requiredAi }) =>
           Object.freeze({
             id,
             name,
+            ...(requiredAi ? { requiredAi } : {}),
             ...cloneCardLists({ main, extra, side }),
           }),
         ),

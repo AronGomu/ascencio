@@ -257,10 +257,34 @@ export function parseCriticalSnapshot(value: unknown): CriticalSnapshot {
   for (const [i, input] of decks.entries()) {
     const d = record(
       input,
-      ["id", "name", "main", "extra", "side"],
+      [
+        "id",
+        "name",
+        "main",
+        "extra",
+        "side",
+        ...(input && typeof input === "object" && "requiredAi" in input
+          ? ["requiredAi"]
+          : []),
+      ],
       `/decks/${i}`,
     );
     requireValue(id(d.id) && text(d.name), `/decks/${i}`);
+    if (d.requiredAi !== undefined) {
+      const ai = record(
+        d.requiredAi,
+        ["runtime", "packageId", "policy"],
+        `/decks/${i}/requiredAi`,
+      );
+      requireValue(
+        ["typescript", "wasm", "native"].includes(String(ai.runtime)) &&
+          typeof ai.packageId === "string" &&
+          /^[a-z0-9][a-z0-9._-]{0,79}$/.test(ai.packageId) &&
+          (ai.runtime !== "typescript" || ai.packageId === "builtin") &&
+          ["basic", "generalist", "random"].includes(String(ai.policy)),
+        `/decks/${i}/requiredAi`,
+      );
+    }
     for (const zone of ["main", "extra", "side"])
       requireValue(
         Array.isArray(d[zone]) &&

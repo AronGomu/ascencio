@@ -200,10 +200,11 @@ export async function loadStoryInputs(
         "card-library",
       );
       const presentationDecks = Object.freeze(
-        decks.map(({ id, name, main, extra, side }) =>
+        decks.map(({ id, name, main, extra, side, requiredAi }) =>
           Object.freeze({
             id,
             name,
+            ...(requiredAi ? { requiredAi } : {}),
             ...cloneCardLists({ main, extra, side }),
           }),
         ),

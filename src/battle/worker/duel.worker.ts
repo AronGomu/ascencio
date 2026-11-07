@@ -1,3 +1,4 @@
+import { receiveBotHostResult } from "./bot-runtime/host-rpc.ts";
 import { parseDuelCommand } from "../duel/contracts/duel-command.ts";
 import type { DuelWorkerEvent } from "../duel/contracts/duel-worker-event.ts";
 import { toDuelError, type DuelWorkerRuntime } from "./DuelWorkerRuntime.ts";
@@ -31,6 +32,7 @@ export function attachDuelWorker(
   let disposed = false;
   let replacementReported = false;
   const handler = (event: MessageEvent<unknown>): void => {
+    if (receiveBotHostResult(event.data)) return;
     let command;
     try {
       command = parseDuelCommand(event.data);

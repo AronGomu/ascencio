@@ -1,3 +1,4 @@
+import { parseBotSelection, type BotSelection } from "./bot-selection.ts";
 import type { InitializeRuntimeCommand } from "../../ports/index.ts";
 import { parseBattleRuntimeInput } from "../../ports/index.ts";
 import {
@@ -30,6 +31,7 @@ export type DuelCommand =
       readonly duelId: DuelId;
       readonly player: DuelDeckSelection;
       readonly opponent: DuelDeckSelection;
+      readonly bot?: BotSelection;
     }
   | {
       readonly type: "respond";
@@ -71,12 +73,15 @@ export function parseDuelCommand(value: unknown): DuelCommand {
       requireOnlyKeys(command, ["type"]);
       return { type: commandType };
     case "startDuel":
-      requireOnlyKeys(command, ["type", "duelId", "player", "opponent"]);
+      requireOnlyKeys(command, ["type", "duelId", "player", "opponent", "bot"]);
       return {
         type: "startDuel",
         duelId: duelId(requireId(command.duelId, "duelId")),
         player: parseDuelDeckSelection(command.player),
         opponent: parseDuelDeckSelection(command.opponent),
+        ...(command.bot === undefined
+          ? {}
+          : { bot: parseBotSelection(command.bot) }),
       };
     case "respond": {
       requireOnlyKeys(command, ["type", "promptId", "choiceIds"]);

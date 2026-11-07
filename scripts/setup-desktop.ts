@@ -6,6 +6,7 @@ import type { PackageBuildSpec } from "../src/storage/contracts/package-build.ts
 import { exportPackages } from "./lib/sqlite-content/index.ts";
 import { exportSqliteSource } from "./lib/json-content/export-sqlite-source.ts";
 import { readableOutputCurrent } from "./lib/json-content/readable-output-current.ts";
+import { installGitHooks } from "./install-git-hooks.ts";
 import { acquireRunLock } from "./lib/run-lock.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -57,6 +58,7 @@ try {
           `${executable} is unavailable. Follow docs/desktop-setup.md, then reopen your terminal.`,
         );
     }
+    installGitHooks(root);
     releaseLock = await acquireRunLock(
       path.join(root, "generated/.locks/desktop-setup"),
     );

@@ -176,6 +176,7 @@ export async function executeMatches(
     binary?: string | undefined;
     iteration?: number | undefined;
     role?: "control" | "candidate" | undefined;
+    stopSource?: { path: string; acknowledged: string | null } | undefined;
   },
 ) {
   const binding = await bindMatches({
@@ -201,6 +202,7 @@ export async function executeMatches(
         role: binding.role,
         runnerIdentity: binding.runnerIdentity,
         executableIdentity: prepared.candidateIdentity,
+        ...(options.stopSource ? { stopSource: options.stopSource } : {}),
       },
     };
     const plan = await sessionControl(binding.session, {
@@ -244,6 +246,9 @@ export async function executeMatches(
         ...(options.resume ? ["--resume"] : []),
       ]);
       const result = await json(path.join(output, "result.json"));
+      const settledPlan = await sessionControl(binding.session, {
+        action: "plan",
+      });
       let receipt: string | null = null;
       if (
         code === 0 &&
@@ -277,6 +282,7 @@ export async function executeMatches(
       return {
         ...result,
         receipt,
+        stoppingReason: settledPlan.stoppingReason,
         exitCode: code,
         output,
         iteration: binding.iteration,

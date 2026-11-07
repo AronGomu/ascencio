@@ -152,7 +152,14 @@ export async function instantiate(
     ns;
   if (factory.contractVersion !== 1 || typeof factory.create !== "function")
     throw new Error("Unsupported bot contract");
-  const instance = factory.create(structuredClone(artifact.config));
+  const configuration: Record<string, string | number | boolean> =
+    structuredClone(artifact.config);
+  if (seed !== undefined && "seed" in configuration) {
+    if (typeof configuration.seed !== "number")
+      throw new Error("External bot seed configuration must be numeric");
+    configuration.seed = seed;
+  }
+  const instance = factory.create(configuration);
   if (
     typeof instance.decide !== "function" ||
     typeof instance.sideboard !== "function"

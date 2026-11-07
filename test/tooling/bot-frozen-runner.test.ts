@@ -12,6 +12,10 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
+import {
+  benchmarkInputs,
+  createBenchmarkSession,
+} from "../../scripts/bot-improvement/benchmark-session.ts";
 import { digest } from "../../scripts/bot-improvement/session-fixtures.ts";
 import { controlSession } from "../../scripts/bot-improvement/control-session.ts";
 import {
@@ -39,6 +43,30 @@ test("worker selection respects CPU topology, pending work and session bound", a
   );
   await assert.rejects(resolveWorkers("0", 500));
   await assert.rejects(resolveWorkers("1.5", 500));
+});
+
+test("external seed-aware factories receive fixture seeds without mutating frozen configuration", () => {
+  const source = `import { instantiate } from "./scripts/bot-evaluation/host-inputs.ts";
+const artifact={module:"external",source:'export const contractVersion=1; export const create=c=>({decide(){},sideboard(){return {exchanges:[],reason:{code:"retained",explanation:String(c.seed)}}}});',config:{seed:7},dependencies:[]};
+const values=[];
+for(const seed of [123,456,undefined]){const bot=await instantiate(artifact,{cards:new Map()},seed);values.push((await bot.sideboard()).reason.explanation);}
+console.log(JSON.stringify({values,configuration:artifact.config}));`;
+  const run = spawnSync(
+    process.execPath,
+    [
+      "--experimental-vm-modules",
+      "--disable-warning=ExperimentalWarning",
+      "--input-type=module",
+      "-e",
+      source,
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(run.status, 0, run.stderr);
+  assert.deepEqual(JSON.parse(run.stdout), {
+    values: ["123", "456", "7"],
+    configuration: { seed: 7 },
+  });
 });
 
 test(
@@ -357,5 +385,73 @@ test(
     assert.equal(attempts[0].status, "interrupted");
     assert.ok(attempts[0].games.length > 0);
     assert.equal(attempts[1].attempt, 2);
+  },
+);
+
+test(
+  "tuning repetitions use fresh equivalent ledgers and forward the source owner stop",
+  { skip: !session, timeout: 60000 },
+  async () => {
+    const root = await mkdtemp(path.resolve(".tmp/frozen-tuning-test-"));
+    const inputs = await benchmarkInputs(session!);
+    inputs.stopSource = {
+      path: path.join(root, "PARENT_STOP"),
+      acknowledged: null,
+    };
+    const first = await createBenchmarkSession(
+      inputs,
+      path.join(root, "first"),
+    );
+    const second = await createBenchmarkSession(
+      inputs,
+      path.join(root, "second"),
+    );
+    assert.deepEqual(
+      await json(path.join(first, "state.json")),
+      await json(path.join(second, "state.json")),
+    );
+    const a = await executeMatches({
+      session: first,
+      out: path.join(first, "evaluation"),
+      workers: "1",
+      maxGames: 4,
+      stopSource: inputs.stopSource,
+    });
+    const b = await executeMatches({
+      session: second,
+      out: path.join(second, "evaluation"),
+      workers: "1",
+      maxGames: 4,
+      stopSource: inputs.stopSource,
+    });
+    assert.equal(a.completedGames, 4);
+    assert.equal(b.completedGames, 4);
+    assert.equal(a.replayIdentity, b.replayIdentity);
+    assert.equal(
+      (await json(path.join(first, "control.json"))).attempts.length,
+      1,
+    );
+    assert.equal(
+      (await json(path.join(second, "control.json"))).attempts.length,
+      1,
+    );
+    await writeFile(inputs.stopSource.path, "parent-request");
+    const stopped = await createBenchmarkSession(
+      inputs,
+      path.join(root, "stopped"),
+    );
+    const c = await executeMatches({
+      session: stopped,
+      out: path.join(stopped, "evaluation"),
+      workers: "2",
+      maxGames: 4,
+      stopSource: inputs.stopSource,
+    });
+    assert.equal(c.completedGames, 0);
+    assert.equal(c.stoppingReason, "owner-stop");
+    assert.equal(
+      (await controlSession(stopped, { action: "plan" })).reservedGames,
+      0,
+    );
   },
 );

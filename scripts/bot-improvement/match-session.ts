@@ -36,6 +36,7 @@ export interface MatchBinding {
   role: "control" | "candidate";
   runnerIdentity: string;
   executableIdentity: string;
+  stopSource?: { path: string; acknowledged: string | null };
 }
 export async function bindMatches(options: {
   session: string;

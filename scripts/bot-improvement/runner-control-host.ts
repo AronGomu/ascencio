@@ -1,4 +1,6 @@
 /** Persistent admission/accounting bridge. Rust retains subprocess and attempt ownership. */
+import { readFile } from "node:fs/promises";
+import { digest } from "./session-fixtures.ts";
 import { createInterface } from "node:readline";
 import { sessionControl as controlSession } from "./match-session.ts";
 import type { MatchBinding } from "./match-session.ts";
@@ -12,6 +14,20 @@ for await (const line of createInterface({
     const command = JSON.parse(line);
     if (command.type === "initialize") binding = command.binding;
     if (!binding) throw new Error("Initialize session binding first");
+    if (binding.stopSource) {
+      try {
+        if (
+          digest(await readFile(binding.stopSource.path)) !==
+          binding.stopSource.acknowledged
+        )
+          await controlSession(binding.session, {
+            action: "stop",
+            reason: "owner-stop",
+          });
+      } catch (e) {
+        if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+      }
+    }
     const base = { iteration: binding.iteration, role: binding.role };
     let action: ControlAction;
     if (command.type === "reserve") {

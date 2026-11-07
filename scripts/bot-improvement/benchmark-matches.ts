@@ -1,6 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import {
+  benchmarkInputs,
+  createBenchmarkSession,
+} from "./benchmark-session.ts";
 import { sessionControl } from "./match-session.ts";
 import { executeMatches, matchOptions, runProcess } from "./run-matches.ts";
 import { machineResources, saveRecommendation } from "./match-workers.ts";
@@ -45,6 +49,7 @@ if (sessionConfig.limits.matchWorkers < requiredBound)
   throw new Error(
     `Setup match-worker bound must be at least ${requiredBound} for this machine`,
   );
+const inputs = await benchmarkInputs(v.session);
 const stages: {
   workers: number;
   skipped?: string;
@@ -69,10 +74,15 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     console.error(
       `Benchmark: ${workers} workers, repetition ${repeat}/${repeats}, 500 matches / 2000 games`,
     );
+    const runSession = await createBenchmarkSession(
+      inputs,
+      path.join(output, `workers-${workers}-repeat-${repeat}`, "session"),
+    );
     const begin = performance.now();
     const run = await executeMatches({
-      session: v.session,
-      out: path.join(output, `workers-${workers}-repeat-${repeat}`),
+      session: runSession,
+      stopSource: inputs.stopSource,
+      out: path.join(runSession, "evaluation"),
       workers: String(workers),
       candidate: v.candidate,
       self: v.self,
@@ -89,14 +99,15 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     executionIdentity ??= run.identity;
     if (run.identity !== executionIdentity)
       throw new Error("Benchmark inputs changed between stages");
+    if (run.stoppingReason === "owner-stop") ownerStopped = true;
     if (ownerStopped) {
       const file = path.join(run.output, "result.json");
-      await sessionControl(v.session, {
+      await sessionControl(runSession, {
         action: "finish",
         iteration: run.iteration,
         status: "interrupted",
         evidence: {
-          path: path.relative(path.resolve(v.session), file),
+          path: path.relative(path.resolve(runSession), file),
           sha256: digest(await readFile(file)),
         },
       });
@@ -106,7 +117,8 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     // Final XML reread/hash verification uses the same production resume path. This
     // validates evidence without replacing the timing of the original full execution.
     const verified = await executeMatches({
-      session: v.session,
+      session: runSession,
+      stopSource: inputs.stopSource,
       out: run.output,
       workers: String(workers),
       candidate: v.candidate,
@@ -120,12 +132,12 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
     });
     const finishStart = performance.now();
     const resultFile = path.join(run.output, "result.json");
-    await sessionControl(v.session, {
+    await sessionControl(runSession, {
       action: "finish",
       iteration: run.iteration,
       status: run.exitCode === 0 ? "complete" : "failed",
       evidence: {
-        path: path.relative(path.resolve(v.session), resultFile),
+        path: path.relative(path.resolve(runSession), resultFile),
         sha256: digest(await readFile(resultFile)),
       },
     });
@@ -187,6 +199,8 @@ const result = {
   stages,
   noiseFraction: noise,
   recommendation: selected?.workers ?? null,
+  accountingIsolation:
+    "Fresh session control ledger and iteration 1 for every repetition; same frozen inputs, stop limits and evidence-writing behavior. Source OWNER_STOP is forwarded to the active run.",
   timingBoundary:
     "Each repetition starts with frozen verification/preparation and ends after Rust process shutdown and required evidence, summary and progress persistence. Build is once before stages; no unmeasured game warmup. Evidence verification replay is reported outside the execution interval.",
   evidenceIdentity: identity(stages),

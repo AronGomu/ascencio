@@ -64,7 +64,7 @@ You are the main improvement orchestrator.
 - `matches-command` = `npm run bot:matches -- --session <session> --iteration <iteration-number> --role control|candidate --out <session>/evaluations/<unique-output> --workers auto`.
 - Pass `--candidate SNAPSHOT.json` and optional `--self SNAPSHOT.json` for explicit archived overrides using `RunnerSnapshot`; the prepared accepted archive is the default.
 - `runner-identity` = `frozen-rust-match-pool/v1` for newly prepared iterations.
-- For local tuning: Run `npm run bot:matches:benchmark -- --session <session> --out <session>/benchmarks/<unique-run>`; allow eight match workers and ten evaluation iterations for two repetitions of every stage.
+- For local tuning: Run `npm run bot:matches:benchmark -- --session <session> --out <session>/benchmarks/<unique-run>`; allow eight match workers; tuning creates fresh accounting sessions for two repetitions of every stage.
 - `baseline-receipt` = None.
 - `iteration-number` = 1.
 - Returns: `session`, `accepted-bot`, `matches-command`, `runner-identity`, `baseline-receipt`, `iteration-number`.

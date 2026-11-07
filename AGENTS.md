@@ -197,7 +197,7 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
 │   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
-│   ├── bot-improvement/              # Frozen setup, iteration preparation, strategy and checks
+│   ├── bot-improvement/              # Frozen setup, iteration preparation, candidate validation and checks
 │   │   ├── session-contract.ts       # Frozen setup and fixture schema
 │   │   ├── iteration-contract.ts     # Prepared iteration and baseline receipt schema
 │   │   └── prepare-iteration.ts      # Accepted snapshot, self binding and baseline reuse plan

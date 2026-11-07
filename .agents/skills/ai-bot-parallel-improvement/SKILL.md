@@ -74,7 +74,10 @@ You are the main improvement orchestrator.
   - `iteration-manifest` = Read the JSON file at `iteration-result.manifest`.
   - If `iteration-result.plan.control` is `evaluate`: Run `matches-command` for `iteration-manifest.control` using its fixture and opponent bindings; save `baseline-receipt` using [the receipt contract](../../../docs/architecture/06-quality/parallel-bot-session.md#iteration-preparation).
   - `proposal` = Choose one heuristic change with the strongest expected win-rate benefit, using available evidence.
-  - `candidate` = Implement `proposal` in `iteration-manifest.candidate.path`; validate against `accepted-bot` and record its rationale and executable identity.
+  - Implement `proposal` in `iteration-manifest.candidate.path`.
+  - `validation` = Run `npm run bot:validate -- <validation-request.json>` with `iteration-manifest.fixture`, `iteration-manifest.accepted`, `iteration-manifest.candidate.path`, and a fresh output path using [the validation contract](../../../docs/architecture/06-quality/parallel-bot-session.md#candidate-validation-aro2-21).
+  - If `validation.status` is `invalid`: Preserve `validation.evidence` and stop with `validation.reasons`.
+  - `candidate` = Read `validation.candidate`; record the proposal rationale.
   - In parallel:
     - `evaluation` = Run `matches-command` with `candidate`, frozen opponents plus the self-opponent, fixtures, and `match-workers`.
     - Whenever a completed match becomes available: Assign it to a Luna match analyst, bounded by `analysis-workers`.

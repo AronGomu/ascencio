@@ -270,6 +270,18 @@ export class HeadlessDuelController {
           ...counterRequests.values(),
         ]);
 
+        // Project the whole batch first; a terminal result supersedes every
+        // prompt in it, including opponent prompts that would await a bot.
+        if (this.#result !== null) {
+          const result = this.#result;
+          this.#closeSession("completed");
+          return {
+            state: this.#projector.snapshot(),
+            events,
+            result,
+          };
+        }
+
         for (const message of boundary.messages) {
           const prompt = this.#prompts.publish(message);
           if (prompt === null) continue;
@@ -315,15 +327,6 @@ export class HeadlessDuelController {
           answeredOpponent = true;
         }
 
-        if (this.#result !== null) {
-          const result = this.#result;
-          this.#closeSession("completed");
-          return {
-            state: this.#projector.snapshot(),
-            events,
-            result,
-          };
-        }
         if (humanPrompt !== undefined) {
           return {
             state: this.#projector.snapshot(),

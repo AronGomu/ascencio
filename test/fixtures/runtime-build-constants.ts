@@ -31,5 +31,7 @@ Object.assign(globalThis, {
     distribution: "fixture",
     imageProvider: "fixture",
   },
+  __BROWSER_DEVELOPMENT__: false,
+  __APP_BUILD_ID__: "0.1.0+test",
   __APP_BUILD_DATE__: "2026-08-20",
 });

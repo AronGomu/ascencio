@@ -80,12 +80,12 @@ describe("immutable SQLite package export", () => {
     for (const packageId of ["duel-core", "freeplay"]) {
       await copyTree(
         path.join(root, `test/fixtures/sqlite/sources/${packageId}`),
-        path.join(root, `content/${packageId}`),
+        path.join(root, `assets/${packageId}`),
       );
       spec.packages.find(
         (entry: { manifest: { packageId: string } }) =>
           entry.manifest.packageId === packageId,
-      ).sourceRoot = `content/${packageId}`;
+      ).sourceRoot = `assets/${packageId}`;
     }
     await rm(path.join(root, "assets/duel-core/engine"), { recursive: true });
     await copyTree(

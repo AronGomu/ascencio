@@ -1,11 +1,7 @@
 import { spawnSync } from "node:child_process";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { build } from "esbuild";
-import { parseBotManifest } from "../../src/battle/duel/contracts/bot-package.ts";
-import { validateWasmLimits } from "../../src/battle/worker/bot-runtime/wasm-limits.ts";
-import { wasmTransport } from "../bot-experiment/transport.ts";
-import { loadCriticalInputs } from "../bot-evaluation/critical-inputs.ts";
 import type { FrozenBot } from "./session-contract.ts";
 
 export class ValidationFailure extends Error {
@@ -51,7 +47,7 @@ export async function command(
     throw new Error(`Command failed; see ${log}`);
 }
 
-/** Existing Cargo recipe and strategy checker, applied only to archived bytes. */
+/** Compile and check the frozen TypeScript-derived strategy boundary. */
 export async function compileCandidate(
   bot: FrozenBot,
   root: string,
@@ -149,95 +145,8 @@ export async function compileCandidate(
     }
     return;
   }
-  const manifest = parseBotManifest(
-    JSON.parse(await readFile(path.join(root, "bot.json"), "utf8")),
+  throw new ValidationFailure(
+    "scope",
+    "Rust AI packages are retired. Use a TypeScript strategy module.",
   );
-  const cargo = path.join(root, "ai/Cargo.toml");
-  const target = path.join(evidence, "cargo-target");
-  try {
-    await command(
-      [
-        "cargo",
-        "build",
-        "--locked",
-        "--release",
-        "--lib",
-        "--target",
-        "wasm32-unknown-unknown",
-        "--manifest-path",
-        cargo,
-      ],
-      root,
-      path.join(evidence, "build.json"),
-      {
-        ...process.env,
-        CARGO_TARGET_DIR: target,
-        RUSTFLAGS: "-C link-arg=--max-memory=536870912",
-      },
-    );
-    const bytes = await readFile(
-      path.join(
-        target,
-        "wasm32-unknown-unknown/release/ascencio_reference_bot.wasm",
-      ),
-    );
-    await mkdir(path.dirname(path.join(root, manifest.wasm)), {
-      recursive: true,
-    });
-    await writeFile(path.join(root, manifest.wasm), bytes);
-  } catch (error) {
-    throw new ValidationFailure("build", String(error));
-  }
-  try {
-    await command(
-      ["cargo", "test", "--locked", "--lib", "--manifest-path", cargo],
-      root,
-      path.join(evidence, "cargo-check.json"),
-      { ...process.env, CARGO_TARGET_DIR: target },
-    );
-    const bytes = await readFile(path.join(root, manifest.wasm));
-    validateWasmLimits(bytes);
-    const compiled = await WebAssembly.compile(Uint8Array.from(bytes));
-    for (const name of [
-      "memory",
-      "allocate",
-      "deallocate",
-      "prepare",
-      "execute",
-      "serialize",
-      "output_len",
-    ])
-      if (!WebAssembly.Module.exports(compiled).some((e) => e.name === name))
-        throw new Error(`Missing bot WASM export: ${name}`);
-    const { dependencies } = await loadCriticalInputs(
-      path.join(fixture, "content"),
-    );
-    const transport = await wasmTransport({ bytes });
-    try {
-      const created = await transport.request({
-        op: "create",
-        contractVersion: 1,
-        policy: bot.policy,
-        configuration: bot.configuration,
-        seed: 1,
-        cards: [...dependencies.cards.values()].map((card) => ({
-          ...card,
-          race: String(card.race),
-        })),
-      });
-      if (created.contractVersion !== 1)
-        throw new Error("Unsupported bot create response");
-    } finally {
-      transport.close();
-    }
-    await writeFile(
-      path.join(evidence, "wasm-check.json"),
-      JSON.stringify({
-        status: "passed",
-        exports: WebAssembly.Module.exports(compiled),
-      }),
-    );
-  } catch (error) {
-    throw new ValidationFailure("check", String(error));
-  }
 }

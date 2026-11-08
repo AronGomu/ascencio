@@ -6,6 +6,10 @@
 
 This is the canonical architecture entry point. Detailed decisions are intentionally atomic and grouped by concern so humans and AI can load only the context needed for a task.
 
+## AI bot strategy language
+
+[ADR-106](../ADR/106_ADR_typescript_ai_bot_strategies.md) requires TypeScript for bot strategies and retires application Rust/WASM and native Rust AI packages. The retained experiment showed no performance benefit; one TypeScript implementation is easier to edit and maintain. The Rust native host, evaluation scheduler, and frozen rules engine retain their separate roles.
+
 ## Browser development and content transport
 
 [ADR-105](../ADR/105_ADR_browser_development_and_shared_content_transport.md) adds fixed-content browser development for real Freeplay and Chapter 1 player flows. Browser Vite and the native `game-content` protocol expose one JavaScript fetch reader. Browser saves use an isolated development key. Production remains Tauri, with native installation, mods, and atomic saves.

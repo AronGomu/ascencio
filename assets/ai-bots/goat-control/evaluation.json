@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "deck": "../../../test/fixtures/decks/pre-gx-2005/pre-gx-2005-goat-control.ydk",
+  "content": "../../../tauri/resources/readable-content",
+  "banlist": "../../freeplay/limits.json",
+  "profile": "mr5",
+  "module": "./bot.ts",
+  "configuration": {}
+}

@@ -413,6 +413,7 @@ describe("App deck picker with local decks", () => {
       "local-v1:local:vs:local",
       { kind: "cards", main: VALID_MAIN, extra: [], side: [] },
       { kind: "cards" },
+      undefined,
     ]);
   });
 

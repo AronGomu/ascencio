@@ -4,6 +4,7 @@ import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as nativeContent from "../../src/shell/native/content.ts";
 import * as coreStartup from "../../src/shell/core/core-gate.ts";
 import AppShell from "../../src/shell/AppShell.svelte";
 import type { DomainLoaders } from "../../src/shell/domain-loaders.ts";
@@ -75,9 +76,7 @@ describe("asset-free CORE menu", () => {
     for (const cy of ["main-menu-new-game", "main-menu-continue"])
       expect(query(cy)).toHaveProperty("disabled", true);
     expect(query("main-menu-load")).toHaveProperty("disabled", false);
-    expect(query("core-gate-status")?.textContent).toContain(
-      "New Game requires chapter-01",
-    );
+    expect(query("main-menu-new-game")?.title).toContain("chapter-01");
     await fireEvent.pointerEnter(query("main-menu-free-play")!);
     await fireEvent.focus(query("main-menu-free-play")!);
     expect(application.acquire).not.toHaveBeenCalled();
@@ -105,6 +104,7 @@ describe("asset-free CORE menu", () => {
   });
 
   it("keeps settings and installer usable while gameplay stays visibly disabled", async () => {
+    vi.spyOn(nativeContent, "isNativeApp").mockReturnValue(true);
     const hashes: string[] = [];
     const store = createShellStore("#/", (hash) => hashes.push(hash));
     const loaders: DomainLoaders = {
@@ -125,9 +125,7 @@ describe("asset-free CORE menu", () => {
       "main-menu-free-play",
     ])
       expect(query(cy)).toHaveProperty("disabled", true);
-    expect(query("core-gate-status")?.textContent).toContain(
-      "Content is required",
-    );
+    expect(query("main-menu-free-play")?.title).toContain("Content is required");
 
     await fireEvent.pointerEnter(query("main-menu-free-play")!);
     await fireEvent.focus(query("main-menu-free-play")!);
@@ -135,12 +133,7 @@ describe("asset-free CORE menu", () => {
 
     await fireEvent.click(query("main-menu-settings")!);
     expect(query("shell-settings-dialog")).not.toBeNull();
-    expect(query("shell-settings-content-status")?.textContent).toContain(
-      "Content is required",
-    );
-
-    await fireEvent.click(query("shell-settings-close")!);
-    await fireEvent.click(query("main-menu-install-content")!);
+    await fireEvent.click(query("shell-settings-content")!);
     expect(hashes).toStrictEqual(["#/install-content"]);
     await waitFor(() => expect(query("install-content-screen")).not.toBeNull());
     expect(query("install-content-unavailable")?.textContent).toContain(

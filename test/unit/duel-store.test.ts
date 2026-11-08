@@ -246,6 +246,7 @@ describe("duel view-state reducer", () => {
         "bundled-v1:chapter-one-starter:vs:chapter-one-practice",
         { kind: "preset", deckId: "chapter-one-starter" },
         { kind: "preset", deckId: "chapter-one-practice" },
+        undefined,
       ],
     ]);
   });
@@ -264,6 +265,7 @@ describe("duel view-state reducer", () => {
         "bundled-v1:chapter-one-practice:vs:chapter-one-starter",
         { kind: "preset", deckId: "chapter-one-practice" },
         { kind: "preset", deckId: "chapter-one-starter" },
+        undefined,
       ],
     ]);
 
@@ -276,11 +278,13 @@ describe("duel view-state reducer", () => {
         "bundled-v1:chapter-one-practice:vs:chapter-one-starter",
         { kind: "preset", deckId: "chapter-one-practice" },
         { kind: "preset", deckId: "chapter-one-starter" },
+        undefined,
       ],
       [
         "bundled-v1:chapter-one-practice:vs:chapter-one-starter",
         { kind: "preset", deckId: "chapter-one-practice" },
         { kind: "preset", deckId: "chapter-one-starter" },
+        undefined,
       ],
     ]);
   });

@@ -1,5 +1,4 @@
 import test from "node:test";
-import { existsSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
   mkdtemp,
@@ -306,52 +305,26 @@ test("setup CLI atomically publishes durable inputs, validates reuse, archives s
       session: path.join(root, "invalid"),
     });
     assert.match(run(request, false), /ENOENT/);
-    await t.test(
-      "validates actual package create/configuration through the bounded WASM transport",
-      { skip: !existsSync("assets/ai-bots/reference/dist/ai.wasm") },
-      async () => {
-        const pkg = path.join(root, "package");
-        await mkdir(path.join(pkg, "dist"), { recursive: true });
-        await cp(
-          "assets/ai-bots/reference/bot.json",
-          path.join(pkg, "bot.json"),
-        );
-        await cp(
-          "assets/ai-bots/reference/dist/ai.wasm",
-          path.join(pkg, "dist/ai.wasm"),
-        );
-        await cp("assets/ai-bots/reference/ai", path.join(pkg, "ai"), {
-          recursive: true,
-          filter: (source) => !source.split(path.sep).includes("target"),
-        });
-        const packageConfig = {
-          schemaVersion: 1,
-          deck: "../target/deck.ydk",
-          content: "../content",
-          banlist: "../target/rules.json",
-          profile: "mr5",
-          policy: "generalist",
-          configuration: { unsupported: true },
-        };
-        await write(path.join(pkg, "evaluation.json"), packageConfig);
-        const packageRequest = {
-          ...request,
-          target: pkg,
-          session: path.join(root, "package-session"),
-        };
-        await write(path.join(root, "request.json"), packageRequest);
-        assert.match(run(packageRequest, false), /Configuration must be empty/);
-        await write(path.join(pkg, "evaluation.json"), {
-          ...packageConfig,
-          configuration: {},
-        });
-        const result = run(packageRequest);
-        assert.equal(
-          (await read(path.join(result.fixture, "manifest.json"))).target.kind,
-          "package",
-        );
-      },
-    );
+    await t.test("rejects retired Rust packages before compiling", async () => {
+      const pkg = path.join(root, "package");
+      await mkdir(pkg);
+      await write(path.join(pkg, "evaluation.json"), {
+        schemaVersion: 1,
+        deck: "../target/deck.ydk",
+        content: "../content",
+        banlist: "../target/rules.json",
+        profile: "mr5",
+        policy: "generalist",
+        configuration: {},
+      });
+      const packageRequest = {
+        ...request,
+        target: pkg,
+        session: path.join(root, "package-session"),
+      };
+      await write(path.join(root, "request.json"), packageRequest);
+      assert.match(run(packageRequest, false), /Rust AI packages are retired/);
+    });
     await write(path.join(root, "request.json"), {
       ...request,
       session: path.join(root, "invalid"),

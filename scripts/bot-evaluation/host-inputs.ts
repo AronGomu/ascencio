@@ -46,7 +46,9 @@ export async function loadInputs(
       if (
         /^experiment:(native|wasm):(basic|generalist|random)$/.test(bot.module)
       )
-        return { ...bot, source: "", dependencies: [] };
+        throw new Error(
+          "Rust AI packages are retired. Use builtin:basic, builtin:generalist or builtin:random.",
+        );
       const entry =
         bot.module === "builtin:basic" ||
         bot.module === "builtin:generalist" ||

@@ -16,6 +16,8 @@ This directory contains current project documentation and historical context. Ro
 
 [Frozen parallel evaluation setup](architecture/06-quality/parallel-bot-session.md) defines fixtures, iterations, candidate validation, recoverable decisions, baseline receipts, stop/resume, execution accounting, finalized-match analysis queues and factual reports.
 
+[ADR-106](ADR/106_ADR_typescript_ai_bot_strategies.md) fixes TypeScript as the AI strategy implementation language: the Rust experiment showed no performance benefit, and TypeScript simplifies editing and iteration.
+
 [Bounded bot improvement](architecture/06-quality/bot-improvement-loop.md) documents the fixed-deck coding-agent loop, configuration, isolation, promotion and recovery.
 
 ## Accepted next content architecture

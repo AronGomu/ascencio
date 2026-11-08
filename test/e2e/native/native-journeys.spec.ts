@@ -95,9 +95,9 @@ test("deck name edits persist through the native user-data bridge", async ({
 }) => {
   await installNativeContentBridge(page);
   await page.goto("/#/decks");
-  await expect(
-    page.getByRole("heading", { name: "Deck Library" }),
-  ).toBeVisible();
+  await expect(page.locator('[data-cy="deck-select-title"]')).toBeVisible();
+  const deckActions = page.locator('[data-cy="deck-select-kebab"]');
+  if (await deckActions.isVisible()) await deckActions.click();
   await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Native persistence check");
   await page.locator('[data-cy="deck-library-create-submit"]').click();

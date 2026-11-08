@@ -25,7 +25,6 @@ mod native_mods;
 #[cfg(test)]
 mod native_package_manager;
 mod native_startup;
-mod native_bots;
 #[cfg(test)]
 mod native_storage;
 mod native_user_data;
@@ -319,9 +318,7 @@ pub fn run() {
         })
         .manage(native_user_data::UserJsonState::default())
         .manage(native_startup::StartupState::default())
-        .manage(native_bots::BotSessions::default())
         .invoke_handler(tauri::generate_handler![
-            native_bots::native_bot_list, native_bots::native_bot_pin, native_bots::native_bot_open, native_bots::native_bot_request, native_bots::native_bot_close, native_bots::native_bot_memory,
             native_startup::native_content_location,
             native_startup::maintenance::native_critical_maintenance,
             native_startup::maintenance::native_startup_repair,

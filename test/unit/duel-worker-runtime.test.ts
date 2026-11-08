@@ -1,8 +1,3 @@
-import {
-  nativeTransport,
-  wasmTransport,
-} from "../../scripts/bot-experiment/transport.ts";
-import { createBasicBotModule } from "../../src/battle/worker/bot/basic-bot.ts";
 import * as runtimeBots from "../../src/battle/worker/bot-runtime/loaded-bot.ts";
 import {
   DuelWorkerClient,
@@ -1070,27 +1065,19 @@ describe("duels started from an explicit card list", () => {
     runtime.dispose();
   });
 
-  it.each(["native", "wasm"] as const)(
-    "serializes %s bot loading, progression, pinned restore and disposal",
-    async (target) => {
+  it.each(["basic", "generalist", "random"] as const)(
+    "serializes TypeScript %s loading, progression, fresh restore and disposal",
+    async (policy) => {
       const harness = await createFakeOcgCoreAdapter(recordedDuelProgram);
       const instances: runtimeBots.LoadedBot[] = [];
+      const originalLoad = runtimeBots.loadBot;
       const create = async (): Promise<runtimeBots.LoadedBot> => {
-        const transport =
-          target === "native" ? await nativeTransport() : await wasmTransport();
-        await transport.request({
-          op: "create",
-          contractVersion: 1,
-          policy: "basic",
-          configuration: {},
-          seed: 1,
-          cards: [],
-        });
-        const bot = runtimeBots.guardedBot(
-          transport,
-          createBasicBotModule(FAKE_DEPENDENCIES).create({}),
-          "pinned-test-version",
+        const bot = await originalLoad(
+          { runtime: "typescript", packageId: "builtin", policy },
+          FAKE_DEPENDENCIES,
           false,
+          undefined,
+          1,
         );
         bot.recreate = create;
         instances.push(bot);
@@ -1142,9 +1129,9 @@ describe("duels started from an explicit card list", () => {
             START_FAKE_DUEL.player,
             START_FAKE_DUEL.opponent,
             {
-              runtime: target,
-              packageId: "ascencio.reference",
-              policy: "basic",
+              runtime: "typescript",
+              packageId: "builtin",
+              policy,
             },
           ),
         ).not.toBeNull();

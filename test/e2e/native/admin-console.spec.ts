@@ -27,9 +27,7 @@ test("the console is not linked from the player-facing main menu", async ({
 test("the route index navigates to any indexed route", async ({ page }) => {
   await page.goto(adminUrl);
   await page.locator('[data-cy="admin-route-free-play-decks"]').click();
-  await expect(
-    page.getByRole("heading", { name: "Deck Library" }),
-  ).toBeVisible();
+  await expect(page.locator('[data-cy="deck-select-title"]')).toBeVisible();
   expect(new URL(page.url()).hash).toBe("#/free-play/decks");
 
   await page.goto(adminUrl);

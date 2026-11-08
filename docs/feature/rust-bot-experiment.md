@@ -1,9 +1,16 @@
-# Portable bot experiment
+# Retired Rust bot experiment
 
-TypeScript remains the default. Freeplay's **Opponent AI** selector chooses Basic,
-Generalist or Random independently of either deck. The Rust versions are optional;
-choosing an unusual AI/deck pairing is allowed. The experiment and measured results
-are retained in [the evidence directory](../evidence/bot-experiment/README.md).
+[ADR-106](../ADR/106_ADR_typescript_ai_bot_strategies.md) records the accepted TypeScript strategy decision and its rationale.
+
+Rust/WASM and native Rust bot strategy development is retired. The application uses the built-in TypeScript Basic, Generalist and Random policies. Freeplay no longer discovers external AI packages, and native builds no longer compile or bundle Rust AI executables. Installed Rust AI packages are no longer supported; content requiring one must select a built-in TypeScript policy.
+
+The [measured results](../evidence/bot-experiment/results.md) found no performance reason to switch built-in policies to Rust. Rust reproduced the saved decisions but transport and copying increased costs. Retained experiment sources are historical evidence. Application loading, evaluation setup, evaluator hosts and candidate compilation reject Rust strategies; historical commands below may require the original experiment revision. The Rust native application host and evaluation scheduler have separate responsibilities and remain in use.
+
+Strategy authoring lives in `src/battle/worker/bot/`, with `generalist-strategy.ts` owning baseline action scoring. The GOAT Control development folder links to that TypeScript implementation.
+
+## Historical package and reproduction contract
+
+The following describes the retired experiment only.
 
 ## Packages and authoring
 

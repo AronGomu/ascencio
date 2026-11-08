@@ -1,10 +1,7 @@
-import { readFile, readdir, realpath } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { build } from "esbuild";
-import { wasmTransport } from "../bot-experiment/transport.ts";
 import { SourceTextModule, createContext } from "node:vm";
-import { validateWasmLimits } from "../../src/battle/worker/bot-runtime/wasm-limits.ts";
-import { parseBotManifest } from "../../src/battle/duel/contracts/bot-package.ts";
 import {
   parseYdk,
   type ParsedDeck,
@@ -127,72 +124,9 @@ export async function resolveBot(folder: string) {
       deck,
     };
   } else {
-    const manifestBytes = await readFile(path.join(folder, "bot.json"));
-    const manifest = parseBotManifest(JSON.parse(manifestBytes.toString()));
-    if (!config.policy || !manifest.policies.includes(config.policy))
-      throw new Error("Missing/unsupported package policy");
-    const safeRead = async (file: string) => {
-      const resolved = await realpath(path.join(folder, file));
-      if (!resolved.startsWith(`${folder}${path.sep}`))
-        throw new Error(`Escaping package path: ${file}`);
-      return readFile(resolved);
-    };
-    bytes["bot.json"] = manifestBytes;
-    bytes[manifest.wasm] = await safeRead(manifest.wasm);
-    validateWasmLimits(bytes[manifest.wasm]!);
-    const compiled = await WebAssembly.compile(
-      Uint8Array.from(bytes[manifest.wasm]!),
+    throw new Error(
+      "Rust AI packages are retired. Set module to builtin:basic, builtin:generalist, builtin:random, or a TypeScript entry in evaluation.json.",
     );
-    const exports = WebAssembly.Module.exports(compiled);
-    for (const name of [
-      "memory",
-      "allocate",
-      "deallocate",
-      "prepare",
-      "execute",
-      "serialize",
-      "output_len",
-    ])
-      if (!exports.some((e) => e.name === name))
-        throw new Error(`Missing bot WASM export: ${name}`);
-    const transport = await wasmTransport({ bytes: bytes[manifest.wasm]! });
-    try {
-      const created = await transport.request({
-        op: "create",
-        contractVersion: 1,
-        policy: config.policy,
-        configuration: config.configuration,
-        seed: 1,
-        cards: [...loaded.dependencies.cards.values()].map((card) => ({
-          ...card,
-          race: String(card.race),
-        })),
-      });
-      if (created.contractVersion !== 1)
-        throw new Error("Unsupported bot create response");
-    } finally {
-      transport.close();
-    }
-    await safeRead(manifest.source);
-    const visit = async (dir: string): Promise<void> => {
-      for (const entry of await readdir(path.join(folder, dir), {
-        withFileTypes: true,
-      })) {
-        if (entry.name === "target") continue;
-        const file = `${dir}/${entry.name}`;
-        if (entry.isSymbolicLink())
-          throw new Error(`Symlink in bot source: ${file}`);
-        if (entry.isDirectory()) await visit(file);
-        else if (entry.isFile()) bytes[file] = await safeRead(file);
-      }
-    };
-    await visit("ai");
-    bot = {
-      kind: "package",
-      policy: config.policy,
-      configuration: config.configuration,
-      deck,
-    };
   }
   if (config.strategy) {
     bytes["strategy.mjs"] = await readFile(

@@ -14,9 +14,9 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../src/storage/index.ts", async (original) => ({
   ...(await original<typeof StorageApi>()),
-  prepareNativeStorage: mocks.prepare,
-  closePreparedNativeStorage: mocks.close,
-  flushPreparedNativeStorage: mocks.flush,
+  prepareApplicationStorage: mocks.prepare,
+  closePreparedApplicationStorage: mocks.close,
+  flushPreparedApplicationStorage: mocks.flush,
   invokeNative: mocks.invoke,
 }));
 vi.mock("../../../src/shell/native/content.ts", () => ({

@@ -989,7 +989,7 @@ it("runs menu New Game through acquired Story inputs without reading saved slots
   expect(read).not.toHaveBeenCalled();
 });
 
-it("keeps Story collection media lazy and releases selected preview on navigation", async () => {
+it("loads visible collection tile art, adds preview on hover and releases both on navigation", async () => {
   const leaseRelease = vi.fn();
   const acquire = vi.fn(async () => ({
     url: "blob:selected",
@@ -1024,19 +1024,19 @@ it("keeps Story collection media lazy and releases selected preview on navigatio
     return found!;
   }, REAL_IMPORT);
   expect(aggregate).not.toHaveBeenCalled();
-  expect(acquire).not.toHaveBeenCalled();
-  await fireEvent.mouseEnter(card);
   await vi.waitFor(() => expect(acquire).toHaveBeenCalledOnce());
+  await fireEvent.mouseEnter(card);
+  await vi.waitFor(() => expect(acquire).toHaveBeenCalledTimes(2));
 
   store.navigate({ kind: "home" });
-  await vi.waitFor(() => expect(leaseRelease).toHaveBeenCalledOnce());
+  await vi.waitFor(() => expect(leaseRelease).toHaveBeenCalledTimes(2));
   expect(aggregate).not.toHaveBeenCalled();
 });
 
 it("cancels pending Story collection preview media on navigation", async () => {
-  let pendingSignal: AbortSignal | null = null;
+  const pendingSignals: AbortSignal[] = [];
   const acquire = vi.fn((_code, _variant, signal: AbortSignal) => {
-    pendingSignal = signal;
+    pendingSignals.push(signal);
     return new Promise<null>((resolve) => {
       signal.addEventListener("abort", () => resolve(null), { once: true });
     });
@@ -1068,9 +1068,11 @@ it("cancels pending Story collection preview media on navigation", async () => {
   }, REAL_IMPORT);
 
   await fireEvent.mouseEnter(card);
-  await vi.waitFor(() => expect(acquire).toHaveBeenCalledOnce());
+  await vi.waitFor(() => expect(acquire).toHaveBeenCalledTimes(2));
   store.navigate({ kind: "home" });
-  await vi.waitFor(() => expect(pendingSignal?.aborted).toBe(true));
+  await vi.waitFor(() =>
+    expect(pendingSignals.every((signal) => signal.aborted)).toBe(true),
+  );
 });
 
 it("acquires Free Play lease before mount; releases after disposal", async () => {

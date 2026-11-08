@@ -533,6 +533,7 @@ describe("App", () => {
       "local-v1:local:vs:local",
       { kind: "cards" },
       { kind: "cards" },
+      undefined,
     ]);
   });
 

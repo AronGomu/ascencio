@@ -69,8 +69,10 @@ ascencio/
 │   │   │                             # Production native platform and asset UI boundaries
 │   │   ├── 104_ADR_startup_memory_content_and_mod_overrides.md
 │   │   │                             # Current JSON snapshots, memory, mods and saves
-│   │   └── 105_ADR_browser_development_and_shared_content_transport.md
-│   │                                 # Browser development exception and shared transport
+│   │   ├── 105_ADR_browser_development_and_shared_content_transport.md
+│   │   │                             # Browser development exception and shared transport
+│   │   └── 106_ADR_typescript_ai_bot_strategies.md
+│   │                                 # TypeScript bot strategies; Rust AI retirement and rationale
 │   ├── story/
 │   │   ├── README.md                 # Narrative canon index
 │   │   ├── scenario/                 # Philosophy, premise and world rules
@@ -121,7 +123,7 @@ ascencio/
 │   │       ├── assets/               # Runtime manifests, card data and scripts
 │   │       ├── opponent/             # Opponent-facing observations and policy integration
 │   │       ├── diagnostics/          # Worker errors and diagnostic records
-│   │       ├── bot-runtime/           # Preemptible WASM/native transports, pinning and validated recovery
+│   │       ├── bot-runtime/           # TypeScript bot loading, validation and historical transport helpers
 │   │       └── bot/
 │   │           ├── bot-contract.ts   # Bot inputs, decisions, settings and sideboarding interface
 │   │           ├── generalist-bot.ts # Shared selection and bot execution machinery
@@ -168,7 +170,7 @@ ascencio/
 │       ├── lib.rs                    # Tauri setup, protocols and command registration
 │       ├── native_startup.rs         # Verified startup snapshots and memory readiness
 │       ├── native_startup/           # Startup maintenance, resources and acceptance support
-│       ├── native_bots.rs            # Installed packages and bounded native bot subprocesses
+│       ├── native_bots.rs            # Retired experimental native bot subprocess implementation
 │       ├── native_user_data.rs       # Atomic JSON user-data writer
 │       ├── native_mods.rs            # Enabled mod state and activation
 │       ├── native_mod_import.rs      # Mod selection and import
@@ -182,8 +184,8 @@ ascencio/
 │   ├── native-release.json           # Native release declaration
 │   ├── distribution-evidence.json    # Distribution approval evidence
 │   ├── setup-evidence.json           # Setup and acceptance evidence
-│   ├── ai-bots/                      # Versioned Rust AI sources, manifests and portable executables
-│   │   └── goat-control/             # GOAT Control specialist development home and baseline links
+│   ├── ai-bots/                      # TypeScript bot entries and retained Rust experiment sources
+│   │   └── goat-control/             # TypeScript generalist entry and GOAT Control evaluation deck
 │   ├── app/                          # Tracked fonts, application icon and download-link settings
 │   ├── duel-core/                    # Engine configuration and strings
 │   ├── freeplay/                     # Freeplay decks, opponents, settings and card limits
@@ -203,7 +205,7 @@ ascencio/
 │   ├── readable-content-release.ts  # Content release pinning, staging and verification
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
-│   ├── bot-evaluation/               # Node host and schemas supporting the Rust evaluator
+│   ├── bot-evaluation/               # TypeScript bot host and schemas for the Rust evaluation scheduler
 │   ├── bot-improvement/              # Frozen sessions, execution, analysis, aggregation and decisions
 │   │   ├── session-contract.ts       # Frozen setup and candidate validation schema
 │   │   ├── iteration-contract.ts     # Prepared bindings and baseline receipts

@@ -6,6 +6,9 @@ test("a rejected native commit preserves deck edits in a saved copy", async ({
 }) => {
   await installNativeContentBridge(page);
   await page.goto("/#/decks");
+  await expect(page.locator('[data-cy="deck-select-title"]')).toBeVisible();
+  const deckActions = page.locator('[data-cy="deck-select-kebab"]');
+  if (await deckActions.isVisible()) await deckActions.click();
   await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Native commit recovery");
   await page.locator('[data-cy="deck-library-create-submit"]').click();

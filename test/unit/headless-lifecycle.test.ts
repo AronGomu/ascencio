@@ -239,6 +239,49 @@ async function createController(
   return { controller, session, harness };
 }
 
+it.each(["before", "after"] as const)(
+  "returns terminal result without invoking an async bot when WIN is %s its prompt",
+  async (order) => {
+    const choose = vi.fn(async () => {
+      throw new Error("Terminal batch must not request a bot decision");
+    });
+    const dispose = vi.fn();
+    const prompt = {
+      type: EngineMessageType.SELECT_YES_NO,
+      player: 1,
+      description: 0n,
+    } as const;
+    const { controller, session, harness } = await createController(
+      {
+        steps: [
+          {
+            status: EngineProcess.END,
+            messages:
+              order === "before"
+                ? [WIN_MESSAGE, prompt]
+                : [prompt, WIN_MESSAGE],
+          },
+        ],
+      },
+      10,
+      undefined,
+      { choose, dispose },
+    );
+    const advance = await controller.advanceAsync();
+    expect(advance.result).toEqual({
+      type: "completed",
+      winner: 1,
+      loser: 0,
+      reason: 1,
+    });
+    expect(advance.prompt).toBeUndefined();
+    expect(choose).not.toHaveBeenCalled();
+    expect(dispose).toHaveBeenCalledOnce();
+    expect(session.disposed).toBe(true);
+    expect(harness.counters.destroyDuel).toBe(1);
+  },
+);
+
 it("serializes asynchronous decisions and never responds after disposal", async () => {
   let finish!: (value: OpponentDecision) => void;
   const dispose = vi.fn();

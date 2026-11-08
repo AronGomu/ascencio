@@ -93,7 +93,6 @@
       policy: policy as BotSelection["policy"],
     },
   }));
-  let aiPackageError: string | null = null;
   let decks: readonly SelectableDeck[] = [];
   /* Card art and card names, for the covers and the hover decklists. Empty
      until the packaged database answers, which is a fetch the seats never wait
@@ -180,34 +179,6 @@
       const loaded = await freePlayBattleModule(loadBattle);
       if (!alive()) return;
       battle = loaded;
-      if (loaded.listBotPackages) {
-        try {
-          const packages = await loaded.listBotPackages();
-          if (!alive()) return;
-          aiOptions = [
-            ...aiOptions.filter((o) => o.selection.runtime === "typescript"),
-            ...packages.flatMap((p) =>
-              p.manifest.policies.flatMap((policy) =>
-                (p.nativeCompatible
-                  ? (["wasm", "native"] as const)
-                  : (["wasm"] as const)
-                ).map((runtime) => ({
-                  key: `${runtime}:${p.manifest.id}:${policy}`,
-                  label: `${policy[0]!.toUpperCase() + policy.slice(1)} · ${runtime === "wasm" ? "WebAssembly" : "Native"} (${p.manifest.packageVersion})`,
-                  selection: {
-                    runtime,
-                    packageId: p.manifest.id,
-                    policy: policy as BotSelection["policy"],
-                  },
-                })),
-              ),
-            ),
-          ];
-        } catch (error) {
-          aiPackageError =
-            error instanceof Error ? error.message : String(error);
-        }
-      }
       /* Whatever is already known, so the seats fill on the first paint: the
          listing this page last read, or the bundled decks alone, which are
          compiled into this build and need no read at all. */
@@ -598,13 +569,6 @@
         >{/each}
     </select>
   </label>
-  {#if aiPackageError}<p
-      role="status"
-      class="ai-package-error"
-      data-cy="freeplay-ai-package-error"
-    >
-      {aiPackageError} Built-in AI remains available.
-    </p>{/if}
 {/snippet}
 
 <style>
@@ -618,18 +582,14 @@
     width: 100%;
     min-height: 2.5rem;
     color: inherit;
-    background: var(--surface-panel, #22212b);
+    background: var(--surface-panel);
     border: 1px solid currentColor;
     border-radius: 0.35rem;
     padding: 0.4rem;
     font: inherit;
   }
   .ai-choice select:focus-visible {
-    outline: 2px solid var(--color-accent, #e3b86c);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
-  }
-  .ai-package-error {
-    font-size: 0.8rem;
-    line-height: 1.4;
   }
 </style>

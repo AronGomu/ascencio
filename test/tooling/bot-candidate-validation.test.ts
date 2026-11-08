@@ -1,5 +1,4 @@
 import test from "node:test";
-import { existsSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
   mkdtemp,
@@ -347,36 +346,13 @@ test("CLI resolves request-relative paths and emits structured invalid output", 
   }
 });
 
-test("Rust candidate build failures preserve source and keep frozen runtime changes out of scope", async () => {
+test("retired Rust candidates cannot enter the strategy build path", async () => {
   const { root, request } = await fixture("package");
   try {
-    await writeFile(
-      path.join(request.candidate, "ai/src/selection.rs"),
-      "forbidden",
-    );
-    const scope = await validateCandidate(request);
-    assert.equal(scope.reasons[0]?.category, "scope");
-    await cp(
-      path.join(request.accepted.path, "ai/src/selection.rs"),
-      path.join(request.candidate, "ai/src/selection.rs"),
-    );
-    await writeFile(
-      path.join(request.candidate, "ai/src/generalist.rs"),
-      "this cannot compile as Rust",
-    );
-    const failed = await validateCandidate({
-      ...request,
-      output: path.join(root, "build-failed"),
-    });
-    assert.equal(failed.reasons[0]?.category, "build", JSON.stringify(failed));
-    assert.match(
-      await readFile(
-        path.join(failed.evidence, "submitted/ai/src/generalist.rs"),
-        "utf8",
-      ),
-      /cannot compile/,
-    );
-    assert.ok(await readFile(path.join(failed.evidence, "build.json")));
+    const result = await validateCandidate(request);
+    assert.equal(result.status, "invalid");
+    assert.equal(result.reasons[0]?.category, "scope");
+    assert.match(result.reasons[0]!.message, /Rust AI packages are retired/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -439,42 +415,6 @@ test("pinned references and output isolation reject drift before compilation", a
         "utf8",
       ),
       /timed out/,
-    );
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test("valid Rust heuristic rebuilds WASM and validates bounded create", async (t) => {
-  const target = spawnSync(
-    "rustc",
-    ["--print", "target-libdir", "--target", "wasm32-unknown-unknown"],
-    { encoding: "utf8", timeout: 10000 },
-  );
-  if (target.status !== 0 || !existsSync(target.stdout.trim())) {
-    t.skip("wasm32-unknown-unknown Rust standard library is not installed");
-    return;
-  }
-  const { root, request } = await fixture("package");
-  try {
-    const file = path.join(request.candidate, "ai/src/generalist.rs");
-    await writeFile(
-      file,
-      (await readFile(file, "utf8")).replace(
-        '"summon" => 100.0',
-        '"summon" => 101.0',
-      ),
-    );
-    const result = await validateCandidate(request);
-    assert.equal(result.status, "valid", JSON.stringify(result));
-    assert.ok(result.candidate && result.executableIdentity);
-    assert.notEqual(
-      result.candidate.bot.files["dist/ai.wasm"],
-      request.accepted.bot.files["dist/ai.wasm"],
-    );
-    assert.match(
-      await readFile(path.join(result.evidence, "wasm-check.json"), "utf8"),
-      /passed/,
     );
   } finally {
     await rm(root, { recursive: true, force: true });

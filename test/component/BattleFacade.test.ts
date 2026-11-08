@@ -322,6 +322,7 @@ describe("BattleFacade", () => {
       "bundled-v1:chapter-one-starter:vs:chapter-one-practice",
       { kind: "preset", deckId: "chapter-one-starter" },
       { kind: "preset", deckId: "chapter-one-practice" },
+      undefined,
     );
     expect(document.querySelector('[data-cy="deck-picker"]')).toBeNull();
   });

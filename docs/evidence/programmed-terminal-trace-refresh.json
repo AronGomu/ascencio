@@ -1,0 +1,112 @@
+{
+  "date": "2026-11-08",
+  "baselineSourceRevision": "2e9489fb33b4d60cd4c9a541154362059c8f4bb7",
+  "baselineAlsoCheckedWithHeadBeforeTerminalFix": true,
+  "method": "Identical persisted responses, frozen engine and current acquired inputs replayed through archived pre-fix controller and current controller. Entry-level comparison found only terminal-batch prompt/response removal and lifecycle sequence adjustment. All results, response counts and action coverage agree. Five old pins already differed before the terminal fix; opening deck-out reproduced its prior pin; surrender is unchanged. Integration test retains two complete replays, exact digest, outcome, coverage, diagnostics and disposal assertions.",
+  "scenarios": [
+    {
+      "id": "battle-and-chain",
+      "transcript": "basic-duel-v1",
+      "pinned": "65ae688f7b31c7c9a1f049d24ace1d2a8e526bc955bf2ea69643ebcce2b9b20d",
+      "before": "d08cf51b6314473fecb4c090d56c48ad7fbca9020dfb6d6b43304dd3f484ba51",
+      "after": "ae86324a5832b34f69d3c196a30d824c978b334a679be640efbc71693c49265a",
+      "responses": 182,
+      "result": {
+        "type": "completed",
+        "winner": 1,
+        "loser": 0,
+        "reason": 1
+      },
+      "coverageSame": true
+    },
+    {
+      "id": "tribute-special-and-target",
+      "transcript": "tribute-special-v1",
+      "pinned": "b4e629367772d5d24253403e21f8939588640193c66ed6b3ba858395e2761225",
+      "before": "dbcd745a15a07dc0012a23bb4e9067fc6042e72969ea2dca81b00ec95407a766",
+      "after": "0b6fa4fc553633272c30ade79b74d656f9944c3f55355a32e1e5dc3be4e6af99",
+      "responses": 110,
+      "result": {
+        "type": "completed",
+        "winner": 0,
+        "loser": 1,
+        "reason": 1
+      },
+      "coverageSame": true
+    },
+    {
+      "id": "effects-recovery-and-position",
+      "transcript": "effects-recovery-v1",
+      "pinned": "5b5de5159d9171cc3ebde2b7d8ff9c880678f7ba2e05f533e05d4e1ab0f26f20",
+      "before": "47a41074ebc2a447992c944ca10ccf457405b9ab4308fa14a9fa34b7edbfa6ff",
+      "after": "5612952a57004c39d62bdd8fe1376aef4fe9f8f2430743eb533f59c696f89034",
+      "responses": 141,
+      "result": {
+        "type": "completed",
+        "winner": 0,
+        "loser": 1,
+        "reason": 1
+      },
+      "coverageSame": true
+    },
+    {
+      "id": "real-wasm-prompt-matrix",
+      "transcript": "prompt-matrix-v1",
+      "pinned": "78400cc635f55c28db60e93838ca6e318d5eedef10713347eb0003c57ef6deb0",
+      "before": "d931e63ea9421e1d5d759ad683a754012410f00cd780a08d6c2fdc4ad03448c0",
+      "after": "7185ce1312e962e722bc5ef019ca86a136aba374a18c66386d73c98dfa0738d5",
+      "responses": 16,
+      "result": {
+        "type": "completed",
+        "winner": 0,
+        "loser": 1,
+        "reason": 1
+      },
+      "coverageSame": true
+    },
+    {
+      "id": "shuffle-and-sort-chain",
+      "transcript": "sort-chain-v1",
+      "pinned": "048fd488d9f0a64992a457cc174c06c41dd5ce099a3b3283de3d95d9e2b1114a",
+      "before": "16abe1a3035b4de3aafb80cb61cb5a26aaaf3dd3ee716413b9aa199bacadb8db",
+      "after": "b5a8dafc7e6b4cef0037c5c4c55e8efd75a8f57dae5f8bae1cc3c7ce57ebd8e2",
+      "responses": 4,
+      "result": {
+        "type": "completed",
+        "winner": 0,
+        "loser": 1,
+        "reason": 1
+      },
+      "coverageSame": true
+    },
+    {
+      "id": "deck-out-at-opening",
+      "transcript": "deck-out-v1",
+      "pinned": "6e5055ccb40df3d2159710c0874789100334c846638dc0506d76dcbc4c5aeccf",
+      "before": "6e5055ccb40df3d2159710c0874789100334c846638dc0506d76dcbc4c5aeccf",
+      "after": "76b02934207e97571790dc72f64975490e6f1f4454e781f0ed8868b8f410c379",
+      "responses": 0,
+      "result": {
+        "type": "completed",
+        "winner": 1,
+        "loser": 0,
+        "reason": 2
+      },
+      "coverageSame": true
+    },
+    {
+      "id": "surrender-at-opening",
+      "transcript": "surrender-v1",
+      "pinned": "a23d49176725a7c6b8e7f8ecc9e1dedd13bf873aafc3437438eee96916c9acf6",
+      "before": "a23d49176725a7c6b8e7f8ecc9e1dedd13bf873aafc3437438eee96916c9acf6",
+      "after": "a23d49176725a7c6b8e7f8ecc9e1dedd13bf873aafc3437438eee96916c9acf6",
+      "responses": 0,
+      "result": {
+        "type": "surrendered",
+        "winner": 1,
+        "loser": 0
+      },
+      "coverageSame": true
+    }
+  ]
+}

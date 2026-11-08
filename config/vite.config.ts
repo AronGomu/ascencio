@@ -1,4 +1,3 @@
-import { browserBotPackagesPlugin } from "../scripts/lib/browser-bot-packages.ts";
 import { appEntryPlugin } from "../scripts/lib/vite-app-entry.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,7 +58,6 @@ export default defineConfig(({ command, mode }): UserConfig => {
     },
     plugins: [
       appEntryPlugin(),
-      browserBotPackagesPlugin(projectRoot),
       syncOnlyVendoredCorePlugin(projectRoot),
       svelte(browserDevelopment ? { compilerOptions: { hmr: false } } : {}),
       contentSourceDenyPlugin(projectRoot),

@@ -128,6 +128,9 @@ test("native scrollbar styling renders and remains visible in forced colors", as
   expect(zoneStyle.color).toBe(zoneStyle.colorSupported ? "auto" : undefined);
 
   await page.goto("/#/decks");
+  await expect(page.locator('[data-cy="deck-select-title"]')).toBeVisible();
+  const deckActions = page.locator('[data-cy="deck-select-kebab"]');
+  if (await deckActions.isVisible()) await deckActions.click();
   await page.locator('[data-cy="deck-select-create"]').click();
   await page.getByLabel("Deck name").fill("Forced color scrollbar");
   await page.locator('[data-cy="deck-library-create-submit"]').click();

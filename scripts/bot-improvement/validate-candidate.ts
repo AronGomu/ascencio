@@ -135,27 +135,10 @@ export async function validateCandidate(
     ) {
       editable = "strategy.mjs";
       executable = "bot.mjs";
-    } else if (
-      accepted.kind === "package" &&
-      accepted.policy === "generalist"
-    ) {
-      // The existing reference build recipe and scoring module are the supported Rust boundary.
-      const manifest = JSON.parse(acceptedFiles["bot.json"]!.toString());
-      if (
-        manifest.id !== "ascencio.reference" ||
-        manifest.source !== "ai/Cargo.toml" ||
-        manifest.wasm !== "dist/ai.wasm"
-      )
-        throw new ValidationFailure(
-          "scope",
-          "Unsupported Rust package boundary; requires reference Cargo recipe",
-        );
-      editable = "ai/src/generalist.rs";
-      executable = "dist/ai.wasm";
     } else
       throw new ValidationFailure(
         "scope",
-        "Supported candidate boundaries: builtin:generalist strategy.mjs or reference generalist ai/src/generalist.rs",
+        "Rust AI packages are retired. Supported candidate boundary: builtin:generalist strategy.mjs (compiled from TypeScript).",
       );
     // Accepted versions may differ only in heuristic source and its generated executable.
     for (const file of new Set([
@@ -187,16 +170,6 @@ export async function validateCandidate(
       throw new ValidationFailure(
         "scope",
         `Required heuristic source missing: ${editable}`,
-      );
-    if (
-      accepted.kind === "package" &&
-      /\b(?:unsafe|extern)\b|\b(?:include|include_str|include_bytes|env|option_env)!|std\s*::\s*(?:fs|net|time|process)|\bmod\s+/.test(
-        submitted[editable]!.toString(),
-      )
-    )
-      throw new ValidationFailure(
-        "scope",
-        "Rust heuristic must use the frozen runtime and seeded inputs; external code, unsafe and ambient APIs are forbidden",
       );
     result.sourceIdentity = identity(
       hashes(

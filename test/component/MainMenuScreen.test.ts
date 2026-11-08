@@ -112,7 +112,7 @@ describe("MainMenuScreen", () => {
     );
     expect((query("main-menu-load") as HTMLButtonElement).disabled).toBe(false);
   });
-  it("renders the five entries with Free Play last", async () => {
+  it("renders gameplay entries followed by Settings", async () => {
     await writeStorySave();
     renderMenu();
     await settleSaveProbe();
@@ -121,9 +121,8 @@ describe("MainMenuScreen", () => {
       "main-menu-new-game",
       "main-menu-continue",
       "main-menu-load",
-      "main-menu-install-content",
-      "main-menu-settings",
       "main-menu-free-play",
+      "main-menu-settings",
     ]);
     expect(query("main-menu-title")).not.toBeNull();
   });
@@ -137,9 +136,8 @@ describe("MainMenuScreen", () => {
       "main-menu-new-game",
       "main-menu-continue",
       "main-menu-load",
-      "main-menu-install-content",
-      "main-menu-settings",
       "main-menu-free-play",
+      "main-menu-settings",
     ]);
   });
 
@@ -254,16 +252,11 @@ describe("MainMenuScreen", () => {
     expect(query("shell-settings-dialog")).toBeNull();
   });
 
-  /* The browser owns fullscreen: the menu and the settings dialog only point
-     at F11 rather than offering an in-app request. */
-  it("points at F11 in the menu and in the settings dialog", async () => {
+  it("shows the build version and keeps content controls in Settings", async () => {
     renderMenu();
-    expect(query("main-menu-fullscreen-hint")!.textContent).toContain("F11");
-
+    expect(query("main-menu-version")!.textContent).toBe("v0.1.0");
+    expect(query("main-menu-install-content")).toBeNull();
     await fireEvent.click(query("main-menu-settings")!);
-
-    expect(query("shell-settings-fullscreen-hint")!.textContent).toContain(
-      "F11",
-    );
+    expect(query("shell-settings-content")).not.toBeNull();
   });
 });

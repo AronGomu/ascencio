@@ -6,7 +6,6 @@ import path from "node:path";
 import { loadCriticalInputs } from "./critical-inputs.ts";
 import { deckOrder } from "../bot-improvement/session-fixtures.ts";
 import type { GameFixture } from "../bot-improvement/session-contract.ts";
-import { wasmTransport } from "../bot-experiment/transport.ts";
 import { writeSync } from "node:fs";
 import {
   instantiateHostBot,
@@ -104,18 +103,10 @@ names.set(61, "summon_succeeded");
 names.set(63, "special_summon_succeeded");
 names.set(65, "flip_summon_succeeded");
 function botOptions(index: number, seed?: number) {
-  const artifact = artifacts[index] as Artifact & { wasm?: string };
-  return {
-    onFallback: send,
-    ...(seed === undefined ? {} : { seed }),
-    ...(artifact.wasm
-      ? {
-          transport: async () =>
-            wasmTransport({ bytes: await readFile(artifact.wasm!) }),
-        }
-      : {}),
-  };
+  if (!artifacts[index]) throw new Error("Missing bot artifact");
+  return { onFallback: send, ...(seed === undefined ? {} : { seed }) };
 }
+
 async function game(command: Command) {
   if (command.fixture) {
     const f = command.fixture;
@@ -468,6 +459,14 @@ type FrozenInputs = Awaited<ReturnType<typeof loadCriticalInputs>> & {
 const frozenCache = new Map<string, FrozenInputs>();
 let frozenContent: Awaited<ReturnType<typeof loadCriticalInputs>> | undefined;
 async function frozenInputs(command: Command): Promise<FrozenInputs> {
+  if (
+    command.frozen!.bots.some(
+      (bot) => bot.wasm || bot.module.startsWith("experiment:"),
+    )
+  )
+    throw new Error(
+      "Rust AI packages are retired. Prepare a new TypeScript evaluation session.",
+    );
   const key = JSON.stringify(command.frozen!.bots);
   const cached = frozenCache.get(key);
   if (cached) return cached;

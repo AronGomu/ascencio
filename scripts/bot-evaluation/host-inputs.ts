@@ -53,7 +53,7 @@ export async function loadInputs(
         bot.module === "builtin:basic" ||
         bot.module === "builtin:generalist" ||
         bot.module === "builtin:random"
-          ? path.resolve(`src/battle/worker/bot/${bot.module.slice(8)}-bot.ts`)
+          ? path.resolve(`assets/ai-bots/${bot.module.slice(8)}/ai/index.ts`)
           : bot.module;
       const built = await build({
         entryPoints: [entry],

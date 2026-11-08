@@ -1,4 +1,4 @@
-import { readFile, realpath } from "node:fs/promises";
+import { readFile, realpath, access } from "node:fs/promises";
 import path from "node:path";
 import { build } from "esbuild";
 import { SourceTextModule, createContext } from "node:vm";
@@ -11,6 +11,8 @@ import { instantiate, type Artifact } from "../bot-evaluation/host-inputs.ts";
 import type { EvaluationSetup, FrozenBot } from "./session-contract.ts";
 import { digest, identity } from "./session-fixtures.ts";
 
+import { packagePath, readAiBotPackage } from "../lib/ai-bots/package.ts";
+
 export async function json(file: string) {
   return JSON.parse(await readFile(file, "utf8"));
 }
@@ -19,6 +21,23 @@ export async function resolveBot(folder: string) {
   const configPath = path.join(folder, "evaluation.json");
   const original = await readFile(configPath, "utf8");
   const config = JSON.parse(original) as EvaluationSetup;
+  let ownedPackage: Awaited<ReturnType<typeof readAiBotPackage>> | undefined;
+  try {
+    await access(path.join(folder, "bot.json"));
+    const manifest = JSON.parse(
+      await readFile(path.join(folder, "bot.json"), "utf8"),
+    );
+    if (manifest.manifestVersion === 1)
+      ownedPackage = await readAiBotPackage(folder);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  if (ownedPackage) {
+    if (!ownedPackage.manifest.recommendedDecks.includes(config.deck))
+      throw new Error("Evaluation deck must be declared in bot.json");
+    config.configuration = ownedPackage.settings;
+  }
+
   if (
     config.schemaVersion !== 1 ||
     !["mr3", "mr5"].includes(config.profile) ||
@@ -89,9 +108,11 @@ export async function resolveBot(folder: string) {
     const builtin = /^builtin:(basic|generalist|random)$/.test(module);
     if (module.startsWith("builtin:") && !builtin)
       throw new Error("Unsupported builtin module");
-    const entry = builtin
-      ? path.resolve(`src/battle/worker/bot/${module.slice(8)}-bot.ts`)
-      : path.resolve(folder, module);
+    const entry = ownedPackage
+      ? packagePath(folder, ownedPackage.manifest.ai.source)
+      : builtin
+        ? path.resolve(`src/battle/worker/bot/${module.slice(8)}-bot.ts`)
+        : path.resolve(folder, module);
     const built = await build({
       entryPoints: [entry],
       bundle: true,

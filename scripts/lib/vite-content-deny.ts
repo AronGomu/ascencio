@@ -157,12 +157,70 @@ export function contentSourceDenyPlugin(projectRoot: string): Plugin {
         const roots = [...new Set([...PRIVATE_ROOTS, ...additionalRoots])].map(
           (root) => path.resolve(projectRoot, root),
         );
+        // Bot implementation modules are public source transforms. Verify the
+        // complete authoring root and final file before exempting an individual
+        // spelling; other candidate spellings still pass the privacy fence.
+        const canonicalProjectRoot = await realpath(projectRoot);
+        const sourceAllowances = new Map<string, Promise<boolean>>();
+        const allowedBotSource = (candidate: string): Promise<boolean> => {
+          let allowed = sourceAllowances.get(candidate);
+          if (allowed) return allowed;
+          allowed = (async () => {
+            const relative = path
+              .relative(projectRoot, candidate)
+              .split(path.sep)
+              .join("/");
+            const match =
+              /^assets\/ai-bots\/([a-z0-9][a-z0-9._-]*)\/ai\/(?:[^/]+\/)*[^/]+\.ts$/.exec(
+                relative,
+              );
+            if (!match) return false;
+            const sourceRoot = path.join(
+              projectRoot,
+              "assets/ai-bots",
+              match[1]!,
+              "ai",
+            );
+            const expectedRoot = path.join(
+              canonicalProjectRoot,
+              "assets/ai-bots",
+              match[1]!,
+              "ai",
+            );
+            try {
+              const [actualRoot, actualFile] = await Promise.all([
+                realpath(sourceRoot),
+                realpath(candidate),
+              ]);
+              return (
+                actualRoot === expectedRoot &&
+                within(actualFile, actualRoot) &&
+                actualFile.endsWith(".ts")
+              );
+            } catch (error) {
+              if (
+                ["ENOENT", "ENOTDIR", "ELOOP"].includes(
+                  (error as NodeJS.ErrnoException).code ?? "",
+                )
+              )
+                return false;
+              throw error;
+            }
+          })();
+          sourceAllowances.set(candidate, allowed);
+          return allowed;
+        };
         for (const candidate of candidates)
-          if (roots.some((root) => within(candidate, root))) return true;
+          if (
+            roots.some((root) => within(candidate, root)) &&
+            !(await allowedBotSource(candidate))
+          )
+            return true;
         const actualRoots = await Promise.all(
           roots.map(async (root) => (await canonicalPath(root)).resolved),
         );
         const canonicalDenied = async (candidate: string) => {
+          if (await allowedBotSource(candidate)) return false;
           const canonical = await canonicalPath(candidate);
           return actualRoots.some(
             (root) =>

@@ -126,10 +126,13 @@ ascencio/
 │   │       ├── bot-runtime/           # TypeScript bot loading, validation and historical transport helpers
 │   │       └── bot/
 │   │           ├── bot-contract.ts   # Bot inputs, decisions, settings and sideboarding interface
-│   │           ├── generalist-bot.ts # Shared selection and bot execution machinery
-│   │           ├── generalist-strategy.ts # Baseline action-scoring strategy
-│   │           ├── basic-bot.ts      # Basic shared policy
-│   │           ├── random-bot.ts     # Random-choice policy
+│   │           ├── generalist-bot.ts # Generalist package compatibility entry and policy adapter
+│   │           ├── strategy-bot.ts   # Policy-independent scoring and response execution
+│   │           ├── strategy-contract.ts # Shared action scoring interfaces
+│   │           ├── bot-as-opponent-policy.ts # Shared validated opponent adapter
+│   │           ├── generalist-strategy.ts # Compatibility export for Generalist package scoring
+│   │           ├── basic-bot.ts      # Basic package entry and shared opponent adapter
+│   │           ├── random-bot.ts     # Compatibility export for Random package policy
 │   │           └── sideboard.ts      # Shared sideboarding transactions and validation
 │   ├── deck-editor/                  # Deck editing UI and application logic; index.ts is public
 │   ├── deck-select/                  # Shared presentational deck-selection screen
@@ -184,8 +187,12 @@ ascencio/
 │   ├── native-release.json           # Native release declaration
 │   ├── distribution-evidence.json    # Distribution approval evidence
 │   ├── setup-evidence.json           # Setup and acceptance evidence
-│   ├── ai-bots/                      # TypeScript bot entries and retained Rust experiment sources
-│   │   └── goat-control/             # TypeScript generalist entry and GOAT Control evaluation deck
+│   ├── ai-bots/                      # Self-contained manifest-driven TypeScript bot packages
+│   │   ├── README.md                 # Package layout, authoring and distribution contract
+│   │   ├── basic/                    # Basic manifest, ai project, settings and deck
+│   │   ├── generalist/               # Generalist manifest, scoring project, settings and deck
+│   │   ├── random/                   # Random manifest, ai project, settings and deck
+│   │   └── goat-control/             # GOAT manifest, baseline ai project, settings and deck
 │   ├── app/                          # Tracked fonts, application icon and download-link settings
 │   ├── duel-core/                    # Engine configuration and strings
 │   ├── freeplay/                     # Freeplay decks, opponents, settings and card limits
@@ -204,7 +211,8 @@ ascencio/
 │   ├── readable-content.ts          # Readable JSON conversion and compilation
 │   ├── readable-content-release.ts  # Content release pinning, staging and verification
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
-│   ├── bot-experiment/               # Saved baseline, parity, runtime smoke and timing commands
+│   ├── build-ai-bots.ts              # Manifest-driven TypeScript distribution bundles
+│   ├── bot-experiment/               # Historical Rust experiment reproduction commands
 │   ├── bot-evaluation/               # TypeScript bot host and schemas for the Rust evaluation scheduler
 │   ├── bot-improvement/              # Frozen sessions, execution, analysis, aggregation and decisions
 │   │   ├── session-contract.ts       # Frozen setup and candidate validation schema

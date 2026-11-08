@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "deck": "../../freeplay/decks/player.ydk",
+  "deck": "decks/default.ydk",
   "content": "../../../tauri/resources/readable-content",
   "banlist": "../../freeplay/limits.json",
   "profile": "mr5",
-  "configuration": {},
-  "module": "builtin:generalist"
+  "module": "builtin:random",
+  "configuration": {}
 }

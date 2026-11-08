@@ -5,12 +5,14 @@ ARO2-19 introduces `npm run bot:setup -- setup-request.json` (Node 26+). Run fro
 The bundled reference includes its associated evaluation sidecar. After normal content staging and bot build, this single command needs no file edits:
 
 ```sh
-npm run bot:setup -- --target assets/ai-bots/reference --seed experiment-1 --session .tmp/bot-session-1 --max-iterations 10
+npm run bot:setup -- --target assets/ai-bots/generalist --seed experiment-1 --session .tmp/bot-session-1 --max-iterations 10
 ```
 
 Repeat `--opponent BOT_FOLDER` for supplied opponents. Optional flags are `--reuse FIXTURE_DIRECTORY`, `--match-workers N`, `--analysis-workers N`, `--max-games N`, `--max-wall-ms N`, and `--owner-stop`. Flag paths are relative to the current directory; the alternative JSON request below resolves paths relative to the request file.
 
-Each named bot folder owns an `evaluation.json` sidecar selecting a TypeScript module. Rust strategy packages are retired by [ADR-106](../../ADR/106_ADR_typescript_ai_bot_strategies.md). For example, in `assets/ai-bots/reference/`:
+Current bot package layout and builds are defined by [the package contract](../../../assets/ai-bots/README.md). `bot.json` declares source, output, settings and decks; setup reads the source and scalar settings from that manifest. Basic, Generalist, Random and GOAT Control have separate folders.
+
+Each named bot folder owns an `evaluation.json` sidecar selecting a TypeScript module. Rust strategy packages are retired by [ADR-106](../../ADR/106_ADR_typescript_ai_bot_strategies.md). For example, in `assets/ai-bots/generalist/`:
 
 ```json
 {
@@ -32,7 +34,7 @@ The request file uses paths relative to itself:
 
 ```json
 {
-  "target": "assets/ai-bots/reference",
+  "target": "assets/ai-bots/generalist",
   "opponents": [],
   "setupSeed": "experiment-2026-11-07-1",
   "session": ".tmp/bot-session-1",

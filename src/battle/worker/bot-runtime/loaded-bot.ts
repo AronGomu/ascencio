@@ -10,7 +10,7 @@ import type {
   BotInstance,
 } from "../bot/bot-contract.ts";
 import { createBasicBotModule } from "../bot/basic-bot.ts";
-import { createGeneralistBotModule } from "../bot/generalist-bot.ts";
+import { createBotModule as createGeneralistBotModule } from "../../../../assets/ai-bots/generalist/ai/index.ts";
 import { createRandomBotModule } from "../bot/random-bot.ts";
 import { validateBotDecision } from "../bot/validate-bot-decision.ts";
 import { legalSelection, selectionCounts } from "../bot/legal-selection.ts";

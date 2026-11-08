@@ -8,7 +8,7 @@ This is the canonical architecture entry point. Detailed decisions are intention
 
 ## AI bot strategy language
 
-[ADR-106](../ADR/106_ADR_typescript_ai_bot_strategies.md) requires TypeScript for bot strategies and retires application Rust/WASM and native Rust AI packages. The retained experiment showed no performance benefit; one TypeScript implementation is easier to edit and maintain. The Rust native host, evaluation scheduler, and frozen rules engine retain their separate roles.
+[ADR-106](../ADR/106_ADR_typescript_ai_bot_strategies.md) requires TypeScript bot projects under `assets/ai-bots/<bot>/ai/`, with package manifests and shared game-side contracts, and retires application Rust/WASM and native Rust AI packages. The retained experiment showed no performance benefit; one TypeScript implementation is easier to edit and maintain. The Rust native host, evaluation scheduler, and frozen rules engine retain their separate roles.
 
 ## Browser development and content transport
 

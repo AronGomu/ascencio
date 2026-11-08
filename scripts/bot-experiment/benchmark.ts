@@ -195,7 +195,7 @@ const report = {
   toolchain: {
     node: process.version,
     rustBuild: JSON.parse(
-      await readFile("assets/ai-bots/reference/dist/build.json", "utf8"),
+      await readFile("docs/archive/rust-bot-experiment/reference/dist/build.json", "utf8"),
     ),
   },
   repetitions,

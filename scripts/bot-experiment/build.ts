@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
-const manifest = "assets/ai-bots/reference/ai/Cargo.toml";
+const manifest = "docs/archive/rust-bot-experiment/reference/ai/Cargo.toml";
 execFileSync(
   "cargo",
   ["build", "--locked", "--release", "--manifest-path", manifest],
@@ -29,18 +29,18 @@ execFileSync(
     },
   },
 );
-await mkdir("assets/ai-bots/reference/dist", { recursive: true });
+await mkdir("docs/archive/rust-bot-experiment/reference/dist", { recursive: true });
 await copyFile(
-  "assets/ai-bots/reference/ai/target/wasm32-unknown-unknown/release/ascencio_reference_bot.wasm",
-  "assets/ai-bots/reference/dist/ai.wasm",
+  "docs/archive/rust-bot-experiment/reference/ai/target/wasm32-unknown-unknown/release/ascencio_reference_bot.wasm",
+  "docs/archive/rust-bot-experiment/reference/dist/ai.wasm",
 );
 
 const files = [
-  `assets/ai-bots/reference/ai/target/release/ascencio-reference-bot${process.platform === "win32" ? ".exe" : ""}`,
-  "assets/ai-bots/reference/dist/ai.wasm",
+  `docs/archive/rust-bot-experiment/reference/ai/target/release/ascencio-reference-bot${process.platform === "win32" ? ".exe" : ""}`,
+  "docs/archive/rust-bot-experiment/reference/dist/ai.wasm",
 ];
 await writeFile(
-  "assets/ai-bots/reference/dist/build.json",
+  "docs/archive/rust-bot-experiment/reference/dist/build.json",
   JSON.stringify(
     {
       rust: execFileSync("rustc", ["--version"], { encoding: "utf8" }).trim(),

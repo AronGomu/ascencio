@@ -59,7 +59,7 @@ async function fixture(kind: "module" | "package" = "module") {
         (name) => `ai/src/${name}.rs`,
       ),
     ])
-      files[file] = await readFile(path.join("assets/ai-bots/reference", file));
+      files[file] = await readFile(path.join("docs/archive/rust-bot-experiment/reference", file));
     files["dist/ai.wasm"] = Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]);
     metadata = { kind, policy: "generalist", configuration: {}, deck };
   }

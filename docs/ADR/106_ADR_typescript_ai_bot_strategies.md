@@ -4,9 +4,11 @@ Status: accepted 2026-11-07.
 
 ## Decision
 
-Implement and maintain AI bot strategies in TypeScript under `src/battle/worker/bot/`. This is the supported strategy authoring and application execution path for Basic, Generalist, Random, and future specialists such as GOAT Control.
+Implement and maintain AI bot strategies in TypeScript in self-contained `assets/ai-bots/<bot>/ai/` projects. This is the supported strategy authoring and application execution path for Basic, Generalist, Random, and future specialists such as GOAT Control.
 
-Retire Rust AI strategy development and its WASM/native package execution in the application. Do not add Rust strategy ports, expose Rust runtime choices, or require Cargo compilation or bot WASM staging for application builds. Retained Rust bot sources, transports, fixtures, and measurements serve historical experiment reproduction only.
+Retire Rust AI strategy development and its WASM/native package execution in the application. Do not add Rust strategy ports, expose Rust runtime choices, or require Cargo compilation or bot WASM staging for application builds. Retained Rust bot sources under `docs/archive/rust-bot-experiment/`, transports, fixtures, and measurements serve historical experiment reproduction only.
+
+Each bot owns `bot.json`, `settings.json`, its TypeScript `ai/` project, recommended `decks/`, and declared resources. The manifest resolves package-relative paths; `bot:build` emits a self-contained `dist/ai.mjs`. Shared contracts, legal-response machinery and compatibility exports remain in `src/battle/worker/bot/`. See [the package contract](../../assets/ai-bots/README.md).
 
 The Rust Tauri host, Rust evaluation scheduler, and frozen `ocgcore-wasm` rules engine retain their existing responsibilities. This decision concerns bot strategy implementation.
 

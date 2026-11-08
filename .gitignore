@@ -52,3 +52,12 @@ assets/ai-bots/*/ai/target/
 
 # Durable local evaluation archives; evaluation.json retains their references.
 assets/ai-bots/*/evaluation/
+
+# Rebuildable TypeScript bot distribution bundles
+assets/ai-bots/*/dist/
+docs/archive/rust-bot-experiment/reference/ai/target/
+
+# Preserve the previously tracked Rust experiment artifacts at their archive location
+!docs/archive/rust-bot-experiment/reference/dist/
+!docs/archive/rust-bot-experiment/reference/dist/ai.wasm
+!docs/archive/rust-bot-experiment/reference/dist/build.json

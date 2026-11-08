@@ -1,9 +1,9 @@
-# GOAT Control bot
+# Goat Control
 
-[bot.ts](bot.ts) exports a functional TypeScript generalist baseline paired with the GOAT Control deck by [evaluation.json](evaluation.json). It has no GOAT-specific scoring yet. In Freeplay, select Generalist and the desired deck independently.
+`bot.json` describes this package. Editable TypeScript source lives in `ai/`; settings and recommended decks are package-local. `evaluation.json` selects the same policy and the adjacent deck.
 
-- Shared policy: [generalist bot](../../../src/battle/worker/bot/generalist-bot.ts)
-- Strategy scoring: [generalist strategy](../../../src/battle/worker/bot/generalist-strategy.ts)
-- Deck fixture: [GOAT Control](../../../test/fixtures/decks/pre-gx-2005/pre-gx-2005-goat-control.ydk)
+Run `npm run bot:build -- goat-control` from the repository to produce the self-contained `dist/ai.mjs` module. Distribute the folder with its manifest, output, settings and declared resources. Source builds use the shared game contracts and legal-response machinery; the bundled output has no repository imports.
 
-Implement specialized strategies through the shared TypeScript strategy seam. Rust strategy implementation is retired by [ADR-106](../../../docs/ADR/106_ADR_typescript_ai_bot_strategies.md).
+`ai/` can grow into knowledge, evaluation, planning, tactics and sideboarding modules as needed. Decision tests, benchmarks and offline tools belong under `ai/tests/`, `ai/benches/` and `ai/tools/` when added. Campaign outputs remain separate.
+
+GOAT Control currently uses an independent copy of the Generalist baseline; it has no specialized GOAT scoring yet. Customize `ai/evaluation/scoring.ts` for future strategy work.

@@ -15,6 +15,7 @@
   },
   "include": [
     "../scripts/**/*.ts",
+    "../assets/ai-bots/*/ai/**/*.ts",
     "../src/**/*.ts",
     "../src/**/*.svelte",
     "../test/**/*.ts",

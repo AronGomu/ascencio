@@ -6,7 +6,7 @@ Rust/WASM and native Rust bot strategy development is retired. The application u
 
 The [measured results](../evidence/bot-experiment/results.md) found no performance reason to switch built-in policies to Rust. Rust reproduced the saved decisions but transport and copying increased costs. Retained experiment sources are historical evidence. Application loading, evaluation setup, evaluator hosts and candidate compilation reject Rust strategies; historical commands below may require the original experiment revision. The Rust native application host and evaluation scheduler have separate responsibilities and remain in use.
 
-Strategy authoring lives in `src/battle/worker/bot/`, with `generalist-strategy.ts` owning baseline action scoring. The GOAT Control development folder links to that TypeScript implementation.
+Strategy authoring lives in `assets/ai-bots/<bot>/ai/`; the Generalist package owns baseline action scoring. See [the package contract](../../assets/ai-bots/README.md). Retired reference sources are archived under `docs/archive/rust-bot-experiment/reference/`.
 
 ## Historical package and reproduction contract
 

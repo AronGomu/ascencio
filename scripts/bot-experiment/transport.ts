@@ -83,7 +83,7 @@ export async function nativeTransport(
 ): Promise<ExperimentTransport> {
   const child = spawn(
     options.executable ??
-      `assets/ai-bots/reference/ai/target/release/ascencio-reference-bot${process.platform === "win32" ? ".exe" : ""}`,
+      `docs/archive/rust-bot-experiment/reference/ai/target/release/ascencio-reference-bot${process.platform === "win32" ? ".exe" : ""}`,
     options.args ?? [],
     { stdio: ["pipe", "pipe", "ignore"] },
   );
@@ -150,7 +150,7 @@ export async function wasmTransport(
   options: Options & { bytes?: Uint8Array } = {},
 ): Promise<ExperimentTransport> {
   const bytes =
-    options.bytes ?? (await readFile("assets/ai-bots/reference/dist/ai.wasm"));
+    options.bytes ?? (await readFile("docs/archive/rust-bot-experiment/reference/dist/ai.wasm"));
   const worker = new Worker(new URL("./wasm-thread.ts", import.meta.url), {
     stdout: true,
     stderr: true,

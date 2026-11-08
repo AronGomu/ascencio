@@ -1,0 +1,17 @@
+{
+  "manifestVersion": 1,
+  "id": "ascencio.generalist",
+  "name": "Generalist",
+  "version": "0.1.0",
+  "botContractVersion": 1,
+  "ai": {
+    "language": "typescript",
+    "source": "ai/index.ts",
+    "entry": "dist/ai.mjs"
+  },
+  "settings": "settings.json",
+  "resources": {},
+  "recommendedDecks": [
+    "decks/default.ydk"
+  ]
+}

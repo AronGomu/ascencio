@@ -82,7 +82,7 @@ test("Rust targets preserve selection ordering, loop state, and Random draws", a
       "--locked",
       "--release",
       "--manifest-path",
-      "assets/ai-bots/reference/ai/Cargo.toml",
+      "docs/archive/rust-bot-experiment/reference/ai/Cargo.toml",
     ],
     { encoding: "utf8" },
   );

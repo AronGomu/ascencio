@@ -60,7 +60,7 @@ describe("bot package and recovery boundary", () => {
   });
   it("accepts bounded import-free reference WASM and rejects absent/unbounded memory", () => {
     expect(() =>
-      validateWasmLimits(readFileSync("assets/ai-bots/reference/dist/ai.wasm")),
+      validateWasmLimits(readFileSync("docs/archive/rust-bot-experiment/reference/dist/ai.wasm")),
     ).not.toThrow();
     expect(() =>
       validateWasmLimits(Uint8Array.from([0, 97, 115, 109, 1, 0, 0, 0])),

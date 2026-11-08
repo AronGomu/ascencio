@@ -1,6 +1,7 @@
 import {
   cp,
   mkdir,
+  lstat,
   mkdtemp,
   readFile,
   readdir,
@@ -21,15 +22,24 @@ const APP_BUILD_OUTPUT = "generated/build/app";
 async function fixture(): Promise<string> {
   await mkdir(path.join(root, ".tmp"), { recursive: true });
   const target = await mkdtemp(path.join(root, ".tmp/t8c-boundary-"));
-  // Code and tracked app-shell assets only; never copy acquired roots, packages, caches, or public content.
+  // Code (including authored bot projects) and tracked app-shell assets only;
+  // never copy acquired roots, bot decks/dist, packages, caches, or public content.
   for (const entry of [
     "src",
+    "assets/ai-bots/basic/ai",
+    "assets/ai-bots/generalist/ai",
+    "assets/ai-bots/random/ai",
+    "assets/ai-bots/goat-control/ai",
     "scripts/lib",
     "vendor/ocgcore-wasm/0.1.2/dist",
   ]) {
     await mkdir(path.dirname(path.join(target, entry)), { recursive: true });
     await cp(path.join(root, entry), path.join(target, entry), {
       recursive: true,
+      filter: async (source) =>
+        !source.startsWith(`${path.join(root, "assets/ai-bots")}${path.sep}`) ||
+        (await lstat(source)).isDirectory() ||
+        source.endsWith(".ts"),
     });
   }
   for (const entry of [
@@ -202,8 +212,15 @@ describe("app/content build boundary", () => {
           ".cache",
         ])
           await expect(access(path.join(target, entry))).rejects.toThrow();
-        // Only app-shell resources are present; package inputs remain absent.
-        expect(await readdir(path.join(target, "assets"))).toEqual(["app"]);
+        // Authored bot TypeScript is application source; bot deck/data and
+        // acquired package inputs remain absent from this build fixture.
+        expect((await readdir(path.join(target, "assets"))).sort()).toEqual([
+          "ai-bots",
+          "app",
+        ]);
+        const botSources = await files(path.join(target, "assets/ai-bots"));
+        expect(botSources.length).toBeGreaterThan(0);
+        expect(botSources.every((file) => file.endsWith(".ts"))).toBe(true);
         await build({
           root: target,
           configFile: path.join(target, "config/vite.config.ts"),
@@ -283,10 +300,11 @@ describe("app/content build boundary", () => {
           ".cache",
         ])
           await expect(access(path.join(target, entry))).rejects.toThrow();
-        // The app icon and fonts live under content now; no game package roots
-        // may appear alongside the explicitly copied app-shell directory.
-
-        expect(await readdir(path.join(target, "assets"))).toEqual(["app"]);
+        // Building cannot acquire game content or add bot deck/dist inputs.
+        expect((await readdir(path.join(target, "assets"))).sort()).toEqual([
+          "ai-bots",
+          "app",
+        ]);
         if (process.env.T8C_EVIDENCE_DIRECTORY)
           await writeFile(
             path.join(

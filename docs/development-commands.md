@@ -117,3 +117,7 @@ Frozen matches: `npm run bot:matches -- --session SESSION --out SESSION/evaluati
 `npm run bot:aggregate -- aggregation-request.json` reads frozen runner evidence and optional analysis queues, writing paired statistics and a factual summary. See [aggregation inputs, denominators and uncertainty](architecture/06-quality/parallel-bot-session.md#candidatecontrol-aggregation-aro2-23).
 
 `npm run bot:decide -- decision-request.json` applies a pinned orchestrator decision and archives its evidence. See [candidate decisions](architecture/06-quality/parallel-bot-session.md#candidate-decisions) for identity pins, recovery and shared state locking.
+
+## AI bot package builds
+
+`npm run bot:build` builds all manifest-driven TypeScript bot packages. Pass a folder name, such as `npm run bot:build -- goat-control`, to build one. Source is under `assets/ai-bots/<bot>/ai/`; generated `dist/ai.mjs` contains its runtime dependencies. See [package authoring](../assets/ai-bots/README.md).

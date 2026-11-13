@@ -15,7 +15,11 @@ impl Campaign {
         op_id: &str,
     ) -> Result<Value> {
         self.guard()?;
-        let key = format!("e{}-{key}", self.s["epoch"]);
+        let _ = key;
+        let pairing = crate::identity::digest(
+            &json!({"protocol":"paired-seed-v1","inputs":self.s["inputs"],"matches":self.c.matches,"opponent_deck":op_deck,"opponent":op_id}),
+        );
+        let key = format!("e{}-{deck}-{id}-{op_deck}-{op_id}", self.s["epoch"]);
         if self.s["jobs"][&key]["status"] == "completed" {
             return Ok(self.s["jobs"][&key]["result"].clone());
         }
@@ -73,6 +77,10 @@ impl Campaign {
             doc["bots"] = json!({"a":{"module":a,"config":{"__campaign_package_json":serde_json::to_string(&ac)?}},"b":{"module":b,"config":{"__campaign_package_json":serde_json::to_string(&bc)?}}});
             doc["batch"]["matches"] = json!(self.c.matches);
             doc["output"]["directory"] = json!(dir.join("runs"));
+            storage::save(
+                &dir.join("pairing.json"),
+                &json!({"schedule":pairing,"matches":self.c.matches,"version":id,"opponent":op_id,"inputs":self.s["inputs"],"runtime":self.s["runtime"]}),
+            )?;
             let config = dir.join("evaluation.xml");
             xml::write(&config, "evaluation", &doc)?;
             attempts.push(json!({"directory":dir,"status":"running","reserved_games":count}));
@@ -81,7 +89,9 @@ impl Campaign {
             self.save()?;
             let result = (|| -> Result<Value> {
                 let mut cmd = Command::new(std::env::current_exe()?);
-                cmd.args(["evaluate", "--config"]).arg(&config);
+                cmd.args(["evaluate", "--config"])
+                    .arg(&config)
+                    .env("ARO2_PAIRED_SCHEDULE", &pairing);
                 process::execute(
                     cmd,
                     &self.c.output,
@@ -95,7 +105,8 @@ impl Campaign {
                     return Err("Expected one run".into());
                 }
                 let run = paths[0].path();
-                let sample = scoring::sample(&run, self.c.matches)?;
+                let mut sample = scoring::sample(&run, self.c.matches)?;
+                sample["pairing"] = json!(pairing);
                 Ok(json!({"run":run,"sample":sample}))
             })();
             match result {

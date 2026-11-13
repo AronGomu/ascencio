@@ -7,10 +7,20 @@ use std::{
     path::Path,
 };
 pub fn save(path: &Path, value: &Value) -> Result<()> {
+    let redirected;
+    let split;
+    let (path, value) =
+        if path.file_name().is_some_and(|n| n == "state.json") && value.get("jobs").is_some() {
+            redirected = path.with_file_name("run.json");
+            split = crate::hierarchy::split_state(&redirected, value)?;
+            (redirected.as_path(), &split)
+        } else {
+            (path, value)
+        };
     fs::create_dir_all(path.parent().unwrap())?;
     let temp = path.with_extension("tmp");
     let mut file = File::create(&temp)?;
-    file.write_all(&serde_json::to_vec_pretty(value)?)?;
+    file.write_all(&serde_json::to_vec(value)?)?;
     file.sync_all()?;
     fs::rename(temp, path)?;
     File::open(path.parent().unwrap())?.sync_all()?;
@@ -33,10 +43,15 @@ pub fn regular_bytes(path: &Path, limit: u64) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 pub fn read(path: &Path) -> Result<Value> {
-    Ok(serde_json::from_slice(&regular_bytes(
-        path,
-        64 * 1024 * 1024,
-    )?)?)
+    let redirected;
+    let path = if !path.exists() && path.file_name().is_some_and(|n| n == "state.json") {
+        redirected = path.with_file_name("run.json");
+        redirected.as_path()
+    } else {
+        path
+    };
+    let value: Value = serde_json::from_slice(&regular_bytes(path, 64 * 1024 * 1024)?)?;
+    crate::hierarchy::resolve(value, path.parent().ok_or("No parent")?, 0)
 }
 pub fn size(path: &Path) -> Result<u64> {
     // Writers atomically rename temporary reports during the scan. Missing

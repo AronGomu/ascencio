@@ -71,7 +71,7 @@ pub fn aggregate(rows: &[Value]) -> Result<Value> {
     let mut score = 0.;
     let mut pre = 0.;
     let mut post = 0.;
-    let mut variance_bound = 0.;
+
     for (row, w) in rows.iter().zip(weights) {
         let values = row["sample"]["clusters"]
             .as_array()
@@ -92,11 +92,8 @@ pub fn aggregate(rows: &[Value]) -> Result<Value> {
         post += w * row["sample"]["post_side"]
             .as_f64()
             .ok_or("Missing post-side")?;
-        variance_bound += w * w / values.len() as f64;
     }
-    Ok(
-        json!({"score":score,"pre_side":pre,"post_side":post,"sum_squared_cluster_weights":variance_bound}),
-    )
+    Ok(json!({"score":score,"pre_side":pre,"post_side":post}))
 }
 pub fn promotion(candidate: &[Value], incumbent: &[Value]) -> Result<Value> {
     if candidate.len() != incumbent.len()
@@ -109,23 +106,24 @@ pub fn promotion(candidate: &[Value], incumbent: &[Value]) -> Result<Value> {
     {
         return Err("Promotion conditions differ".into());
     }
+    if candidate.iter().zip(incumbent).any(|(a, b)| {
+        a["sample"]["pairing"].as_str().is_none()
+            || a["sample"]["pairing"] != b["sample"]["pairing"]
+    }) {
+        return Err("Missing or mismatched paired schedule".into());
+    }
     let c = aggregate(candidate)?;
     let i = aggregate(incumbent)?;
     let delta = c["score"].as_f64().unwrap() - i["score"].as_f64().unwrap();
-    let radius = (40_f64.ln()
-        * (c["sum_squared_cluster_weights"].as_f64().unwrap()
-            + i["sum_squared_cluster_weights"].as_f64().unwrap())
-        / 2.)
-        .sqrt();
     Ok(
-        json!({"method":"weighted_independent_match_cluster_hoeffding_two_sided_95_v1","candidate":c,"incumbent":i,"delta":delta,"lower":(delta-radius).max(-1.),"upper":(delta+radius).min(1.),"supported":delta-radius>0.}),
+        json!({"method":"paired_saved_match_win_rate_v1","candidate":c,"incumbent":i,"delta":delta,"supported":delta>0.}),
     )
 }
 #[cfg(test)]
 mod tests {
     use super::*;
     fn row(deck: &str, id: &str, values: Vec<f64>) -> Value {
-        json!({"opponent_deck":deck,"opponent":id,"sample":{"clusters":values,"pre_side":0.,"post_side":0.}})
+        json!({"opponent_deck":deck,"opponent":id,"sample":{"pairing":"test-schedule","clusters":values,"pre_side":0.,"post_side":0.}})
     }
     #[test]
     fn strata_draws_and_degenerate_samples() {
@@ -138,7 +136,7 @@ mod tests {
         assert_eq!(promotion(&rows, &rows).unwrap()["supported"], false);
         assert_eq!(
             promotion(&[row("a", "1", vec![1.])], &[row("a", "1", vec![0.])]).unwrap()["supported"],
-            false
+            true
         );
         assert_eq!(
             promotion(
@@ -148,6 +146,9 @@ mod tests {
             .unwrap()["supported"],
             true
         );
+        let mut different = row("a", "1", vec![1.; 10]);
+        different["sample"]["pairing"] = json!("other-seeds");
+        assert!(promotion(&[different], &[row("a", "1", vec![0.; 10])]).is_err());
         assert!(promotion(&[], &[]).is_err());
         assert!(promotion(&rows, &[row("a", "9", vec![0.; 10])]).is_err());
     }

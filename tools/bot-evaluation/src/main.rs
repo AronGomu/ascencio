@@ -3,11 +3,12 @@ mod application_identity;
 mod bugs;
 #[cfg(target_os = "linux")]
 mod campaign;
+mod compact_log;
 mod compare;
 mod config;
 mod evidence_validation;
-mod evidence_writer;
 mod execution;
+mod hierarchy;
 mod host;
 mod identity;
 #[cfg(target_os = "linux")]
@@ -42,6 +43,13 @@ fn execute() -> xml::Result<i32> {
     let required = |key: &str| option(key).ok_or_else(|| format!("Missing {key}"));
     match command{
  #[cfg(target_os = "linux")]
+ "prune-baseline"=>campaign::retention::prune_baseline(Path::new(&required("--directory")?),args.iter().any(|a|a=="--analysis-delivered")),
+ "prune-iteration"=>campaign::retention::prune(Path::new(&required("--directory")?),required("--iteration")?.parse()?,args.iter().any(|a|a=="--analysis-delivered")),
+ "migrate-run"=>campaign::migrate_run(Path::new(&required("--directory")?),Path::new(&required("--previous-executable")?)),
+ "migrate-evidence"=>hierarchy::migrate(Path::new(&required("--directory")?)),
+ "compact-logs"=>compact_log::convert(Path::new(&required("--run")?),Path::new(&required("--out")?)),
+ "campaign-import"=>campaign::import_candidate(Path::new(&required("--directory")?),Path::new(&required("--candidate")?),Path::new(&required("--previous-executable")?)),
+ "campaign-report"=>campaign::refresh_report(Path::new(&required("--directory")?)),
  "campaign"=>campaign::run(Path::new(&required("--config")?), args.iter().any(|a| a == "--resume")),
  "improve"=>improvement::run(Path::new(&required("--config")?), args.iter().any(|a| a == "--resume")),
  "benchmark"=>{if option("--resume").is_some(){return Err("A benchmark never resumes an existing run".into());} runner::benchmark(config::read(Path::new(&required("--config")?))?, command_start)},

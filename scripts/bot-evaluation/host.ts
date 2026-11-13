@@ -26,6 +26,7 @@ import type { BotGameObservation } from "../../src/battle/worker/bot/bot-contrac
 import type { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 interface Command {
   type: string;
+  seed?: [string, string, string, string];
   snapshot: string;
   codes: number[];
   bots: { module: string; config: Record<string, string> }[];
@@ -111,13 +112,13 @@ async function game(command: Command) {
         ? {
             mode: "programmed",
             rules: command.profile,
-            seed: createProductionSeed(),
+            seed: command.seed ? command.seed.map(BigInt) as [bigint,bigint,bigint,bigint] : createProductionSeed(),
             playerDeckOrder: command.orders[0].main,
             opponentDeckOrder: command.orders[1].main,
             playerExtraOrder: command.orders[0].extra,
             opponentExtraOrder: command.orders[1].extra,
           }
-        : { mode: "production", rules: command.profile },
+        : { mode: "production", rules: command.profile, ...(command.seed ? {seed: command.seed.map(BigInt) as [bigint,bigint,bigint,bigint]} : {}) },
       onEngineDiagnostic: (e) =>
         send({
           type: "diagnostic",

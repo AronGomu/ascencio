@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "paired-win-rate-v1",
+  "defaults": {
+    "rounds": 50,
+    "matches": 250,
+    "max_wall_ms": 86400000,
+    "max_bytes": 2000000000,
+    "agent_timeout_ms": 600000,
+    "evaluation_timeout_ms": 1800000,
+    "check_timeout_ms": 300000,
+    "recovery_timeout_ms": 300000,
+    "max_retries": 0,
+    "max_fixes": 0
+  },
+  "gameCeiling": "(2 + 2 * rounds) * opponents * matches * gamesPerMatch",
+  "protocol": {
+    "gamesPerMatch": 4,
+    "startingSides": "A, B before sideboarding; A, B after sideboarding",
+    "pairing": "Same engine seeds and starting deck orders for baseline/candidate pairs; different matches may have different orders",
+    "draws": "Count as nonwins",
+    "weighting": "Equal weight per opponent deck, then equal weight per version within a deck",
+    "acceptance": "Promote only for strictly higher weighted win rate on saved paired matches; retain on ties, regressions or incomplete comparisons",
+    "selfPlay": "Always include the frozen starting target AI among opponents",
+    "confidenceIntervals": false
+  },
+  "execution": {
+    "review": "Pause at authorized stage boundaries in step-by-step mode",
+    "cancellation": "CANCEL marker or SIGINT; allow 60 seconds for shutdown, then terminate only the owned process group",
+    "baselineReuse": "Require matching schedule, inputs, implementation, settings and verified evidence",
+    "gameAccounting": "Reserve before execution; failed and interrupted reservations remain consumed; reused results add no new reservations",
+    "wallAccounting": "Elapsed since persisted campaign start, including review pauses and interruptions",
+    "storageAccounting": "Retained campaign directory bytes; preserve evidence on exhaustion",
+    "deadline": "Each operation timeout is capped by remaining campaign wall time"
+  },
+  "artifacts": {
+    "checkpoint": "state.json",
+    "configuration": "configuration.json",
+    "handoff": "report.md",
+    "packages": "versions/",
+    "evaluations": "evaluations/",
+    "proposals": "proposals/",
+    "exports": "final/packages.json"
+  }
+}

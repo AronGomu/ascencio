@@ -1,4 +1,4 @@
-//! Multi-deck state machine. Only this supervisor schedules evaluator children.
+//! Supervised target-only campaign. Each invocation stops at a review boundary.
 mod agents;
 mod archive;
 mod config;
@@ -6,6 +6,7 @@ mod evaluation;
 mod pool;
 mod recovery;
 mod report;
+pub mod retention;
 mod scoring;
 use crate::{
     identity,
@@ -118,7 +119,7 @@ impl Campaign {
         let frozen = self.s["pool"].clone();
         let mut next = json!({});
         let mut rankings = json!({});
-        for deck in self.c.decks.clone() {
+        for deck in self.c.decks.iter().take(1).cloned().collect::<Vec<_>>() {
             let ids = self.s["decks"][&deck.id]["versions"]
                 .as_array()
                 .unwrap()
@@ -161,126 +162,126 @@ impl Campaign {
             .join(format!("ranking-e{}-{label}.json", self.s["epoch"]));
         storage::save(&path, &record)?;
         let mut s = self.s.clone();
-        s["pool"] = next;
+        // Rankings never replace the frozen evaluation opponents.
         s["rankings"].as_array_mut().unwrap().push(record);
         storage::save(&self.c.output.join("state.json"), &s)?;
         self.s = s;
         Ok(())
     }
-    fn round(&mut self, round: u64) -> Result<()> {
+    // One invocation performs one reviewable stage. Opponents always use the
+    // immutable initial pool; only the first configured deck may receive proposals.
+    fn advance(&mut self) -> Result<()> {
         self.guard()?;
-        let epoch = self.s["epoch"].as_u64().unwrap();
-        let frozen = if self.s["active"].is_null() {
-            self.s["active"] =
-                json!({"round":round,"epoch":epoch,"pool":self.s["pool"],"started_ms":now()});
-            self.save()?;
-            self.s["pool"].clone()
-        } else {
-            self.s["active"]["pool"].clone()
-        };
-        let mut diagnostics = json!({});
-        for d in self.c.decks.clone() {
-            let id = self.s["decks"][&d.id]["incumbent"]
-                .as_str()
-                .unwrap()
-                .to_owned();
-            let (opponents, excluded) = pool::eligible(&self.s, &frozen, &d.id, &[id.clone()])?;
-            if opponents.is_empty() {
-                return Err(format!("No diagnostic support for {}", d.id).into());
+        self.recover_pending()?;
+        let target = self.c.decks[0].id.clone();
+        let round = self.s["completed_rounds"].as_u64().unwrap() + 1;
+        let incumbent = self.s["decks"][&target]["incumbent"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        let stage = self.s["next_stage"]
+            .as_str()
+            .unwrap_or("diagnostics")
+            .to_owned();
+        let opponents = pool::eligible(&self.s, &self.s["pool"], &target, &[incumbent.clone()])?.0;
+        match stage.as_str() {
+            "diagnostics" => {
+                let rows = self.gauntlet(
+                    &format!("r{round}-diagnostic"),
+                    &target,
+                    &incumbent,
+                    &opponents,
+                )?;
+                self.s["active"] = json!({"round":round,"diagnostics":rows});
+                self.s["next_stage"] = json!("proposal");
             }
-            let rows = self.gauntlet(
-                &format!("r{round}-diagnostic-{}", d.id),
-                &d.id,
-                &id,
-                &opponents,
-            )?;
-            diagnostics[&d.id] = json!({"results":rows,"excluded":excluded});
-        }
-        let mut decisions = json!({});
-        let mut incumbents = json!({});
-        for d in self.c.decks.clone() {
-            let incumbent = self.s["decks"][&d.id]["incumbent"]
-                .as_str()
-                .unwrap()
-                .to_owned();
-            let proposal = self.propose(round, &d.id, &diagnostics[&d.id])?;
-            let mut record =
-                json!({"incumbent":incumbent,"proposal":proposal,"outcome":"no_change"});
-            if !proposal["invalid_candidate"].is_null() {
-                record["outcome"] = json!("rejected_invalid_package");
+            "proposal" => {
+                let diagnostics = self.s["active"]["diagnostics"].clone();
+                let proposal = self.propose(round, &target, &diagnostics)?;
+                self.s["active"]["proposal"] = proposal;
+                self.s["next_stage"] = json!("comparison");
             }
-            let mut accepted = incumbent.clone();
-            if let Some(candidate) = proposal["candidate"].as_str() {
-                record["outcome"] = json!("unchanged_package");
-                if candidate != incumbent {
-                    let (opponents, excluded) = pool::eligible(
-                        &self.s,
-                        &frozen,
-                        &d.id,
-                        &[incumbent.clone(), candidate.to_owned()],
-                    )?;
-                    if opponents.is_empty() {
-                        record["outcome"] = json!("unassessable_no_common_opponents");
-                        record["comparison"] = json!({"candidate":[],"incumbent":[],"excluded":excluded,"assessment":null});
-                        incumbents[&d.id] = json!(accepted);
-                        decisions[&d.id] = record;
-                        continue;
-                    }
-                    let candidate_rows = self.gauntlet(
-                        &format!("r{round}-candidate-{}", d.id),
-                        &d.id,
+            "comparison" => {
+                let proposal = self.s["active"]["proposal"].clone();
+                if let Some(candidate) =
+                    proposal["candidate"].as_str().filter(|id| *id != incumbent)
+                {
+                    let candidates = self.gauntlet(
+                        &format!("r{round}-candidate"),
+                        &target,
                         candidate,
                         &opponents,
                     )?;
-                    let incumbent_rows = self.gauntlet(
-                        &format!("r{round}-control-{}", d.id),
-                        &d.id,
+                    let controls = self.gauntlet(
+                        &format!("r{round}-control"),
+                        &target,
                         &incumbent,
                         &opponents,
                     )?;
-                    let assessment = scoring::promotion(&candidate_rows, &incumbent_rows)?;
-                    let promoted = assessment["supported"] == true;
-                    record["outcome"] = json!(if promoted {
-                        "promoted"
-                    } else {
-                        "rejected_regression_or_inconclusive"
-                    });
-                    record["comparison"] = json!({"candidate":candidate_rows,"incumbent":incumbent_rows,"excluded":excluded,"assessment":assessment});
-                    if promoted {
-                        accepted = candidate.to_owned();
-                    }
+                    self.s["active"]["assessment"] = scoring::promotion(&candidates, &controls)?;
+                    self.s["active"]["candidate_results"] = json!(candidates);
+                    self.s["active"]["control_results"] = json!(controls);
                 }
+                self.s["next_stage"] = json!("decision");
             }
-            incumbents[&d.id] = json!(accepted);
-            decisions[&d.id] = record;
+            "decision" => {
+                let mut record = self.s["active"].clone();
+                let promote = record["assessment"]["supported"] == true;
+                record["decision"] = json!(if promote {
+                    "promoted"
+                } else {
+                    "retained_incumbent"
+                });
+                if promote {
+                    self.s["decks"][&target]["incumbent"] = record["proposal"]["candidate"].clone();
+                }
+                record["epoch"] = self.s["epoch"].clone();
+                let outcome = record["decision"].clone();
+                record["decisions"] = json!({target.clone(): {"outcome":outcome,"proposal":record["proposal"],"comparison":{"assessment":record["assessment"],"candidate":record["candidate_results"],"incumbent":record["control_results"]}}});
+                storage::save(
+                    &self.c.output.join(format!("round-{round:04}.json")),
+                    &record,
+                )?;
+                self.s["rounds"].as_array_mut().unwrap().push(record);
+                self.s["completed_rounds"] = json!(round);
+                self.s["active"] = Value::Null;
+                self.s["next_stage"] = json!("analysis");
+            }
+            "analysis" => return Err(
+                "Deliver loss analysis to the orchestrator, then prune-iteration before continuing"
+                    .into(),
+            ),
+            "ranking" => {
+                self.rank("final")?;
+                self.s["next_stage"] = json!("export");
+            }
+            "export" => {
+                let mut cmd = std::process::Command::new(
+                    std::env::var("ARO2_NODE").unwrap_or_else(|_| "node".into()),
+                );
+                cmd.arg("scripts/bot-campaign/export-packages.ts")
+                    .arg(&self.c.output);
+                process::execute(
+                    cmd,
+                    &self.c.output,
+                    &self.c.output.join("export.log"),
+                    self.limit(self.c.check_timeout_ms)?,
+                    self.c.max_bytes,
+                    &self.stop,
+                )?;
+                self.s["exports"] = storage::read(&self.c.output.join("final/packages.json"))?;
+                self.s["next_stage"] = json!("done");
+            }
+            _ => return Err("Unknown campaign stage".into()),
         }
-        // Ranking never activates a rejected version. All decisions are committed
-        // together only after final-round ranking and evidence persistence succeed.
-        if round % 10 == 0 || round == self.c.rounds {
-            self.rank(&format!("round-{round}"))?;
-        }
-        let record = json!({"round":round,"epoch":epoch,"pool":frozen,"diagnostics":diagnostics,"decisions":decisions,"completed_ms":now()});
-        storage::save(
-            &self.c.output.join(format!("round-{round:04}.json")),
-            &record,
-        )?;
-        let mut s = self.s.clone();
-        for d in &self.c.decks {
-            s["decks"][&d.id]["incumbent"] = incumbents[&d.id].clone();
-        }
-        s["rounds"].as_array_mut().unwrap().push(record);
-        s["completed_rounds"] = json!(round);
-        s["active"] = Value::Null;
-        storage::save(&self.c.output.join("state.json"), &s)?;
-        self.s = s;
-        report::write(&self.c, &self.s)?;
         println!(
-            "completed round {round}/{}; reserved {} games",
-            self.c.rounds, self.s["reserved_games"]
+            "Finished {stage}; next stage: {}. Review evidence before explicit --resume.",
+            self.s["next_stage"]
         );
-        Ok(())
+        self.save()
     }
 }
+
 fn input_identity(c: &Config) -> Result<String> {
     let eval = crate::config::read(&c.evaluation)?;
     let mut decks = vec![];
@@ -291,6 +292,133 @@ fn input_identity(c: &Config) -> Result<String> {
         &json!({"evaluation":eval.doc,"rules":eval.rules,"manifest":identity::sha(fs::read(eval.snapshot.join("manifest.json"))?),"decks":decks}),
     ))
 }
+/// Refresh a handoff without changing checkpoint state or advancing execution.
+pub fn import_candidate(
+    directory: &Path,
+    source: &Path,
+    previous_executable: &Path,
+) -> Result<i32> {
+    let lock = fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(directory.join("lock"))?;
+    if unsafe { libc::flock(lock.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
+        return Err("Campaign already running".into());
+    }
+    let mut state = storage::read(&directory.join("state.json"))?;
+    if state["next_stage"] != "proposal" && state["next_stage"] != "comparison" {
+        return Err("Candidate import requires proposal stage".into());
+    }
+    let config = storage::read(&directory.join("configuration.json"))?;
+    let mut c: Config = serde_json::from_value(
+        state
+            .get("latest_configuration")
+            .cloned()
+            .unwrap_or(config["configuration"].clone()),
+    )?;
+    c.output = directory.canonicalize()?;
+    if state["inputs"] != input_identity(&c)? || state["commands"] != c.command_identity()? {
+        return Err("Pinned inputs or commands changed".into());
+    }
+    if state["runtime"] != crate::application_identity::digest_for(previous_executable)? {
+        return Err("Previous executable or runtime sources do not match checkpoint".into());
+    }
+    for job in state["jobs"].as_object().ok_or("Missing jobs")?.values() {
+        if job["status"] == "completed"
+            && job["evidence_sha256"]
+                != storage::evidence_digest(Path::new(xml::text(&job["directory"])?))?
+        {
+            return Err("Baseline evidence changed".into());
+        }
+    }
+    let target = c.decks[0].id.clone();
+    let round = state["completed_rounds"]
+        .as_u64()
+        .ok_or("Missing completed rounds")?
+        + 1;
+    let parent = xml::text(&state["decks"][&target]["incumbent"])?.to_owned();
+    let candidate = archive::package(
+        &c,
+        &storage::regular_bytes(source, 1024 * 1024)?,
+        &c.decks[0].config,
+    )?;
+    if state["next_stage"] == "comparison" && state["active"]["proposal"]["candidate"] != candidate
+    {
+        return Err("A different candidate is already imported".into());
+    }
+    let dir = c
+        .output
+        .join("proposals")
+        .join(format!("r{round}-{target}"))
+        .join(format!("external-{candidate}"));
+    fs::create_dir_all(&dir)?;
+    let campaign = Campaign {
+        c,
+        s: state.clone(),
+        stop: Arc::new(AtomicBool::new(false)),
+    };
+    campaign.checks(&candidate, &dir)?;
+    let result = json!({"candidate":candidate,"parent":parent,"directory":dir,"origin":"conversation-orchestrator","epoch":state["epoch"]});
+    archive::register(
+        &mut state,
+        &target,
+        &candidate,
+        round,
+        &parent,
+        result.clone(),
+    );
+    let key = format!("r{round}-{target}");
+    let previous_attempt = state["proposals"][&key].clone();
+    if !previous_attempt.is_null() {
+        state["abandoned"]
+            .as_array_mut()
+            .ok_or("Missing attempt archive")?
+            .push(previous_attempt);
+    }
+    storage::save(&dir.join("proposal.json"), &result)?;
+    state["proposals"][&key] = json!({"status":"completed","result":result,"directory":dir,"evidence_sha256":storage::evidence_digest(&dir)?});
+    state["active"]["proposal"] = result;
+    state["next_stage"] = json!("comparison");
+    state["status"] = json!("paused");
+    state["reason"] = Value::Null;
+    let migration = json!({"reason":"external proposal import command; evaluation mechanics unchanged","old_runtime":state["runtime"],"new_runtime":crate::application_identity::digest()?,"previous_executable":previous_executable.canonicalize()?,"at_ms":now()});
+    storage::save(&dir.join("import-receipt.json"), &migration)?;
+    state["proposals"][&key]["evidence_sha256"] = json!(storage::evidence_digest(&dir)?);
+    state["runtime"] = migration["new_runtime"].clone();
+    state["runtime_transitions"]
+        .as_array_mut()
+        .map(|a| a.push(migration.clone()))
+        .unwrap_or_else(|| state["runtime_transitions"] = json!([migration]));
+    storage::save(&directory.join("state.json"), &state)?;
+    report::write(&campaign.c, &state)?;
+    println!("Imported {candidate}; paused before comparison");
+    Ok(0)
+}
+
+pub fn refresh_report(directory: &Path) -> Result<i32> {
+    let lock = fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(directory.join("lock"))?;
+    if unsafe { libc::flock(lock.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
+        return Err("Campaign already running".into());
+    }
+    let state = storage::read(&directory.join("state.json"))?;
+    let configuration = storage::read(&directory.join("configuration.json"))?;
+    let mut c: Config = serde_json::from_value(
+        state
+            .get("latest_configuration")
+            .cloned()
+            .unwrap_or(configuration["configuration"].clone()),
+    )?;
+    c.output = directory.canonicalize()?;
+    report::write(&c, &state)?;
+    println!("{}", c.output.join("report.md").display());
+    Ok(0)
+}
+
 pub fn run(path: &Path, resume: bool) -> Result<i32> {
     let mut c = Config::read(path)?;
     fs::create_dir_all(&c.output)?;
@@ -304,7 +432,7 @@ pub fn run(path: &Path, resume: bool) -> Result<i32> {
         return Err("Campaign already running".into());
     }
     let fingerprint = identity::digest(&serde_json::to_value(&c)?);
-    let exists = c.output.join("state.json").exists();
+    let exists = c.output.join("state.json").exists() || c.output.join("run.json").exists();
     if exists != resume {
         return Err("Use --resume for an existing campaign only".into());
     }
@@ -369,7 +497,7 @@ pub fn run(path: &Path, resume: bool) -> Result<i32> {
         if eval.fixture.is_some() {
             return Err("Campaign requires production shuffles".into());
         }
-        let mut s = json!({"configuration_sha256":fingerprint,"commands":c.command_identity()?,"inputs":input_identity(&c)?,"runtime":crate::application_identity::digest()?,"epoch":0,"started_ms":now(),"status":"running","reason":null,"completed_rounds":0,"reserved_games":0,"decks":{},"pool":{},"jobs":{},"proposals":{},"rounds":[],"rankings":[],"fixes":[],"bugs":{},"abandoned":[],"active":null});
+        let mut s = json!({"protocol":"paired-v1","configuration_sha256":fingerprint,"commands":c.command_identity()?,"inputs":input_identity(&c)?,"runtime":crate::application_identity::digest()?,"epoch":0,"started_ms":now(),"status":"running","reason":null,"completed_rounds":0,"next_stage":"diagnostics","reserved_games":0,"decks":{},"pool":{},"jobs":{},"proposals":{},"rounds":[],"rankings":[],"fixes":[],"bugs":{},"abandoned":[],"active":null});
         for d in &c.decks {
             let id = archive::package(
                 &c,
@@ -377,7 +505,9 @@ pub fn run(path: &Path, resume: bool) -> Result<i32> {
                 &d.config,
             )?;
             s["decks"][&d.id] = json!({"incumbent":id,"agent_id":format!("deck-{}-{}",d.id,now()),"versions":[{"id":id,"round":0,"parent":null,"valid":true}]});
-            s["pool"][&d.id] = json!([id]);
+            if c.decks.len() == 1 || d.id != c.decks[0].id {
+                s["pool"][&d.id] = json!([id]);
+            }
         }
         for d in &c.decks {
             let (opponents, _) = pool::eligible(
@@ -387,14 +517,54 @@ pub fn run(path: &Path, resume: bool) -> Result<i32> {
                 &[s["decks"][&d.id]["incumbent"].as_str().unwrap().to_owned()],
             )?;
             if opponents.is_empty() {
-                return Err(
-                    "Initial roster needs nonidentical eligible opponents for every deck".into(),
-                );
+                return Err("Initial roster needs an eligible opponent".into());
             }
+        }
+        if let Some(source) = &c.baseline_campaign {
+            let previous = storage::read(&source.join("state.json"))?;
+            if previous["protocol"] != "paired-v1"
+                || previous["inputs"] != s["inputs"]
+                || previous["runtime"] != s["runtime"]
+                || previous["commands"] != s["commands"]
+            {
+                return Err("Imported baseline implementation or inputs differ".into());
+            }
+            let mut reused = 0_u64;
+            for (key, job) in previous["jobs"]
+                .as_object()
+                .ok_or("Missing imported jobs")?
+            {
+                if job["status"] != "completed" || job["epoch"] != s["epoch"] {
+                    continue;
+                }
+                let directory = Path::new(xml::text(&job["directory"])?);
+                if job["evidence_sha256"] != storage::evidence_digest(directory)? {
+                    return Err("Imported baseline evidence changed".into());
+                }
+                let expected = identity::digest(
+                    &json!({"protocol":"paired-seed-v1","inputs":s["inputs"],"matches":c.matches,"opponent_deck":job["opponent_deck"],"opponent":job["opponent"]}),
+                );
+                if job["result"]["sample"]["pairing"] != expected {
+                    return Err("Imported baseline schedule differs".into());
+                }
+                let mut sample =
+                    scoring::sample(Path::new(xml::text(&job["result"]["run"])?), c.matches)?;
+                sample["pairing"] = json!(expected);
+                if sample != job["result"]["sample"] {
+                    return Err("Imported baseline sample differs".into());
+                }
+                s["jobs"][key] = job.clone();
+                reused += c.matches * 4;
+            }
+            if reused == 0 {
+                return Err("No compatible completed baseline batches to import".into());
+            }
+            s["reused_games"] = json!(reused);
+            s["baseline_source"] = json!(source);
         }
         storage::save(
             &c.output.join("configuration.json"),
-            &json!({"configuration":c,"protocol":"equal-deck/equal-version; weighted independent match-cluster Hoeffding two-sided 95%; draws count as nonwins; no adaptive samples; top-three; refresh10/end/epoch; hash ties; ranking common intersection","runtime":s["runtime"],"inputs":s["inputs"],"fixed_decks":c.decks.iter().map(|d|Ok(json!({"id":d.id,"ydk":fs::read_to_string(&d.deck)?}))).collect::<Result<Vec<Value>>>()?}),
+            &json!({"configuration":c,"protocol":"paired-v1; baseline reuse; strictly higher saved paired-match win rate; supervised-v2; first deck target only; immutable initial opponents; self-play allowed; equal-deck/equal-version;  draws count as nonwins; no adaptive samples; top-three; refresh10/end/epoch; hash ties; ranking common intersection","runtime":s["runtime"],"inputs":s["inputs"],"fixed_decks":c.decks.iter().map(|d|Ok(json!({"id":d.id,"ydk":fs::read_to_string(&d.deck)?}))).collect::<Result<Vec<Value>>>()?}),
         )?;
         storage::save(&c.output.join("state.json"), &s)?;
         s
@@ -421,49 +591,18 @@ pub fn run(path: &Path, resume: bool) -> Result<i32> {
                 .to_owned();
             campaign.checks(&id, &campaign.c.output)?;
         }
-        loop {
-            match campaign.recover_pending() {
-                Err(e) if e.to_string() == "epoch_changed" => continue,
-                result => result?,
-            }
-            if campaign.s["pending_epoch_ranking"] == true {
-                match campaign.rank(&format!("epoch-{}", campaign.s["epoch"])) {
-                    Err(e) if e.to_string() == "epoch_changed" => continue,
-                    result => result?,
-                }
-                campaign.s["pending_epoch_ranking"] = json!(false);
-                campaign.save()?;
-            }
-            let round = campaign.s["completed_rounds"].as_u64().unwrap() + 1;
-            if round > campaign.c.rounds {
-                break;
-            }
-            match campaign.round(round) {
-                Ok(()) => (),
-                Err(e) if e.to_string() == "epoch_changed" => continue,
-                Err(e) => return Err(e),
-            }
+        // Initial launch only freezes packages. Each explicit resume advances once.
+        if resume {
+            campaign.advance()?;
         }
-        let mut export = std::process::Command::new(
-            std::env::var("ARO2_NODE").unwrap_or_else(|_| "node".into()),
-        );
-        export
-            .arg("scripts/bot-campaign/export-packages.ts")
-            .arg(&campaign.c.output);
-        process::execute(
-            export,
-            &campaign.c.output,
-            &campaign.c.output.join("export.log"),
-            campaign.limit(campaign.c.check_timeout_ms)?,
-            campaign.c.max_bytes,
-            &campaign.stop,
-        )?;
-        let packages = storage::read(&campaign.c.output.join("final/packages.json"))?;
-        campaign.s["exports"] = packages;
         Ok(())
     })();
     campaign.s["status"] = json!(if result.is_ok() {
-        "completed"
+        if campaign.s["next_stage"] == "done" {
+            "completed"
+        } else {
+            "paused"
+        }
     } else {
         "incomplete"
     });
@@ -471,7 +610,7 @@ pub fn run(path: &Path, resume: bool) -> Result<i32> {
     campaign.save()?;
     report::write(&campaign.c, &campaign.s)?;
     println!("{}", campaign.c.output.display());
-    Ok(if campaign.s["status"] == "completed" {
+    Ok(if campaign.s["status"] != "incomplete" {
         0
     } else {
         2
@@ -514,4 +653,108 @@ mod checkpoint_tests {
         next["max_retries"] = json!(0);
         assert!(budget_extension(&old, &next).is_err());
     }
+}
+
+/// Explicit format migration, with old runtime/evidence verified before deletion.
+pub fn migrate_run(directory: &Path, previous_executable: &Path) -> Result<i32> {
+    let lock = fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(directory.join("lock"))?;
+    if unsafe { libc::flock(lock.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
+        return Err("Run already running".into());
+    }
+    let mut state = storage::read(&directory.join("state.json"))?;
+    let config = storage::read(&directory.join("configuration.json"))?;
+    let mut c: Config = serde_json::from_value(
+        state
+            .get("latest_configuration")
+            .cloned()
+            .unwrap_or(config["configuration"].clone()),
+    )?;
+    c.output = directory.canonicalize()?;
+    if state["runtime"] != crate::application_identity::digest_for(previous_executable)?
+        || state["inputs"] != input_identity(&c)?
+        || state["commands"] != c.command_identity()?
+    {
+        return Err("Pre-migration identity mismatch".into());
+    }
+    for job in state["jobs"].as_object().ok_or("Missing jobs")?.values() {
+        if job["status"] == "completed"
+            && job["evidence_sha256"]
+                != storage::evidence_digest(Path::new(xml::text(&job["directory"])?))?
+        {
+            if !directory.join("run.json").exists()
+                || !directory.join("hierarchy-migration.json").exists()
+            {
+                return Err("Pre-migration evidence changed".into());
+            }
+            // Resume our interrupted representation-only normalization. Verify
+            // original per-game canonical hashes and scores before any writes.
+            let run = std::path::PathBuf::from(xml::text(&job["result"]["run"])?);
+            let manifest = xml::read(&run.join("manifest.xml"), "manifest")?;
+            for n in 1..=c.matches {
+                let id = format!("match-{n:06}");
+                let base = run.join("matches").join(&id);
+                let record = xml::read(&base.join("match.xml"), "match")?;
+                let views = [
+                    xml::read(&base.join("player-a.xml"), "player-report")?,
+                    xml::read(&base.join("player-b.xml"), "player-report")?,
+                ];
+                crate::match_evidence::verify_evidence(&record, &views, &manifest, &id)?;
+            }
+            let mut sample = scoring::sample(&run, c.matches)?;
+            sample["pairing"] = job["result"]["sample"]["pairing"].clone();
+            if sample != job["result"]["sample"] {
+                return Err("Interrupted normalization changed results".into());
+            }
+        }
+    }
+    crate::hierarchy::migrate(directory)?;
+    for job in state["jobs"]
+        .as_object_mut()
+        .ok_or("Missing jobs")?
+        .values_mut()
+    {
+        if job["status"] != "completed" {
+            continue;
+        }
+        let run = std::path::PathBuf::from(xml::text(&job["result"]["run"])?);
+        let manifest = xml::read(&run.join("manifest.xml"), "manifest")?;
+        for n in 1..=c.matches {
+            let id = format!("match-{n:06}");
+            let base = run.join("matches").join(&id);
+            let record = xml::read(&base.join("match.xml"), "match")?;
+            let reports = [
+                xml::read(&base.join("player-a.xml"), "player-report")?,
+                xml::read(&base.join("player-b.xml"), "player-report")?,
+            ];
+            crate::match_evidence::verify_evidence(&record, &reports, &manifest, &id)?;
+        }
+        let mut sample = scoring::sample(&run, c.matches)?;
+        sample["pairing"] = job["result"]["sample"]["pairing"].clone();
+        if sample != job["result"]["sample"] {
+            return Err("Post-migration results differ".into());
+        }
+        job["evidence_sha256"] = json!(storage::evidence_digest(Path::new(xml::text(
+            &job["directory"]
+        )?))?);
+    }
+    let migration = json!({"kind":"hierarchical-evidence-v1","previous_runtime":state["runtime"],"runtime":crate::application_identity::digest()?,"at_ms":now(),"results_verified":true});
+    storage::save(&directory.join("hierarchy-migration.json"), &migration)?;
+    state["runtime"] = migration["runtime"].clone();
+    storage::save(&directory.join("state.json"), &state)?;
+    if storage::read(&directory.join("run.json"))? != state {
+        return Err("Checkpoint roundtrip mismatch".into());
+    }
+    if directory.join("state.json").exists() {
+        fs::remove_file(directory.join("state.json"))?;
+    }
+    report::write(&c, &state)?;
+    println!(
+        "Migration complete; stage preserved: {}",
+        state["next_stage"]
+    );
+    Ok(0)
 }

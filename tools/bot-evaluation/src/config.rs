@@ -28,10 +28,14 @@ fn resolve(base: &Path, v: &Value) -> Result<PathBuf> {
     Ok(base.join(s).canonicalize()?)
 }
 pub fn read(file: &Path) -> Result<Config> {
-    let source = file.canonicalize()?;
+    let source = if file.exists() {
+        file.canonicalize()?
+    } else {
+        crate::hierarchy::physical(file).canonicalize()?
+    };
     let base = source.parent().unwrap();
     let mut doc = xml::read(&source, "evaluation")?;
-    xml::validate("evaluation", &fs::read(&source)?)?;
+    xml::validate("evaluation", &xml::encode("evaluation", &doc)?)?;
     let matches = xml::integer(&doc["batch"]["matches"])?;
     if !(1..=10000).contains(&matches) || doc["batch"]["execution"] != "sequential" {
         return Err("Expected 1–10000 sequential matches".into());

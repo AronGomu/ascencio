@@ -191,6 +191,7 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 │   ├── assets/                        # Asset-pipeline documentation
 │   ├── story/                         # Narrative canon: scenario, chapters, characters
 │   └── archive/                       # Superseded historical context
+├── config/bot-campaign-policy.json   # Shared campaign defaults, protocol and artifact conventions
 ├── package.json
 ├── tsconfig.json
 ├── index.html                         # Tauri webview entry document
@@ -211,6 +212,10 @@ Every HTML element rendered by a Svelte component under `src/battle/`, `src/shel
 │   ├── story/                         # Visual Novel domain
 │   ├── storage/                       # Native content contracts/client, schema and producer/test helpers
 │   └── styles/
+├── tools/bot-evaluation/src/campaign/retention.rs # Journaled action pruning after delivered analysis
+├── tools/bot-evaluation/src/hierarchy.rs # Linked run, iteration, evaluation and per-game persistence
+├── tools/bot-evaluation/src/compact_log.rs # Compact actor-relative match logs and XML conversion
+├── tools/bot-evaluation/src/campaign/ # Supervised target-only campaign stages and frozen opponents
 ├── scripts/                           # Asset acquisition/verification tools
 │   └── lib/                           # Focused pipeline modules
 ├── tests/                             # Unit/component/integration fixtures/tests

@@ -41,7 +41,21 @@ pub(crate) fn save_match_progress(
     if let Some(progress) = progress {
         files.push((dir.join("progress.xml"), "progress", progress));
     }
-    xml::write_match(&files)
+    for (path, _, _) in &files {
+        if crate::hierarchy::physical(path)
+            .with_extension("tmp")
+            .is_dir()
+        {
+            return Err("Evidence temporary path is a directory".into());
+        }
+    }
+    for (path, root, value) in &files {
+        xml::write(path, root, value)?;
+    }
+    for (actor, report) in ["a", "b"].iter().zip(reports) {
+        crate::compact_log::save(&base.join(format!("player-{actor}.log")), report)?;
+    }
+    Ok(())
 }
 
 #[derive(Default)]

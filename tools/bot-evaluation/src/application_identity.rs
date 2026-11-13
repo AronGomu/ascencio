@@ -3,6 +3,9 @@ use crate::{identity, xml::Result};
 use serde_json::json;
 use std::{fs, path::Path};
 pub fn digest() -> Result<String> {
+    digest_for(&std::env::current_exe()?)
+}
+pub fn digest_for(executable_path: &Path) -> Result<String> {
     fn visit(path: &Path, records: &mut Vec<(String, String)>) -> Result<()> {
         if path.is_dir() {
             let mut entries = fs::read_dir(path)?
@@ -32,7 +35,7 @@ pub fn digest() -> Result<String> {
     ] {
         visit(Path::new(path), &mut records)?;
     }
-    let executable = identity::sha(fs::read(std::env::current_exe()?)?);
+    let executable = identity::sha(fs::read(executable_path)?);
     Ok(identity::digest(
         &json!({"executable":executable,"sources":records}),
     ))

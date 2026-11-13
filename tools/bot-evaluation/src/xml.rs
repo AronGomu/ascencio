@@ -3,7 +3,7 @@ use quick_xml::{
     Writer,
 };
 use serde_json::{Map, Value};
-use std::{fs, io::Write, path::Path};
+use std::{fs, path::Path};
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 fn collection_item(parent: &str, name: &str) -> bool {
     matches!(
@@ -55,6 +55,14 @@ fn collection_item(parent: &str, name: &str) -> bool {
         || (name == "observation" && parent == "observations")
 }
 pub fn read(path: &Path, root: &str) -> Result<Value> {
+    if path.extension().is_some_and(|e| e == "json")
+        || (!path.exists() && crate::hierarchy::physical(path).exists())
+    {
+        let value = crate::hierarchy::read(path, root)?;
+        semantics(root, &value)?;
+        validate(root, &encode(root, &value)?)?;
+        return Ok(value);
+    }
     let bytes = fs::read_to_string(path)?;
     let value = parse(&bytes, root)?;
     validate(root, bytes.as_bytes())?;
@@ -313,64 +321,7 @@ pub fn write(path: &Path, root: &str, value: &Value) -> Result<()> {
     }
     cost(1, start);
     let start = std::time::Instant::now();
-    fs::create_dir_all(path.parent().ok_or("No parent")?)?;
-    let tmp = path.with_extension("xml.tmp");
-    let mut file = fs::File::create(&tmp)?;
-    file.write_all(&bytes)?;
-    file.sync_all()?;
-    fs::rename(tmp, path)?;
-    #[cfg(unix)]
-    fs::File::open(path.parent().unwrap())?.sync_all()?;
-    cost(2, start);
-    Ok(())
-}
-/// One durable match commit. Files are flushed concurrently, then the two
-/// perspectives and match marker are published and directory-synced. Optional
-/// progress is published only after that evidence commit is durable.
-/// This is bounded filesystem concurrency, never parallel game execution.
-pub fn write_match(files: &[(std::path::PathBuf, &str, &Value)]) -> Result<()> {
-    let _timer = WriteTimer::start();
-    let parent = files
-        .first()
-        .and_then(|f| f.0.parent())
-        .ok_or("Empty match write")?;
-    let mut prepared = Vec::with_capacity(files.len());
-    for (index, (path, root, value)) in files.iter().enumerate() {
-        let expected_parent = if index < 3 {
-            Some(parent)
-        } else {
-            parent.parent().and_then(Path::parent)
-        };
-        if path.parent() != expected_parent || (index == 3 && *root != "progress") {
-            return Err("Invalid match commit directory/root".into());
-        }
-        let start = std::time::Instant::now();
-        semantics(root, value)?;
-        let bytes = encode(root, value)?;
-        cost(0, start);
-        prepared.push((path.with_extension("xml.tmp"), root.to_string(), bytes));
-    }
-    fs::create_dir_all(parent)?;
-    let lane_costs = crate::evidence_writer::flush(prepared)?;
-    COSTS.with(|v| {
-        let mut c = v.get();
-        c[1] += lane_costs[0];
-        c[2] += lane_costs[1];
-        v.set(c);
-    });
-    let start = std::time::Instant::now();
-    for (path, _, _) in files.iter().take(3) {
-        fs::rename(path.with_extension("xml.tmp"), path)?;
-    }
-    #[cfg(unix)]
-    fs::File::open(parent)?.sync_all()?;
-    // The progress data was flushed in parallel, but its name is published
-    // only after the referenced evidence files and their directory are durable.
-    if let Some((path, _, _)) = files.get(3) {
-        fs::rename(path.with_extension("xml.tmp"), path)?;
-        #[cfg(unix)]
-        fs::File::open(path.parent().unwrap())?.sync_all()?;
-    }
+    crate::hierarchy::write(path, root, value)?;
     cost(2, start);
     Ok(())
 }

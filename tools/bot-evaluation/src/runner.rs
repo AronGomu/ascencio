@@ -32,7 +32,6 @@ pub fn benchmark(c: Config, command_start: Instant) -> Result<i32> {
         return Err("Benchmark requires exactly one match and a 100 ms limit; it never resumes or schedules a soak".into());
     }
     let (code, directory) = evaluate_inner(c, None)?;
-    crate::evidence_writer::shutdown();
     let elapsed = command_start.elapsed().as_secs_f64() * 1000.0;
     let mut summary = xml::read(&directory.join("summary.xml"), "summary")?;
     summary["performance"]["end_to_end_ms"] = json!(elapsed);
@@ -78,6 +77,18 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
         xml::write(&directory.join("manifest.xml"), "manifest", &expected)?;
         expected
     };
+    if resume.is_some() {
+        let header = directory.join("matches/match-000001/player-a.json");
+        if header.exists() {
+            let data: Value = serde_json::from_slice(&crate::improvement::storage::regular_bytes(
+                &header,
+                1024 * 1024,
+            )?)?;
+            if data["retention"] == "actions-pruned" {
+                return Err("Completed evaluation actions were pruned; reuse retained results through the improvement-run cache".into());
+            }
+        }
+    }
     let mut failure_guard = FailureGuard {
         directory: directory.clone(),
         armed: true,
@@ -101,7 +112,7 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
         }
         if next > 1 {
             metrics.timing_incomplete = true;
-            if directory.join("summary.xml").exists() {
+            if directory.join("summary.xml").exists() || directory.join("summary.json").exists() {
                 let previous = xml::read(&directory.join("summary.xml"), "summary")?;
                 let covered = xml::integer(&previous["counts"]["matches_completed"])?
                     + xml::integer(&previous["counts"]["matches_incomplete"])?;

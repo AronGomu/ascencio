@@ -20,6 +20,8 @@ pub struct Deck {
 #[serde(deny_unknown_fields)]
 pub struct Config {
     pub evaluation: PathBuf,
+    #[serde(default)]
+    pub baseline_campaign: Option<PathBuf>,
     pub output: PathBuf,
     pub decks: Vec<Deck>,
     pub agent: Vec<String>,
@@ -28,7 +30,7 @@ pub struct Config {
     pub recovery_checks: Vec<Vec<String>>,
     pub command_inputs: Vec<PathBuf>,
     pub rounds: u64,
-    #[serde(default = "ten")]
+    #[serde(default = "fifty")]
     pub matches: u64,
     pub max_games: u64,
     pub max_wall_ms: u64,
@@ -40,15 +42,48 @@ pub struct Config {
     pub max_retries: u64,
     pub max_fixes: u64,
 }
-fn ten() -> u64 {
-    10
+fn fifty() -> u64 {
+    50
 }
 impl Config {
     pub fn read(path: &Path) -> Result<Self> {
         let path = path.canonicalize()?;
         let base = path.parent().unwrap();
-        let mut c: Self = serde_json::from_value(storage::read(&path)?)?;
-        c.evaluation = base.join(c.evaluation).canonicalize()?;
+        let mut value = storage::read(&path)?;
+        let policy: Value =
+            serde_json::from_str(include_str!("../../../../config/bot-campaign-policy.json"))?;
+        for (key, default) in policy["defaults"]
+            .as_object()
+            .ok_or("Missing policy defaults")?
+        {
+            if value.get(key).is_none() {
+                value[key] = default.clone();
+            }
+        }
+        if value.get("max_games").is_none() {
+            let rounds = value["rounds"].as_u64().ok_or("Invalid rounds")?;
+            let matches = value["matches"].as_u64().ok_or("Invalid matches")?;
+            let decks = value["decks"].as_array().ok_or("Missing decks")?.len() as u64;
+            let opponents = if decks <= 1 { 1 } else { decks - 1 };
+            value["max_games"] = serde_json::json!(rounds
+                .checked_mul(2)
+                .and_then(|n| n.checked_add(2))
+                .and_then(|n| n.checked_mul(opponents))
+                .and_then(|n| n.checked_mul(matches))
+                .and_then(|n| n.checked_mul(4))
+                .ok_or("Game ceiling overflow")?);
+        }
+        let mut c: Self = serde_json::from_value(value)?;
+        let evaluation = base.join(&c.evaluation);
+        c.evaluation = if evaluation.exists() {
+            evaluation.canonicalize()?
+        } else {
+            crate::hierarchy::physical(&evaluation).canonicalize()?
+        };
+        c.baseline_campaign = c
+            .baseline_campaign
+            .map(|p| base.join(p).canonicalize())
+            .transpose()?;
         c.output = std::path::absolute(base.join(c.output))?;
         let mut ids = BTreeSet::new();
         for d in &mut c.decks {
@@ -74,7 +109,7 @@ impl Config {
         for input in &mut c.command_inputs {
             *input = std::path::absolute(base.join(&input))?;
         }
-        if c.decks.len() < 2
+        if c.decks.is_empty()
             || c.rounds == 0
             || c.matches == 0
             || c.matches > 10000
@@ -114,5 +149,21 @@ impl Config {
     }
     pub fn command_identity(&self) -> Result<String> {
         command_identity::commands(&self.commands(), &self.command_inputs)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    #[test]
+    fn single_target_configuration_defaults_to_fifty_and_accepts_override() {
+        let mut value = json!({"evaluation":"evaluation.xml","output":"out","decks":[{"id":"goat","deck":"deck.ydk","strategy":"strategy.mjs","config":{}}],"agent":["agent"],"bug_agent":["bug"],"checks":[["check"]],"recovery_checks":[["check"]],"command_inputs":[],"rounds":1,"max_games":1000,"max_wall_ms":1000,"max_bytes":1000,"agent_timeout_ms":1000,"evaluation_timeout_ms":1000,"check_timeout_ms":1000,"recovery_timeout_ms":1000,"max_retries":0,"max_fixes":0});
+        let defaults: Config = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(defaults.matches, 50);
+        assert_eq!(defaults.decks.len(), 1);
+        value["matches"] = json!(7);
+        let explicit: Config = serde_json::from_value(value).unwrap();
+        assert_eq!(explicit.matches, 7);
     }
 }

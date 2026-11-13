@@ -3,7 +3,7 @@ use crate::{
     xml::{self, Result},
 };
 use serde_json::{json, Value};
-use std::{fs, path::Path};
+use std::path::Path;
 pub fn compare(baseline: &Path, candidate: &Path, out: &Path) -> Result<i32> {
     let baseline = baseline.canonicalize()?;
     let candidate = candidate.canonicalize()?;
@@ -135,7 +135,7 @@ pub fn compare(baseline: &Path, candidate: &Path, out: &Path) -> Result<i32> {
         "comparison-{}",
         &identity::digest(&json!([baseline, candidate]))[..16]
     );
-    let doc = json!({"comparison_id":id,"baseline_run":baseline,"candidate_run":candidate,"baseline_manifest_sha256":identity::sha(fs::read(baseline.join("manifest.xml"))?),"candidate_manifest_sha256":identity::sha(fs::read(candidate.join("manifest.xml"))?),"comparison_mode":"unpaired","comparability":{"same_input_deck":same_deck,"same_rules_and_banlist":same_rules,"same_engine_and_content":same_content,"same_opponent_artifact_and_config":changed.is_some(),"same_starting_order_cases":same_orders,"changed_bot":changed,"confounded":confounded,"notes":{"note":"Same fixture is not proof of identical later random execution; comparison uses unpaired match clusters."}},"metrics":{"metric":metrics},"decision_changes":behavior,"performance_changes":performance,"sideboarding_changes":side_changes,"reliability_changes":reliability_changes,"new_bug_ids":{"bug_id":new},"recurring_failure_signatures":{"bug_id":recurring},"previously_observed_bugs_not_seen":{"bug_id":gone},"limitations":{"limitation":["Self-play symmetry is not evidence of strength improvement.","Starting orders do not control subsequent random outcomes.","Conditional action rates and sideboard differences do not establish causality."]}});
+    let doc = json!({"comparison_id":id,"baseline_run":baseline,"candidate_run":candidate,"baseline_manifest_sha256":identity::sha(serde_json::to_vec(&xml::read(&baseline.join("manifest.xml"),"manifest")?)?),"candidate_manifest_sha256":identity::sha(serde_json::to_vec(&xml::read(&candidate.join("manifest.xml"),"manifest")?)?),"comparison_mode":"unpaired","comparability":{"same_input_deck":same_deck,"same_rules_and_banlist":same_rules,"same_engine_and_content":same_content,"same_opponent_artifact_and_config":changed.is_some(),"same_starting_order_cases":same_orders,"changed_bot":changed,"confounded":confounded,"notes":{"note":"Same fixture is not proof of identical later random execution; comparison uses unpaired match clusters."}},"metrics":{"metric":metrics},"decision_changes":behavior,"performance_changes":performance,"sideboarding_changes":side_changes,"reliability_changes":reliability_changes,"new_bug_ids":{"bug_id":new},"recurring_failure_signatures":{"bug_id":recurring},"previously_observed_bugs_not_seen":{"bug_id":gone},"limitations":{"limitation":["Self-play symmetry is not evidence of strength improvement.","Starting orders do not control subsequent random outcomes.","Conditional action rates and sideboard differences do not establish causality."]}});
     xml::write(&out.join("comparison.xml"), "comparison", &doc)?;
     xml::write(
         &out.join("report.xml"),

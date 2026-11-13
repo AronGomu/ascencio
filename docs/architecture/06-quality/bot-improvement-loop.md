@@ -99,3 +99,7 @@ Create `CANCEL` in the output directory or send SIGINT to stop. Remove `CANCEL` 
 ## Validation
 
 Use the repository's targeted test workflow. `test/tooling/bot-improvement.test.ts` runs real four-game evaluation and tests rejected proposals, immutable incumbents, completed-run resume, failed-agent recovery and changed-config refusal. Set `ARO2_ACCEPTANCE_SNAPSHOT` to a complete verified snapshot to enable it. Rust tests cover conservative confidence decisions, archive tamper detection and process-group watchdog/cancellation. Existing bot tests cover legal responses, hidden identities and simulator policy adaptation.
+
+## Decision counterfactuals
+
+Use [decision replay](decision-replay.md) to reproduce retained game records up to a decision and compare an original-policy continuation with a replacement AI. This diagnostic leaves the improvement checkpoint unchanged and retains both continuations.

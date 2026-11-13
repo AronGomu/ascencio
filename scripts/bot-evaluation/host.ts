@@ -1,5 +1,10 @@
+import {
+  DecisionReplay,
+  ReplayMismatchError,
+  type ReplaySpec,
+} from "./decision-replay.ts";
 import { bindPromptInstances } from "../../src/battle/worker/bot/prompt-instances.ts";
-/** Narrow frozen-core/bot host. Rust alone owns scheduling, persistence and results. */
+/** Real-engine bot host. Callers own scheduling, persistence and results. */
 import { createInterface } from "node:readline";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,9 +42,14 @@ import type {
 } from "../../src/battle/worker/bot/bot-contract.ts";
 import { OcgCoreAdapter } from "../../src/battle/worker/engine/OcgCoreAdapter.ts";
 interface Command {
+  replay?: ReplaySpec;
   type: string;
   critical?: boolean;
-  frozen?: { engine: string; bots: (Artifact & { wasm?: string })[] };
+  frozen?: {
+    legacy?: boolean;
+    engine: string;
+    bots: (Artifact & { wasm?: string })[];
+  };
   fixture?: GameFixture;
   botSeeds?: number[];
   capture?: boolean;
@@ -67,6 +77,7 @@ let measuring = false;
 let handlesCreated = 0,
   handlesDestroyed = 0;
 let outputBuffer = "";
+let replay: DecisionReplay | undefined;
 function flushOutput() {
   if (!outputBuffer) return;
   const start = performance.now();
@@ -77,6 +88,14 @@ function flushOutput() {
   if (measuring) ipcTime += performance.now() - start;
 }
 function send(value: unknown) {
+  const frame = value as {
+    type?: string;
+    actor: number;
+    entry: unknown;
+    initial: unknown;
+  };
+  if (frame.type === "event") replay?.event(frame.actor, frame.entry);
+  if (frame.type === "initial") replay?.initial(frame.actor, frame.initial);
   const start = performance.now();
   const event = (value as { type?: string }).type === "event";
   outputBuffer +=
@@ -108,6 +127,9 @@ function botOptions(index: number, seed?: number) {
 }
 
 async function game(command: Command) {
+  replay = command.replay
+    ? new DecisionReplay(command.replay, command.bot_order)
+    : undefined;
   if (command.fixture) {
     const f = command.fixture;
     command.seed = f.engineSeed as [string, string, string, string];
@@ -312,6 +334,8 @@ async function game(command: Command) {
         initialized = true;
       }
       if (terminal) {
+        if (replay && !replay.reached)
+          throw Error("replay_mismatch: game ended before takeover");
         session.dispose();
         handlesDestroyed++;
         send({
@@ -358,13 +382,38 @@ async function game(command: Command) {
         const capturedInput = command.capture
           ? structuredClone(input)
           : undefined;
-        // The repository-owned basic policy is read-only; its fresh instance
-        // may share immutable observation data, as in the actual runtime.
+        const recorded = replay?.decision(
+          actor,
+          `${actor}-decision-${decisions + 1}`,
+          promptRecord(prompt),
+          state.turn,
+          state.phase,
+        );
+        if (replay?.reached && command.replay?.replacement) {
+          const target = command.replay.actor === "a" ? 0 : 1;
+          if (command.bot_order[actor] === target) {
+            bots[actor]!.close?.();
+            bots[actor] = await instantiateHostBot(
+              command.replay.replacement,
+              activeDependencies,
+            );
+            delete command.replay.replacement;
+            send({
+              type: "replay_takeover",
+              actor,
+              decision_id: command.replay.decision,
+            });
+          }
+        }
+        // External takeover policies always receive a cloned observation.
+        const takeoverActor = command.replay?.actor === "a" ? 0 : 1;
         const trusted =
-          artifacts[command.bot_order[actor]]!.module === "builtin:basic";
-        const decision = await bots[actor]!.decide(
+          artifacts[command.bot_order[actor]]!.module === "builtin:basic" &&
+          !(replay?.reached && command.bot_order[actor] === takeoverActor);
+        const calculated = await bots[actor]!.decide(
           trusted ? input : structuredClone(input),
         );
+        const decision = recorded ?? calculated;
         const duration = performance.now() - botStart;
         if (command.capture)
           send({
@@ -432,6 +481,9 @@ async function game(command: Command) {
             : "engine_or_bot_error",
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : null,
+        ...(error instanceof ReplayMismatchError
+          ? { replay_difference: error.difference }
+          : {}),
       },
       turns,
       duration_ms: performance.now() - start,
@@ -439,6 +491,7 @@ async function game(command: Command) {
       bot_time_ms: botTime,
     });
   } finally {
+    replay = undefined;
     for (const bot of bots) bot.close?.();
     if (session && !session.disposed) {
       session.dispose();
@@ -453,7 +506,9 @@ async function game(command: Command) {
   }
 }
 // Frozen artifacts are read verbatim; dependencies/content are reused within one worker only.
-type FrozenInputs = Awaited<ReturnType<typeof loadCriticalInputs>> & {
+type FrozenInputs = {
+  dependencies: ActiveDuelDependencies;
+  manifest: Awaited<ReturnType<typeof loadInputs>>["manifest"];
   artifacts: (Artifact & { wasm?: string })[];
 };
 const frozenCache = new Map<string, FrozenInputs>();
@@ -467,10 +522,24 @@ async function frozenInputs(command: Command): Promise<FrozenInputs> {
     throw new Error(
       "Rust AI packages are retired. Prepare a new TypeScript evaluation session.",
     );
-  const key = JSON.stringify(command.frozen!.bots);
+  const key = JSON.stringify({
+    snapshot: command.snapshot,
+    engine: command.frozen!.engine,
+    legacy: command.frozen!.legacy,
+    bots: command.frozen!.bots,
+  });
   const cached = frozenCache.get(key);
   if (cached) return cached;
-  frozenContent ??= await loadCriticalInputs(command.snapshot);
+  const content = command.frozen!.legacy
+    ? await loadInputs(
+        command.snapshot,
+        command.codes,
+        command.frozen!.bots.map((b) => ({
+          module: b.source,
+          config: b.config,
+        })),
+      )
+    : (frozenContent ??= await loadCriticalInputs(command.snapshot));
   const artifacts = await Promise.all(
     command.frozen!.bots.map(async (bot) => ({
       ...bot,
@@ -479,7 +548,7 @@ async function frozenInputs(command: Command): Promise<FrozenInputs> {
         : await readFile(path.resolve(bot.source), "utf8"),
     })),
   );
-  const loaded = { ...frozenContent, artifacts };
+  const loaded = { ...content, artifacts };
   frozenCache.set(key, loaded);
   return loaded;
 }

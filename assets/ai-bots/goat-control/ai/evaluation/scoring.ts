@@ -1,5 +1,5 @@
 import type { PromptChoice } from "../../../../../src/battle/duel/contracts/player-prompt.ts";
-/** Independent initial copy of the Generalist baseline; specialize GOAT scoring here. */
+/** GOAT-specific resource and targeting rules over the Generalist baseline. */
 import { EnginePosition } from "../../../../../src/battle/worker/engine/engine-constants.ts";
 import type { ActiveDuelDependencies } from "../../../../../src/battle/worker/assets/active-duel-dependencies.ts";
 
@@ -10,6 +10,19 @@ export function baselineStrategy(
 ): GeneralistStrategy {
   return (input, choice) => {
     const { prompt, observation } = input;
+    const opponent =
+      observation.publicState?.players[prompt.player === 0 ? 1 : 0];
+    if (
+      choice.action === "activate" &&
+      choice.card?.code === 71044499 &&
+      opponent &&
+      !opponent.monsters.some((card) => !card.faceUp)
+    )
+      return {
+        score: -1000,
+        code: "preserve_nobleman",
+        explanation: "Keep Nobleman without an opposing face-down target.",
+      };
     const stats =
       choice.card?.code === undefined
         ? undefined

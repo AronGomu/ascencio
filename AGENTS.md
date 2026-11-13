@@ -58,6 +58,7 @@ ascencio/
 │   │   │   ├── testing.md            # Test strategy and verification routes
 │   │   │   ├── diagnostics.md        # Errors, traces and reproducibility
 │   │   │   ├── bot-improvement-loop.md # Bounded real-engine bot improvement loop
+│   │   │   ├── decision-replay.md     # Verified game-prefix replay and AI takeover comparisons
 │   │   │   └── parallel-bot-session.md # Setup, iterations, analysis jobs, accounting and paired aggregation
 │   │   └── 07-governance/            # Trust, security, distribution and extension constraints
 │   ├── ADR/                          # Recorded architecture decisions
@@ -192,7 +193,7 @@ ascencio/
 │   │   ├── basic/                    # Basic manifest, ai project, settings and deck
 │   │   ├── generalist/               # Generalist manifest, scoring project, settings and deck
 │   │   ├── random/                   # Random manifest, ai project, settings and deck
-│   │   └── goat-control/             # GOAT manifest, baseline ai project, settings and deck
+│   │   └── goat-control/             # GOAT manifest, deck-specific scoring project, settings and deck
 │   ├── app/                          # Tracked fonts, application icon and download-link settings
 │   ├── duel-core/                    # Engine configuration and strings
 │   ├── freeplay/                     # Freeplay decks, opponents, settings and card limits
@@ -213,8 +214,15 @@ ascencio/
 │   ├── verify-native-build.ts        # Frontend build and payload boundaries
 │   ├── build-ai-bots.ts              # Manifest-driven TypeScript distribution bundles
 │   ├── bot-experiment/               # Historical Rust experiment reproduction commands
-│   ├── bot-evaluation/               # TypeScript bot host and schemas for the Rust evaluation scheduler
+│   ├── bot-evaluation/               # TypeScript bot host, verified decision replay and evaluator schemas
 │   ├── bot-improvement/              # Frozen sessions, execution, analysis, aggregation and decisions
+│   │   ├── replay-game-decision.ts   # Replay recorded choices and compare AI continuations
+│   │   ├── prune-improvement-iteration.ts # Delete analysed action traces; retain results and receipts
+│   │   ├── migrate-improvement-run.ts # Verified linked-evidence migration without replay
+│   │   ├── generate-improvement-run-index.ts # Agent navigation from run to individual games
+│   │   ├── generate-compact-match-logs.ts # Existing match evidence to actor-relative text logs
+│   │   ├── update-improvement-history.ts # Atomic bot-local Markdown attempt and decision history
+│   │   ├── generate-improvement-run-setup.ts # Frozen packages and generated improvement-run setup files
 │   │   ├── session-contract.ts       # Frozen setup and candidate validation schema
 │   │   ├── iteration-contract.ts     # Prepared bindings and baseline receipts
 │   │   ├── session-control-contract.ts # Stop/resume and execution accounting

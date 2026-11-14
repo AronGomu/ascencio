@@ -81,8 +81,7 @@ import { validateSideboard } from "../../src/battle/worker/bot/sideboard.ts";
 import { readFile, mkdir, access } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawn } from "node:child_process";
-import { createInterface } from "node:readline";
+import { ReplayHostProcess } from "./replay-host-process.ts";
 import { createHash } from "node:crypto";
 import { findOutputRoot } from "./output-storage.ts";
 import {
@@ -512,116 +511,41 @@ const command = {
   ),
 };
 const startedBranches: string[] = [];
+const host = new ReplayHostProcess<Frame>(
+  path.join(project, "scripts/bot-evaluation/host.ts"),
+  project,
+);
 async function branch(name: string, changed: boolean) {
   startedBranches.push(name);
   await writeFile(
     path.join(out, "attempts.json"),
     JSON.stringify({ started: startedBranches }),
   );
-  const child = spawn(
-    process.execPath,
-    [
-      "--experimental-vm-modules",
-      "--disable-warning=ExperimentalWarning",
-      path.join(project, "scripts/bot-evaluation/host.ts"),
-    ],
-    { cwd: project, stdio: ["pipe", "pipe", "pipe"] },
-  );
-  let stderr = "";
-  let transportError: unknown;
-  child.stderr.on("data", (b) => (stderr = (stderr + b).slice(-65536)));
-  child.stdin.on("error", (error) => {
-    transportError = error;
-    child.kill("SIGKILL");
-  });
-  const frames: Frame[] = [];
-  let done: Frame | undefined;
-  let failure: Frame | undefined;
-  let timedOut = false;
-  const timeout = setTimeout(
-    () => {
-      timedOut = true;
-      child.kill("SIGKILL");
+  const {
+    frames,
+    stderr,
+    timedOut,
+    error: transportError,
+  } = await host.run(
+    initialize,
+    {
+      ...command,
+      replay: {
+        actor: v.actor,
+        decision: v.decision,
+        records,
+        ...(changed ? { replacement } : {}),
+      },
     },
     Math.min(
       300000,
       Number(manifest.configuration.limits.game_wall_time_ms) + 30000,
     ),
   );
-  const exited = new Promise<number | null>((resolve) =>
-    child.on("close", resolve),
+  const done = frames.findLast((f) => f.type === "done");
+  const failure = frames.findLast((f) =>
+    ["failure", "host_error"].includes(f.type),
   );
-  let bytes = 0;
-  try {
-    child.stdin.write(JSON.stringify(initialize) + "\n");
-    for await (const line of createInterface({ input: child.stdout })) {
-      bytes += Buffer.byteLength(line);
-      if (bytes > 128 * 1024 * 1024)
-        throw Error("Replay protocol exceeded 128 MiB");
-      const f = JSON.parse(line) as Frame;
-      frames.push(f);
-      if (f.type === "ready")
-        child.stdin.write(
-          JSON.stringify({
-            ...command,
-            replay: {
-              actor: v.actor,
-              decision: v.decision,
-              records,
-              ...(changed ? { replacement } : {}),
-            },
-          }) + "\n",
-        );
-      if (f.type === "done") done = f;
-      if (["failure", "host_error"].includes(f.type)) failure = f;
-      if (f.type === "cleanup" || f.type === "host_error") child.stdin.end();
-    }
-  } catch (error) {
-    transportError = error;
-    child.kill("SIGKILL");
-  } finally {
-    child.stdin.end();
-  }
-  const code = await exited;
-  clearTimeout(timeout);
-
-  const flat = (value: unknown, prefix = ""): string => {
-    if (Array.isArray(value))
-      return value.map((x, i) => flat(x, `${prefix}.${i}`)).join(" ");
-    if (value && typeof value === "object")
-      return Object.entries(value)
-        .map(([k, x]) => flat(x, prefix ? `${prefix}.${k}` : k))
-        .filter(Boolean)
-        .join(" ");
-    return value === null || value === undefined
-      ? ""
-      : `${prefix}=${JSON.stringify(value)}`;
-  };
-  let offered: { id: string; label: string }[] = [];
-  const text = [
-    `LOG replay-v1 | game=${neutral.game_id} branch=${name} seats=0:${order[0] === 0 ? "a" : "b"},1:${order[1] === 0 ? "a" : "b"}`,
-  ];
-  for (const f of frames) {
-    const actor =
-      f.actor === undefined ? "?" : order[f.actor] === 0 ? "a" : "b";
-    if (f.type === "decision_started") offered = f.prompt.choices.choice;
-    if (f.type === "event")
-      text.push(
-        `T${f.entry.turn} VIEW ${actor} E${f.entry.sequence} ${f.entry.event} | ${flat(f.entry.changes)} | ${flat(f.entry.details)}`,
-      );
-    if (f.type === "decision")
-      text.push(
-        `T${f.entry.turn} ${actor} ${f.entry.phase} D${f.entry.decision_id} CHOOSE ${(f.entry.selected_choice_ids?.choice_id ?? []).map((id) => offered.find((c) => c.id === id)?.label ?? id).join(", ")} | OFFERED ${offered.map((c) => `${c.id}:${c.label}`).join("; ")}`,
-      );
-    if (f.type === "replay_takeover")
-      text.push(`TAKEOVER ${actor} ${v.decision}`);
-    if (f.type === "done")
-      text.push(
-        `RESULT winner=${f.winner === null ? "draw" : order[f.winner] === 0 ? "a" : "b"} turns=${f.turns}`,
-      );
-    if (["failure", "host_error"].includes(f.type))
-      text.push(`FAILURE ${flat(f)}`);
-  }
   await writeFile(
     path.join(out, `${name}.log`),
     "ASCENCIO_REPLAY_LOG\t2\n" +
@@ -633,9 +557,9 @@ async function branch(name: string, changed: boolean) {
       code: "REPLAY_TIMEOUT",
       branch: name,
     });
-  if (code !== 0 || failure || !done || transportError)
+  if (failure || !done || transportError)
     throw Error(
-      `${name} replay failed: ${JSON.stringify(failure ?? { code, stderr, transportError: String(transportError) })}`,
+      `${name} replay failed: ${JSON.stringify(failure ?? { stderr, transportError: String(transportError) })}`,
     );
   return {
     winner:
@@ -740,4 +664,8 @@ try {
       }),
     );
   } else throw error;
+} finally {
+  await host.close();
+  // Branch files snapshot diagnostics; retain the final shared stream after exit.
+  await writeFile(path.join(out, "host-stderr.log"), host.stderr);
 }

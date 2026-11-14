@@ -606,3 +606,131 @@ test("complete paired evaluation requires every candidate report before synthesi
     await rm(f.session, { recursive: true, force: true });
   }
 });
+
+test("compact native analysis packets remain bound to complete loss evidence during aggregation", async () => {
+  const f = await fixture();
+  const { publishTextCompletion } =
+    await import("../../scripts/bot-improvement/analysis-text-evidence.ts");
+  const { prepareAnalyses } =
+    await import("../../scripts/bot-improvement/prepare-analyses.ts");
+  try {
+    const job = f.jobs.candidate,
+      item = job.matches[0]!,
+      match = item.match.id;
+    const root = `candidate/matches/${match}`;
+    await f.put("config.json", {
+      schemaVersion: 1,
+      fixture: f.manifest.fixture,
+      limits: { analysisWorkers: 1 },
+    });
+    await f.put(`${root}/fixture.json`, item);
+    await f.put(`${root}/match.json`, {
+      match_id: match,
+      run_id: job.identity,
+      status: "completed",
+      sideboarding: { status: "completed" },
+    });
+    for (let n = 1; n <= 4; n++) {
+      const common = {
+        game_id: `${match}-game-${n}`,
+        stage: n < 3 ? "pre_side" : "post_side",
+        status: "completed",
+      };
+      const starter = n % 2 ? "a" : "b",
+        hash = digest(`game-${n}`);
+      await f.put(`${root}/games/game-${n}/game.json`, {
+        ...common,
+        number: n,
+        starter,
+        winner: "b",
+        draw: false,
+        evidence_sha256: hash,
+      });
+      for (const actor of ["a", "b"]) {
+        await f.put(`${root}/games/game-${n}/${actor}.json`, {
+          ...common,
+          starting_player: starter,
+          result: {
+            evidence_sha256: hash,
+            outcome: actor === "a" ? "loss" : "win",
+          },
+          timeline: {
+            entry: [
+              { kind: "decision", sequence: 1, decision_id: `${actor}-${n}` },
+            ],
+          },
+        });
+        await f.put(`${root}/games/game-${n}/${actor}.log`, "fixture\n");
+      }
+    }
+    await publishTextCompletion(f.session, root, {
+      match,
+      executionIdentity: job.identity,
+      fixtureIdentity: f.frozen.identity,
+      candidateIdentity: job.candidateIdentity,
+      opponentIdentity: item.identities[1]!,
+      item,
+    });
+    await f.put("proposal.txt", "Mechanical fixture; no causal claim.");
+    const binding = {
+      iteration: 1,
+      role: "candidate" as const,
+      root: "candidate",
+      execution: f.request.candidate.execution,
+      proposal: await f.ref("proposal.txt"),
+    };
+    await prepareAnalyses(f.session, { action: "sync", binding });
+    const claim = (
+      await prepareAnalyses(f.session, {
+        action: "claim",
+        iteration: 1,
+        role: "candidate",
+        owner: "fixture",
+      })
+    ).claim!;
+    await f.put(
+      "findings.md",
+      `# Fixture\nJob: ${claim.id}\nPacket: ${claim.packet.sha256}\n\n` +
+        [1, 2, 3, 4]
+          .map(
+            (n) =>
+              `- G${n} | a-${n} | unclear | Fixture loss | No causal conclusion\n`,
+          )
+          .join(""),
+    );
+    await prepareAnalyses(f.session, {
+      action: "complete",
+      iteration: 1,
+      role: "candidate",
+      job: claim.id,
+      token: claim.claim!.token,
+      report: await f.ref("findings.md"),
+    });
+    const queueFile = "iterations/iteration-0001/analyses/candidate/queue.json";
+    f.request.candidate.analyses = await f.ref(queueFile);
+    const valid = await aggregateSession(f.request);
+    assert.equal(valid.completeness.reports.candidate.complete, 1);
+    assert.deepEqual(valid.completeness.reports.candidate.invalid, []);
+    const packet = JSON.parse(
+      await readFile(path.join(f.session, claim.packet.path), "utf8"),
+    );
+    assert.equal(packet.format, "target-loss-v1");
+    assert.deepEqual(packet.events, []);
+    packet.lossGames.pop();
+    await f.put("tampered-packet.json", packet);
+    const queue = JSON.parse(
+      await readFile(path.join(f.session, queueFile), "utf8"),
+    );
+    queue.jobs[0].packet = await f.ref("tampered-packet.json");
+    await f.put(queueFile, queue);
+    f.request.candidate.analyses = await f.ref(queueFile);
+    const invalid = await aggregateSession(f.request);
+    assert.equal(invalid.completeness.reports.candidate.complete, 0);
+    assert.match(
+      invalid.completeness.reports.candidate.invalid[0]!.reason,
+      /does not match finalized evidence/,
+    );
+  } finally {
+    await rm(f.session, { recursive: true, force: true });
+  }
+});

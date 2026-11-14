@@ -1,4 +1,4 @@
-import { verifyNativeCompletion } from "./typescript-native-completion.ts";
+import { verifyNativeSchedule } from "./typescript-native-resume.ts";
 export { verifyNativeCompletion } from "./typescript-native-completion.ts";
 import { NativeEngineSlot } from "./typescript-native-executor.ts";
 import { parseMatchLog } from "./game-log.ts";
@@ -51,9 +51,13 @@ export async function nativeRuntimeIdentity() {
     "typescript-native-worker.ts",
     "typescript-native-executor.ts",
     "typescript-native-completion.ts",
+    "typescript-native-resume.ts",
     "typescript-native-evidence.ts",
     "run-typescript-native.ts",
     "replay-output-budget.ts",
+    "game-log.ts",
+    "output-storage.ts",
+    "batch-storage-lease.ts",
   ])
     files.push(path.join("scripts/bot-improvement", file));
   return identity({
@@ -192,10 +196,28 @@ export async function runTypescriptNative(options: {
     const old = await optional(path.join(output, "binding.json"));
     if (options.resume && identity(old) !== identity(binding))
       throw Error("Native resume inputs changed");
+    process.once("SIGINT", signal);
+    process.once("SIGTERM", signal);
+    const verificationStart = performance.now();
+    const verified = options.resume
+      ? await verifyNativeSchedule({
+          output,
+          job,
+          workers,
+          runtime: binding.runtime,
+          register: (worker) => threads.push(worker),
+          aborted: () => reason !== null,
+        })
+      : job.matches.map(() => false);
+    const resumeVerificationMs = options.resume
+      ? performance.now() - verificationStart
+      : 0;
+    const reusedMatches = new Set(
+      job.matches.filter((_, i) => verified[i]).map((item) => item.match.id),
+    );
     const pending: Job["matches"] = [];
-    for (const item of job.matches) {
-      if (options.resume && (await verifyNativeCompletion(output, job, item)))
-        index[item.match.id] = `matches/${item.match.id}`;
+    for (const [position, item] of job.matches.entries()) {
+      if (verified[position]) index[item.match.id] = `matches/${item.match.id}`;
       else pending.push(item);
     }
     for (let i = 0; i < workers; i++) {
@@ -285,8 +307,6 @@ export async function runTypescriptNative(options: {
         journal,
       );
     await saveIndex();
-    process.once("SIGINT", signal);
-    process.once("SIGTERM", signal);
     const checkStop = async () => {
       if (
         Date.now() >=
@@ -415,17 +435,20 @@ export async function runTypescriptNative(options: {
     );
     await saveIndex();
     let completedGames = 0,
+      reusedCompletedGames = 0,
       failedGames = 0,
       skippedGames = 0,
       timeoutGames = 0;
-    for (const relative of Object.values(index)) {
+    for (const [matchId, relative] of Object.entries(index)) {
       const match = parseMatchLog(
         await readFile(path.join(output, relative, "native/match.log"), "utf8"),
       );
       for (const ref of match.refs) {
         const game = ref.checkpoint_game as Record<string, unknown>;
-        if (game.status === "completed") completedGames++;
-        else if (game.status === "failed") {
+        if (game.status === "completed") {
+          completedGames++;
+          if (reusedMatches.has(matchId)) reusedCompletedGames++;
+        } else if (game.status === "failed") {
           failedGames++;
           if (game.failure_category === "timeout") timeoutGames++;
         } else skippedGames++;
@@ -447,7 +470,11 @@ export async function runTypescriptNative(options: {
         timeoutGames,
         reservedGames: charged,
         elapsedMs,
-        gamesPerSecond: completedGames / (elapsedMs / 1000),
+        reusedCompletedGames,
+        executedCompletedGames: completedGames - reusedCompletedGames,
+        resumeVerificationMs,
+        gamesPerSecond:
+          (completedGames - reusedCompletedGames) / (elapsedMs / 1000),
         stoppingReason: reason,
         output,
         exitCode:

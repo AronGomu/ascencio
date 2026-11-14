@@ -148,25 +148,35 @@ export async function outputUsage(root: string, actual = false) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
       throw error;
     }
-    for (const entry of entries) {
-      if (
-        entry.name === ".output-storage.lock" ||
-        entry.name === ".output-storage.recovery" ||
-        entry.name.startsWith(".output-lock-")
-      )
-        continue;
-      const file = path.join(dir, entry.name);
-      let info;
-      try {
-        info = await lstat(file);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
-        throw error;
+    // Bound in-flight metadata requests without serializing every file's I/O.
+    // Recurse only after each batch settles, so depth cannot multiply fan-out.
+    for (let offset = 0; offset < entries.length; offset += 32) {
+      const batch = await Promise.all(
+        entries.slice(offset, offset + 32).map(async (entry) => {
+          if (
+            entry.name === ".output-storage.lock" ||
+            entry.name === ".output-storage.recovery" ||
+            entry.name.startsWith(".output-lock-")
+          )
+            return null;
+          const file = path.join(dir, entry.name);
+          try {
+            return { file, info: await lstat(file) };
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+            throw error;
+          }
+        }),
+      );
+      for (const item of batch) {
+        if (!item) continue;
+        const { file, info } = item;
+        if (leased && path.resolve(file) === leased)
+          dataBytes += lease.maxBytes;
+        else if (info.isDirectory()) await visit(file);
+        else if (control(file)) controlBytes += info.size;
+        else dataBytes += info.size;
       }
-      if (leased && path.resolve(file) === leased) dataBytes += lease.maxBytes;
-      else if (info.isDirectory()) await visit(file);
-      else if (control(file)) controlBytes += info.size;
-      else dataBytes += info.size;
     }
   }
   await visit(root);

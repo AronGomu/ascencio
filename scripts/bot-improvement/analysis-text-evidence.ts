@@ -52,6 +52,12 @@ async function localFiles(
 async function linkedReader(session: string, pins?: Map<string, string>) {
   const refs = new Map<string, EvidenceReference>();
   const cache = new Map<string, Buffer>();
+  // Reader-local verified bytes are immutable. Keep only the current decoded
+  // game: its virtual neutral/a/b views share a parse without retaining a run.
+  let gameCache:
+    { file: string; value: ReturnType<typeof parseGameLog> } | undefined;
+  let matchCache:
+    { file: string; value: ReturnType<typeof parseMatchLog> } | undefined;
   const read = async (file: string) => {
     if (cache.has(file)) return cache.get(file)!;
     const bytes = pins
@@ -122,18 +128,26 @@ async function linkedReader(session: string, pins?: Map<string, string>) {
       if (virtual) {
         const game = /^(.*\/games\/game-[0-9]+)\/(game|a|b)\.json$/.exec(file);
         if (game) {
-          const parsed = parseGameLog(
-            (await read(`${game[1]}/game.log`)).toString(),
-          );
+          const source = `${game[1]}/game.log`;
+          if (gameCache?.file !== source)
+            gameCache = {
+              file: source,
+              value: parseGameLog((await read(source)).toString()),
+            };
+          const parsed = gameCache.value;
           return game[2] === "game"
             ? parsed.neutral
             : parsed.actors[game[2] === "a" ? 0 : 1];
         }
         const match = /^(.*)\/(match|fixture)\.json$/.exec(file);
         if (match) {
-          const parsed = parseMatchLog(
-            (await read(`${match[1]}/match.log`)).toString(),
-          );
+          const source = `${match[1]}/match.log`;
+          if (matchCache?.file !== source)
+            matchCache = {
+              file: source,
+              value: parseMatchLog((await read(source)).toString()),
+            };
+          const parsed = matchCache.value;
           return match[2] === "match" ? parsed.match : parsed.fixture;
         }
         throw new Error(`Unpinned or missing record: ${file}`);
@@ -180,12 +194,24 @@ export async function publishTextCompletion(
       a.path.localeCompare(b.path),
     ),
   };
-  await validateText(session, relative, expected, marker, reader);
+  const result = await validateText(
+    session,
+    relative,
+    expected,
+    marker,
+    reader,
+  );
+  const bytes = JSON.stringify(marker, null, 2) + "\n";
   await writeOutput(
     path.join(await analysisPath(session, relative), "done.json"),
-    JSON.stringify(marker, null, 2) + "\n",
+    bytes,
     true,
   );
+  const receipt = { path: `${relative}/done.json`, sha256: digest(bytes) };
+  // Cross the persistence boundary before returning the already validated data.
+  await readEvidence(session, receipt);
+  await verifyTextFiles(session, relative, marker);
+  return { ...result, files: [receipt, ...marker.files] };
 }
 
 export async function finalizedText(
@@ -216,6 +242,20 @@ export async function finalizedText(
     ],
   };
 }
+async function verifyTextFiles(
+  session: string,
+  relative: string,
+  marker: Marker,
+) {
+  const owned = await localFiles(session, relative);
+  const declared = marker.files
+    .filter((f) => f.path.startsWith(relative + "/"))
+    .map((f) => f.path)
+    .sort();
+  if (!isDeepStrictEqual(owned, declared))
+    throw new Error("Native evidence file set changed");
+  for (const ref of marker.files) await readEvidence(session, ref);
+}
 async function validateText(
   session: string,
   relative: string,
@@ -237,14 +277,7 @@ async function validateText(
     )
   )
     throw new Error("Native match identity mismatch");
-  const owned = await localFiles(session, relative);
-  const declared = marker.files
-    .filter((f) => f.path.startsWith(relative + "/"))
-    .map((f) => f.path)
-    .sort();
-  if (!isDeepStrictEqual(owned, declared))
-    throw new Error("Native evidence file set changed");
-  for (const ref of marker.files) await readEvidence(session, ref);
+  await verifyTextFiles(session, relative, marker);
   if (
     expected.item !== undefined &&
     !isDeepStrictEqual(

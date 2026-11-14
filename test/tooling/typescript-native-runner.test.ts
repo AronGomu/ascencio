@@ -1,6 +1,7 @@
+import { verifyNativeSchedule } from "../../scripts/bot-improvement/typescript-native-resume.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, rm, readdir } from "node:fs/promises";
 import path from "node:path";
 import {
   canonicalTree,
@@ -55,6 +56,27 @@ test("native codec retains exact typed records and version-one canonical rules",
     d: null,
     nested: { code: "001" },
   });
+  const special = canonicalTree(
+    JSON.parse(
+      '{"z":2,"__proto__":{"safe":true},"10":10,"2":2,"constructor":"own"}',
+    ),
+  ) as Record<string, unknown>;
+  assert.equal(Object.getPrototypeOf(special), Object.prototype);
+  assert.deepEqual(Object.getOwnPropertyDescriptor(special, "__proto__"), {
+    value: { safe: "true" },
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+  assert.equal(
+    JSON.stringify(special),
+    '{"2":"2","10":"10","__proto__":{"safe":"true"},"constructor":"own","z":"2"}',
+  );
+  const sparseInput: unknown[] = [undefined, null, [], 3];
+  delete sparseInput[0];
+  const sparse = canonicalTree(sparseInput) as unknown[];
+  assert.equal(0 in sparse, false);
+  assert.equal(JSON.stringify(sparse), '[null,null,[],"3"]');
   const text = "ASCENCIO_GAME_LOG\t2\n" + encodeLogRecord("GAME", value);
   assert.deepEqual(
     decodeLog(compactLog(text), "ASCENCIO_GAME_LOG\t2"),
@@ -82,6 +104,9 @@ test(
     const run = await runTypescriptNative(options);
     assert.equal(run.status, "completed");
     assert.equal(run.completedGames, 8);
+    assert.equal(run.executedCompletedGames, 8);
+    assert.equal(run.reusedCompletedGames, 0);
+    assert.equal(run.resumeVerificationMs, 0);
     assert.equal(run.reservedGames, 8);
     for (const item of job.matches) {
       assert.ok(await verifyNativeCompletion(run.output, job, item));
@@ -97,6 +122,31 @@ test(
     const resumed = await runTypescriptNative({ ...options, resume: true });
     assert.equal(resumed.reservedGames, 8);
     assert.equal(resumed.completedGames, 8);
+    assert.equal(resumed.executedCompletedGames, 0);
+    assert.equal(resumed.reusedCompletedGames, 8);
+    assert.equal(resumed.gamesPerSecond, 0);
+    assert.ok(resumed.resumeVerificationMs > 0);
+    let abortVerification = false,
+      verificationWorkers = 0,
+      exitedWorkers = 0;
+    await assert.rejects(
+      verifyNativeSchedule({
+        output: run.output,
+        job,
+        workers: 2,
+        runtime: "fixture",
+        register: (worker) => {
+          verificationWorkers++;
+          worker.once("exit", () => exitedWorkers++);
+          abortVerification = true;
+          void worker.terminate();
+        },
+        aborted: () => abortVerification,
+      }),
+      /interrupted/,
+    );
+    assert.equal(verificationWorkers, 1);
+    assert.equal(exitedWorkers, verificationWorkers);
     const input = path.join(
         run.output,
         `matches/${job.matches[0]!.match.id}/native/games/game-1/game.log`,
@@ -140,6 +190,13 @@ test(
         .status,
       "complete",
     );
+    const unexpectedReceipt = path.join(path.dirname(input), "done.json");
+    await writeFile(unexpectedReceipt, "{}");
+    await assert.rejects(
+      runTypescriptNative({ ...options, resume: true }),
+      /file set changed/,
+    );
+    await rm(unexpectedReceipt);
     const afterReplay = await runTypescriptNative({ ...options, resume: true });
     assert.equal(afterReplay.reservedGames, 8);
     assert.equal(afterReplay.completedGames, 8);
@@ -245,3 +302,53 @@ test(
     assert.ok(verifyNativeGame(bytes));
   },
 );
+
+test("resume cancellation starts no verification worker or game", async () => {
+  let created = 0;
+  await assert.rejects(
+    verifyNativeSchedule({
+      output: "unused",
+      job: { matches: [{}], limits: {} } as Job,
+      workers: 2,
+      runtime: "test",
+      register: () => {
+        created++;
+      },
+      aborted: () => true,
+    }),
+    /interrupted/,
+  );
+  assert.equal(created, 0);
+});
+
+test("resume pool caps worker creation and missing receipts perform no writes", async () => {
+  const output = await mkdtemp(path.resolve(".tmp/native-resume-empty-"));
+  let created = 0,
+    exited = 0;
+  try {
+    const job = {
+      identity: "missing-receipt-fixture",
+      limits: {},
+      matches: Array.from({ length: 12 }, (_, n) => ({
+        match: { id: `match-${n}` },
+      })),
+    } as unknown as Job;
+    const result = await verifyNativeSchedule({
+      output,
+      job,
+      workers: 16,
+      runtime: "fixture",
+      aborted: () => false,
+      register: (worker) => {
+        created++;
+        worker.once("exit", () => exited++);
+      },
+    });
+    assert.deepEqual(result, Array(12).fill(false));
+    assert.equal(created, 4);
+    assert.equal(exited, created);
+    assert.deepEqual(await readdir(output), []);
+  } finally {
+    await rm(output, { recursive: true, force: true });
+  }
+});

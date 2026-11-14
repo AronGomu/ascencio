@@ -26,3 +26,15 @@ Fifty matches equal 200 games per backend. The comparison uses the same frozen s
 ## Archived backends and existing runs
 
 `session-batch/v1` is the archived Rust batch identity. Existing iterations remain pinned and must use `npm run bot:matches:rust`; a TypeScript invocation rejects switching their identity. `bot:batch:rust` runs the independent Rust backend; `bot:matches:rust:calibrate` uses `.cache/batch-runner-workers.json`. The older supervisor remains under `scripts/bot-improvement/archive/` and `bot:matches:legacy`. Archived Rust and legacy commands can still build the separate developer executable. Running processes are not reconfigured by this default change.
+
+## Native loss packet compatibility
+
+New analysis queues pin `nativePacketFormat: "target-loss-v1"`. Their internal match packets retain source hashes, game metadata and complete target-loss decision allowlists, and omit the unused full-actor event-address list (`events: []`). Analyst-facing slice packets still expose only target losses and their pinned views. Existing queues without that format pin keep their original packet representation and hashes on resume. Aggregation validates the format against the queue and checks every loss against finalized evidence; XML report references retain their full event lists.
+
+## Analysis publication allowance
+
+Budgeted bulk packet publication and slice/report ingestion reserve their analysis directory through the existing session storage lease, under the session owner lock. Local writes charge staging and replacement bytes; normal publication avoids a whole-run quota walk for each file. The allowance excludes global checkpoint headroom, and byte usage is reconciled before release. Small claim/status transitions retain the shared gate.
+
+An active lease is never replaced, including one naming the same directory. A pre-existing storage suspension blocks acquisition. A local quota rejection persists the shared storage suspension and stops further owned writes until explicit recovery. Callback failure retains committed evidence and releases the reservation after owned writes settle. A hard process crash can leave both session ownership and the active lease; establish that the owner stopped before operator recovery. Do not clear a live lock or lease. The compact/legacy packet recovery rules above still apply when publication resumes.
+
+This allowance covers analysis packets, views and reports, not worker-produced game files or the initial source-evidence discovery pass. Shortening slice conversion's session-lock duration remains separate work.

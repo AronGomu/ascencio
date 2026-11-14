@@ -6,34 +6,41 @@ import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
 type Obj = Record<string, unknown>;
 export function canonicalTree(v: unknown, evidence = false): unknown {
   if (Array.isArray(v)) return v.map((x) => canonicalTree(x, evidence));
-  if (v && typeof v === "object")
-    return Object.fromEntries(
-      Object.keys(v)
-        .sort()
-        .filter((k) => {
-          const x = (v as Obj)[k];
-          return (
-            !(Array.isArray(x) && !x.length) &&
-            !(
-              evidence &&
-              (k.endsWith("_sha256") ||
-                k.endsWith("_path") ||
-                [
-                  "bug_id",
-                  "duration_ms",
-                  "engine_time_ms",
-                  "bot_time_ms",
-                  "bridge_time_ms",
-                  "captured_at",
-                  "created_at",
-                  "updated_at",
-                  "path",
-                ].includes(k))
-            )
-          );
-        })
-        .map((k) => [k, canonicalTree((v as Obj)[k], evidence)]),
-    );
+  if (v && typeof v === "object") {
+    const source = v as Record<string, unknown>,
+      result: Record<string, unknown> = {};
+    for (const k of Object.keys(source).sort()) {
+      const x = source[k];
+      if (Array.isArray(x) && !x.length) continue;
+      if (
+        evidence &&
+        (k.endsWith("_sha256") ||
+          k.endsWith("_path") ||
+          [
+            "bug_id",
+            "duration_ms",
+            "engine_time_ms",
+            "bot_time_ms",
+            "bridge_time_ms",
+            "captured_at",
+            "created_at",
+            "updated_at",
+            "path",
+          ].includes(k))
+      )
+        continue;
+      const value = canonicalTree(x, evidence);
+      if (Object.hasOwn(Object.prototype, k))
+        Object.defineProperty(result, k, {
+          value,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      else result[k] = value;
+    }
+    return result;
+  }
   return v === null ? null : String(v);
 }
 export const nativeIdentity = (v: unknown) =>
@@ -446,7 +453,7 @@ export function verifyNativeGame(text: string) {
 }
 export function verifyNativeMatch(
   text: string,
-  job: Job,
+  job: Pick<Job, "identity">,
   item: Job["matches"][number],
 ) {
   const m = parseMatchLog(text);

@@ -42,14 +42,43 @@ export function encodeLogRecord(tag: string, value: unknown): string {
 }
 export function decodeLogRecord(line: string): LogLine {
   const [tag, ...fields] = line.split("\t");
+  return decodeFields(tag, fields);
+}
+function fieldPath(pointer: string) {
+  const slash = pointer.lastIndexOf("/");
+  return {
+    pointer,
+    parent: pointer.slice(0, slash),
+    key: pointer
+      .slice(slash + 1)
+      .replaceAll("~2", "=")
+      .replaceAll("~1", "/")
+      .replaceAll("~0", "~"),
+  };
+}
+function decodeFields(
+  tag: string | undefined,
+  fields: string[],
+  dictionary?: ReturnType<typeof fieldPath>[],
+): LogLine {
   if (!tag || !/^[A-Z_]+$/.test(tag) || !fields.length)
     throw Error("Invalid log record");
   const nodes = new Map<string, LogValue>();
   for (const field of fields) {
     const at = field.indexOf("=");
     if (at < 0) throw Error("Malformed log field");
-    const pointer = field.slice(0, at),
-      token = field.slice(at + 1);
+    let pointer = field.slice(0, at);
+    let location: ReturnType<typeof fieldPath> | undefined;
+    const token = field.slice(at + 1);
+    if (dictionary) {
+      if (
+        !/^#(0|[1-9][0-9]*)$/.test(pointer) ||
+        dictionary[Number(pointer.slice(1))] === undefined
+      )
+        throw Error("Unknown log field alias");
+      location = dictionary[Number(pointer.slice(1))]!;
+      pointer = location.pointer;
+    }
     if (nodes.has(pointer) || (pointer !== "" && !pointer.startsWith("/")))
       throw Error("Duplicate or invalid log field");
     let value: LogValue;
@@ -68,26 +97,24 @@ export function decodeLogRecord(line: string): LogLine {
       value = Number(token.slice(2));
     else throw Error("Invalid log field type");
     if (pointer !== "") {
-      const slash = pointer.lastIndexOf("/"),
-        parent = nodes.get(pointer.slice(0, slash));
-      const key = pointer
-        .slice(slash + 1)
-        .replaceAll("~2", "=")
-        .replaceAll("~1", "/")
-        .replaceAll("~0", "~");
+      const resolved = location ?? fieldPath(pointer);
+      const parent = nodes.get(resolved.parent),
+        key = resolved.key;
       if (!parent || typeof parent !== "object")
         throw Error("Missing log field parent");
+      // Inherited object names must never invoke a prototype setter.
       if (Array.isArray(parent)) {
         if (!/^(0|[1-9][0-9]*)$/.test(key) || Number(key) !== parent.length)
           throw Error("Invalid log array index");
         parent.push(value);
-      } else
+      } else if (Object.hasOwn(Object.prototype, key))
         Object.defineProperty(parent, key, {
           value,
           writable: true,
           enumerable: true,
           configurable: true,
         });
+      else parent[key] = value;
     } else if (nodes.size) throw Error("Log root must come first");
     nodes.set(pointer, value);
   }
@@ -98,7 +125,7 @@ export function decodeLog(text: string, header: string): LogLine[] {
   const lines = text.split("\n");
   if (lines.shift() !== header || lines.pop() !== "")
     throw Error("Invalid or truncated log header/footer");
-  let fields: string[] | undefined;
+  let fields: ReturnType<typeof fieldPath>[] | undefined;
   if (lines[0]?.startsWith("FIELDS\t")) {
     const dictionary = decodeLogRecord(lines.shift()!);
     if (
@@ -107,22 +134,12 @@ export function decodeLog(text: string, header: string): LogLine[] {
       new Set(dictionary.value).size !== dictionary.value.length
     )
       throw Error("Invalid log field dictionary");
-    fields = dictionary.value as string[];
+    fields = (dictionary.value as string[]).map(fieldPath);
   }
   return lines.map((line) => {
     if (!fields) return decodeLogRecord(line);
     const [tag, ...values] = line.split("\t");
-    return decodeLogRecord(
-      [
-        tag,
-        ...values.map((value) => {
-          const match = /^#(0|[1-9][0-9]*)=(.*)$/.exec(value);
-          if (!match || fields![Number(match[1])] === undefined)
-            throw Error("Unknown log field alias");
-          return `${fields![Number(match[1])]}=${match[2]}`;
-        }),
-      ].join("\t"),
-    );
+    return decodeFields(tag, values, fields);
   });
 }
 export interface LogObject {

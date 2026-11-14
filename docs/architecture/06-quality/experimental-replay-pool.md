@@ -44,7 +44,9 @@ Workers claim small batches from a shared queue. Equal numbers of cases do not i
 
 One worker slot runs one replay CLI process at a time. Each case retains the existing original-policy control followed by a modified continuation. Both branches use strict prefix verification, recorded seeds and sideboarding. The replacement starts with fresh bot state at takeover, while original policies are warmed through the prefix. A process group owns the CLI and its engine children, enabling bounded cancellation.
 
-This first version retains fresh engine hosts for each branch. It does not implement persistent replay host reuse; that is a separate optimization requiring state-isolation measurements. The existing single-case command now additionally publishes machine-readable `result.json` and `attempts.json`, without changing its decision semantics.
+A case reuses one engine host for its control and alternative branches. Every game still creates a new duel and fresh original bot instances; takeover creates a fresh replacement instance. Engine/content caches stay within that case. Cases remain separate CLI processes; there is no cross-case host reuse or control-result cache. A branch starts only after the preceding branch reaches balanced cleanup. Malformed protocol, host failure, timeout or owner termination fences that host from reuse.
+
+`control.log` and `alternative.log` retain their complete typed protocol frames. Branch stderr files are snapshots of the shared case stream; `host-stderr.log` retains its bounded final contents after the host exits. The case does not finish or publish a pool completion receipt until the host is reaped. `result.json` and `attempts.json` retain their existing decision and attempt semantics.
 
 ## Resource accounting and failures
 

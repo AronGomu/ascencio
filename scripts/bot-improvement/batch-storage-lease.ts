@@ -46,6 +46,7 @@ export async function leaseBatchStorage(
   resume: boolean,
   maxBytes?: number,
   metadataHeadroom = 8_000_000,
+  requireInactive = false,
 ) {
   root =
     (await findOutputRoot(path.join(path.resolve(root), ".probe"))) ??
@@ -54,7 +55,7 @@ export async function leaseBatchStorage(
   const relative = path.relative(root, evaluation);
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
     throw Error("Batch evaluation must be inside its session");
-  let parent = path.dirname(evaluation);
+  let parent = evaluation;
   while (parent !== root) {
     try {
       if ((await lstat(parent)).isSymbolicLink())
@@ -67,8 +68,20 @@ export async function leaseBatchStorage(
   return locked(root, async () => {
     const file = path.join(root, ".batch-output-lease.json");
     const previous = (await read(file)) as BatchStorageLease | null;
-    if (previous?.active && previous.evaluation !== relative)
+    if (
+      previous?.active &&
+      (requireInactive || previous.evaluation !== relative)
+    )
       throw Error("Another batch evaluation holds session storage");
+    if (requireInactive)
+      await lstat(path.join(root, ".storage-stop")).then(
+        () => {
+          throw Error("max-output-bytes: analysis storage is suspended");
+        },
+        (error) => {
+          if (error.code !== "ENOENT") throw error;
+        },
+      );
     const limits = await read(path.join(root, ".output-budget.json"));
     // Reconcile the real bytes, not the previous lease's conservative reservation.
     const usage = await outputUsage(root, true);

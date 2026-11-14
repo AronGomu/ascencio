@@ -150,7 +150,7 @@ export class NativeEngineSlot {
     const result = await this.request({
       type: "verify",
       output,
-      job: this.data.job,
+      job: { identity: this.data.job.identity },
       item,
       marker,
     });

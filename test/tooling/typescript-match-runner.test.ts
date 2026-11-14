@@ -42,6 +42,23 @@ test("gameplay hashing ignores object key order and detects changed decisions", 
     gameplayHash({ choices: ["b", "a"] }),
   );
 });
+test("seat mapping owns all nested records without a preceding clone", () => {
+  for (const swapped of [false, true]) {
+    const input = {
+      actor: { label: ["opaque"] },
+      life_points: { a: { amount: 8000 }, b: { amount: 4000 } },
+      nested: [{ controller: 0, cards: [10, 20] }],
+    };
+    const expected = mapPlayers(structuredClone(input), swapped);
+    const mapped = mapPlayers(input, swapped);
+    assert.deepEqual(mapped, expected);
+    input.actor.label[0] = "mutated";
+    input.life_points.a.amount = 1;
+    input.life_points.b.amount = 2;
+    input.nested[0]!.cards[0] = 999;
+    assert.deepEqual(mapped, expected);
+  }
+});
 const source = process.env.ARO2_FROZEN_SESSION;
 test(
   "persistent TypeScript workers reproduce the same games at one and two workers",

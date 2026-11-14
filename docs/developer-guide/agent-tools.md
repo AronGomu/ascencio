@@ -54,3 +54,15 @@ node scripts/agent-tools/check-theme.mjs docs/FILE.html
 ## Document ownership
 
 The performance retrospective owns historical observations and rationale. The implementation plan owns ordered actions, acceptance criteria and current progress. Link between them instead of copying measurements. The short root `AGENTS.md` routes to `docs/repository-map.md`, which owns the detailed tree. Keep durable documentation linked from `docs/README.md`.
+
+## Offline analysis performance fixture
+
+```sh
+node scripts/bot-improvement/benchmark-analysis-evidence.ts FINALIZED_PAYLOAD FRESH_OUTPUT
+```
+
+Copies twelve finalized matches into three isolated fixtures, measures first publication and completed resume separately, and checks identical returned evidence across all stages. Producer files stay unchanged. Output records source/input provenance, monotonic elapsed time, CPU, RSS, event/loss counts and result fingerprints. Copying and provenance capture are outside measured stages. This measures analysis verification/publication only; it does not measure simulation, analyst work or replay.
+
+### Combined improvement-workflow fixture
+
+`node scripts/bot-improvement/benchmark-improvement-workflow.ts --source FROZEN_SESSION --out FRESH_OUTPUT --matches 25 --workers 2` copies verified initial frozen inputs into an isolated diagnostic fixture, then measures full native evaluation, target-loss preparation, claims and complete mechanical report ingestion. It validates every emitted loss view and resumes completed evidence without adding reservations. Counts are bounded to 1–25 matches; use four for a smoke check. The source fixture/session remains read-only. This uses the original frozen target, not later promoted versions. Reports deliberately classify every loss as unclear and are not AI analysis or promotion evidence. Setup, verification and resume are reported separately. The output includes `measurements.json`, all gameplay and mechanical reports; the destination must be outside an existing budgeted run.

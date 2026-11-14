@@ -349,7 +349,10 @@ export async function finalizedEvidence(
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       try {
-        await publishTextCompletion(session, native, expected);
+        return {
+          ...(await publishTextCompletion(session, native, expected)),
+          adapter: "linked-text-v1" as const,
+        };
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
       }

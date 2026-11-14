@@ -113,3 +113,26 @@ test("nested evaluation sessions cannot acquire independent space outside the pa
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("usage batches metadata without losing nested bytes or counting lock files", async () => {
+  const root = await mkdtemp(path.resolve(".tmp/quota-scan-"));
+  try {
+    await mkdir(path.join(root, "nested"));
+    for (let n = 0; n < 70; n++)
+      await writeFile(path.join(root, `game-${n}.log`), "x".repeat(n + 1));
+    await writeFile(path.join(root, "nested", "game.log"), "nested");
+    await writeFile(path.join(root, "report.json"), "{}");
+    await mkdir(path.join(root, ".output-storage.lock"));
+    await writeFile(
+      path.join(root, ".output-storage.lock", "owner"),
+      "ignored",
+    );
+    assert.deepEqual(await outputUsage(root), {
+      dataBytes: (70 * 71) / 2 + 6,
+      controlBytes: 2,
+      totalBytes: (70 * 71) / 2 + 8,
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

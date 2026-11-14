@@ -15,7 +15,10 @@ import {
   decodeLog,
   targetLossView,
 } from "../../scripts/bot-improvement/game-log.ts";
-import { publishTextCompletion } from "../../scripts/bot-improvement/analysis-text-evidence.ts";
+import {
+  publishTextCompletion,
+  finalizedText,
+} from "../../scripts/bot-improvement/analysis-text-evidence.ts";
 import { prepareAnalysisSlices } from "../../scripts/bot-improvement/analysis-slices.ts";
 import type { AnalysisBinding } from "../../scripts/bot-improvement/analysis-contract.ts";
 
@@ -54,6 +57,86 @@ test("field dictionaries decode losslessly and reject unknown aliases", () => {
     () => decodeLog(text.replace("#2=", "#99="), header),
     /Unknown log field alias/,
   );
+  for (const alias of [
+    "#01",
+    "#-1",
+    "#1.0",
+    "#Infinity",
+    "1",
+    "#999999999999999999999",
+  ])
+    assert.throws(
+      () => decodeLog(text.replace("#2=", `${alias}=`), header),
+      /Unknown log field alias/,
+    );
+  assert.throws(
+    () => decodeLog(text.replace("#2=", "#1="), header),
+    /Duplicate/,
+  );
+  assert.throws(
+    () => decodeLog(text.replace('#1=s:"decision"', "#1=n:NaN"), header),
+    /Invalid log field type/,
+  );
+});
+test("decoded object fields retain own data properties without invoking inherited setters", () => {
+  const key = "__ascencio_decode_setter_probe__";
+  const previous = Object.getOwnPropertyDescriptor(Object.prototype, key);
+  Object.defineProperty(Object.prototype, key, {
+    configurable: true,
+    set() {
+      throw Error("Inherited setter was invoked");
+    },
+  });
+  try {
+    const value = JSON.parse(
+      '{"__proto__":{"polluted":true},"constructor":7,"toString":"ordinary","__ascencio_decode_setter_probe__":42}',
+    );
+    const result = decodeLogRecord(line("EVENT", value).trimEnd()).value;
+    assert.deepEqual(result, value);
+    assert.equal(Object.getPrototypeOf(result), Object.prototype);
+    assert.equal(Object.hasOwn(Object.prototype, "polluted"), false);
+    for (const name of Object.keys(value)) {
+      const descriptor = Object.getOwnPropertyDescriptor(result, name)!;
+      assert.equal(descriptor.writable, true);
+      assert.equal(descriptor.enumerable, true);
+      assert.equal(descriptor.configurable, true);
+    }
+  } finally {
+    if (previous) Object.defineProperty(Object.prototype, key, previous);
+    else Reflect.deleteProperty(Object.prototype, key);
+  }
+});
+test("dictionary paths retain escaped keys, per-record parents and array ordering", () => {
+  const header = "ASCENCIO_GAME_LOG\t2";
+  const dictionary = ["", "/a~1b", "/a~1b/~0~2", "/items", "/items/0"];
+  const decode = (fields: string[], records: string) =>
+    decodeLog(header + "\n" + line("FIELDS", fields) + records, header);
+  assert.deepEqual(
+    decode(
+      dictionary,
+      'EVENT\t#0=o\t#1=o\t#2=s:"first"\t#3=a\t#4=n:9\n' +
+        'EVENT\t#0=o\t#1=o\t#2=s:"second"\t#3=a\t#4=n:10\n',
+    ),
+    [
+      { tag: "EVENT", value: { "a/b": { "~=": "first" }, items: [9] } },
+      { tag: "EVENT", value: { "a/b": { "~=": "second" }, items: [10] } },
+    ],
+  );
+  assert.throws(
+    () => decode(dictionary, 'EVENT\t#0=o\t#2=s:"missing-parent"\n'),
+    /Missing log field parent/,
+  );
+  assert.throws(
+    () => decode(["", "/1"], "EVENT\t#0=a\t#1=n:2\n"),
+    /Invalid log array index/,
+  );
+  assert.throws(
+    () => decode(["", "invalid"], "EVENT\t#0=o\t#1=n:2\n"),
+    /Duplicate or invalid log field/,
+  );
+  assert.deepEqual(decode(["", "unused-invalid"], "EVENT\t#0=z\n"), [
+    { tag: "EVENT", value: null },
+  ]);
 });
 test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes and consolidates cross-slice reasons", async () => {
   await mkdir(".tmp", { recursive: true });
@@ -212,7 +295,7 @@ test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes 
       }
       index += line("END_MATCH", item.match.id);
       await put(path.join(session, root, "match.log"), index);
-      await publishTextCompletion(session, root, {
+      return await publishTextCompletion(session, root, {
         match: item.match.id,
         executionIdentity: execution.identity,
         fixtureIdentity: frozen.identity,
@@ -221,7 +304,34 @@ test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes 
         item,
       });
     }
-    await match(1);
+    const published = await match(1);
+    const firstRoot = "run/matches/match-0001";
+    const expected = {
+      match: "match-0001",
+      executionIdentity: execution.identity,
+      fixtureIdentity: frozen.identity,
+      candidateIdentity: bot.identity,
+      opponentIdentity: bot.identity,
+      item: execution.matches[0],
+    };
+    const verified = await finalizedText(session, firstRoot, expected);
+    assert.deepEqual(published, verified);
+    assert.deepEqual(verified.outcomes, ["loss", "win", "draw", "draw"]);
+    assert.deepEqual(verified.lossGames, [
+      { game: 1, decisions: ["a-decision-1"] },
+    ]);
+    const gameFile = path.join(session, firstRoot, "games/game-1/game.log");
+    const original = await readFile(gameFile, "utf8");
+    await writeFile(gameFile, original.replace("a-decision-1", "a-decision-9"));
+    await assert.rejects(
+      finalizedText(session, firstRoot, expected),
+      /Evidence mismatch/,
+    );
+    await writeFile(gameFile, original);
+    assert.deepEqual(
+      await finalizedText(session, firstRoot, expected),
+      verified,
+    );
     await assert.rejects(
       prepareAnalysisSlices(session, { action: "sync", binding }),
       /All matches/,

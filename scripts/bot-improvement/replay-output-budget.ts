@@ -113,6 +113,9 @@ export async function installLocalOutputAllowance(root: string, limit: number) {
     reserve: Math.min(16_000_000, Math.floor(limit / 2)),
   });
 }
+export function clearLocalOutputAllowance(root: string) {
+  scopes.delete(path.resolve(root));
+}
 export function clearReplayWriteGrants() {
   scopes.clear();
 }

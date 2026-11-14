@@ -38,3 +38,13 @@ Each worker slot owns its engine. External game/decision deadlines terminate tha
 `bot:typescript:compact` writes compact gameplay summaries; `--evidence` additionally retains raw host frames. `bot:typescript:benchmark:diagnostic` includes both of those weaker formats plus the native stage. The normal `bot:typescript:benchmark` and `bot:batch:compare` commands select full native evidence only. Compact summaries and raw frames are not substitutes for native verified evidence. Their larger speedups include reduced persistence work.
 
 The shared host CLI retains its original line protocol. Importing its command handler starts no stdin reader. The experimental worker uses a synchronous in-process frame sink, with one serialized command per host runtime.
+
+## Completed-resume verification
+
+Resume checks retained completion evidence in a bounded verification pool, capped at four worker threads and the configured worker count. Verification starts before journal admission or any new game reservation. Each request carries only the execution identity and current match; workers perform the same file-inventory, byte-hash, fixture and canonical-game checks as finalization. No engine initialization or bot execution is requested. Results are applied in frozen schedule order. Missing receipts remain pending; invalid receipts fail the resume and stop further verification admission. All owned verification workers settle before failure is returned.
+
+SIGINT/SIGTERM handlers are installed before verification. Only the outer completion receipt and the native analysis receipt are exempt from the authoritative source inventory; unexpected receipts inside game directories are rejected. Small completed resumes may pay worker startup overhead; the twelve-match measurement includes startup and shows reduced coordinator event-loop blocking. This is verification throughput, not new games per second.
+
+The result separates `executedCompletedGames` from `reusedCompletedGames`. `gamesPerSecond` counts only newly executed completed games over this invocation’s elapsed time; a fully completed resume reports zero simulated games/second. `resumeVerificationMs` reports the bounded verification stage separately (zero on fresh execution).
+
+Native and diagnostic worker sinks copy host records once while mapping engine seats into stable actors. The mapped records own all nested data, including opaque role values. Prompts are still snapshotted at `decision_started` because their use is delayed until the decision record.

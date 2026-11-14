@@ -18,6 +18,8 @@ export interface EventReference {
 }
 export interface AnalysisPacket {
   schemaVersion: 1;
+  /** New native queues omit unused full-timeline addresses; legacy packets remain readable. */
+  format?: "target-loss-v1";
   adapter: "frozen-xml-v1" | "linked-text-v1";
   id: string;
   iteration: number;
@@ -63,6 +65,7 @@ export interface MatchAnalysisReport {
 }
 export interface AnalysisQueue {
   schemaVersion: 1;
+  nativePacketFormat?: "target-loss-v1";
   binding: AnalysisBinding;
   fixtureIdentity: string;
   runnerIdentity: string;

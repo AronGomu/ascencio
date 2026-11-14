@@ -14,14 +14,14 @@ export async function optionalJson(file: string) {
     throw error;
   }
 }
-export async function save(file: string, data: unknown) {
+export async function save(file: string, data: unknown, writer = writeOutput) {
   const bytes = `${JSON.stringify(data, null, 2)}\n`;
   try {
     if ((await readFile(file, "utf8")) === bytes) return;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
-  await writeOutput(file, bytes);
+  await writer(file, bytes);
 }
 
 export async function evidence(session: string, ref: EvidenceReference) {

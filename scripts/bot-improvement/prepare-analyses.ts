@@ -1,11 +1,16 @@
-import { mkdir, readFile } from "node:fs/promises";
+import {
+  analysisWriteOutput as writeOutput,
+  saveAnalysis as save,
+  withAnalysisOutput,
+} from "./analysis-output.ts";
+import { mkdir, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { writeOutput, ensureSessionOutput } from "./output-storage.ts";
+import { ensureSessionOutput } from "./output-storage.ts";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { withSessionLock } from "./session-lock.ts";
-import { json, optionalJson, save } from "./session-checkpoint.ts";
+import { json, optionalJson } from "./session-checkpoint.ts";
 import { digest } from "./session-fixtures.ts";
 import { analysisPath, readEvidence } from "./analysis-evidence.ts";
 import { discoverAnalyses } from "./analysis-discovery.ts";
@@ -94,19 +99,52 @@ function pump(queue: AnalysisQueue) {
       capacity--;
     }
 }
+/** A crash may leave immutable packets before the queue checkpoint exists. */
+async function orphanNativeFormat(session: string, directory: string) {
+  let files: string[];
+  try {
+    files = await readdir(await analysisPath(session, `${directory}/packets`));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+    throw error;
+  }
+  let compact: boolean | undefined;
+  for (const file of files.filter((name) => name.endsWith(".json"))) {
+    const packet = JSON.parse(
+      await readFile(
+        await analysisPath(session, `${directory}/packets/${file}`),
+        "utf8",
+      ),
+    ) as AnalysisPacket;
+    if (packet.adapter !== "linked-text-v1") continue;
+    if (packet.format !== undefined && packet.format !== "target-loss-v1")
+      throw Error("Unknown orphan analysis packet format");
+    const next = packet.format === "target-loss-v1";
+    if (compact !== undefined && compact !== next)
+      throw Error("Conflicting orphan analysis packet formats");
+    compact = next;
+  }
+  return compact ?? true;
+}
 /** Deterministic queue/claim/report transitions. Never dispatches an agent. */
 export async function prepareAnalyses(session: string, action: AnalysisAction) {
   session = path.resolve(session);
   await ensureSessionOutput(session);
   const binding = action.action === "sync" ? action.binding : action;
   const directory = scope(binding.iteration, binding.role);
+  const stateFile = path.join(session, directory, "queue.json");
+  const snapshot = (await optionalJson(stateFile)) as AnalysisQueue | null;
+  // Preserve old packet bytes on resume. New queues use the loss allowlist.
+  const compactNative = snapshot
+    ? snapshot.nativePacketFormat === "target-loss-v1"
+    : action.action === "sync"
+      ? await orphanNativeFormat(session, directory)
+      : true;
   // Read large runner logs outside the short shared publication transaction.
   const discovered =
     action.action === "sync"
-      ? await discoverAnalyses(session, action.binding)
+      ? await discoverAnalyses(session, action.binding, compactNative)
       : null;
-  const stateFile = path.join(session, directory, "queue.json");
-  const snapshot = (await optionalJson(stateFile)) as AnalysisQueue | null;
   const integrity: { job: string; reason: string }[] = [];
   for (const job of snapshot?.jobs ?? []) {
     try {
@@ -135,7 +173,7 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
       integrity.push({ job: job.id, reason: String(error) });
     }
   }
-  return withSessionLock(session, async () => {
+  const transaction = async () => {
     await analysisPath(
       session,
       `iterations/iteration-${String(binding.iteration).padStart(4, "0")}`,
@@ -156,7 +194,8 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
         queue.fixtureIdentity !== discovered.queue.fixtureIdentity ||
         queue.executionIdentity !== discovered.queue.executionIdentity ||
         queue.runnerIdentity !== discovered.queue.runnerIdentity ||
-        queue.workers !== discovered.queue.workers
+        queue.workers !== discovered.queue.workers ||
+        queue.nativePacketFormat !== discovered.queue.nativePacketFormat
       )
         throw new Error("Analysis queue binding changed");
       await ensureDirectory(session, `${directory}/packets`);
@@ -309,7 +348,12 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
       validation:
         "Structural sections and resolvable references only; factual and causal correctness require agent review.",
     };
-  });
+  };
+  return withSessionLock(session, () =>
+    action.action === "sync" || action.action === "complete"
+      ? withAnalysisOutput(session, directory, transaction)
+      : transaction(),
+  );
 }
 if (
   process.argv[1] &&

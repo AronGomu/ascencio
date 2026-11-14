@@ -17,7 +17,7 @@ async function optional(file: string) {
 }
 export async function verifyNativeCompletion(
   output: string,
-  job: Job,
+  job: Pick<Job, "identity">,
   item: Job["matches"][number],
   pendingMarker?: { files: Record<string, string> },
 ) {
@@ -34,7 +34,11 @@ export async function verifyNativeCompletion(
       const f = path.join(root, e.name);
       if (e.isSymbolicLink()) throw Error("Symlink native evidence");
       if (e.isDirectory()) await visit(f);
-      else if (e.isFile() && e.name !== "done.json")
+      else if (
+        e.isFile() &&
+        f !== path.join(base, "done.json") &&
+        f !== path.join(base, "native", "done.json")
+      )
         files.push(path.relative(base, f));
       else if (!e.isFile()) throw Error("Invalid native evidence entry");
     }

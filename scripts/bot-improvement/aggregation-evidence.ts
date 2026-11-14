@@ -269,7 +269,17 @@ async function reportCompleteness(
           identity: manifest.opponents.find((o) => o.slot === slot)!.identity,
         }) ||
         !equal(packet.files, result.files) ||
-        !equal(packet.events, result.events) ||
+        packet.format !==
+          (result.adapter === "linked-text-v1"
+            ? queue.nativePacketFormat
+            : undefined) ||
+        (packet.format !== undefined && packet.format !== "target-loss-v1") ||
+        (packet.format === "target-loss-v1" &&
+          result.adapter !== "linked-text-v1") ||
+        !equal(
+          packet.events,
+          packet.format === "target-loss-v1" ? [] : result.events,
+        ) ||
         !equal(packet.games, result.games) ||
         !equal(
           packet.lossGames,

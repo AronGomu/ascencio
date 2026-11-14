@@ -50,17 +50,17 @@ parentPort!.on(
         const f = raw as Frame,
           actor = order[f.actor] ?? 0;
         if (f.type === "initial")
-          initial[actor] = mapPlayers(
-            structuredClone(f.initial),
-            swapped,
-          ) as Record<string, unknown>;
+          initial[actor] = mapPlayers(f.initial, swapped) as Record<
+            string,
+            unknown
+          >;
         if (f.type === "event" || f.type === "decision") {
           entries++;
           evidenceBytes += valueSize(f);
           if (entries > 1_000_000 || evidenceBytes > 64 * 1024 * 1024)
             throw Error("evidence_limit: game exceeded bounded evidence limit");
-          const entry = structuredClone(f.entry);
-          if (f.type === "decision") entry.prompt = prompt;
+          const entry =
+            f.type === "decision" ? { ...f.entry, prompt } : f.entry;
           events[actor]!.push(
             mapPlayers(entry, swapped) as Record<string, unknown>,
           );

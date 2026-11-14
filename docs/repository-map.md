@@ -97,6 +97,7 @@ ascencio/
 │   ├── developer-guide/              # Developer walkthroughs and HTML guides
 │   ├── feature/                      # Feature-specific design rationale, including rust-bot-experiment.md
 │   ├── evidence/                     # Retained verification evidence
+│   │   └── bot-improvement/          # Raw iteration/source evidence, final performance report and comparison graph
 │   └── archive/                      # Superseded documentation and historical context
 │
 ├── src/                              # TypeScript/Svelte application and Worker code
@@ -226,6 +227,8 @@ ascencio/
 │   │   ├── run-matches.ts           # Default session batch runner CLI and public tooling exports
 │   │   ├── session-batch-runner.ts  # Session admission, batch execution, settlement and baseline receipts
 │   │   ├── batch-session-accounting.ts # Durable game allocations and worker-journal settlement
+│   │   ├── benchmark-analysis-evidence.ts # Offline twelve-match publication/resume performance fixture
+│   │   ├── benchmark-improvement-workflow.ts # Isolated evaluation, complete loss preparation/report ingestion and resume fixture
 │   │   ├── batch-storage-lease.ts   # Shared session quota reservation for independent workers
 │   │   ├── prepare-match-job.ts     # Verified frozen schedules, snapshots and engine job construction
 │   │   ├── match-process.ts         # Subprocess lifecycle and shared match CLI options
@@ -233,6 +236,7 @@ ascencio/
 │   │   ├── run-batch-matches.ts     # Standalone batch runner and shared prepared-job launcher
 │   │   ├── run-typescript-native.ts  # Default TypeScript execution, session leases, journals and verified resume
 │   │   ├── typescript-native-worker.ts # Persistent in-process WASM host and game/checkpoint records
+│   │   ├── typescript-native-resume.ts # Bounded read-only completion verification pool before admission
 │   │   ├── typescript-native-completion.ts # Shared read-only canonical completion and resume verification
 │   │   ├── typescript-native-executor.ts # External deadlines, restart and per-game timeout continuation
 │   │   ├── typescript-calibration.ts # Separate TypeScript runtime and machine recommendation identity
@@ -251,6 +255,7 @@ ascencio/
 │   │   ├── prepare-replay-pool.ts    # Loss discovery, immutable variant bundles and input pins
 │   │   ├── replay-work-queue.ts      # Dynamic batch assignment across replay worker slots
 │   │   ├── replay-pool-process.ts    # Case process groups, deadlines and cancellation
+│   │   ├── replay-host-process.ts    # Serialized replay branch host ownership, protocol bounds and shutdown
 │   │   ├── replay-output-budget.ts  # Independent replay writer allowances under the shared quota
 │   │   ├── benchmark-replay-pool.ts  # Independent replay CPU calibration and behavior comparisons
 │   │   ├── replay-game-decision.ts   # Replay recorded choices and compare AI continuations
@@ -265,6 +270,7 @@ ascencio/
 │   │   ├── session-control-contract.ts # Stop/resume and execution accounting
 │   │   ├── output-storage.ts         # Shared output quota, protected headroom and atomic writes
 │   │   ├── prepare-iteration.ts      # Accepted snapshot, self binding and baseline reuse
+│   │   ├── analysis-output.ts        # Single-owner quota reservation and scoped packet/report writers
 │   │   ├── analysis-contract.ts      # Analysis packets, claims and report sections
 │   │   ├── analysis-discovery.ts     # Frozen execution bindings and match packet preparation
 │   │   ├── analysis-evidence.ts      # Legacy evidence validation and finalized adapter selection

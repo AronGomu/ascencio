@@ -1,12 +1,16 @@
 /** Durable one-owner-per-250-match dispatch; packets contain target losses only. */
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { writeOutput } from "./output-storage.ts";
+import {
+  analysisWriteOutput as writeOutput,
+  saveAnalysis as save,
+  withAnalysisOutput,
+} from "./analysis-output.ts";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 import { prepareAnalyses } from "./prepare-analyses.ts";
-import { json, optionalJson, save } from "./session-checkpoint.ts";
+import { json, optionalJson } from "./session-checkpoint.ts";
 import { analysisPath, readEvidence } from "./analysis-evidence.ts";
 import { digest } from "./session-fixtures.ts";
 import { targetLossView } from "./game-log.ts";
@@ -102,8 +106,14 @@ export async function prepareAnalysisSlices(
         "All matches must be finalized and intact before slice dispatch",
       );
   }
+  const owned = <T>(run: () => Promise<T>) =>
+    withSessionLock(session, () =>
+      action.action === "sync" || action.action === "complete"
+        ? withAnalysisOutput(session, scope, run)
+        : run(),
+    );
   return retrySession(session, () =>
-    withSessionLock(session, async () => {
+    owned(async () => {
       const queuePath = path.join(session, scope, "queue.json");
       const queue = (await json(queuePath)) as AnalysisQueue;
       if (queue.expected.some((m) => !queue.jobs.some((j) => j.match === m)))

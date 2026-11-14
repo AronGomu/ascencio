@@ -32,6 +32,10 @@ export function gameplayHash(value: unknown): string {
         : v;
   return identity(sort(value));
 }
+// Mapping also owns its result: exceptional object-valued role fields must
+// not retain host references even though their contents are not seat-mapped.
+const copyValue = (value: unknown) =>
+  value && typeof value === "object" ? structuredClone(value) : value;
 export function mapPlayers(value: unknown, swapped: boolean): unknown {
   if (Array.isArray(value)) return value.map((v) => mapPlayers(v, swapped));
   if (!value || typeof value !== "object") return value;
@@ -39,12 +43,20 @@ export function mapPlayers(value: unknown, swapped: boolean): unknown {
     Object.entries(value).map(([k, v]) => {
       if (k === "life_points" && swapped && v && typeof v === "object") {
         const points = v as { a: unknown; b: unknown };
-        return [k, { a: points.b, b: points.a }];
+        return [k, { a: copyValue(points.b), b: copyValue(points.a) }];
       }
       if (["actor", "player", "controller", "owner", "turn_player"].includes(k))
         return [
           k,
-          v === 0 ? (swapped ? "b" : "a") : v === 1 ? (swapped ? "a" : "b") : v,
+          v === 0
+            ? swapped
+              ? "b"
+              : "a"
+            : v === 1
+              ? swapped
+                ? "a"
+                : "b"
+              : copyValue(v),
         ];
       return [k, mapPlayers(v, swapped)];
     }),
@@ -133,14 +145,14 @@ export async function integratedMatch(
       (f) => {
         const actor = order[f.actor] ?? 0;
         if (f.type === "initial")
-          initial[actor] = mapPlayers(
-            structuredClone(f.initial),
-            swapped,
-          ) as Record<string, unknown>;
+          initial[actor] = mapPlayers(f.initial, swapped) as Record<
+            string,
+            unknown
+          >;
         if (f.type === "decision_started") prompt = structuredClone(f.prompt);
         if (f.type === "event" || f.type === "decision") {
-          const entry = structuredClone(f.entry);
-          if (f.type === "decision") entry.prompt = prompt;
+          const entry =
+            f.type === "decision" ? { ...f.entry, prompt } : f.entry;
           events[actor]!.push(
             mapPlayers(entry, swapped) as Record<string, unknown>,
           );

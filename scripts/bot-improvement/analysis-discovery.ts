@@ -17,6 +17,7 @@ import type { IterationManifest } from "./iteration-contract.ts";
 export async function discoverAnalyses(
   session: string,
   binding: AnalysisBinding,
+  compactNative = false,
 ) {
   const config = await json(path.join(session, "config.json"));
   const frozen = await verifyFrozen(config.fixture.path);
@@ -105,6 +106,9 @@ export async function discoverAnalyses(
         opponent: { slot: match.opponentSlot, identity: opponent.identity },
         proposal: binding.proposal,
         ...result,
+        ...(compactNative && result.adapter === "linked-text-v1"
+          ? { format: "target-loss-v1" as const, events: [] }
+          : {}),
       });
     } catch (error) {
       unavailable.push({
@@ -124,6 +128,9 @@ export async function discoverAnalyses(
     unavailable,
     queue: {
       schemaVersion: 1 as const,
+      ...(compactNative
+        ? { nativePacketFormat: "target-loss-v1" as const }
+        : {}),
       binding,
       fixtureIdentity: frozen.identity,
       runnerIdentity: manifest.runnerIdentity,

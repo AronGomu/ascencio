@@ -1,22 +1,34 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { benchmarkBehavior } from "../benchmark-behavior.ts";
+import { mkdir, readFile } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "../output-storage.ts";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import {
   benchmarkInputs,
   createBenchmarkSession,
-} from "./benchmark-session.ts";
-import { sessionControl } from "./match-session.ts";
+} from "../benchmark-session.ts";
+import { sessionControl } from "../match-session.ts";
 import {
   executeMatches,
   matchOptions,
   runProcess,
   interruptActiveProcess,
 } from "./run-matches.ts";
-import { machineResources, saveRecommendation } from "./match-workers.ts";
-import { digest, identity } from "./session-fixtures.ts";
+import {
+  machineResources,
+  saveRecommendation,
+  selectWorkerRecommendation,
+} from "../match-workers.ts";
+import { verifyFrozen } from "../frozen-setup.ts";
+import { digest, identity } from "../session-fixtures.ts";
 
 const { values: v } = parseArgs({
-  options: { ...matchOptions, repeats: { type: "string", default: "1" } },
+  options: {
+    ...matchOptions,
+    repeats: { type: "string", default: "1" },
+    "worker-counts": { type: "string", default: "1,2,4,6,8" },
+    "preferred-workers": { type: "string" },
+  },
 });
 if (!v.session || !v.out || v.resume)
   throw new Error(
@@ -25,9 +37,33 @@ if (!v.session || !v.out || v.resume)
 const repeats = Number(v.repeats);
 if (!Number.isSafeInteger(repeats) || repeats < 1)
   throw new Error("At least one repetition required");
-const matchCount = Number(v.matches ?? 24);
-if (!Number.isSafeInteger(matchCount) || matchCount < 1 || matchCount > 500)
-  throw new Error("Match count must be 1–500");
+const sourceConfig = JSON.parse(
+  await readFile(path.join(v.session, "config.json"), "utf8"),
+);
+const frozen = await verifyFrozen(sourceConfig.fixture.path);
+if (frozen.identity !== sourceConfig.fixture.identity)
+  throw new Error("Session fixture identity mismatch");
+const matchCount = Number(v.matches ?? Math.min(24, frozen.matches.length));
+if (
+  !Number.isSafeInteger(matchCount) ||
+  matchCount < 1 ||
+  matchCount > frozen.matches.length
+)
+  throw new Error(`Match count must be 1–${frozen.matches.length}`);
+const workerCounts = v["worker-counts"].split(",").map(Number);
+if (
+  !workerCounts.length ||
+  new Set(workerCounts).size !== workerCounts.length ||
+  workerCounts.some((n) => !Number.isSafeInteger(n) || n < 1 || n > 64)
+)
+  throw new Error("Worker counts must be distinct integers from 1 to 64");
+workerCounts.sort((a, b) => a - b);
+const preferredWorkers =
+  v["preferred-workers"] === undefined
+    ? undefined
+    : Number(v["preferred-workers"]);
+if (preferredWorkers !== undefined && !workerCounts.includes(preferredWorkers))
+  throw new Error("Preferred worker count must be a benchmark stage");
 let ownerStopped = false;
 const requestStop = () => {
   ownerStopped = true;
@@ -52,7 +88,7 @@ const sessionConfig = JSON.parse(
   await readFile(path.join(v.session, "config.json"), "utf8"),
 );
 const requiredBound = Math.max(
-  ...[1, 2, 4, 6, 8].filter((n) => n <= resources.usable),
+  ...workerCounts.filter((n) => n <= resources.usable),
 );
 if (sessionConfig.limits.matchWorkers < requiredBound)
   throw new Error(
@@ -71,8 +107,9 @@ const stages: {
 let baseline = 0,
   previous = 0,
   executionIdentity: string | undefined,
-  replayIdentity: string | undefined;
-stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
+  replayIdentity: string | undefined,
+  behaviorIdentity: string | undefined;
+stagesLoop: for (const workers of workerCounts) {
   const stage: (typeof stages)[number] = { workers, runs: [] };
   stages.push(stage);
   if (workers > resources.usable) {
@@ -108,7 +145,7 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
       : null;
     if (run.workers !== workers)
       throw new Error(
-        "Session worker bound clamps requested benchmark stage; setup with --match-workers 8",
+        `Session worker bound clamps requested benchmark stage; setup with --match-workers ${Math.max(...workerCounts)}`,
       );
     executionIdentity ??= run.identity;
     if (run.identity !== executionIdentity)
@@ -167,6 +204,19 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
       verified.exitCode === run.exitCode;
     replayIdentity ??= run.replayIdentity;
     run.replayMatchesBaseline = run.replayIdentity === replayIdentity;
+    if (
+      run.evidenceVerified &&
+      run.completedGames === matchCount * 4 &&
+      run.failedGames === 0 &&
+      run.skippedGames === 0
+    ) {
+      run.behaviorIdentity = await benchmarkBehavior(
+        run.output,
+        frozen.matches.slice(0, matchCount).map((m) => m.id),
+      );
+      behaviorIdentity ??= run.behaviorIdentity;
+      run.behaviorMatchesBaseline = run.behaviorIdentity === behaviorIdentity;
+    }
     stage.runs.push(run);
     await writeFile(
       path.join(output, "benchmark.json"),
@@ -184,7 +234,7 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
       r.failedGames === 0 &&
       r.skippedGames === 0 &&
       r.evidenceVerified === true &&
-      r.replayMatchesBaseline === true,
+      r.behaviorMatchesBaseline === true,
   );
   const times = stage.runs
     .map((r) => Number(r.commandWallMs))
@@ -198,21 +248,14 @@ stagesLoop: for (const workers of [1, 2, 4, 6, 8]) {
   stage.previousSpeedup = (previous || baseline) / stage.medianMs;
   previous = stage.medianMs;
 }
-// Use the larger of a 3% floor and observed relative run spread as the noise band.
-const reliable = stages.filter((s) => s.reliable);
-const noise = Math.max(
-  0.03,
-  ...reliable.map((s) => {
-    const t = s.runs.map((r) => Number(r.commandWallMs));
-    return (Math.max(...t) - Math.min(...t)) / s.medianMs!;
-  }),
-);
-const fastest = Math.min(...reliable.map((s) => s.medianMs!));
+const selection = selectWorkerRecommendation(stages, preferredWorkers);
+const noise = selection.noiseFraction;
 const selected = ownerStopped
   ? undefined
-  : reliable.find((s) => s.medianMs! <= fastest * (1 + noise));
+  : stages.find((s) => s.workers === selection.workers);
 const result = {
   schemaVersion: 1,
+  behaviorProtocol: "decisions-outcomes-opening-orders-v1",
   resources,
   matchCount,
   repeats,
@@ -220,6 +263,8 @@ const result = {
   stages,
   noiseFraction: noise,
   recommendation: selected?.workers ?? null,
+  preferredWorkers,
+  workerCounts,
   accountingIsolation:
     "Fresh session control ledger and iteration 1 for every repetition; same frozen inputs, stop limits and evidence-writing behavior. Source OWNER_STOP is forwarded to the active run.",
   timingBoundary:
@@ -239,6 +284,7 @@ if (selected)
   await saveRecommendation(
     selected.workers,
     path.join(output, "benchmark.json"),
+    preferredWorkers,
   );
 console.log(JSON.stringify(result));
 if (!selected) process.exitCode = 2;

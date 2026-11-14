@@ -1,5 +1,6 @@
 /** Build navigation with one index per owner; never duplicate parent configuration. */
-import { readFile, writeFile, readdir, mkdir, stat } from "node:fs/promises";
+import { readFile, readdir, mkdir, stat } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "./output-storage.ts";
 import path from "node:path";
 import { parseArgs } from "node:util";
 const { values: v } = parseArgs({
@@ -72,13 +73,17 @@ for (const [key, reference] of Object.entries(state.jobs) as [
     for (let n = 1; n <= 4; n++) {
       const game = path.join(match, "games", `game-${n}`);
       const views = [];
+      if (await exists(path.join(game, "game.log")))
+        views.push(
+          link("Game log (A/B sections)", path.join(game, "game.log")),
+        );
       for (const actor of ["a", "b"])
         if (await exists(path.join(game, `${actor}.log`)))
           views.push(
             link(actor.toUpperCase(), path.join(game, `${actor}.log`)),
           );
       matchLines.push(
-        `- Game ${n}: ${link("Record", path.join(game, "game.json"))} · ${views.length ? views.join(" · ") : job.retention?.actions_pruned ? "Actions pruned after analysis" : "Actions unavailable"}`,
+        `- Game ${n}: ${(await exists(path.join(game, "game.log"))) ? link("Game log", path.join(game, "game.log")) : link("Legacy record", path.join(game, "game.json"))} · ${views.length ? views.join(" · ") : job.retention?.actions_pruned ? "Actions pruned after analysis" : "Actions unavailable"}`,
       );
     }
   }

@@ -1,48 +1,48 @@
-# Read a compact match log
+# Read an authoritative game log
 
-Read one actor’s file at a time. Examples below illustrate syntax, not measured results.
+New frozen runs persist gameplay only in typed `.log` files. One `game.log` contains one game and separate actor A/B sections. `match.log` indexes the four games in order and carries shared match/fixture/manifest metadata. There are no per-game JSON, actor JSON or retained game XML files. Code reconstructs exact records in memory from these logs for replay, verification, aggregation and resume.
+
+## Typed record format
+
+A file starts with `ASCENCIO_GAME_LOG<TAB>2` or `ASCENCIO_MATCH_LOG<TAB>2`. An optional `FIELDS` record stores the shared field-path dictionary once; subsequent `#N=typed-value` aliases refer to its zero-based entries. Code expands aliases before interpreting records; analyst loss views use expanded paths for readability. Each subsequent line is one logical record: a tag, followed by tab-separated `pointer=typed-value` fields. Examples below use `<TAB>` for readability; real files use literal tabs.
 
 ```text
-LOG v1 | match=match-000001 actor=a bot=<artifact-hash>
-CARD 69162969 Set Lightning Vortex
-
-GAME match-000001-game-1 | first=a stage=pre_side status=completed
-INITIAL own_configuration.main.card.0.card_code=69162969 own_configuration.main.card.0.copies=1
-T1 a main1 D0-decision-22 CHOOSE setSpellTrap:69162969 | OFFERED setSpellTrap:69162969,endPhase:? | reason=develop_board
-T1 ? main1 E99 move | <changed-fields> <event-details>
-RESULT <result-fields>
-
-GAME match-000001-game-2 | first=b stage=pre_side status=completed
-...
-GAME match-000001-game-3 | first=a stage=post_side status=completed
-...
-GAME match-000001-game-4 | first=b stage=post_side status=completed
-...
-SIDEBOARD <sideboarding-fields>
+EVENT<TAB>=o<TAB>/kind=s:"decision"<TAB>/sequence=n:42<TAB>/decision_id=s:"0-decision-42"<TAB>/selected_choice_ids=o<TAB>/selected_choice_ids/choice_id=a<TAB>/selected_choice_ids/choice_id/0=s:"exact-choice-instance-7"
 ```
 
-## Fields
+- `o` and `a`: object and array containers, including empty ones.
+- `s:"..."`: escaped string; JSON scalar escaping preserves tabs/newlines/quotes without making the record a JSON document.
+- `n:42`, `b:0`, `b:1`, `z`: number, false, true and null.
+- Pointers use `/` segments; `~0`, `~1`, `~2` escape `~`, `/`, `=` in property names. Exact choice IDs, constraints, event ordering and all fields survive round trips.
 
-- `LOG`: format version, match ID, actor perspective and bot artifact hash. Actor A/B is a stable identity, not necessarily the starting player.
-- `CARD code label`: visible card-code dictionary. Labels may include an action prefix such as “Set”; resolve codes here rather than repeating names.
-- `GAME`: game ID, starting actor, pre/post-sideboarding stage and completion status.
-- `INITIAL`: initial actor-visible data. Dotted paths identify nested fields; numeric segments identify array positions. `card_code` identifies a card; `copies` gives its count.
-- `Tn actor phase`: turn, acting player and phase. `?` means absent or unspecified; it does not identify a hidden card.
-- `D<id>`: original decision ID. Preserve it when citing evidence.
-- `CHOOSE action:card[:value]`: selected action(s), comma-separated for multiple selections.
-- `OFFERED`: available action descriptions, not hypothetical actions or scores.
-- `reason`: the strategy’s recorded reason code, not proof that its choice was good.
-- `E<number>`: event sequence within its source timeline. Following fields describe observed changes and event details.
-- `RESULT`: recorded game outcome. Check completion before counting it; missing fields are not losses.
-- `SIDEBOARD`: recorded sideboarding outcome and changes.
+## Game record order
 
-## Reading procedure
+```text
+ASCENCIO_GAME_LOG<TAB>2
+GAME<TAB>...identity, number, starting actor, stage, status, outcome, evidence hash...
+ACTOR<TAB>=s:"a"
+RECORD<TAB>...actor game identity and configuration hash...
+SIDEBOARD<TAB>...status, exchanges, applies_now, carried_forward, applied_before_game...
+INITIAL<TAB>...actor-visible initial state and deck configuration...
+EVENT<TAB>...complete event or decision, exact prompt choices and selected IDs...
+EVENT<TAB>...
+RESULT<TAB>...actor result...
+END_ACTOR<TAB>=s:"a"
+ACTOR<TAB>=s:"b"
+...same actor record sequence...
+END_ACTOR<TAB>=s:"b"
+END_GAME<TAB>=s:"match-0001-game-1"
+```
 
-1. Check perspective, bot identity, game completion and result.
-2. Locate relevant `CHOOSE` lines; resolve card codes and compare offered actions.
-3. Follow subsequent events to assess consequences. Keep observations separate from strategic hypotheses.
-4. Cite log path, game ID and decision ID. Compare candidate/baseline only with matching paired schedules.
+Pre-side games mark sideboarding not applicable with empty exchanges. Game 3 records the transaction applied before play; game 4 marks that configuration carried forward. Exchanges list source/destination sections, card codes, quantities and reasons. Actors are stable identities, not starting seats. Each actor’s events contain only that actor’s legitimate observations; full game logs contain both perspectives for programmatic replay and must not be supplied directly to loss analysts.
 
-## Limits
+## Analyst views
 
-Each `a.log` or `b.log` contains one game from one perspective. Its parent match links the four games; the evaluation and iteration reference their owned records. The log contains only its source perspective. Never infer concealed opponent cards from `?`. Initial data and some events have no explicit actor. Scores and timing are omitted. Repeated descriptions such as `select:?` can represent distinct choices; consult the linked actor machine record (`a.json` or `b.json`) for exact choice IDs, constraints, positions or detailed explanations. The compact log is a review projection; the linked machine records preserve exact choices for validation and resume. Seeds and pairing identity belong to the evaluation’s `pairing.json`.
+`analysis-slices.ts` publishes `ASCENCIO_LOSS_LOG<TAB>2` views only for completed target losses. These contain minimal game metadata, the target’s sideboarding/initial state/events/result and an end marker. They omit opponent-only content and every winning/drawing game. An analyst receives only its slice packet and the view paths in `jobs[].losses[].log`.
+
+1. Read the loss identity and target perspective.
+2. Compare offered actions and exact selected IDs at the critical decision.
+3. Follow subsequent visible events; separate observations from strategic hypotheses.
+4. Cite the match/game, view path and original decision ID in the existing Markdown report.
+
+Preserve `?`/null as unknown information. Do not infer concealed cards or open other game files. Use the lossless source logs for orchestrator-owned replay; no JSON sidecar is needed. Legacy linked JSON/XML adapters are read-only compatibility for retained old runs and are not the output contract for new runs.

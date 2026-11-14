@@ -1,5 +1,7 @@
 # Documentation
 
+[TypeScript runner performance implementation plan](architecture/06-quality/typescript-runner-performance-implementation-plan.md) is the ordered fresh-session handoff for implementing and measuring workflow acceleration.
+
 This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
 
 [`project-guide.md`](project-guide.md) contains operating guidance, local validation policy, architecture constraints, document conventions, and task-management instructions.
@@ -13,6 +15,12 @@ This directory contains current project documentation and historical context. Ro
 [`development-commands.md`](development-commands.md) lists every current npm command, standalone native launch instructions, and the explicit coverage limits of aggregate checks.
 
 [`startup-loading-messages.md`](startup-loading-messages.md) maps each startup heading to its work and explains how to review wording in a paused visual preview.
+
+[Experimental replay pool](architecture/06-quality/experimental-replay-pool.md) documents explicit loss-reason batches, worker isolation, shared output allowances and replay concurrency experiments.
+
+[Default batch runner](architecture/06-quality/independent-batch-runner.md) covers default session execution, independent resource allowances, archived legacy execution, calibration and paired performance comparisons.
+
+[Bot-improvement performance retrospective](architecture/06-quality/bot-improvement-performance-retrospective.html) records the 2026-11-14 stage timings, TypeScript migration comparisons, remaining bottlenecks and prioritized acceleration plan, with a durable evidence snapshot.
 
 [Frozen parallel evaluation setup](architecture/06-quality/parallel-bot-session.md) defines fixtures, iterations, candidate validation, recoverable decisions, baseline receipts, stop/resume, execution accounting, finalized-match analysis queues and factual reports.
 
@@ -215,3 +223,5 @@ Current module authoring and campaign prerequisites: [Content modules](assets/co
 - [Frozen real-engine match pool, resume and progressive local tuning](architecture/06-quality/parallel-bot-session.md#execute-frozen-matches-aro2-18).
 
 - [ARO2-18 frozen-runner local timing, latency and evidence](evidence/bot-session-runner/results.md).
+
+- [Persistent TypeScript runner](architecture/06-quality/experimental-typescript-runner.md): default Node match workers, session integration and reproducible Rust comparisons.

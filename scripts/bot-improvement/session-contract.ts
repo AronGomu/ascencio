@@ -69,8 +69,14 @@ export interface SetupOptions {
     maxIterations?: number;
     maxGames?: number;
     maxWallMs?: number;
+    /** Run output cap including checkpoints; defaults to 20 GB. */
+    maxBytes?: number;
     ownerStop?: true;
   };
+  /** Total matches, default 2,500; mutually exclusive with matchesPerOpponent. */
+  matches?: number;
+  /** Matches for each supplied opponent plus the self slot. */
+  matchesPerOpponent?: number;
   matchWorkers?: number;
   analysisWorkers?: number;
   reuse?: string;

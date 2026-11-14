@@ -74,12 +74,13 @@ export async function resolveWorkers(
       if (saved.machineIdentity === resources.identity)
         requested = saved.workers;
       else
-        console.error(
-          "CPU/environment identity changed; retune with bot:matches:benchmark. Using one worker.",
+        throw new Error(
+          "Machine settings are stale; calibrate before execution",
         );
-    } catch {
-      console.error(
-        "No local measured recommendation; using one worker. Run bot:matches:benchmark to tune.",
+    } catch (error) {
+      throw new Error(
+        "No valid machine-local recommendation; calibrate before execution",
+        { cause: error },
       );
     }
   }
@@ -87,9 +88,45 @@ export async function resolveWorkers(
     throw new Error("Workers must be auto or 1–64");
   return Math.max(1, Math.min(requested, resources.usable, pending, bound));
 }
-export async function saveRecommendation(workers: number, evidence: string) {
+export async function saveRecommendation(
+  workers: number,
+  evidence: string,
+  preferredWorkers?: number,
+) {
   const resources = await machineResources();
   await mkdir(path.dirname(recommendationPath), { recursive: true });
+  const measured = await readFile(evidence, "utf8");
+  const result = JSON.parse(measured);
+  if (
+    result.recommendation !== workers ||
+    result.resources?.identity !== resources.identity
+  )
+    throw new Error("Recommendation does not match measured machine results");
+  const archive = path.join(
+    path.dirname(recommendationPath),
+    "worker-calibrations",
+    identity(result),
+  );
+  await mkdir(archive, { recursive: true });
+  const savedEvidence = path.join(archive, "benchmark.json");
+  await writeFile(savedEvidence, measured);
+  const lines = [
+    "# Worker calibration",
+    "",
+    `Selected workers: ${workers}. Preferred workers: ${preferredWorkers ?? "none"}.`,
+    "",
+    "| Workers | Seconds | Reliable |",
+    "|---:|---:|---|",
+  ];
+  for (const stage of result.stages)
+    lines.push(
+      `| ${stage.workers} | ${stage.medianMs === undefined ? "—" : (stage.medianMs / 1000).toFixed(2)} | ${stage.reliable ?? false} |`,
+    );
+  lines.push(
+    "",
+    `Sample: ${result.matchCount} matches per stage, ${result.repeats} repetition(s). Recommendation applies only to the recorded machine/environment.`,
+  );
+  await writeFile(path.join(archive, "report.md"), lines.join("\n") + "\n");
   const tmp = `${recommendationPath}.${randomUUID()}.tmp`;
   await writeFile(
     tmp,
@@ -99,11 +136,59 @@ export async function saveRecommendation(workers: number, evidence: string) {
         machineIdentity: resources.identity,
         resources,
         workers,
-        evidence,
+        preferredWorkers,
+        evidence: savedEvidence,
+        sourceEvidence: evidence,
       },
       null,
       2,
     ),
   );
   await rename(tmp, recommendationPath);
+}
+
+/** Prefer the owner's count only when reliable timings put it in the competitive band. */
+export function selectWorkerRecommendation(
+  stages: {
+    workers: number;
+    reliable?: boolean;
+    medianMs?: number;
+    runs: Record<string, unknown>[];
+  }[],
+  preferred?: number,
+) {
+  const reliable = stages.filter(
+    (s) =>
+      s.reliable &&
+      s.medianMs !== undefined &&
+      s.medianMs > 0 &&
+      s.runs.length &&
+      s.runs.every(
+        (r) =>
+          typeof r.commandWallMs === "number" &&
+          Number.isFinite(r.commandWallMs),
+      ),
+  );
+  const noiseFraction = Math.max(
+    0.03,
+    ...reliable.map((s) => {
+      const times = s.runs.map((r) => Number(r.commandWallMs));
+      return (Math.max(...times) - Math.min(...times)) / s.medianMs!;
+    }),
+  );
+  const fastest = Math.min(...reliable.map((s) => s.medianMs!));
+  const competitive = reliable
+    .filter((s) => s.medianMs! <= fastest * (1 + noiseFraction))
+    .sort((a, b) => a.workers - b.workers);
+  return {
+    workers:
+      (competitive.find((s) => s.workers === preferred) ?? competitive[0])
+        ?.workers ?? null,
+    noiseFraction,
+  };
+}
+
+/** Future sessions permit calibration across the available logical CPUs. */
+export async function defaultMatchWorkerBound(explicit?: number) {
+  return explicit ?? availableParallelism();
 }

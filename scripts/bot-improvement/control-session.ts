@@ -1,6 +1,15 @@
+import { chargedGames, heldGames } from "./batch-session-accounting.ts";
+import {
+  configureOutputStorage,
+  storageStatus,
+  clearStorageStop,
+  DEFAULT_OUTPUT_BYTES,
+  CONTROL_RESERVE_BYTES,
+} from "./output-storage.ts";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 import { json, optionalJson, save, evidence } from "./session-checkpoint.ts";
 import { writeSessionReport } from "./report-session.ts";
@@ -45,15 +54,25 @@ export async function controlSession(
     if (acceptedBot.identity !== state.accepted.identity)
       throw new Error("Accepted reference identity mismatch");
     await botBytes(state.accepted.path, acceptedBot);
-    const limits = config.limits.stop;
+    let limits = {
+      ...config.limits.stop,
+      maxBytes: config.limits.stop.maxBytes ?? DEFAULT_OUTPUT_BYTES,
+    };
     if (
+      limits.maxBytes <= CONTROL_RESERVE_BYTES ||
       !limits ||
       !Object.keys(limits).length ||
       Object.keys(limits).some(
         (k) =>
-          !["maxIterations", "maxGames", "maxWallMs", "ownerStop"].includes(k),
+          ![
+            "maxIterations",
+            "maxGames",
+            "maxWallMs",
+            "maxBytes",
+            "ownerStop",
+          ].includes(k),
       ) ||
-      ["maxIterations", "maxGames", "maxWallMs"].some(
+      ["maxIterations", "maxGames", "maxWallMs", "maxBytes"].some(
         (k) =>
           limits[k] !== undefined &&
           (!Number.isSafeInteger(limits[k]) || limits[k] < 1),
@@ -91,16 +110,41 @@ export async function controlSession(
     if (
       ledger.schemaVersion !== 1 ||
       ledger.fixtureIdentity !== frozen.identity ||
-      identity(ledger.limits) !== identity(limits)
+      !isDeepStrictEqual(
+        {
+          ...(ledger.configuredLimits ?? ledger.limits),
+          maxBytes:
+            (ledger.configuredLimits ?? ledger.limits).maxBytes ??
+            DEFAULT_OUTPUT_BYTES,
+        },
+        limits,
+      )
     )
       throw new Error(
         "Control identity or limits changed; budgets cannot be extended",
       );
+    limits = {
+      ...ledger.limits,
+      maxBytes: ledger.limits.maxBytes ?? DEFAULT_OUTPUT_BYTES,
+    };
+    ledger.limits = limits;
     const now = Date.now();
-    if (ledger.activeSince !== null) {
-      ledger.elapsedMs += Math.max(0, now - ledger.activeSince);
-      ledger.activeSince = now;
-    }
+    ledger.startedAt ??= (ledger.activeSince ?? now) - ledger.elapsedMs;
+    if (!Number.isSafeInteger(ledger.startedAt) || ledger.startedAt < 0)
+      throw Error("Invalid persisted wall-clock start");
+    const activeElapsed =
+      ledger.activeSince === null
+        ? ledger.elapsedMs
+        : ledger.elapsedMs + Math.max(0, now - ledger.activeSince);
+    ledger.elapsedMs = Math.max(
+      ledger.elapsedMs,
+      activeElapsed,
+      now - ledger.startedAt,
+    );
+    ledger.startedAt = Math.min(ledger.startedAt, now - ledger.elapsedMs);
+    if (ledger.activeSince !== null) ledger.activeSince = now;
+    await configureOutputStorage(session, limits.maxBytes);
+    let storage = await storageStatus(session);
     let marker: string | null = null;
     try {
       marker = digest(await readFile(path.join(session, "OWNER_STOP")));
@@ -122,13 +166,55 @@ export async function controlSession(
         input.ownerStopToken !== ledger.ownerStopToken
       )
         throw new Error("Explicit owner-stop token required");
+      if (input.limits) {
+        const next = { ...limits, ...input.limits };
+        if (
+          next.ownerStop !== limits.ownerStop ||
+          Object.keys(next).some(
+            (k) =>
+              ![
+                "ownerStop",
+                "maxGames",
+                "maxWallMs",
+                "maxIterations",
+                "maxBytes",
+              ].includes(k),
+          ) ||
+          (
+            ["maxGames", "maxWallMs", "maxIterations", "maxBytes"] as const
+          ).some(
+            (k) =>
+              (limits[k] !== undefined &&
+                (next[k] === undefined || next[k]! < limits[k])) ||
+              (next[k] !== undefined &&
+                (!Number.isSafeInteger(next[k]) || next[k]! < 1)),
+          )
+        )
+          throw new Error(
+            "Continuation limits may only increase explicitly; preserve existing limits",
+          );
+        ledger.configuredLimits ??= { ...limits };
+        (ledger.limitChanges ??= []).push({
+          at: now,
+          before: { ...limits },
+          after: { ...next },
+        });
+        ledger.limits = { ...next };
+        limits = ledger.limits;
+      }
+      await configureOutputStorage(
+        session,
+        ledger.limits.maxBytes ?? DEFAULT_OUTPUT_BYTES,
+      );
+      await clearStorageStop(session);
+      storage = await storageStatus(session);
       ledger.ownerStopToken = null;
       ledger.acknowledgedMarker = marker;
       ledger.stoppingReason = null;
     }
     const completedGames = () =>
       ledger.attempts.reduce((n, a) => n + a.games.length, 0);
-    const reservedGames = () => running().length * 4;
+    const reservedGames = () => heldGames(ledger);
     const active = () =>
       ledger.iterations.find(
         (i) => i.status === "active" || i.status === "interrupted",
@@ -136,12 +222,15 @@ export async function controlSession(
     const limitReason = (): StopReason | null =>
       ledger.ownerStopToken
         ? "owner-stop"
-        : limits.maxWallMs !== undefined && ledger.elapsedMs >= limits.maxWallMs
-          ? "max-wall-ms"
-          : limits.maxGames !== undefined &&
-              completedGames() + 4 > limits.maxGames
-            ? "max-games"
-            : null;
+        : storage.exhausted
+          ? "max-output-bytes"
+          : limits.maxWallMs !== undefined &&
+              ledger.elapsedMs >= limits.maxWallMs
+            ? "max-wall-ms"
+            : limits.maxGames !== undefined &&
+                chargedGames(ledger) + 4 > limits.maxGames
+              ? "max-games"
+              : null;
     ledger.stoppingReason = limitReason() ?? ledger.stoppingReason;
     if (input.action === "stop")
       ledger.stoppingReason = ledger.ownerStopToken
@@ -177,7 +266,7 @@ export async function controlSession(
         !existing &&
         !ledger.stoppingReason &&
         limits.maxGames !== undefined &&
-        completedGames() + 4 > limits.maxGames
+        chargedGames(ledger) + 4 > limits.maxGames
       )
         ledger.stoppingReason = "max-games";
       if (!ledger.stoppingReason) {
@@ -244,12 +333,12 @@ export async function controlSession(
           reservation = { attempt: last, launch: false };
         } else if (
           limits.maxGames !== undefined &&
-          completedGames() + 4 > limits.maxGames
+          chargedGames(ledger) + 4 > limits.maxGames
         ) {
           ledger.stoppingReason = "max-games";
         } else if (
           limits.maxGames === undefined ||
-          completedGames() + reservedGames() + 4 <= limits.maxGames
+          chargedGames(ledger) + reservedGames() + 4 <= limits.maxGames
         ) {
           const attempt: ExecutionAttempt = {
             iteration: input.iteration,
@@ -345,7 +434,11 @@ export async function controlSession(
     )
       ledger.stoppingReason ??= "max-iterations";
     // Keep charging until every running job has settled, including cancellation latency.
-    if (!running().length && (ledger.stoppingReason || !active()))
+    if (
+      !running().length &&
+      !ledger.batchAllocations?.some((a) => a.status === "running") &&
+      (ledger.stoppingReason || !active())
+    )
       ledger.activeSince = null;
     const pending = active();
     if (pending && pending.accepted.identity !== state.accepted.identity)
@@ -354,6 +447,7 @@ export async function controlSession(
     const plan = {
       schemaVersion: 1,
       reservation,
+      limits: ledger.limits,
       session,
       accepted: state.accepted,
       stoppingReason: ledger.stoppingReason,
@@ -361,8 +455,12 @@ export async function controlSession(
       mayStart: ledger.stoppingReason === null,
       iteration: pending?.iteration ?? ledger.iterations.length + 1,
       completedGames: completedGames(),
+      chargedGames: chargedGames(ledger),
+      batchAllocations: ledger.batchAllocations ?? [],
       reservedGames: reservedGames(),
+      startedAt: ledger.startedAt,
       elapsedMs: ledger.elapsedMs,
+      storage,
       cancel: ledger.stoppingReason ? running() : [],
       running: running(),
       completedMatches: ledger.attempts

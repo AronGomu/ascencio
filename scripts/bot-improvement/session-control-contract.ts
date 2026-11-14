@@ -1,3 +1,4 @@
+import type { BatchAllocation } from "./batch-session-accounting.ts";
 import type { SetupOptions } from "./session-contract.ts";
 
 export interface EvidenceReference {
@@ -5,8 +6,14 @@ export interface EvidenceReference {
   sha256: string;
 }
 export type StopReason =
-  "owner-stop" | "interrupted" | "max-iterations" | "max-games" | "max-wall-ms";
+  | "owner-stop"
+  | "interrupted"
+  | "max-iterations"
+  | "max-games"
+  | "max-wall-ms"
+  | "max-output-bytes";
 export interface ExecutionAttempt {
+  batchAllocation?: string;
   iteration: number;
   role: "control" | "candidate";
   match: string;
@@ -21,6 +28,14 @@ export interface SessionControl {
   schemaVersion: 1;
   fixtureIdentity: string;
   limits: SetupOptions["stop"];
+  configuredLimits?: SetupOptions["stop"];
+  limitChanges?: {
+    at: number;
+    before: SetupOptions["stop"];
+    after: SetupOptions["stop"];
+  }[];
+  /** Immutable wall-clock origin, including suspended intervals. */
+  startedAt?: number;
   elapsedMs: number;
   activeSince: number | null;
   stoppingReason: StopReason | null;
@@ -33,6 +48,7 @@ export interface SessionControl {
     evidence?: EvidenceReference;
   }[];
   attempts: ExecutionAttempt[];
+  batchAllocations?: BatchAllocation[];
   records: {
     iteration: number;
     kind: "proposal" | "decision" | "comparison";
@@ -43,7 +59,11 @@ export type ControlAction =
   | { action: "plan" | "report" }
   | { action: "start"; iteration: number }
   | { action: "stop"; reason: "owner-stop" | "interrupted" }
-  | { action: "continue"; ownerStopToken?: string }
+  | {
+      action: "continue";
+      ownerStopToken?: string;
+      limits?: SetupOptions["stop"];
+    }
   | {
       action: "reserve";
       runnerIdentity: string;

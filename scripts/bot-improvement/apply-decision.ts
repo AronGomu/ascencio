@@ -1,13 +1,13 @@
 import {
   mkdir,
   readFile,
-  writeFile,
   rename,
   rm,
   open,
   readdir,
   lstat,
 } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "./output-storage.ts";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { pathToFileURL } from "node:url";
@@ -223,7 +223,7 @@ export async function applyDecision(
           manifest.accepted.identity !== state.accepted.identity ||
           manifest.accepted.bot.identity !== state.accepted.identity ||
           manifest.candidate.basedOn !== state.accepted.identity ||
-          !same(manifest.control, manifest.self) ||
+          manifest.self.identity !== frozen.target.identity ||
           manifest.control.identity !== state.accepted.identity
         )
           throw new Error("Stale iteration or accepted binding mismatch");

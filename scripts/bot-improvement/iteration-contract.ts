@@ -38,7 +38,7 @@ export interface IterationManifest {
   plan: {
     control: "reuse-baseline" | "evaluate";
     candidate: "validate-then-evaluate";
-    matchesPerEvaluation: 500;
-    gamesPerEvaluation: 2000;
+    matchesPerEvaluation: number;
+    gamesPerEvaluation: number;
   };
 }

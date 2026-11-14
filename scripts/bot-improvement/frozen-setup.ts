@@ -17,7 +17,7 @@ export async function verifyFrozen(root: string): Promise<FrozenSetup> {
       throw new Error(`Frozen input mismatch: ${file}`);
   }
   if (
-    frozen.matches.length !== 500 ||
+    frozen.matches.length < 1 ||
     frozen.matches.some((m) => m.games.length !== 4) ||
     identity(frozen.matches) !==
       identity(
@@ -25,6 +25,7 @@ export async function verifyFrozen(root: string): Promise<FrozenSetup> {
           frozen.setupSeed,
           frozen.target.deck,
           frozen.opponents.map((b) => b.deck),
+          frozen.matches.length,
         ),
       )
   )

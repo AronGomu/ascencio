@@ -1,4 +1,6 @@
 mod analysis;
+mod batch_runner;
+mod worker_storage;
 mod application_identity;
 mod bugs;
 mod compare;
@@ -8,11 +10,16 @@ mod evidence_writer;
 mod execution;
 mod frozen_evidence;
 mod frozen_match;
+#[path = "archive/frozen_pool.rs"]
 mod frozen_pool;
+mod frozen_match_support;
 mod host;
 mod identity;
 #[cfg(target_os = "linux")]
 mod improvement;
+mod native_match_evidence;
+mod output_storage;
+mod log_codec;
 mod process_memory;
 mod process_ownership;
 #[cfg(not(target_os = "linux"))]
@@ -45,11 +52,12 @@ fn execute() -> xml::Result<i32> {
     let option = |key: &str| args.windows(2).find(|w| w[0] == key).map(|w| w[1].clone());
     let required = |key: &str| option(key).ok_or_else(|| format!("Missing {key}"));
     match command{
- "frozen"=>frozen_pool::run(Path::new(&required("--job")?),Path::new(&required("--out")?),required("--workers")?.parse()?,args.iter().any(|a| a == "--resume")),
+ "batch"=>batch_runner::run(Path::new(&required("--job")?),Path::new(&required("--out")?),required("--workers")?.parse()?,required("--batch-size")?.parse()?,args.iter().any(|a| a == "--resume")),
+ "frozen-legacy"=>frozen_pool::run(Path::new(&required("--job")?),Path::new(&required("--out")?),required("--workers")?.parse()?,args.iter().any(|a| a == "--resume")),
  "improve"=>improvement::run(Path::new(&required("--config")?), args.iter().any(|a| a == "--resume")),
  "benchmark"=>{if option("--resume").is_some(){return Err("A benchmark never resumes an existing run".into());} runner::benchmark(config::read(Path::new(&required("--config")?))?, command_start)},
  "evaluate"=>runner::evaluate(config::read(Path::new(&required("--config")?))?,option("--resume").map(PathBuf::from)),
  "compare"=>compare::compare(Path::new(&required("--baseline")?),Path::new(&required("--candidate")?),Path::new(&required("--out")?)),
  "validate"=>{let file=required("--file")?;let root=required("--root")?;xml::read(Path::new(&file),&root)?;xml::validate(&root,&std::fs::read(file)?)?;Ok(0)},
- _=>Err("Usage: bot-evaluation benchmark --config evaluation.xml | evaluate --config evaluation.xml [--resume RUN] | compare --baseline RUN --candidate RUN --out DIRECTORY | validate --file FILE --root ROOT".into())}
+ _=>Err("Usage: bot-evaluation batch --job JOB --out DIRECTORY --workers N --batch-size N [--resume] | frozen-legacy --job JOB --out DIRECTORY --workers N [--resume] | benchmark --config evaluation.xml | evaluate --config evaluation.xml [--resume RUN] | compare --baseline RUN --candidate RUN --out DIRECTORY | validate --file FILE --root ROOT".into())}
 }

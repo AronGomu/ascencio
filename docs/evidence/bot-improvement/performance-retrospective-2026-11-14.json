@@ -1,0 +1,703 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-11-14T19:07:30.970Z",
+  "note": "Read-only measurements during an active legacy preparer and concurrent migration work. File mtimes are not CPU timers. Not a controlled benchmark. No matches or replays launched for this audit.",
+  "node": "v26.13.0",
+  "sourcePins": [
+    {
+      "file": ".agents/skills/ai-bot-self-improvement/SKILL.md",
+      "sha256": "33da1f4204c196501ae13f57f07866b7ce554661dc636bd959c47f3c3f9055b2"
+    },
+    {
+      "file": "scripts/bot-improvement/run-matches.ts",
+      "sha256": "03fe4e7ddb318163a7089ce97fb93d788247f4472ebbd173a923bc024d804d18"
+    },
+    {
+      "file": "scripts/bot-improvement/session-batch-runner.ts",
+      "sha256": "f846efecc83c33b5cd98190ca5b6cb685aa3af83cc14dcf88ba0e3abced4ef69"
+    },
+    {
+      "file": "scripts/bot-improvement/run-typescript-native.ts",
+      "sha256": "fb8fec578f7772d49cd9988b949e7e0232a0104241da97bb975c26b92995320c"
+    },
+    {
+      "file": "scripts/bot-improvement/typescript-native-worker.ts",
+      "sha256": "e1d1f2eb293e7567cc727a3bbb37a475a6eae47bd8dd2cd62fc81bf05bce65f8"
+    },
+    {
+      "file": "scripts/bot-improvement/typescript-native-executor.ts",
+      "sha256": "c8ba9d064e62b522b533a10aef5225d822ac3689f334c7e848cf0e9db58da99d"
+    },
+    {
+      "file": "scripts/bot-improvement/typescript-native-evidence.ts",
+      "sha256": "197c9b520a8ac34ad2510f5da9fb7c29892e3094e69354457d5803fe9477e4f9"
+    },
+    {
+      "file": "scripts/bot-improvement/analysis-text-evidence.ts",
+      "sha256": "b74b7cfbb7a559a455f156d64b78937226d312cd030fecf9686842c5f0798473"
+    },
+    {
+      "file": "scripts/bot-improvement/analysis-discovery.ts",
+      "sha256": "d3e8334b4937d737c80030190b957d120444e6359c9c30bc959270bbe0cfe148"
+    },
+    {
+      "file": "scripts/bot-improvement/analysis-slices.ts",
+      "sha256": "0165e6b03a3ba6c7025d7162286966c33b8132a9b1e41fee4cf8e55c23305040"
+    },
+    {
+      "file": "scripts/bot-improvement/prepare-analyses.ts",
+      "sha256": "7f4de957ac9ee597599a1111c4ebef26dd6777752e10f7d9870128b677af9392"
+    },
+    {
+      "file": "scripts/bot-improvement/output-storage.ts",
+      "sha256": "3069d9483e15542f14d98757918ecc0421362fa82e7a653a2b5947fa2a72ffcc"
+    },
+    {
+      "file": "scripts/bot-improvement/batch-storage-lease.ts",
+      "sha256": "3e0d97ddff2a956db19200208c17e3d0f2371a9f9a4af1072e040c17c197c093"
+    },
+    {
+      "file": "scripts/bot-improvement/replay-output-budget.ts",
+      "sha256": "703477f87aa22b86cac3b028af89d76527c26cb100940817115413d32f838645"
+    },
+    {
+      "file": "scripts/bot-improvement/replay-game-decision.ts",
+      "sha256": "da720947db1975e153bfc0901fb116e709825ca37e3733478f2fbe6d7535dcf5"
+    },
+    {
+      "file": "scripts/bot-improvement/run-replay-pool.ts",
+      "sha256": "3acdb6a2f7a21a4d151db49a3a3be6119d3f0e47b7aeff47f469c0d5ee348f3b"
+    },
+    {
+      "file": "scripts/bot-improvement/prepare-replay-pool.ts",
+      "sha256": "4a1db04a9fccd152c9f3b755c0a19c407db825b22c1154def692034cb412cf96"
+    },
+    {
+      "file": "scripts/bot-improvement/typescript-calibration.ts",
+      "sha256": "5c476e5363f7900ff50f7b1d294350e2ece428eff358d7c4914f8eedf486a761"
+    },
+    {
+      "file": "scripts/bot-improvement/calibrate-batch-workers.ts",
+      "sha256": "e90e232f35d8cef7e4d43efa00e45888a8e9f161b04dcc3e65868b77b7d48711"
+    }
+  ],
+  "milestones": {
+    "setup-request.json": {
+      "modifiedAt": "2026-11-14T12:11:07.067Z"
+    },
+    "session/config.json": {
+      "modifiedAt": "2026-11-14T12:11:08.755Z"
+    },
+    "validation/result.json": {
+      "modifiedAt": "2026-11-14T12:11:23.644Z"
+    },
+    "validation-packaged/result.json": {
+      "modifiedAt": "2026-11-14T12:15:58.571Z"
+    },
+    "evaluation.log": {
+      "modifiedAt": "2026-11-14T12:24:05.045Z"
+    },
+    "extended-evaluation-result.json": {
+      "modifiedAt": "2026-11-14T15:55:33.029Z"
+    },
+    "analysis-sync-process.json": {
+      "modifiedAt": "2026-11-14T15:57:24.405Z"
+    },
+    "baseline-verification.log": {
+      "modifiedAt": "2026-11-14T15:56:26.445Z"
+    }
+  },
+  "groups": {
+    "allFiles": {
+      "count": 27410,
+      "bytes": 20210742863,
+      "firstMs": 1794658268755.0552,
+      "lastMs": 1794683250943.3044
+    },
+    "derivedReceipts": {
+      "count": 2500,
+      "bytes": 3385000,
+      "firstMs": 1794659121150.0342,
+      "lastMs": 1794677210171.696
+    },
+    "gameLogs": {
+      "count": 10000,
+      "bytes": 12222967356,
+      "firstMs": 1794658813336.9324,
+      "lastMs": 1794671702583.0227
+    },
+    "matchPackets": {
+      "count": 2500,
+      "bytes": 2374617781,
+      "firstMs": 1794677211562.7246,
+      "lastMs": 1794679471958.4421
+    },
+    "lossViews": {
+      "count": 4121,
+      "bytes": 5074569799,
+      "firstMs": 1794679473692.439,
+      "lastMs": 1794683250943.3044
+    },
+    "slicePackets": {
+      "count": 8,
+      "bytes": 47564516,
+      "firstMs": 1794679922170.5872,
+      "lastMs": 1794683134331.9856
+    }
+  },
+  "samples": [
+    {
+      "file": ".tmp/goat-control-test-2026-11-14/session/evaluations/baseline/matches/match-0001/native/games/game-1/game.log",
+      "bytes": 1430674,
+      "trials": [
+        {
+          "parseMs": 86.86361299999999,
+          "verifyMs": 104.38109199999985,
+          "lossViewMs": 83.95170699999994
+        },
+        {
+          "parseMs": 91.59116300000005,
+          "verifyMs": 90.06324000000018,
+          "lossViewMs": 76.04617200000007
+        },
+        {
+          "parseMs": 69.49981399999979,
+          "verifyMs": 93.04185199999984,
+          "lossViewMs": 81.35363800000005
+        }
+      ]
+    },
+    {
+      "file": ".tmp/goat-control-test-2026-11-14/session/evaluations/baseline/matches/match-0500/native/games/game-1/game.log",
+      "bytes": 832167,
+      "trials": [
+        {
+          "parseMs": 41.52709200000004,
+          "verifyMs": 52.60628500000007,
+          "lossViewMs": null
+        },
+        {
+          "parseMs": 40.497262999999975,
+          "verifyMs": 53.28017699999987,
+          "lossViewMs": null
+        },
+        {
+          "parseMs": 39.65202799999997,
+          "verifyMs": 47.50922300000002,
+          "lossViewMs": null
+        }
+      ]
+    },
+    {
+      "file": ".tmp/goat-control-test-2026-11-14/session/evaluations/baseline/matches/match-1500/native/games/game-1/game.log",
+      "bytes": 1909869,
+      "trials": [
+        {
+          "parseMs": 91.219247,
+          "verifyMs": 116.32786899999996,
+          "lossViewMs": 105.08319699999993
+        },
+        {
+          "parseMs": 93.39024400000017,
+          "verifyMs": 115.71835800000008,
+          "lossViewMs": 109.69211399999995
+        },
+        {
+          "parseMs": 91.24877199999992,
+          "verifyMs": 115.4948589999999,
+          "lossViewMs": 106.31410400000004
+        }
+      ]
+    }
+  ],
+  "storageScanMs": 892.1639459999997,
+  "storage": {
+    "maxBytes": 50000000000,
+    "controlReserveBytes": 16000000,
+    "dataBytes": 20204983237,
+    "controlBytes": 7713091,
+    "totalBytes": 20212696328,
+    "stopped": false,
+    "exhausted": false
+  },
+  "savedEvidence": [
+    {
+      "file": ".tmp/goat-control-test-2026-11-14/extended-evaluation-result.json",
+      "sha256": "85117bec68872066d67bce482cc7fc0542b3d0cf130929b39c55104e451cffa3",
+      "value": {
+        "amortizedWallMsPerCompletedMatch": 4627.8645356576,
+        "averageCompletedMatchLatencyMs": 4530.656782457995,
+        "completedGames": 10000,
+        "completedMatchLatencySamples": 2500,
+        "elapsedMs": 11569661.339143999,
+        "error": null,
+        "failedGames": 0,
+        "failures": {},
+        "fixtureIdentity": "4a3b634a99d1fc307b3425d0117b0faef875ae0c056f964d2eeac4d5cdc55468",
+        "gamesPerSecond": 0.8643295345358715,
+        "identity": "4904479455762b4389cffcb88e9637a786c3d3321d98faf37c133d4ed9a1010e",
+        "incompleteMatches": 0,
+        "matches": 2500,
+        "memoryMethod": "Linux /proc summed RSS; each descendant once, shared pages may be counted in multiple processes",
+        "memorySampleMs": 100,
+        "processTreePeakRssBytes": 10125549568,
+        "replayIdentity": "2807b983b012c3bf1155a04e6da220941e6352243ca15506a20d3a8797281f61",
+        "schemaVersion": 1,
+        "skippedGames": 0,
+        "status": "completed",
+        "stoppingReason": null,
+        "workers": 7,
+        "receipt": "/home/aron/Projects/ascencio/.tmp/goat-control-test-2026-11-14/session/evaluations/baseline/baseline-receipt.json",
+        "report": null,
+        "exitCode": 0,
+        "output": "/home/aron/Projects/ascencio/.tmp/goat-control-test-2026-11-14/session/evaluations/baseline",
+        "iteration": 1,
+        "role": "control"
+      }
+    },
+    {
+      "file": ".tmp/goat-control-test-2026-11-14/session/baseline/summary.json",
+      "sha256": "ef40065fc42a592e7dc339732e297383986cfcb12e9699511524df55d148bd60",
+      "value": {
+        "schemaVersion": 1,
+        "status": "complete",
+        "sourceCommit": "7e8f39a44555c42e28d02462ce54d2ddc4f44774",
+        "targetId": "ascencio.goat-control",
+        "fixtureIdentity": "4a3b634a99d1fc307b3425d0117b0faef875ae0c056f964d2eeac4d5cdc55468",
+        "executionIdentity": "4904479455762b4389cffcb88e9637a786c3d3321d98faf37c133d4ed9a1010e",
+        "acceptedIdentity": "ebe96feffe61b989270abd8d266dfb386ec559f1e549c3c9fab3b49f69a3c72b",
+        "source": "evaluations/baseline.job.json",
+        "receipt": "evaluations/baseline/baseline-receipt.json",
+        "completedMatches": 2500,
+        "scheduledGames": 10000,
+        "completedGames": 10000,
+        "ignoredGames": 0,
+        "counts": {
+          "win": 4979,
+          "loss": 5009,
+          "draw": 12,
+          "timeout": 0,
+          "failed": 0,
+          "skipped": 0
+        },
+        "weightedWinRate": 0.4979,
+        "opponents": [
+          {
+            "slot": "self",
+            "identity": "ebe96feffe61b989270abd8d266dfb386ec559f1e549c3c9fab3b49f69a3c72b",
+            "counts": {
+              "win": 4979,
+              "loss": 5009,
+              "draw": 12,
+              "timeout": 0,
+              "failed": 0,
+              "skipped": 0
+            },
+            "winRate": 0.4979
+          }
+        ],
+        "verifiedCompletionFiles": 15000,
+        "gameReservationsCharged": 10012,
+        "recoveryGameReservations": 12,
+        "startedAt": 1794658805872,
+        "verifiedAt": "2026-11-14T15:56:25.509Z"
+      }
+    },
+    {
+      "file": ".tmp/batch-runner-comparison-v1/comparison.json",
+      "sha256": "0c7c16faa71c3fc03da25d2de27dd712b29d62065b87d21eb3893295f70845f2",
+      "value": {
+        "schemaVersion": 1,
+        "matches": 8,
+        "workers": 4,
+        "repeats": 2,
+        "batchSize": 2,
+        "runs": [
+          {
+            "runner": "legacy",
+            "workers": 4,
+            "matches": 8,
+            "wallMs": 21456.726196,
+            "gamesPerSecond": 1.491373833439954,
+            "fingerprint": "82827f37b3818a0306189cdf584ac109d8644746962bfdad63d007423e42f966",
+            "peakRssBytes": 2982817792,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-runner-comparison-v1/legacy-1/source/evaluation"
+          },
+          {
+            "runner": "batch",
+            "workers": 4,
+            "matches": 8,
+            "wallMs": 10242.668028,
+            "gamesPerSecond": 3.1241859945595025,
+            "fingerprint": "82827f37b3818a0306189cdf584ac109d8644746962bfdad63d007423e42f966",
+            "peakRssBytes": 3373932544,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-runner-comparison-v1/batch-1/evaluation"
+          },
+          {
+            "runner": "batch",
+            "workers": 4,
+            "matches": 8,
+            "wallMs": 10165.240083999997,
+            "gamesPerSecond": 3.1479827073014963,
+            "fingerprint": "82827f37b3818a0306189cdf584ac109d8644746962bfdad63d007423e42f966",
+            "peakRssBytes": 3208081408,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-runner-comparison-v1/batch-2/evaluation"
+          },
+          {
+            "runner": "legacy",
+            "workers": 4,
+            "matches": 8,
+            "wallMs": 20747.425522999998,
+            "gamesPerSecond": 1.542360037129702,
+            "fingerprint": "82827f37b3818a0306189cdf584ac109d8644746962bfdad63d007423e42f966",
+            "peakRssBytes": 3091730432,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-runner-comparison-v1/legacy-2/source/evaluation"
+          }
+        ],
+        "gameplayIdentical": true,
+        "timing": "Preparation through child exit and durable evidence; build, fixture-session creation and post-run integrity/fingerprint verification excluded. Alternating runner order."
+      }
+    },
+    {
+      "file": ".tmp/batch-workers-8-confirmation/comparison.json",
+      "sha256": "ca214ab3d3edba7011c4fbe97e5b6fd5538874c5d429fda469ac53944eb0e38e",
+      "value": {
+        "schemaVersion": 1,
+        "method": "Same one-minute execution budget and pinned input identity as the preceding 6/10/12-worker tests. Eight-worker trial ran subsequently; one trial per count. Throughput includes preparation/shutdown and excludes interrupted partial matches. Evidence hashes verified; eight-worker common gameplay compared against the previously verified ten-worker trial.",
+        "runs": [
+          {
+            "workers": 6,
+            "batchSize": 2,
+            "budgetMs": 60000,
+            "wallMs": 61968.412534,
+            "finalizedMatches": 92,
+            "finalizedGames": 368,
+            "gamesPerSecond": 5.938509394574061,
+            "peakRssBytes": 6043975680,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-workers-6-10-12/workers-6/evaluation"
+          },
+          {
+            "workers": 8,
+            "batchSize": 2,
+            "budgetMs": 60000,
+            "wallMs": 61258.470949,
+            "finalizedMatches": 98,
+            "finalizedGames": 392,
+            "gamesPerSecond": 6.399114994665062,
+            "peakRssBytes": 7463575552,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-workers-8-confirmation/evaluation"
+          },
+          {
+            "workers": 10,
+            "batchSize": 2,
+            "budgetMs": 60000,
+            "wallMs": 61517.74898800001,
+            "finalizedMatches": 103,
+            "finalizedGames": 412,
+            "gamesPerSecond": 6.697254154737798,
+            "peakRssBytes": 8991502336,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-workers-6-10-12/workers-10/evaluation"
+          },
+          {
+            "workers": 12,
+            "batchSize": 2,
+            "budgetMs": 60000,
+            "wallMs": 62360.196583,
+            "finalizedMatches": 105,
+            "finalizedGames": 420,
+            "gamesPerSecond": 6.7350653624221595,
+            "peakRssBytes": 11491409920,
+            "output": "/home/aron/Projects/ascencio/.tmp/batch-workers-6-10-12/workers-12/evaluation"
+          }
+        ],
+        "commonMatchesCompared": 98,
+        "commonGamesCompared": 392,
+        "mismatches": []
+      }
+    },
+    {
+      "file": ".tmp/typescript-native-comparison-v2/comparison.json",
+      "sha256": "8a984ac107979f27e2ecb88bfde7c1d75a788ed259b8da8d70bb040de07d9ab7",
+      "value": {
+        "rust": {
+          "runner": "batch",
+          "workers": 2,
+          "matches": 36,
+          "wallMs": 53916.610574,
+          "gamesPerSecond": 2.6707910320579495,
+          "fingerprint": "7885ed761a5226469dc1c2c7d2d6ba6505aa3dfe54316c4e9a6919fa665e6124",
+          "peakRssBytes": 1936334848,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-native-comparison-v2/rust/evaluation"
+        },
+        "runs": [],
+        "native": {
+          "runner": "typescript-native/v1",
+          "status": "completed",
+          "workers": 2,
+          "matches": 36,
+          "completedGames": 144,
+          "failedGames": 0,
+          "skippedGames": 0,
+          "reservedGames": 144,
+          "elapsedMs": 48252.241502000004,
+          "gamesPerSecond": 2.9843173191038463,
+          "stoppingReason": null,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-native-comparison-v2/typescript-native/payload"
+        },
+        "nativeResume": {
+          "runner": "typescript-native/v1",
+          "status": "completed",
+          "workers": 2,
+          "matches": 36,
+          "completedGames": 144,
+          "failedGames": 0,
+          "skippedGames": 0,
+          "reservedGames": 144,
+          "elapsedMs": 10535.275770000007,
+          "gamesPerSecond": 13.668365512562174,
+          "stoppingReason": null,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-native-comparison-v2/typescript-native/payload"
+        },
+        "nativeGameplayFingerprint": "7885ed761a5226469dc1c2c7d2d6ba6505aa3dfe54316c4e9a6919fa665e6124",
+        "order": "typescript-first",
+        "identicalGameplay": true,
+        "comparisonFingerprint": "11aa38eda0b02d05545a70cc2d159e72b5a002b728b54b68466d942f55c8e5bd",
+        "scope": "Fixed identical matches; elapsed includes startup, durable native v2 logs, evidence hashing, completion verification and output writes. Native and Rust gameplay fingerprints must match. Resume timing is verification only, not simulated throughput. Compact/raw modes, when included, have weaker persistence contracts. This standalone test does not migrate session ledgers or change production defaults."
+      }
+    },
+    {
+      "file": ".tmp/typescript-production-200-games-v3/comparison.json",
+      "sha256": "c709711ad2530aaeca2993e5767f25db4d7c10d1da0d452371a9180063a9191a",
+      "value": {
+        "rust": {
+          "runner": "batch",
+          "workers": 4,
+          "matches": 50,
+          "wallMs": 43002.699559999994,
+          "gamesPerSecond": 4.650870806865224,
+          "fingerprint": "442528379c849277e161faee691a8b995dd786e22d50a57a0bf7b5a350e04bdc",
+          "peakRssBytes": 3755798528,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-production-200-games-v3/rust/evaluation"
+        },
+        "runs": [],
+        "native": {
+          "runner": "typescript-native/v1",
+          "status": "completed",
+          "workers": 4,
+          "matches": 50,
+          "completedGames": 200,
+          "failedGames": 0,
+          "skippedGames": 0,
+          "timeoutGames": 0,
+          "reservedGames": 200,
+          "elapsedMs": 65409.352792000005,
+          "gamesPerSecond": 3.057666701518889,
+          "stoppingReason": null,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-production-200-games-v3/typescript-native/payload",
+          "exitCode": 0
+        },
+        "nativeResume": {
+          "runner": "typescript-native/v1",
+          "status": "completed",
+          "workers": 4,
+          "matches": 50,
+          "completedGames": 200,
+          "failedGames": 0,
+          "skippedGames": 0,
+          "timeoutGames": 0,
+          "reservedGames": 200,
+          "elapsedMs": 25722.40285700001,
+          "gamesPerSecond": 7.775323367411325,
+          "stoppingReason": null,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-production-200-games-v3/typescript-native/payload",
+          "exitCode": 0
+        },
+        "fullEvidence": {
+          "games": 200,
+          "exactGameHashes": 180,
+          "fullTimelinesVerified": true,
+          "scope": "Existing strict replay normalization permits only permutations of consecutive state-free description hints; decisions, state changes and all other events stay ordered."
+        },
+        "nativeGameplayFingerprint": "442528379c849277e161faee691a8b995dd786e22d50a57a0bf7b5a350e04bdc",
+        "order": "rust-first",
+        "identicalGameplay": true,
+        "comparisonFingerprint": "c1964d836d0804635c0365b23a36ce770be7a311501bcf639cb1f8a3ef25f946",
+        "scope": "Fixed identical matches; elapsed includes startup, durable native v2 logs, evidence hashing, completion verification and output writes. Native and Rust gameplay fingerprints must match. Resume timing is verification only, not simulated throughput. Compact/raw modes, when included, have weaker persistence contracts. This standalone test does not migrate session ledgers or change production defaults."
+      }
+    },
+    {
+      "file": ".tmp/typescript-calibration-smoke-v1/calibration.json",
+      "sha256": "efd224eb7e7475ab67cbe58274678d52bebd9dacac42368b7f1b530a8c46bb45",
+      "value": {
+        "schemaVersion": 1,
+        "backend": "typescript",
+        "identity": "803c368f3ceb444155a2884401132b564ebc323c1b990e15dbb096b059ea9a30",
+        "workers": 3,
+        "batchSize": 1,
+        "matches": 3,
+        "repeats": 1,
+        "logical": 16,
+        "stages": [
+          {
+            "workers": 2,
+            "medianMs": 5216.973623
+          },
+          {
+            "workers": 3,
+            "medianMs": 3923.0050360000005
+          }
+        ],
+        "runs": [
+          {
+            "runner": "typescript",
+            "workers": 2,
+            "matches": 3,
+            "wallMs": 5216.973623,
+            "gamesPerSecond": 2.3001841426024785,
+            "fingerprint": "d73abd2a18a2b15f8c0bab552f23fe77054cd4b578aaabd3c1f29ea9b11dddf7",
+            "output": "/home/aron/Projects/ascencio/.tmp/typescript-calibration-smoke-v1/workers-2-repeat-1/evaluation/payload",
+            "peakRssBytes": 978341888
+          },
+          {
+            "runner": "typescript",
+            "workers": 3,
+            "matches": 3,
+            "wallMs": 3923.0050360000005,
+            "gamesPerSecond": 3.058879580801027,
+            "fingerprint": "d73abd2a18a2b15f8c0bab552f23fe77054cd4b578aaabd3c1f29ea9b11dddf7",
+            "output": "/home/aron/Projects/ascencio/.tmp/typescript-calibration-smoke-v1/workers-3-repeat-1/evaluation/payload",
+            "peakRssBytes": 1391415296
+          }
+        ],
+        "scope": "Short fresh standalone sessions; recalibrate under representative output sizes and background load."
+      }
+    },
+    {
+      "file": ".tmp/goat-control-test-2026-11-14/session/replay-pool-benchmark-v2/benchmark.json",
+      "sha256": "344dec391cb046833a64083c1cf89930a321be9770f510fc9d490aae09db820b",
+      "value": {
+        "schemaVersion": 1,
+        "experimental": true,
+        "runs": [
+          {
+            "workers": 1,
+            "repeat": 1,
+            "cases": 4,
+            "elapsedMs": 23380,
+            "casesPerSecond": 0.1710863986313088,
+            "branchAttempts": {
+              "control": 4,
+              "alternative": 4
+            },
+            "fingerprint": "6342a5252029ce02c3195927b337fe8439b7e939dd8190f36f3e566232c23181",
+            "output": "/home/aron/Projects/ascencio/.tmp/goat-control-test-2026-11-14/session/replay-pool-benchmark-v2/workers-1-repeat-1"
+          },
+          {
+            "workers": 2,
+            "repeat": 1,
+            "cases": 4,
+            "elapsedMs": 11575,
+            "casesPerSecond": 0.3455723542116631,
+            "branchAttempts": {
+              "control": 4,
+              "alternative": 4
+            },
+            "fingerprint": "6342a5252029ce02c3195927b337fe8439b7e939dd8190f36f3e566232c23181",
+            "output": "/home/aron/Projects/ascencio/.tmp/goat-control-test-2026-11-14/session/replay-pool-benchmark-v2/workers-2-repeat-1"
+          }
+        ],
+        "identicalReplayBehavior": true,
+        "scope": "Fresh processes per replay case; explicit worker counts; includes discovery, source freezing, both branches and durable evidence. Does not select production concurrency."
+      }
+    },
+    {
+      "file": ".tmp/typescript-production-200-games-v4/comparison.json",
+      "sha256": "e96af1111d8b3c94c2bfdae752df30afe01ebf8528cf0e7b95ab8002528ad9ce",
+      "value": {
+        "rust": {
+          "runner": "batch",
+          "workers": 4,
+          "matches": 50,
+          "wallMs": 44696.962062,
+          "gamesPerSecond": 4.474577035517005,
+          "fingerprint": "442528379c849277e161faee691a8b995dd786e22d50a57a0bf7b5a350e04bdc",
+          "peakRssBytes": 3708264448,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-production-200-games-v4/rust/evaluation"
+        },
+        "runs": [],
+        "native": {
+          "runner": "typescript-native/v1",
+          "processTreePeakRssBytes": 2661625856,
+          "status": "completed",
+          "workers": 4,
+          "matches": 50,
+          "completedGames": 200,
+          "failedGames": 0,
+          "skippedGames": 0,
+          "timeoutGames": 0,
+          "reservedGames": 200,
+          "elapsedMs": 66186.114777,
+          "gamesPerSecond": 3.0217818446339892,
+          "stoppingReason": null,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-production-200-games-v4/typescript-native/payload",
+          "exitCode": 0
+        },
+        "nativeResume": {
+          "runner": "typescript-native/v1",
+          "processTreePeakRssBytes": 629071872,
+          "status": "completed",
+          "workers": 4,
+          "matches": 50,
+          "completedGames": 200,
+          "failedGames": 0,
+          "skippedGames": 0,
+          "timeoutGames": 0,
+          "reservedGames": 200,
+          "elapsedMs": 32333.21965700001,
+          "gamesPerSecond": 6.185588757372662,
+          "stoppingReason": null,
+          "output": "/home/aron/Projects/ascencio/.tmp/typescript-production-200-games-v4/typescript-native/payload",
+          "exitCode": 0
+        },
+        "fullEvidence": {
+          "games": 200,
+          "exactGameHashes": 174,
+          "fullTimelinesVerified": true,
+          "scope": "Existing strict replay normalization permits only permutations of consecutive state-free description hints; decisions, state changes and all other events stay ordered."
+        },
+        "nativeGameplayFingerprint": "442528379c849277e161faee691a8b995dd786e22d50a57a0bf7b5a350e04bdc",
+        "order": "rust-first",
+        "identicalGameplay": true,
+        "comparisonFingerprint": "c1964d836d0804635c0365b23a36ce770be7a311501bcf639cb1f8a3ef25f946",
+        "scope": "Fixed identical matches; elapsed includes startup, durable native v2 logs, evidence hashing, completion verification and output writes. Native and Rust gameplay fingerprints must match. Resume timing is verification only, not simulated throughput. Compact/raw modes, when included, have weaker persistence contracts. This standalone test does not migrate session ledgers or change production defaults."
+      },
+      "addedAtFinalRecheck": true
+    }
+  ],
+  "finalCodeRecheck": {
+    "observedAt": "2026-11-14T19:15:52.982786+00:00",
+    "changes": [
+      "Match completion verification now dispatched to engine worker",
+      "Final outcome tally now reads match summaries",
+      "Completed resume still verifies sequentially"
+    ],
+    "sourcePins": [
+      {
+        "file": "scripts/bot-improvement/run-typescript-native.ts",
+        "sha256": "86d20831d093d0a33d8fa581fd697b9dd060ce63b89a596042c2ac6c870af64e"
+      },
+      {
+        "file": "scripts/bot-improvement/typescript-native-worker.ts",
+        "sha256": "b72c2a05ef8b5dc76e28223f8a480c67f01aa9674d1ec5434e9f39e7a5356e10"
+      },
+      {
+        "file": "scripts/bot-improvement/typescript-native-executor.ts",
+        "sha256": "49f1ececa8a980a29453ddf7d4cbc6e3dd29edfdf11d7ddf4cdd377cb83c45e8"
+      },
+      {
+        "file": "scripts/bot-improvement/typescript-native-completion.ts",
+        "sha256": "57a8cfb3eb8a180933618fb05f440a8b800bce8dfb271845047d92156a9109c3"
+      }
+    ]
+  }
+}

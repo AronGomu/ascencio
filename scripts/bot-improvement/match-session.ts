@@ -29,7 +29,8 @@ export const sessionControl = (
   session: string,
   action: Parameters<typeof controlSession>[1],
 ) => retrySession(session, () => controlSession(session, action));
-export const matchRunnerIdentity = "frozen-rust-match-pool/v1";
+export const matchRunnerIdentity = "session-typescript/v1";
+export const rustMatchRunnerIdentity = "session-batch/v1";
 export interface MatchBinding {
   session: string;
   iteration: number;
@@ -44,6 +45,8 @@ export async function bindMatches(options: {
   iteration?: number | undefined;
   role?: "control" | "candidate" | undefined;
   resume?: boolean | undefined;
+  runnerIdentity?: string | undefined;
+  fallbackRunnerIdentity?: string | undefined;
 }) {
   const session = path.resolve(options.session),
     output = path.resolve(options.out);
@@ -74,7 +77,10 @@ export async function bindMatches(options: {
       `iteration-${String(iteration).padStart(4, "0")}`,
       "manifest.json",
     );
-    let runnerIdentity = matchRunnerIdentity;
+    let runnerIdentity =
+      options.runnerIdentity ??
+      options.fallbackRunnerIdentity ??
+      matchRunnerIdentity;
     try {
       runnerIdentity = JSON.parse(
         await readFile(manifestPath, "utf8"),
@@ -82,6 +88,10 @@ export async function bindMatches(options: {
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
     }
+    if (options.runnerIdentity && runnerIdentity !== options.runnerIdentity)
+      throw Error(
+        "Runner identity changed; use the archived runner for legacy iterations",
+      );
     const manifest = await retrySession(session, () =>
       prepareIteration({
         session,

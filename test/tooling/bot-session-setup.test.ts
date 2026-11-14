@@ -15,7 +15,11 @@ import { cardCode } from "../../src/battle/duel/contracts/ids.ts";
 import {
   schedule,
   deckOrder,
+  resolveMatchCount,
+  digest,
 } from "../../scripts/bot-improvement/session-fixtures.ts";
+import { prepareMatches } from "../../scripts/bot-improvement/run-matches.ts";
+import { executeMatches } from "../../scripts/bot-improvement/archive/run-matches.ts";
 import { controlSession } from "../../scripts/bot-improvement/control-session.ts";
 import { prepareIteration } from "../../scripts/bot-improvement/prepare-iteration.ts";
 
@@ -24,10 +28,10 @@ const deck = {
   extra: [cardCode(50), cardCode(51)],
   side: [cardCode(60)],
 };
-test("500 deterministic four-game fixtures cover self-play, even slots, stable remainder and separate random streams", () => {
+test("2,500 deterministic four-game fixtures cover self-play, even slots, stable remainder and separate random streams", () => {
   const self = schedule("seed", deck, []);
-  assert.equal(self.length, 500);
-  assert.equal(self.flatMap((m) => m.games).length, 2000);
+  assert.equal(self.length, 2500);
+  assert.equal(self.flatMap((m) => m.games).length, 10000);
   assert.ok(self.every((m) => m.opponentSlot === "self"));
   const counts = (n: number) =>
     Object.values(
@@ -40,8 +44,8 @@ test("500 deterministic four-game fixtures cover self-play, even slots, stable r
         return a;
       }, {}),
     );
-  assert.deepEqual(counts(1), [250, 250]);
-  assert.deepEqual(counts(2), [167, 167, 166]);
+  assert.deepEqual(counts(1), [1250, 1250]);
+  assert.deepEqual(counts(2), [834, 833, 833]);
   assert.deepEqual(self, schedule("seed", deck, []));
   assert.notDeepEqual(self, schedule("different", deck, []));
   const games = self[0]!.games;
@@ -64,9 +68,44 @@ test("500 deterministic four-game fixtures cover self-play, even slots, stable r
   assert.equal(games[2]!.orders, null);
   assert.equal(
     new Set(self.flatMap((m) => m.games.flatMap((g) => g.engineSeed))).size,
-    8000,
+    40000,
   );
   assert.notEqual(games[0]!.botSeeds[0], games[0]!.botSeeds[1]);
+});
+
+test("configurable schedules preserve seeds and orders, cover per-opponent allocations and reject invalid counts", () => {
+  const initial = schedule("seed", deck, [deck]);
+  for (const count of [1, 250, 501, 750]) {
+    const matches = schedule("seed", deck, [deck], count);
+    assert.equal(matches.length, count);
+    assert.deepEqual(matches, initial.slice(0, count));
+  }
+  assert.equal(resolveMatchCount(undefined, undefined, 2), 2500);
+  assert.equal(resolveMatchCount(undefined, 250, 2), 750);
+  const allocations = schedule(
+    "seed",
+    deck,
+    [deck, deck],
+    resolveMatchCount(undefined, 250, 2),
+  );
+  for (const slot of ["opponent-1", "opponent-2", "self"])
+    assert.equal(
+      allocations.filter((m) => m.opponentSlot === slot).length,
+      250,
+    );
+  for (const count of [
+    0,
+    -1,
+    1.5,
+    NaN,
+    Infinity,
+    Number.MAX_SAFE_INTEGER + 1,
+  ]) {
+    assert.throws(() => resolveMatchCount(count, undefined, 0));
+    assert.throws(() => resolveMatchCount(undefined, count, 0));
+  }
+  assert.throws(() => resolveMatchCount(250, 250, 1), /not both/);
+  assert.throws(() => resolveMatchCount(undefined, Number.MAX_SAFE_INTEGER, 1));
 });
 
 test("setup CLI atomically publishes durable inputs, validates reuse, archives sources and preserves failures", async (t) => {
@@ -145,7 +184,137 @@ test("setup CLI atomically publishes durable inputs, validates reuse, archives s
     };
     await write(path.join(root, "request.json"), request);
     const first = run(request);
-    assert.equal(first.games, 2000);
+    assert.equal(first.games, 10000);
+    const originalSetupConfig = await readFile(
+      path.join(target, "evaluation.json"),
+    );
+    await t.test(
+      "configured counts flow through frozen verification, prepared jobs and baseline receipts",
+      async () => {
+        for (const matches of [250, 750]) {
+          const custom = {
+            ...request,
+            matches,
+            session: path.join(root, `session-${matches}`),
+          };
+          await write(path.join(root, "request.json"), custom);
+          const result = run(custom);
+          assert.equal(result.matches, matches);
+          assert.equal(result.games, matches * 4);
+          const plan = await prepareIteration({
+            session: result.session,
+            iteration: 1,
+            runnerIdentity: "test-runner-v1",
+          });
+          assert.equal(plan.plan.matchesPerEvaluation, matches);
+          assert.equal(plan.plan.gamesPerEvaluation, matches * 4);
+          const job = await prepareMatches({ session: result.session });
+          assert.equal(job.job.matches.length, matches);
+          assert.equal(job.totalMatches, matches);
+          assert.equal(
+            (await prepareMatches({ session: result.session, matchCount: 1 }))
+              .job.matches.length,
+            1,
+          );
+          await assert.rejects(
+            prepareMatches({
+              session: result.session,
+              matchCount: matches + 1,
+            }),
+            /Match count/,
+          );
+          await write(path.join(root, "request.json"), {
+            ...custom,
+            session: custom.session + "-reuse",
+            reuse: result.fixture,
+            matches: matches + 1,
+          });
+          assert.match(
+            run(custom, false),
+            /Reuse identity mismatch|Frozen|reuse/i,
+          );
+        }
+        await write(path.join(root, "request.json"), request);
+      },
+    );
+    await t.test(
+      "per-opponent CLI freezes a small full plan; only full completions publish reusable receipts",
+      async () => {
+        const small = path.join(root, "small");
+        const cli = spawnSync(
+          process.execPath,
+          [
+            "--experimental-vm-modules",
+            "scripts/bot-improvement/setup-session.ts",
+            "--target",
+            target,
+            "--seed",
+            request.setupSeed,
+            "--session",
+            small,
+            "--max-iterations",
+            "2",
+            "--matches-per-opponent",
+            "3",
+          ],
+          { encoding: "utf8", timeout: 30000 },
+        );
+        assert.equal(cli.status, 0, cli.stderr);
+        assert.equal(JSON.parse(cli.stdout).matches, 3);
+        const fake = path.join(root, "fake-runner.mjs");
+        await writeFile(
+          fake,
+          `#!/usr/bin/env node
+import fs from 'node:fs';import path from 'node:path';
+const job=JSON.parse(fs.readFileSync(process.argv[process.argv.indexOf('--job')+1],'utf8'));const out=process.argv[process.argv.indexOf('--out')+1];fs.mkdirSync(out,{recursive:true});
+for(const m of job.matches){const p=path.join(out,'matches',m.match.id);fs.mkdirSync(p,{recursive:true});fs.writeFileSync(path.join(p,'done.json'),JSON.stringify({match:m.match.id}));}
+fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({completedGames:job.matches.length*4,failedGames:0,skippedGames:0,failures:{}}));
+`,
+          { mode: 0o755 },
+        );
+        const full = await executeMatches({
+          session: small,
+          out: path.join(small, "evaluations/full"),
+          workers: "1",
+          binary: fake,
+        });
+        assert.ok(full.receipt);
+        const receipt = await read(full.receipt!);
+        assert.equal(receipt.completedMatches.length, 3);
+        assert.equal(Object.keys(receipt.matches).length, 3);
+        for (const evidence of Object.values(receipt.matches) as {
+          path: string;
+          sha256: string;
+        }[])
+          assert.equal(
+            digest(
+              await readFile(
+                path.join(path.dirname(full.receipt!), evidence.path),
+              ),
+            ),
+            evidence.sha256,
+          );
+        const reused = await prepareIteration({
+          session: small,
+          iteration: 1,
+          runnerIdentity: "frozen-rust-match-pool/v1",
+          baseline: full.receipt!,
+        });
+        assert.equal(reused.baseline.action, "reuse");
+        const subset = await executeMatches({
+          session: small,
+          out: path.join(small, "evaluations/subset"),
+          workers: "1",
+          binary: fake,
+          matchCount: 2,
+        });
+        assert.equal(subset.receipt, null);
+      },
+    );
+
+    // Count-specific setup cases publish their own bot-side fixture reference.
+    // Restore the initial reference before asserting the original setup below.
+    await writeFile(path.join(target, "evaluation.json"), originalSetupConfig);
     await t.test(
       "published setup feeds preparation and session control without conversion",
       async () => {
@@ -236,6 +405,31 @@ test("setup CLI atomically publishes durable inputs, validates reuse, archives s
       path.join(suppliedResult.fixture, "manifest.json"),
     );
     assert.equal(suppliedManifest.opponents.length, 1);
+    const perOpponent = {
+      ...supplied,
+      matchesPerOpponent: 7,
+      session: path.join(root, "per-opponent"),
+    };
+    await write(path.join(root, "request.json"), perOpponent);
+    const perResult = run(perOpponent);
+    assert.equal(perResult.matches, 14);
+    assert.equal(perResult.games, 56);
+    const perManifest = await read(
+      path.join(perResult.fixture, "manifest.json"),
+    );
+    assert.equal(
+      perManifest.matches.filter(
+        (m: { opponentSlot: string }) => m.opponentSlot === "self",
+      ).length,
+      7,
+    );
+    assert.equal(
+      perManifest.matches.filter(
+        (m: { opponentSlot: string }) => m.opponentSlot === "opponent-1",
+      ).length,
+      7,
+    );
+
     await writeFile(path.join(opponent, "bot.ts"), "later edits");
     assert.match(
       await readFile(

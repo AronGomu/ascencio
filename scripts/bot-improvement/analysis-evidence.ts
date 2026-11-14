@@ -69,6 +69,7 @@ function xmlSummary(bytes: Buffer, root: string) {
           "game_id",
           "number",
           "status",
+          "failure_category",
           "winner",
           "draw",
           "result/outcome",
@@ -302,7 +303,9 @@ export async function finalizedXml(
     outcomes: neutral.games.map((g) => {
       const status = g.fields.status as "completed" | "failed" | "skipped";
       return status !== "completed"
-        ? status
+        ? g.fields.failure_category === "timeout"
+          ? ("timeout" as const)
+          : status
         : g.fields.winner === "a"
           ? ("win" as const)
           : g.fields.winner === "b"
@@ -311,5 +314,62 @@ export async function finalizedXml(
     }),
     events,
     sideboarding: neutral.fields["sideboarding/status"]!,
+  };
+}
+
+/** Select by the finalized marker, never by an unverified file-name heuristic. */
+export async function finalizedEvidence(
+  session: string,
+  relative: string,
+  expected: Parameters<typeof finalizedXml>[2],
+) {
+  const marker = JSON.parse(
+    await readFile(
+      await analysisPath(session, `${relative}/done.json`),
+      "utf8",
+    ),
+  );
+  if (
+    marker.adapter === undefined &&
+    marker.files &&
+    (Object.hasOwn(marker.files, "native/match.json") ||
+      Object.hasOwn(marker.files, "native/match.log"))
+  ) {
+    // A closed producer owns the outer receipt; native derivatives have their own pinned receipt.
+    const native = `${relative}/native`;
+    const nativeRefs = Object.entries(
+      marker.files as Record<string, string>,
+    ).filter(([file]) => file.startsWith("native/") || file === "fixture.json");
+    for (const [file, sha256] of nativeRefs)
+      await readEvidence(session, { path: `${relative}/${file}`, sha256 });
+    const { publishTextCompletion, finalizedText } =
+      await import("./analysis-text-evidence.ts");
+    try {
+      await analysisPath(session, `${native}/done.json`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      try {
+        await publishTextCompletion(session, native, expected);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      }
+    }
+    return {
+      ...(await finalizedText(session, native, expected)),
+      adapter: "linked-text-v1" as const,
+    };
+  }
+  if (marker.adapter === "linked-text-v1" || marker.adapter === "game-log-v2") {
+    const { finalizedText } = await import("./analysis-text-evidence.ts");
+    return {
+      ...(await finalizedText(session, relative, expected)),
+      adapter: "linked-text-v1" as const,
+    };
+  }
+  if (marker.adapter !== undefined)
+    throw new Error("Unsupported completion adapter");
+  return {
+    ...(await finalizedXml(session, relative, expected)),
+    adapter: "frozen-xml-v1" as const,
   };
 }

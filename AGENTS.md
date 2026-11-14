@@ -21,9 +21,7 @@ ascencio/
 │
 ├── .agents/skills/                   # Project-local agent workflows
 │   ├── ai-bot-self-improvement/
-│   │   └── SKILL.md                  # Bot improvement orchestration and result reporting
-│   ├── ai-bot-parallel-improvement/
-│   │   └── SKILL.md                  # Frozen setup and parallel improvement orchestration
+│   │   └── SKILL.md                  # Bot improvement orchestration, run summaries and temporary log contracts
 │   ├── ascencio-tests/
 │   │   └── SKILL.md                  # Select and run related tests locally
 │   └── impeccable/
@@ -55,6 +53,11 @@ ascencio/
 │   │   ├── 04-data/                  # Data, saves, assets and historical transport
 │   │   ├── 05-presentation/          # UI and rendering architecture
 │   │   ├── 06-quality/
+│   │   │   ├── typescript-runner-performance-implementation-plan.md # Fresh-session execution plan for runner and workflow acceleration
+│   │   │   ├── bot-improvement-performance-retrospective.html # Measured workflow costs and TypeScript-first optimization plan
+│   │   │   ├── experimental-typescript-runner.md # Persistent Node engine runner comparison
+│   │   │   ├── experimental-replay-pool.md # Explicit loss-reason queue, worker isolation and replay experiments
+│   │   │   ├── independent-batch-runner.md # Default batch execution, session allowances and legacy archive
 │   │   │   ├── testing.md            # Test strategy and verification routes
 │   │   │   ├── diagnostics.md        # Errors, traces and reproducibility
 │   │   │   ├── bot-improvement-loop.md # Bounded real-engine bot improvement loop
@@ -216,6 +219,36 @@ ascencio/
 │   ├── bot-experiment/               # Historical Rust experiment reproduction commands
 │   ├── bot-evaluation/               # TypeScript bot host, verified decision replay and evaluator schemas
 │   ├── bot-improvement/              # Frozen sessions, execution, analysis, aggregation and decisions
+│   │   ├── run-matches.ts           # Default session batch runner CLI and public tooling exports
+│   │   ├── session-batch-runner.ts  # Session admission, batch execution, settlement and baseline receipts
+│   │   ├── batch-session-accounting.ts # Durable game allocations and worker-journal settlement
+│   │   ├── batch-storage-lease.ts   # Shared session quota reservation for independent workers
+│   │   ├── prepare-match-job.ts     # Verified frozen schedules, snapshots and engine job construction
+│   │   ├── match-process.ts         # Subprocess lifecycle and shared match CLI options
+│   │   ├── archive/                 # Legacy supervisor, benchmark and 2–8-worker calibration
+│   │   ├── run-batch-matches.ts     # Standalone batch runner and shared prepared-job launcher
+│   │   ├── run-typescript-native.ts  # Default TypeScript execution, session leases, journals and verified resume
+│   │   ├── typescript-native-worker.ts # Persistent in-process WASM host and game/checkpoint records
+│   │   ├── typescript-native-completion.ts # Shared read-only canonical completion and resume verification
+│   │   ├── typescript-native-executor.ts # External deadlines, restart and per-game timeout continuation
+│   │   ├── typescript-calibration.ts # Separate TypeScript runtime and machine recommendation identity
+│   │   ├── typescript-benchmark.ts # Native-evidence TypeScript calibration measurement
+│   │   ├── typescript-native-evidence.ts # Native v2 log encoder, canonical hashing and receipt validation
+│   │   ├── run-typescript-matches.ts # Experimental persistent Node worker match pool
+│   │   ├── typescript-match-worker.ts # In-process WASM engine, four games and sideboarding
+│   │   ├── compare-native-runners.ts # Full actor timelines and sideboarding parity via replay rules
+│   │   ├── benchmark-typescript-matches.ts # Rust versus integrated TypeScript gameplay and timings
+│   │   ├── worker-calibration.ts      # Shared exhaustive CPU stages and median recommendation
+│   │   ├── calibrate-batch-workers.ts # Independent TypeScript/Rust CPU calibration and recommendations
+│   │   ├── compare-match-runners.ts # Short paired legacy/batch performance comparison
+│   │   ├── batch-benchmark.ts       # Shared gameplay and completion verification for benchmarks
+│   │   ├── run-replay-pool.ts        # Experimental bounded replay scheduling and case receipts
+│   │   ├── replay-pool-contract.ts   # Reason variants, explicit critical decisions and result contracts
+│   │   ├── prepare-replay-pool.ts    # Loss discovery, immutable variant bundles and input pins
+│   │   ├── replay-work-queue.ts      # Dynamic batch assignment across replay worker slots
+│   │   ├── replay-pool-process.ts    # Case process groups, deadlines and cancellation
+│   │   ├── replay-output-budget.ts  # Independent replay writer allowances under the shared quota
+│   │   ├── benchmark-replay-pool.ts  # Independent replay CPU calibration and behavior comparisons
 │   │   ├── replay-game-decision.ts   # Replay recorded choices and compare AI continuations
 │   │   ├── prune-improvement-iteration.ts # Delete analysed action traces; retain results and receipts
 │   │   ├── migrate-improvement-run.ts # Verified linked-evidence migration without replay
@@ -226,15 +259,22 @@ ascencio/
 │   │   ├── session-contract.ts       # Frozen setup and candidate validation schema
 │   │   ├── iteration-contract.ts     # Prepared bindings and baseline receipts
 │   │   ├── session-control-contract.ts # Stop/resume and execution accounting
+│   │   ├── output-storage.ts         # Shared output quota, protected headroom and atomic writes
 │   │   ├── prepare-iteration.ts      # Accepted snapshot, self binding and baseline reuse
 │   │   ├── analysis-contract.ts      # Analysis packets, claims and report sections
 │   │   ├── analysis-discovery.ts     # Frozen execution bindings and match packet preparation
-│   │   ├── analysis-evidence.ts      # Finalized runner XML adapter and event references
-│   │   ├── analysis-report.ts        # Structural report and reference validation
+│   │   ├── analysis-evidence.ts      # Legacy evidence validation and finalized adapter selection
+│   │   ├── analysis-text-evidence.ts # Verified game-log evidence and legacy record reader
+│   │   ├── game-log.ts               # Lossless typed game logs, decoding and loss-only views
+│   │   ├── analysis-slices.ts        # Durable 250-match analyst claims, loss filtering and reports
+│   │   ├── publish-text-match.ts     # Publish verified native match completion for streaming analysis
+│   │   ├── benchmark-behavior.ts     # Verified gameplay fingerprints for worker comparisons
+│   │   ├── analysis-report.ts        # Markdown findings, generated reports and reference validation
 │   │   ├── prepare-analyses.ts       # Durable bounded analysis queue; no model invocation
 │   │   ├── control-session.ts        # Admission, settlement, continuation and reports
 │   │   ├── decision-contract.ts      # Pinned orchestrator decision and outcome schema
 │   │   ├── apply-decision.ts         # Recoverable archive and atomic accepted-state commit
+│   │   ├── commit-bot-version.ts     # Journaled bot-version Git publication and crash recovery
 │   │   └── session-lock.ts           # Shared session write lock
 │   └── lib/
 │       ├── asset-roots.ts            # Current acquisition and source-root mapping
@@ -246,10 +286,16 @@ ascencio/
 ├── tools/bot-evaluation/             # Separate Rust developer executable
 │   ├── Cargo.toml                    # Evaluator dependencies and release settings
 │   └── src/
-│       ├── main.rs                   # Evaluate, compare, benchmark and improve commands
-│       ├── frozen_pool.rs            # Frozen-session scheduling, budgets and resume
+│       ├── main.rs                   # Evaluate, independent batches, compare, benchmark and improve commands
+│       ├── batch_runner.rs           # Independent persistent batch workers and durable reservations
+│       ├── worker_storage.rs         # Independent incremental writer allowances and staging accounting
+│       ├── archive/frozen_pool.rs    # Legacy per-match session supervisor
+│       ├── frozen_match_support.rs   # Shared host initialization, identities and match metrics
 │       ├── frozen_match.rs           # Four-game execution through existing engine/evidence
 │       ├── frozen_evidence.rs        # Completion markers, replay hashes and integrity
+│       ├── native_match_evidence.rs  # Authoritative game/match log writing and resume decoding
+│       ├── log_codec.rs              # Lossless typed text record encoding and validation
+│       ├── output_storage.rs         # Cross-process output quota and atomic publication
 │       ├── runner.rs                 # Sequential real-engine match scheduling
 │       ├── config.rs                 # Evaluator configuration
 │       └── improvement/             # Bounded strategy improvement, persistence and statistics

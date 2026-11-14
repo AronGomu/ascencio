@@ -60,6 +60,22 @@ pub fn append(
     new_count: Option<u64>,
 ) -> Result<()> {
     let _timer = xml::WriteTimer::start();
+    if crate::output_storage::root(path).is_some() {
+        let root = if container == "occurrences" {
+            "diagnostics"
+        } else {
+            "bug-ticket"
+        };
+        let mut doc = xml::read(path, root)?;
+        doc[container][child]
+            .as_array_mut()
+            .ok_or("Missing append collection")?
+            .push(value.clone());
+        if let Some(n) = new_count {
+            doc["occurrence_count"] = serde_json::json!(n);
+        }
+        return xml::write(path, root, &doc);
+    }
     let bytes = xml::fragment(child, value)?;
     let tmp = path.with_extension("xml.tmp");
     let mut reader = Reader::from_reader(BufReader::new(fs::File::open(path)?));

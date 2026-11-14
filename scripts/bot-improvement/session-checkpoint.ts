@@ -1,6 +1,6 @@
-import { readFile, writeFile, rename, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { writeOutput } from "./output-storage.ts";
 import { digest } from "./session-fixtures.ts";
 import type { EvidenceReference } from "./session-control-contract.ts";
 
@@ -15,16 +15,15 @@ export async function optionalJson(file: string) {
   }
 }
 export async function save(file: string, data: unknown) {
-  const stage = `${file}.staging-${randomUUID()}`;
+  const bytes = `${JSON.stringify(data, null, 2)}\n`;
   try {
-    await writeFile(stage, `${JSON.stringify(data, null, 2)}\n`, {
-      flag: "wx",
-    });
-    await rename(stage, file);
-  } finally {
-    await rm(stage, { force: true });
+    if ((await readFile(file, "utf8")) === bytes) return;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
+  await writeOutput(file, bytes);
 }
+
 export async function evidence(session: string, ref: EvidenceReference) {
   if (
     !ref ||

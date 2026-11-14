@@ -1,4 +1,5 @@
-export type GameOutcome = "win" | "loss" | "draw" | "failed" | "skipped";
+export type GameOutcome =
+  "win" | "loss" | "draw" | "failed" | "skipped" | "timeout";
 export interface MatchObservation {
   id: string;
   slot: string;
@@ -60,6 +61,7 @@ function metrics(rows: MatchObservation[]) {
     losses: count("loss"),
     draws: count("draw"),
     failedGames: count("failed"),
+    ignoredTimeoutGames: count("timeout"),
     skippedGames: count("skipped"),
     sideboardingFailures: rows.filter((m) => m.sideboarding === "failed")
       .length,
@@ -87,7 +89,10 @@ export function aggregateStatistics(
         m.games !== null &&
         (m.games.length !== 4 ||
           m.games.some(
-            (g) => !["win", "loss", "draw", "failed", "skipped"].includes(g),
+            (g) =>
+              !["win", "loss", "draw", "failed", "skipped", "timeout"].includes(
+                g,
+              ),
           )),
     )
   )
@@ -117,5 +122,73 @@ export function aggregateStatistics(
       winRateDifference: pairedEstimate(paired.map((m) => m.winDifference)),
       scoreRateDifference: pairedEstimate(paired.map((m) => m.scoreDifference)),
     },
+  };
+}
+
+/** Decision statistic: equal opponent weights, paired individual games, no intervals. */
+export function pairedGameDecision(
+  control: MatchObservation[],
+  candidate: MatchObservation[],
+) {
+  // Validate identities, schedules and outcome vocabulary with the shared contract.
+  aggregateStatistics(control, candidate);
+  const other = new Map(candidate.map((m) => [m.id, m]));
+  const slots = [...new Set(control.map((m) => m.slot))].sort();
+  const valid = (g: GameOutcome | undefined) =>
+    g !== undefined && ["win", "loss", "draw"].includes(g);
+  const perOpponent = slots.map((slot) => {
+    let pairs = 0,
+      ignored = 0,
+      unavailable = 0,
+      aWins = 0,
+      bWins = 0;
+    for (const a of control.filter((m) => m.slot === slot)) {
+      const b = other.get(a.id)!;
+      for (let i = 0; i < 4; i++) {
+        const x = a.games?.[i],
+          y = b.games?.[i];
+        if (x === "timeout" || y === "timeout") {
+          ignored++;
+          continue;
+        }
+        if (!valid(x) || !valid(y)) {
+          unavailable++;
+          continue;
+        }
+        pairs++;
+        aWins += Number(x === "win");
+        bWins += Number(y === "win");
+      }
+    }
+    return {
+      slot,
+      weight: 1,
+      pairedGames: pairs,
+      ignoredPairs: ignored,
+      unavailablePairs: unavailable,
+      controlWinRate: pairs ? aWins / pairs : null,
+      candidateWinRate: pairs ? bWins / pairs : null,
+    };
+  });
+  const assessable =
+    perOpponent.length > 0 &&
+    perOpponent.every((p) => p.pairedGames > 0 && p.unavailablePairs === 0);
+  const controlRate = assessable
+    ? sum(perOpponent.map((p) => p.controlWinRate!)) / slots.length
+    : null;
+  const candidateRate = assessable
+    ? sum(perOpponent.map((p) => p.candidateWinRate!)) / slots.length
+    : null;
+  return {
+    unit: "game",
+    drawWins: 0,
+    weighting: "equal-opponents",
+    perOpponent,
+    controlWinRate: controlRate,
+    candidateWinRate: candidateRate,
+    difference: assessable ? candidateRate! - controlRate! : null,
+    assessable,
+    recommendation:
+      assessable && candidateRate! > controlRate! ? "accept" : "retain",
   };
 }

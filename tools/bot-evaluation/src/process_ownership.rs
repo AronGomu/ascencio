@@ -1,6 +1,6 @@
 //! Durable process identities let a new dispatcher terminate only its dead owner's hosts.
 use crate::{
-    frozen_pool::{read, save},
+    frozen_match_support::{read, save},
     xml::Result,
 };
 use serde_json::{json, Value};
@@ -67,6 +67,18 @@ impl Owners {
         };
         save(&this.path, &this.document)?;
         Ok(this)
+    }
+    pub fn terminate_hosts(&self) -> Result<()> {
+        for host in self.document["hosts"].as_array().ok_or("Missing hosts")? {
+            let pid = host["pid"].as_u64().ok_or("Invalid host pid")? as u32;
+            if token(pid).is_some_and(|t| host["start"] == t) {
+                #[cfg(target_os = "linux")]
+                unsafe {
+                    libc::kill(pid as i32, libc::SIGKILL);
+                }
+            }
+        }
+        Ok(())
     }
     pub fn register(&mut self, pid: u32) -> Result<()> {
         self.document["hosts"]

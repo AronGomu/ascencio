@@ -47,15 +47,21 @@ impl Admission {
         Ok(())
     }
     fn games(&self, base: &Path, record: &Value) -> Result<Value> {
-        let id = record["match_id"].as_str().ok_or("Missing match id")?;
-        let file = base.join("matches").join(id).join("match.xml");
-        let relative = file
-            .strip_prefix(&self.session)
-            .map_err(|_| "Ledger evidence must be session-relative")?;
-        let evidence =
-            json!({"path":relative.to_string_lossy(),"sha256":identity::sha(fs::read(&file)?)});
-        Ok(json!(xml::items(&record["games"],"game").iter().filter(|g|g["status"]=="completed").map(|g|json!({"number":g["number"].as_u64().or_else(||g["number"].as_str().and_then(|s|s.parse::<u64>().ok())).unwrap(),"evidence":evidence})).collect::<Vec<_>>()))
+        let mut games = vec![];
+        for game in xml::items(&record["games"], "game") {
+            if game["status"] != "completed" {
+                continue;
+            }
+            let number = xml::integer(&game["number"])?;
+            let file = base.join(format!("native/games/game-{number}/game.log"));
+            let relative = file
+                .strip_prefix(&self.session)
+                .map_err(|_| "Ledger evidence must be session-relative")?;
+            games.push(json!({"number":number,"evidence":{"path":relative.to_string_lossy(),"sha256":identity::sha(fs::read(file)?)}}));
+        }
+        Ok(json!(games))
     }
+
     pub fn reserve(&mut self, id: &str, recovered: Option<(&Path, &Value)>) -> Result<Reservation> {
         let games = match recovered {
             Some((base, record)) => self.games(base, record)?,

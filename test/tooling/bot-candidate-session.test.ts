@@ -1,6 +1,6 @@
 import test from "node:test";
 import { controlSession } from "../../scripts/bot-improvement/control-session.ts";
-import { executeMatches } from "../../scripts/bot-improvement/run-matches.ts";
+import { executeMatches } from "../../scripts/bot-improvement/archive/run-matches.ts";
 import { bindMatches } from "../../scripts/bot-improvement/match-session.ts";
 import { applyDecision } from "../../scripts/bot-improvement/apply-decision.ts";
 import type { CandidateDecisionRequest } from "../../scripts/bot-improvement/decision-contract.ts";
@@ -29,7 +29,7 @@ const save = async (file: string, value: unknown) => {
 };
 const json = async (file: string) => JSON.parse(await readFile(file, "utf8"));
 
-async function preparedSession() {
+async function preparedSession(packaged = false) {
   await mkdir(".tmp", { recursive: true });
   const root = await mkdtemp(path.resolve(".tmp/candidate-session-"));
   try {
@@ -63,8 +63,13 @@ async function preparedSession() {
       banlist: "rules.json",
       profile: "mr5",
       configuration: {},
-      module: "builtin:generalist",
+      module: packaged ? "./bot.ts" : "builtin:generalist",
     });
+    if (packaged)
+      await writeFile(
+        path.join(target, "bot.ts"),
+        "export const contractVersion = 1; export const create = () => ({ decide: () => ({}), sideboard: () => ({}) });",
+      );
     await save(path.join(target, "rules.json"), []);
     await writeFile(
       path.join(target, "deck.ydk"),
@@ -175,7 +180,8 @@ test("actual setup and iteration snapshots validate, promote and prepare the nex
     await controlSession(setup.session, { action: "start", iteration: 2 });
     const next = await prepareIteration({ ...options, iteration: 2 });
     assert.equal(next.accepted.identity, candidate.bot.identity);
-    assert.equal(next.self.identity, candidate.bot.identity);
+    assert.equal(next.self.identity, prepared.self.identity);
+    assert.notEqual(next.self.identity, candidate.bot.identity);
     assert.notEqual(next.comparisonIdentity, prepared.comparisonIdentity);
     const second = await validateCandidate({
       schemaVersion: 1,
@@ -756,6 +762,53 @@ process.exitCode = 2;
     } finally {
       await next.release();
     }
+  } finally {
+    await rm(f.root, { recursive: true, force: true });
+  }
+});
+
+test("packaged baseline validates exact frozen bytes and rejects executable edits", async () => {
+  const f = await preparedSession(true);
+  try {
+    const request = {
+      schemaVersion: 1 as const,
+      fixture: f.prepared.fixture,
+      accepted: f.prepared.accepted,
+      candidate: f.prepared.candidate.path,
+      output: path.join(f.root, "baseline-validation"),
+    };
+    const validatePackaged = async (input: typeof request) => {
+      const requestPath = path.join(f.root, "packaged-validation-request.json");
+      await save(requestPath, input);
+      const run = spawnSync(
+        process.execPath,
+        [
+          "--experimental-vm-modules",
+          "scripts/bot-improvement/validate-candidate.ts",
+          requestPath,
+        ],
+        { encoding: "utf8", timeout: 30000 },
+      );
+      assert.equal(run.error, undefined, run.stderr);
+      return JSON.parse(run.stdout) as CandidateValidationResult;
+    };
+    const valid = await validatePackaged(request);
+    assert.equal(valid.status, "valid", JSON.stringify(valid));
+    assert.equal(valid.candidate!.bot.identity, f.prepared.accepted.identity);
+    assert.deepEqual(
+      await json(path.join(request.output, "result.json")),
+      valid,
+    );
+    await writeFile(
+      path.join(request.candidate, "bot.mjs"),
+      "export const contractVersion = 2;",
+    );
+    const invalid = await validatePackaged({
+      ...request,
+      output: path.join(f.root, "changed-validation"),
+    });
+    assert.equal(invalid.status, "invalid");
+    assert.match(invalid.reasons[0]!.message, /unchanged frozen bytes/);
   } finally {
     await rm(f.root, { recursive: true, force: true });
   }

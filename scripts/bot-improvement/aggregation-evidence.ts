@@ -2,10 +2,13 @@ import path from "node:path";
 import { isDeepStrictEqual as equal } from "node:util";
 import {
   analysisPath,
-  finalizedXml,
+  finalizedEvidence,
   readEvidence,
 } from "./analysis-evidence.ts";
-import { validateAnalysisReport } from "./analysis-report.ts";
+import {
+  validateAnalysisReport,
+  parseLossMarkdown,
+} from "./analysis-report.ts";
 import { identity } from "./session-fixtures.ts";
 import type { FrozenSetup } from "./session-contract.ts";
 import type {
@@ -91,7 +94,10 @@ export async function collectEvaluation(
       throw new Error("Invalid baseline receipt binding/coverage");
   }
   const rows: MatchObservation[] = [];
-  const finalized = new Map<string, Awaited<ReturnType<typeof finalizedXml>>>();
+  const finalized = new Map<
+    string,
+    Awaited<ReturnType<typeof finalizedEvidence>>
+  >();
   for (const match of [...frozen.matches].sort((a, b) =>
     a.id.localeCompare(b.id),
   )) {
@@ -128,7 +134,7 @@ export async function collectEvaluation(
       });
     }
     try {
-      const result = await finalizedXml(session, relative, {
+      const result = await finalizedEvidence(session, relative, {
         match: match.id,
         executionIdentity: job.identity,
         fixtureIdentity: frozen.identity,
@@ -194,7 +200,7 @@ async function reportCompleteness(
   executionIdentity: string,
   candidateIdentity: string,
   frozen: FrozenSetup,
-  finalized: Map<string, Awaited<ReturnType<typeof finalizedXml>>>,
+  finalized: Map<string, Awaited<ReturnType<typeof finalizedEvidence>>>,
   refs: EvidenceReference[],
 ) {
   const expected = frozen.matches.map((m) => m.id).sort();
@@ -248,7 +254,7 @@ async function reportCompleteness(
       if (
         !result ||
         packet.schemaVersion !== 1 ||
-        packet.adapter !== "frozen-xml-v1" ||
+        packet.adapter !== result.adapter ||
         packet.id !== job.id ||
         packet.iteration !== manifest.iteration ||
         packet.role !== role ||
@@ -264,15 +270,34 @@ async function reportCompleteness(
         }) ||
         !equal(packet.files, result.files) ||
         !equal(packet.events, result.events) ||
-        !equal(packet.games, result.games)
+        !equal(packet.games, result.games) ||
+        !equal(
+          packet.lossGames,
+          result.adapter === "linked-text-v1" ? result.lossGames : undefined,
+        )
       )
         throw new Error("Analysis packet does not match finalized evidence");
       if (!job.report) throw new Error("Missing completed report");
-      validateAnalysisReport(
-        JSON.parse((await readEvidence(session, job.report)).toString()),
-        packet,
-        job.packet.sha256,
+      const report = JSON.parse(
+        (await readEvidence(session, job.report)).toString(),
       );
+      validateAnalysisReport(report, packet, job.packet.sha256);
+      if (packet.adapter === "linked-text-v1" && !job.findings)
+        throw new Error("Missing archived Markdown findings");
+      if (job.findings) {
+        if (
+          !equal(
+            parseLossMarkdown(
+              (await readEvidence(session, job.findings)).toString(),
+              packet,
+              job.packet.sha256,
+            ),
+            report,
+          )
+        )
+          throw new Error("Markdown findings differ from stored report");
+        refs.push(job.findings);
+      }
       refs.push(job.packet, job.report);
       complete++;
     } catch (error) {

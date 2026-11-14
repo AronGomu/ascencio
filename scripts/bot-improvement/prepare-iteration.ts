@@ -1,12 +1,8 @@
+import { mkdir, readFile, rename, rm, stat, lstat } from "node:fs/promises";
 import {
-  mkdir,
-  readFile,
-  writeFile,
-  rename,
-  rm,
-  stat,
-  lstat,
-} from "node:fs/promises";
+  writeBudgetedFile as writeFile,
+  ensureSessionOutput,
+} from "./output-storage.ts";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -85,6 +81,7 @@ async function baselinePlan(
 }
 
 export async function prepareIteration(options: IterationOptions) {
+  await ensureSessionOutput(path.resolve(options.session));
   return withSessionLock(path.resolve(options.session), () =>
     prepareLocked(options),
   );
@@ -158,7 +155,7 @@ async function prepareLocked(options: IterationOptions) {
         path: path.join(config.fixture.path, `opponents/opponent-${i + 1}`),
         identity: opponent.identity,
       })),
-      { slot: "self", ...reference },
+      { slot: "self", path: initial, identity: frozen.target.identity },
     ];
     const comparisonIdentity = identity({
       fixture: frozen.identity,
@@ -178,7 +175,7 @@ async function prepareLocked(options: IterationOptions) {
       fixture: config.fixture,
       accepted: { ...reference, bot },
       control: reference,
-      self: reference,
+      self: { path: initial, identity: frozen.target.identity },
       candidate: {
         path: path.join(destination, "candidate"),
         basedOn: bot.identity,
@@ -191,8 +188,8 @@ async function prepareLocked(options: IterationOptions) {
       plan: {
         control: baseline.action === "reuse" ? "reuse-baseline" : "evaluate",
         candidate: "validate-then-evaluate",
-        matchesPerEvaluation: 500,
-        gamesPerEvaluation: 2000,
+        matchesPerEvaluation: frozen.matches.length,
+        gamesPerEvaluation: frozen.matches.length * 4,
       },
     };
     if (

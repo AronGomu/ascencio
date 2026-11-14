@@ -1,4 +1,5 @@
-import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "./output-storage.ts";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type {
@@ -15,6 +16,8 @@ import {
   writeTree,
 } from "./candidate-files.ts";
 import { compileCandidate, ValidationFailure } from "./validation-build.ts";
+import { loadCriticalInputs } from "../bot-evaluation/critical-inputs.ts";
+import { instantiate } from "../bot-evaluation/host-inputs.ts";
 
 function body(bot: FrozenBot) {
   const { identity: _id, files: _files, ...metadata } = bot;
@@ -126,6 +129,65 @@ export async function validateCandidate(
         "input",
         "Candidate changed while snapshotting; retry to a fresh output directory",
       );
+
+    // Baseline packages are checked without translating their policy or rebuilding
+    // against live shared code. Changed packages need a separate scoped edit adapter.
+    if (accepted.kind === "module" && accepted.module === "bot.mjs") {
+      if (
+        accepted.identity !== frozen.target.identity ||
+        treeIdentity(submitted) !== treeIdentity(acceptedFiles)
+      )
+        throw new ValidationFailure(
+          "scope",
+          "Packaged baseline validation requires unchanged frozen bytes; changed packages need a target-AI-only edit adapter",
+        );
+      const source = submitted["bot.mjs"]?.toString();
+      if (!source || /\bimport\s*\(/.test(source))
+        throw new ValidationFailure(
+          "scope",
+          "Packaged bot must be self-contained",
+        );
+      const { dependencies } = await loadCriticalInputs(
+        path.join(request.fixture.path, "content"),
+      );
+      await instantiate(
+        {
+          module: "bot.mjs",
+          source,
+          dependencies: [],
+          config: accepted.configuration,
+        },
+        dependencies,
+      );
+      await verifyFrozen(request.fixture.path);
+      if (
+        treeIdentity(await readTree(request.accepted.path)) !==
+        treeIdentity(acceptedArchive)
+      )
+        throw new ValidationFailure(
+          "input",
+          "Accepted archive changed during validation",
+        );
+      const compiledRoot = path.join(destination, "candidate");
+      await writeTree(compiledRoot, submitted);
+      await writeFile(
+        path.join(compiledRoot, "frozen-bot.json"),
+        JSON.stringify(accepted, null, 2) + "\n",
+        { flag: "wx" },
+      );
+      result.sourceIdentity = treeIdentity(submitted);
+      result.executableIdentity = identity({
+        "bot.mjs": accepted.files["bot.mjs"],
+      });
+      result.candidate = { path: compiledRoot, bot: accepted };
+      result.status = "valid";
+      await writeFile(
+        path.join(destination, "result.json"),
+        JSON.stringify(result, null, 2) + "\n",
+        { flag: "wx" },
+      );
+      return result;
+    }
 
     let editable: string;
     let executable: string;

@@ -230,6 +230,13 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
                 }
                 continue;
             }
+            if host_dead && !failed {
+                host = Host::start()?;
+                ready = init(&mut host, &c)?;
+                if manifest(&c, &ready, &run)?["identity_sha256"] != saved_manifest["identity_sha256"] {
+                    return Err("Input identity changed after timed-out game".into());
+                }
+            }
             if index == 2 {
                 let mut checkpoint = json!({"captured_at":now(),"pending_prompt":{"kind":"sideboarding","constraints":{"preserve_section_sizes":true,"preserve_total_multiset":true}},"attempted_response":null,"player":null,"private_engine_state":null,"bot_debug_state":null,"recent_engine_events":{}});
                 if let Err(e) = sideboard(
@@ -292,7 +299,7 @@ fn evaluate_inner(c: Config, resume: Option<PathBuf>) -> Result<(i32, PathBuf)> 
             host_dead = result.host_dead;
             metrics.peak = metrics.peak.max(result.peak);
             if let Some(f) = &result.failure {
-                failed = true;
+                failed = f["category"] != "timeout";
                 let bug = bugs.record(
                     &run,
                     &id,

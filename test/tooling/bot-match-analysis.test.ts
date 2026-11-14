@@ -33,7 +33,7 @@ async function put(file: string, value: unknown) {
     typeof value === "string" ? value : JSON.stringify(value),
   );
 }
-async function fixture(workers = 1) {
+async function fixture(workers = 1, matchCount = 500) {
   await mkdir(".tmp", { recursive: true });
   const session = await mkdtemp(path.resolve(".tmp/match-analysis-"));
   const botBody = {
@@ -53,7 +53,7 @@ async function fixture(workers = 1) {
     target: bot,
     opponents: [],
     files: { "versions/initial/bot.mjs": digest("bot") },
-    matches: schedule("analysis", bot.deck, []),
+    matches: schedule("analysis", bot.deck, [], matchCount),
   };
   const frozen = { ...body, identity: identity(body) };
   await put(path.join(session, "fixture/manifest.json"), frozen);
@@ -436,6 +436,190 @@ test("adapter rejects symlinks, unlisted files, unsafe marker paths and malforme
       finalizedXml(f.session, "../escape", expected),
       /Unsafe/,
     );
+  } finally {
+    await rm(f.session, { recursive: true, force: true });
+  }
+});
+
+test("native linked logs stream into durable claims and Markdown loss findings without XML", async () => {
+  const f = await fixture();
+  const { publishTextCompletion } =
+    await import("../../scripts/bot-improvement/analysis-text-evidence.ts");
+  const native = async (
+    number: number,
+    hasLosses: boolean,
+    badLink = false,
+  ) => {
+    const item = f.job.matches[number - 1]!;
+    const match = item.match.id;
+    const relative = `run/matches/${match}`;
+    await put(path.join(f.session, "shared.json"), {
+      hash: digest("native-game"),
+    });
+    await put(path.join(f.session, relative, "fixture.json"), item);
+    await put(path.join(f.session, relative, "match.json"), {
+      kind: "match",
+      data: {
+        match_id: match,
+        run_id: f.job.identity,
+        status: "completed",
+        sideboarding: { status: "completed" },
+      },
+    });
+    for (let n = 1; n <= 4; n++) {
+      const dir = path.join(f.session, relative, `games/game-${n}`);
+      const winner = hasLosses && n % 2 ? "b" : "a";
+      const metadata = {
+        game_id: `${match}-game-${n}`,
+        stage: n < 3 ? "pre_side" : "post_side",
+        starting_player: n % 2 ? "a" : "b",
+      };
+      await put(path.join(dir, "metadata.json"), metadata);
+      const common = {
+        game_id: { $ref: "metadata.json#/game_id" },
+        stage: { $ref: "metadata.json#/stage" },
+        status: "completed",
+      };
+      await put(path.join(dir, "game.json"), {
+        ...common,
+        number: n,
+        starter: { $ref: "metadata.json#/starting_player" },
+        winner,
+        draw: false,
+        evidence_sha256: {
+          $ref: badLink
+            ? "../../../../../../etc/passwd"
+            : "../../../../../shared.json#/hash",
+        },
+      });
+      for (const actor of ["a", "b"]) {
+        await put(path.join(dir, `${actor}.json`), {
+          ...common,
+          starting_player: { $ref: "metadata.json#/starting_player" },
+          result: {
+            evidence_sha256: digest("native-game"),
+            outcome: winner === actor ? "win" : "loss",
+          },
+          timeline: {
+            entry: [
+              {
+                sequence: 1,
+                kind: "decision",
+                decision_id: `${actor}-decision-${n}`,
+              },
+            ],
+          },
+        });
+        await put(
+          path.join(dir, `${actor}.log`),
+          `LOG v1 actor=${actor}\nD1 ${actor}-decision-${n}\n`,
+        );
+      }
+    }
+    await publishTextCompletion(f.session, relative, {
+      match,
+      executionIdentity: f.job.identity,
+      fixtureIdentity: f.frozen.identity,
+      candidateIdentity: f.bot.identity,
+      opponentIdentity: f.bot.identity,
+      item,
+    });
+    return relative;
+  };
+  try {
+    await assert.rejects(native(3, true, true), /Unsafe/);
+    await assert.rejects(
+      readFile(
+        path.join(
+          f.session,
+          "run/matches",
+          f.frozen.matches[2]!.id,
+          "done.json",
+        ),
+      ),
+      /ENOENT/,
+    );
+    const first = await native(1, true);
+    await native(2, false);
+    const synced = await f.sync();
+    assert.equal(synced.finalized, 2);
+    assert.equal(synced.completed, 1);
+    const claim = (
+      await f.run({ action: "claim", ...f.act, owner: "native-analyst" })
+    ).claim!;
+    const packet = JSON.parse(
+      await readFile(path.join(f.session, claim.packet.path), "utf8"),
+    ) as AnalysisPacket;
+    assert.equal(packet.adapter, "linked-text-v1");
+    assert.deepEqual(
+      packet.lossGames?.map((g) => g.game),
+      [1, 3],
+    );
+    assert.ok(packet.files.some((file) => file.path === "shared.json"));
+    assert.ok(packet.files.every((file) => !file.path.endsWith(".xml")));
+    const text = `# Match loss analysis\n\nJob: ${claim.id}\nPacket: ${claim.packet.sha256}\n\n- G1 | a-decision-1 | avoidable | Bad target | Prefer the opposing target\n- G3 | - | unclear | Insufficient visible information | Review another matching loss\n`;
+    await put(
+      path.join(f.session, "native-findings.md"),
+      text.replace("a-decision-1", "invented"),
+    );
+    const request = {
+      action: "complete" as const,
+      ...f.act,
+      job: claim.id,
+      token: claim.claim!.token,
+      report: await f.ref("native-findings.md"),
+    };
+    await assert.rejects(f.run(request), /unresolvable/);
+    await put(
+      path.join(f.session, "native-findings.md"),
+      text.split("- G3")[0]!,
+    );
+    await assert.rejects(
+      f.run({ ...request, report: await f.ref("native-findings.md") }),
+      /coverage/,
+    );
+    await put(path.join(f.session, "native-findings.md"), text);
+    const done = await f.run({
+      ...request,
+      report: await f.ref("native-findings.md"),
+    });
+    assert.equal(done.completed, 2);
+    assert.equal(
+      (await f.run({ action: "claim", ...f.act, owner: "extra" })).claim,
+      null,
+    );
+    await put(path.join(f.session, "native-findings.md"), "later live edits");
+    assert.deepEqual(
+      (await f.run({ action: "status", ...f.act })).integrity,
+      [],
+    );
+    await put(path.join(f.session, first, "games/game-1/a.log"), "tampered");
+    assert.ok(
+      (await f.run({ action: "status", ...f.act })).integrity.length > 0,
+    );
+    const again = await f.sync();
+    assert.ok(again.unavailable.some((m) => m.match === packet.match));
+  } finally {
+    await rm(f.session, { recursive: true, force: true });
+  }
+});
+
+test("post-evaluation sessions block loss analysts until every scheduled match finalizes", async () => {
+  const f = await fixture(1, 2);
+  try {
+    const configFile = path.join(f.session, "config.json");
+    const config = JSON.parse(await readFile(configFile, "utf8"));
+    await put(configFile, { ...config, analysisTiming: "after-evaluation" });
+    await f.finalized(1);
+    await f.sync();
+    await assert.rejects(
+      f.run({ action: "claim", ...f.act, owner: "early-analyst" }),
+      /Wait for all scheduled matches to finalize/,
+    );
+    await f.finalized(2);
+    await f.sync();
+    const result = await f.run({ action: "claim", ...f.act, owner: "analyst" });
+    assert.equal(result.claim?.match, "match-0001");
   } finally {
     await rm(f.session, { recursive: true, force: true });
   }

@@ -1,3 +1,7 @@
+import { parseMatchLog } from "../../scripts/bot-improvement/game-log.ts";
+import { benchmarkBehavior } from "../../scripts/bot-improvement/benchmark-behavior.ts";
+import { compareNativeRunners } from "../../scripts/bot-improvement/compare-native-runners.ts";
+import { messageActor } from "../../scripts/bot-evaluation/host-events.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -21,10 +25,11 @@ import { controlSession } from "../../scripts/bot-improvement/control-session.ts
 import {
   prepareMatches,
   executeMatches,
-} from "../../scripts/bot-improvement/run-matches.ts";
+} from "../../scripts/bot-improvement/archive/run-matches.ts";
 import {
   machineResources,
   resolveWorkers,
+  selectWorkerRecommendation,
 } from "../../scripts/bot-improvement/match-workers.ts";
 
 const session = process.env.ARO2_FROZEN_SESSION;
@@ -33,6 +38,36 @@ const binary = path.resolve(
 );
 const json = async (file: string) => JSON.parse(await readFile(file, "utf8"));
 const pause = () => new Promise((r) => setTimeout(r, 30));
+/** Compare complete persisted records through the existing strict replay rules.
+ * Independent executions may permute state-free engine description hints;
+ * source completion identities stay pinned and are still checked on resume.
+ */
+async function assertEquivalentGameplay(
+  left: string,
+  right: string,
+  ids: string[],
+) {
+  assert.equal(
+    await benchmarkBehavior(left, ids),
+    await benchmarkBehavior(right, ids),
+  );
+  const view = await mkdtemp(path.resolve(".tmp/frozen-gameplay-compare-"));
+  await writeFile(
+    path.join(view, "matches.json"),
+    JSON.stringify(
+      Object.fromEntries(
+        ids.map((id) => [
+          id,
+          path.relative(view, path.join(left, "matches", id)),
+        ]),
+      ),
+    ),
+  );
+  const comparison = await compareNativeRunners(view, right);
+  assert.equal(comparison.games, ids.length * 4);
+  assert.equal(comparison.fullTimelinesVerified, true);
+}
+
 test("worker selection respects CPU topology, pending work and session bound", async () => {
   const resources = await machineResources();
   assert.ok(resources.usable >= 1 && resources.usable <= resources.logical);
@@ -70,20 +105,27 @@ console.log(JSON.stringify({values,configuration:artifact.config}));`;
 });
 
 test(
-  "benchmark subset keeps the frozen 500 schedule and forwards supervisor SIGINT immediately",
+  "benchmark subset keeps the frozen schedule and forwards supervisor SIGINT immediately",
   { skip: !session, timeout: 45000 },
   async () => {
     const full = await prepareMatches({ session: session! });
-    const subset = await prepareMatches({ session: session!, matchCount: 24 });
-    assert.equal(full.job.matches.length, 500);
-    assert.equal(subset.job.matches.length, 24);
-    assert.deepEqual(subset.job.matches, full.job.matches.slice(0, 24));
+    const subsetCount = Math.min(24, full.totalMatches);
+    const subset = await prepareMatches({
+      session: session!,
+      matchCount: subsetCount,
+    });
+    assert.equal(full.job.matches.length, full.totalMatches);
+    assert.equal(subset.job.matches.length, subsetCount);
+    assert.deepEqual(
+      subset.job.matches,
+      full.job.matches.slice(0, subsetCount),
+    );
     await assert.rejects(
       prepareMatches({ session: session!, matchCount: 0 }),
       /Match count/,
     );
     await assert.rejects(
-      prepareMatches({ session: session!, matchCount: 501 }),
+      prepareMatches({ session: session!, matchCount: full.totalMatches + 1 }),
       /Match count/,
     );
     const root = await mkdtemp(path.resolve(".tmp/frozen-subset-stop-"));
@@ -91,13 +133,13 @@ test(
     const child = spawn(
       process.execPath,
       [
-        "scripts/bot-improvement/benchmark-matches.ts",
+        "scripts/bot-improvement/archive/benchmark-matches.ts",
         "--session",
         session!,
         "--out",
         out,
         "--matches",
-        "24",
+        String(subsetCount),
         "--repeats",
         "1",
       ],
@@ -178,7 +220,7 @@ test(
       const child = spawn(
         binary,
         [
-          "frozen",
+          "frozen-legacy",
           "--job",
           input,
           "--out",
@@ -215,7 +257,13 @@ test(
       b = await json(path.join(root, "two/result.json"));
     assert.equal(a.completedGames, 16);
     assert.equal(b.completedGames, 16);
-    assert.equal(a.replayIdentity, b.replayIdentity);
+    assert.match(a.replayIdentity, /^[a-f0-9]{64}$/);
+    assert.match(b.replayIdentity, /^[a-f0-9]{64}$/);
+    await assertEquivalentGameplay(
+      path.join(root, "one"),
+      path.join(root, "two"),
+      job.matches.map((m) => m.match.id),
+    );
     const progress = await json(path.join(root, "two/progress.json"));
     assert.deepEqual(
       progress.finalizedMatches,
@@ -258,12 +306,17 @@ test(
     assert.equal(await resumed.done, 0, resumed.output());
     const c = await json(path.join(root, "cancel/result.json"));
     assert.equal(c.completedGames, 16);
-    assert.equal(c.replayIdentity, a.replayIdentity);
+    assert.match(c.replayIdentity, /^[a-f0-9]{64}$/);
+    await assertEquivalentGameplay(
+      path.join(root, "one"),
+      path.join(root, "cancel"),
+      job.matches.map((m) => m.match.id),
+    );
     const corrupt = path.join(
       root,
       "two/matches",
       job.matches[1]!.match.id,
-      "fixture.json",
+      "native/match.log",
     );
     await appendFile(corrupt, " ");
     const rejected = start("two", 2, true, reversed);
@@ -332,7 +385,7 @@ test(
     const child = spawn(
       process.execPath,
       [
-        "scripts/bot-improvement/run-matches.ts",
+        "scripts/bot-improvement/archive/run-matches.ts",
         "--session",
         stopped,
         "--out",
@@ -394,7 +447,7 @@ test(
       const child = spawn(
         process.execPath,
         [
-          "scripts/bot-improvement/run-matches.ts",
+          "scripts/bot-improvement/archive/run-matches.ts",
           "--session",
           crashed,
           "--out",
@@ -424,15 +477,13 @@ test(
     for (let n = 0; n < 2000; n++) {
       try {
         const text = await readFile(
-          path.join(
-            crashOutput,
-            "matches/match-0001/matches/match-0001/match.xml",
-          ),
+          path.join(crashOutput, "matches/match-0001/native/match.log"),
           "utf8",
         );
+        const refs = parseMatchLog(text).refs;
         if (
-          text.includes("<status>completed</status>") &&
-          text.includes("<status>skipped</status>")
+          refs.some((r) => r.status === "completed") &&
+          refs.some((r) => r.status === "skipped")
         ) {
           checkpoint = true;
           break;
@@ -500,7 +551,9 @@ test(
     });
     assert.equal(a.completedGames, 4);
     assert.equal(b.completedGames, 4);
-    assert.equal(a.replayIdentity, b.replayIdentity);
+    assert.match(a.replayIdentity, /^[a-f0-9]{64}$/);
+    assert.match(b.replayIdentity, /^[a-f0-9]{64}$/);
+    await assertEquivalentGameplay(a.output, b.output, ["match-0001"]);
     assert.equal(
       (await json(path.join(first, "control.json"))).attempts.length,
       1,
@@ -529,3 +582,44 @@ test(
     );
   },
 );
+
+test("engine sentinel values never become invalid actor identities in match evidence", () => {
+  assert.equal(messageActor({ player: 0 }), 0);
+  assert.equal(messageActor({ controller: 1 }), 1);
+  for (const value of [2, 255, -1, "a", null, undefined])
+    assert.equal(messageActor({ player: value }), null);
+  const event = { player: 2, controller: 1 };
+  assert.equal(messageActor(event), null);
+  assert.deepEqual(event, { player: 2, controller: 1 });
+  assert.equal(messageActor({}), null);
+});
+
+test("calibration prefers six only within a reliable competitive timing band", () => {
+  const stage = (workers: number, time: number, reliable = true) => ({
+    workers,
+    reliable,
+    medianMs: time,
+    runs: [{ commandWallMs: time }],
+  });
+  assert.equal(
+    selectWorkerRecommendation([stage(4, 100), stage(6, 102)], 6).workers,
+    6,
+  );
+  assert.equal(
+    selectWorkerRecommendation([stage(4, 100), stage(6, 110)], 6).workers,
+    4,
+  );
+  assert.equal(
+    selectWorkerRecommendation([stage(8, 99), stage(4, 100), stage(6, 100)], 6)
+      .workers,
+    6,
+  );
+  assert.equal(
+    selectWorkerRecommendation([stage(8, 50, false), stage(6, 100)], 6).workers,
+    6,
+  );
+  assert.equal(
+    selectWorkerRecommendation([stage(6, 100, false)], 6).workers,
+    null,
+  );
+});

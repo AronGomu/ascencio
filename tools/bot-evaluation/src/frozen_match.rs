@@ -4,7 +4,7 @@ use crate::{
     config::Config,
     execution::{play, sideboard},
     host::Host,
-    match_evidence::{finish, new_match, save_match, verify_evidence},
+    match_evidence::{finish, new_match, verify_evidence},
     xml::{self, Result},
 };
 use serde_json::{json, Value};
@@ -20,6 +20,7 @@ pub fn execute(
     manifest: &Value,
     directory: &Path,
     stop: &AtomicBool,
+    restart: &mut dyn FnMut(&mut Host) -> Result<Value>,
 ) -> Result<(Value, [Value; 2])> {
     let f = c.frozen.as_ref().ok_or("Missing frozen match")?;
     let id = xml::text(&f["match"]["id"])?;
@@ -27,16 +28,22 @@ pub fn execute(
     let (mut record, mut reports) = new_match(run, id, manifest);
     let mut bugs = BugStore::new(directory);
     let mut decks = [f["decks"][0].clone(), f["decks"][1].clone()];
-    save_match(directory, &record, &reports)?;
+    crate::native_match_evidence::save(directory, &record, &reports, manifest, f)?;
     let mut failed = false;
+    let mut ready = ready.clone();
+    let mut restart_needed = false;
     for index in 0..4 {
         if failed || stop.load(Ordering::SeqCst) {
             break;
         }
+        if restart_needed {
+            ready = restart(host)?;
+            restart_needed = false;
+        }
         if index == 2 {
             let mut checkpoint = json!({"captured_at":crate::runtime_identity::now(),"pending_prompt":{"kind":"sideboarding"},"player":null});
             if let Err(error) =
-                sideboard(host, c, ready, &mut reports, &mut record, &mut checkpoint)
+                sideboard(host, c, &ready, &mut reports, &mut record, &mut checkpoint)
             {
                 host.kill();
                 let failure = json!({"category":"sideboarding_failure","message":error.to_string(),"stack":null});
@@ -63,7 +70,9 @@ pub fn execute(
             stop,
         )?;
         if let Some(failure) = &result.failure {
-            failed = true;
+            let timeout = failure["category"] == "timeout";
+            failed = !timeout;
+            restart_needed = timeout;
             let bug = bugs.record(
                 run,
                 id,
@@ -83,7 +92,7 @@ pub fn execute(
             r["games"]["game"][index] = result.records[i].clone();
         }
         finish(&mut record);
-        save_match(directory, &record, &reports)?;
+        crate::native_match_evidence::save(directory, &record, &reports, manifest, f)?;
     }
     finish(&mut record);
     for (index, g) in record["games"]["game"]
@@ -103,7 +112,7 @@ pub fn execute(
             }
         }
     }
-    save_match(directory, &record, &reports)?;
+    crate::native_match_evidence::save(directory, &record, &reports, manifest, f)?;
     verify_evidence(&record, &reports, manifest, id)?;
     Ok((record, reports))
 }

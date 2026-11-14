@@ -1,3 +1,4 @@
+import { defaultMatchWorkerBound } from "./match-workers.ts";
 import {
   mkdir,
   readFile,
@@ -12,7 +13,12 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { json, resolveBot } from "./setup-inputs.ts";
 import { verifyFrozen } from "./frozen-setup.ts";
-import { digest, identity, schedule } from "./session-fixtures.ts";
+import {
+  digest,
+  identity,
+  schedule,
+  resolveMatchCount,
+} from "./session-fixtures.ts";
 import type { FrozenSetup, SetupOptions } from "./session-contract.ts";
 
 async function absent(file: string) {
@@ -34,6 +40,13 @@ async function save(file: string, value: unknown) {
 export async function setupSession(options: SetupOptions) {
   if (!options.setupSeed || typeof options.setupSeed !== "string")
     throw new Error("Explicit setup seed required");
+  const matches = resolveMatchCount(
+    options.matches,
+    options.matchesPerOpponent,
+    options.opponents.length,
+  );
+  if (matches < options.opponents.length + 1)
+    throw new Error("Total matches must cover every opponent including self");
   const stop = options.stop;
   if (
     !stop ||
@@ -42,17 +55,22 @@ export async function setupSession(options: SetupOptions) {
     Object.entries(stop).some(([k, v]) =>
       k === "ownerStop"
         ? v !== true
-        : !["maxIterations", "maxGames", "maxWallMs"].includes(k) ||
+        : !["maxIterations", "maxGames", "maxWallMs", "maxBytes"].includes(k) ||
           !Number.isSafeInteger(v) ||
           Number(v) <= 0,
     )
   )
     throw new Error("Invalid stopping condition");
-  const matchWorkers = options.matchWorkers ?? 6,
-    analysisWorkers = options.analysisWorkers ?? 3;
-  for (const n of [matchWorkers, analysisWorkers])
-    if (!Number.isSafeInteger(n) || n < 1 || n > 64)
-      throw new Error("Worker limits must be 1–64");
+  const matchWorkers = await defaultMatchWorkerBound(options.matchWorkers),
+    analysisWorkers = options.analysisWorkers ?? Math.ceil(matches / 250);
+  if (!Number.isSafeInteger(matchWorkers) || matchWorkers < 1)
+    throw new Error("Match workers must be positive integers");
+  if (
+    !Number.isSafeInteger(analysisWorkers) ||
+    analysisWorkers < 1 ||
+    analysisWorkers > 64
+  )
+    throw new Error("Analysis worker limits must be 1–64");
   const session = path.resolve(options.session);
   await mkdir(path.dirname(session), { recursive: true });
   const sessionLock = `${session}.lock`;
@@ -165,6 +183,7 @@ export async function setupSession(options: SetupOptions) {
         options.setupSeed,
         target.frozen.deck,
         opponents.map((b) => b.frozen.deck),
+        matches,
       ),
     };
     let frozen: FrozenSetup = { ...body, identity: identity(body) };
@@ -202,6 +221,7 @@ export async function setupSession(options: SetupOptions) {
     }
     const config = {
       schemaVersion: 1,
+      runner: "session-typescript/v1",
       fixture: { path: fixture, identity: frozen.identity },
       accepted: {
         identity: frozen.target.identity,
@@ -213,9 +233,10 @@ export async function setupSession(options: SetupOptions) {
           identity: bot.identity,
           path: path.join(fixture, `opponents/opponent-${i + 1}`),
         })),
-        { slot: "self", bindAt: "iteration-boundary" },
+        { slot: "self", bindAt: "frozen-start" },
       ],
       profile: target.config.profile,
+      analysisTiming: "after-evaluation",
       limits: { matchWorkers, analysisWorkers, stop },
       protocol: frozen.protocol,
     };
@@ -262,8 +283,8 @@ export async function setupSession(options: SetupOptions) {
       config: path.join(session, "config.json"),
       fixture,
       identity: frozen.identity,
-      matches: 500,
-      games: 2000,
+      matches: frozen.matches.length,
+      games: frozen.matches.length * frozen.protocol.gamesPerMatch,
     };
   } catch (error) {
     if (changedConfig && target)
@@ -298,6 +319,8 @@ if (
         "max-games": { type: "string" },
         "max-wall-ms": { type: "string" },
         "owner-stop": { type: "boolean" },
+        matches: { type: "string" },
+        "matches-per-opponent": { type: "string" },
         "match-workers": { type: "string" },
         "analysis-workers": { type: "string" },
       },
@@ -322,6 +345,12 @@ if (
         ...(values["owner-stop"] ? { ownerStop: true as const } : {}),
       },
       ...(values.reuse ? { reuse: path.resolve(values.reuse) } : {}),
+      ...(values.matches === undefined
+        ? {}
+        : { matches: Number(values.matches) }),
+      ...(values["matches-per-opponent"] === undefined
+        ? {}
+        : { matchesPerOpponent: Number(values["matches-per-opponent"]) }),
       ...(values["match-workers"] === undefined
         ? {}
         : { matchWorkers: Number(values["match-workers"]) }),
@@ -332,7 +361,7 @@ if (
   } else {
     if (!input || process.argv.length !== 3)
       throw new Error(
-        "Usage: npm run bot:setup -- setup-request.json OR --target BOT --seed SEED --session PATH --max-iterations N",
+        "Usage: npm run bot:setup -- setup-request.json OR --target BOT --seed SEED --session PATH --max-iterations N [--matches N | --matches-per-opponent N]",
       );
     request = (await json(input)) as SetupOptions;
     const base = path.dirname(path.resolve(input));

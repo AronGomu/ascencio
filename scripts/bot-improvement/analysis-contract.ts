@@ -4,7 +4,7 @@ import type { EvidenceReference } from "./session-control-contract.ts";
 export interface AnalysisBinding {
   iteration: number;
   role: "control" | "candidate";
-  /** Session-relative output root of the frozen XML runner. */
+  /** Session-relative finalized runner output root. */
   root: string;
   /** Pinned runner preparation (*.job.json); paths inside are runner-owned. */
   execution: EvidenceReference;
@@ -18,7 +18,7 @@ export interface EventReference {
 }
 export interface AnalysisPacket {
   schemaVersion: 1;
-  adapter: "frozen-xml-v1";
+  adapter: "frozen-xml-v1" | "linked-text-v1";
   id: string;
   iteration: number;
   role: AnalysisBinding["role"];
@@ -29,7 +29,7 @@ export interface AnalysisPacket {
   candidateIdentity: string;
   opponent: { slot: string; identity: string };
   proposal: EvidenceReference;
-  /** Complete marker, XML manifest, neutral match, both perspectives, and any extra logs. */
+  /** Completion receipt and pinned native records/text logs, or legacy XML evidence. */
   files: EvidenceReference[];
   games: {
     number: number;
@@ -37,8 +37,10 @@ export interface AnalysisPacket {
     status: "completed" | "failed" | "skipped";
     evidenceHash: string | null;
   }[];
-  /** Stable tuple addressing an actual timeline entry in a pinned player XML. */
+  /** Stable tuple addressing an actual timeline entry in a pinned actor record. */
   events: EventReference[];
+  /** Native adapter: target losses and legal critical-decision references. */
+  lossGames?: { game: number; decisions: string[] }[] | undefined;
 }
 export interface AnalysisSection {
   text: string;
@@ -76,6 +78,8 @@ export interface AnalysisQueue {
     attempt: number;
     claim?: { token: string; owner: string };
     report?: EvidenceReference;
+    /** Agent-facing Markdown; report holds the code-generated canonical record. */
+    findings?: EvidenceReference;
   }[];
 }
 export type AnalysisAction =
@@ -103,3 +107,17 @@ export type AnalysisAction =
       token: string;
       report: EvidenceReference;
     };
+
+export interface LossMatchReport {
+  schemaVersion: 1;
+  format: "loss-markdown-v1";
+  job: string;
+  packetSha256: string;
+  findings: {
+    game: number;
+    decision: string | null;
+    classification: "avoidable" | "unavoidable" | "unclear";
+    reason: string;
+    solution: string;
+  }[];
+}

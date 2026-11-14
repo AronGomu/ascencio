@@ -275,3 +275,47 @@ test("description hints use one-based player labels and preserve both player ide
   r.decision(0, "0-decision-1", prompt, 1, "main1");
   assert.equal(r.reached, true);
 });
+
+test("historical non-player event actors remain replayable without weakening payload checks", () => {
+  const make = () => {
+    const spec = fixture();
+    const event = {
+      kind: "event",
+      actor: 2,
+      event: "hint",
+      sequence: 1,
+      details: { item: [{ player: 2, value: 7 }] },
+    };
+    spec.records[0]!.timeline.entry.unshift(event);
+    return { spec, event };
+  };
+  const { spec, event } = make();
+  const replay = new DecisionReplay(spec, [0, 1]);
+  replay.event(0, { ...event, actor: null });
+  assert.equal(
+    replay.decision(0, "0-decision-1", prompt, 1, "main1"),
+    undefined,
+  );
+  assert.equal(replay.reached, true);
+  const second = make();
+  const changed = new DecisionReplay(second.spec, [0, 1]);
+  assert.throws(
+    () =>
+      changed.event(0, {
+        ...second.event,
+        actor: null,
+        details: { item: [{ player: 1, value: 7 }] },
+      }),
+    /replay_mismatch/,
+  );
+  const third = make();
+  third.spec.records[0]!.timeline.entry[0]!.actor = "b";
+  assert.throws(
+    () =>
+      new DecisionReplay(third.spec, [0, 1]).event(0, {
+        ...third.event,
+        actor: null,
+      }),
+    /replay_mismatch/,
+  );
+});

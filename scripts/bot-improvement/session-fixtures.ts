@@ -26,13 +26,36 @@ export function deckOrder(deck: ParsedDeck, seed: string) {
   };
   return { main: shuffle(deck.main), extra: shuffle(deck.extra) };
 }
+/** Resolve a total evaluation count; round-robin allocation differs by at most one match. */
+export function resolveMatchCount(
+  matches: number | undefined,
+  perOpponent: number | undefined,
+  opponents: number,
+) {
+  if (matches !== undefined && perOpponent !== undefined)
+    throw new Error("Specify matches or matchesPerOpponent, not both");
+  const count =
+    perOpponent === undefined
+      ? (matches ?? 2500)
+      : perOpponent * (opponents + 1);
+  if (
+    (perOpponent !== undefined &&
+      (!Number.isSafeInteger(perOpponent) || perOpponent < 1)) ||
+    !Number.isSafeInteger(count) ||
+    count < 1
+  )
+    throw new Error("Match count must be a positive safe integer");
+  return count;
+}
 export function schedule(
   seed: string,
   target: ParsedDeck,
   opponents: ParsedDeck[],
+  matches = 2500,
 ): FrozenSetup["matches"] {
   const slots = [...opponents, target];
-  return Array.from({ length: 500 }, (_, m) => {
+  resolveMatchCount(matches, undefined, opponents.length);
+  return Array.from({ length: matches }, (_, m) => {
     const slot = m % slots.length;
     const key = `${seed}/match/${m + 1}`;
     const word = randomWords(`${key}/sideboard`);

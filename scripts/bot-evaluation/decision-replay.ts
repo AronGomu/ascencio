@@ -8,7 +8,7 @@ import type { ChoiceId } from "../../src/battle/duel/contracts/ids.ts";
 import type { Artifact } from "./host-inputs.ts";
 export interface ReplayEntry {
   kind: string;
-  actor?: string;
+  actor?: string | number | null;
   decision_id?: string;
   prompt?: unknown;
   selected_choice_ids?: { choice_id: ChoiceId[] };
@@ -53,8 +53,20 @@ function stable(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stable);
   if (!value || typeof value !== "object")
     return value === null ? null : String(value);
+  // Older logs recorded non-player engine sentinels as event actors. Preserve their
+  // detail payloads while comparing the actor identity to the corrected null value.
+  const normalized =
+    "kind" in value &&
+    value.kind === "event" &&
+    "actor" in value &&
+    (value.actor === 2 ||
+      value.actor === 255 ||
+      value.actor === "2" ||
+      value.actor === "255")
+      ? { ...value, actor: null }
+      : value;
   return Object.fromEntries(
-    Object.entries(value)
+    Object.entries(normalized)
       .filter(([k]) => k !== "duration_ms")
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => [k, stable(v)]),

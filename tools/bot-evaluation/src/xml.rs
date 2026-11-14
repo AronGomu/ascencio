@@ -3,7 +3,7 @@ use quick_xml::{
     Writer,
 };
 use serde_json::{Map, Value};
-use std::{fs, io::Write, path::Path};
+use std::{fs, path::Path};
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 fn collection_item(parent: &str, name: &str) -> bool {
     matches!(
@@ -251,8 +251,7 @@ pub fn validate(root: &str, bytes: &[u8]) -> Result<()> {
             #[cfg(not(test))]
             let schema_directory = std::path::PathBuf::from("tools/bot-evaluation/schemas/v1");
             #[cfg(test)]
-            let schema_directory =
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("schemas/v1");
+            let schema_directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("schemas/v1");
             let schema = fs::read_to_string(schema_directory.join(format!("{root}.xsd")))?;
             if schema.contains("schemaLocation")
                 || schema.contains("<!DOCTYPE")
@@ -313,14 +312,7 @@ pub fn write(path: &Path, root: &str, value: &Value) -> Result<()> {
     }
     cost(1, start);
     let start = std::time::Instant::now();
-    fs::create_dir_all(path.parent().ok_or("No parent")?)?;
-    let tmp = path.with_extension("xml.tmp");
-    let mut file = fs::File::create(&tmp)?;
-    file.write_all(&bytes)?;
-    file.sync_all()?;
-    fs::rename(tmp, path)?;
-    #[cfg(unix)]
-    fs::File::open(path.parent().unwrap())?.sync_all()?;
+    crate::output_storage::write(path, &bytes)?;
     cost(2, start);
     Ok(())
 }

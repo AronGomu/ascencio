@@ -5,5 +5,9 @@
   "banlist": "../../freeplay/limits.json",
   "profile": "mr5",
   "module": "./ai/index.ts",
-  "configuration": {}
+  "configuration": {},
+  "fixtures": {
+    "path": "evaluation/fixtures/4a3b634a99d1fc307b3425d0117b0faef875ae0c056f964d2eeac4d5cdc55468",
+    "identity": "4a3b634a99d1fc307b3425d0117b0faef875ae0c056f964d2eeac4d5cdc55468"
+  }
 }

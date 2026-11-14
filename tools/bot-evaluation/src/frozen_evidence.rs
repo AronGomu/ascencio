@@ -1,6 +1,6 @@
 //! Frozen match completion markers, replay identities and corruption checks.
 use crate::{
-    frozen_pool::{read, save},
+    frozen_match_support::{read, save},
     identity,
     match_evidence::verify_evidence,
     xml::{self, Result},
@@ -32,16 +32,10 @@ pub fn restore(base: &Path, manifest: &Value, id: &str) -> Result<(Value, [Value
     if completion["files"] != evidence_files(base)? {
         return Err("Completed evidence bytes changed".into());
     }
-    let saved = xml::read(&base.join("manifest.xml"), "manifest")?;
-    if saved["identity_sha256"] != manifest["identity_sha256"] {
+    let (record, reports, logged_manifest, _) = crate::native_match_evidence::restore(base)?;
+    if logged_manifest["identity_sha256"] != manifest["identity_sha256"] {
         return Err("Completed match inputs changed".into());
     }
-    let dir = base.join("matches").join(id);
-    let record = xml::read(&dir.join("match.xml"), "match")?;
-    let reports = [
-        xml::read(&dir.join("player-a.xml"), "player-report")?,
-        xml::read(&dir.join("player-b.xml"), "player-report")?,
-    ];
     verify_evidence(&record, &reports, manifest, id)?;
     Ok((record, reports))
 }

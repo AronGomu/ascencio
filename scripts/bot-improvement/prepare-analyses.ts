@@ -1,6 +1,7 @@
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeOutput, ensureSessionOutput } from "./output-storage.ts";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { withSessionLock } from "./session-lock.ts";
@@ -8,7 +9,10 @@ import { json, optionalJson, save } from "./session-checkpoint.ts";
 import { digest } from "./session-fixtures.ts";
 import { analysisPath, readEvidence } from "./analysis-evidence.ts";
 import { discoverAnalyses } from "./analysis-discovery.ts";
-import { validateAnalysisReport } from "./analysis-report.ts";
+import {
+  validateAnalysisReport,
+  parseLossMarkdown,
+} from "./analysis-report.ts";
 import type {
   AnalysisAction,
   AnalysisPacket,
@@ -62,6 +66,23 @@ async function publish(session: string, relative: string, value: unknown) {
   } else await save(file, value);
   return { path: relative, sha256: digest(await readFile(file)) };
 }
+async function publishMarkdown(
+  session: string,
+  relative: string,
+  text: string,
+) {
+  const file = path.join(session, relative);
+  try {
+    await writeOutput(file, text, true);
+  } catch (error) {
+    if (
+      (error as NodeJS.ErrnoException).code !== "EEXIST" ||
+      (await readFile(await analysisPath(session, relative), "utf8")) !== text
+    )
+      throw error;
+  }
+  return { path: relative, sha256: digest(await readFile(file)) };
+}
 function pump(queue: AnalysisQueue) {
   let capacity =
     queue.queueLimit -
@@ -76,6 +97,7 @@ function pump(queue: AnalysisQueue) {
 /** Deterministic queue/claim/report transitions. Never dispatches an agent. */
 export async function prepareAnalyses(session: string, action: AnalysisAction) {
   session = path.resolve(session);
+  await ensureSessionOutput(session);
   const binding = action.action === "sync" ? action.binding : action;
   const directory = scope(binding.iteration, binding.role);
   // Read large runner logs outside the short shared publication transaction.
@@ -96,6 +118,18 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
           (await readEvidence(session, job.report)).toString(),
         );
         validateAnalysisReport(report, packet, job.packet.sha256);
+        if (
+          job.findings &&
+          !isDeepStrictEqual(
+            parseLossMarkdown(
+              (await readEvidence(session, job.findings)).toString(),
+              packet,
+              job.packet.sha256,
+            ),
+            report,
+          )
+        )
+          throw new Error("Markdown findings differ from stored report");
       }
     } catch (error) {
       integrity.push({ job: job.id, reason: String(error) });
@@ -136,20 +170,47 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
         const previous = queue.jobs.find((j) => j.id === packet.id);
         if (previous && !isDeepStrictEqual(previous.packet, ref))
           throw new Error("Finalized match changed after enqueue");
-        if (!previous)
-          queue.jobs.push({
+        if (!previous) {
+          const job: AnalysisQueue["jobs"][number] = {
             id: packet.id,
             match: packet.match,
             packet: ref,
             status: "waiting",
             attempt: 0,
-          });
+          };
+          if (
+            packet.adapter === "linked-text-v1" &&
+            packet.lossGames?.length === 0
+          ) {
+            const text = `# Match loss analysis\n\nJob: ${packet.id}\nPacket: ${ref.sha256}\n\n- No target losses.\n`;
+            job.findings = await publishMarkdown(
+              session,
+              `${directory}/reports/${packet.match}-no-losses.md`,
+              text,
+            );
+            job.report = await publish(
+              session,
+              `${directory}/reports/${packet.match}-no-losses.json`,
+              parseLossMarkdown(text, packet, ref.sha256),
+            );
+            job.status = "complete";
+          }
+          queue.jobs.push(job);
+        }
       }
       queue.jobs.sort((a, b) => a.match.localeCompare(b.match));
     }
     pump(queue);
     let claim: AnalysisQueue["jobs"][number] | null = null;
     if (action.action === "claim") {
+      const config = await json(path.join(session, "config.json"));
+      if (
+        config.analysisTiming === "after-evaluation" &&
+        queue.expected.some((m) => !queue.jobs.some((j) => j.match === m))
+      )
+        throw new Error(
+          "Wait for all scheduled matches to finalize before loss analysis",
+        );
       if (typeof action.owner !== "string" || !action.owner.trim())
         throw new Error("Claim owner is required");
       // A retry after losing stdout returns the original claim, never claims a second job.
@@ -182,10 +243,24 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
         delete job.claim;
       } else {
         const packet = await intactPacket(session, job.packet);
-        const report = JSON.parse(
-          (await readEvidence(session, action.report)).toString(),
-        );
+        const bytes = (await readEvidence(session, action.report)).toString();
+        const markdown = packet.adapter === "linked-text-v1";
+        const report = markdown
+          ? parseLossMarkdown(bytes, packet, job.packet.sha256)
+          : JSON.parse(bytes);
         validateAnalysisReport(report, packet, job.packet.sha256);
+        if (
+          job.findings &&
+          !isDeepStrictEqual(
+            parseLossMarkdown(
+              (await readEvidence(session, job.findings)).toString(),
+              packet,
+              job.packet.sha256,
+            ),
+            report,
+          )
+        )
+          throw new Error("Markdown findings differ from stored report");
         const ref = await publish(
           session,
           `${directory}/reports/${job.match}-attempt-${job.attempt}.json`,
@@ -194,6 +269,12 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
         if (job.status === "complete" && !isDeepStrictEqual(job.report, ref))
           throw new Error("Conflicting completed report");
         job.report = ref;
+        if (markdown)
+          job.findings = await publishMarkdown(
+            session,
+            `${directory}/reports/${job.match}-attempt-${job.attempt}.md`,
+            bytes,
+          );
         job.status = "complete";
       }
     } else if (!["sync", "status"].includes(action.action))

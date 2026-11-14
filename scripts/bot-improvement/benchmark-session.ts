@@ -1,5 +1,6 @@
 /** Fresh accounting state prevents ledger growth from biasing later concurrency stages. */
-import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { readFile, mkdir } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "./output-storage.ts";
 import path from "node:path";
 import { retrySession } from "./match-session.ts";
 import { withSessionLock } from "./session-lock.ts";
@@ -51,7 +52,14 @@ export async function createBenchmarkSession(
     await mkdir(path.join(destination, dir));
   await writeFile(
     path.join(destination, "config.json"),
-    JSON.stringify(inputs.config, null, 2),
+    JSON.stringify(
+      {
+        ...inputs.config,
+        limits: { ...inputs.config.limits, matchWorkers: 8 },
+      },
+      null,
+      2,
+    ),
     { flag: "wx" },
   );
   await writeFile(

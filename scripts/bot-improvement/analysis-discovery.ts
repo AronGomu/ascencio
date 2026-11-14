@@ -5,7 +5,7 @@ import { verifyFrozen } from "./frozen-setup.ts";
 import {
   analysisPath,
   readEvidence,
-  finalizedXml,
+  finalizedEvidence,
 } from "./analysis-evidence.ts";
 import type {
   AnalysisBinding,
@@ -84,7 +84,7 @@ export async function discoverAnalyses(
       throw new Error("Runner schedule/opponent mismatch");
     const relative = `${binding.root}/matches/${match.id}`;
     try {
-      const result = await finalizedXml(session, relative, {
+      const result = await finalizedEvidence(session, relative, {
         match: match.id,
         executionIdentity: execution.identity,
         fixtureIdentity: frozen.identity,
@@ -94,7 +94,6 @@ export async function discoverAnalyses(
       });
       packets.push({
         schemaVersion: 1,
-        adapter: "frozen-xml-v1",
         id: `${binding.iteration}/${binding.role}/${match.id}`,
         iteration: binding.iteration,
         role: binding.role,

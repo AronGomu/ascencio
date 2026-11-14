@@ -13,12 +13,14 @@ const { values: v } = parseArgs({
     evidence: { type: "string" },
     reason: { type: "string" },
     delta: { type: "string" },
+    rules: { type: "string", multiple: true },
+    "candidate-hash": { type: "string" },
     help: { type: "boolean" },
   },
 });
 if (v.help) {
   console.log(
-    "Usage: node scripts/bot-improvement/update-improvement-history.ts --bot PACKAGE --id ID --change TEXT --status pending|accepted|rejected|error|superseded --base VERSION --candidate FILE --evidence FILE [--delta POINTS] [--reason TEXT]\nCreates or replaces one Markdown line by ID. Completed entries require a reason; accepted/rejected entries require a numeric win-rate difference. Uses an exclusive lock and atomic replacement.",
+    "Usage: node scripts/bot-improvement/update-improvement-history.ts --bot PACKAGE --id ID --change TEXT --status pending|accepted|rejected|error|superseded --base VERSION --candidate FILE --evidence FILE [--delta POINTS] [--reason TEXT] [--rules RULE_ID] [--candidate-hash SHA256]\nCreates or replaces one Markdown line by ID. Completed entries require a reason; accepted/rejected entries require a numeric win-rate difference. Uses an exclusive lock and atomic replacement.",
   );
   process.exit(0);
 }
@@ -64,13 +66,37 @@ try {
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
   }
+  const rules = [...new Set(v.rules ?? [])].sort();
+  if (rules.some((r) => !/^[a-zA-Z0-9_.-]+$/.test(r)))
+    throw Error("Invalid rule ID");
+  const hash = v["candidate-hash"];
+  if (hash && !/^[a-f0-9]{64}$/.test(hash))
+    throw Error("Invalid candidate hash");
+  const fingerprint = hash ? ` · candidate-hash: ${hash}` : "";
+  const ruleSet = rules.length ? ` · rules: ${rules.join(",")}` : "";
+  if (
+    v.status === "pending" &&
+    hash &&
+    text
+      .split("\n")
+      .some(
+        (line) =>
+          !line.startsWith(`- ${v.id} · `) &&
+          line.includes(` · base: ${clean(v.base!)} ·`) &&
+          line.includes(fingerprint) &&
+          / · (REJECTED|ERROR|ACCEPTED)/.test(line),
+      )
+  )
+    throw Error(
+      "Duplicate candidate against the same accepted version; change the rule/source before retrying",
+    );
   const prefix = `- ${v.id} · `;
   const delta =
     v.delta === undefined
       ? ""
       : ` · ${Number(v.delta) > 0 ? "+" : ""}${Number(v.delta)} pp`;
   const reason = v.reason ? ` — ${clean(v.reason)}` : "";
-  const line = `${prefix}${labels[v.status!]}${delta} · ${clean(v.change!)}${reason} · base: ${clean(v.base!)} · [candidate](<${path.resolve(v.candidate!)}>) · [evidence](<${path.resolve(v.evidence!)}>)`;
+  const line = `${prefix}${labels[v.status!]}${delta} · ${clean(v.change!)}${reason} · base: ${clean(v.base!)}${fingerprint}${ruleSet} · [candidate](<${path.resolve(v.candidate!)}>) · [evidence](<${path.resolve(v.evidence!)}>)`;
   const lines = text.trimEnd().split("\n");
   const existing = lines.findIndex((l) => l.startsWith(prefix));
   if (existing < 0) {

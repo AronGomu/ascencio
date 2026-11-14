@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+import { messageActor } from "./host-events.ts";
 import {
   DecisionReplay,
   ReplayMismatchError,
@@ -87,6 +89,7 @@ function flushOutput() {
   while (offset < bytes.length) offset += writeSync(1, bytes, offset);
   if (measuring) ipcTime += performance.now() - start;
 }
+let integratedSink: ((frame: unknown) => void) | undefined;
 function send(value: unknown) {
   const frame = value as {
     type?: string;
@@ -96,6 +99,10 @@ function send(value: unknown) {
   };
   if (frame.type === "event") replay?.event(frame.actor, frame.entry);
   if (frame.type === "initial") replay?.initial(frame.actor, frame.initial);
+  if (integratedSink) {
+    integratedSink(value);
+    return;
+  }
   const start = performance.now();
   const event = (value as { type?: string }).type === "event";
   outputBuffer +=
@@ -267,12 +274,7 @@ async function game(command: Command) {
               entry: {
                 sequence: ++sequence,
                 kind: "event",
-                actor:
-                  "player" in message
-                    ? message.player
-                    : "controller" in message
-                      ? message.controller
-                      : null,
+                actor: messageActor(message),
                 event,
                 turn: after.turn,
                 phase: after.phase,
@@ -552,12 +554,17 @@ async function frozenInputs(command: Command): Promise<FrozenInputs> {
   frozenCache.set(key, loaded);
   return loaded;
 }
-for await (const line of createInterface({
-  input: process.stdin,
-  crlfDelay: Infinity,
-})) {
+/** One serialized caller per runtime; imported by experimental in-process workers. */
+export async function executeHostCommand(
+  input: unknown,
+  sink?: (frame: unknown) => void,
+) {
+  if (integratedSink) throw Error("Concurrent host commands are unsupported");
+  integratedSink = sink;
   try {
-    const command = JSON.parse(line) as Command;
+    const command = (
+      typeof input === "string" ? JSON.parse(input) : input
+    ) as Command;
     if (command.type === "initialize") {
       const loaded = command.frozen
         ? await frozenInputs(command)
@@ -668,5 +675,18 @@ for await (const line of createInterface({
       type: "host_error",
       message: error instanceof Error ? error.message : String(error),
     });
+  } finally {
+    integratedSink = undefined;
+  }
+}
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  for await (const line of createInterface({
+    input: process.stdin,
+    crlfDelay: Infinity,
+  })) {
+    await executeHostCommand(line);
   }
 }

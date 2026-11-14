@@ -1,4 +1,5 @@
-import { readdir, readFile, mkdir, writeFile } from "node:fs/promises";
+import { readdir, readFile, mkdir } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "./output-storage.ts";
 import path from "node:path";
 import { digest, identity } from "./session-fixtures.ts";
 

@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "./output-storage.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual as equal } from "node:util";
@@ -9,7 +10,10 @@ import {
   collectEvaluation,
   recheckEvaluation,
 } from "./aggregation-evidence.ts";
-import { aggregateStatistics } from "./aggregation-statistics.ts";
+import {
+  aggregateStatistics,
+  pairedGameDecision,
+} from "./aggregation-statistics.ts";
 import type { AggregationRequest } from "./aggregation-contract.ts";
 import type { IterationManifest } from "./iteration-contract.ts";
 
@@ -36,7 +40,7 @@ export async function aggregateSession(request: AggregationRequest) {
       slot: `opponent-${i + 1}`,
       identity: bot.identity,
     })),
-    { slot: "self", identity: manifest.control.identity },
+    { slot: "self", identity: frozen.target.identity },
   ];
   for (const field of [
     "deck",
@@ -61,7 +65,7 @@ export async function aggregateSession(request: AggregationRequest) {
     acceptedIdentity !== identity(acceptedBody) ||
     manifest.control.identity !== acceptedIdentity ||
     manifest.accepted.identity !== acceptedIdentity ||
-    manifest.self.identity !== acceptedIdentity ||
+    manifest.self.identity !== frozen.target.identity ||
     !manifest.runnerIdentity ||
     !equal(
       manifest.opponents.map(({ slot, identity }) => ({ slot, identity })),
@@ -96,9 +100,13 @@ export async function aggregateSession(request: AggregationRequest) {
       candidate.rows.filter((m) => m.slot === opponent.slot),
     ),
   }));
-  const evaluationComplete =
-    overall.control.completeMatches === frozen.matches.length &&
-    overall.candidate.completeMatches === frozen.matches.length;
+  const evaluationComplete = [overall.control, overall.candidate].every(
+    (m) =>
+      m.finalizedMatches === frozen.matches.length &&
+      m.failedGames === 0 &&
+      m.skippedGames === 0 &&
+      m.sideboardingFailures === 0,
+  );
   const synthesisReady =
     evaluationComplete &&
     candidate.reports.status === "complete" &&
@@ -144,9 +152,10 @@ export async function aggregateSession(request: AggregationRequest) {
       uncertainty:
         "Candidate minus control; sample SD of paired match means / sqrt(n); normal approximate 95% interval mean +/- 1.96 SE, untruncated. Interval and SE null below two complete paired clusters. Zero observed variance yields zero SE; small samples and correlated matches limit approximation.",
       weighting:
-        "Overall pools scheduled match clusters, weighting opponents by their frozen match counts; per-opponent estimates use that slot only. No imputation, multiple-comparison adjustment, or acceptance decision. Self-play against the pinned accepted snapshot is reported as its own slot.",
+        "Overall pools scheduled match clusters, weighting opponents by their frozen match counts; per-opponent estimates use that slot only. No imputation, multiple-comparison adjustment, or acceptance decision. Self-play against the frozen starting snapshot is reported as its own slot.",
       settings: control.executionSettings,
     },
+    gameDecision: pairedGameDecision(control.rows, candidate.rows),
     overall,
     perOpponent,
     unavailable: {

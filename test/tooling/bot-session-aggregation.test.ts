@@ -103,7 +103,7 @@ async function fixture() {
     target: bot,
     opponents: [bot],
     files: { "versions/initial/bot.mjs": digest("bot") },
-    matches: schedule("aggregate", bot.deck, [bot.deck]),
+    matches: schedule("aggregate", bot.deck, [bot.deck], 500),
   };
   const frozen = { ...body, identity: identity(body) };
   await put("fixture/manifest.json", frozen);

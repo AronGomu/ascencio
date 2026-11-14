@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
+import { writeBudgetedFile as writeFile } from "./output-storage.ts";
 import path from "node:path";
 import { build } from "esbuild";
 import type { FrozenBot } from "./session-contract.ts";

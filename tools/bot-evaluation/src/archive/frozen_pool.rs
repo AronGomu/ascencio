@@ -1,13 +1,12 @@
-//! One coordinator owns progress; bounded workers own disjoint match directories.
+use crate::frozen_match_support::{read,save,configuration,initialize,match_manifest,observe};
+// Archived coordinator: one coordinator owns progress; bounded workers own disjoint match directories.
 use crate::{
-    config::{self, Config},
     frozen_evidence::{finalize, replay_record, restore},
     host::Host,
     identity,
     metrics::Metrics,
     process_memory::tree_rss,
     process_ownership::Owners,
-    runtime_identity::now,
     session_admission::{Admission, Reservation},
     xml::{self, Result},
 };
@@ -15,7 +14,6 @@ use serde_json::{json, Value};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
-    io::Write,
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -24,78 +22,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-pub fn save(path: &Path, value: &Value) -> Result<()> {
-    fs::create_dir_all(path.parent().ok_or("Missing parent")?)?;
-    let temporary = path.with_extension("json.tmp");
-    let mut file = fs::File::create(&temporary)?;
-    file.write_all(&serde_json::to_vec_pretty(value)?)?;
-    file.sync_all()?;
-    fs::rename(temporary, path)?;
-    fs::File::open(path.parent().unwrap())?.sync_all()?;
-    Ok(())
-}
-pub(crate) fn read(path: &Path) -> Result<Value> {
-    Ok(serde_json::from_slice(&fs::read(path)?)?)
-}
-fn configuration(job: &Value, item: &Value, output: &Path) -> Config {
-    Config {
-        doc: json!({"batch":{"matches":1,"execution":"frozen"}}),
-        deck: item["decks"][0].clone(),
-        bots: json!([]),
-        snapshot: PathBuf::from(job["content"].as_str().unwrap()),
-        banlist: PathBuf::from(job["banlist"].as_str().unwrap()),
-        rules: job["rules"].clone(),
-        profile: job["profile"].as_str().unwrap().into(),
-        matches: 1,
-        limits: job["limits"].clone(),
-        output: output.to_owned(),
-        fixture: None,
-        target: 100.0,
-        frozen: Some(item.clone()),
-    }
-}
-fn initialize(host: &mut Host, job: &Value, item: &Value, c: &Config) -> Result<Value> {
-    host.send(
-        &json!({"type":"initialize","snapshot":c.snapshot,"codes":[],"bots":[],
-        "frozen":{"bots":item["bots"],"engine":job["engine"]}}),
-    )?;
-    loop {
-        let ready = host.receive(Duration::from_secs(120))?;
-        match ready["type"].as_str() {
-            Some("diagnostic") => continue,
-            Some("ready") => {
-                for d in item["decks"].as_array().ok_or("Missing decks")? {
-                    config::validate_deck(d, &ready["cards"], &c.rules)?;
-                }
-                return Ok(ready);
-            }
-            _ => return Err(format!("Frozen host initialization: {ready}").into()),
-        }
-    }
-}
-fn match_manifest(job: &Value, item: &Value, runtime: &str) -> Value {
-    let bots = json!({"a":{"artifact_sha256":item["identities"][0]},"b":{"artifact_sha256":item["identities"][1]}});
-    json!({"run_id":job["identity"],"created_at":now(),"application_revision":env!("CARGO_PKG_VERSION"),
-        "runtime_sha256":runtime,"runtime":{},"engine":{"sha256":job["engineHash"]},
-        "content":{"sha256":job["fixtureIdentity"]},"rules":{"profile":job["profile"]},
-        "deck":config::deck_doc(&item["decks"][0]),"bots":bots,"configuration":{"batch":{"matches":1}},
-        "identity_sha256":identity::digest(&json!([job["identity"],item,runtime]))})
-}
-fn observe(metrics: &mut Metrics, record: &Value, reports: &[Value; 2]) {
-    for (i, g) in xml::items(&record["games"], "game").iter().enumerate() {
-        metrics.game(
-            g,
-            &[
-                reports[0]["games"]["game"][i].clone(),
-                reports[1]["games"]["game"][i].clone(),
-            ],
-        );
-    }
-    for r in reports {
-        metrics.sideboard(r);
-    }
-    metrics.finish_match(record);
-}
 pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i32> {
     let started = Instant::now();
     let job = Arc::new(read(file)?);
@@ -106,6 +32,22 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
         return Err("Evaluation output exists; use --resume".into());
     }
     fs::create_dir_all(output)?;
+    let storage_root = job["storage"]["root"]
+        .as_str()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| output.to_owned());
+    crate::output_storage::configure(
+        &storage_root,
+        job["storage"]["maxBytes"]
+            .as_u64()
+            .unwrap_or(crate::output_storage::DEFAULT_MAX),
+        job["storage"]["controlReserveBytes"]
+            .as_u64()
+            .unwrap_or(crate::output_storage::CONTROL_RESERVE),
+    )?;
+    if !fs::canonicalize(output)?.starts_with(fs::canonicalize(&storage_root)?) {
+        return Err("Storage root must contain evaluation output".into());
+    }
     // Exclusive evaluation ownership survives crashes for explicit operator recovery.
     let lock = output.join("runner.lock");
     fs::create_dir(&lock).map_err(|e| format!("Evaluation locked at {}: {e}", lock.display()))?;
@@ -117,14 +59,29 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
     }
     let _lock = Lock(lock);
     let meta = output.join("execution.json");
-    if resume {
+    let startup_resume = resume
+        && !meta.exists()
+        && output.join("result.json").is_file()
+        && read(&output.join("result.json"))?["stoppingReason"] == "max-output-bytes"
+        && read(&output.join("result.json"))?["completedGames"] == 0
+        && !output.join("matches").exists();
+    if resume && !startup_resume {
         if read(&meta)? != execution_identity {
             return Err("Resume runtime/input identity mismatch".into());
         }
     } else {
-        save(&meta, &execution_identity)?;
+        if let Err(e) = save(&meta, &execution_identity) {
+            if !e.to_string().starts_with("max-output-bytes:") {
+                return Err(e);
+            }
+            save(
+                &output.join("result.json"),
+                &json!({"schemaVersion":1,"status":"interrupted","stoppingReason":"max-output-bytes","completedGames":0,"failedGames":0,"skippedGames":0,"matches":0,"elapsedMs":0}),
+            )?;
+            return Ok(2);
+        }
     }
-    let previous = if resume {
+    let previous = if resume && !startup_resume {
         read(&output.join("progress.json"))?
     } else {
         json!({"reservedGames":0,"elapsedMs":0})
@@ -205,8 +162,20 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
         println!("{}", output.display());
         return Ok(if metrics.incomplete == 0 { 0 } else { 2 });
     }
-    let max_games = job["budget"]["maxGames"].as_u64().unwrap_or(u64::MAX);
-    let max_wall = job["budget"]["maxWallMs"].as_f64().unwrap_or(f64::MAX);
+    let max_games = if admission.is_some() {
+        job["sessionControl"]["maxGamesOverride"]
+            .as_u64()
+            .unwrap_or(u64::MAX)
+    } else {
+        job["budget"]["maxGames"].as_u64().unwrap_or(u64::MAX)
+    };
+    let max_wall = if admission.is_some() {
+        job["sessionControl"]["maxWallMsOverride"]
+            .as_f64()
+            .unwrap_or(f64::MAX)
+    } else {
+        job["budget"]["maxWallMs"].as_f64().unwrap_or(f64::MAX)
+    };
     let mut error: Option<String> = None;
     let mut last_poll = Instant::now();
     std::thread::scope(|scope| {
@@ -249,12 +218,26 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                         let active = host.as_mut().unwrap();
                         let ready = initialize(active, &job, &item, &c)?;
                         let manifest = match_manifest(&job, &item, runtime);
-                        xml::write(&base.join("manifest.xml"), "manifest", &manifest)?;
-                        save(&base.join("fixture.json"), &item)?;
-                        let evidence = crate::frozen_match::execute(
+                        let evidence_result = crate::frozen_match::execute(
                             &c, active, &ready, &manifest, &base, &stop,
-                        )?;
-                        save(&base.join("latency.json"),&json!({"match":id,"elapsedMs":match_start.elapsed().as_secs_f64()*1000.0,"completed":evidence.0["status"]=="completed","boundary":"Worker start before host initialization through all four games, sideboarding, canonical verification and durable XML; excludes admission queue, latency/commit marker metadata and coordinator settlement."}))?;
+                            &mut |host| {
+                                host.kill();
+                                *host = Host::start()?;
+                                owners.lock().unwrap().register(host.pid())?;
+                                initialize(host, &job, &item, &c)
+                            },
+                        );
+                        let evidence=match evidence_result {
+                            Ok(evidence)=>evidence,
+                            Err(error) if error.to_string().starts_with("max-output-bytes:")=>{
+                                stop.store(true,Ordering::SeqCst);
+                                let(record,reports,_,_)=crate::native_match_evidence::restore(&base)?;
+                                crate::match_evidence::verify_evidence(&record,&reports,&manifest,&id)?;
+                                (record,reports)
+                            },
+                            Err(error)=>return Err(error),
+                        };
+                        if !stop.load(Ordering::SeqCst){save(&base.join("latency.json"),&json!({"match":id,"elapsedMs":match_start.elapsed().as_secs_f64()*1000.0,"completed":evidence.0["status"]=="completed","boundary":"Worker start before host initialization through all four games, sideboarding, canonical verification and durable logs; excludes admission queue, latency/commit marker metadata and coordinator settlement."}))?;}
                         if !stop.load(Ordering::SeqCst) {
                             finalize(&base)?;
                         }
@@ -274,7 +257,25 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                         Ok((evidence.0, evidence.1, persisted))
                     })()
                     .map_err(|e| e.to_string());
-                    let interrupted = stop.load(Ordering::SeqCst);
+                    let result=match result {
+                        Err(ref message) if message.starts_with("max-output-bytes:")=>{
+                            stop.store(true,Ordering::SeqCst);
+                            match crate::native_match_evidence::restore(&base) {
+                                Ok((record,reports,_,_))=>{
+                                    let recovered=(||->Result<(Value,[Value;2],PathBuf)>{
+                                        crate::match_evidence::verify_evidence(&record,&reports,&match_manifest(&job,&item,runtime),&id)?;
+                                        fs::create_dir_all(output.join("attempts"))?;
+                                        let archive=output.join("attempts").join(format!("{id}-storage-attempt-{attempt}-{}",time::OffsetDateTime::now_utc().unix_timestamp_nanos()));
+                                        fs::rename(&base,&archive)?;
+                                        Ok((record,reports,archive))
+                                    })();
+                                    recovered.map_err(|e|e.to_string())
+                                },Err(_)=>result,
+                            }
+                        },_=>result,
+                    };
+                    let interrupted = stop.load(Ordering::SeqCst) || result.as_ref().err().is_some_and(|e|e.starts_with("max-output-bytes:"));
+                    if interrupted{stop.store(true,Ordering::SeqCst);}
                     if results.send((id, attempt, result, interrupted)).is_err() {
                         break;
                     }
@@ -287,7 +288,11 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
         let mut next = pending.into_iter().peekable();
         let mut active = 0;
         loop {
+            if crate::output_storage::exhausted(&storage_root) {
+                stop.store(true, Ordering::SeqCst);
+            }
             while active < workers
+                && !crate::output_storage::exhausted(&storage_root)
                 && !stop.load(Ordering::SeqCst)
                 && reserved.saturating_add(4) <= max_games
                 && previous_ms + started.elapsed().as_secs_f64() * 1000.0 < max_wall
@@ -299,38 +304,28 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
                 let attempt = if let Some(control) = admission.as_mut() {
                     let base = output.join("matches").join(id);
                     let recovered = if resume && base.exists() && !base.join("done.json").exists() {
-                        let dir = base.join("matches").join(id);
-                        let record = xml::read(&dir.join("match.xml"), "match");
-                        match record {
-                            Ok(record) => {
-                                let reports = [
-                                    xml::read(&dir.join("player-a.xml"), "player-report"),
-                                    xml::read(&dir.join("player-b.xml"), "player-report"),
-                                ];
-                                if let [Ok(a), Ok(b)] = reports {
-                                    if crate::match_evidence::verify_evidence(
-                                        &record,
-                                        &[a, b],
-                                        &match_manifest(&job, &item, &runtime),
-                                        id,
-                                    )
-                                    .is_ok()
+                        match crate::native_match_evidence::restore(&base) {
+                            Ok((record, [a, b], _, _)) => {
+                                if crate::match_evidence::verify_evidence(
+                                    &record,
+                                    &[a, b],
+                                    &match_manifest(&job, &item, &runtime),
+                                    id,
+                                )
+                                .is_ok()
+                                {
+                                    let archive = output.join("attempts").join(format!(
+                                        "{id}-recovered-{}",
+                                        time::OffsetDateTime::now_utc().unix_timestamp_nanos()
+                                    ));
+                                    if let Err(e) = fs::create_dir_all(output.join("attempts"))
+                                        .and_then(|_| fs::rename(&base, &archive))
                                     {
-                                        let archive = output.join("attempts").join(format!(
-                                            "{id}-recovered-{}",
-                                            time::OffsetDateTime::now_utc().unix_timestamp_nanos()
-                                        ));
-                                        if let Err(e) = fs::create_dir_all(output.join("attempts"))
-                                            .and_then(|_| fs::rename(&base, &archive))
-                                        {
-                                            error = Some(e.to_string());
-                                            stop.store(true, Ordering::SeqCst);
-                                            break;
-                                        }
-                                        Some((archive, record))
-                                    } else {
-                                        None
+                                        error = Some(e.to_string());
+                                        stop.store(true, Ordering::SeqCst);
+                                        break;
                                     }
+                                    Some((archive, record))
                                 } else {
                                     None
                                 }
@@ -460,7 +455,10 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
     });
     memory_done.store(true, Ordering::SeqCst);
     let peak = memory.join().unwrap_or(0);
-    let status = if error.is_some() {
+    let storage_stopped = crate::output_storage::exhausted(&storage_root);
+    let status = if storage_stopped {
+        "interrupted"
+    } else if error.is_some() {
         "failed"
     } else if completed.len() == items.len() {
         "completed"
@@ -488,12 +486,17 @@ pub fn run(file: &Path, output: &Path, workers: usize, resume: bool) -> Result<i
     save(&output.join("replay.json"), &replay)?;
     save(
         &output.join("result.json"),
-        &json!({"schemaVersion":1,"averageCompletedMatchLatencyMs":if completed_latencies.is_empty(){None}else{Some(completed_latencies.iter().sum::<f64>()/completed_latencies.len() as f64)},"completedMatchLatencySamples":completed_latencies.len(),"amortizedWallMsPerCompletedMatch":if metrics.matches>0{Some(elapsed/metrics.matches as f64)}else{None},"replayIdentity":identity::digest(&replay),"identity":job["identity"],"fixtureIdentity":job["fixtureIdentity"],"workers":workers,"status":status,"matches":metrics.matches,"incompleteMatches":metrics.incomplete,"completedGames":metrics.completed,"failedGames":metrics.failed,"skippedGames":metrics.skipped,"failures":metrics.failures,"elapsedMs":elapsed,"gamesPerSecond":metrics.completed as f64/(elapsed/1000.0),"processTreePeakRssBytes":peak,"memorySampleMs":100,"memoryMethod":"Linux /proc summed RSS; each descendant once, shared pages may be counted in multiple processes","error":error}),
+        &json!({"schemaVersion":1,"averageCompletedMatchLatencyMs":if completed_latencies.is_empty(){None}else{Some(completed_latencies.iter().sum::<f64>()/completed_latencies.len() as f64)},"completedMatchLatencySamples":completed_latencies.len(),"amortizedWallMsPerCompletedMatch":if metrics.matches>0{Some(elapsed/metrics.matches as f64)}else{None},"replayIdentity":identity::digest(&replay),"identity":job["identity"],"fixtureIdentity":job["fixtureIdentity"],"workers":workers,"status":status,"stoppingReason":if storage_stopped{Some("max-output-bytes")}else{None},"matches":metrics.matches,"incompleteMatches":metrics.incomplete,"completedGames":metrics.completed,"failedGames":metrics.failed,"skippedGames":metrics.skipped,"failures":metrics.failures,"elapsedMs":elapsed,"gamesPerSecond":metrics.completed as f64/(elapsed/1000.0),"processTreePeakRssBytes":peak,"memorySampleMs":100,"memoryMethod":"Linux /proc summed RSS; each descendant once, shared pages may be counted in multiple processes","error":error}),
     )?;
     println!("{}", output.display());
-    Ok(if status == "completed" && metrics.incomplete == 0 {
-        0
-    } else {
-        2
-    })
+    Ok(
+        if status == "completed"
+            && metrics.skipped == 0
+            && metrics.failures.keys().all(|k| k == "timeout")
+        {
+            0
+        } else {
+            2
+        },
+    )
 }

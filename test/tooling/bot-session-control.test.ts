@@ -415,3 +415,129 @@ test("plans deny budgets too small for a match and interrupted checkpoints requi
     await rm(f.session, { recursive: true, force: true });
   }
 });
+
+test("explicit continuation increases limits without erasing consumed games or the original configuration", async () => {
+  const f = await fixture({ maxGames: 4 });
+  try {
+    await f.run({ action: "start", iteration: 1 });
+    await f.run(f.reserve);
+    await f.run(f.settle);
+    assert.equal((await f.run({ action: "plan" })).stoppingReason, "max-games");
+    const resumed = await f.run({
+      action: "continue",
+      limits: { maxGames: 8 },
+    });
+    assert.equal(resumed.completedGames, 4);
+    assert.equal(resumed.limits.maxGames, 8);
+    assert.equal(resumed.stoppingReason, null);
+    assert.equal((await f.run({ action: "plan" })).limits.maxGames, 8);
+    await assert.rejects(
+      f.run({ action: "continue", limits: { maxGames: 4 } }),
+      /only increase/,
+    );
+    const ledger = JSON.parse(
+      await readFile(path.join(f.session, "control.json"), "utf8"),
+    );
+    assert.equal(ledger.configuredLimits.maxGames, 4);
+    assert.equal(ledger.limitChanges.length, 1);
+  } finally {
+    await rm(f.session, { recursive: true, force: true });
+  }
+});
+
+test("suspended time is charged from the persisted wall-clock origin", async () => {
+  const f = await fixture({ maxWallMs: 100 });
+  try {
+    await f.run({ action: "start", iteration: 1 });
+    await f.run({ action: "stop", reason: "interrupted" });
+    const file = path.join(f.session, "control.json"),
+      ledger = JSON.parse(await readFile(file, "utf8"));
+    ledger.startedAt = Date.now() - 1000;
+    ledger.elapsedMs = 10;
+    ledger.activeSince = null;
+    await save(file, ledger);
+    const stopped = await f.run({ action: "plan" });
+    assert.equal(stopped.stoppingReason, "max-wall-ms");
+    assert.ok(stopped.elapsedMs >= 1000);
+    const resumed = await f.run({
+      action: "continue",
+      limits: { maxWallMs: 10000 },
+    });
+    assert.equal(resumed.stoppingReason, null);
+    assert.equal(resumed.startedAt, ledger.startedAt);
+    assert.ok(resumed.elapsedMs >= stopped.elapsedMs);
+  } finally {
+    await rm(f.session, { recursive: true, force: true });
+  }
+});
+
+test("output exhaustion blocks admission, saves a report and resumes only with more capacity", async () => {
+  const f = await fixture({ maxGames: 20 });
+  try {
+    await f.run({ action: "start", iteration: 1 });
+    const limits = (await f.run({ action: "plan" })).limits;
+    const max = limits.maxBytes!;
+    const data = path.join(f.session, "space.log");
+    await writeFile(data, "");
+    // Sparse payload: exercise a 20 GB logical limit without allocating 20 GB.
+    const { truncate } = await import("node:fs/promises");
+    await truncate(data, max - 16_000_000);
+    const stopped = await f.run(f.reserve);
+    assert.equal(stopped.stoppingReason, "max-output-bytes");
+    assert.equal(stopped.reservation, null);
+    const report = await f.run({ action: "report" });
+    assert.equal(report.stoppingReason, "max-output-bytes");
+    await assert.rejects(
+      f.run({ action: "continue" }),
+      /Output limit still exhausted/,
+    );
+    // Existing fixtures and control metadata consume capacity too. Restore a
+    // full free reserve, rather than assuming a fixed 1 MB increase is enough.
+    const extendedMax = Math.max(
+      max + 1_000_000,
+      report.storage.totalBytes +
+        report.storage.controlReserveBytes +
+        1_000_000,
+    );
+    const resumed = await f.run({
+      action: "continue",
+      limits: { maxBytes: extendedMax },
+    });
+    assert.equal(resumed.stoppingReason, null);
+    assert.equal(resumed.limits.maxBytes, extendedMax);
+    assert.equal(resumed.completedGames, 0);
+  } finally {
+    await rm(f.session, { recursive: true, force: true });
+  }
+});
+
+test("limit pinning compares values rather than key order and migrates older default limits", async () => {
+  const f = await fixture({ maxIterations: 2, maxGames: 20 });
+  try {
+    await f.run({ action: "plan" });
+    const file = path.join(f.session, "config.json"),
+      config = JSON.parse(await readFile(file, "utf8"));
+    config.limits.stop = { maxGames: 20, maxIterations: 2 };
+    await save(file, config);
+    assert.equal((await f.run({ action: "plan" })).stoppingReason, null);
+    const control = path.join(f.session, "control.json"),
+      ledger = JSON.parse(await readFile(control, "utf8"));
+    delete ledger.startedAt;
+    delete ledger.limits.maxBytes;
+    ledger.activeSince = null;
+    ledger.elapsedMs = 17;
+    await save(control, ledger);
+    const migrated = await f.run({ action: "plan" });
+    assert.equal(migrated.limits.maxBytes, 20_000_000_000);
+    assert.ok(migrated.elapsedMs >= 17);
+    assert.ok(Number.isSafeInteger(migrated.startedAt));
+    config.limits.stop.maxGames = 21;
+    await save(file, config);
+    await assert.rejects(
+      f.run({ action: "plan" }),
+      /Control identity or limits changed/,
+    );
+  } finally {
+    await rm(f.session, { recursive: true, force: true });
+  }
+});

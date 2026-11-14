@@ -103,7 +103,12 @@ test("iteration CLI snapshots control/self and retries preserve candidate edits 
     );
     assert.equal(run.status, 0, run.stderr);
     const first = JSON.parse(run.stdout);
-    assert.deepEqual(first.control, first.self);
+    assert.deepEqual(first.control, {
+      path: path.join(f.session, "iterations/iteration-0001/accepted"),
+      identity: f.accepted.identity,
+    });
+    assert.deepEqual(first.self, f.accepted);
+    assert.notEqual(first.control.path, first.self.path);
     assert.equal(first.opponents.at(-1).identity, f.accepted.identity);
     assert.equal(first.baseline.reason, "missing");
     assert.equal(first.candidate.identity, null);
@@ -205,12 +210,24 @@ test("accepted promotion binds a new snapshot and invalidates baseline; frozen d
       schemaVersion: 1,
       fixtureIdentity: f.frozen.identity,
       accepted: { path: version, identity: bot.identity },
+      iteration: 1,
     };
     await save(path.join(f.session, "state.json"), state);
     await assert.rejects(prepareIteration(f.options), /identity mismatch/);
     const next = await prepareIteration({ ...f.options, iteration: 2 });
     assert.notEqual(next.comparisonIdentity, first.comparisonIdentity);
-    assert.equal(next.self.identity, bot.identity);
+    assert.equal(next.control.identity, bot.identity);
+    assert.equal(next.accepted.bot.identity, bot.identity);
+    assert.deepEqual(next.self, f.accepted);
+    assert.equal(next.opponents.at(-1)!.identity, f.frozen.target.identity);
+    assert.equal(
+      await readFile(path.join(next.control.path, "bot.mjs"), "utf8"),
+      "changed",
+    );
+    assert.equal(
+      await readFile(path.join(next.self.path, "bot.mjs"), "utf8"),
+      "initial",
+    );
     await save(path.join(version, "frozen-bot.json"), {
       ...bot,
       deck: { main: [], extra: [], side: [] },
@@ -245,7 +262,7 @@ test("corruption and locks fail without publishing; ordinary failure permits ret
     assert.deepEqual(await readdir(conflict), []);
     await rm(conflict, { recursive: true });
     const first = await prepareIteration(f.options);
-    await writeFile(path.join(first.self.path, "bot.mjs"), "broken");
+    await writeFile(path.join(first.control.path, "bot.mjs"), "broken");
     await assert.rejects(prepareIteration(f.options), /Accepted file mismatch/);
   } finally {
     await rm(f.root, { recursive: true, force: true });

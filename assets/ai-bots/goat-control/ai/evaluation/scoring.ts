@@ -1,5 +1,5 @@
 import type { PromptChoice } from "../../../../../src/battle/duel/contracts/player-prompt.ts";
-/** GOAT-specific resource and targeting rules over the Generalist baseline. */
+/** Independent initial copy of the Generalist baseline; specialize GOAT scoring here. */
 import { EnginePosition } from "../../../../../src/battle/worker/engine/engine-constants.ts";
 import type { ActiveDuelDependencies } from "../../../../../src/battle/worker/assets/active-duel-dependencies.ts";
 
@@ -12,6 +12,8 @@ export function baselineStrategy(
     const { prompt, observation } = input;
     const opponent =
       observation.publicState?.players[prompt.player === 0 ? 1 : 0];
+    const effect = observation.publicState?.chain.at(-1);
+    const own = observation.publicState?.players[prompt.player];
     if (
       choice.action === "activate" &&
       choice.card?.code === 71044499 &&
@@ -22,6 +24,107 @@ export function baselineStrategy(
         score: -1000,
         code: "preserve_nobleman",
         explanation: "Keep Nobleman without an opposing face-down target.",
+      };
+    if (
+      prompt.kind === "selectCard" &&
+      effect?.controller === prompt.player &&
+      effect.sourceIdentityVisible &&
+      effect.sourceCard === 5318639 &&
+      choice.card &&
+      ["spellTrap", "field"].includes(choice.card.location)
+    )
+      return {
+        score: choice.card.controller === prompt.player ? -1000 : 1000,
+        code: "mst_enemy_target",
+        explanation: "Prefer opposing backrow for our pending MST.",
+      };
+    if (
+      choice.action === "activate" &&
+      choice.card?.code === 5318639 &&
+      opponent &&
+      opponent.spellsAndTraps.length === 0
+    )
+      return {
+        score: -1000,
+        code: "preserve_mst",
+        explanation: "Keep MST without opposing backrow.",
+      };
+    if (
+      choice.action === "activate" &&
+      choice.card?.code === 19613556 &&
+      opponent &&
+      opponent.spellsAndTraps.length === 0
+    )
+      return {
+        score: -1000,
+        code: "preserve_heavy_storm",
+        explanation: "Do not clear only our backrow.",
+      };
+    const usefulFlip =
+      choice.card?.code === 31560081
+        ? own?.graveyard.some(
+            (card) =>
+              card.code !== undefined &&
+              ((dependencies.cards.get(card.code)?.type ?? 0) & 2) !== 0,
+          )
+        : choice.card?.code === 33508719 &&
+          own &&
+          opponent &&
+          own.handCount - 1 < 5 &&
+          own.handCount - 1 <= opponent.handCount;
+    if (
+      prompt.kind === "idleCommand" &&
+      choice.action === "summon" &&
+      usefulFlip &&
+      prompt.choices.some(
+        (alternative) =>
+          alternative.action === "setMonster" &&
+          alternative.card?.instanceId === choice.card?.instanceId,
+      ) &&
+      opponent?.monsters.some(
+        (card) =>
+          card.faceUp &&
+          card.code !== undefined &&
+          (dependencies.cards.get(card.code)?.attack ?? 0) >
+            (dependencies.cards.get(choice.card!.code!)?.attack ?? 0),
+      )
+    )
+      return {
+        score: -1000,
+        code: "protect_flip_utility",
+        explanation:
+          "Set a useful flip monster instead of exposing it to a stronger visible monster.",
+      };
+    if (
+      choice.action === "activate" &&
+      choice.card?.code === 53582587 &&
+      own &&
+      opponent &&
+      opponent.monsters.length === 0 &&
+      own.monsters.some(
+        (card) =>
+          card.code !== 26202165 &&
+          card.code !== undefined &&
+          ((dependencies.cards.get(card.code)?.type ?? 0) & 16384) === 0,
+      )
+    )
+      return {
+        score: -1000,
+        code: "preserve_own_board",
+        explanation:
+          "Decline Torrential when only our non-token board would be lost.",
+      };
+    if (
+      prompt.kind === "selectCard" &&
+      effect?.controller === prompt.player &&
+      effect.sourceIdentityVisible &&
+      effect.sourceCard === 71044499 &&
+      choice.card?.location === "monster"
+    )
+      return {
+        score: choice.card.controller === prompt.player ? -1000 : 1000,
+        code: "nobleman_enemy_target",
+        explanation: "Prefer opposing monsters for our pending Nobleman.",
       };
     const stats =
       choice.card?.code === undefined

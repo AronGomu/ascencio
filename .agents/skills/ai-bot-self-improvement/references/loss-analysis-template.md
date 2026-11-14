@@ -1,6 +1,6 @@
 # Loss analysis report
 
-Write `baseline/loss-analysis.md` or `iterations/iteration-N/loss-analysis.md` in English. Review every newly played target loss; use prior analyses for cached results. List **all supported reasons affecting at least one loss**, ranked by affected losses, then severity. There is no limit on the number of reasons. Count each game once per reason; reasons may overlap, so counts need not sum to total losses.
+Write `baseline/loss-analysis.md` or `iterations/iteration-N/loss-analysis.md` in English. Review every newly played target loss; use prior analyses for cached results. List **all supported reasons affecting at least 5 distinct losses**, ranked by affected losses, then severity; omit smaller groups. There is no limit on the number of reasons. Count each game once per reason; reasons may overlap, so counts need not sum to total losses.
 
 Judge choices using information visible at the time. Distinguish observed mistakes from uncertain loss attribution; an alternative need not be proven to win before replay testing. Report losses with no supported reason as unclear; do not invent reasons.
 

@@ -22,24 +22,31 @@ Produce an AI version with a higher paired-match win rate.
 - `run-directory`: project-defined location for checkpoints, immutable bot versions and execution evidence.
 - `accepted-version`: currently accepted target AI, initially the starting AI.
 - `candidate`: proposed replacement containing the accumulated replay-validated rules.
-- `eligible-reason`: supported loss pattern affecting at least one lost game, ranked by affected games.
+- `eligible-reason`: supported loss pattern affecting at least 5 distinct lost games, ranked by affected games; omit smaller groups from the reason list and replay jobs.
 - `baseline-results`: completed accepted version results against frozen opponents on the recorded match schedule.
 - `paired-schedule`: recorded engine seeds, match/game identities and starting sides shared by accepted version and candidate evaluations.
+
+## Version archive
+
+- Commit an AI version on `main` only after its full iteration evaluation and decision, including rejected candidates. Record its full commit SHA, bot package path and outcome.
+- Record each iteration's starting accepted version by its existing commit. Keep any uncommitted starting source as a temporary snapshot with a content hash until it qualifies for an iteration commit; never substitute branch HEAD for the recorded accepted version.
+- Keep intermediate rule variants and unevaluated candidates in temporary storage with content hashes; create no Git commits for them. Preserve the accepted-version reference independently of rejected candidate commits.
+- Retrieve source with `git show <sha>:<path>` or extract the package from that commit. Use Git references instead of archival source-directory copies; retain execution bundles and hashes required by the runner for reproducibility.
+- Commit only intended bot changes and history; preserve unrelated work. Keep game logs, generated bundles and dependencies outside Git. Preserve commits without rewriting history; push only with authorization.
 
 ## Overview
 
 1. **Improvement run** — the full process, configured for up to 50 iterations by default.
     1. **Preparation** — resolve bots, freeze opponents and configure limits (workflow step 1).
-    2. **Baseline evaluation** — evaluate the starting AI and save results and starting conditions (workflow step 2).
-    3. **Candidate preparation** — analyze losses and cumulatively replay-validate fixes before each iteration (workflow step 3).
-    4. **Iteration** — evaluate and decide on the combined candidate (workflow steps 4–5).
-        1. **Candidate** — the accumulated replay-validated AI changes.
-        2. **Evaluate** — test the candidate against frozen opponents.
-            1. **Evaluation** — test one AI version over the configured matches per opponent, default 250.
-                1. **Match** — four games covering starting-side rotation and sideboarding under the current evaluator contract.
-                    1. **Game** — one duel ending in a win, loss or draw.
-        3. **Decide** — promote the candidate to the accepted version if its weighted win rate improves; otherwise keep the current accepted version.
-    5. **Finalization** — rank saved versions, export the accepted AI and summarize results after the iterations finish.
+    2. **Baseline** — evaluate the starting AI in step 2, skip the candidate decision in step 3, then analyze and improve it in step 4.
+    3. **Iteration** — repeat Evaluate → Decide → Analyze and improve (workflow steps 2–4).
+        1. **Candidate** — one combined AI version containing the validated rule changes.
+        2. **Evaluation** — test that version over the configured matches per frozen opponent, default 250.
+            1. **Match** — four games covering starting-side rotation and sideboarding under the evaluator contract.
+                1. **Game** — one duel ending in a win, loss or draw.
+        3. **Decision** — promote the candidate if its weighted win rate improves; otherwise retain the accepted version.
+        4. **Analysis and improvement** — analyze losses, test isolated rules in parallel and combine validated fixes into the next candidate.
+    4. **Finalization** — rank saved versions, export the accepted AI and summarize results (workflow step 5).
 2. **Supporting concepts**
     1. **AI version** — one saved implementation of the AI.
     2. **Frozen opponent** — an unchanged AI version used throughout the run, including the starting AI for self-play.
@@ -104,37 +111,32 @@ Map these terms to the existing implementation without renaming its interfaces: 
 
 ### 1 — Prepare the bots and improvement run
 
-1. Resolve the implementation, bots and command template.
+1. Resolve the implementation, bots and command template; use `main` and Version archive.
 2. Find a compatible checkpoint, or run [generate-improvement-run-setup.ts](../../../scripts/bot-improvement/generate-improvement-run-setup.ts).
 3. Validate the setup with evaluator and strategy checks.
 
-### 2 — Generate or retrieve the baseline
+### 2 — Evaluate
 
-1. Initialize the improvement run or resume a compatible checkpoint; complete missing baseline matches using the starting AI against frozen opponents.
-2. Save the results and paired schedule; spawn a baseline loss-analysis agent using [loss-analysis-template.md](references/loss-analysis-template.md). Keep source logs for step 3.
+1. Initialize or resume a compatible improvement run. On the first pass, evaluate the starting AI to establish the baseline; later passes evaluate the final combined candidate. Record the source version using Version archive; stop for invalid or unchanged candidates.
+2. Run the evaluator for the configured matches against every frozen opponent. Save the baseline's paired schedule and reuse it for candidates; retrieve compatible results or complete missing matches.
+3. Verify evidence and save results, weighted win rates and resource usage. For candidates, also save the difference from the accepted version; mark incomplete or mismatched comparisons unassessable.
 
-### 3 — Prepare the next iteration’s candidate
+### 3 — Decide
 
-1. Read the loss analysis. Starting with reason 1, implement its proposed rule in the target AI; keep previously validated rules.
-2. Run [replay-game-decision.ts](../../../scripts/bot-improvement/replay-game-decision.ts) on that reason’s lost games, taking over at each recorded critical decision. Verify the rule changes the intended choice. Stop at the first verified loss-to-win conversion; mark the rule replay-validated, not yet promoted. Compare the accumulated script before and after this rule at the same takeover; a win already achieved by earlier rules does not validate the new rule.
-3. If every associated loss is tried without a conversion, remove only the unvalidated rule and record why. Process every eligible reason in rank order, preserving earlier fixes; stop on execution failures or budget exhaustion.
-4. Archive and validate the combined candidate; run [update-improvement-history.ts](../../../scripts/bot-improvement/update-improvement-history.ts). Record each rule’s outcome and replay reference; generate no `proposal.md`. Start the iteration only after every eligible reason is processed. If none validates, report no candidate.
-5. Run [prune-improvement-iteration.ts](../../../scripts/bot-improvement/prune-improvement-iteration.ts) only after analysis delivery and replay review, unless the owner requests retaining logs. Preserve unresolved replay evidence.
+1. For the initial baseline, record its accepted-version reference and continue to step 4 without counting an iteration decision.
+2. For a candidate, apply the acceptance rule, save the decision and checkpoint, and update the history with the win-rate difference and a short reason. Commit the evaluated AI using Version archive and record its SHA; preserve the accepted-version reference on rejection.
+3. Continue to step 4 for loss analysis, including after the last iteration decision.
 
-### 4 — Evaluate the candidate
+### 4 — Analyze losses and prepare the next candidate
 
-1. Skip candidate games for invalid or unchanged proposals; record why.
-2. Run the evaluator to play the candidate’s configured matches against every frozen opponent on the saved paired schedule; reuse compatible accepted-version results.
-3. Verify paired evidence and save both weighted win rates, percentage-point difference and resource usage. Mark incomplete or mismatched comparisons unassessable.
+1. Spawn a loss-analysis agent for the evaluated version using [loss-analysis-template.md](references/loss-analysis-template.md); reuse compatible existing analysis. Bind every report to its source AI and evaluation. After delivery, check stop conditions before preparing another candidate; finish at step 5 when the run is complete.
+2. Record the next iteration's accepted starting version using Version archive. Use that version's matching loss analysis; after rejection, reuse the accepted version's analysis rather than applying the rejected candidate's reasons to a different source AI. Prepare one immutable variant per eligible reason, containing only that reason's rule; use separate source and output directories.
+3. Run reason jobs in parallel with [replay-game-decision.ts](../../../scripts/bot-improvement/replay-game-decision.ts). Replay every associated loss at its recorded critical decision, comparing the isolated variant against the accepted version. Retain a rule only after all its cases complete and it converts at least 5 losses and 5% of the reason's total associated losses into wins, with the intended choice changed. Earlier reason fixes do not enter validation.
+4. Bound concurrent jobs by available resources and queue remaining reasons. Reserve shared budgets atomically before each replay. Exclude rules below either threshold; preserve their results. On failure or budget exhaustion, stop admission and settle active jobs while preserving evidence.
+5. Wait for every reason job to finish. Combine all validated rules into one final candidate based on the accepted version; resolve overlapping edits while preserving each rule's behavior. Validate and freeze that version, then run [update-improvement-history.ts](../../../scripts/bot-improvement/update-improvement-history.ts) with included rules and replay references. Generate no `proposal.md`. If none validates, finish at step 5 with no candidate.
+6. Run [prune-improvement-iteration.ts](../../../scripts/bot-improvement/prune-improvement-iteration.ts) only after analysis delivery and replay review, unless the owner requests retaining logs. Preserve unresolved replay evidence. Continue to step 2 with the final candidate for its full evaluation.
 
-### 5 — Decide and continue
+### 5 — Verify and deliver
 
-1. Apply the acceptance rule, save the decision and checkpoint, and update the history entry with its result, win-rate difference and a short factual reason.
-2. Spawn a loss-analysis agent after each decision using [loss-analysis-template.md](references/loss-analysis-template.md). Retain game records until the next candidate’s replay validation is complete.
-3. Return to step 3 before starting another iteration; build from the accepted version and reuse its compatible baseline. Retain rejected candidates’ fixes as history, not as accepted code.
-4. Rank saved versions and export the accepted AI at separate review boundaries.
-
-### 6 — Verify and deliver
-
-1. Verify decisions, completed iterations, loss analyses, ranking and exports against evidence.
+1. Verify completed iterations, decisions and loss analyses against evidence; rank saved versions and export the accepted AI at the final review boundary.
 2. Generate the report and deliver artifact links, completion status and unresolved errors.

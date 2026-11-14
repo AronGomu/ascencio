@@ -31,6 +31,10 @@ function fixture(t: { after: (fn: () => void) => void }) {
   git("config", "user.name", "Test");
   write("src/value.ts", "export const value = 1;\n");
   write("test/tooling/value.test.ts", 'import "../../src/value.ts";\n');
+  write(
+    "scripts/agent-tools/check-docs.py",
+    readFileSync("scripts/agent-tools/check-docs.py", "utf8"),
+  );
   git("add", ".");
   git("-c", "core.hooksPath=/dev/null", "commit", "-qm", "base");
   return { root, git, write };

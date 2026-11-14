@@ -1,8 +1,12 @@
 # Documentation
 
+[Agent tools](developer-guide/agent-tools.md) provides run status, small benchmark commands, bounded reads, review snapshots and documentation checks. The [full navigation map](repository-map.md) lists project paths and responsibilities.
+
 [TypeScript runner performance implementation plan](architecture/06-quality/typescript-runner-performance-implementation-plan.md) is the ordered fresh-session handoff for implementing and measuring workflow acceleration.
 
-This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the fast entry point for AI and contributors.
+This directory contains current project documentation and historical context. Root [`AGENTS.md`](../AGENTS.md) is the compact topic router; the [repository map](repository-map.md) provides detailed paths.
+
+[Repository cleanup](repository-cleanup.md) covers bounded inspection, patch equivalence, functional review and manifest-based deletion.
 
 [`project-guide.md`](project-guide.md) contains operating guidance, local validation policy, architecture constraints, document conventions, and task-management instructions.
 

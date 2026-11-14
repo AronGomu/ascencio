@@ -1,3 +1,4 @@
+import { benchmarkProvenance } from "./benchmark-provenance.ts";
 import { availableParallelism } from "node:os";
 import { workerCounts, workerRecommendation } from "./worker-calibration.ts";
 /** Compare explicit replay worker counts without changing production settings. */
@@ -28,6 +29,10 @@ if (
 )
   throw Error("Positive worker counts/repeats/batch size required");
 const request = JSON.parse(await readFile(v.request, "utf8"));
+const provenance = benchmarkProvenance(request, {
+  workers: counts,
+  evidenceMode: "verified replay branches and durable evidence",
+});
 const cases = request.reasons.reduce(
   (n: number, r: { cases: unknown[] }) => n + r.cases.length,
   0,
@@ -86,6 +91,7 @@ for (let repeat = 0; repeat < repeats; repeat++)
       JSON.stringify(
         {
           schemaVersion: 1,
+          provenance,
           experimental: true,
           runs,
           logical,

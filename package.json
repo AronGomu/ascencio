@@ -114,7 +114,16 @@
     "bot:setup": "node --experimental-vm-modules scripts/bot-improvement/setup-session.ts",
     "bot:validate": "node --experimental-vm-modules scripts/bot-improvement/validate-candidate.ts",
     "bot:decide": "node scripts/bot-improvement/apply-decision.ts",
-    "bot:prepare-iteration": "node scripts/bot-improvement/prepare-iteration.ts"
+    "bot:prepare-iteration": "node scripts/bot-improvement/prepare-iteration.ts",
+    "repo:cleanup": "node scripts/repository/cleanup.ts",
+    "agent:status": "node scripts/agent-tools/session-tools.mjs status",
+    "agent:read": "node scripts/agent-tools/session-tools.mjs read",
+    "agent:snapshot": "node scripts/agent-tools/session-tools.mjs snapshot",
+    "agent:recheck": "node scripts/agent-tools/session-tools.mjs recheck",
+    "docs:check": "python3 scripts/agent-tools/check-docs.py",
+    "bot:perf:smoke": "node scripts/agent-tools/session-tools.mjs perf smoke",
+    "bot:perf:confirm": "node scripts/agent-tools/session-tools.mjs perf confirm",
+    "bot:perf:integrated": "node scripts/agent-tools/session-tools.mjs perf integrated"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,3 +1,4 @@
+import { benchmarkProvenance } from "./benchmark-provenance.ts";
 import { randomUUID } from "node:crypto";
 import { benchmarkTypescriptRun } from "./typescript-benchmark.ts";
 import {
@@ -41,6 +42,13 @@ const sourceConfig = JSON.parse(
 );
 const sourceFixture = JSON.parse(
   await readFile(path.join(sourceConfig.fixture.path, "manifest.json"), "utf8"),
+);
+const provenance = benchmarkProvenance(
+  { config: sourceConfig, fixture: sourceFixture },
+  {
+    workers: counts,
+    evidenceMode: "native-v2",
+  },
 );
 const matches = Number(
   v.matches ??
@@ -95,6 +103,7 @@ const config = JSON.parse(
   await readFile(path.join(v.session, "config.json"), "utf8"),
 );
 const report = {
+  provenance,
   schemaVersion: 1,
   backend: v.backend,
   identity: native

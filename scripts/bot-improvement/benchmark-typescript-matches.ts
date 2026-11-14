@@ -1,3 +1,4 @@
+import { benchmarkProvenance } from "./benchmark-provenance.ts";
 import { runProcess } from "./match-process.ts";
 import { compareNativeRunners } from "./compare-native-runners.ts";
 import type { runTypescriptNative } from "./run-typescript-native.ts";
@@ -37,6 +38,17 @@ const source = await createBenchmarkSession(
   path.join(v.out, "source"),
 );
 const { job } = await prepareTypescriptJob(source, Number(v.matches));
+const provenance = benchmarkProvenance(job, {
+  workers: [Number(v.workers)],
+  evidenceMode: v["full-only"]
+    ? "native-v2"
+    : "native-v2 plus diagnostic compact/raw frames",
+  childRuntimeFlags: [
+    "--no-lazy",
+    "--no-wasm-lazy-compilation",
+    "--no-liftoff",
+  ],
+});
 await buildBatchRunner();
 const nativeOptions = {
   job,
@@ -155,6 +167,7 @@ if (
 )
   throw Error("Native resume replayed or lost work");
 const report = {
+  provenance,
   rust,
   runs,
   native,

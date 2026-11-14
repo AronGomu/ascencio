@@ -92,6 +92,7 @@ export async function benchmarkRun(options: {
     runner: options.legacy ? "legacy" : "batch",
     workers: run.workers as number,
     matches: options.matches,
+    completedGames: run.completedGames,
     wallMs,
     gamesPerSecond: run.completedGames / (wallMs / 1000),
     fingerprint,

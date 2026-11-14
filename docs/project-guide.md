@@ -179,12 +179,12 @@ Use [Ticketing](ticketing.md) for the Linear workspace, project and connection s
 
 ## Repository navigation and bounded search
 
-Review the `AGENTS.md` tree whenever files change. Update paths and descriptions in the same change when files are added, removed, renamed, moved, or change responsibility. Keep the tree as a curated topic map: files represented by a directory remain covered there. Content-only edits need no artificial tree diff when the map remains accurate.
+Review the `docs/repository-map.md` tree whenever files change. Update paths and descriptions in the same change when files are added, removed, renamed, moved, or change responsibility. Keep the tree as a curated topic map: files represented by a directory remain covered there. Content-only edits need no artificial tree diff when the map remains accurate.
 
-Start searches from the owning directory found in `AGENTS.md`. List candidate filenames with `rg --files` before reading content. Search selected files or directories; include `.tmp/` only for specific evidence and exclude generated bundles. Keep output bounded and narrow the search when it truncates.
+Start searches from the owning directory found in `docs/repository-map.md`. List candidate filenames with `rg --files` before reading content. Search selected files or directories; include `.tmp/` only for specific evidence and exclude generated bundles. Keep output bounded and narrow the search when it truncates.
 
 ## Local commit checks
 
-Install the tracked hook after cloning with `git config --local core.hooksPath .githooks`. The pre-commit hook runs existing lint and typecheck commands for staged code/config changes. It checks the working tree and does not stage or rewrite files. Keep staged and working changes aligned for a reproducible commit. Node and installed npm dependencies are required.
+Install the tracked hook after cloning with `npm run hooks:install`. The pre-commit hook delegates to `scripts/validate-commit.ts`: it checks staged/working-tree alignment, runs applicable ESLint and TypeScript/Svelte checks, selects related tests, and caches success only for identical content. Prose-only commits skip application checks. Unknown test mappings require an explicit selection through `npm run commit:validate -- --tests <exact-test-files>`.
 
-Run related tests separately using the ascencio-tests workflow before committing. The hook is a quick static guardrail, not full validation. Remote CI remains disabled.
+Use the ascencio-tests workflow to review related test selection before committing. The hook runs local checks; remote CI remains disabled.

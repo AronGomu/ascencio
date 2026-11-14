@@ -29,14 +29,9 @@ Already implemented in the inspected working tree:
 
 Confirm these changes and their tests; do not implement them again. Sequential completed-resume verification and shared analysis overhead remained at the review snapshot.
 
-Historical observations, not implementation promises:
+Historical timings and benchmark limitations are maintained in the [retrospective](bot-improvement-performance-retrospective.html) and its linked evidence snapshot.
 
-- Old 10,000-game evaluation: 192.83 minutes. Post-evaluation preparation: 190.11 minutes and still incomplete.
-- Preparation intervals: 89.43 minutes discovery/receipts, 37.67 minutes packet publication, 62.95 minutes loss-view creation so far.
-- 2,500 packets: 2.37 GB. 4,121 loss views: 5.075 GB. One whole-run quota scan: 892 ms across roughly 27,410 files.
-- Full-evidence native comparisons were mixed: 144 games at two workers favored TypeScript; later 200-game tests at four workers favored optimized Rust. Do not claim language migration alone guarantees speed.
-
-## Non-negotiable behavior
+## Required behavior
 
 Keep the same frozen schedule, engine seeds, deck/sideboarding rules, original policies and exact decision identities. Validate persisted bytes before trusting receipts. Analysts receive only target-loss information. Every completed target loss must be covered. All associated losses for every eligible reason must be replayed; preserve the five distinct losses and 5% conversion thresholds, intended-choice checks and timeout denominators.
 
@@ -123,6 +118,8 @@ Done: no late package-format block, redundant baseline simulation or hidden repe
 
 ## Validation and performance gates
 
+Use the reusable [agent tools](../../developer-guide/agent-tools.md) for small benchmark commands and review source snapshots. Historical measurements belong in the retrospective; this plan owns execution order and completion criteria.
+
 Use the test skill to select exact related files. Likely suites: `typescript-native-runner.test.ts`, `bot-session-batch.test.ts`, `bot-output-storage.test.ts`, `bot-analysis-slices.test.ts`, `bot-match-analysis.test.ts`, `bot-session-aggregation.test.ts`, `bot-candidate-session.test.ts`, `replay-pool.test.ts`, `replay-pool-real.test.ts`, `worker-calibration.test.ts`, and `decision-replay.test.ts`. Confirm paths exist before invoking them.
 
 Example after selection:
@@ -168,3 +165,7 @@ Final delivery includes a small integrated benchmark report with its scale limit
 Fresh-session prompt:
 
 > Implement docs/architecture/06-quality/typescript-runner-performance-implementation-plan.md for the TypeScript runner. Start by reconciling current code and active runs with its known state, then execute the phases in order. Preserve unrelated changes and frozen run identities. Use targeted local validation and measure complete workflow gains. Keep the plan's completion matrix current and continue through implementation, reporting any concrete blocker with evidence.
+
+## Generated benchmark provenance
+
+Match comparisons, match worker calibration and replay worker calibration embed `provenance` from `benchmark-provenance.ts` before measured stages. It records source revision and source-byte digest (including uncommitted runner sources), frozen job/config/request digest, Node/runtime flags, CPU/load, workers, evidence mode and scope limitations. Existing raw runs and actual completed counts remain in the same report. Review those counts and behavior verification before interpreting speedups; resume verification and diagnostic compact/raw modes have separate costs and persistence contracts.

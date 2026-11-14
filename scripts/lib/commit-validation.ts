@@ -122,6 +122,18 @@ export function validateCommit(
   check?: Check,
 ): void {
   const changed = stagedFiles(root);
+  const documents = changed.filter(
+    (file) => /\.(md|html)$/.test(file) && existsSync(path.join(root, file)),
+  );
+  if (documents.length) {
+    const args = ["scripts/agent-tools/check-docs.py", ...documents];
+    const result = spawnSync("python3", args, { cwd: root, stdio: "inherit" });
+    if (result.error || result.status !== 0)
+      throw new Error(
+        "Documentation checks failed; fix links/HTML before committing.",
+      );
+  }
+
   if (changed.every(documentationOnly)) {
     console.log(
       "[pre-commit] Documentation-only/no staged changes: application checks skipped.",

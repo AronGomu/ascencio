@@ -46,6 +46,7 @@ export async function benchmarkTypescriptRun(options: {
     runner: "typescript",
     workers: run.workers,
     matches: options.matches,
+    completedGames: run.completedGames,
     wallMs: run.elapsedMs,
     gamesPerSecond: run.gamesPerSecond,
     fingerprint,

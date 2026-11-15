@@ -258,7 +258,14 @@ export function parseGameLog(text: string): GameLog {
   };
 }
 export function targetLossView(text: string): string {
-  const { neutral, actors, sideboarding } = parseGameLog(text);
+  return targetLossViewFromRecords(parseGameLog(text));
+}
+/** Workers already own these records; avoid a serialization/decode round trip. */
+export function targetLossViewFromRecords({
+  neutral,
+  actors,
+  sideboarding,
+}: GameLog): string {
   if (
     neutral.status !== "completed" ||
     neutral.winner !== "b" ||

@@ -1,0 +1,10 @@
+[
+  [
+    "SKILL.md",
+    "All stages inherit these rules and the Limits, Incident policy and Artifact lifecycle below. Stage instructions add requirements; omission never grants an exception."
+  ],
+  [
+    "SKILL.md",
+    "`task STAGE` prints inherited policy and current actions. `advance STAGE EVENT` checks a legal edge and prints the next task, only after the orchestrator verifies completion. `resume PRIOR-STAGE` requires a verified prior checkpoint and Incident policy\u2019s authorization. This stateless dispatcher neither executes/persists runs, certifies evidence nor grants authorization. Owning tools control execution, accounting, storage, claims and publication; semantic gates remain orchestrator obligations. Persist each verified next stage with project checkpoint tools; stop conditions override progression."
+  ]
+]

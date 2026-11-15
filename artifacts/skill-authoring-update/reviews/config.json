@@ -1,0 +1,17 @@
+{
+  "bot": {
+    "source": "/home/aron/Projects/ascencio/.agents/skills/ai-bot-self-improvement",
+    "candidate": "/home/aron/Projects/ascencio/.agents/skills/ai-bot-self-improvement-REFINED-AUTHORING-REVIEW",
+    "artifacts": "/home/aron/Projects/ascencio/artifacts/skill-authoring-update/reviews/bot"
+  },
+  "authoring": {
+    "source": "/home/aron/.agents/skills/how-to-make-skills",
+    "candidate": "/home/aron/.agents/skills/how-to-make-skills-REFINED-AUTHORING-REVIEW",
+    "artifacts": "/home/aron/Projects/ascencio/artifacts/skill-authoring-update/reviews/authoring"
+  },
+  "refine": {
+    "source": "/home/aron/.agents/skills/refine-skill",
+    "candidate": "/home/aron/.agents/skills/refine-skill-REFINED-AUTHORING-REVIEW",
+    "artifacts": "/home/aron/Projects/ascencio/artifacts/skill-authoring-update/reviews/refine"
+  }
+}

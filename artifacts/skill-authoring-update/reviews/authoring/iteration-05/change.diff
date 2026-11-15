@@ -1,0 +1,8 @@
+--- references/skill-rules-guidelines.md
++++ references/skill-rules-guidelines.md
+@@ -53,4 +53,4 @@
+ | 47 | 60% | Give the agent one stage-specific task at a time | Let the controller emit only the current stage's actions and required policy. Define entry conditions, permitted actions, completion evidence and the next stage.<br><br>This reduces loaded context. It reduces total characters only when shared instructions are genuinely deduplicated. Keep required shared policy reachable and explicit. |
+ | 48 | 60% | Prefer a minimal report contract/example | Replace long fictional reports with a small example that demonstrates required layout and fields when authorized. Remove invented measurements, duplicated policy and obsolete operational advice.<br><br>Keep required report contents authoritative in one place. An example should illustrate those requirements rather than create competing defaults or procedures. |
+ | 49 | 50% | Reuse Markdown reference links | Define repeated long destinations once and reuse short, descriptive labels. Avoid indirection when a destination occurs only once and the reference adds overhead. |
+-| 50 | 40% | Aspirational reduction | A 25% character reduction is an aspiration, subordinate to readability and behavioral preservation. Do not stop searching for useful simplification merely because a target was reached. |
++| 50 | 40% | Aspirational reduction | A 25% character reduction is an aspiration, subordinate to readability and behavioral preservation. Keep seeking useful simplification after reaching a target. |

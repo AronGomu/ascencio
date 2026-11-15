@@ -1,0 +1,20 @@
+{
+  "/home/aron/Projects/ascencio/.agents/skills/ai-bot-self-improvement": {
+    "SKILL.md": "2e91718dc3f55247039bef5e0807b77c959b567722aac869f6c7b4bc3da7ecc2",
+    "agents/openai.yaml": "aa76c0d791fe86ee3cdb06f0a29d86f3bd0c1305e3c58de3fbb6260fcdf7f75a",
+    "references/match-log-template.md": "b6302332b2cd355b72cc2718f58da0cd3866445e79176711a0ff68cee74b0155",
+    "references/loss-analysis-template.md": "fd69f38d9101323ae44ca7050a613ff2f5f853a818100d64fc6e7b9e8a13225d",
+    "references/streaming-loss-analysis.md": "c47909ed4f1d45965746f43a478058a8ff8c42ef5b42b0be3559560346013788",
+    "references/run-summary-example.txt": "abb69d570179538c9d52bc4342c78858119786a73090037828eba4012e77f591",
+    "references/defaults.md": "d384318887bae0c2aa70893c512b9c378031a22ec0fbd046c4d4868e372017d1",
+    "scripts/workflow-controller.mjs": "108a1805b6316289259a929655f2d89ac15adcb98a5b33f67c4e5d1932981e9f"
+  },
+  "/home/aron/.agents/skills/how-to-make-skills": {
+    "SKILL.md": "d359967360fc52c1362813454e3cf7d375ba9327d6dcfb53b9f31cdbbb8d6be3",
+    "references/skill-rules-guidelines.md": "3f4656ba5e1f59030e63bafd800bc8f6f33d1eba16e9ff130f23b256a2d70e62"
+  },
+  "/home/aron/.agents/skills/refine-skill": {
+    "SKILL.md": "360d8df7d4ed544b36b53c10805bc112aecbdffd88ec222ec6045125ddff7150",
+    "references/explanation-template.md": "99b38acd3f632af37fb931efd025bbbebf7cded605cfbe01e606b83a6117efae"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "review_context": "automatic-authoring-review",
+  "provider_control": "collaboration.spawn_agent",
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "low",
+  "fork_turns": "none",
+  "reviewer_input": "candidate package and explanation template only; dependency reads allowed",
+  "attestation_limit": "Supported launch controls set requested settings; backend routing is not independently inspectable by children."
+}

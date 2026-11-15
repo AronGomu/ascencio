@@ -1,4 +1,5 @@
 /** Persistent engine ownership, externally enforced deadlines and timeout continuation. */
+import { digest } from "./session-fixtures.ts";
 import { Worker } from "node:worker_threads";
 import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
 import { NativeMatchEvidence } from "./typescript-native-evidence.ts";
@@ -6,7 +7,13 @@ import type { Job, Frame } from "./typescript-match-worker.ts";
 type Obj = Record<string, unknown>;
 interface Response {
   verified?: boolean;
-  nativeGame?: { text: string; game: Obj; records: Obj[] };
+  nativeGame?: {
+    text: string;
+    lossView?: string;
+    decisions: string[];
+    game: Obj;
+    records: Obj[];
+  };
   initial: Obj[];
   events: Obj[][];
   terminal?: Frame;
@@ -172,7 +179,11 @@ export class NativeEngineSlot {
   }
   async match(
     item: Job["matches"][number],
-    writeGame: (number: number, text: string) => Promise<void>,
+    writeGame: (
+      number: number,
+      text: string,
+      lossView?: string,
+    ) => Promise<void>,
     writeBug: (id: string, value: unknown) => Promise<void>,
   ) {
     const { job } = this.data,
@@ -287,8 +298,18 @@ export class NativeEngineSlot {
             "Missing native game evidence",
           );
         builder.games.push(response.nativeGame.game);
+        if (response.nativeGame.lossView !== undefined)
+          builder.lossBindings[index] = {
+            transformation: 1,
+            sha256: digest(response.nativeGame.lossView),
+            decisions: response.nativeGame.decisions,
+          };
         builder.records.push(response.nativeGame.records);
-        await writeGame(index + 1, response.nativeGame.text);
+        await writeGame(
+          index + 1,
+          response.nativeGame.text,
+          response.nativeGame.lossView,
+        );
       } catch (e) {
         if (this.data.aborted()) throw e;
         // Writer/encoder failures belong to the coordinator. Converting one

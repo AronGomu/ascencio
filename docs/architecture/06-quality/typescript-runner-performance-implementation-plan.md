@@ -255,3 +255,10 @@ The retained implementation completed two reversed pairs against the starting ru
 Strict comparison verified 200 paired game timelines, sideboarding and terminal outcomes; all target-only views and report coverage were checked independently. Completed resumes made no new game reservations. Sixty-six targeted tests passed, with one unavailable external legacy XML fixture skipped. Fifteen affected tests passed again after static cleanup; TypeScript, ESLint, Prettier, documentation and diff checks passed. No campaign, promotion, commit or push occurred.
 
 The [final report](../../evidence/bot-improvement/performance-loop-2026-11-14.html) records the source identities, raw-evidence location, limitations, phase matrix and verified resume procedure. The loop is complete; deferred roadmap items are not claimed as implemented.
+
+
+### Loss-analysis follow-up implementation
+
+The loss-analysis path now supports worker-derived target-only projections with transformation/version/hash bindings, metadata admission for new native evidence, and the existing parser fallback for older runs. Finalization checks projection equivalence before publishing the receipt. Slice conversion happens outside session ownership and `sync` with `maxSlices: 1` permits admission of each ready 250-match slice after the complete evaluation barrier.
+
+Review packets include ordered readable pages, exact event/decision coverage and byte counts. Analysts submit primary classifications and all supported secondary reasons together; offered/chosen IDs are checked against pinned loss decisions and Markdown is generated mechanically. `checkpoint` publishes validated match subsets within the slice, allowing a replacement owner to skip completed jobs. `status` reads the cached summary; `audit` performs explicit full evidence verification. Legacy packets and Markdown remain readable. These additions implement previously deferred functionality; prior benchmark numbers do not measure this follow-up or establish analyst-time savings.

@@ -1,0 +1,35 @@
+{
+  "detectedDuring": "iteration9",
+  "action": "Preserve current original without overwrite; retain initial baseline and record new identity. No refinement command intentionally edited original.",
+  "files": [
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/SKILL.md",
+      "initialSha256": "97ab332fedd57367daac5b713848776fe54a618722b6c5cbb1d3a7c4a0a32b13",
+      "observedSha256": "78dd749df51e8213fdbdb534ed2294a0f543870fa01b6001098e9562491f4d17",
+      "initialCharacters": 36440,
+      "observedCharacters": 36857
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/references/streaming-loss-analysis.md",
+      "initialSha256": "a8b1bfff5f6dda75d2eb848a6a91063ff91251d2524efde3fc47a6de424e1cc2",
+      "observedSha256": "5f4dacfca1a5d428154c6a98cc3f3bee37cf5d84ed11e1e213cea3cd7e608f00",
+      "initialCharacters": 7140,
+      "observedCharacters": 10502
+    }
+  ],
+  "observations": [
+    [
+      {
+        "path": ".agents/skills/ai-bot-self-improvement/SKILL.md",
+        "sha256": "78dd749df51e8213fdbdb534ed2294a0f543870fa01b6001098e9562491f4d17",
+        "characters": 36857
+      },
+      {
+        "path": ".agents/skills/ai-bot-self-improvement/references/streaming-loss-analysis.md",
+        "sha256": "a34cd3d4244ce83a98f0a694ad22af7c308f33c96e89e0159e579504117c9d5f",
+        "characters": 10831
+      }
+    ]
+  ],
+  "policy": "Source is changing concurrently; preserve it, pin incorporated snapshot, do not claim live-source equivalence."
+}

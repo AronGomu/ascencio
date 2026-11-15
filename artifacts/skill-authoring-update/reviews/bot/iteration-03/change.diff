@@ -1,0 +1,11 @@
+--- SKILL.md
++++ SKILL.md
+@@ -61,7 +61,7 @@
+ 
+ ## Limits
+ 
+-Read [default values][defaults] during Prepare, then pin owner overrides and resolved values in run configuration; it is authoritative for execution. The defaults file is input, not a replacement setup schema. Resume preserves setup, original `startedAt` and consumed budgets. Every admission checks remaining time/storage and reserves through the shared gate; settle completed, failed and cancelled attempts through owning tools.
++Read [default values][defaults] during Prepare, then pin owner overrides and resolved values in run configuration; it is authoritative for execution. The defaults file supplies values, not the setup schema. Resume preserves setup, original `startedAt` and consumed budgets. Every admission checks remaining time/storage and reserves through the shared gate; settle completed, failed and cancelled attempts through owning tools.
+ 
+ | Resource | Policy and configuration binding |
+ | --- | --- |

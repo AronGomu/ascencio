@@ -1,0 +1,18 @@
+[
+  [
+    "SKILL.md",
+    "Read [default values][defaults] during Prepare, then pin owner overrides and resolved values in run configuration; it is authoritative for execution. The defaults file is input, not a replacement setup schema. Resume preserves setup, original `startedAt` and consumed budgets. Every admission checks remaining time/storage and reserves through the controller; settle completed, failed and cancelled attempts through owning tools."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "3. Pin evaluation, AI source/version, match range, packet identities and hashes. Supply only each packet and its explicit allowlisted `jobs[].losses[].log` target-loss projections. Analysts never read full two-actor logs, opponent-only content, wins/draws/timeouts/failed/skipped gameplay or accepted-version wins. Match indexes are references only, not permission to traverse other games. A no-loss slice reports zero losses reviewed and opens no gameplay."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "- For each packet job not in `claim.completedJobs`, submit structured first-pass findings bound to job/packet hash; the tool generates per-match Markdown. Checkpoint small completed-match batches. Completed findings survive release/reassignment; no-loss slices open nothing and submit no findings."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "Use authoritative lossless logs and verified native receipts. Frozen execution publishes receipts after match closure. A standalone producer uses [publish-text-match.ts](../../../../scripts/bot-improvement/publish-text-match.ts) only after writer closure to verify records and publish its receipt."
+  ]
+]

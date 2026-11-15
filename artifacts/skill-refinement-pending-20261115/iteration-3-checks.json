@@ -1,0 +1,18 @@
+{
+  "iteration": "3",
+  "source": {
+    "instructionCharacters": 50244,
+    "instructionalCodeCommentCharacters": 83,
+    "physicalBytes": 53736
+  },
+  "candidate": {
+    "instructionCharacters": 49979,
+    "instructionalCodeCommentCharacters": 83,
+    "physicalBytes": 53473
+  },
+  "brokenReferences": [],
+  "sourceDrift": [],
+  "literalChanges": [],
+  "executableChanges": [],
+  "scope": "All package Markdown, text references and agent YAML; instructional .mjs comments counted; executable-only .mjs/.d.mts source excluded. Physical bytes includes every file. External linked docs remain unchanged and uncounted in both versions."
+}

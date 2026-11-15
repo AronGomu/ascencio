@@ -1,0 +1,50 @@
+[
+  [
+    "SKILL.md",
+    "node .agents/skills/ai-bot-self-improvement-REFINED/scripts/workflow-controller.mjs advance prepare ready"
+  ],
+  [
+    "SKILL.md",
+    "`task` prints inherited policy plus the current stage's instructions. `advance` checks the transition table below and prints the next task; call it only after verifying the current completion gate. It does not execute games, certify semantic evidence, store run state or grant recovery authorization. Persist the verified next stage with the project's checkpoint commands. For a suspended run use `resume <prior-stage>` only after the required authorization and checkpoint verification. Cancellation/limits always override progression."
+  ],
+  [
+    "SKILL.md",
+    ""
+  ],
+  [
+    "SKILL.md",
+    "Existing tools remain the execution controller: `bot:session` controls admission/accounting, `bot:matches` owns match execution, storage gate owns quota/atomic writes, slice tool owns analyst claims, and decision/archive tools own publication transactions. Keep human judgment and unverified gates explicit below; a stage transition is not proof of their completion."
+  ],
+  [
+    "SKILL.md",
+    "Both pools test every worker count from 2 through available logical CPUs. Reuse only matching recommendations; otherwise recalibrate. Save successful measurements, failed attempts and exclusions across resume. Only fully successful required repetitions qualify. Input/prefix integrity changes are failures, not concurrency measurements. A CPU bound below two cannot produce the required recommendation: stop rather than invent a fallback. Diagnostic games have separate accounting; verify the existing controller's admission classification before calibration and stop on any unresolved budget conflict."
+  ],
+  [
+    "SKILL.md",
+    "| Temporary execution evidence | Game logs under `games/game-N/` with actor A/B initial state/events/choices/IDs/sideboarding/results; match log indexes four games. Per-match Markdown and [evaluation report][loss-report], replay points/control-takeover traces/outcomes, immutable variant hashes, frozen packages/copies, schedules, receipts, machine records and bundles | Keep while execution, validation, replay, accepted-analysis reuse or resume needs it; apply version conditions above. No permanent archival source copies; delivery alone permits no pruning. |"
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "2. Partition the frozen schedule in recorded order into disjoint consecutive 250-match slices (last may be smaller). Launch exactly one owner per whole slice in parallel: ten for 2,500 matches. Queue whole slices for runtime slot capacity; do not split/merge assignments. Setup's `analysis-workers` is the slice count."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "4. Analysts review every completed target loss using visible information, preserving unknowns. Write the per-match findings below under the evaluation's `analyses/`, with separate job/packet bindings per match, and return paths plus slice coverage. Keep singleton findings; eligibility is global. Analysts receive paired new-loss flags from metadata when relevant, never winning-game content."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "- `{\"action\":\"sync\",\"binding\":...}` verifies finalization, derives slices and publishes target-loss views/allowlists."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "- For every `packet.jobs` entry, write the bound per-match report using only its allowlisted losses. A no-loss slice returns an empty report list."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "- `{\"action\":\"complete\",\"iteration\":N,\"role\":\"candidate\",\"slice\":\"slice-0001\",\"token\":\"...\",\"reports\":[{\"path\":\"...\",\"sha256\":\"...\"}]}` validates coverage and publishes findings/code-generated metadata. `release` requires slice ID, token and `terminated:true`; reassignment invalidates stale completions."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "Write one row per target loss, fields separated by `|` with no pipes inside fields. Classifications: `avoidable`, `unavoidable`, `unclear`. An avoidable finding requires a decision ID present in that game's target record; use `-` when unavailable. The queue validates bindings, loss membership, decision IDs and complete unique coverage; findings remain Markdown. Regression diagnosis and isolated repair follow the skill\u2019s Source selection and replay gate; observed associations are not causal proof."
+  ]
+]

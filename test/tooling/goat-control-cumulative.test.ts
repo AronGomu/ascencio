@@ -131,11 +131,12 @@ function decide(
   enemy: Partial<PublicPlayerState> = {},
   chain: PublicChainLink[] = [],
   events: BotObservedEvent[] = [],
+  turn = 1,
 ) {
   const state: PublicDuelState = {
     snapshotId: snapshotId("test"),
     revision: 1,
-    turn: 1,
+    turn,
     turnPlayer: 0,
     phase: "main1",
     layout: { extraMonsterZones: true },
@@ -209,7 +210,7 @@ test("Heavy Storm avoids clearing only our backrow but remains available against
   );
 });
 
-test("useful flip monsters are set against a visibly stronger opponent, without forcing an empty Faith effect", () => {
+test("Faith preserves opening or visible spell recovery value, while useful Jar is set", () => {
   const faith = card(31560081, 0, "hand");
   const faithOptions = [
     choice("summon", "summon", faith),
@@ -225,7 +226,22 @@ test("useful flip monsters are set against a visibly stronger opponent, without 
     ),
     ["set"],
   );
-  assert.deepEqual(decide("idleCommand", faithOptions, {}, enemy), ["summon"]);
+  assert.deepEqual(decide("idleCommand", faithOptions, {}, enemy), ["set"]);
+  assert.deepEqual(decide("idleCommand", faithOptions, {}, enemy, [], [], 3), [
+    "summon",
+  ]);
+  assert.deepEqual(
+    decide(
+      "idleCommand",
+      faithOptions,
+      { graveyard: [card(5318639, 0, "graveyard")] },
+      enemy,
+      [],
+      [],
+      3,
+    ),
+    ["set"],
+  );
   const jar = card(33508719, 0, "hand");
   assert.deepEqual(
     decide(

@@ -1,6 +1,7 @@
 /** Single-owner analysis writes backed by the shared run quota reservation. */
 import { AsyncLocalStorage } from "node:async_hooks";
 import path from "node:path";
+import { optionalJson } from "./session-checkpoint.ts";
 import { findOutputRoot, outputUsage, writeOutput } from "./output-storage.ts";
 import {
   leaseBatchStorage,
@@ -77,15 +78,18 @@ export async function withAnalysisOutput<T>(
   await analysisPath(session, ".session-state.lock");
   const root = await findOutputRoot(path.join(output, ".probe"));
   if (!root) return run();
-  // Refuse every active reservation, including one for this exact directory.
+  const pipeline = (await optionalJson(path.join(session, "config.json")))
+    ?.analysisPolicy?.pipeline;
+  // Refuse overlapping reservations, including one for this exact directory.
   // Crash recovery must establish that the prior owner stopped; never steal it.
   const lease = await leaseBatchStorage(
     root,
     output,
     false,
-    undefined,
+    pipeline?.analysisBytes,
     8_000_000,
     true,
+    !!pipeline,
   );
   const scope = { root, output, open: true, suspended: false };
   async function settle() {
@@ -96,7 +100,7 @@ export async function withAnalysisOutput<T>(
       if (usage.totalBytes > lease.maxBytes)
         throw Error("Analysis output exceeded its reserved allowance");
     } finally {
-      await releaseBatchStorage(scope.root, lease.token);
+      await releaseBatchStorage(lease.root, lease.token);
     }
   }
   try {

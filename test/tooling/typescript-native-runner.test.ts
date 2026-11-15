@@ -1,9 +1,17 @@
 import { verifyNativeSchedule } from "../../scripts/bot-improvement/typescript-native-resume.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile, rm, readdir } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  writeFile,
+  rm,
+  readdir,
+  mkdir,
+} from "node:fs/promises";
 import path from "node:path";
 import {
+  NativeMatchEvidence,
   canonicalTree,
   gameEvidenceHash,
   compactLog,
@@ -13,6 +21,7 @@ import {
   encodeLogRecord,
   decodeLog,
   parseGameLog,
+  targetLossView,
 } from "../../scripts/bot-improvement/game-log.ts";
 import {
   runTypescriptNative,
@@ -23,7 +32,11 @@ import { finalizedEvidence } from "../../scripts/bot-improvement/analysis-eviden
 import { outputUsage } from "../../scripts/bot-improvement/output-storage.ts";
 import { spawn } from "node:child_process";
 import { NativeEngineSlot } from "../../scripts/bot-improvement/typescript-native-executor.ts";
-import type { Job } from "../../scripts/bot-improvement/typescript-match-worker.ts";
+import { digest } from "../../scripts/bot-improvement/session-fixtures.ts";
+import type {
+  Job,
+  Frame,
+} from "../../scripts/bot-improvement/typescript-match-worker.ts";
 test("native initialization rejects a host failure response", async () => {
   const slot = new NativeEngineSlot({
     runtime: "test-runtime",
@@ -92,6 +105,186 @@ test("native codec retains exact typed records and version-one canonical rules",
     gameEvidenceHash("g", ["a", "b"], [{ timeline: [{ choice: "b" }] }, r]),
   );
 });
+test("native loss projections bind both starters, exclude nonlosses and reject rehashed tampering", async () => {
+  await mkdir(".tmp", { recursive: true });
+  const output = await mkdtemp(path.resolve(".tmp/native-loss-projection-"));
+  const deck = { main: [], extra: [], side: [] };
+  const item = {
+    match: { id: "match-0001" },
+    decks: [deck, deck],
+    identities: [digest("target"), digest("opponent")],
+    bots: [],
+  } as unknown as Job["matches"][number];
+  const job = {
+    identity: digest("execution"),
+    engineHash: digest("engine"),
+    fixtureIdentity: digest("fixture"),
+    profile: "mr5",
+  } as Job;
+  const builder = new NativeMatchEvidence(job, item);
+  builder.sideboarding = [{ status: "completed" }, { status: "completed" }];
+  const files: Record<string, string> = {};
+  const base = path.join(output, "matches", item.match.id);
+  const write = async (file: string, text: string) => {
+    await mkdir(path.dirname(path.join(base, file)), { recursive: true });
+    await writeFile(path.join(base, file), text);
+    files[file] = digest(text);
+  };
+  const marker = () =>
+    writeFile(path.join(base, "done.json"), JSON.stringify({ files }));
+  const expected = {
+    match: item.match.id,
+    executionIdentity: job.identity,
+    fixtureIdentity: job.fixtureIdentity,
+    candidateIdentity: item.identities[0]!,
+    opponentIdentity: item.identities[1]!,
+    item,
+    targetLossOnly: true,
+  };
+  try {
+    for (let index = 0; index < 4; index++) {
+      const text = builder.game({
+        index,
+        initial: [{ visible: "TARGET" }, { visible: "OPPONENT_PRIVATE" }],
+        events: [0, 1].map((actor) => [
+          {
+            kind: "decision",
+            sequence: 1,
+            decision_id: `${actor}-decision-${index}`,
+            prompt: {
+              choices: {
+                choice: [{ id: `choice-${actor}`, label: "Named card" }],
+              },
+            },
+            selected_choice_ids: { choice_id: [`choice-${actor}`] },
+          },
+        ]),
+        terminal: {
+          winner: index === 0 ? 1 : index === 1 ? 0 : index === 2 ? 0 : null,
+          turns: 1,
+          engine_reason: "fixture",
+        } as Frame,
+        decks: [deck, deck],
+      });
+      await write(`native/games/game-${index + 1}/game.log`, text);
+      const view = builder.lossView(index);
+      if (index < 2) {
+        assert.equal(view, targetLossView(text));
+        assert.doesNotMatch(view!, /OPPONENT_PRIVATE/);
+        const decisions = [`0-decision-${index}`];
+        builder.lossBindings[index] = {
+          transformation: 1,
+          sha256: digest(view!),
+          decisions,
+        };
+        await write(`native/games/game-${index + 1}/loss.log`, view!);
+      } else assert.equal(view, undefined);
+    }
+    const matchText = builder.match();
+    await write("native/match.log", matchText);
+    await marker();
+    assert.equal(await verifyNativeCompletion(output, job, item), true);
+    const summary = await finalizedEvidence(
+      output,
+      "matches/match-0001",
+      expected,
+    );
+    assert.ok(summary.adapter === "linked-text-v1");
+    assert.deepEqual(summary.outcomes, ["loss", "loss", "win", "draw"]);
+    assert.deepEqual(summary.lossGames, [
+      { game: 1, decisions: ["0-decision-0"] },
+      { game: 2, decisions: ["0-decision-1"] },
+    ]);
+    assert.deepEqual(summary.events, []);
+    const viewFile = "native/games/game-1/loss.log";
+    const viewText = await readFile(path.join(base, viewFile), "utf8");
+    // Changing a visible state while updating all derivative hashes still fails
+    // the authoritative transformation comparison at the producer boundary.
+    const altered = viewText.replace("TARGET", "FORGED");
+    await write(viewFile, altered);
+    builder.lossBindings[0]!.sha256 = digest(altered);
+    await write("native/match.log", builder.match());
+    await marker();
+    await assert.rejects(
+      verifyNativeCompletion(output, job, item),
+      /projection mismatch/,
+    );
+    await write(viewFile, viewText);
+    builder.lossBindings[0]!.sha256 = digest(viewText);
+    builder.lossBindings[0]!.decisions = ["invented-decision"];
+    await write("native/match.log", builder.match());
+    await marker();
+    await assert.rejects(
+      verifyNativeCompletion(output, job, item),
+      /projection mismatch/,
+    );
+    await assert.rejects(
+      finalizedEvidence(output, "matches/match-0001", expected),
+      /decision summary mismatch/,
+    );
+    // A producer declaring v1 may not omit both a required view and its binding.
+    delete builder.lossBindings[0];
+    await rm(path.join(base, viewFile));
+    delete files[viewFile];
+    await write("native/match.log", builder.match());
+    await marker();
+    await assert.rejects(
+      verifyNativeCompletion(output, job, item),
+      /Missing native loss projection/,
+    );
+    await assert.rejects(
+      finalizedEvidence(output, "matches/match-0001", expected),
+      /Missing bound native loss view/,
+    );
+    builder.lossBindings[0] = {
+      transformation: 1,
+      sha256: digest(viewText),
+      decisions: ["0-decision-0"],
+    };
+    await write(viewFile, viewText);
+    await write("native/match.log", builder.match());
+    await write("native/games/game-3/loss.log", viewText);
+    await marker();
+    await assert.rejects(
+      verifyNativeCompletion(output, job, item),
+      /Only completed target losses/,
+    );
+    await assert.rejects(
+      finalizedEvidence(output, "matches/match-0001", expected),
+      /Non-loss projection/,
+    );
+    // Existing receipts predate worker projections and retain the verified fallback.
+    for (const number of [1, 2, 3]) {
+      const file = `native/games/game-${number}/loss.log`;
+      await rm(path.join(base, file));
+      delete files[file];
+    }
+    const legacyMatch =
+      "ASCENCIO_MATCH_LOG\t2\n" +
+      decodeLog(matchText, "ASCENCIO_MATCH_LOG\t2")
+        .map((row) => {
+          if (row.tag === "MANIFEST")
+            delete (row.value as Record<string, unknown>)
+              .loss_projection_version;
+          if (row.tag === "GAME_REF")
+            delete (row.value as Record<string, unknown>).target_loss;
+          return encodeLogRecord(row.tag, row.value);
+        })
+        .join("");
+    await write("native/match.log", legacyMatch);
+    await marker();
+    assert.equal(await verifyNativeCompletion(output, job, item), true);
+    const legacy = await finalizedEvidence(
+      output,
+      "matches/match-0001",
+      expected,
+    );
+    assert.ok(legacy.adapter === "linked-text-v1");
+    assert.deepEqual(legacy.lossGames, summary.lossGames);
+  } finally {
+    await rm(output, { recursive: true, force: true });
+  }
+});
 const source = process.env.ARO2_FROZEN_SESSION;
 test(
   "full TypeScript evidence supports analysis, replay, verified resume and bounded accounting",
@@ -110,14 +303,51 @@ test(
     assert.equal(run.reservedGames, 8);
     for (const item of job.matches) {
       assert.ok(await verifyNativeCompletion(run.output, job, item));
-      await finalizedEvidence(run.output, `matches/${item.match.id}`, {
-        match: item.match.id,
-        executionIdentity: job.identity,
-        fixtureIdentity: job.fixtureIdentity,
-        candidateIdentity: item.identities[0]!,
-        opponentIdentity: item.identities[1]!,
-        item,
-      });
+      const full = await finalizedEvidence(
+        run.output,
+        `matches/${item.match.id}`,
+        {
+          match: item.match.id,
+          executionIdentity: job.identity,
+          fixtureIdentity: job.fixtureIdentity,
+          candidateIdentity: item.identities[0]!,
+          opponentIdentity: item.identities[1]!,
+          item,
+        },
+      );
+      const compact = await finalizedEvidence(
+        run.output,
+        `matches/${item.match.id}`,
+        {
+          match: item.match.id,
+          executionIdentity: job.identity,
+          fixtureIdentity: job.fixtureIdentity,
+          candidateIdentity: item.identities[0]!,
+          opponentIdentity: item.identities[1]!,
+          item,
+          targetLossOnly: true,
+        },
+      );
+      assert.ok(
+        compact.adapter === "linked-text-v1" &&
+          full.adapter === "linked-text-v1",
+      );
+      assert.deepEqual(compact.games, full.games);
+      assert.deepEqual(compact.outcomes, full.outcomes);
+      assert.deepEqual(compact.lossGames, full.lossGames);
+      for (let number = 1; number <= 4; number++) {
+        const gamePath = path.join(
+          run.output,
+          `matches/${item.match.id}/native/games/game-${number}`,
+        );
+        const log = await readFile(path.join(gamePath, "game.log"), "utf8");
+        if (full.outcomes[number - 1] === "loss")
+          assert.equal(
+            await readFile(path.join(gamePath, "loss.log"), "utf8"),
+            targetLossView(log),
+          );
+        else assert.ok(!(await readdir(gamePath)).includes("loss.log"));
+      }
     }
     const resumed = await runTypescriptNative({ ...options, resume: true });
     assert.equal(resumed.reservedGames, 8);

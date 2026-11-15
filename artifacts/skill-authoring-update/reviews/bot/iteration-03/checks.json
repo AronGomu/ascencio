@@ -1,0 +1,49 @@
+{
+  "missing_local_references": [],
+  "literal_fenced_blocks_identical": true,
+  "executables_identical": true,
+  "model_defaults_present": true,
+  "candidate_dispatcher_stages": [
+    {
+      "stage": "prepare",
+      "exit": 0,
+      "current_task": true
+    },
+    {
+      "stage": "evaluate",
+      "exit": 0,
+      "current_task": true
+    },
+    {
+      "stage": "decide",
+      "exit": 0,
+      "current_task": true
+    },
+    {
+      "stage": "analyze",
+      "exit": 0,
+      "current_task": true
+    },
+    {
+      "stage": "replay",
+      "exit": 0,
+      "current_task": true
+    },
+    {
+      "stage": "assemble",
+      "exit": 0,
+      "current_task": true
+    },
+    {
+      "stage": "deliver",
+      "exit": 0,
+      "current_task": true
+    },
+    {
+      "stage": "suspended",
+      "exit": 0,
+      "current_task": true
+    }
+  ],
+  "review_context": "automatic-authoring-review"
+}

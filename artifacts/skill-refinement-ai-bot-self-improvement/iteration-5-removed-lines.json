@@ -1,0 +1,46 @@
+[
+  [
+    "SKILL.md",
+    "Pin effective values before launch; owner values replace defaults. Resume keeps setup, original `startedAt` and all consumed budgets. Every admission checks remaining time/storage and reserves execution through the controller; settle completed, failed and cancelled attempts through their owning tools."
+  ],
+  [
+    "SKILL.md",
+    ""
+  ],
+  [
+    "SKILL.md",
+    "| Resource | Default and accounting |"
+  ],
+  [
+    "SKILL.md",
+    "| Decisions | 50 persisted candidate decisions; baseline excluded. Final evaluation still requires loss analysis before normal delivery. No validated edit is a legitimate early stop, not a claim that all planned decisions ran. |"
+  ],
+  [
+    "SKILL.md",
+    "| Evaluation | 2,500 total matches, four games each. Allocate floor(total/opponents) each plus one to the first remainder opponents; freeze order/schedule and require at least one match each. Set total `matches`; leave `matchesPerOpponent` unset. |"
+  ],
+  [
+    "SKILL.md",
+    "| Evaluation games | Planned = (1 + decisions) \u00d7 total matches \u00d7 four. Recovery = floor(10% planned). Pin both and their sum: defaults 510,000 + 51,000 = 561,000. Failed/interrupted reservations and recovery executions count; caches add none. Track planned/recovery separately. |"
+  ],
+  [
+    "SKILL.md",
+    "| Wall time | 24 h (86,400,000 ms) from persisted start, including suspension/downtime. Never reset on resume. |"
+  ],
+  [
+    "SKILL.md",
+    "| Storage | Explicit setup `stop.maxBytes: 50000000000` (50 GB) unless overridden. Count logical bytes, staging, logs, active evidence and imports. Record imported scope. Shared Node/Rust gate reserves 16,000,000 bytes inside the cap for controls/checkpoints/reports; data uses the remainder. |"
+  ],
+  [
+    "SKILL.md",
+    "| Deadlines | Evaluation attempt 5 h (18,000,000 ms); candidate preparation 10 min; each validation check 5 min; each replay control/takeover 5 min including prefix. Measure launch-to-exit; cap by remaining wall time. |"
+  ],
+  [
+    "SKILL.md",
+    "| Replays/diagnostics | No rule-replay game quota; replay every associated loss. Count controls/takeovers separately, with calibration diagnostics separate from evaluation/rule validation. All consume wall time/storage. |"
+  ],
+  [
+    "SKILL.md",
+    "On suspension/interruption/cancellation gracefully stop owned games/replays/analysts, allow at most 60 seconds, then terminate only owned process groups. Settle/cancel reservations, verify shutdown and checkpoint completed work, pending jobs/coverage, interrupted reservations, source identities, next stage and budgets. Report stop reason, checkpoint, next action and required limit change. Owner-authorized explicit closure is distinct from ordinary resource suspension and must retain incomplete status."
+  ]
+]

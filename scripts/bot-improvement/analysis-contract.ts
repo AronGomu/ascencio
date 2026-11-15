@@ -2,6 +2,7 @@ import type { EvidenceReference } from "./session-control-contract.ts";
 
 /** ARO2-22 extension: session/fixture/iteration schemas remain unchanged. */
 export interface AnalysisBinding {
+  analysisId?: string;
   iteration: number;
   role: "control" | "candidate";
   /** Session-relative finalized runner output root. */
@@ -76,6 +77,7 @@ export interface AnalysisQueue {
   jobs: {
     id: string;
     match: string;
+    lossCount?: number;
     packet: EvidenceReference;
     status: "waiting" | "pending" | "claimed" | "complete";
     attempt: number;
@@ -85,8 +87,12 @@ export interface AnalysisQueue {
     findings?: EvidenceReference;
   }[];
 }
-export type AnalysisAction =
-  | { action: "sync"; binding: AnalysisBinding }
+export type AnalysisAction = { analysisId?: string } & (
+  | {
+      action: "sync";
+      binding: AnalysisBinding;
+      matchRange?: { start: number; count: number };
+    }
   | { action: "status"; iteration: number; role: AnalysisBinding["role"] }
   | {
       action: "claim";
@@ -109,11 +115,14 @@ export type AnalysisAction =
       job: string;
       token: string;
       report: EvidenceReference;
-    };
+    }
+);
 
 export interface LossMatchReport {
   schemaVersion: 1;
   format: "loss-markdown-v1";
+  /** Present when primary and secondary hypotheses were captured in one pass. */
+  reasons?: LossReason[];
   job: string;
   packetSha256: string;
   findings: {
@@ -123,4 +132,14 @@ export interface LossMatchReport {
     reason: string;
     solution: string;
   }[];
+}
+
+export interface LossReason {
+  game: number;
+  id: string;
+  decision: string;
+  offered: string[];
+  chosen: string[];
+  reason: string;
+  solution: string;
 }

@@ -1,5 +1,30 @@
 /** Shared exhaustive CPU stages and repeat-aware recommendation policy. */
 import { availableParallelism } from "node:os";
+
+/** Every available count must be measured or explicitly excluded after recovery. */
+export function calibrationCoversWorkers(
+  saved: {
+    workers: number;
+    stages: { workers: number; medianMs: number }[];
+    excluded?: number[];
+  },
+  allowed: number,
+) {
+  const excluded = new Set(saved.excluded ?? []);
+  const measured = new Set(
+    saved.stages
+      .filter((stage) => Number.isFinite(stage.medianMs) && stage.medianMs > 0)
+      .map((stage) => stage.workers),
+  );
+  return (
+    measured.has(saved.workers) &&
+    !excluded.has(saved.workers) &&
+    Array.from({ length: allowed - 1 }, (_, i) => i + 2).every(
+      (count) => measured.has(count) || excluded.has(count),
+    )
+  );
+}
+
 export function workerCounts(value?: string, logical = availableParallelism()) {
   if (!Number.isSafeInteger(logical) || logical < 2)
     throw Error(

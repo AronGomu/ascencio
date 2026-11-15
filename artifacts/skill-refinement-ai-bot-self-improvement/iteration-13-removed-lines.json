@@ -1,0 +1,26 @@
+[
+  [
+    "SKILL.md",
+    "| Ordinary | Baseline, accepted candidate, tie or unassessable rejection | Add one fix | Accepted source and its matching analysis; still analyze a rejected evaluation before returning to retained accepted analysis | Accepted source |"
+  ],
+  [
+    "references/loss-analysis-template.md",
+    "Read when merging slices. Write English `baseline/loss-analysis.md` or `iterations/iteration-N/loss-analysis.md`, bound to evaluated source. Use the slice protocol for complete coverage and matching reuse."
+  ],
+  [
+    "references/loss-analysis-template.md",
+    "For every reason enumerate all affected games and primary critical decision IDs relative to the linked source evaluation. Link that evaluation once; qualify IDs if mixing evaluations. Replay points are execution inputs, not another ledger. Retention follows the skill\u2019s Artifact lifecycle, including completion of reason replays."
+  ],
+  [
+    "references/match-log-template.md",
+    "Read before log review. File ownership, analyst access and retention follow the skill and slice protocol; the codec below preserves exact gameplay for in-memory reconstruction."
+  ],
+  [
+    "references/match-log-template.md",
+    "`ASCENCIO_LOSS_LOG<TAB>2` contains identity, target sideboarding/initial state/events/result and end marker. Review only packet `jobs[].losses[].log` target-loss allowlists."
+  ],
+  [
+    "references/match-log-template.md",
+    "Preserve `?`/null as unknown; use only visible information and allowlisted views. Orchestrator replay uses the lossless source logs without JSON sidecars."
+  ]
+]

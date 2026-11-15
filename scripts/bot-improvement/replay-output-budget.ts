@@ -1,6 +1,6 @@
+import { readBatchStorageLease } from "./batch-storage-lease.ts";
 /** Experimental Node writer allowances, backed by one validated parent quota lease. */
 import {
-  readFile,
   mkdir,
   readdir,
   lstat,
@@ -50,9 +50,8 @@ export function replayWorkerRoot(grant: ReplayWriteGrant, worker: number) {
   );
 }
 export async function installReplayWriteGrant(grant: ReplayWriteGrant) {
-  const lease = JSON.parse(
-    await readFile(path.join(grant.root, ".batch-output-lease.json"), "utf8"),
-  );
+  const lease = await readBatchStorageLease(grant.root, grant.token);
+  if (!lease) throw Error("Invalid replay writer lease");
   const evaluation = path.resolve(grant.root, lease.evaluation),
     output = path.resolve(grant.output);
   if (

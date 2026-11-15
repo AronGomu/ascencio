@@ -1,0 +1,18 @@
+{
+  "source": {
+    "instruction_characters": 50709,
+    "physical_bytes": 54202
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "instruction_characters": 50688,
+      "physical_bytes": 54181
+    },
+    {
+      "iteration": 2,
+      "instruction_characters": 50657,
+      "physical_bytes": 54150
+    }
+  ]
+}

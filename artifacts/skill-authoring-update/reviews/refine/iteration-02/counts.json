@@ -1,0 +1,18 @@
+{
+  "input": {
+    "instructional_characters": 5174,
+    "physical_bytes": 5246,
+    "instructional_resources": {
+      "SKILL.md": 3494,
+      "references/explanation-template.md": 1680
+    }
+  },
+  "candidate": {
+    "instructional_characters": 5173,
+    "physical_bytes": 5245,
+    "instructional_resources": {
+      "SKILL.md": 3493,
+      "references/explanation-template.md": 1680
+    }
+  }
+}

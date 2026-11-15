@@ -1,6 +1,7 @@
 /** Read-only completion verification, shared by coordinator resume and worker finalization. */
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { targetLossViewFromRecords } from "./game-log.ts";
 import { digest, identity } from "./session-fixtures.ts";
 import type { Job } from "./typescript-match-worker.ts";
 import {
@@ -51,6 +52,7 @@ export async function verifyNativeCompletion(
     files.some(
       (f) =>
         !expected.includes(f) &&
+        !/^native\/games\/game-[1-4]\/loss\.log$/.test(f) &&
         !/^bugs\/match-[0-9]+(?:-game-[1-4])?-[a-z_]+\.json$/.test(f),
     )
   )
@@ -60,6 +62,11 @@ export async function verifyNativeCompletion(
     job,
     item,
   );
+  if (
+    match.manifest.loss_projection_version !== undefined &&
+    match.manifest.loss_projection_version !== 1
+  )
+    throw Error("Unsupported native loss projection version");
   for (const file of files) {
     const bytes = await readFile(path.join(base, file));
     if (marker.files[file] !== digest(bytes))
@@ -72,6 +79,29 @@ export async function verifyNativeCompletion(
         identity(game.neutral) !== identity(match.refs[n - 1]!.checkpoint_game)
       )
         throw Error("Native match/game reference mismatch");
+      const view = file.replace(/game\.log$/, "loss.log");
+      const binding = match.refs[n - 1]!.target_loss;
+      if (files.includes(view)) {
+        const text = await readFile(path.join(base, view), "utf8");
+        const expectedBinding = {
+          transformation: 1,
+          sha256: digest(text),
+          decisions: game.actors[0].timeline.entry
+            .filter((e) => e.kind === "decision")
+            .map((e) => String(e.decision_id)),
+        };
+        if (
+          text !== targetLossViewFromRecords(game) ||
+          identity(binding) !== identity(expectedBinding)
+        )
+          throw Error("Native loss projection mismatch");
+      } else if (
+        binding !== undefined ||
+        (match.manifest.loss_projection_version === 1 &&
+          game.neutral.status === "completed" &&
+          game.neutral.winner === "b")
+      )
+        throw Error("Missing native loss projection");
     }
   }
   return true;

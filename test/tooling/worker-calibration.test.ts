@@ -3,7 +3,29 @@ import assert from "node:assert/strict";
 import {
   workerCounts,
   workerRecommendation,
+  calibrationCoversWorkers,
 } from "../../scripts/bot-improvement/worker-calibration.ts";
+test("saved calibration accepts excluded counts without selecting them", () => {
+  const saved = {
+    workers: 2,
+    stages: [{ workers: 2, medianMs: 100 }],
+    excluded: [3, 4],
+  };
+  assert.equal(calibrationCoversWorkers(saved, 4), true);
+  assert.equal(calibrationCoversWorkers({ ...saved, excluded: [4] }, 4), false);
+  assert.equal(calibrationCoversWorkers({ ...saved, workers: 4 }, 4), false);
+  assert.equal(
+    calibrationCoversWorkers({ ...saved, excluded: [2, 3, 4] }, 4),
+    false,
+  );
+  assert.equal(
+    calibrationCoversWorkers(
+      { ...saved, stages: [{ workers: 2, medianMs: 0 }] },
+      4,
+    ),
+    false,
+  );
+});
 test("calibration covers every available CPU count without a 64-worker ceiling", () => {
   assert.deepEqual(workerCounts(undefined, 6), [2, 3, 4, 5, 6]);
   assert.equal(workerCounts(undefined, 128).at(-1), 128);

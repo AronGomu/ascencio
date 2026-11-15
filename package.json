@@ -123,7 +123,12 @@
     "docs:check": "python3 scripts/agent-tools/check-docs.py",
     "bot:perf:smoke": "node scripts/agent-tools/session-tools.mjs perf smoke",
     "bot:perf:confirm": "node scripts/agent-tools/session-tools.mjs perf confirm",
-    "bot:perf:integrated": "node scripts/agent-tools/session-tools.mjs perf integrated"
+    "bot:perf:integrated": "node scripts/agent-tools/session-tools.mjs perf integrated",
+    "bot:analysis:pipeline": "node scripts/bot-improvement/analysis-pipeline.ts",
+    "bot:analysis:policy": "node scripts/bot-improvement/configure-analysis-policy.ts",
+    "bot:analysis:import": "node scripts/bot-improvement/import-analysis-findings.ts",
+    "bot:analysis:benchmark": "node scripts/bot-improvement/benchmark-review-workflow.ts",
+    "bot:workflow:status": "node scripts/bot-improvement/workflow-status.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

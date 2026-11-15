@@ -1,0 +1,52 @@
+[
+  {
+    "iteration": 5,
+    "instructionCharacters": 35365,
+    "physicalCharacters": 38304,
+    "change": "Centralized resource defaults as a mandatory readable table; accounting/authorization policy stays in main skill.",
+    "findings": "Reviewer 2 misread raw 18000000 ms as 18 minutes. Replaced the initial JSON draft with a readable table giving exact milliseconds and human units; distinguished fixed four-game/16MB constants. Reviewers 1/3 retained correct semantics; all understood controller/source/replay/incident boundaries. No other behavioral disagreement observed.",
+    "removedLines": 11,
+    "boundaryCasesReviewed": 24,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 6,
+    "instructionCharacters": 34429,
+    "physicalCharacters": 37368,
+    "change": "Consolidated reference prose under existing main/slice authorities; shortened illustrative report without changing literal log or analysis blocks.",
+    "findings": "All reviewers now read deadlines correctly. Retention summaries implied closure-only cleanup, unlike eligible in-run rejected pruning. Clarified lifecycle once: rejected details may be pruned after summarized analysis/decision and ended dependencies without closure; accepted retention and suspension/owner overrides stay distinct. Stage, source, scoring, replay and incident interpretations otherwise agree. Correction is reviewed again by next fresh iteration.",
+    "removedLines": 28,
+    "boundaryCasesReviewed": 24,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 7,
+    "instructionCharacters": 34083,
+    "physicalCharacters": 37022,
+    "change": "Combined equivalent owner/analyst stop consequences and grouped temporary execution artifacts under one lifecycle rule.",
+    "findings": "All three now preserve eligible in-run rejected pruning, accepted-source retention, dependency end conditions and owner/suspension overrides. Stage, source, scoring, timeout/recovery/calibration and dispatcher interpretations agree. No step-3.4 wording correction needed; deletion audit restored receipts before reviewer dispatch.",
+    "removedLines": 8,
+    "boundaryCasesReviewed": 26,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 8,
+    "instructionCharacters": 33468,
+    "physicalCharacters": 36407,
+    "change": "Shortened stage bodies into action/completion instructions using mandatory policy/reference contracts; kept setup seed, variant implementation and overlap handling explicit.",
+    "findings": "All three preserve named-stage order, source modes, scoring/gates, correct units, incident recovery boundaries and version-specific retention. No new misunderstanding or step-3.4 correction observed. External schemas remain mandatory dependencies and dispatcher remains stateless. Short explanations omit some details but do not assert conflicting behavior.",
+    "removedLines": 8,
+    "boundaryCasesReviewed": 26,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 9,
+    "instructionCharacters": 34933,
+    "physicalCharacters": 37872,
+    "change": "Removed repeated controller/calibration explanations and a derived default example; incorporated a pinned concurrently updated current-source slice protocol as a separately recorded source addition.",
+    "findings": "All reviewers preserve source modes, units, gates, incident/retention distinctions and actual stateless dispatcher boundary. They understand current incremental preparation, complete page review, first-pass primary/secondary reasons, generated Markdown, immutable checkpoint reuse and audit-before-rule-trust. Reviewer2 phrasing blurred conversion versus publication ownership; clarified conversion outside session lock and bounded publication under it. Added review pages/packets/checkpoints explicitly to lifecycle and labeled primary-row format as generated output. Final corrections have no extra fresh review because stop is step3.4.",
+    "removedLines": 12,
+    "boundaryCasesReviewed": 26,
+    "status": "through-step-3.4"
+  }
+]

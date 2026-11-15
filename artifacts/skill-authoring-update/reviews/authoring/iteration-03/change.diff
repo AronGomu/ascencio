@@ -1,0 +1,10 @@
+--- references/skill-rules-guidelines.md
++++ references/skill-rules-guidelines.md
+@@ -1,6 +1,6 @@
+ # Skill rules guidelines
+ 
+-Read this ordered list whenever creating, updating or refining a skill. Earlier rows override later rows when they conflict; percentage ties retain the displayed order. Strictness is an enforcement priority, not a success rate.
++Read this ordered list when creating, updating or refining a skill. Earlier rows override later rows when they conflict; percentage ties retain the displayed order. Strictness is an enforcement priority, not a success rate.
+ 
+ | Order | Strictness percentage | Rule | Guidance |
+ | ---: | ---: | --- | --- |

@@ -1,3 +1,4 @@
+import type { AnalysisPolicy } from "./analysis-policy.ts";
 import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
 import type { BotConfiguration } from "../../src/battle/worker/bot/bot-contract.ts";
 
@@ -61,6 +62,7 @@ export interface FrozenSetup {
   }[];
 }
 export interface SetupOptions {
+  analysisPolicy?: AnalysisPolicy;
   target: string;
   opponents: string[];
   setupSeed: string;
@@ -73,7 +75,7 @@ export interface SetupOptions {
     maxBytes?: number;
     ownerStop?: true;
   };
-  /** Total matches, default 2,500; mutually exclusive with matchesPerOpponent. */
+  /** Total matches, default 250; mutually exclusive with matchesPerOpponent. */
   matches?: number;
   /** Matches for each supplied opponent plus the self slot. */
   matchesPerOpponent?: number;

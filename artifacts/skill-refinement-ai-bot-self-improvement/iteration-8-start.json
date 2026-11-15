@@ -1,0 +1,45 @@
+{
+  "files": [
+    {
+      "path": "SKILL.md",
+      "characters": 23563,
+      "sha256": "90e343420a20818a63e2cea898c2b598f8e812b6c5756b74572a5f5d863dc69e"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "characters": 338,
+      "sha256": "aa76c0d791fe86ee3cdb06f0a29d86f3bd0c1305e3c58de3fbb6260fcdf7f75a"
+    },
+    {
+      "path": "references/defaults.md",
+      "characters": 875,
+      "sha256": "d384318887bae0c2aa70893c512b9c378031a22ec0fbd046c4d4868e372017d1"
+    },
+    {
+      "path": "references/loss-analysis-template.md",
+      "characters": 1289,
+      "sha256": "ded94dbdb3535a49c132c5715d05687f0c774fcf049a51efb301e1bbe92ee175"
+    },
+    {
+      "path": "references/match-log-template.md",
+      "characters": 2879,
+      "sha256": "2693fc75a2859b286c72f1a317201c8ddf795c66032ecaeba167d27d72dcdd9f"
+    },
+    {
+      "path": "references/run-summary-example.txt",
+      "characters": 799,
+      "sha256": "abb69d570179538c9d52bc4342c78858119786a73090037828eba4012e77f591"
+    },
+    {
+      "path": "references/streaming-loss-analysis.md",
+      "characters": 4340,
+      "sha256": "663995d694e8f86a877b5d07b1b0bb9ef116b436b4e4aabe4b6d7e1971ede3e1"
+    },
+    {
+      "path": "scripts/workflow-controller.mjs",
+      "characters": 2939,
+      "sha256": "108a1805b6316289259a929655f2d89ac15adcb98a5b33f67c4e5d1932981e9f"
+    }
+  ],
+  "instructionCharacters": 34083
+}

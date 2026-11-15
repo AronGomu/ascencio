@@ -1,0 +1,44 @@
+{
+  "totalCharacters": 43844,
+  "removedExplanationDocuments": [
+    "current-skill-explanation.md",
+    "reviewer-1-explanation.md",
+    "reviewer-2-explanation.md",
+    "reviewer-3-explanation.md",
+    "round-2-reviewer-2-explanation.md",
+    "round-2-reviewer-1-explanation.md",
+    "round-2-reviewer-3-explanation.md"
+  ],
+  "files": [
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/SKILL.md",
+      "characters": 26479,
+      "sha256": "599cd3ed272ca1aea2a95ee2863f81e9d9f51b74bbebbd0b7b489b6ab9b10d18"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/agents/openai.yaml",
+      "characters": 338,
+      "sha256": "aa76c0d791fe86ee3cdb06f0a29d86f3bd0c1305e3c58de3fbb6260fcdf7f75a"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/loss-analysis-template.md",
+      "characters": 2281,
+      "sha256": "8a98c450c34fe07397bf15d88a74e4a25d74684eab85e4768c195002658c0f07"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/match-log-template.md",
+      "characters": 3731,
+      "sha256": "597c354d56636ba78e8c1ad9b6dcd12d5fe86b283ec02a398101fb6c72c6c8cf"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/run-summary-example.txt",
+      "characters": 3875,
+      "sha256": "45691e8c5325e2dade06f66f2e17547a345d872017973edaf780ac03537ac9d4"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/streaming-loss-analysis.md",
+      "characters": 7140,
+      "sha256": "a8b1bfff5f6dda75d2eb848a6a91063ff91251d2524efde3fc47a6de424e1cc2"
+    }
+  ]
+}

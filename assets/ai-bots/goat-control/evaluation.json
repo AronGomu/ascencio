@@ -7,7 +7,7 @@
   "module": "./ai/index.ts",
   "configuration": {},
   "fixtures": {
-    "path": "evaluation/fixtures/7bcff3b387a042b0861fb726c8fea0957eae3a0bcb47dbd203f0d28de4bae4b3",
-    "identity": "7bcff3b387a042b0861fb726c8fea0957eae3a0bcb47dbd203f0d28de4bae4b3"
+    "path": "evaluation/fixtures/0942555e0e1ff908983bb44427ddc279c98fd9d8dea6ba0eb1a04e6984f4b5fc",
+    "identity": "0942555e0e1ff908983bb44427ddc279c98fd9d8dea6ba0eb1a04e6984f4b5fc"
   }
 }

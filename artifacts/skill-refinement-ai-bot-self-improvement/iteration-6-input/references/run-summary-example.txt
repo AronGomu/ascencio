@@ -1,0 +1,27 @@
+AI BOT IMPROVEMENT RUN SUMMARY
+Layout example only; fill from verified evidence, not invented values.
+
+Run / target / frozen opponents: <IDs and source commits/hashes>
+Engine / content / runner: <identities>
+Configuration / shared policy: <links>
+Started / ended / state / reason: <timestamps and honest terminal or suspended status>
+Next stage / checkpoint / required continuation: <stage, path/hash, authorization or limit change>
+
+VERSIONS — baseline and every evaluated candidate
+<version, commit, parent accepted source; opponent and weighted W/L/D/rates;
+ paired difference, coverage/ignored counts, outcome and reason>
+
+RULES — every attempt
+<reason, affected losses, replayed/converted/timed-out counts, disposition and reason>
+Loss coverage / unclear: <aggregate counts>
+
+ACCOUNTING
+<executed/reused/reserved/failed/cancelled games; controls/takeovers and diagnostics;
+ elapsed and remaining time; current/peak storage and limits; errors/timeouts>
+
+RESULT
+<accepted commit; existing comparable ranking; changes and unresolved issues>
+Completed: <accepted export path/hash; checked consolidation and permitted cleanup>
+Suspended: <pending work and retained resume evidence; no final ranking/export/cleanup>
+
+References: <authoritative effective configuration and shared policy>

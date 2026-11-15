@@ -6,6 +6,7 @@ Whenever files change, review this map and keep paths and responsibilities synch
 ascencio/
 ├── AGENTS.md                         # Compact agent topic router
 ├── README.md                         # Project overview, installation and entry commands
+├── ai-improvement-skill-upgrade-propositions.md # Bot workflow performance and execution proposals
 ├── package.json                      # npm commands, dependencies and required Node version
 ├── package-lock.json                 # Pinned JavaScript dependency resolution
 ├── .node-version                     # Development Node version
@@ -23,7 +24,8 @@ ascencio/
 │
 ├── .agents/skills/                   # Project-local agent workflows
 │   ├── ai-bot-self-improvement/
-│   │   └── SKILL.md                  # Bot improvement orchestration, run summaries and temporary log contracts
+│   │   └── SKILL.md                  # Promoted bot workflow, references and executable stage-task dispatcher
+│   ├── ai-bot-self-improvement-REFINED/ # Historical validated refinement candidate; automatic reviews use unique siblings
 │   ├── ascencio-tests/
 │   │   └── SKILL.md                  # Select and run related tests locally
 │   └── impeccable/
@@ -57,6 +59,7 @@ ascencio/
 │   │   ├── 04-data/                  # Data, saves, assets and historical transport
 │   │   ├── 05-presentation/          # UI and rendering architecture
 │   │   ├── 06-quality/
+│   │   │   ├── ai-improvement-upgrades.md # Proposal-by-proposal implementation, validation and remaining integration
 │   │   │   ├── typescript-runner-performance-implementation-plan.md # Fresh-session execution plan for runner and workflow acceleration
 │   │   │   ├── bot-improvement-performance-retrospective.html # Measured workflow costs and TypeScript-first optimization plan
 │   │   │   ├── experimental-typescript-runner.md # Persistent Node engine runner comparison
@@ -229,6 +232,11 @@ ascencio/
 │   │   ├── batch-session-accounting.ts # Durable game allocations and worker-journal settlement
 │   │   ├── benchmark-analysis-evidence.ts # Offline twelve-match publication/resume performance fixture
 │   │   ├── benchmark-improvement-workflow.ts # Isolated evaluation, complete loss preparation/report ingestion and resume fixture
+│   │   ├── readable-loss-review.ts # Plain target-perspective loss chronology with sideboarding and exact decision references
+│   │   ├── narrative-loss-review.ts # Deterministic readable Markdown-to-narrative CLI, decisions and field snapshots
+│   │   ├── review-card-names.ts    # Frozen English labels and engine card types for readable loss files
+│   │   ├── loss-review-queue.ts    # One-owner-per-loss claims, findings validation and match aggregation
+│   │   ├── replay-calibration-stage.ts # Measured replay pool handoff within recovery-owned attempt directories
 │   │   ├── batch-storage-lease.ts   # Shared session quota reservation for independent workers
 │   │   ├── prepare-match-job.ts     # Verified frozen schedules, snapshots and engine job construction
 │   │   ├── match-process.ts         # Subprocess lifecycle and shared match CLI options
@@ -276,7 +284,9 @@ ascencio/
 │   │   ├── analysis-evidence.ts      # Legacy evidence validation and finalized adapter selection
 │   │   ├── analysis-text-evidence.ts # Verified game-log evidence and legacy record reader
 │   │   ├── game-log.ts               # Lossless typed game logs, decoding and loss-only views
-│   │   ├── analysis-slices.ts        # Durable 250-match analyst claims, loss filtering and reports
+│   │   ├── analysis-slices.ts        # Incremental 250-match readiness, claims, report checkpoints and cached summaries
+│   │   ├── loss-review.ts            # Target-only readable event pages and exact decision choice bindings
+│   │   ├── native-loss-summary.ts    # Verified worker projection metadata admission with legacy fallback
 │   │   ├── publish-text-match.ts     # Publish verified native match completion for streaming analysis
 │   │   ├── benchmark-behavior.ts     # Verified gameplay fingerprints for worker comparisons
 │   │   ├── analysis-report.ts        # Markdown findings, generated reports and reference validation
@@ -340,3 +350,9 @@ ascencio/
 ├── .cache/                          # Ignored upstream downloads and cache
 └── node_modules/                    # Installed JavaScript dependencies; generated
 ```
+
+Bot improvement tooling now also owns compact loss-review encoding/reconstruction, page acknowledgements, analysis policy helpers, calibration attempt recovery and durable operation status. Tests under `test/tooling/` cover these contracts; `test/unit/duel-state-projector-swap.test.ts` covers control-transfer instance identity. The active skill performance reference owns current readable version-4 loss review; encoded versions 1–3 and their page acknowledgements remain historical. REFINED candidates are separate from the active skill.
+
+`scripts/bot-improvement/` also owns concurrent storage envelopes, the supervised analysis pipeline, immutable analysis cohorts and imports, resource/feasibility admission, versioned reason reconciliation, verified bounded caches, metadata telemetry/dashboard rendering and bounded workflow benchmarks. Their public CLI commands are declared in `package.json`; diagnostics remain under `.tmp/` and cannot authorize campaign resumption.
+
+The active bot-improvement skill also owns cross-iteration pending-rule accumulation and the 300-distinct-loss definitive rejection policy. This is an orchestrator contract; the replay CLI does not automatically maintain that ledger.

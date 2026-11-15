@@ -21,6 +21,12 @@ Each card carries sorted unique counters shaped exactly `{ type, name, count }`,
 
 Chain links use native one-based indices and exactly preserve triggering controller, presentation-safe source identity, optional resolved description, phase (`pending | solving | solved`), and outcome (`normal | negated | disabled`). Phase and outcome are orthogonal. Concealed/unresolved sources expose only generic `Card effect`; raw code, instance ID, and encoded/resolved description remain absent. `CHAINING` appends, indexed status messages update existing links without resizing, and `CHAIN_END` clears.
 
+## Control swaps and observation identity
+
+`MSG_SWAP` (55) carries two **pre-swap** field addresses. The projector removes both occupants before inserting each at the opposite address; physical instance IDs, battle positions, counters and overlay materials travel with the cards. Public codes are refreshed only under the destination viewer's visibility rules. Missing, duplicate or non-field source slots fail before mutation. Frozen engine code remains unchanged.
+
+This handler fixes the observed Creature Swap discrepancy where fresh legal prompts had current card codes but event observations retained the previous occupants' codes. Previously 55 was classified as an event but fell through the projector's default branch. Old logs retain that historical defect and must not be rewritten or treated as newly verified evidence. Identity-dependent findings from those logs remain ambiguous unless independently established. Regression coverage is in `test/unit/duel-state-projector-swap.test.ts`, including both transfer directions and concealed identities.
+
 ## Visibility and invariants
 
 - Offline solo play has no secrecy boundary between Worker and main thread. Hidden identities may exist in projected/store state, but explicit visibility metadata must prevent plain display through DOM text, accessible names, card images, screenshots, routine logs, or diagnostics.

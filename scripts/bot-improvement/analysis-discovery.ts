@@ -18,6 +18,7 @@ export async function discoverAnalyses(
   session: string,
   binding: AnalysisBinding,
   compactNative = false,
+  matchRange?: { start: number; count: number },
 ) {
   const config = await json(path.join(session, "config.json"));
   const frozen = await verifyFrozen(config.fixture.path);
@@ -65,6 +66,23 @@ export async function discoverAnalyses(
   }
   if (items.size !== frozen.matches.length)
     throw new Error("Runner schedule coverage mismatch");
+  if (
+    matchRange &&
+    (!Number.isSafeInteger(matchRange.start) ||
+      matchRange.start < 0 ||
+      !Number.isSafeInteger(matchRange.count) ||
+      matchRange.count < 1)
+  )
+    throw Error("Invalid discovery range");
+  const selected = new Set(
+    (matchRange
+      ? frozen.matches.slice(
+          matchRange.start,
+          matchRange.start + matchRange.count,
+        )
+      : frozen.matches
+    ).map((m) => m.id),
+  );
   const packets: AnalysisPacket[] = [];
   const unavailable: { match: string; reason: string }[] = [];
   for (const match of frozen.matches) {
@@ -83,6 +101,7 @@ export async function discoverAnalyses(
       ])
     )
       throw new Error("Runner schedule/opponent mismatch");
+    if (!selected.has(match.id)) continue;
     const relative = `${binding.root}/matches/${match.id}`;
     try {
       const result = await finalizedEvidence(session, relative, {
@@ -92,6 +111,7 @@ export async function discoverAnalyses(
         candidateIdentity: execution.candidateIdentity,
         opponentIdentity: opponent.identity,
         item,
+        targetLossOnly: compactNative,
       });
       packets.push({
         schemaVersion: 1,

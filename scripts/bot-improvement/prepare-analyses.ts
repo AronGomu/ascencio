@@ -1,3 +1,5 @@
+import { retrySession } from "./match-session.ts";
+import { analysisScope } from "./analysis-scope.ts";
 import {
   analysisWriteOutput as writeOutput,
   saveAnalysis as save,
@@ -25,15 +27,6 @@ import type {
 } from "./analysis-contract.ts";
 import type { EvidenceReference } from "./session-control-contract.ts";
 
-function scope(iteration: number, role: string) {
-  if (
-    !Number.isSafeInteger(iteration) ||
-    iteration < 1 ||
-    !["control", "candidate"].includes(role)
-  )
-    throw new Error("Invalid analysis iteration/role");
-  return `iterations/iteration-${String(iteration).padStart(4, "0")}/analyses/${role}`;
-}
 async function ensureDirectory(session: string, relative: string) {
   const parts = relative.split("/");
   for (let i = 1; i <= parts.length; i++) {
@@ -131,7 +124,11 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
   session = path.resolve(session);
   await ensureSessionOutput(session);
   const binding = action.action === "sync" ? action.binding : action;
-  const directory = scope(binding.iteration, binding.role);
+  const directory = analysisScope(
+    binding.iteration,
+    binding.role,
+    binding.analysisId,
+  );
   const stateFile = path.join(session, directory, "queue.json");
   const snapshot = (await optionalJson(stateFile)) as AnalysisQueue | null;
   // Preserve old packet bytes on resume. New queues use the loss allowlist.
@@ -143,10 +140,17 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
   // Read large runner logs outside the short shared publication transaction.
   const discovered =
     action.action === "sync"
-      ? await discoverAnalyses(session, action.binding, compactNative)
+      ? await discoverAnalyses(
+          session,
+          action.binding,
+          compactNative,
+          action.matchRange,
+        )
       : null;
   const integrity: { job: string; reason: string }[] = [];
-  for (const job of snapshot?.jobs ?? []) {
+  for (const job of action.action === "sync" && action.matchRange
+    ? []
+    : (snapshot?.jobs ?? [])) {
     try {
       // Status exposes damage instead of silently counting an invalid completion.
       await intactPacket(session, job.packet);
@@ -214,6 +218,7 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
             id: packet.id,
             match: packet.match,
             packet: ref,
+            ...(packet.lossGames ? { lossCount: packet.lossGames.length } : {}),
             status: "waiting",
             attempt: 0,
           };
@@ -349,10 +354,12 @@ export async function prepareAnalyses(session: string, action: AnalysisAction) {
         "Structural sections and resolvable references only; factual and causal correctness require agent review.",
     };
   };
-  return withSessionLock(session, () =>
-    action.action === "sync" || action.action === "complete"
-      ? withAnalysisOutput(session, directory, transaction)
-      : transaction(),
+  return retrySession(session, () =>
+    withSessionLock(session, () =>
+      action.action === "sync" || action.action === "complete"
+        ? withAnalysisOutput(session, directory, transaction)
+        : transaction(),
+    ),
   );
 }
 if (

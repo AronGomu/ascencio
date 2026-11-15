@@ -1,0 +1,45 @@
+{
+  "source": {
+    "instructionCharacters": 54050,
+    "instructionFiles": 8,
+    "physicalBytes": 57545,
+    "allFiles": 10,
+    "scope": "All Markdown, text, YAML and instructional comments in executable source; executable-only code/declarations excluded."
+  },
+  "iteration1": {
+    "instructionCharacters": 48528,
+    "instructionFiles": 8,
+    "physicalBytes": 52021,
+    "allFiles": 10,
+    "scope": "All Markdown, text, YAML and instructional comments in executable source; executable-only code/declarations excluded."
+  },
+  "missingReferences": [],
+  "iteration2": {
+    "instructionCharacters": 48575,
+    "instructionFiles": 8,
+    "physicalBytes": 52068,
+    "allFiles": 10,
+    "scope": "All Markdown, text, YAML and instructional comments in executable source; executable-only code/declarations excluded."
+  },
+  "iteration3": {
+    "instructionCharacters": 48537,
+    "instructionFiles": 8,
+    "physicalBytes": 52030,
+    "allFiles": 10,
+    "scope": "All Markdown, text, YAML and instructional comments in executable source; executable-only code/declarations excluded."
+  },
+  "iteration4": {
+    "instructionCharacters": 48489,
+    "instructionFiles": 8,
+    "physicalBytes": 51984,
+    "allFiles": 10,
+    "scope": "All Markdown, text, YAML and instructional comments in executable source; executable-only code/declarations excluded."
+  },
+  "iteration5": {
+    "instructionCharacters": 48414,
+    "instructionFiles": 8,
+    "physicalBytes": 51909,
+    "allFiles": 10,
+    "scope": "All Markdown, text, YAML and instructional comments in executable source; executable-only code/declarations excluded."
+  }
+}

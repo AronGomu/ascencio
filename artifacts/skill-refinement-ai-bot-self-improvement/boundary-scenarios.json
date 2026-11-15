@@ -1,0 +1,194 @@
+[
+  {
+    "case": "baseline",
+    "behaviors": [
+      "B11"
+    ],
+    "expected": "Evaluate starting source, record reference without decision count, then analyze."
+  },
+  {
+    "case": "strict gain",
+    "behaviors": [
+      "B08"
+    ],
+    "expected": "Accept valid strictly greater paired weighted rate only."
+  },
+  {
+    "case": "tie",
+    "behaviors": [
+      "B08",
+      "B22"
+    ],
+    "expected": "Retain accepted; analyze candidate then use matching accepted analysis for additions."
+  },
+  {
+    "case": "regression",
+    "behaviors": [
+      "B22",
+      "B29"
+    ],
+    "expected": "Retain comparator; replay and assemble repairs from unchanged regressing source."
+  },
+  {
+    "case": "missing opponent pairs",
+    "behaviors": [
+      "B07"
+    ],
+    "expected": "Unassessable and retain; do not infer gain from other opponents."
+  },
+  {
+    "case": "individual timeout",
+    "behaviors": [
+      "B30",
+      "B28"
+    ],
+    "expected": "Finalize ignored without retry; exclude paired sides/keep replay denominator."
+  },
+  {
+    "case": "interrupted evaluation allowance left",
+    "behaviors": [
+      "B17",
+      "B31"
+    ],
+    "expected": "Recover verified missing work and charge attempt, preserving original clock."
+  },
+  {
+    "case": "recovery exhausted",
+    "behaviors": [
+      "B17"
+    ],
+    "expected": "Ignore remaining interrupted games; continue eligible work without more game request."
+  },
+  {
+    "case": "first calibration stage failure",
+    "behaviors": [
+      "B21"
+    ],
+    "expected": "One same-input retry in fresh evidence directory."
+  },
+  {
+    "case": "second calibration stage failure",
+    "behaviors": [
+      "B21"
+    ],
+    "expected": "Exclude count and remaining repetitions; preserve attempts and continue other counts."
+  },
+  {
+    "case": "prefix integrity failure",
+    "behaviors": [
+      "B21",
+      "B30"
+    ],
+    "expected": "Stop, not performance retry or ignored outcome."
+  },
+  {
+    "case": "one CPU",
+    "behaviors": [
+      "B20",
+      "B21"
+    ],
+    "expected": "No qualifying count; stop rather than invent fallback."
+  },
+  {
+    "case": "zero-loss slice",
+    "behaviors": [
+      "B24"
+    ],
+    "expected": "Open no gameplay; report zero reviewed."
+  },
+  {
+    "case": "251 matches",
+    "behaviors": [
+      "B23"
+    ],
+    "expected": "Two whole owners with250/1 slices; queue without splitting."
+  },
+  {
+    "case": "4 conversions of4 losses",
+    "behaviors": [
+      "B25",
+      "B28"
+    ],
+    "expected": "Ineligible reason and below five conversions, regardless percentage."
+  },
+  {
+    "case": "5 conversions of101 losses",
+    "behaviors": [
+      "B28"
+    ],
+    "expected": "Below5% so exclude rule."
+  },
+  {
+    "case": "5 conversions of100 including timeout",
+    "behaviors": [
+      "B28"
+    ],
+    "expected": "Qualifies if intended choices change and all cases settled; timeout never conversion."
+  },
+  {
+    "case": "no qualifying edit",
+    "behaviors": [
+      "B10",
+      "B37"
+    ],
+    "expected": "Deliver retained accepted source honestly, provided not resource-suspended."
+  },
+  {
+    "case": "final decision",
+    "behaviors": [
+      "B11",
+      "B10"
+    ],
+    "expected": "Complete required analysis before normal delivery; no next candidate."
+  },
+  {
+    "case": "time/storage exhaustion during final analysis",
+    "behaviors": [
+      "B34"
+    ],
+    "expected": "Suspend incomplete, retain evidence; no export/ranking/cleanup."
+  },
+  {
+    "case": "owner cancel",
+    "behaviors": [
+      "B32",
+      "B33"
+    ],
+    "expected": "Owned shutdown/checkpoint; explicit same-checkpoint resume."
+  },
+  {
+    "case": "dispatcher advance without proof",
+    "behaviors": [
+      "B09"
+    ],
+    "expected": "CLI output is not proof; caller must not progress until gate verified."
+  },
+  {
+    "case": "material overlap changes logic",
+    "behaviors": [
+      "B29"
+    ],
+    "expected": "New isolated logic re-passes its gate; no mandatory combined-rule gate."
+  },
+  {
+    "case": "eligible rejected details during run",
+    "behaviors": [
+      "B36"
+    ],
+    "expected": "Prune after summarized analysis/decision and ended dependencies; closure not required."
+  },
+  {
+    "case": "accepted detail still current",
+    "behaviors": [
+      "B36"
+    ],
+    "expected": "Retain despite local replay completion until replacement/closure and ended dependencies."
+  },
+  {
+    "case": "retention requested",
+    "behaviors": [
+      "B36"
+    ],
+    "expected": "Preserve requested details even after otherwise eligible closure."
+  }
+]

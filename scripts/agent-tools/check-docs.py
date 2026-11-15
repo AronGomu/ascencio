@@ -30,6 +30,10 @@ class Document(HTMLParser):
 def check(file):
     p = pathlib.Path(file)
     if not p.exists(): return []  # staged deletion
+    # Skill-review inputs are frozen copies, retaining links relative to their
+    # original installation. Validate reports/current packages, not copied inputs.
+    if len(p.parts) > 1 and p.parts[0] == 'artifacts' and p.parts[1].startswith('skill-') and p.name not in {'report.md', 'README.md'}:
+        return []
     text = p.read_text()
     errors = []
     if p.suffix == '.html':

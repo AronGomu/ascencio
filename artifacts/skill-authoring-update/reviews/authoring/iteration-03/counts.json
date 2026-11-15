@@ -1,0 +1,18 @@
+{
+  "input": {
+    "instructional_characters": 24304,
+    "physical_bytes": 24340,
+    "instructional_resources": {
+      "SKILL.md": 6049,
+      "references/skill-rules-guidelines.md": 18255
+    }
+  },
+  "candidate": {
+    "instructional_characters": 24300,
+    "physical_bytes": 24336,
+    "instructional_resources": {
+      "SKILL.md": 6049,
+      "references/skill-rules-guidelines.md": 18251
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# Iteration2 explanation comparison
+
+Compared A/B/C by Prepare, Evaluate, Decide, Analyze, Replay, Assemble, Deliver/Suspended and the normalized identity/accounting/incident/retention items from iteration1. All preserve frozen paired game scoring, strict promotion, full versus selected review, source-mode restrictions, eligibility before authorized Replay, current-source full-stack control/variant reruns, five-wins AND5% gate, cap300 distinct losses, valid terminal failure only, independent budgets, timeout/recovery/calibration distinctions, pending evidence retention and final-analysis requirement. Presentation grouping differs; no behavioral disagreement remains.
+
+A/B report no substantive ambiguity. C identifies closure-vs-detailed-ledger retention, resolved by explicit pending override, and deterministic first-seen ordering of concurrent findings, an implementation choice already constrained to deterministic order. No owner policy question or new fallback is needed. Schema/current-policy reconstruction remain operational limitations. Iteration3 shortens current-source paragraph without dropping any obligations; see audit.md and checks.

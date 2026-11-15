@@ -1,5 +1,6 @@
 import {
   leaseBatchStorage,
+  batchStorageLeases,
   releaseBatchStorage,
 } from "./batch-storage-lease.ts";
 import {
@@ -88,8 +89,9 @@ export async function runReplayPool(options: {
     throw Error(`Source session is stopped: ${sourceControl.stoppingReason}`);
   if (
     prepared.sourceRoot &&
-    (await optional(path.join(prepared.sourceRoot, ".batch-output-lease.json")))
-      ?.active
+    (await batchStorageLeases(prepared.sourceRoot)).some(
+      (lease) => lease.active,
+    )
   )
     throw Error("Finish the active evaluation before starting a replay pool");
   const storageRoot = (await findOutputRoot(path.join(output, ".probe")))!;
@@ -351,7 +353,7 @@ export async function runReplayPool(options: {
     return result;
   } finally {
     clearReplayWriteGrants();
-    await releaseBatchStorage(storageRoot, lease.token);
+    await releaseBatchStorage(lease.root, lease.token);
   }
 }
 if (

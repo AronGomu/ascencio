@@ -1,0 +1,36 @@
+{
+  "scope": "All package files: SKILL.md, four references, and agents/openai.yaml; Unicode characters including whitespace. External project/tooling documents remain dependencies, not relocated package content. No executable-only files present.",
+  "totalCharacters": 53805,
+  "files": [
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/SKILL.md",
+      "characters": 36440,
+      "sha256": "97ab332fedd57367daac5b713848776fe54a618722b6c5cbb1d3a7c4a0a32b13"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/agents/openai.yaml",
+      "characters": 338,
+      "sha256": "aa76c0d791fe86ee3cdb06f0a29d86f3bd0c1305e3c58de3fbb6260fcdf7f75a"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/references/loss-analysis-template.md",
+      "characters": 2281,
+      "sha256": "8a98c450c34fe07397bf15d88a74e4a25d74684eab85e4768c195002658c0f07"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/references/match-log-template.md",
+      "characters": 3731,
+      "sha256": "597c354d56636ba78e8c1ad9b6dcd12d5fe86b283ec02a398101fb6c72c6c8cf"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/references/run-summary-example.txt",
+      "characters": 3875,
+      "sha256": "45691e8c5325e2dade06f66f2e17547a345d872017973edaf780ac03537ac9d4"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement/references/streaming-loss-analysis.md",
+      "characters": 7140,
+      "sha256": "a8b1bfff5f6dda75d2eb848a6a91063ff91251d2524efde3fc47a6de424e1cc2"
+    }
+  ]
+}

@@ -36,7 +36,7 @@ export function resolveMatchCount(
     throw new Error("Specify matches or matchesPerOpponent, not both");
   const count =
     perOpponent === undefined
-      ? (matches ?? 2500)
+      ? (matches ?? 250)
       : perOpponent * (opponents + 1);
   if (
     (perOpponent !== undefined &&
@@ -51,7 +51,7 @@ export function schedule(
   seed: string,
   target: ParsedDeck,
   opponents: ParsedDeck[],
-  matches = 2500,
+  matches = 250,
 ): FrozenSetup["matches"] {
   const slots = [...opponents, target];
   resolveMatchCount(matches, undefined, opponents.length);

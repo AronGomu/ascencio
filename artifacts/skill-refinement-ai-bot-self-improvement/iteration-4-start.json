@@ -1,0 +1,35 @@
+{
+  "totalCharacters": 39704,
+  "files": [
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/SKILL.md",
+      "characters": 24406,
+      "sha256": "143c761bf78d4833732eca79d1fb27b3aea8c0646eaf5a87b2b0ea633a67b63a"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/agents/openai.yaml",
+      "characters": 338,
+      "sha256": "aa76c0d791fe86ee3cdb06f0a29d86f3bd0c1305e3c58de3fbb6260fcdf7f75a"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/loss-analysis-template.md",
+      "characters": 2281,
+      "sha256": "8a98c450c34fe07397bf15d88a74e4a25d74684eab85e4768c195002658c0f07"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/match-log-template.md",
+      "characters": 3731,
+      "sha256": "597c354d56636ba78e8c1ad9b6dcd12d5fe86b283ec02a398101fb6c72c6c8cf"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/run-summary-example.txt",
+      "characters": 3875,
+      "sha256": "45691e8c5325e2dade06f66f2e17547a345d872017973edaf780ac03537ac9d4"
+    },
+    {
+      "path": ".agents/skills/ai-bot-self-improvement-REFINED/references/streaming-loss-analysis.md",
+      "characters": 5073,
+      "sha256": "faaf58a0649b47766eac1bfe635184e85d51a1228bf030a89e265753131831a8"
+    }
+  ]
+}

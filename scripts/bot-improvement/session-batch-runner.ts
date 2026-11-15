@@ -1,3 +1,4 @@
+import { verifyCalibrationReport } from "./calibration-evidence.ts";
 import {
   runTypescriptNative,
   nativeRuntimeIdentity,
@@ -10,6 +11,7 @@ import {
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { calibrationCoversWorkers } from "./worker-calibration.ts";
 import {
   bindMatches,
   sessionControl,
@@ -82,14 +84,21 @@ async function workersFor(
         !Number.isSafeInteger(saved.workers) ||
         saved.workers < 1 ||
         saved.workers > allowed ||
-        Math.max(...saved.stages.map((s: { workers: number }) => s.workers)) <
-          allowed ||
+        !calibrationCoversWorkers(saved, allowed) ||
         saved.identity !==
           (native
             ? await typescriptCalibrationIdentity(fixture, batchSize)
             : await calibrationIdentity(binary, fixture, batchSize))
       )
         throw Error("Stale batch worker calibration");
+      if (
+        saved.acceptedIdentity !==
+        identity(
+          (await json(path.join(options.session, "state.json"))).accepted,
+        )
+      )
+        throw Error("Calibration accepted source changed");
+      await verifyCalibrationReport(saved);
       return saved.workers as number;
     };
     try {
@@ -217,12 +226,16 @@ export async function executeMatches(options: MatchOptions) {
       if (identity(await json(publicFile)) !== identity(publicJob))
         throw Error("Session resume preparation changed");
     } else await writeOutput(publicFile, JSON.stringify(publicJob), true);
+    const pipeline = (await json(path.join(session, "config.json")))
+      .analysisPolicy?.pipeline;
     lease = await leaseBatchStorage(
       session,
       output,
       !!options.resume,
-      undefined,
+      pipeline?.evaluationBytes,
       8_000_000 + Buffer.byteLength(JSON.stringify(publicJob)) * 2 + 65536,
+      false,
+      !!pipeline,
     );
     const stopSource = options.stopSource ?? {
       path: path.join(session, "OWNER_STOP"),
@@ -277,7 +290,7 @@ export async function executeMatches(options: MatchOptions) {
         });
     // Stop writers before releasing their shared allowance. Failed launch leaves the lease held.
     const storageRoot = lease.root;
-    await releaseBatchStorage(session, lease.token);
+    await releaseBatchStorage(lease.root, lease.token);
     lease = undefined;
     await settleBatchBudget(binding, output);
     let receipt: string | null = null;
@@ -330,7 +343,7 @@ export async function executeMatches(options: MatchOptions) {
       stoppingReason: settled.stoppingReason ?? run.stoppingReason,
     };
   } finally {
-    if (lease && native) await releaseBatchStorage(session, lease.token);
+    if (lease && native) await releaseBatchStorage(lease.root, lease.token);
     await binding.release();
   }
 }

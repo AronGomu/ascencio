@@ -329,6 +329,75 @@ export class DuelStateProjector {
       case EngineMessageType.SHUFFLE_SET_CARD:
         this.#shuffleSetCards(message.cards);
         break;
+      case EngineMessageType.SWAP: {
+        // MSG_SWAP carries the two pre-swap addresses. Both occupied slots must
+        // be detached before insertion; sequential MOVE would collide with one.
+        const addresses = [message.card1, message.card2] as const;
+        const locations = addresses.map((a) => engineLocation(a.location));
+        const cards = addresses.map((a, i) =>
+          findPublicCard(
+            this.#players[a.controller],
+            locations[i]!,
+            a.sequence,
+          ),
+        );
+        if (
+          addresses.some((a) => isOverlayAddress(a)) ||
+          locations.some((location) => !isFixedLocation(location)) ||
+          !cards[0] ||
+          !cards[1] ||
+          cards[0] === cards[1]
+        )
+          throw new Error("SWAP requires two distinct occupied field slots");
+        for (const [i, address] of addresses.entries())
+          removePublicCard(
+            this.#players[address.controller],
+            locations[i]!,
+            address.sequence,
+          );
+        for (const [i, source] of addresses.entries()) {
+          const destination = addresses[1 - i]!;
+          const card = cards[i]!;
+          const location = locations[1 - i]!;
+          // Battle position belongs to the card, not the destination slot.
+          card.controller = destination.controller;
+          card.location = location;
+          card.sequence = destination.sequence;
+          card.position = enginePosition(source.position);
+          card.faceUp = isFaceUp(source.position);
+          if (
+            isPublicCard(
+              destination.controller,
+              location,
+              source.position,
+              this.#viewer,
+            )
+          ) {
+            if (source.code > 0) card.code = cardCode(source.code);
+          } else {
+            // Raw protocol codes are not permission to reveal a concealed card.
+            delete card.code;
+          }
+          this.#clearPendingPublicRevealsForMove(source, destination);
+          insertPublicCard(
+            this.#players[destination.controller],
+            location,
+            destination.sequence,
+            card,
+          );
+          events.push({
+            type: "cardMoved",
+            instanceId: card.instanceId,
+            ...(card.code === undefined ? {} : { card: card.code }),
+            from: locations[i]!,
+            to: location,
+          });
+          reconciliationRequests.push(
+            ...reconciliationRequestsForMove(source, destination),
+          );
+        }
+        break;
+      }
       case EngineMessageType.MOVE: {
         // Tokens enter/leave existence at location 0, not a public deck/pile.
         if (

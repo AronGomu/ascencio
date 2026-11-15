@@ -1,0 +1,11 @@
+{
+  "expected": {
+    "SKILL.md": "d359967360fc52c1362813454e3cf7d375ba9327d6dcfb53b9f31cdbbb8d6be3",
+    "references/skill-rules-guidelines.md": "3f4656ba5e1f59030e63bafd800bc8f6f33d1eba16e9ff130f23b256a2d70e62"
+  },
+  "actual": {
+    "SKILL.md": "d359967360fc52c1362813454e3cf7d375ba9327d6dcfb53b9f31cdbbb8d6be3",
+    "references/skill-rules-guidelines.md": "3f4656ba5e1f59030e63bafd800bc8f6f33d1eba16e9ff130f23b256a2d70e62"
+  },
+  "matches": true
+}

@@ -1,0 +1,18 @@
+{
+  "iteration": "1",
+  "source": {
+    "instructionCharacters": 50244,
+    "physicalBytes": 53736,
+    "instructionalCodeCommentCharacters": 83
+  },
+  "candidate": {
+    "instructionCharacters": 50069,
+    "physicalBytes": 53561,
+    "instructionalCodeCommentCharacters": 83
+  },
+  "brokenReferences": [],
+  "sourceDrift": [],
+  "literalChanges": [],
+  "executableChanges": [],
+  "scope": "All package Markdown/text/YAML and83 controller instructional comment characters. Executable-only code excluded; physical bytes include every file. External unchanged docs and review artifacts excluded equally."
+}

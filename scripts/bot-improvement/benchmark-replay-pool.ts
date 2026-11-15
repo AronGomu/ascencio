@@ -1,3 +1,9 @@
+import { stableCalibrationProvenance } from "./calibration-evidence.ts";
+import { calibrationMemory } from "./calibration-memory.ts";
+import { prepareReplayPool } from "./prepare-replay-pool.ts";
+import { configureOutputStorage, findOutputRoot } from "./output-storage.ts";
+import { recoverCalibration } from "./calibration-recovery.ts";
+import { hostname, release } from "node:os";
 import { benchmarkProvenance } from "./benchmark-provenance.ts";
 import { availableParallelism } from "node:os";
 import { workerCounts, workerRecommendation } from "./worker-calibration.ts";
@@ -5,7 +11,7 @@ import { workerCounts, workerRecommendation } from "./worker-calibration.ts";
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { runReplayPool } from "./run-replay-pool.ts";
+import { replayCalibrationStage } from "./replay-calibration-stage.ts";
 import { writeOutput } from "./output-storage.ts";
 import { identity } from "./session-fixtures.ts";
 const { values: v } = parseArgs({
@@ -15,6 +21,10 @@ const { values: v } = parseArgs({
     "worker-counts": { type: "string" },
     repeats: { type: "string", default: "2" },
     "batch-size": { type: "string", default: "1" },
+    "max-bytes": { type: "string" },
+    "memory-budget-bytes": { type: "string" },
+    "memory-reserve-bytes": { type: "string" },
+    "memory-per-worker-bytes": { type: "string" },
   },
 });
 if (!v.request || !v.out) throw Error("--request and --out required");
@@ -23,6 +33,7 @@ const counts = workerCounts(v["worker-counts"], logical),
   repeats = Number(v.repeats),
   batchSize = Number(v["batch-size"]);
 if (
+  repeats < 2 ||
   !counts.length ||
   new Set(counts).size !== counts.length ||
   ![...counts, repeats, batchSize].every((n) => Number.isInteger(n) && n > 0)
@@ -41,73 +52,76 @@ if (cases < Math.max(...counts) * batchSize)
   throw Error(
     "Provide at least one full replay batch per worker at the largest stage",
   );
+const memory = calibrationMemory(v);
+if (
+  !(await findOutputRoot(path.join(v.out, ".probe"))) &&
+  v["max-bytes"] === undefined
+)
+  throw Error(
+    "Replay calibration requires an existing storage root or explicit --max-bytes",
+  );
+if (v["max-bytes"] !== undefined)
+  await configureOutputStorage(v.out, Number(v["max-bytes"]));
+const prepared = await prepareReplayPool(
+  v.request,
+  path.join(v.out, "identity-probe"),
+);
+const workload = prepared.jobs.map((j) => ({
+  ...j,
+  replacement: undefined,
+  pins: j.pins.map((p) => ({
+    path: p.path === j.replacement ? "replacement" : p.path,
+    sha256: p.sha256,
+  })),
+}));
 await mkdir(path.dirname(path.resolve(v.out)), { recursive: true });
-await mkdir(v.out);
-const runs = [];
-let expected: string | undefined;
-for (let repeat = 0; repeat < repeats; repeat++)
-  for (const workers of repeat % 2 ? [...counts].reverse() : counts) {
-    const output = path.join(v.out, `workers-${workers}-repeat-${repeat + 1}`);
-    const result = await runReplayPool({
-      request: v.request,
-      out: output,
-      workers,
+await mkdir(v.out, { recursive: true });
+const { runs, excluded, exclusions, journal, journalIdentity } =
+  await recoverCalibration({
+    out: v.out,
+    identity: identity({
+      request,
+      provenance: stableCalibrationProvenance(provenance),
+      workload,
+      memory,
+      counts,
+      repeats,
       batchSize,
-    });
-    if (
-      result.status !== "complete" ||
-      result.ignored ||
-      result.failed ||
-      result.cancelled
-    )
-      throw Error("Benchmark requires fully successful replay cases");
-    const fingerprint = identity(
-      result.rows
-        .map((row) => ({
-          id: row.id,
-          control: row.result!.control,
-          alternative: row.result!.alternative,
-          choiceChanged: row.result!.choiceChanged,
-          convertedLossToWin: row.result!.convertedLossToWin,
-        }))
-        .sort((a, b) => a.id.localeCompare(b.id)),
-    );
-    expected ??= fingerprint;
-    if (expected !== fingerprint)
-      throw Error("Replay behavior changed across worker counts");
-    const run = {
-      workers,
-      repeat: repeat + 1,
-      cases: result.complete,
-      elapsedMs: result.elapsedMs,
-      casesPerSecond: result.complete / (result.elapsedMs / 1000),
-      branchAttempts: result.branchAttempts,
-      fingerprint,
-      output: path.resolve(output),
-    };
-    runs.push(run);
-    await writeOutput(
-      path.join(v.out, "benchmark.json"),
-      JSON.stringify(
-        {
-          schemaVersion: 1,
-          provenance,
-          experimental: true,
-          runs,
-          logical,
-          workerCounts: counts,
-          repeats,
-          ...workerRecommendation(runs),
-          identicalReplayBehavior: true,
-          scope:
-            "Fresh processes per replay case; explicit worker counts; includes discovery, source freezing, both branches and durable evidence. Recommendation applies only to this replay workload; production settings are unchanged.",
-        },
-        null,
-        2,
-      ),
-    );
-    console.log(JSON.stringify(run));
-  }
+      node: process.version,
+      flags: process.execArgv,
+      machine: hostname(),
+      kernel: release(),
+    }),
+    counts,
+    repeats,
+    ...(memory ? { memory } : {}),
+    run: (workers, output) =>
+      replayCalibrationStage(v.request!, workers, output, batchSize),
+  });
+await writeOutput(
+  path.join(v.out, "benchmark.json"),
+  JSON.stringify(
+    {
+      schemaVersion: 1,
+      provenance,
+      experimental: true,
+      runs,
+      excluded,
+      exclusions,
+      journal,
+      journalIdentity,
+      memory,
+      workload,
+      logical,
+      workerCounts: counts,
+      repeats,
+      ...workerRecommendation(runs),
+      identicalReplayBehavior: true,
+    },
+    null,
+    2,
+  ),
+);
 // Readability check: the durable benchmark is the handoff artifact.
 await readFile(path.join(v.out, "benchmark.json"));
 

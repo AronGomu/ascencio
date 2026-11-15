@@ -1,0 +1,21 @@
+AI BOT IMPROVEMENT RUN SUMMARY
+Layout only; use verified fields required by Output and artifact lifecycle.
+
+RUN
+<identity, configuration/policy links, times, state/reason, checkpoint and next stage>
+
+VERSIONS — baseline and every evaluated candidate
+<source/parent, per-opponent and weighted results, paired difference, coverage, outcome>
+
+RULES — every attempt
+<reason, affected/replayed/converted/timed-out counts, disposition>
+
+ACCOUNTING
+<games, controls/takeovers/diagnostics, budgets, elapsed/peak storage, errors>
+
+RESULT
+<accepted source, comparable ranking, changes and unresolved issues>
+Completed: <export/hash; checked consolidation and eligible cleanup>
+Suspended: <pending work, retained evidence and continuation requirements>
+
+References: <effective configuration and shared policy>

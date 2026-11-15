@@ -20,6 +20,12 @@ import {
   finalizedText,
 } from "../../scripts/bot-improvement/analysis-text-evidence.ts";
 import { prepareAnalysisSlices } from "../../scripts/bot-improvement/analysis-slices.ts";
+import { parseLossMarkdown } from "../../scripts/bot-improvement/analysis-report.ts";
+import {
+  readReviewPage,
+  readableLossPages,
+  lossDecisions,
+} from "../../scripts/bot-improvement/loss-review.ts";
 import type { AnalysisBinding } from "../../scripts/bot-improvement/analysis-contract.ts";
 
 const put = async (file: string, value: unknown) => {
@@ -332,16 +338,25 @@ test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes 
       await finalizedText(session, firstRoot, expected),
       verified,
     );
-    await assert.rejects(
-      prepareAnalysisSlices(session, { action: "sync", binding }),
-      /All matches/,
-    );
-    for (let n = 2; n <= 251; n++) await match(n);
-    const synced = await prepareAnalysisSlices(session, {
+    const partial = await prepareAnalysisSlices(session, {
       action: "sync",
       binding,
     });
+    assert.equal(partial.preparationComplete, false);
+    assert.equal(
+      partial.dispatch.length,
+      0,
+      "A partial slice cannot be dispatched",
+    );
+    for (let n = 2; n <= 250; n++) await match(n);
+    const synced = await prepareAnalysisSlices(session, {
+      action: "sync",
+      binding,
+      maxSlices: 1,
+    });
     assert.equal(synced.workers, 2);
+    assert.equal(synced.preparationComplete, false);
+    assert.equal(synced.dispatch.length, 1);
     const a = { iteration: 1, role: "candidate" as const };
     const first = (
       await prepareAnalysisSlices(session, {
@@ -360,6 +375,18 @@ test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes 
       ).claim,
       first,
     );
+    assert.equal(
+      (await prepareAnalysisSlices(session, { action: "status", ...a }))
+        .preparationComplete,
+      false,
+    );
+    await match(251);
+    const rest = await prepareAnalysisSlices(session, {
+      action: "sync",
+      binding,
+      maxSlices: 1,
+    });
+    assert.equal(rest.preparationComplete, true);
     const second = (
       await prepareAnalysisSlices(session, {
         action: "claim",
@@ -382,6 +409,27 @@ test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes 
           );
           assert.match(view, /LOSS_ONLY/);
           assert.doesNotMatch(view, /WIN_DRAW_ONLY|OPPONENT_PRIVATE/);
+          assert.deepEqual(Object.keys(lossDecisions(view)), loss.decisions);
+          assert.equal(loss.review.sourceSha256, loss.log.sha256);
+          assert.equal(loss.review.version, 4);
+          assert.equal(loss.review.pages.length, 1);
+          for (const page of loss.review.pages) {
+            const readable = await readReviewPage(session, page);
+            assert.equal(digest(readable), page.pageSha256);
+            await assert.rejects(
+              readReviewPage(session, {
+                ...page,
+                pageSha256: digest("forged"),
+              }),
+              /evidence mismatch/,
+            );
+            assert.doesNotMatch(readable, /WIN_DRAW_ONLY|OPPONENT_PRIVATE/);
+            assert.match(readable, /^# Loss/);
+            assert.doesNotMatch(
+              readable,
+              /\["define",|\["template",|\["delta",/,
+            );
+          }
         }
         const file = `findings/${job.match}.md`;
         await put(
@@ -419,7 +467,73 @@ test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes 
       })
     ).claim!;
     await assert.rejects(prepareAnalysisSlices(session, report2), /Stale/);
-    await prepareAnalysisSlices(session, report1);
+    // Publish half a slice and recover its immutable reports after reassignment.
+    const half = report1.reports.slice(0, 2);
+    const queuePath = path.join(
+      session,
+      "iterations/iteration-0001/analyses/candidate/queue.json",
+    );
+    const queue = JSON.parse(await readFile(queuePath, "utf8"));
+    const structured = [];
+    for (const ref of half) {
+      const text = await readFile(path.join(session, ref.path), "utf8");
+      const id = /^Job: (.+)$/m.exec(text)![1];
+      const job = queue.jobs.find((j: { id: string }) => j.id === id);
+      const packet = JSON.parse(
+        await readFile(path.join(session, job.packet.path), "utf8"),
+      );
+      const report = parseLossMarkdown(text, packet, job.packet.sha256);
+      report.reasons = [
+        {
+          game: 1,
+          id: "wrong-target",
+          decision: "a-decision-1",
+          offered: ["exact-instance-42"],
+          chosen: ["exact-instance-42"],
+          reason: "Wrong target",
+          solution: "Revise target rule",
+        },
+      ];
+      structured.push(report);
+    }
+    const bad = structuredClone(structured);
+    bad[0]!.reasons![0]!.chosen = [];
+    await assert.rejects(
+      prepareAnalysisSlices(session, {
+        ...report1,
+        action: "checkpoint",
+        reports: [],
+        findings: bad,
+      }),
+      /choices differ/,
+    );
+    await prepareAnalysisSlices(session, {
+      ...report1,
+      action: "checkpoint",
+      reports: [],
+      findings: structured,
+    });
+    await prepareAnalysisSlices(session, {
+      action: "release",
+      ...a,
+      slice: first.id,
+      token: first.claim!.token,
+      terminated: true,
+    });
+    const recovered = (
+      await prepareAnalysisSlices(session, {
+        action: "claim",
+        ...a,
+        owner: "recovered",
+      })
+    ).claim!;
+    assert.equal(recovered.completedJobs?.length, 2);
+    await assert.rejects(prepareAnalysisSlices(session, report1), /Stale/);
+    await prepareAnalysisSlices(session, {
+      ...report1,
+      token: recovered.claim!.token,
+      reports: report1.reports.slice(2),
+    });
     const done = await prepareAnalysisSlices(session, {
       ...report2,
       token: replacement.claim!.token,
@@ -431,7 +545,193 @@ test("251-match dispatch owns 250/1 slices, exposes only target losses, resumes 
     );
     assert.match(summary, /5 losses reviewed/);
     assert.match(summary, /Wrong target.*5 losses/);
+    const stateBefore = await readFile(done.state, "utf8");
+    const stored = JSON.parse(await readFile(queuePath, "utf8"));
+    const canonical = path.join(
+      session,
+      stored.jobs.find((j: { match: string }) => j.match === "match-0001")
+        .report.path,
+    );
+    const originalReport = await readFile(canonical, "utf8");
+    await writeFile(canonical, "tampered");
+    // Ordinary status is read-only; an explicit audit inspects report/source bytes.
+    const status = await prepareAnalysisSlices(session, {
+      action: "status",
+      ...a,
+    });
+    assert.deepEqual(status.summary, done.summary);
+    assert.equal(await readFile(done.state, "utf8"), stateBefore);
+    await assert.rejects(
+      prepareAnalysisSlices(session, { action: "audit", ...a }),
+      /integrity/,
+    );
+    await writeFile(canonical, originalReport);
+    await prepareAnalysisSlices(session, { action: "audit", ...a });
+    const { configureAnalysisPolicy } =
+      await import("../../scripts/bot-improvement/configure-analysis-policy.ts");
+    const { importAnalysisFindings } =
+      await import("../../scripts/bot-improvement/import-analysis-findings.ts");
+    await configureAnalysisPolicy(session, {
+      id: "expanded",
+      policy: {
+        mode: "full",
+        sliceMatches: 1,
+        analystSlots: 2,
+        scheduling: "cost-balanced",
+      },
+    });
+    await prepareAnalysisSlices(session, {
+      action: "sync",
+      binding: { ...binding, analysisId: "expanded" },
+      maxSlices: 1,
+    });
+    const importedClaim = (
+      await prepareAnalysisSlices(session, {
+        action: "claim",
+        ...a,
+        analysisId: "expanded",
+        owner: "reuse",
+      })
+    ).claim!;
+    const imported = await importAnalysisFindings(session, {
+      ...a,
+      analysisId: "expanded",
+      slice: importedClaim.id,
+      token: importedClaim.claim!.token,
+    });
+    assert.deepEqual(imported.imported, ["match-0001"]);
+    assert.equal(imported.executedGames, 0);
+    assert.deepEqual(
+      (
+        await importAnalysisFindings(session, {
+          ...a,
+          analysisId: "expanded",
+          slice: importedClaim.id,
+          token: importedClaim.claim!.token,
+        })
+      ).imported,
+      [],
+    );
+    const expandedStatus = await prepareAnalysisSlices(session, {
+      action: "status",
+      ...a,
+      analysisId: "expanded",
+    });
+    assert.equal(expandedStatus.coverage.reviewedLosses, 1);
+    assert.equal(expandedStatus.fullCoverage, false);
+    await put(path.join(session, "control.json"), {
+      stoppingReason: "owner-stop",
+    });
+    await assert.rejects(
+      prepareAnalysisSlices(session, {
+        action: "sync",
+        binding: { ...binding, analysisId: "expanded" },
+        maxSlices: 1,
+      }),
+      /Session is stopped/,
+    );
+    await put(path.join(session, "control.json"), {
+      stoppingReason: "max-iterations",
+    });
+    await prepareAnalysisSlices(session, {
+      action: "sync",
+      binding: { ...binding, analysisId: "expanded" },
+      maxSlices: 1,
+    });
+    await put(path.join(session, "OWNER_STOP"), "new stop");
+    await assert.rejects(
+      prepareAnalysisSlices(session, {
+        action: "sync",
+        binding: { ...binding, analysisId: "expanded" },
+        maxSlices: 1,
+      }),
+      /unacknowledged OWNER_STOP/,
+    );
+    await rm(path.join(session, "OWNER_STOP"));
+    await rm(path.join(session, "control.json"));
+
+    await configureAnalysisPolicy(session, {
+      id: "parallel",
+      policy: {
+        mode: "full",
+        sliceMatches: 125,
+        analystSlots: 2,
+        preparationSlots: 2,
+        resources: {
+          runtimeSlots: 2,
+          reserveBytes: 1,
+          bytesPerAnalyst: 1,
+          bytesPerPreparer: 1,
+        },
+      },
+    });
+    const parallel = await prepareAnalysisSlices(session, {
+      action: "sync",
+      binding: { ...binding, analysisId: "parallel" },
+      maxSlices: 2,
+    });
+    assert.equal(parallel.dispatch.length, 2);
+    assert.equal(parallel.preparationComplete, false);
+    assert.deepEqual(
+      parallel.dispatch.map((s) => s.id),
+      ["slice-0001", "slice-0002"],
+    );
+    await assert.rejects(
+      prepareAnalysisSlices(session, {
+        action: "sync",
+        binding: { ...binding, analysisId: "missing" },
+        maxSlices: 1,
+      }),
+      /Unknown analysis cohort/,
+    );
   } finally {
     await rm(session, { recursive: true, force: true });
   }
+});
+
+test("readable pages preserve every event and decision while removing repeated state", () => {
+  let text =
+    "ASCENCIO_LOSS_LOG\t2\n" +
+    line("GAME", { game_id: "g", outcome: "loss" }) +
+    line("INITIAL", { own: "known", opponent: "visible only" });
+  for (let i = 0; i < 100; i++)
+    text += line("EVENT", {
+      kind: i % 10 === 0 ? "decision" : "observation",
+      sequence: i,
+      turn: Math.floor(i / 10),
+      state: { field: "unchanged".repeat(300), life: 8000 - i },
+      ...(i % 10
+        ? {}
+        : {
+            decision_id: `decision-${i}`,
+            prompt: {
+              choices: {
+                choice: [
+                  { id: `choice-${i}`, label: "Breaker the Magical Warrior" },
+                ],
+              },
+            },
+            selected_choice_ids: { choice_id: [`choice-${i}`] },
+          }),
+    });
+  text += line("RESULT", { outcome: "loss" }) + line("END_GAME", "g");
+  const pages = readableLossPages(text);
+  assert.equal(
+    pages.reduce((n, p) => n + p.events, 0),
+    100,
+  );
+  assert.deepEqual(
+    pages.flatMap((p) => p.decisions),
+    Object.keys(lossDecisions(text)),
+  );
+  assert.ok(pages.length > 1);
+  assert.ok(
+    Buffer.byteLength(pages.map((p) => p.text).join("")) <
+      Buffer.byteLength(text),
+  );
+  assert.match(
+    pages.map((p) => p.text).join(""),
+    /Breaker the Magical Warrior/,
+  );
+  assert.deepEqual(readableLossPages(text), pages);
 });

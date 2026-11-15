@@ -1,0 +1,22 @@
+[
+  [
+    "SKILL.md",
+    "Before baseline reuse an exact starting-source commit or create it on `main`. Commit every candidate after full evaluation/decision, including rejected ones. Unevaluated variants remain temporary content-hashed source, without commits. Keep accepted references independent of HEAD/rejections; retrieve source with `git show <sha>:<path>` or package extraction instead of permanent source copies."
+  ],
+  [
+    "SKILL.md",
+    "| Run report | Project location or `artifacts/`; state/stage, results/decisions, used/remaining budgets, errors and links; [minimal example][summary] | Generate on suspension/final delivery; compact retained evidence below |"
+  ],
+  [
+    "SKILL.md",
+    "After checked closure consolidation remove eligible temporary execution evidence. Suspended runs retain resumable detail until completion or explicit closure. Summary-only closed runs cannot supply verified cached games/replays. Distinguish reservations from completions and diagnostics from comparisons; References link shared policy and authoritative pinned configuration, without copying policy or an overrides section."
+  ],
+  [
+    "SKILL.md",
+    "The table defines legal progression; every gate includes inherited policy and evidence verification. Controller events describe completed outcomes, not permissions to skip their gates."
+  ],
+  [
+    "SKILL.md",
+    "Resolve inputs and mandatory contracts; read defaults and pin effective configuration and setup seed. Use frozen-session `bot:setup`, archive starting source, validate setup/current runner and exact sources, and save both matching calibration recommendations. Pin whole consecutive 250-match slices and `analysis-workers = ceil(total-matches / 250)`. Ready requires verified setup and both recommendations."
+  ]
+]

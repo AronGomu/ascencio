@@ -1,3 +1,4 @@
+import { resolveAnalysisPolicy } from "./analysis-policy.ts";
 import { defaultMatchWorkerBound } from "./match-workers.ts";
 import {
   mkdir,
@@ -47,7 +48,13 @@ export async function setupSession(options: SetupOptions) {
   );
   if (matches < options.opponents.length + 1)
     throw new Error("Total matches must cover every opponent including self");
-  const stop = options.stop;
+  const stop = { ...options.stop };
+  for (const key of ["maxBytes", "maxWallMs"] as const)
+    if (options.analysisPolicy?.[key] !== undefined) {
+      if (stop[key] !== undefined && stop[key] !== options.analysisPolicy[key])
+        throw Error("Policy budget differs from explicit session stop limit");
+      stop[key] = options.analysisPolicy[key];
+    }
   if (
     !stop ||
     Array.isArray(stop) ||
@@ -236,7 +243,17 @@ export async function setupSession(options: SetupOptions) {
         { slot: "self", bindAt: "frozen-start" },
       ],
       profile: target.config.profile,
-      analysisTiming: "after-evaluation",
+      analysisTiming: options.analysisPolicy?.pipeline
+        ? "per-slice"
+        : "after-evaluation",
+      ...(options.analysisPolicy
+        ? {
+            analysisPolicy: resolveAnalysisPolicy(
+              options.analysisPolicy,
+              analysisWorkers,
+            ),
+          }
+        : {}),
       limits: { matchWorkers, analysisWorkers, stop },
       protocol: frozen.protocol,
     };
@@ -323,16 +340,28 @@ if (
         "matches-per-opponent": { type: "string" },
         "match-workers": { type: "string" },
         "analysis-workers": { type: "string" },
+        "analysis-policy": { type: "string" },
+        "max-bytes": { type: "string" },
       },
     });
     if (!values.target || !values.seed || !values.session)
       throw new Error("--target, --seed and --session are required");
     request = {
+      ...(values["analysis-policy"]
+        ? {
+            analysisPolicy: resolveAnalysisPolicy(
+              await json(path.resolve(values["analysis-policy"])),
+            ),
+          }
+        : {}),
       target: values.target,
       opponents: values.opponent ?? [],
       setupSeed: values.seed,
       session: values.session,
       stop: {
+        ...(values["max-bytes"]
+          ? { maxBytes: Number(values["max-bytes"]) }
+          : {}),
         ...(values["max-iterations"] === undefined
           ? {}
           : { maxIterations: Number(values["max-iterations"]) }),

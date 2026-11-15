@@ -1,0 +1,52 @@
+[
+  {
+    "iteration": 10,
+    "instructionCharacters": 34724,
+    "physicalCharacters": 37663,
+    "change": "Replaced duplicate analyst ownership, evaluation barrier and retention prose with existing named authorities.",
+    "findings": "All three explanations preserve stage order, ownership, gates and retention. External schema/deadline/fixture questions remain mandatory contract lookups, not new policy. No correction needed.",
+    "removedLines": 3,
+    "boundaryCasesReviewed": 32,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 11,
+    "instructionCharacters": 34508,
+    "physicalCharacters": 37447,
+    "change": "Shortened inherited-policy and dispatcher descriptions without changing routing or verification duties.",
+    "findings": "Three explanations retain stateless routing, independent gates, source modes, thresholds and lifecycle. Partial slices/fixtures/runtime slots resolve through existing references; external deadline schema remains a lookup. No correction needed.",
+    "removedLines": 2,
+    "boundaryCasesReviewed": 32,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 12,
+    "instructionCharacters": 34347,
+    "physicalCharacters": 37286,
+    "change": "Consolidated loss allowlists, no-loss handling and receipt narration; replaced ambiguous reservation owner with shared gate.",
+    "findings": "Three reports agree on loss scope, replay gates and retention. Reviewer1 exposed controller/reservation naming ambiguity: changed controller to shared gate, without adding caveat. Final correction has no fresh same-iteration review.",
+    "removedLines": 4,
+    "boundaryCasesReviewed": 32,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 13,
+    "instructionCharacters": 34146,
+    "physicalCharacters": 37085,
+    "change": "Removed repeated reference access/retention narration; clarified one fix applies per isolated variant.",
+    "findings": "All3 explanations retain complete loss review, replay/assembly and lifecycle. Replaced Add one fix table cell with Add one fix per isolated variant to resolve repeated scope question. Calibration fixture/workload details remain owning-contract lookups.",
+    "removedLines": 6,
+    "boundaryCasesReviewed": 32,
+    "status": "through-step-3.4"
+  },
+  {
+    "iteration": 14,
+    "instructionCharacters": 34039,
+    "physicalCharacters": 36978,
+    "change": "Shortened archive, closure and transition narration; made final partial slice explicit.",
+    "findings": "All3 reports preserve legal progression, caller verification, scoring, source modes and retention. Fully ignored opponent is unassessable; calibration retry is specific exception to general non-timeout stop. No final correction required.",
+    "removedLines": 5,
+    "boundaryCasesReviewed": 32,
+    "status": "through-step-3.4"
+  }
+]

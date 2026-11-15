@@ -1,0 +1,45 @@
+[
+  {
+    "case": "Evaluation barrier incomplete",
+    "behaviors": [
+      "B23",
+      "B39"
+    ],
+    "expected": "No slice/analyst dispatch before all scheduled matches and reservations settle."
+  },
+  {
+    "case": "First sync returns preparationComplete false",
+    "behaviors": [
+      "B39"
+    ],
+    "expected": "Claim/dispatch ready whole slice and continue maxSlices1 sync until complete."
+  },
+  {
+    "case": "Loss spans several review pages",
+    "behaviors": [
+      "B40"
+    ],
+    "expected": "Read every ordered page or full allowlisted log; preserve counts/hashes and record duration/bytes."
+  },
+  {
+    "case": "One loss has primary and secondary supported reasons",
+    "behaviors": [
+      "B41"
+    ],
+    "expected": "Capture both first-pass with stable IDs/exact ordered choice bindings; primary coverage once, per-reason distinct-game counts."
+  },
+  {
+    "case": "Resume contains claim.completedJobs",
+    "behaviors": [
+      "B42"
+    ],
+    "expected": "Skip accepted jobs, checkpoint remaining small complete-match batches under active token; identical retry safe, changed accepted report rejected."
+  },
+  {
+    "case": "Status says analysis complete",
+    "behaviors": [
+      "B43"
+    ],
+    "expected": "Use status only for progress; audit source/report/page bytes and coverage before resumed findings drive rules."
+  }
+]

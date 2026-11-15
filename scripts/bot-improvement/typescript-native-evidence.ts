@@ -1,5 +1,11 @@
 /** Native v2 evidence compatible with the existing Rust writer and replay reader. */
-import { encodeLogRecord, parseGameLog, parseMatchLog } from "./game-log.ts";
+import {
+  encodeLogRecord,
+  parseGameLog,
+  parseMatchLog,
+  targetLossViewFromRecords,
+  type GameLog,
+} from "./game-log.ts";
 import { digest } from "./session-fixtures.ts";
 import type { Job, Frame } from "./typescript-match-worker.ts";
 import type { ParsedDeck } from "../../src/battle/duel/presets/deck-parser.ts";
@@ -111,6 +117,9 @@ export function compactLog(text: string) {
 }
 export class NativeMatchEvidence {
   games: Obj[] = [];
+  lossBindings: (
+    { transformation: 1; sha256: string; decisions: string[] } | undefined
+  )[] = [];
   records: Obj[][] = [];
   sideboarding: Obj[] = [];
   readonly job: Job;
@@ -288,6 +297,36 @@ export class NativeMatchEvidence {
     this.records.push(records);
     return this.serializeGame(index);
   }
+  lossView(index: number): string | undefined {
+    if (
+      this.games[index]?.status !== "completed" ||
+      this.games[index]?.winner !== "b"
+    )
+      return undefined;
+    return targetLossViewFromRecords({
+      neutral: this.games[index],
+      actors: this.records[index],
+      sideboarding: [this.gameSide(index, 0), this.gameSide(index, 1)],
+    } as unknown as GameLog);
+  }
+  gameSide(index: number, actor: number) {
+    return index < 2
+      ? {
+          status: "not_applicable",
+          applies_now: false,
+          carried_forward: false,
+          exchanges: { exchange: [] },
+        }
+      : {
+          ...(this.sideboarding[actor] ?? {
+            status: "skipped",
+            skip_reason: "earlier_execution_failed",
+          }),
+          applies_now: index === 2,
+          carried_forward: index === 3,
+          applied_before_game: 3,
+        };
+  }
   serializeGame(index: number) {
     const game = this.games[index]!,
       records = this.records[index]! as {
@@ -300,23 +339,7 @@ export class NativeMatchEvidence {
     let text = "ASCENCIO_GAME_LOG\t2\n" + encodeLogRecord("GAME", game);
     for (const [i, actor] of ["a", "b"].entries()) {
       const { initial: own, timeline, result, ...header } = records[i]!;
-      const side =
-        index < 2
-          ? {
-              status: "not_applicable",
-              applies_now: false,
-              carried_forward: false,
-              exchanges: { exchange: [] },
-            }
-          : {
-              ...(this.sideboarding[i] ?? {
-                status: "skipped",
-                skip_reason: "earlier_execution_failed",
-              }),
-              applies_now: index === 2,
-              carried_forward: index === 3,
-              applied_before_game: 3,
-            };
+      const side = this.gameSide(index, i);
       text +=
         encodeLogRecord("ACTOR", actor) +
         encodeLogRecord("RECORD", header) +
@@ -369,6 +392,7 @@ export class NativeMatchEvidence {
       run_id: job.identity,
       created_at: new Date().toISOString(),
       application_revision: "typescript-native/v1",
+      loss_projection_version: 1,
       runtime_sha256: this.runtime,
       runtime: {},
       engine: { sha256: job.engineHash },
@@ -407,6 +431,7 @@ export class NativeMatchEvidence {
         winner: g.winner,
         draw: g.draw,
         checkpoint_game: g,
+        ...(this.lossBindings[i] ? { target_loss: this.lossBindings[i] } : {}),
       });
     return compactLog(text + encodeLogRecord("END_MATCH", id));
   }

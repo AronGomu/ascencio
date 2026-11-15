@@ -1,0 +1,20 @@
+--- SKILL.md
++++ SKILL.md
+@@ -7,7 +7,7 @@
+ 
+ ## Goal
+ 
+-Produce the shortest clear, human-readable skill preserving intent and outcome ; leave implementation to judgment.
++Produce the shortest clear, readable skill that preserves intent and outcome; leave implementation to judgment.
+ 
+ ## Model defaults
+ 
+@@ -16,7 +16,7 @@
+ ## Inputs
+ 
+ - Required: skill folder path.
+-- Optional: priorities or retained requirements; iterations (default: 5); candidate destination; `review_context` (use `automatic-authoring-review` for authoring-triggered reviews).
++- Optional: priorities or retained requirements; iterations (default: 5); candidate destination (a sibling folder); `review_context` (use `automatic-authoring-review` for authoring-triggered reviews).
+ 
+ ## Constraints
+ 

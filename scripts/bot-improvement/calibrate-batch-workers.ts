@@ -1,3 +1,12 @@
+import { verifyFrozen } from "./frozen-setup.ts";
+import { stableCalibrationProvenance } from "./calibration-evidence.ts";
+import { calibrationMemory } from "./calibration-memory.ts";
+import {
+  ensureSessionOutput,
+  configureOutputStorage,
+} from "./output-storage.ts";
+import { recoverCalibration } from "./calibration-recovery.ts";
+import { identity as hashIdentity } from "./session-fixtures.ts";
 import { benchmarkProvenance } from "./benchmark-provenance.ts";
 import { randomUUID } from "node:crypto";
 import { benchmarkTypescriptRun } from "./typescript-benchmark.ts";
@@ -27,6 +36,9 @@ const { values: v } = parseArgs({
     repeats: { type: "string", default: "2" },
     "batch-size": { type: "string", default: "1" },
     "worker-counts": { type: "string" },
+    "memory-budget-bytes": { type: "string" },
+    "memory-reserve-bytes": { type: "string" },
+    "memory-per-worker-bytes": { type: "string" },
   },
 });
 if (!v.session || !v.out)
@@ -40,11 +52,18 @@ const counts = workerCounts(v["worker-counts"], logical);
 const sourceConfig = JSON.parse(
   await readFile(path.join(v.session, "config.json"), "utf8"),
 );
-const sourceFixture = JSON.parse(
-  await readFile(path.join(sourceConfig.fixture.path, "manifest.json"), "utf8"),
+const sourceState = JSON.parse(
+  await readFile(path.join(v.session, "state.json"), "utf8"),
 );
+const sourceFixture = await verifyFrozen(sourceConfig.fixture.path);
+if (sourceFixture.identity !== sourceConfig.fixture.identity)
+  throw Error("Calibration fixture identity mismatch");
 const provenance = benchmarkProvenance(
-  { config: sourceConfig, fixture: sourceFixture },
+  {
+    config: sourceConfig,
+    fixture: sourceFixture,
+    accepted: sourceState.accepted,
+  },
   {
     workers: counts,
     evidenceMode: "native-v2",
@@ -64,38 +83,52 @@ if (
     (n) => Number.isSafeInteger(n) && n > 0,
   ) ||
   counts.some((n) => n > logical || n * batchSize > matches) ||
+  repeats < 2 ||
   batchSize > 256
 )
   throw Error(
     "Positive integer stages required; each worker requires a full batch of matches and cannot exceed available logical CPUs",
   );
+const memory = calibrationMemory(v);
+await ensureSessionOutput(v.session);
+await configureOutputStorage(v.out, sourceConfig.limits.stop.maxBytes);
 await mkdir(path.dirname(path.resolve(v.out)), { recursive: true });
-await mkdir(v.out);
+await mkdir(v.out, { recursive: true });
 if (!native) await buildBatchRunner();
-const runs: Awaited<ReturnType<typeof benchmarkRun>>[] = [];
-let fingerprint: string | undefined;
-// Alternate stage order to reduce systematic warm-cache/background-load bias.
-for (let r = 0; r < repeats; r++)
-  for (const workers of r % 2 ? [...counts].reverse() : counts) {
-    console.error(
-      `Batch calibration: ${workers} workers, repetition ${r + 1}/${repeats}`,
-    );
-    const run = await (native ? benchmarkTypescriptRun : benchmarkRun)({
-      session: v.session,
-      out: path.join(v.out, `workers-${workers}-repeat-${r + 1}`),
-      workers,
-      matches,
+const calibrationId = native
+  ? await typescriptCalibrationIdentity(
+      sourceConfig.fixture.identity,
       batchSize,
-    });
-    fingerprint ??= run.fingerprint;
-    if (run.fingerprint !== fingerprint)
-      throw Error("Gameplay changed across worker settings");
-    runs.push(run);
-    await writeFile(
-      path.join(v.out, "runs.json"),
-      JSON.stringify(runs, null, 2),
+    )
+  : await calibrationIdentity(
+      batchBinary,
+      sourceConfig.fixture.identity,
+      batchSize,
     );
-  }
+const { runs, excluded, exclusions, journal, journalIdentity } =
+  await recoverCalibration({
+    out: v.out,
+    identity: hashIdentity({
+      calibrationId,
+      provenance: stableCalibrationProvenance(provenance),
+      memory,
+      matches,
+      repeats,
+      batchSize,
+      counts,
+    }),
+    counts,
+    repeats,
+    ...(memory ? { memory } : {}),
+    run: (workers, out) =>
+      (native ? benchmarkTypescriptRun : benchmarkRun)({
+        session: v.session!,
+        out,
+        workers,
+        matches,
+        batchSize,
+      }),
+  });
 const { stages, workers } = workerRecommendation(
   runs.map((r) => ({ workers: r.workers, elapsedMs: r.wallMs })),
 );
@@ -103,7 +136,13 @@ const config = JSON.parse(
   await readFile(path.join(v.session, "config.json"), "utf8"),
 );
 const report = {
+  excluded,
+  exclusions,
+  journal,
+  journalIdentity,
+  memory,
   provenance,
+  acceptedIdentity: hashIdentity(sourceState.accepted),
   schemaVersion: 1,
   backend: v.backend,
   identity: native

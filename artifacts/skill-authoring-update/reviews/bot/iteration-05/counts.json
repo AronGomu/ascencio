@@ -1,0 +1,30 @@
+{
+  "input": {
+    "instructional_characters": 34328,
+    "physical_bytes": 37137,
+    "instructional_resources": {
+      "SKILL.md": 22240,
+      "agents/openai.yaml": 338,
+      "references/defaults.md": 875,
+      "references/loss-analysis-template.md": 1218,
+      "references/match-log-template.md": 2728,
+      "references/run-summary-example.txt": 799,
+      "references/streaming-loss-analysis.md": 5962,
+      "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+    }
+  },
+  "candidate": {
+    "instructional_characters": 34320,
+    "physical_bytes": 37129,
+    "instructional_resources": {
+      "SKILL.md": 22240,
+      "agents/openai.yaml": 338,
+      "references/defaults.md": 875,
+      "references/loss-analysis-template.md": 1210,
+      "references/match-log-template.md": 2728,
+      "references/run-summary-example.txt": 799,
+      "references/streaming-loss-analysis.md": 5962,
+      "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+    }
+  }
+}

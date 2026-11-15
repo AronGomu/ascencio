@@ -1,0 +1,8 @@
+--- references/loss-analysis-template.md
++++ references/loss-analysis-template.md
+@@ -20,4 +20,4 @@
+    Replay points: …
+ ```
+ 
+-For every reason enumerate all affected games and primary critical decision IDs relative to the linked source evaluation. Link that evaluation once; qualify IDs if mixing evaluations. Replay points are execution inputs, not another ledger. Retention follows Artifact lifecycle.
++For each reason, list all affected games and their primary critical decision IDs in the linked source evaluation. Link that evaluation once; qualify IDs if mixing evaluations. Replay points are execution inputs, not another ledger. Retention follows Artifact lifecycle.

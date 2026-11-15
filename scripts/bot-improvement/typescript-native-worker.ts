@@ -111,8 +111,16 @@ parentPort!.on(
           terminal,
           decks: command.originalDecks as [ParsedDeck, ParsedDeck],
         });
+        const lossView = builder.lossView(native.index);
         nativeGame = {
           text,
+          lossView,
+          decisions:
+            lossView === undefined
+              ? []
+              : events[0]!
+                  .filter((e) => e.kind === "decision")
+                  .map((e) => String(e.decision_id)),
           game: builder.games[native.index],
           records: native.index < 2 ? builder.records[native.index] : [],
         };

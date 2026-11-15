@@ -1,0 +1,114 @@
+[
+  [
+    "SKILL.md",
+    "| Analyses/replays | Per-match Markdown, evaluation [loss-analysis.md][loss-report], replay points, traces, control/takeover outcomes | Same dependency rule; rejected details only after summarized decision/analysis, accepted details until replacement/closure; delivery alone is insufficient |"
+  ],
+  [
+    "references/loss-analysis-template.md",
+    "Read when merging completed slice findings. Write English `baseline/loss-analysis.md` or `iterations/iteration-N/loss-analysis.md`, bound to the evaluated AI/source. Review every newly played completed target loss; reuse only matching cached analysis."
+  ],
+  [
+    "references/loss-analysis-template.md",
+    "Merge equivalent reasons globally. Include all groups affecting at least five distinct losses, ranked by count then severity; smaller groups enter neither final reasons nor replay jobs. Count a game once per reason, allowing overlaps. Preserve unclear losses and incomplete coverage. Judge visible information at the choice; identify supported mistakes without requiring proof an alternative wins before replay. Invent no attribution, gain estimates or confidence labels."
+  ],
+  [
+    "references/loss-analysis-template.md",
+    "For every reason enumerate all affected games and primary critical decision IDs relative to the linked source evaluation. Link that evaluation once; qualify IDs if mixing evaluations. Replay points are required inputs, not a second loss ledger. Retain report and source records until all reasons are replay-processed and validation/reuse/resume needs end; apply the skill's Artifact lifecycle at closure."
+  ],
+  [
+    "references/match-log-template.md",
+    "Read before log review. `game.log` stores one game with actor A/B sections; `match.log` indexes four games and shared fixture/manifest metadata. Code reconstructs exact gameplay in memory; agents receive only target-loss projections."
+  ],
+  [
+    "references/match-log-template.md",
+    "- `o` and `a`: object and array containers, including empty ones."
+  ],
+  [
+    "references/match-log-template.md",
+    "- `s:\"...\"`: escaped string; JSON scalar escaping preserves tabs/newlines/quotes without making the record a JSON document."
+  ],
+  [
+    "references/match-log-template.md",
+    "- `n:42`, `b:0`, `b:1`, `z`: number, false, true and null."
+  ],
+  [
+    "references/match-log-template.md",
+    "Pre-side games mark sideboarding not applicable with empty exchanges. Game 3 records the transaction applied before play; game 4 marks that configuration carried forward. Exchanges list source/destination sections, card codes, quantities and reasons. Actors are stable identities, not starting seats. Each actor\u2019s events contain only that actor\u2019s legitimate observations; full game logs contain both perspectives for programmatic replay and must not be supplied directly to loss analysts."
+  ],
+  [
+    "references/match-log-template.md",
+    "`analysis-slices.ts` publishes `ASCENCIO_LOSS_LOG<TAB>2`: minimal identity, target sideboarding/initial state/events/result and end marker. Analysts receive only packet `jobs[].losses[].log` allowlists for completed target losses, never full two-actor logs or accepted winning gameplay."
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Layout example only; fill from verified evidence, not invented values."
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Run / target / frozen opponents: <IDs and source commits/hashes>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Engine / content / runner: <identities>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Configuration / shared policy: <links>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Started / ended / state / reason: <timestamps and honest terminal or suspended status>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Next stage / checkpoint / required continuation: <stage, path/hash, authorization or limit change>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "<version, commit, parent accepted source; opponent and weighted W/L/D/rates;"
+  ],
+  [
+    "references/run-summary-example.txt",
+    " paired difference, coverage/ignored counts, outcome and reason>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "<reason, affected losses, replayed/converted/timed-out counts, disposition and reason>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Loss coverage / unclear: <aggregate counts>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "<executed/reused/reserved/failed/cancelled games; controls/takeovers and diagnostics;"
+  ],
+  [
+    "references/run-summary-example.txt",
+    " elapsed and remaining time; current/peak storage and limits; errors/timeouts>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "<accepted commit; existing comparable ranking; changes and unresolved issues>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Completed: <accepted export path/hash; checked consolidation and permitted cleanup>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "Suspended: <pending work and retained resume evidence; no final ranking/export/cleanup>"
+  ],
+  [
+    "references/run-summary-example.txt",
+    "References: <authoritative effective configuration and shared policy>"
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "5. Reuse only identity/hash-matching findings; verify IDs and exactly-once coverage. Wait for all slices, merge categories and compile the evaluation-bound [loss report](loss-analysis-template.md). Its global eligibility/ranking/replay-point contract governs; slice reports never independently trigger changes."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "Write one row per target loss, fields separated by `|` with no pipes inside fields. Classifications: `avoidable`, `unavoidable`, `unclear`. An avoidable finding requires a decision ID present in that game's target record; use `-` when unavailable. The queue rejects wrong bindings, winning-game findings, duplicates, invented decisions and incomplete coverage. Human/agent findings and final reports remain Markdown. Regression diagnosis and isolated repair follow the skill\u2019s Source selection and replay gate; observed associations are not causal proof."
+  ]
+]

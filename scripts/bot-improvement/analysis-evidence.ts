@@ -1,3 +1,4 @@
+import { evidenceParseCache } from "./verified-evidence-cache.ts";
 import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
@@ -30,8 +31,27 @@ export async function readEvidence(session: string, ref: EvidenceReference) {
   return bytes;
 }
 
+/** Every lookup revalidates bytes; parser identities invalidate transformation changes. */
+export async function readEvidenceJson<T = unknown>(
+  session: string,
+  ref: EvidenceReference,
+): Promise<T> {
+  const bytes = await readEvidence(session, ref);
+  return evidenceParseCache.decode(
+    bytes,
+    "json/v1",
+    () => JSON.parse(bytes.toString()) as T,
+    ref.sha256,
+  );
+}
+
 /** Read only exporter fields needed for completeness and timeline addressing. */
 function xmlSummary(bytes: Buffer, root: string) {
+  return evidenceParseCache.decode(bytes, `xml-summary/v1/${root}`, () =>
+    parseXmlSummary(bytes, root),
+  );
+}
+function parseXmlSummary(bytes: Buffer, root: string) {
   const parser = new SaxesParser();
   const stack: string[] = [];
   const fields: Record<string, string> = {};
@@ -136,12 +156,15 @@ export async function finalizedXml(
     item?: unknown;
     /** Aggregation additionally validates competitive outcomes. */
     outcomes?: boolean;
+    targetLossOnly?: boolean;
   },
 ) {
   const base = await analysisPath(session, relative);
   const donePath = `${relative}/done.json`;
   const doneBytes = await readFile(await analysisPath(session, donePath));
-  const done = JSON.parse(doneBytes.toString());
+  const done = evidenceParseCache.decode(doneBytes, "json/v1", () =>
+    JSON.parse(doneBytes.toString()),
+  );
   const files = done.files as Record<string, string>;
   if (!files || typeof files !== "object" || Array.isArray(files))
     throw new Error("Invalid completion marker");
@@ -323,11 +346,11 @@ export async function finalizedEvidence(
   relative: string,
   expected: Parameters<typeof finalizedXml>[2],
 ) {
-  const marker = JSON.parse(
-    await readFile(
-      await analysisPath(session, `${relative}/done.json`),
-      "utf8",
-    ),
+  const markerBytes = await readFile(
+    await analysisPath(session, `${relative}/done.json`),
+  );
+  const marker = evidenceParseCache.decode(markerBytes, "json/v1", () =>
+    JSON.parse(markerBytes.toString()),
   );
   if (
     marker.adapter === undefined &&
@@ -342,6 +365,41 @@ export async function finalizedEvidence(
     ).filter(([file]) => file.startsWith("native/") || file === "fixture.json");
     for (const [file, sha256] of nativeRefs)
       await readEvidence(session, { path: `${relative}/${file}`, sha256 });
+    if (expected.targetLossOnly) {
+      const owned = (await tree(await analysisPath(session, relative))).filter(
+        (f) => f !== "done.json" && f !== "native/done.json",
+      );
+      if (!isDeepStrictEqual(owned, Object.keys(marker.files).sort()))
+        throw Error("Native completion file set changed");
+      const { nativeLossSummary } = await import("./native-loss-summary.ts");
+      const dependencies = [
+        { path: `${relative}/done.json`, sha256: digest(markerBytes) },
+        ...nativeRefs.map(([file, sha256]) => ({
+          path: `${relative}/${file}`,
+          sha256,
+        })),
+      ];
+      // Every dependency and the directory set were verified above, even on a cache hit.
+      // Include binding and paths so no summary crosses candidate/session scopes.
+      const summaryKey = JSON.stringify({
+        session: path.resolve(session),
+        relative,
+        expected,
+        dependencies,
+      });
+      const result = await evidenceParseCache.decodeAsync(
+        summaryKey,
+        "native-loss-summary/v1",
+        () => nativeLossSummary(session, relative, dependencies, expected),
+      );
+      if (
+        digest(
+          await readFile(await analysisPath(session, `${relative}/done.json`)),
+        ) !== digest(markerBytes)
+      )
+        throw Error("Native completion marker changed during verification");
+      if (result) return { ...result, adapter: "linked-text-v1" as const };
+    }
     const { publishTextCompletion, finalizedText } =
       await import("./analysis-text-evidence.ts");
     try {

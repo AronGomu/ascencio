@@ -28,10 +28,10 @@ const deck = {
   extra: [cardCode(50), cardCode(51)],
   side: [cardCode(60)],
 };
-test("2,500 deterministic four-game fixtures cover self-play, even slots, stable remainder and separate random streams", () => {
+test("250 default deterministic four-game fixtures cover self-play, even slots, stable remainder and separate random streams", () => {
   const self = schedule("seed", deck, []);
-  assert.equal(self.length, 2500);
-  assert.equal(self.flatMap((m) => m.games).length, 10000);
+  assert.equal(self.length, 250);
+  assert.equal(self.flatMap((m) => m.games).length, 1000);
   assert.ok(self.every((m) => m.opponentSlot === "self"));
   const counts = (n: number) =>
     Object.values(
@@ -44,8 +44,8 @@ test("2,500 deterministic four-game fixtures cover self-play, even slots, stable
         return a;
       }, {}),
     );
-  assert.deepEqual(counts(1), [1250, 1250]);
-  assert.deepEqual(counts(2), [834, 833, 833]);
+  assert.deepEqual(counts(1), [125, 125]);
+  assert.deepEqual(counts(2), [84, 83, 83]);
   assert.deepEqual(self, schedule("seed", deck, []));
   assert.notDeepEqual(self, schedule("different", deck, []));
   const games = self[0]!.games;
@@ -68,19 +68,19 @@ test("2,500 deterministic four-game fixtures cover self-play, even slots, stable
   assert.equal(games[2]!.orders, null);
   assert.equal(
     new Set(self.flatMap((m) => m.games.flatMap((g) => g.engineSeed))).size,
-    40000,
+    4000,
   );
   assert.notEqual(games[0]!.botSeeds[0], games[0]!.botSeeds[1]);
 });
 
 test("configurable schedules preserve seeds and orders, cover per-opponent allocations and reject invalid counts", () => {
-  const initial = schedule("seed", deck, [deck]);
+  const initial = schedule("seed", deck, [deck], 2500);
   for (const count of [1, 250, 501, 750]) {
     const matches = schedule("seed", deck, [deck], count);
     assert.equal(matches.length, count);
     assert.deepEqual(matches, initial.slice(0, count));
   }
-  assert.equal(resolveMatchCount(undefined, undefined, 2), 2500);
+  assert.equal(resolveMatchCount(undefined, undefined, 2), 250);
   assert.equal(resolveMatchCount(undefined, 250, 2), 750);
   const allocations = schedule(
     "seed",
@@ -184,7 +184,7 @@ test("setup CLI atomically publishes durable inputs, validates reuse, archives s
     };
     await write(path.join(root, "request.json"), request);
     const first = run(request);
-    assert.equal(first.games, 10000);
+    assert.equal(first.games, 1000);
     const originalSetupConfig = await readFile(
       path.join(target, "evaluation.json"),
     );
@@ -194,6 +194,7 @@ test("setup CLI atomically publishes durable inputs, validates reuse, archives s
         for (const matches of [250, 750]) {
           const custom = {
             ...request,
+            setupSeed: `explicit-count-${matches}`,
             matches,
             session: path.join(root, `session-${matches}`),
           };

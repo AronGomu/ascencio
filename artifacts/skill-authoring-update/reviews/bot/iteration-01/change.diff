@@ -1,0 +1,11 @@
+--- SKILL.md
++++ SKILL.md
+@@ -20,7 +20,7 @@
+ 
+ ## Constraints
+ 
+-All stages inherit this policy; stage instructions add requirements.
++All stages inherit this policy and add their own requirements.
+ 
+ - Modify only target AI; preserve decks, engine, legality and hidden-information boundaries. Freeze all opponents, always including the starting AI as self-opponent. Accepted control is a separate, moving reference.
+ - Pin configuration, source commits/hashes, engine/content/runner/comparison identities, opponent order and paired schedule before dispatch. Pair starting deck orders, engine seeds, sides, rules and content; derive bot/engine randomness from stable match/game IDs. Choices and sideboarding may change trajectories, not starting inputs.

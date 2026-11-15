@@ -1,0 +1,14 @@
+[
+  [
+    "references/streaming-loss-analysis.md",
+    "Read before analyst dispatch. Analysts diagnose only; the orchestrator implements changes and owns execution."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "1. After Decide, verify every scheduled match finalized and every reservation settled. Filter completed target losses using machine outcome metadata; no analyst starts during evaluation."
+  ],
+  [
+    "references/streaming-loss-analysis.md",
+    "6. Apply the skill\u2019s Incident policy on failure/stop and Artifact lifecycle to reports/logs. Preserve ownership and uncovered losses for explicit continuation without duplicate analysts; delivery alone permits no pruning."
+  ]
+]

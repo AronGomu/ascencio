@@ -1,0 +1,338 @@
+[
+  {
+    "agent_task": "bot_i1_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-01/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i1_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-01/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i1_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-01/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i2_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-02/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i2_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-02/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i2_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-02/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i3_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-03/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i3_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-03/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i3_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-03/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i4_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-04/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i4_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-04/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i4_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-04/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i5_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-05/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i5_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-05/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "bot_i5_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/bot/iteration-05/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i1_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-01/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i1_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-01/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i1_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-01/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i2_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-02/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i2_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-02/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i2_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-02/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i3_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-03/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i3_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-03/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i3_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-03/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i4_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-04/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i4_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-04/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i4_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-04/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i5_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-05/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i5_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-05/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "authoring_i5_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/authoring/iteration-05/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i1_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-01/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i1_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-01/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i1_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-01/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i2_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-02/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i2_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-02/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i2_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-02/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i3_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-03/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i3_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-03/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i3_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-03/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i4_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-04/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i4_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-04/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i4_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-04/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i5_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-05/reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i5_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-05/reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i5_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-05/reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i1_r2_a",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-01/round-2-reviewer-a.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i1_r2_b",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-01/round-2-reviewer-b.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  },
+  {
+    "agent_task": "refine_i1_r2_c",
+    "explanation": "artifacts/skill-authoring-update/reviews/refine/iteration-01/round-2-reviewer-c.md",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "fork_turns": "none"
+  }
+]

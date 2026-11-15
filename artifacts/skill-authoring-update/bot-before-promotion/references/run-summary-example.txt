@@ -1,0 +1,71 @@
+AI BOT IMPROVEMENT RUN SUMMARY
+Illustrative example only. IDs, hashes and results below are fictional.
+Placeholders in angle brackets stand for full recorded hashes/paths.
+
+Run: goat-control-2026-11-14-001
+State: SUSPENDED — incomplete, resumable
+Reason: 24-hour wall-time limit reached during iteration 2 replay validation.
+Started: 2026-11-14 09:00 UTC
+Stopped: 2026-11-15 09:00 UTC
+Target: goat-control; package: assets/ai-bots/goat-control
+Starting version: v001; commit: <full-initial-source-SHA>
+Frozen opponent: goat-control v001; commit: <full-initial-source-SHA>
+Engine / content / runner: <engine-hash> / <content-hash> / <runner-SHA>
+Configuration: <run-directory>/setup.json; hash: <configuration-hash>
+Settings: 2,500 total matches, allocated evenly across opponents; 4 games/match; 50 decisions maximum;
+          calibrated match workers: 6; analysis workers: 3;
+          replay timeout: 5 minutes per control/takeover execution.
+
+EVALUATED VERSIONS
+Opponent for all entries: frozen goat-control v001; weight: 1.
+Rates below use wins / completed games; no draws occurred in this example.
+Baseline v001: 10,000 games; W 5,000 / L 5,000 / D 0; win rate 50.00%.
+Iteration 1 v002: parent v001; commit <full-v002-SHA>;
+  10,000 games; W 5,300 / L 4,700 / D 0; win rate 53.00%;
+  paired change +3.00 percentage points; ACCEPTED: strictly higher win rate.
+Iteration 2 v003: parent v002; commit <full-v003-SHA>;
+  10,000 games; W 5,200 / L 4,800 / D 0; win rate 52.00%;
+  paired change -1.00 percentage point; REJECTED: regression against v002.
+Weighted rates equal the per-opponent rates because there is one opponent.
+Current accepted version: v002. Next candidate: not yet assembled.
+
+RULE ATTEMPTS
+Iteration 1, removal targeting: 100 affected losses; 100 cases replayed;
+  12 converted to wins; 0 timed out; INCLUDED in v002.
+Iteration 1, premature attack: 20 affected losses; 20 cases replayed;
+  2 converted; 0 timed out; EXCLUDED: fewer than five conversions.
+Iteration 2, backrow protection: 50 affected losses; 30 cases replayed;
+  6 converted; 0 timed out; PENDING: 20 cases remain; no inclusion decision.
+Loss coverage: baseline 5,000/5,000; v002 4,700/4,700; v003 4,800/4,800.
+Unclear losses: baseline 900; v002 850; v003 870.
+
+ACCOUNTING
+Comparison games: 30,000 executed; 0 reused; 30,000 reserved;
+                  0 failed; 0 cancelled; 0 reservations outstanding.
+Replay executions: 300 completed (150 controls and 150 takeovers);
+                   0 timed out; 0 active at checkpoint.
+Elapsed: 24h / 24h. Evaluation ceiling: 30,000 / 510,000 games.
+Storage: 840 MB current; 920 MB peak / 20,000 MB limit.
+Errors: none. Stop was a wall-time limit, not a failed game.
+
+RESUME
+Checkpoint: <run-directory>/run.json; hash: <checkpoint-hash>
+Next action: iteration 2, step 4 — replay remaining 20 backrow-protection cases
+             against accepted v002, then decide whether to include the rule.
+Required: explicit continuation and increased wall-time allowance.
+Retained: pending jobs, schedules, receipts, source snapshots, game records,
+          accepted-version analyses and replay inputs needed for continuation.
+No active workers remain. No closure cleanup or final export performed.
+
+CURRENT RESULT
+Accepted source: v002, commit <full-v002-SHA>.
+Provisional order from existing evaluations: v002 (53%), v003 (52%), v001 (50%).
+Final ranking/export: pending run completion.
+User summary: removal targeting improved win rate by 3 percentage points;
+              the next candidate regressed; one further rule is partly tested.
+
+AT COMPLETED RUN CLOSURE
+Replace RESUME with completed status and final accepted export path/hash.
+Keep this compact summary, run-level state/configuration, Git source versions,
+compact bot history and accepted export. Remove detailed execution evidence
+only after summaries are checked and no resume work remains.

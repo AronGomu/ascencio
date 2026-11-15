@@ -1,0 +1,5 @@
+# Character accounting
+
+Instruction scope: every UTF-8 decoded character in package Markdown, text templates and agent YAML configuration, plus instructional comment lines in the executable controller. All package references are counted even when consulted conditionally; no relocation reduction claimed. Executable controller code and its TypeScript declaration interface are excluded as executable-only source, not prose instructions. Refinement explanations, snapshots, reports and validation tooling live outside the package and are excluded. Physical size counts bytes of all package files, including executable source and declarations. External project contracts already linked by the source remain unchanged and are not duplicated or removed; no new lookups are introduced.
+
+Reduction is intentionally conservative because the owner requested preserving all behavior other than the already-authored local-file calibration reuse. The 25% aspiration is not achieved. Reader agreement demonstrates policy comprehension, not executable equivalence or measured usability/throughput.

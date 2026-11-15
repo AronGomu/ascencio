@@ -136,3 +136,31 @@ test("usage batches metadata without losing nested bytes or counting lock files"
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("lease cleanup uses acquisition root after an ancestor budget appears", async () => {
+  const { leaseBatchStorage, releaseBatchStorage } =
+    await import("../../scripts/bot-improvement/batch-storage-lease.ts");
+  const root = await mkdtemp(path.resolve(".tmp/lease-ancestor-"));
+  const nested = path.join(root, "nested");
+  const output = path.join(nested, "evaluation");
+  try {
+    await mkdir(output, { recursive: true });
+    await configureOutputStorage(nested, 100_000_000);
+    const lease = await leaseBatchStorage(nested, output, false);
+    assert.equal(lease.root, nested);
+    await configureOutputStorage(root, 200_000_000);
+    await releaseBatchStorage(lease.root, lease.token);
+    assert.equal(
+      JSON.parse(
+        await readFile(path.join(nested, ".batch-output-lease.json"), "utf8"),
+      ).active,
+      false,
+    );
+    await assert.rejects(
+      readFile(path.join(root, ".batch-output-lease.json")),
+      /ENOENT/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

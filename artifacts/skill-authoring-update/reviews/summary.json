@@ -1,0 +1,391 @@
+{
+  "review_context": "automatic-authoring-review",
+  "iterations": 15,
+  "reviewer_assignments": 48,
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "low",
+  "source_hashes_match": true,
+  "packages": {
+    "bot": {
+      "baseline": 34365,
+      "final": 34320,
+      "change": -45,
+      "reduction_percent": 0.131,
+      "physical_bytes": 37129,
+      "iterations": [
+        {
+          "iteration": 1,
+          "input": {
+            "instructional_characters": 34365,
+            "physical_bytes": 37174,
+            "instructional_resources": {
+              "SKILL.md": 22277,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          },
+          "candidate": {
+            "instructional_characters": 34359,
+            "physical_bytes": 37168,
+            "instructional_resources": {
+              "SKILL.md": 22271,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          }
+        },
+        {
+          "iteration": 2,
+          "input": {
+            "instructional_characters": 34359,
+            "physical_bytes": 37168,
+            "instructional_resources": {
+              "SKILL.md": 22271,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          },
+          "candidate": {
+            "instructional_characters": 34321,
+            "physical_bytes": 37130,
+            "instructional_resources": {
+              "SKILL.md": 22233,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          }
+        },
+        {
+          "iteration": 3,
+          "input": {
+            "instructional_characters": 34321,
+            "physical_bytes": 37130,
+            "instructional_resources": {
+              "SKILL.md": 22233,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          },
+          "candidate": {
+            "instructional_characters": 34318,
+            "physical_bytes": 37127,
+            "instructional_resources": {
+              "SKILL.md": 22230,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          }
+        },
+        {
+          "iteration": 4,
+          "input": {
+            "instructional_characters": 34318,
+            "physical_bytes": 37127,
+            "instructional_resources": {
+              "SKILL.md": 22230,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          },
+          "candidate": {
+            "instructional_characters": 34328,
+            "physical_bytes": 37137,
+            "instructional_resources": {
+              "SKILL.md": 22240,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          }
+        },
+        {
+          "iteration": 5,
+          "input": {
+            "instructional_characters": 34328,
+            "physical_bytes": 37137,
+            "instructional_resources": {
+              "SKILL.md": 22240,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1218,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          },
+          "candidate": {
+            "instructional_characters": 34320,
+            "physical_bytes": 37129,
+            "instructional_resources": {
+              "SKILL.md": 22240,
+              "agents/openai.yaml": 338,
+              "references/defaults.md": 875,
+              "references/loss-analysis-template.md": 1210,
+              "references/match-log-template.md": 2728,
+              "references/run-summary-example.txt": 799,
+              "references/streaming-loss-analysis.md": 5962,
+              "scripts/workflow-controller.mjs (instructional comments and CLI usage)": 168
+            }
+          }
+        }
+      ],
+      "candidate": "/home/aron/Projects/ascencio/.agents/skills/ai-bot-self-improvement-REFINED-AUTHORING-REVIEW",
+      "source": "/home/aron/Projects/ascencio/.agents/skills/ai-bot-self-improvement",
+      "reviewer_assignments": 15
+    },
+    "authoring": {
+      "baseline": 24345,
+      "final": 24266,
+      "change": -79,
+      "reduction_percent": 0.325,
+      "physical_bytes": 24302,
+      "iterations": [
+        {
+          "iteration": 1,
+          "input": {
+            "instructional_characters": 24345,
+            "physical_bytes": 24381,
+            "instructional_resources": {
+              "SKILL.md": 6090,
+              "references/skill-rules-guidelines.md": 18255
+            }
+          },
+          "candidate": {
+            "instructional_characters": 24325,
+            "physical_bytes": 24361,
+            "instructional_resources": {
+              "SKILL.md": 6070,
+              "references/skill-rules-guidelines.md": 18255
+            }
+          }
+        },
+        {
+          "iteration": 2,
+          "input": {
+            "instructional_characters": 24325,
+            "physical_bytes": 24361,
+            "instructional_resources": {
+              "SKILL.md": 6070,
+              "references/skill-rules-guidelines.md": 18255
+            }
+          },
+          "candidate": {
+            "instructional_characters": 24304,
+            "physical_bytes": 24340,
+            "instructional_resources": {
+              "SKILL.md": 6049,
+              "references/skill-rules-guidelines.md": 18255
+            }
+          }
+        },
+        {
+          "iteration": 3,
+          "input": {
+            "instructional_characters": 24304,
+            "physical_bytes": 24340,
+            "instructional_resources": {
+              "SKILL.md": 6049,
+              "references/skill-rules-guidelines.md": 18255
+            }
+          },
+          "candidate": {
+            "instructional_characters": 24300,
+            "physical_bytes": 24336,
+            "instructional_resources": {
+              "SKILL.md": 6049,
+              "references/skill-rules-guidelines.md": 18251
+            }
+          }
+        },
+        {
+          "iteration": 4,
+          "input": {
+            "instructional_characters": 24300,
+            "physical_bytes": 24336,
+            "instructional_resources": {
+              "SKILL.md": 6049,
+              "references/skill-rules-guidelines.md": 18251
+            }
+          },
+          "candidate": {
+            "instructional_characters": 24291,
+            "physical_bytes": 24327,
+            "instructional_resources": {
+              "SKILL.md": 6049,
+              "references/skill-rules-guidelines.md": 18242
+            }
+          }
+        },
+        {
+          "iteration": 5,
+          "input": {
+            "instructional_characters": 24291,
+            "physical_bytes": 24327,
+            "instructional_resources": {
+              "SKILL.md": 6049,
+              "references/skill-rules-guidelines.md": 18242
+            }
+          },
+          "candidate": {
+            "instructional_characters": 24266,
+            "physical_bytes": 24302,
+            "instructional_resources": {
+              "SKILL.md": 6049,
+              "references/skill-rules-guidelines.md": 18217
+            }
+          }
+        }
+      ],
+      "candidate": "/home/aron/.agents/skills/how-to-make-skills-REFINED-AUTHORING-REVIEW",
+      "source": "/home/aron/.agents/skills/how-to-make-skills",
+      "reviewer_assignments": 15
+    },
+    "refine": {
+      "baseline": 5158,
+      "final": 5153,
+      "change": -5,
+      "reduction_percent": 0.097,
+      "physical_bytes": 5229,
+      "iterations": [
+        {
+          "iteration": 1,
+          "input": {
+            "instructional_characters": 5158,
+            "physical_bytes": 5230,
+            "instructional_resources": {
+              "SKILL.md": 3478,
+              "references/explanation-template.md": 1680
+            }
+          },
+          "candidate": {
+            "instructional_characters": 5174,
+            "physical_bytes": 5246,
+            "instructional_resources": {
+              "SKILL.md": 3494,
+              "references/explanation-template.md": 1680
+            }
+          }
+        },
+        {
+          "iteration": 2,
+          "input": {
+            "instructional_characters": 5174,
+            "physical_bytes": 5246,
+            "instructional_resources": {
+              "SKILL.md": 3494,
+              "references/explanation-template.md": 1680
+            }
+          },
+          "candidate": {
+            "instructional_characters": 5173,
+            "physical_bytes": 5245,
+            "instructional_resources": {
+              "SKILL.md": 3493,
+              "references/explanation-template.md": 1680
+            }
+          }
+        },
+        {
+          "iteration": 3,
+          "input": {
+            "instructional_characters": 5173,
+            "physical_bytes": 5245,
+            "instructional_resources": {
+              "SKILL.md": 3493,
+              "references/explanation-template.md": 1680
+            }
+          },
+          "candidate": {
+            "instructional_characters": 5172,
+            "physical_bytes": 5244,
+            "instructional_resources": {
+              "SKILL.md": 3492,
+              "references/explanation-template.md": 1680
+            }
+          }
+        },
+        {
+          "iteration": 4,
+          "input": {
+            "instructional_characters": 5172,
+            "physical_bytes": 5244,
+            "instructional_resources": {
+              "SKILL.md": 3492,
+              "references/explanation-template.md": 1680
+            }
+          },
+          "candidate": {
+            "instructional_characters": 5173,
+            "physical_bytes": 5247,
+            "instructional_resources": {
+              "SKILL.md": 3493,
+              "references/explanation-template.md": 1680
+            }
+          }
+        },
+        {
+          "iteration": 5,
+          "input": {
+            "instructional_characters": 5173,
+            "physical_bytes": 5247,
+            "instructional_resources": {
+              "SKILL.md": 3493,
+              "references/explanation-template.md": 1680
+            }
+          },
+          "candidate": {
+            "instructional_characters": 5153,
+            "physical_bytes": 5229,
+            "instructional_resources": {
+              "SKILL.md": 3473,
+              "references/explanation-template.md": 1680
+            }
+          }
+        }
+      ],
+      "candidate": "/home/aron/.agents/skills/refine-skill-REFINED-AUTHORING-REVIEW",
+      "source": "/home/aron/.agents/skills/refine-skill",
+      "reviewer_assignments": 18
+    }
+  }
+}

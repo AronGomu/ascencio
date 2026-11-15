@@ -1,0 +1,81 @@
+# Explanation from reviewer 3 for refined bot-improvement comprehension
+
+## 1. Outcome and scope
+
+Given one required target `ai-bot`, optional additional opponents, owner limits and a compatible checkpoint, seek a strictly higher paired-game win rate and deliver accepted source, verified results and compact history. Starting AI is always a frozen self-opponent. Only target AI changes; decks, engine, legality and information boundaries stay protected. Successful completion can honestly report no qualifying edit. This explanation uses only the refined package and explanation template; linked external implementations were not inspected or executed.
+
+## 2. Process overview
+
+Prepare freezes setup and calibrates two pools, then Evaluate runs baseline or a combined candidate; Decide records baseline or accepts/rejects the candidate, and Analyze diagnoses that evaluation even after the final decision. Below the ceiling, Replay tests isolated edits and Assemble combines qualifying ones for another evaluation. A valid regression switches preparation to removing/updating an existing rule from the regressing source. No qualifying edit or a fully analyzed decision ceiling leads to Deliver. Resource and owner stops take precedence and enter Suspended. The executable dispatcher presents inherited policy and one task, validates syntactic transitions, and prints the next task; owning project tools and the orchestrator perform execution, evidence verification, checkpoint persistence and authorization checks.
+
+## 3. Execution matrix
+
+| Step | Entry condition | Action and owner | Concurrency | Decision/completion criterion | Saved output | Next step |
+|---|---|---|---|---|---|---|
+| Prepare | New run or verified compatible preparation checkpoint | Orchestrator resolves inputs/contracts, uses frozen `bot:setup`, archives initial source, verifies current session-typescript/v1 and creates schedule/slices | Match/replay calibration separately; neither overlaps evaluation/analysis; test 2 through logical CPUs | Exact sources/setup plus matching optimal recommendations for both pools; admission classification resolved | Pinned run configuration, limits, start, schedule, calibration reports and replay cache; whole 250-match slice plan | `ready` → Evaluate |
+| Evaluate | Prepared baseline or frozen assembled candidate | Validate target boundary; bind source, accepted control, schedule/runner; reuse matching evidence and run missing matches through admission/match tools | Independent matches at optimal match concurrency; four games and sideboarding sequential per match | Every scheduled match finalized, reservations settled, evidence/coverage/resources verified; save paired difference | Typed gameplay logs, receipts, results, usage, comparison/provenance | `complete` → Decide |
+| Decide | Verified evaluation | Baseline establishes accepted reference without consuming decision; otherwise orchestrator independently verifies strict improvement, uses decision/archive/history tools | Serialized publication transactions | Persist accepted/rejected reason; archive every evaluated candidate, even rejected | Decision/checkpoint, commit SHA/source hashes, attempt history | `complete` → Analyze |
+| Analyze | Decide complete; finalized matches and settled reservations | Slice tool dispatches diagnosis-only owners; orchestrator verifies exactly-once loss coverage, merges reasons and finalizes source-bound Markdown | One owner per consecutive whole 250-match slice, queued for slots; no overlapping evaluation | All completed target losses covered or matching analysis reused; include every global reason with ≥5 losses; report unclear coverage | Bound per-match reports, claim/packet metadata, final loss-analysis.md with every reason's replay points | `complete` at decision ceiling → Deliver; otherwise `continue` → Replay; exhaustion → Suspended |
+| Replay | Analysis delivered, budget remains | Orchestrator reads history, implements immutable isolated variants; controls use unchanged analysis source and exact primary critical decisions | Measured replay concurrency; wait for every reason job | Every associated case settles; qualify only intended choice changes yielding wins in ≥5 and ≥5% of associated losses | Rule IDs/operation/base/hash/included IDs, controls/takeovers, failures and nonconversions | `validated` → Assemble; `none` → Deliver |
+| Assemble | At least one qualifying edit | Combine all passing edits from proper source base, resolve overlaps preserving semantics/attribution; replay materially changed isolated logic; validate/freeze; update history with rules/hash/base/references | No independent combined-rule replay gate prescribed | Frozen valid candidate; unedited repair rules preserved | Candidate hash/build and history; no proposal.md; eligible pruning only via tool | `ready` → Evaluate |
+| Deliver | Fully analyzed ceiling or no qualifying edit | Verify required evidence, rank existing comparable evaluations, export accepted source, check consolidation then clean eligible detail | No fresh ranking games | Honest status, actual decisions and unresolved errors; required evidence retained until dependencies end | Checked report, export/hash, compact state/history | `complete` → Closed |
+| Suspended | Any active stage: `suspend`; owner stop or incident | Stop admission/owned work, settle reservations, verify shutdown, checkpoint prior stage and report | Graceful shutdown ≤60 seconds then terminate owned process groups only | Resume requires applicable explicit authorization, verified checkpoint and sufficient limits | Pending coverage/jobs, attempts, identities, consumed budgets, stop reason/next action | `resume PRIOR-STAGE` → verified prior active stage |
+| Dispatcher | Caller chooses task/event | `task STAGE` extracts inherited pre-workflow policy plus named stage and link definitions; `advance` checks table; `resume` accepts an active prior stage | One task at a time by policy | Code checks stage/event syntax only; no evidence/state/authorization checks | Printed task or Closed; errors exit nonzero | Caller persists verified next stage with owning tools |
+
+## 4. Identities and invariants
+
+| Item | Initial source/value | Allowed changes | Must remain fixed | Verification |
+|---|---|---|---|---|
+| Target/opponents | Setup target plus ordered extras and starting self-opponent | Target AI only; accepted control advances on strict promotion | Frozen opponent sources; deck/engine/legality/visibility boundaries | Source commits/hashes and target-only validation |
+| Comparison fixture | Pinned rules/content, engine/runner/comparison identities, schedules, deck orders, seeds/sides and stable match/game IDs | Choices/sideboarding can change trajectories | Starting paired inputs and randomness derivation | Completed comparable intersections; remove either ignored game from both rates; each opponent needs a pair |
+| Scoring | Wins/completed nonignored games; draws count as zero wins; equal opponent weights | Rates change with finalized evidence | Game weighting; no confidence intervals or match-weighted promotion | Strictly positive weighted paired difference; unresolved mismatch unassessable |
+| Ordinary source | Accepted commit and matching analysis | Add one isolated fix per variant; combine passing edits | Replay control/assembly base remains accepted source | Analyze rejected evaluation before returning to accepted analysis |
+| Repair source | Valid lower-rate regressing candidate | Remove/update one existing rule; add none | Preserve other rules; accepted remains promotion comparator | Candidate-loss diagnosis; metadata flags new losses, association is not causation |
+| Evidence reuse | Matching input/settings/implementation/schedule/integrity and source-bound analysis | Reuse verified completed records only | Provenance and executed/reused distinction | Hash/identity checks; closed summary-only evidence cannot supply caches |
+| Archive identity | Stable bot ID, unique immutable version/run IDs | Accepted reference changes independently of HEAD | Existing history and full commit/path/source binding | Commit helper journal; required subject/trailers; source retrieval via git show/package extraction |
+
+## 5. Limits and accounting
+
+| Resource/stage | Default limit | Override rule | Accounting | Action at exhaustion |
+|---|---|---|---|---|
+| Candidate decisions | 50 persisted; baseline excluded | Owner values replace defaults before launch | Count actual persisted decisions; final evaluation still analyzed | Analyze then Deliver; no edit may stop earlier |
+| Evaluation schedule | 2,500 total matches ×4 games | Owner value; ≥1 match/opponent | Floor allocation plus first remainder opponents; total matches set, matchesPerOpponent unset | Frozen schedule governs finalization |
+| Evaluation games | 510,000 planned +51,000 recovery =561,000 | Pin formula from effective decisions/matches; recovery floor 10% planned | Failed/interrupted reservations and recovery executions count; caches add none; separate ledgers | Recovery exhausted: ignore remaining interrupted games; no request for more games |
+| Wall time | 24h from persisted startedAt | Explicit authorized increase/continuation | Includes suspension/downtime; resume never resets | Suspend; no ranking/export/analysis/cleanup |
+| Storage | Explicit 50,000,000,000 bytes | Explicit increase; active writer requires full continuation request, gate update under writer lock, controller continuation after session lock releases | Logical bytes including imports/staging/logs/evidence; 16,000,000 bytes reserved inside cap for controls | Quota marker blocks data writes; suspend, preserve required evidence |
+| Attempt deadlines | Evaluation 5h; preparation 10min; validation check 5min; replay control/takeover 5min including prefix | Cap by remaining wall time | Launch-to-exit | Apply matching timeout/failure incident; never reset run time |
+| Calibration | All worker counts 2..CPUs; required match repetitions; replay two repetitions and full largest-stage batch/worker | Reuse only identity-matching saved optimal recommendation | Diagnostics separate from evaluation/rule validation; successes/failures/exclusions persist | No qualifier or CPUs<2 stops preparation |
+| Replay | Every associated loss; no rule-replay game quota | No invented recovery allowance | Controls/takeovers separately; all cost time/storage; ignored timeouts remain denominator | Resource exhaustion suspends |
+
+## 6. Incidents and continuation
+
+| Incident | Immediate action | Retry allowance | Evidence preserved | Resume condition |
+|---|---|---|---|---|
+| Individual game/replay timeout | Bug report; finalize ignored; continue safe work; evaluation ignore removes both paired sides | Never retry case | Timeout/accounting and denominator/nonconversion evidence | No interrupted-work classification |
+| Interrupted evaluation | Recover missing work, settle all attempts | Automatic within remaining recovery allowance/deadlines; then ignore remaining interruptions | Verified completions, reservations, attempts/timeouts | Matching evidence and remaining limits |
+| Failed calibration count stage | New evidence directory, same inputs | Once; second failure excludes count and remaining repetitions | Both attempts and retry state | Other counts can continue; qualifying recommendation required |
+| Unsupported package before admission | Preserve validation, adapt build/validation tooling only; related local checks and fresh validation directory | Narrow tooling exception; no game charge | Failed validation and new checks | Valid with protected boundaries intact; otherwise stop |
+| Initialization/sideboarding/integrity/other non-timeout validation failure | Stop; never ignore unsafe state | No generic retry; replay recovery not automatic | Failure and source/evidence bindings | Applicable explicit resolution, not dispatcher permission |
+| Analyst failure/owner stop | Halt dispatch; settle/terminate owned analysts | Explicit continuation | Reports, claims, uncovered losses | Resume uncovered work without duplicate owners |
+| Time/storage or pause/cancellation | Shutdown/checkpoint/report as Suspended | Explicit continuation/increase as applicable | All resumable detail and original budgets/start | Same verified checkpoint; incomplete explicit closure stays incomplete |
+
+## 7. Delivery and retention
+
+| Artifact | Required contents | Destination | Retain until | Cleanup condition |
+|---|---|---|---|---|
+| Run state | Configuration, pinned identities, decision/accounting/checkpoint records | run.json; iterations/iteration-N/iteration.json; owned receipts/references | Compact state survives closure | Consolidate through owning tools; generated JSON never hand-edited |
+| Gameplay | Typed lossless game.log actor sections, exact state/events/choices/sideboarding/results; match.log four-game index | games/game-N and existing match paths | Execution/validation/replay/reuse/resume dependencies end | Checked closure consolidation; no JSON gameplay sidecars |
+| Analysis/replay | Markdown per-match reports and baseline/iteration loss-analysis.md; complete reason replay points; traces/outcomes | Evaluation analyses and existing replay locations | Rejected details through summarized decision/analysis; accepted through replacement/closure plus dependencies | Delivery alone insufficient; analysts receive positive allowlisted target-loss projections only |
+| Sources/setup detail | Immutable variant hashes, builds, schedules, frozen packages and machine records | Existing temporary/run locations | All validation/reuse/resume dependencies end | Remove detailed copies after checked closure; archive source in Git |
+| History/export | Initial and all evaluated candidate commits; English compact attempt history with SUPERSEDED replacements; accepted export/hash | Git and improvement-history.md/export location | Permanent compact result | Commit only intended bot/history changes; journal recovers interrupted commit |
+| Report | Status/reason/times, IDs/hashes/configuration, per-version W/L/D/rates/paired coverage/difference, rule counts/dispositions, usage/errors, accepted result/ranking/links | Project or artifacts | Retain after closure; also generated on suspension | Closure aggregates omit game/decision detail; then remove logs/receipts/traces/schedules/variants/frozen copies/machine records/bundles unless owner retains |
+
+## 8. Ambiguities and interpretations
+
+| ID | Instruction reference | Ambiguity | Chosen interpretation | Behavioral consequence | Clarification required? |
+|---|---|---|---|---|---|
+| A1 | streaming-loss-analysis final sentence | Refers to “Workflow 4” although stages are named | Means Analyze/source-selection and Replay repair rules | Follow named stage policy; no missing numbered workflow invented | No |
+| A2 | Limits: “missing required limits” and owner overrides | Defaults supplied yet autonomy says ask for missing required limits | Effective documented defaults satisfy limits unless setup/owner context requires an unspecified value | Pin explicit defaults, ask only for actually unresolved required values | Only if unresolved |
+| A3 | Workflow vs dispatcher | CLI accepts analyze complete without checking ceiling and resume without suspended state | Events assert caller-verified outcomes; dispatcher is stateless, not an authorization/security boundary | Independently verify ceiling/checkpoint/authorization and persist state; do not treat command success as proof | No |
+| A4 | Calibration and linked owning contracts | Match repetitions, request schemas and diagnostic admission classification reside outside package | Package directs discovery; their concrete behavior cannot be certified from this reading | An actual run must inspect required external contracts before dispatch and stop on unresolved conflict | Yes before execution if contracts unavailable |
+| A5 | Ordinary mode “add one fix” vs Assemble all passing edits | Could imply one fix per entire candidate | One isolated fix per variant, followed by combination of all passing edits | Candidate may contain multiple independently qualifying fixes; materially changed logic replays again | No |

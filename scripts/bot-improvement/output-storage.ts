@@ -1,3 +1,4 @@
+import { batchStorageLeases } from "./batch-storage-lease.ts";
 /** Cross-process output quota. Data cannot consume the checkpoint/report reserve. */
 import {
   open,
@@ -42,6 +43,7 @@ const controls = new Set([
   ".output-budget.json",
   ".storage-stop",
   ".batch-output-lease.json",
+  ".batch-output-leases.json",
 ]);
 function control(file: string) {
   return controls.has(path.basename(file).split(".output-stage-")[0]!);
@@ -116,28 +118,32 @@ async function writeRaw(file: string, bytes: string | Uint8Array) {
   }
 }
 export async function outputUsage(root: string, actual = false) {
-  const lease = !actual
-    ? await readFile(path.join(root, ".batch-output-lease.json"), "utf8").then(
-        JSON.parse,
-        (e) => {
-          if (e.code === "ENOENT") return null;
-          throw e;
-        },
-      )
-    : null;
-  if (
-    lease?.active &&
-    (lease.schemaVersion !== 1 ||
+  const leases = actual
+    ? []
+    : (await batchStorageLeases(root)).filter((l) => l.active);
+  const leased = new Map<string, number>();
+  for (const lease of leases) {
+    if (
+      lease.schemaVersion !== 1 ||
       !Number.isSafeInteger(lease.maxBytes) ||
       lease.maxBytes < 1 ||
-      typeof lease.evaluation !== "string" ||
+      !lease.evaluation ||
       path.isAbsolute(lease.evaluation) ||
-      lease.evaluation
-        .split(/[\\/]/)
-        .some((p: string) => !p || p === ".." || p === "."))
-  )
-    throw Error("Invalid batch storage lease");
-  const leased = lease?.active ? path.resolve(root, lease.evaluation) : null;
+      lease.evaluation.split(/[\\/]/).some((p) => !p || p === "." || p === "..")
+    )
+      throw Error("Invalid batch storage lease");
+    const resolved = path.resolve(root, lease.evaluation);
+    if (
+      [...leased.keys()].some(
+        (p) =>
+          p === resolved ||
+          p.startsWith(resolved + path.sep) ||
+          resolved.startsWith(p + path.sep),
+      )
+    )
+      throw Error("Overlapping storage leases");
+    leased.set(resolved, lease.maxBytes);
+  }
   let dataBytes = 0,
     controlBytes = 0;
   async function visit(dir: string) {
@@ -171,8 +177,8 @@ export async function outputUsage(root: string, actual = false) {
       for (const item of batch) {
         if (!item) continue;
         const { file, info } = item;
-        if (leased && path.resolve(file) === leased)
-          dataBytes += lease.maxBytes;
+        if (leased.has(path.resolve(file)))
+          dataBytes += leased.get(path.resolve(file))!;
         else if (info.isDirectory()) await visit(file);
         else if (control(file)) controlBytes += info.size;
         else dataBytes += info.size;
@@ -180,12 +186,12 @@ export async function outputUsage(root: string, actual = false) {
     }
   }
   await visit(root);
-  if (leased) {
+  for (const [directory, bytes] of leased) {
     try {
-      await lstat(leased);
+      await lstat(directory);
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
-      dataBytes += lease.maxBytes;
+      dataBytes += bytes;
     }
   }
   return { dataBytes, controlBytes, totalBytes: dataBytes + controlBytes };
@@ -307,6 +313,47 @@ export async function writeOutput(
       size =
         typeof bytes === "string" ? Buffer.byteLength(bytes) : bytes.byteLength;
     const isControl = control(file);
+    const lease = (await batchStorageLeases(root)).find(
+      (l) =>
+        l.active &&
+        (file === path.resolve(root, l.evaluation) ||
+          file.startsWith(path.resolve(root, l.evaluation) + path.sep)),
+    );
+    if (lease) {
+      const scopeUsage = await outputUsage(
+        path.resolve(root, lease.evaluation),
+        true,
+      );
+      if (
+        (!isControl && status.stopped) ||
+        scopeUsage.totalBytes + size >
+          lease.maxBytes -
+            (isControl
+              ? 0
+              : Math.min(CONTROL_RESERVE_BYTES, Math.floor(lease.maxBytes / 2)))
+      ) {
+        if (status.totalBytes + 17 <= status.maxBytes) {
+          try {
+            await writeRaw(
+              path.join(root, ".storage-stop"),
+              "max-output-bytes\n",
+            );
+            await syncDirectory(root);
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+          }
+        }
+        throw Object.assign(
+          Error("max-output-bytes: reserved scope envelope exhausted"),
+          { code: "MAX_OUTPUT_BYTES" },
+        );
+      }
+      // The root already counts this entire envelope, including staging bytes.
+      if (status.totalBytes > status.maxBytes)
+        throw Error("max-output-bytes: root quota exhausted");
+      await publish();
+      return;
+    }
     if (
       (!isControl && status.stopped) ||
       status.totalBytes + size > status.maxBytes ||

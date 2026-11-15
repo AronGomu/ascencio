@@ -1,3 +1,4 @@
+import { verifyCalibrationReport } from "./calibration-evidence.ts";
 import { writeOutput } from "./output-storage.ts";
 /** Opt-in standalone batch runner. Never mutates an improvement session ledger. */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
@@ -116,6 +117,7 @@ export async function executeBatch(options: {
       (await calibrationIdentity(binary, job.fixtureIdentity, batchSize))
     )
       throw Error("Batch calibration is stale; run bot:batch:calibrate");
+    await verifyCalibrationReport(saved);
     workers = saved.workers;
   } else workers = options.workers;
   if (

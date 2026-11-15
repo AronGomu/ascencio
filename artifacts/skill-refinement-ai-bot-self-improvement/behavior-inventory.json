@@ -1,0 +1,227 @@
+{
+  "scope": "Retained behavior after owner-authorized legacy retirement/minimal example; original output blocks preserved.",
+  "items": [
+    {
+      "id": "B01",
+      "topic": "Scope",
+      "requirement": "Only target AI changes; decks, engine, legality and hidden information protected."
+    },
+    {
+      "id": "B02",
+      "topic": "Opponents",
+      "requirement": "Frozen roster always includes starting AI, independent of accepted comparator."
+    },
+    {
+      "id": "B03",
+      "topic": "Pairing",
+      "requirement": "Pinned setup seed/sources/runtime/content/comparison; stable IDs derive randomness; identical paired starting inputs."
+    },
+    {
+      "id": "B04",
+      "topic": "Execution",
+      "requirement": "Saved optimal match concurrency; four games and sideboarding sequential within each match."
+    },
+    {
+      "id": "B05",
+      "topic": "Cache",
+      "requirement": "Reuse only verified matching inputs/settings/implementation/schedule/integrity; record provenance."
+    },
+    {
+      "id": "B06",
+      "topic": "Scoring",
+      "requirement": "Game wins over completed pairs; draws zero wins; equal opponent weights; ignores excluded both sides."
+    },
+    {
+      "id": "B07",
+      "topic": "Assessability",
+      "requirement": "Each opponent requires pairs; unresolved comparability unassessable; integrity failures stop."
+    },
+    {
+      "id": "B08",
+      "topic": "Promotion",
+      "requirement": "Only valid strictly higher weighted paired rate promotes; ties/regressions/unassessable retain accepted; no confidence intervals."
+    },
+    {
+      "id": "B09",
+      "topic": "Control boundary",
+      "requirement": "Stateless dispatcher selects instructions/legal edges only; callers verify gates, authorization and checkpoint; tools own actual execution."
+    },
+    {
+      "id": "B10",
+      "topic": "Stage order",
+      "requirement": "Prepare/Evaluate/Decide/Analyze/Replay/Assemble loop; analyzed ceiling or no-edit delivers; suspension overrides progression."
+    },
+    {
+      "id": "B11",
+      "topic": "Baseline",
+      "requirement": "Exact starting source validated/evaluated first; baseline is not candidate decision; final decision still analyzed."
+    },
+    {
+      "id": "B12",
+      "topic": "Current support",
+      "requirement": "Current TypeScript runner only; incompatible legacy run starts fresh. Owner-authorized retirement."
+    },
+    {
+      "id": "B13",
+      "topic": "Ownership",
+      "requirement": "Orchestrator implements; delegate only diagnosis; scripts own outputs/JSON; no automatic proposal or proposal.md."
+    },
+    {
+      "id": "B14",
+      "topic": "Archive",
+      "requirement": "Exact initial commit; evaluated candidates committed after decision including rejects; required subject/trailers/full IDs; accepted independent of HEAD; unevaluated hashes only."
+    },
+    {
+      "id": "B15",
+      "topic": "Authorization",
+      "requirement": "Unrelated work/history preserved; no push/publish/merge without authorization; routine resolution only."
+    },
+    {
+      "id": "B16",
+      "topic": "Limits",
+      "requirement": "Pin owner overrides/defaults; original start and consumed budgets never reset; 50 decisions, 2500 total matches, roster floor/remainder, >=1 each."
+    },
+    {
+      "id": "B17",
+      "topic": "Game accounting",
+      "requirement": "Planned formula and floor10% recovery, separate charges, failed/interrupted reservations count, caches zero; extra interrupted games ignored after allowance."
+    },
+    {
+      "id": "B18",
+      "topic": "Wall/storage",
+      "requirement": "24h includes downtime; explicit50GB gate; logical staging/import bytes,16MB headroom; retain required evidence."
+    },
+    {
+      "id": "B19",
+      "topic": "Deadlines",
+      "requirement": "5h evaluation,10m preparation,5m each check/control/takeover including prefix; cap by remaining wall."
+    },
+    {
+      "id": "B20",
+      "topic": "Calibration",
+      "requirement": "Separate matching recommendations before evaluation; every2..CPU stage, only successful reps; replay2 repetitions/full batch/equal outcomes/smallest within3%; separate diagnostic counts."
+    },
+    {
+      "id": "B21",
+      "topic": "Calibration failure",
+      "requirement": "One same-input fresh-directory retry; second excludes stage count; persist attempts/exclusions; integrity stops; CPU<2 no invented fallback."
+    },
+    {
+      "id": "B22",
+      "topic": "Source selection",
+      "requirement": "Ordinary accepted-source addition; only measured regression repairs regressing source via one remove/update, no additions; accepted comparator separate."
+    },
+    {
+      "id": "B23",
+      "topic": "Analysis plan",
+      "requirement": "One owner per frozen consecutive250-match slice; queue whole slices for slots; no evaluation overlap; all slices complete."
+    },
+    {
+      "id": "B24",
+      "topic": "Analyst scope",
+      "requirement": "Allowlisted completed target-loss projections only; no wins/draws/ignored/opponent-only/full logs; no-loss opens nothing; unknowns preserved."
+    },
+    {
+      "id": "B25",
+      "topic": "Coverage",
+      "requirement": "Exactly-once all completed target losses; matching reuse; singleton slice findings; global merge; all reasons>=5 losses,count then severity,overlaps/unclear reported."
+    },
+    {
+      "id": "B26",
+      "topic": "Replay points",
+      "requirement": "Every associated loss has exact primary decision/evaluation binding; visible-information diagnosis; no invented attribution/gain/confidence."
+    },
+    {
+      "id": "B27",
+      "topic": "History",
+      "requirement": "Exclude unchanged failed context/rules/combinations; retry material change/explanation; stable rule operations/sources/hash/sorted included IDs."
+    },
+    {
+      "id": "B28",
+      "topic": "Replay gate",
+      "requirement": "Every associated loss settled against unchanged source, isolated edits; changed-choice wins>=5 AND>=5%; timeouts denominator/nonconversion; record failed/unchanged too."
+    },
+    {
+      "id": "B29",
+      "topic": "Assembly",
+      "requirement": "Await all reason jobs; combine all passing edits from mode base; preserve attribution/unedited rules; materially changed isolated logic replays; no extra combined gate."
+    },
+    {
+      "id": "B30",
+      "topic": "Timeouts",
+      "requirement": "Individual game/replay timeout bug report/ignored/no retry; continue safe jobs; init/sideboard/integrity/non-timeout failures stop."
+    },
+    {
+      "id": "B31",
+      "topic": "Recovery",
+      "requirement": "Only interrupted evaluation automatic within allowance/time/storage; ordinary replay no auto retry; analyst failure explicit continuation."
+    },
+    {
+      "id": "B32",
+      "topic": "Suspension",
+      "requirement": "Stop admission; graceful owned shutdown<=60s then owned groups only; settle/verify/atomic checkpoint with index-last/prior skipped-prefix; preserve next stage/identities/pending work/budgets."
+    },
+    {
+      "id": "B33",
+      "topic": "Continuation",
+      "requirement": "Owner pause/cancel explicit same-checkpoint resume; resource explicit increase, full limits/request and gate writer-lock/controller ordering; no implicit budget raise."
+    },
+    {
+      "id": "B34",
+      "topic": "Exhaustion",
+      "requirement": "Incomplete suspension; no analysis/rank/export/closure cleanup; explicit closure remains incomplete."
+    },
+    {
+      "id": "B35",
+      "topic": "Formats",
+      "requirement": "Existing interfaces/paths/typed log codec and literal Markdown blocks unchanged; in-memory replay; control JSON only; no gameplay sidecars."
+    },
+    {
+      "id": "B36",
+      "topic": "Retention",
+      "requirement": "Dependency-based active evidence; rejected after summarized analysis/decision,accepted until replacement/closure; owner retention; checked compact closure before detail deletion."
+    },
+    {
+      "id": "B37",
+      "topic": "Delivery",
+      "requirement": "Existing comparable ranking only; export/hash; full compact identity/version/rule/coverage/resource/error report; summary-only closed run cannot seed verified cache."
+    },
+    {
+      "id": "B38",
+      "topic": "History output",
+      "requirement": "English one attempt line with status/change/version/evidence/result; SUPERSEDED replacements; refs link policy and authoritative config; no policy copies/override section."
+    }
+  ],
+  "authorizedChanges": [
+    "Legacy support retired",
+    "Fictional summary replaced with minimal example",
+    "Executable dispatcher added, not claimed semantic automation"
+  ],
+  "currentSourceAdditions": [
+    {
+      "id": "B39",
+      "topic": "Incremental preparation",
+      "requirement": "After full evaluation barrier, sync maxSlices1 and dispatch ready slices until preparationComplete; no change to whole250 ownership."
+    },
+    {
+      "id": "B40",
+      "topic": "Review completeness",
+      "requirement": "Read every ordered review page or entire allowlisted loss log; verify bound hashes/event-decision counts; record review duration/supplied bytes; never paginate away coverage."
+    },
+    {
+      "id": "B41",
+      "topic": "First-pass reasons",
+      "requirement": "Capture primary and all supported secondary reasons with stable IDs, exact decisions and ordered offered/chosen IDs; separate activation and targeting; hypotheses await replay."
+    },
+    {
+      "id": "B42",
+      "topic": "Durable findings",
+      "requirement": "Submit structured first-pass findings for generated Markdown; checkpoint small completed-match batches; resume only jobs absent from claim.completedJobs; accepted findings immutable/idempotent across reassignments."
+    },
+    {
+      "id": "B43",
+      "topic": "Analysis trust",
+      "requirement": "Status is metadata-only; audit verifies full source/report/page evidence before resumed analysis is trusted."
+    }
+  ]
+}

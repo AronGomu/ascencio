@@ -1,0 +1,11 @@
+--- SKILL.md
++++ SKILL.md
+@@ -184,7 +184,7 @@
+ 
+ ### Replay
+ 
+-Read history/linked summaries; exclude unchanged failed context/rules/combinations. Explain materially changed retries. Implement isolated variants; record stable rule IDs, operation, accepted/replay source, candidate hash and sorted included IDs; keep immutable isolated source/output directories. Execute Source selection and replay gate at measured resource-bounded concurrency, wait for every reason job and record failed/unchanged outcomes. At least one passing edit goes to Assemble; none retains accepted source and goes to Deliver.
++Read history and linked summaries; exclude unchanged failed contexts, rules and combinations. Explain materially changed retries. Implement isolated variants; record stable rule IDs, operation, accepted/replay source, candidate hash and sorted included IDs; keep immutable isolated source/output directories. Execute Source selection and replay gate at measured resource-bounded concurrency, wait for every reason job and record failed/unchanged outcomes. At least one passing edit goes to Assemble; none retains accepted source and goes to Deliver.
+ 
+ ### Assemble
+ 

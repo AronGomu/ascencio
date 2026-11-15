@@ -3,6 +3,7 @@ import type {
   EventReference,
   MatchAnalysisReport,
   LossMatchReport,
+  LossReason,
 } from "./analysis-contract.ts";
 
 export const eventKey = (ref: EventReference) =>
@@ -90,7 +91,31 @@ export function parseLossMarkdown(
       solution: cells[4]!,
     });
   }
+  const reasons: LossReason[] = [];
+  for (const line of text.split(/\r?\n/).filter((l) => l.startsWith("- R G"))) {
+    const cells = line
+      .slice(4)
+      .split("|")
+      .map((c) => c.trim());
+    if (cells.length !== 8 || !/^G[1-4]$/.test(cells[0]!))
+      throw Error("Invalid Markdown reason row");
+    reasons.push({
+      game: Number(cells[0]!.slice(1)),
+      id: cells[1]!,
+      decision: cells[2]!,
+      offered: JSON.parse(cells[3]!),
+      chosen: JSON.parse(cells[4]!),
+      reason: cells[5]!,
+      solution: cells[6]!,
+    });
+    if (cells[7] !== "supported")
+      throw Error("Reason must be a supported hypothesis");
+  }
+  const completeReasons = /^Reasons: complete$/m.test(text);
+  if (reasons.length && !completeReasons)
+    throw Error("Missing first-pass reason coverage declaration");
   const report = {
+    ...(completeReasons ? { reasons } : {}),
     schemaVersion: 1 as const,
     format: "loss-markdown-v1" as const,
     job: job ?? "",
@@ -135,6 +160,74 @@ export function validateLossReport(
       throw new Error("Invalid or unresolvable loss finding");
     seen.add(finding.game);
   }
+  const reasonsSeen = new Set<string>();
+  if (report.reasons !== undefined) {
+    if (!Array.isArray(report.reasons)) throw Error("Invalid reason bindings");
+    for (const reason of report.reasons) {
+      const game = packet.lossGames.find((g) => g.game === reason.game);
+      const key = `${reason.game}/${reason.id}`;
+      if (
+        !game ||
+        !/^[a-z][a-z0-9-]*$/.test(reason.id) ||
+        !game.decisions.includes(reason.decision) ||
+        reasonsSeen.has(key) ||
+        !Array.isArray(reason.offered) ||
+        !Array.isArray(reason.chosen) ||
+        ![...reason.offered, ...reason.chosen].every(
+          (c) => typeof c === "string",
+        ) ||
+        reason.chosen.some((c) => !reason.offered.includes(c)) ||
+        !reason.reason?.trim() ||
+        !reason.solution?.trim()
+      )
+        throw Error("Invalid or duplicate reason binding");
+      reasonsSeen.add(key);
+    }
+  }
+  if (
+    report.reasons !== undefined &&
+    report.findings.some(
+      (f) =>
+        f.classification === "avoidable" &&
+        !report.reasons!.some(
+          (r) => r.game === f.game && r.decision === f.decision,
+        ),
+    )
+  )
+    throw Error("First-pass reasons omit a primary avoidable finding");
   if (seen.size !== packet.lossGames.length)
     throw new Error("Incomplete target loss coverage");
+}
+
+/** Structured agent findings have one canonical human-readable representation. */
+export function renderLossMarkdown(
+  report: LossMatchReport,
+  packet: AnalysisPacket,
+  sha: string,
+) {
+  validateLossReport(report, packet, sha);
+  const cell = (s: string) => {
+    if (/[|\r\n]/.test(s))
+      throw Error("Markdown finding fields must be single-line without pipes");
+    return s;
+  };
+  const json = (ids: string[]) =>
+    JSON.stringify(ids).replaceAll("|", "\\u007c");
+  return (
+    `# Match loss analysis\n\nJob: ${report.job}\nPacket: ${sha}\n` +
+    (report.reasons === undefined ? "" : "Reasons: complete\n") +
+    "\n" +
+    report.findings
+      .map(
+        (f) =>
+          `- G${f.game} | ${cell(f.decision ?? "-")} | ${f.classification} | ${cell(f.reason)} | ${cell(f.solution)}\n`,
+      )
+      .join("") +
+    (report.reasons ?? [])
+      .map(
+        (r) =>
+          `- R G${r.game} | ${r.id} | ${cell(r.decision)} | ${json(r.offered)} | ${json(r.chosen)} | ${cell(r.reason)} | ${cell(r.solution)} | supported\n`,
+      )
+      .join("")
+  );
 }

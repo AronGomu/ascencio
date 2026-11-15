@@ -1,0 +1,34 @@
+[
+  [
+    "SKILL.md",
+    "Resolve bots/checkpoint and required contracts. Use frozen-session `bot:setup` with target, extra opponents, seed, total matches and all limits; archive starting source. Validate setup, current runner compatibility and exact sources; save both calibrated recommendations and the whole consecutive 250-match slice plan, deriving `analysis-workers = ceil(total-matches / 250)`. Ready requires matching recommendations and a verified setup. Stop incompatible runs rather than adding compatibility branches."
+  ],
+  [
+    "SKILL.md",
+    "Evaluate unchanged starting source first, then changed combined candidates. Validate/freeze exact source and target-only boundary before dispatch, using only Incident policy's narrow tooling exception if needed. Bind schedule, runner, source and accepted control; retrieve compatible results or run missing matches with owning tools. Complete only after every scheduled match finalizes, reservations settle and evidence/results/coverage/resource usage are verified. Save candidate's paired difference from accepted source."
+  ],
+  [
+    "SKILL.md",
+    "Record baseline accepted reference without a candidate decision. Otherwise verify Constraints' promotion rule, persist outcome/reason/difference/checkpoint, archive every evaluated candidate with the commit helper and update history. Rejection preserves accepted reference. Always continue to Analyze, even after the final decision."
+  ],
+  [
+    "SKILL.md",
+    "Read and follow [slice protocol][analysis] and [evaluation report contract][loss-report]. After Decide, dispatch one diagnosis-only owner per consecutive whole slice, queue for runtime slots, verify every completed target loss exactly once, reuse matching findings, merge equivalent reasons and finalize one source-bound report. Apply stop conditions after delivery: decision ceiling goes to Deliver; resource exhaustion suspends; otherwise continue with the appropriate source mode."
+  ],
+  [
+    "SKILL.md",
+    "Read history/linked summaries; exclude unchanged failed rules/combinations in the same source/context. A retry needs material change/explanation. Implement immutable isolated variants under Source selection and replay gate, with stable rule IDs, operation, accepted/replay source, candidate hash and sorted included IDs in separate source/output directories. Run all associated losses at measured replay concurrency within resources; wait for every reason job, recording failed/unchanged outcomes too. Return validated only if at least one edit passes; none retains accepted source and goes to Deliver."
+  ],
+  [
+    "SKILL.md",
+    "Combine all passing edits from the mode's base, resolving overlaps while preserving validated semantics, rule attribution and unedited repair rules. Materially changed isolated logic needs its own replay gate, not a new combined-rule gate. Validate/freeze candidate; update history with `--rules`, `--candidate-hash`, accepted `--base` and replay references. Generate no `proposal.md`. Prune only eligible details with the designated tool; then return to Evaluate."
+  ],
+  [
+    "SKILL.md",
+    "Verify required decisions/analyses against evidence, rank existing comparable evaluations, export accepted source and check the report before lifecycle cleanup. A search with no validated edit may end early; report actual progress, without claiming all planned decisions ran. Resource exhaustion uses the suspension report/checkpoint path instead. Deliver links, status and unresolved errors."
+  ],
+  [
+    "SKILL.md",
+    "Perform Incident policy's shutdown, settlement, checkpoint and report. Preserve the prior stage and resumable evidence. Resume only under its applicable authorization and remaining/increased limits; an explicitly closed incomplete run never becomes successful by relabeling it."
+  ]
+]

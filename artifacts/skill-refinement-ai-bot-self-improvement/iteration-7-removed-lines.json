@@ -1,0 +1,34 @@
+[
+  [
+    "SKILL.md",
+    "| Analyst execution failure / owner stop | Halt dispatch, settle/terminate owned analysts; retain reports, claims and uncovered losses | Explicit continuation; resume uncovered work without duplicate owners |"
+  ],
+  [
+    "SKILL.md",
+    "| Owner pause/cancellation | Stop admission and owned work | Explicit instruction on same verified checkpoint |"
+  ],
+  [
+    "SKILL.md",
+    ""
+  ],
+  [
+    "SKILL.md",
+    "On suspension/interruption/cancellation gracefully stop owned games/replays/analysts, allow at most effective `timeoutsMs.ownedShutdownGrace`, then terminate only owned process groups. Settle/cancel reservations, verify shutdown and checkpoint completed work, pending jobs/coverage, interrupted reservations, source identities, next stage and budgets. Report stop reason, checkpoint, next action and required limit change. Owner-authorized explicit closure is distinct from ordinary resource suspension and must retain incomplete status."
+  ],
+  [
+    "SKILL.md",
+    "| Gameplay | One game log with actor A/B sections under `games/game-N/`; match log indexes four games in order; exact initial state/events/choices/IDs/sideboarding/results | Keep while execution, validation, replay, accepted-analysis reuse or resume needs it |"
+  ],
+  [
+    "SKILL.md",
+    "| Analyses/replays | Per-match Markdown, evaluation [loss-analysis.md][loss-report], replay points, traces, control/takeover outcomes | Same dependency rule; report delivery alone is insufficient |"
+  ],
+  [
+    "SKILL.md",
+    "| Temporary source/builds | Immutable variant hashes, frozen packages, schedules, machine records, bundles | Same dependency rule; no permanent archival source copies |"
+  ],
+  [
+    "SKILL.md",
+    "After checked consolidation remove detailed logs, receipts, per-match analyses, replay traces/points, schedules, variants, frozen copies, machine records and bundles. Explicit owner retention overrides cleanup. Suspended runs retain resumable detail until completion or explicit closure. Summary-only closed runs cannot supply verified cached games/replays. Distinguish reservations from completions and diagnostics from comparisons; References link shared policy and authoritative pinned configuration, without copying policy or an overrides section."
+  ]
+]

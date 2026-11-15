@@ -1,0 +1,11 @@
+--- SKILL.md
++++ SKILL.md
+@@ -21,7 +21,7 @@
+ 
+ Keep the authored skill read-only throughout this review. NEVER replace, install, promote or commit over the authored skill as part of this process. Save the candidate separately; report its link, per-iteration character counts, findings, checks and remaining limitations to the user. Promotion requires a later separate explicit user instruction.
+ 
+-Run this once per completed authoring task for each changed skill, including this authoring skill or refine-skill itself. Candidate changes and supporting artifacts made within a refinement review are part of that same review and must not launch another review. Mutual links are dependencies to read, not recursive invocation. If required delegation/settings are unavailable, report the review as pending rather than claiming completion.
++Run once per completed authoring task for each changed skill, including this skill and refine-skill. Candidate changes and supporting artifacts made within a refinement review are part of that same review and must not launch another review. Mutual links are dependencies to read, not recursive invocation. If required delegation/settings are unavailable, report the review as pending rather than claiming completion.
+ 
+ ## Template
+ 

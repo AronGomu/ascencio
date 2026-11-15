@@ -1,8 +1,8 @@
-# Loss analysis report
+# Evaluation loss report
 
-Write `baseline/loss-analysis.md` or `iterations/iteration-N/loss-analysis.md` in English. The orchestrator compiles all 250-match slice analysts’ existing per-match findings into this one evaluation-level document after every slice finishes. Review every newly played target loss; use prior analyses for cached results. Analysts read only completed target-loss game content, never wins or draws. List **all supported reasons affecting at least 5 distinct losses**, ranked by affected losses, then severity; omit smaller groups. There is no limit on the number of reasons. Count each game once per reason; reasons may overlap, so counts need not sum to total losses.
+Read when merging slices. Write English `baseline/loss-analysis.md` or `iterations/iteration-N/loss-analysis.md`, bound to evaluated source. Coverage and reuse follow the slice protocol.
 
-Judge choices using information visible at the time. Distinguish observed mistakes from uncertain loss attribution; an alternative need not be proven to win before replay testing. Report losses with no supported reason as unclear; do not invent reasons.
+Apply the skill’s global eligibility/ranking gate to merged reasons. Count each game once per reason, allowing overlaps; report unclear/incomplete coverage. Judge visible information, not concealed facts. Supported mistakes need no pre-replay proof an alternative wins; invent no attribution, gain estimates or confidence labels.
 
 ```markdown
 # Loss Analysis — Baseline / Iteration N
@@ -20,8 +20,4 @@ N games · L losses reviewed · R eligible reasons.
    Replay points: …
 ```
 
-For each reason, enumerate every affected game and its primary critical decision, using IDs relative to the report’s source evaluation. Link that evaluation once; qualify IDs by evaluation when multiple batches are included. These compact replay points are required execution inputs, not a separate loss ledger. State incomplete coverage and unclear-loss count; overlapping reason counts need not add up. Emit no gain estimates or confidence labels.
-
-Keep source action records until the orchestrator has processed every eligible reason through replay validation. Delivery alone does not permit pruning; honor owner retention requests.
-
-This report and its replay points are temporary execution evidence. Retain them while needed for rule validation, accepted-version reuse or resume; at run closure keep only reason/count/outcome summaries in the run-level report and remove this detailed report under the skill’s Output retention rules.
+For every reason enumerate all affected games and primary critical decision IDs relative to the linked source evaluation. Link that evaluation once; qualify IDs if mixing evaluations. Replay points are execution inputs, not another ledger. Retention follows Artifact lifecycle.

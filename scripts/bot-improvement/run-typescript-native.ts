@@ -1,3 +1,4 @@
+import { readBatchStorageLease } from "./batch-storage-lease.ts";
 import { verifyNativeSchedule } from "./typescript-native-resume.ts";
 export { verifyNativeCompletion } from "./typescript-native-completion.ts";
 import { NativeEngineSlot } from "./typescript-native-executor.ts";
@@ -258,9 +259,7 @@ export async function runTypescriptNative(options: {
     // its allowance after replay/analysis artifacts grow elsewhere in the root.
     if (options.sessionLease) {
       const provided = options.sessionLease,
-        current = await optional(
-          path.join(provided.root, ".batch-output-lease.json"),
-        );
+        current = await readBatchStorageLease(provided.root, provided.token);
       if (
         !current?.active ||
         current.token !== provided.token ||
@@ -392,10 +391,15 @@ export async function runTypescriptNative(options: {
             }
             const match = await engine.match(
               item,
-              async (number, text) => {
+              async (number, text, lossView) => {
                 const file = `native/games/game-${number}/game.log`;
                 await write(path.join(base, file), text);
                 hashes[file] = digest(text);
+                if (lossView !== undefined) {
+                  const viewFile = `native/games/game-${number}/loss.log`;
+                  await write(path.join(base, viewFile), lossView);
+                  hashes[viewFile] = digest(lossView);
+                }
               },
               async (id, value) => {
                 const file = `bugs/${id}.json`;
@@ -495,7 +499,7 @@ export async function runTypescriptNative(options: {
     clearReplayWriteGrants();
     try {
       if (lease && !options.sessionLease)
-        await releaseBatchStorage(root, lease.token);
+        await releaseBatchStorage(lease.root, lease.token);
     } finally {
       await rm(lock, { recursive: true, force: true });
     }

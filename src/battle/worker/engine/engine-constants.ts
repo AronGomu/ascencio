@@ -77,6 +77,7 @@ export const EngineMessageType = {
   MOVE: 50,
   POSITION_CHANGE: 53,
   SET: 54,
+  SWAP: 55,
   SUMMONING: 60,
   SPECIAL_SUMMONING: 62,
   FLIP_SUMMONING: 64,

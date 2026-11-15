@@ -1,0 +1,11 @@
+{
+  "expected": {
+    "SKILL.md": "360d8df7d4ed544b36b53c10805bc112aecbdffd88ec222ec6045125ddff7150",
+    "references/explanation-template.md": "99b38acd3f632af37fb931efd025bbbebf7cded605cfbe01e606b83a6117efae"
+  },
+  "actual": {
+    "SKILL.md": "360d8df7d4ed544b36b53c10805bc112aecbdffd88ec222ec6045125ddff7150",
+    "references/explanation-template.md": "99b38acd3f632af37fb931efd025bbbebf7cded605cfbe01e606b83a6117efae"
+  },
+  "matches": true
+}

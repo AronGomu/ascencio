@@ -1,0 +1,11 @@
+--- SKILL.md
++++ SKILL.md
+@@ -44,7 +44,7 @@
+ 
+ `task STAGE` prints policy and current actions; `advance STAGE EVENT` checks the table’s edge and prints the next task. First verify completion and checkpoint the next stage through project tools. `resume PRIOR-STAGE` requires a verified checkpoint and Incident policy authorization. The dispatcher is stateless: owning tools execute/persist runs, accounting, storage, claims and publication; the orchestrator verifies semantic gates and authorization. Stops override progression.
+ 
+-Read the [runner contract][runner] before setup/dispatch. Discover exact request schemas and CLI options at the owning entry point rather than duplicating them here:
++Read the [runner contract][runner] before setup/dispatch. Read exact request schemas and CLI options at the owning entry point:
+ 
+ | Responsibility | Entry point |
+ | --- | --- |

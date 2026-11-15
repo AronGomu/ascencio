@@ -1,0 +1,5 @@
+# Iteration3 explanation comparison
+
+Compared all three reports by every source stage and normalized identity/scoring/eligibility/replay/budget/incident/retention item from iteration1. All understand eligible pending entries rerun every old/new case from original inputs using current analysis-source controls and isolated rule branches; unsupported reconstruction blocks rather than inventing failure. All preserve stable identities, reason/correction separation, deterministic cap300, five-win AND5% gate with changed choice, valid complete cap failure, no extra budgets and pending retention.
+
+A flags ledger representation/hash interoperability as operational implementation; B flags schema/path and separate detailed retention; C flags similarity reconciliation and pending-vs-no-edit delivery. These are compatible interpretations of explicit constraints, not behavioral disagreements. No changes required beyond planned prose reduction in iteration4. Full source modes, strict promotion, calibration/timeout/recovery/suspension distinctions and output contracts remain consistent; independent deletion audit remains in audit.md.

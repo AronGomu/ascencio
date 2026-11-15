@@ -1,0 +1,8 @@
+--- SKILL.md
++++ SKILL.md
+@@ -81,4 +81,4 @@
+ 
+ Record each iteration’s skill character counts and comparison report.
+ 
+-Repeat from step 2 until the requested iteration count is complete. Report each iteration’s counts, review findings, checks and candidate links to the user. Do not automatically commit or promote. A later separate explicit user instruction is required to replace the source.
++Repeat steps 2–3 for every requested iteration. Report each iteration’s counts, review findings, checks and candidate links to the user. Do not automatically commit or promote. A later separate explicit user instruction is required to replace the source.

@@ -1,0 +1,12 @@
+{
+  "SKILL.md": "fa5fd31243cf4fb8510872779e927272be0cdf6540c333a12fa02b018d21b33b",
+  "agents/openai.yaml": "aa76c0d791fe86ee3cdb06f0a29d86f3bd0c1305e3c58de3fbb6260fcdf7f75a",
+  "references/match-log-template.md": "b6302332b2cd355b72cc2718f58da0cd3866445e79176711a0ff68cee74b0155",
+  "references/loss-analysis-template.md": "fd69f38d9101323ae44ca7050a613ff2f5f853a818100d64fc6e7b9e8a13225d",
+  "references/streaming-loss-analysis.md": "8cf62ebc84117f972f49d0e88c7416f3ac6dfdcf5cdb0f0033d86146182dd5f0",
+  "references/run-summary-example.txt": "abb69d570179538c9d52bc4342c78858119786a73090037828eba4012e77f591",
+  "references/defaults.md": "c9e1d6687e53059f655e35bde4aa8b36d44c349ba4b7c16d974487efc24d00b2",
+  "references/performance-upgrades.md": "1a53b13ff2099f8f928b4aac55557b7b9d6ae25af13c56e92396b9350b5103c3",
+  "scripts/workflow-controller.mjs": "fb4fe9a1dd8ff7a56dec3da7a57140daaeea7ff3ad462d4c81eca5bdfc2e5393",
+  "scripts/workflow-controller.d.mts": "a372281052d7bc318471e45db81ac2ae9600f3d35bb800784c36b4c0d74afcd7"
+}
